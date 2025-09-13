@@ -2,7 +2,7 @@
 
 #include "application/application.h"
 
-#include "engine/core/message.h"
+#include "engine/base/message.h"
 
 int main(int argc_, char** argv_) {
     (void)argc_;

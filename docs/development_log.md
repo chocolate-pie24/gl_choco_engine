@@ -17,3 +17,9 @@
 
 - 実装内容: ERROR_MESSAGE/INFO_MESSAGE/DEBUG_MESSAGE/WARN_MESSAGE
 - ブランチ名称: feat/core-message
+
+## Refactor core/message -> base/message
+
+- 実装内容: Move 'core/message' -> 'base/message'
+  - 追加予定のcore/memoryがmessageへ依存するため、一方向依存を守る
+  - engine/base/message.hへ変更

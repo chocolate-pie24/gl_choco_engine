@@ -5,9 +5,9 @@
 ```mermaid
 graph TD
   A[application]
-  C[core/message]
+  B[base/message]
 
-  A --> C
+  A --> B
 ```
 
 ## 各レイヤー詳細
@@ -16,11 +16,11 @@ graph TD
 
 - 目的: 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理。
 - 依存:
-  - core
+  - base
 
-### core
+### base
 
-- 目的: 最下層のユーティリティ(ログ、メモリアロケータ等)。外部依存なし(標準Cのみ)。
+- 目的: 最下層のユーティリティ(ログ、プロジェクト全体で使用するマクロ定義等)。外部依存なし(標準Cのみ)。
 - 保有機能:
-  - core/message: 色付き出力/レベル/STDOUT/STDERR
+  - base/message: 色付き出力/レベル/STDOUT/STDERR
 - 依存: C標準ライブラリのみ

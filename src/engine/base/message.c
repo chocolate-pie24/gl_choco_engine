@@ -13,7 +13,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "engine/core/message.h"
+#include "engine/base/message.h"
 
 #define MESSAGE_BUFSIZE 1024
 #define HEADER_BUFSIZE 128
