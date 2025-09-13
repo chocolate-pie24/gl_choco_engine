@@ -1,9 +1,10 @@
 #include <stddef.h> // for NULL
-#include <stdio.h>  // for fprintf TODO: remove this!!
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
 
 #include "application/application.h"
+
+#include "engine/core/message.h"
 
 typedef struct app_state {
     int rubbish;    // 一時的にビルド通すため
@@ -18,8 +19,7 @@ app_err_t application_create(void) {
 
     // Preconditions
     if(NULL != s_app_state) {   // TODO: CHECK_NOT_VALID_GOTO_CLEANUP()
-        // TODO: ERROR_MESSAGE()
-        fprintf(stderr, "[ERROR](RUNTIME_ERROR): application_create - Application state is already initialized.\n");
+        ERROR_MESSAGE("application_create(RUNTIME_ERROR) - Application state is already initialized.\n");
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -27,8 +27,7 @@ app_err_t application_create(void) {
     // Simulation
     tmp = (app_state_t*)malloc(sizeof(*tmp)); // TODO: choco_malloc
     if(NULL == tmp) {   // TODO: CHECK_ALLOC_ERR_GOTO_CLEANUP()
-        // TODO: ERROR_MESSAGE()
-        fprintf(stderr, "[ERROR](NO_MEMORY): application_create - Failed to allocate app_state memory.\n");
+        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate app_state memory.\n");
         ret = APPLICATION_NO_MEMORY;
         goto cleanup;
     }
@@ -64,7 +63,7 @@ cleanup:
 app_err_t application_run(void) {
     app_err_t ret = APPLICATION_SUCCESS;
     if(NULL == s_app_state) {
-        fprintf(stderr, "[ERROR](APPLICATION_RUNTIME_ERROR): application_run - Application is not initialized.\n");
+        ERROR_MESSAGE("application_run(APPLICATION_RUNTIME_ERROR) - Application is not initialized.\n");
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }

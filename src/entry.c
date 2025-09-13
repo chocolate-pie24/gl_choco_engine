@@ -2,34 +2,39 @@
 
 #include "application/application.h"
 
+#include "engine/core/message.h"
+
 int main(int argc_, char** argv_) {
     (void)argc_;
     (void)argv_;
 #ifdef RELEASE_BUILD
-    fprintf(stdout, "Build mode: RELEASE.\n");
+    INFO_MESSAGE("Build mode: RELEASE.");
 #endif
 #ifdef DEBUG_BUILD
-    fprintf(stdout, "Build mode: DEBUG.\n");
+    INFO_MESSAGE("Build mode: DEBUG.");
 #endif
 #ifdef TEST_BUILD
-    fprintf(stdout, "Build mode: TEST.\n");
+    INFO_MESSAGE("Build mode: TEST.");
 #endif
 
     const app_err_t app_create_result = application_create();
     if(APPLICATION_SUCCESS != app_create_result) {
+        ERROR_MESSAGE("Failed to initialize application.");
         goto cleanup;
     } else {
-        fprintf(stdout, "Application created successfully.\n");
+        INFO_MESSAGE("Application created successfully.");
     }
 
     const app_err_t app_run_result = application_run();
     if(APPLICATION_SUCCESS != app_run_result) {
+        ERROR_MESSAGE("Failed to execute application.");
         goto cleanup;
     } else {
-        fprintf(stdout, "Application executed successfully.\n");
+        INFO_MESSAGE("Application executed successfully.");
     }
 
 cleanup:
     application_destroy();
+    INFO_MESSAGE("Application destroyed successfully.");
     return 0;
 }
