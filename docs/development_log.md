@@ -7,3 +7,8 @@
 - 備考:
   - 目標は「ビルド・実行・クリーンアップできる最小環境」の構築
   - 今回はMacOSをターゲットにしたmakefileを作成するが、将来的な拡張を前提とする(将来的にはMac/Linux/FreeBSD対応を想定)
+
+## Add application_layer
+
+- 実装内容: application_create/run/destroyの公開API設計と最小実装。main() はこの3関数のみを呼び出す構成に整理。
+- ブランチ名称: feat/application-layer
