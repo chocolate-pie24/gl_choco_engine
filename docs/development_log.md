@@ -12,3 +12,8 @@
 
 - 実装内容: application_create/run/destroyの公開API設計と最小実装。main() はこの3関数のみを呼び出す構成に整理。
 - ブランチ名称: feat/application-layer
+
+## Add core/message
+
+- 実装内容: ERROR_MESSAGE/INFO_MESSAGE/DEBUG_MESSAGE/WARN_MESSAGE
+- ブランチ名称: feat/core-message
