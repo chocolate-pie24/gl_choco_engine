@@ -4,7 +4,7 @@
 
 #include "application/application.h"
 
-#include "engine/base/message.h"
+#include "engine/base/choco_message.h"
 
 typedef struct app_state {
     int rubbish;    // 一時的にビルド通すため

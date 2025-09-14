@@ -2,7 +2,7 @@
 
 #include "application/application.h"
 
-#include "engine/base/message.h"
+#include "engine/base/choco_message.h"
 
 int main(int argc_, char** argv_) {
     (void)argc_;
