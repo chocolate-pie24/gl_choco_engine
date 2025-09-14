@@ -6,8 +6,11 @@
 graph TD
   A[application]
   B[base/message]
+  C[core/memory]
 
   A --> B
+  A --> C
+  C --> B
 ```
 
 ## 各レイヤー詳細
@@ -27,3 +30,11 @@ graph TD
   - `base/macros`: 共通マクロ
 - 依存: C 標準ライブラリのみ
 - 入れないもの: メモリアロケータ、数学/コンテナなど“機能モジュール”（＝coreへ）
+
+### core
+
+- 目的: プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)。
+- 保有機能:
+  - core/memory/linear_allocator: リニアアロケータ
+- 依存:
+  - base

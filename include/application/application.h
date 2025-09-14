@@ -9,6 +9,7 @@ typedef enum {
     APPLICATION_SUCCESS,
     APPLICATION_NO_MEMORY,
     APPLICATION_RUNTIME_ERROR,
+    APPLICATION_UNDEFINED_ERROR,
 } app_err_t;
 
 app_err_t application_create(void);

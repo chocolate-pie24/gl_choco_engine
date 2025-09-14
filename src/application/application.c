@@ -5,9 +5,12 @@
 #include "application/application.h"
 
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_macros.h"
+
+#include "engine/core/memory/linear_allocator.h"
 
 typedef struct app_state {
-    int rubbish;    // 一時的にビルド通すため
+    linear_alloc_t* linear_allocator;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL;
@@ -15,6 +18,8 @@ static app_state_t* s_app_state = NULL;
 // TODO: oc_choco_malloc + テスト
 app_err_t application_create(void) {
     app_err_t ret = APPLICATION_RUNTIME_ERROR;
+    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+
     app_state_t* tmp = NULL;
 
     // Preconditions
@@ -33,12 +38,29 @@ app_err_t application_create(void) {
     }
     memset(tmp, 0, sizeof(*tmp));
 
-    // commit
-    s_app_state = tmp;
-
     // begin launch all systems.
+
+    // create linear allocator.
+    tmp->linear_allocator = NULL;
+    ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_RUNTIME_ERROR;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+
     // end launch all systems.
 
+    // commit
+    s_app_state = tmp;
     ret = APPLICATION_SUCCESS;
 
 cleanup:
@@ -52,6 +74,7 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    linear_allocator_destroy(&s_app_state->linear_allocator);
     // end cleanup all systems.
 
     free(s_app_state);  // TODO: choco_free

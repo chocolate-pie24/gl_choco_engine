@@ -35,3 +35,10 @@
 
 - 実装内容: base/macrosと同様、名前衝突を回避するためchoco_messageへ変更
 - ブランチ名称: refactor/base-message
+
+## Add core/memory/linear_allocator
+
+- 実装内容: リニアアロケータ
+  - 個別解放不可(全てまとめて解放のみ)
+  - 起動時から終了時まで解放されない各システム用メモリ確保に使用
+- ブランチ名称: feat/core-memory

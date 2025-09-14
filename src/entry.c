@@ -1,8 +1,13 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #include "application/application.h"
 
 #include "engine/base/choco_message.h"
+
+#ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
+#include "test_linear_allocator.h"
+#endif
 
 int main(int argc_, char** argv_) {
     (void)argc_;
@@ -15,6 +20,9 @@ int main(int argc_, char** argv_) {
 #endif
 #ifdef TEST_BUILD
     INFO_MESSAGE("Build mode: TEST.");
+    for(uint8_t i = 0; i != 200; ++i) {
+        test_linear_allocator();
+    }
 #endif
 
     const app_err_t app_create_result = application_create();
