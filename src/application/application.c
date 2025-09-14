@@ -1,6 +1,7 @@
 #include <stddef.h> // for NULL
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
+#include <stdalign.h>
 
 #include "application/application.h"
 
@@ -8,9 +9,14 @@
 #include "engine/base/choco_macros.h"
 
 #include "engine/core/memory/linear_allocator.h"
+#include "engine/core/memory/choco_memory.h"
 
 typedef struct app_state {
     linear_alloc_t* linear_allocator;
+
+    size_t memory_system_memory_requirement;
+    size_t memory_system_alignment_requirement;
+    memory_system_t* memory_system;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL;
@@ -19,6 +25,7 @@ static app_state_t* s_app_state = NULL;
 app_err_t application_create(void) {
     app_err_t ret = APPLICATION_RUNTIME_ERROR;
     linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     app_state_t* tmp = NULL;
 
@@ -40,7 +47,7 @@ app_err_t application_create(void) {
 
     // begin launch all systems.
 
-    // create linear allocator.
+    // launch all systems -> create linear allocator.
     tmp->linear_allocator = NULL;
     ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
     if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -57,6 +64,28 @@ app_err_t application_create(void) {
         goto cleanup;
     }
 
+    // launch all systems -> create memory system.
+    tmp->memory_system = NULL;
+    memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
+    void* tmp_memory_system_ptr = NULL;
+    linear_alloc_err_t ret_memory_system_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_memory_system_allocate) {
+        ERROR_MESSAGE("Failed to allocate memory system memory.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_memory_system_allocate) {
+        ERROR_MESSAGE("Failed to allocate memory system memory.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+    memory_sys_err_t ret_memory_system_init = memory_system_init(tmp_memory_system_ptr);
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_memory_system_init) {
+        ERROR_MESSAGE("Failed to initialize memory system.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+    tmp->memory_system = tmp_memory_system_ptr;
+
     // end launch all systems.
 
     // commit
@@ -64,6 +93,17 @@ app_err_t application_create(void) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        if(NULL != tmp && NULL != tmp->memory_system) {
+            memory_system_destroy(tmp->memory_system);
+        }
+        if(NULL != tmp) {
+            linear_allocator_destroy(&tmp->linear_allocator);
+            free(tmp);
+            tmp = NULL;
+        }
+    }
+
     return ret;
 }
 
@@ -74,6 +114,7 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    memory_system_destroy(s_app_state->memory_system);
     linear_allocator_destroy(&s_app_state->linear_allocator);
     // end cleanup all systems.
 
