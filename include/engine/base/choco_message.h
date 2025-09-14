@@ -9,8 +9,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef CHOCO_MESSAGE_H
+#define CHOCO_MESSAGE_H
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,3 +30,8 @@
   - KIB, MIB, GIB
   - 今後のテスト関数の用意のため、NO_COVERAGEを追加
 - ブランチ名称: feat/base-macros
+
+## Refactor base/message
+
+- 実装内容: base/macrosと同様、名前衝突を回避するためchoco_messageへ変更
+- ブランチ名称: refactor/base-message

@@ -13,7 +13,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "engine/base/message.h"
+#include "engine/base/choco_message.h"
 
 #define MESSAGE_BUFSIZE 1024
 #define HEADER_BUFSIZE 128
