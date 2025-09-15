@@ -189,51 +189,6 @@ cleanup:
     return;
 }
 
-static void NO_COVERAGE test_memory_system_report(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    memory_system_t* system = NULL;
-    size_t memory = 0;
-    size_t align = 0;
-    memory_system_preinit(&memory, &align);
-    system = malloc(memory);
-    ret = memory_system_init(system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-
-    void* ptr_string = NULL;
-    void* ptr_system = NULL;
-
-    // memory_system_ == NULLでワーニング No-op
-    memory_system_report(NULL);
-
-    // all 0.
-    memory_system_report(system);
-
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-
-    // total = 128
-    // string 128
-    // system 0
-    memory_system_report(system);
-
-    ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-
-    // total = 384
-    // string 128
-    // system 256
-    memory_system_report(system);
-
-    free(system);
-    system = NULL;
-}
-
 void memory_system_report(const memory_system_t* const memory_system_) {
     if(NULL == memory_system_) {
         WARN_MESSAGE("memory_system_report - No-op: memory_system_ is NULL.");
@@ -244,7 +199,8 @@ void memory_system_report(const memory_system_t* const memory_system_) {
     fprintf(stdout, "\033[1;35m\tTotal allocated: %zu\n", memory_system_->total_allocated);
     fprintf(stdout, "\tMemory tag allocated:\n");
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        fprintf(stdout, "\t\ttag(%s): %zu\n", memory_system_->mem_tag_str[i], memory_system_->mem_tag_allocated[i]);
+        const char* tag_str = memory_system_->mem_tag_str[i];
+        fprintf(stdout, "\t\ttag(%s): %zu\n", (NULL != tag_str) ? tag_str : "unknown", memory_system_->mem_tag_allocated[i]);
     }
     fprintf(stdout, "\033[0m\n");
 cleanup:
@@ -524,6 +480,54 @@ static void NO_COVERAGE test_memory_system_free(void) {
 
     ptr_string = NULL;
     ptr_system = NULL;
+
+    free(system);
+    system = NULL;
+}
+
+static void NO_COVERAGE test_memory_system_report(void) {
+    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_t* system = NULL;
+    size_t memory = 0;
+    size_t align = 0;
+    memory_system_preinit(&memory, &align);
+    system = malloc(memory);
+    ret = memory_system_init(system);
+    assert(MEMORY_SYSTEM_SUCCESS == ret);
+
+    void* ptr_string = NULL;
+    void* ptr_system = NULL;
+
+    // memory_system_ == NULLでワーニング No-op
+    memory_system_report(NULL);
+
+    // all 0.
+    memory_system_report(system);
+
+    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
+    assert(MEMORY_SYSTEM_SUCCESS == ret);
+    assert(128 == system->total_allocated);
+    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+
+    // total = 128
+    // string 128
+    // system 0
+    memory_system_report(system);
+
+    ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
+    assert(MEMORY_SYSTEM_SUCCESS == ret);
+    assert((128 + 256) == system->total_allocated);
+    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+
+    // total = 384
+    // string 128
+    // system 256
+    memory_system_report(system);
+
+    system->mem_tag_str[MEMORY_TAG_STRING] = NULL;
+    memory_system_report(system);
 
     free(system);
     system = NULL;
