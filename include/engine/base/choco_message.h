@@ -9,8 +9,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#ifndef CHOCO_MESSAGE_H
-#define CHOCO_MESSAGE_H
+#ifndef GLCE_ENGINE_BASE_CHOCO_MESSAGE_H
+#define GLCE_ENGINE_BASE_CHOCO_MESSAGE_H
 
 #ifdef __cplusplus
 extern "C" {

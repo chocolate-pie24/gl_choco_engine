@@ -1,5 +1,5 @@
-#ifndef TEST_LINEAR_ALLOCATOR_H
-#define TEST_LINEAR_ALLOCATOR_H
+#ifndef GLCE_TEST_TEST_LINEAR_ALLOCATOR_H
+#define GLCE_TEST_TEST_LINEAR_ALLOCATOR_H
 
 #ifdef __cplusplus
 extern "C" {

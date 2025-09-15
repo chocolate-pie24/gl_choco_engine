@@ -1,5 +1,5 @@
-#ifndef TEST_MEMORY_SYSTEM_H
-#define TEST_MEMORY_SYSTEM_H
+#ifndef GLCE_TEST_TEST_MEMORY_SYSTEM_H
+#define GLCE_TEST_TEST_MEMORY_SYSTEM_H
 
 #ifdef __cplusplus
 extern "C" {

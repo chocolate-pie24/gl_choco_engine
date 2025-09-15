@@ -1,5 +1,5 @@
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#ifndef GLCE_APPLICATION_APPLICATION_H
+#define GLCE_APPLICATION_APPLICATION_H
 
 #ifdef __cplusplus
 extern "C" {
