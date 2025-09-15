@@ -1,5 +1,5 @@
-#ifndef CHOCO_MACROS_H
-#define CHOCO_MACROS_H
+#ifndef GLCE_ENGINE_BASE_CHOCO_MACROS_H
+#define GLCE_ENGINE_BASE_CHOCO_MACROS_H
 
 #ifdef __cplusplus
 extern "C" {

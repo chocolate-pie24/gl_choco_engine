@@ -1,5 +1,5 @@
-#ifndef CHOCO_MEMORY_H
-#define CHOCO_MEMORY_H
+#ifndef GLCE_ENGINE_CORE_MEMORY_CHOCO_MEMORY_H
+#define GLCE_ENGINE_CORE_MEMORY_CHOCO_MEMORY_H
 
 #ifdef __cplusplus
 extern "C" {
