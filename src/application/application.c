@@ -12,8 +12,10 @@
 #include "engine/core/memory/choco_memory.h"
 
 typedef struct app_state {
+    // core/memory/linear_allocator
     linear_alloc_t* linear_allocator;
 
+    // core/memory/memory_system
     size_t memory_system_memory_requirement;
     size_t memory_system_alignment_requirement;
     memory_system_t* memory_system;
@@ -36,7 +38,7 @@ app_err_t application_create(void) {
         goto cleanup;
     }
 
-    // Simulation
+    // begin Simulation
     tmp = (app_state_t*)malloc(sizeof(*tmp)); // TODO: choco_malloc
     if(NULL == tmp) {   // TODO: CHECK_ALLOC_ERR_GOTO_CLEANUP()
         ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate app_state memory.\n");
@@ -45,9 +47,9 @@ app_err_t application_create(void) {
     }
     memset(tmp, 0, sizeof(*tmp));
 
-    // begin launch all systems.
+    // begin Simulation -> launch all systems.(Don't use s_app_state here.)
 
-    // launch all systems -> create linear allocator.
+    // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
     tmp->linear_allocator = NULL;
     ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
     if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -64,7 +66,7 @@ app_err_t application_create(void) {
         goto cleanup;
     }
 
-    // launch all systems -> create memory system.
+    // Simulation -> launch all systems -> create memory system.(Don't use s_app_state here.)
     tmp->memory_system = NULL;
     memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
     void* tmp_memory_system_ptr = NULL;
@@ -86,7 +88,8 @@ app_err_t application_create(void) {
     }
     tmp->memory_system = tmp_memory_system_ptr;
 
-    // end launch all systems.
+    // end Simulation -> launch all systems.
+    // end Simulation
 
     // commit
     s_app_state = tmp;

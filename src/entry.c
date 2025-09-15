@@ -7,6 +7,7 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 #include "test_linear_allocator.h"
+#include "test_memory_system.h"
 #endif
 
 int main(int argc_, char** argv_) {
@@ -22,6 +23,7 @@ int main(int argc_, char** argv_) {
     INFO_MESSAGE("Build mode: TEST.");
     for(uint8_t i = 0; i != 200; ++i) {
         test_linear_allocator();
+        test_memory_system();
     }
 #endif
 

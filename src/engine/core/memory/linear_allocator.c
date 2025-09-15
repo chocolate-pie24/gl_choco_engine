@@ -142,7 +142,7 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
     CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, "linear_allocator_allocate", "out_ptr_")
     CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, "linear_allocator_allocate", "out_ptr_")
     if(0 == req_align_ || 0 == req_size_) {
-        WARN_MESSAGE("linear_allocator_allocate - Provided req_align_ or req_size_ is 0. Nothing to allocate.");
+        WARN_MESSAGE("linear_allocator_allocate - No-op: req_align_ or req_size_ is 0.");
         ret = LINEAR_ALLOC_SUCCESS;
         goto cleanup;
     }
