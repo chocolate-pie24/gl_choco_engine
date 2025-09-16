@@ -67,7 +67,10 @@
   - [x] memory_system_report で mem_tag_str[i] ?: "unknown" 的な防御（UB回避）。
   - [x] ヘッダガードのユニーク化
   - [] doxygenドキュメント
-    - [] Doxyfile用意
+    - [x] Doxyfile用意
     - [] doxygenコメント追加
     - [] doxygen GitHub pages
     - [] doxygenページをREADME.mdにリンク追加
+  - [] 別ブランチ エラーチェックマクロをmacros.hへ移動
+  - [] doxygenスクリプト
+  - [] エンジンレイヤー構成資料へのリンクをREADME.mdへ追加

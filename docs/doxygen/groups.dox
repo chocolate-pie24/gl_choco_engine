@@ -1,0 +1,22 @@
+/** @defgroup application Application
+    @brief エンジンが保有する各サブシステムのオーケストレーション。サブシステム初期化、メインループ駆動、終了処理
+*/
+
+/** @defgroup engine Engine
+    @brief エンジンの最上位レイヤー。ゲームアプリケーション側に描画/リソース管理/イベント処理等の機能を提供する
+*/
+
+/** @defgroup base Base
+    @ingroup engine
+    @brief 最下層の“横断ユーティリティ”。全レイヤーから安心して使える小道具を提供する
+*/
+
+/** @defgroup core Core
+    @ingroup engine
+    @brief プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
+*/
+
+/** @defgroup core_memory Core Memory
+    @ingroup core
+    @brief メモリアロケータ/メモリトラッキング
+*/

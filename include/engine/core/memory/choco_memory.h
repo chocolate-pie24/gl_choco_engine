@@ -1,3 +1,15 @@
+/**　@addtogroup core_memory
+ * @{
+ *
+ * @file choco_memory.h
+ * @author chocolate-pie24
+ *
+ * @version 0.1
+ * @date 2025-09-16
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #ifndef GLCE_ENGINE_CORE_MEMORY_CHOCO_MEMORY_H
 #define GLCE_ENGINE_CORE_MEMORY_CHOCO_MEMORY_H
 
@@ -39,3 +51,5 @@ void memory_system_report(const memory_system_t* const memory_system_);
 }
 #endif
 #endif
+
+/*@}*/
