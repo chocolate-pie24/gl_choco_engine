@@ -2,6 +2,23 @@
 
 ## Step1_1: 実行基盤とメモリ管理レイヤの初期化
 
+- TODO:
+  - [x] このログのセクションを増やす。アプリケーション土台作り(メモリーシステム構築まで)
+    - [x] base/macorsの誤記を修正
+  - [x] README.mdにビルド方法等を整備
+  - [x] memory_system_report で mem_tag_str[i] ?: "unknown" 的な防御（UB回避）。
+  - [x] ヘッダガードのユニーク化
+  - [] doxygenドキュメント
+    - [x] Doxyfile用意
+    - [] doxygenコメント追加
+    - [] doxygen GitHub pages
+    - [] doxygenページをREADME.mdにリンク追加
+  - [] 別ブランチ エラーチェックマクロをmacros.hへ移動
+  - [] doxygenスクリプト
+  - [] エンジンレイヤー構成資料へのリンクをREADME.mdへ追加
+  - [] clang-tidyセットアップ
+  - [] サニタイザセットアップ
+
 ### application_scaffolding
 
 - 実装内容: Makefile / ビルドスクリプト / VSCodeワークスペース設定 / main関数の雛形
@@ -60,17 +77,3 @@
   - doxygenドキュメント
   - todo.md作成
 
-- TODO:
-  - [x] このログのセクションを増やす。アプリケーション土台作り(メモリーシステム構築まで)
-    - [x] base/macorsの誤記を修正
-  - [x] README.mdにビルド方法等を整備
-  - [x] memory_system_report で mem_tag_str[i] ?: "unknown" 的な防御（UB回避）。
-  - [x] ヘッダガードのユニーク化
-  - [] doxygenドキュメント
-    - [x] Doxyfile用意
-    - [] doxygenコメント追加
-    - [] doxygen GitHub pages
-    - [] doxygenページをREADME.mdにリンク追加
-  - [] 別ブランチ エラーチェックマクロをmacros.hへ移動
-  - [] doxygenスクリプト
-  - [] エンジンレイヤー構成資料へのリンクをREADME.mdへ追加
