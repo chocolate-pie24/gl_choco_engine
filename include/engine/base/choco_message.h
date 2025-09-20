@@ -1,10 +1,12 @@
-/**
- * @file message.h
+/** @addtogroup base
+ * @{
+ *
+ * @file choco_message.h
  * @author chocolate-pie24
- * @brief メッセージ標準出力機能定義
+ * @brief メッセージ標準出力、標準エラー出力処理
+ *
  * @version 0.1
- * @date 2025-07-20
- * @todo fileline, func_name
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2025
  *
@@ -22,17 +24,10 @@ extern "C" {
  * @date 2024-10-13
  */
 typedef enum MESSAGE_SEVERITY {
-    /** @brief 重要度:エラー */
-    MESSAGE_SEVERITY_ERROR,
-
-    /** @brief 重要度:ワーニング */
-    MESSAGE_SEVERITY_WARNING,
-
-    /** @brief 重要度:情報 */
-    MESSAGE_SEVERITY_INFORMATION,
-
-    /** @brief 重要度:デバッグ情報 */
-    MESSAGE_SEVERITY_DEBUG
+    MESSAGE_SEVERITY_ERROR,         /**< 重要度: エラー */
+    MESSAGE_SEVERITY_WARNING,       /**< 重要度: ワーニング */
+    MESSAGE_SEVERITY_INFORMATION,   /**< 重要度: インフォメーション */
+    MESSAGE_SEVERITY_DEBUG,         /**< 重要度: デバッグ情報 */
 } MESSAGE_SEVERITY;
 
 /**
@@ -144,3 +139,5 @@ void message_output(MESSAGE_SEVERITY severity_, const char* const fmt_,  ...);
 }
 #endif
 #endif
+
+/*@}*/

@@ -1,3 +1,14 @@
+/**
+ * @file application.c
+ * @author chocolate-pie24
+ * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理の実装
+ *
+ * @version 0.1
+ * @date 2025-09-20
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include <stddef.h> // for NULL
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
@@ -11,17 +22,21 @@
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
 
+/**
+ * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
+ *
+ */
 typedef struct app_state {
     // core/memory/linear_allocator
-    linear_alloc_t* linear_allocator;
+    linear_alloc_t* linear_allocator;   /**< リニアアロケータオブジェクト */
 
     // core/memory/memory_system
-    size_t memory_system_memory_requirement;
-    size_t memory_system_alignment_requirement;
-    memory_system_t* memory_system;
+    size_t memory_system_memory_requirement;        /**< メモリーシステム要求メモリ量 */
+    size_t memory_system_alignment_requirement;     /**< メモリーシステムメモリアライメント要件 */
+    memory_system_t* memory_system;                 /**< メモリーシステム内部状態管理オブジェクトへのポインタ */
 } app_state_t;
 
-static app_state_t* s_app_state = NULL;
+static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // TODO: oc_choco_malloc + テスト
 app_err_t application_create(void) {

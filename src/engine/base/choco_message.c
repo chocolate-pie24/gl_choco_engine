@@ -1,9 +1,10 @@
 /**
- * @file message.c
+ * @file choco_message.c
  * @author chocolate-pie24
- * @brief メッセージ標準出力機能実装
+ * @brief メッセージ標準出力、標準エラー出力処理実装
+ *
  * @version 0.1
- * @date 2025-07-20
+ * @date 2025-09-20
  *
  * @copyright Copyright (c) 2025
  *

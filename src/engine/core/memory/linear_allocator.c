@@ -1,3 +1,15 @@
+/**
+ *
+ * @file linear_allocator.c
+ * @author chocolate-pie24
+ * @brief linear_alloc_tオブジェクトの定義と関連APIの内部実装
+ *
+ * @version 0.1
+ * @date 2025-09-16
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include <stddef.h>
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
@@ -9,13 +21,17 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
 
+/**
+ * @brief linear_alloc_t内部データ構造
+ * @todo 必要であればメモリトラッキング追加(現状では入れる予定はなし)
+ */
 struct linear_alloc {
-    // NOTE: 必要であればメモリトラッキング追加(現状では入れる予定はなし)
-    size_t capacity;
-    void* head_ptr;
-    void* memory_pool;
+    size_t capacity;    /**< アロケータが管理するメモリ容量(byte) */
+    void* head_ptr;     /**< 次にメモリを確保する際の先頭アドレス(実際にはアライメント要件分オフセットされたアドレスを渡す) */
+    void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
+// TODO: 引数にretvalを追加し、base/macros.hに移動
 #define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
     if(NULL == ptr_) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
@@ -23,6 +39,7 @@ struct linear_alloc {
         goto cleanup;  \
     } \
 
+// TODO: 引数にretvalを追加し、base/macros.hに移動
 #define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
     if(NULL != ptr_) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
@@ -30,6 +47,7 @@ struct linear_alloc {
         goto cleanup;  \
     } \
 
+// TODO: 引数にretvalを追加し、base/macros.hに移動
 #define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, function_name_, variable_name_) \
     if(!(is_valid_)) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
@@ -37,6 +55,7 @@ struct linear_alloc {
         goto cleanup;  \
     } \
 
+// TODO: 引数にretvalを追加し、base/macros.hに移動
 #define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
     if(NULL == ptr_) { \
         ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
@@ -129,11 +148,6 @@ cleanup:
     return;
 }
 
-// 引数allocator_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数out_ptr_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数*out_ptr != NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数req_size_が0またはreq_align_でワーニングメッセージ、結果はLINEAR_ALLOC_SUCCESSでメモリ確保はなし
-// req_align_が2の冪乗ではない場合にLINEAR_ALLOC_INVALID_ARGUMENT
 linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
     linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 

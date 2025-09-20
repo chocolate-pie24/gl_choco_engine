@@ -3,3 +3,4 @@ obj/
 bin/
 cov/
 *.o
+docs/doxygen/html
