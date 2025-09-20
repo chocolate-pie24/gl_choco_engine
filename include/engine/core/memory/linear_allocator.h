@@ -1,4 +1,4 @@
-/**　@addtogroup core_memory
+/** @addtogroup core_memory
  * @{
  *
  * @file linear_allocator.h
@@ -69,7 +69,7 @@ typedef enum {
  * @param[out] allocator_ linear_alloc_t*型オブジェクトへのポインタ(create内でsizeof(linear_alloc_t)のメモリを確保するためダブルポインタを使用)
  * @param[in] capacity_ アロケータ保有メモリ容量(byte)
  *
- * @retval CORE_STRING_INVALID_ARGUMENT  引数allocator_ == NULL
+ * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数allocator_ == NULL
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数*allocator_ != NULL
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数capacity_ == 0
  * @retval LINEAR_ALLOC_NO_MEMORY        メモリ確保失敗

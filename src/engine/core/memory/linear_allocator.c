@@ -1,5 +1,4 @@
-/**　@addtogroup core_memory
- * @{
+/**
  *
  * @file linear_allocator.c
  * @author chocolate-pie24
@@ -149,13 +148,6 @@ cleanup:
     return;
 }
 
-// 引数allocator_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数out_ptr_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数*out_ptr != NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-// 引数req_size_が0またはreq_align_でワーニングメッセージ、結果はLINEAR_ALLOC_SUCCESSでメモリ確保はなし
-// req_align_が2の冪乗ではない場合にLINEAR_ALLOC_INVALID_ARGUMENT
-// 割り当て先頭アドレス+size_がUINTPTR_MAXの値を超過する場合にLINEAR_ALLOC_INVALID_ARGUMENT
-// 割り当てるメモリ領域がallocator_が保有しているメモリ領域に収まらない場合、LINEAR_ALLOC_NO_MEMORY
 linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
     linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 

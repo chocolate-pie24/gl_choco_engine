@@ -1,3 +1,15 @@
+/**
+ * @file choco_memory.c
+ * @author chocolate-pie24
+ * @brief memory_system_tオブジェクトの内部状態定義と関連APIの実装
+ *
+ *
+ * @version 0.1
+ * @date 2025-09-20
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include <stddef.h>
 #include <stdalign.h>
 #include <stdlib.h> // for malloc TODO: remove this!!
@@ -29,10 +41,14 @@ static void test_memory_system_free(void);
 static void test_memory_system_report(void);
 #endif
 
+/**
+ * @brief メモリーシステム内部状態管理オブジェクト
+ *
+ */
 struct memory_system {
-    size_t total_allocated;
-    size_t mem_tag_allocated[MEMORY_TAG_MAX];
-    const char* mem_tag_str[MEMORY_TAG_MAX];
+    size_t total_allocated;                     /**< メモリ総割り当て量 */
+    size_t mem_tag_allocated[MEMORY_TAG_MAX];   /**< 各メモリータグごとのメモリ割り当て量 */
+    const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリータグ文字列 */
 };
 
 #define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
@@ -108,13 +124,6 @@ cleanup:
     return;
 }
 
-// memory_system_ == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-// out_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-// *out_ptr != NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-// mem_tag_ >= MEMORY_TAG_MAXでMEMORY_SYSTEM_INVALID_ARGUMENT
-// size_ == 0でwarningメッセージを出し、MEMORY_SYSTEM_SUCCESS
-// mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
-// total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
 memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 

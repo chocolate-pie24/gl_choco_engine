@@ -1,3 +1,13 @@
+/**
+ * @file entry.c
+ * @author chocolate-pie24
+ * @brief ゲームアプリケーションエントリーポイント
+ * @version 0.1
+ * @date 2025-09-20
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include <stdio.h>
 #include <stdint.h>
 
@@ -10,6 +20,13 @@
 #include "test_memory_system.h"
 #endif
 
+/**
+ * @brief ゲームアプリケーションメイン
+ *
+ * @param argc_ 引数の個数
+ * @param argv_ 引数
+ * @return int
+ */
 int main(int argc_, char** argv_) {
     (void)argc_;
     (void)argv_;

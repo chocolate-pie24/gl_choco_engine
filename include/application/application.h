@@ -1,3 +1,16 @@
+/** @addtogroup application
+ * @{
+ *
+ * @file application.h
+ * @author chocolate-pie24
+ * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理を提供
+ *
+ * @version 0.1
+ * @date 2025-09-20
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #ifndef GLCE_APPLICATION_APPLICATION_H
 #define GLCE_APPLICATION_APPLICATION_H
 
@@ -5,21 +18,45 @@
 extern "C" {
 #endif
 
+/**
+ * @brief アプリケーションエラーコード定義
+ *
+ */
 typedef enum {
-    APPLICATION_SUCCESS,
-    APPLICATION_NO_MEMORY,
-    APPLICATION_RUNTIME_ERROR,
-    APPLICATION_INVALID_ARGUMENT,
-    APPLICATION_UNDEFINED_ERROR,
+    APPLICATION_SUCCESS,            /**< アプリケーション成功 */
+    APPLICATION_NO_MEMORY,          /**< メモリ不足 */
+    APPLICATION_RUNTIME_ERROR,      /**< 実行時エラー */
+    APPLICATION_INVALID_ARGUMENT,   /**< 引数異常 */
+    APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } app_err_t;
 
+/**
+ * @brief エンジンを構成する各サブシステムを初期化する
+ *
+ * @retval APPLICATION_RUNTIME_ERROR    アプリケーションがすでに初期化済み
+ * @retval APPLICATION_NO_MEMORY        メモリ確保に失敗
+ * @retval APPLICATION_UNDEFINED_ERROR  未定義のエラーが発生
+ * @retval APPLICATION_INVALID_ARGUMENT サブシステム初期化に無効な引数を指定した
+ * @retval APPLICATION_SUCCESS          エンジンおよびアプリケーションの初期化に成功し、正常終了
+ */
 app_err_t application_create(void);
 
+/**
+ * @brief エンジンを構成するサブシステムを停止し、アプリケーション終了する
+ *
+ */
 void application_destroy(void);
 
+/**
+ * @brief アプリケーションメインループ
+ *
+ * @return app_err_t
+ */
 app_err_t application_run(void);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
+
+/*@}*/

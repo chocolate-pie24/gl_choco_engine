@@ -1,4 +1,4 @@
-/**　@addtogroup core_memory
+/** @addtogroup core_memory
  * @{
  *
  * @file choco_memory.h
@@ -63,14 +63,14 @@ typedef struct memory_system memory_system_t;
  *
  * @note
  * 下記の理由から本APIと @ref memory_system_init() を使用した2段階でのシステムの初期化が必要
- * - memory_system_tのメモリは @ref linear_allocator_t を使用して外部で確保する
- * - @ref choco_memory.h は @ref linear_allocator には依存しない
- * - memory_system_tの内部構造を隠蔽しているため、外部システムはmemory_system_tのメモリ要件、メモリアライメント要件を知らない
+ * - memory_system_tのメモリは @ref linear_alloc_t を使用して外部で確保する
+ * - @ref choco_memory.h は @ref linear_alloc_t には依存しない
+ * - memory_system_tの内部構造を隠蔽しているため、外部システムはmemory_system_tのメモリ要件、メモリアライメント要件を知らない \n
  * なお、memory_systemは起動時から終了時まで存在し続けることを想定している \n
  * このため、不定期解放が必要なメモリアロケーションではなく、linear_allocatorによるメモリ確保を行った
  *
  * 使用例:
- * @note
+ * @code
  * size_t memory = 0;
  * size_t align = 0;
  * memory_system_preinit(&memory, &aling);
@@ -137,6 +137,7 @@ memory_sys_err_t memory_system_init(memory_system_t* const memory_system_);
  *
  * @note 本APIは内部状態のみの破棄であるため、memory_system_本体のメモリは解放されない
  *
+ * 使用例:
  * @code
  * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
@@ -169,7 +170,7 @@ memory_sys_err_t memory_system_init(memory_system_t* const memory_system_);
  *
  * // オブジェクトの破棄
  * memory_system_destroy(memory_system_ptr);
- * linear_allocator_destroy(&s_app_state->linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
+ * linear_allocator_destroy(&linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
  * @endcode
  *
  * @param[in,out] memory_system_ 初期化対象オブジェクト
@@ -191,6 +192,7 @@ void memory_system_destroy(memory_system_t* const memory_system_);
  * @param[in] mem_tag_ メモリータグ
  * @param[out] out_ptr_ 割り当てたメモリ
  *
+ * 使用例:
  * @code
  * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
@@ -227,7 +229,7 @@ void memory_system_destroy(memory_system_t* const memory_system_);
  *
  * // オブジェクトの破棄
  * memory_system_destroy(memory_system_ptr);
- * linear_allocator_destroy(&s_app_state->linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
+ * linear_allocator_destroy(&linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
  * @endcode
  *
  * @retval MEMORY_SYSTEM_INVALID_ARGUMENT memory_system_ == NULL
@@ -245,6 +247,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, s
 /**
  * @brief memory_system_を使用してメモリを解放する
  *
+ * 使用例:
  * @code
  * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
@@ -284,7 +287,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, s
  *
  * // オブジェクトの破棄
  * memory_system_destroy(memory_system_ptr);
- * linear_allocator_destroy(&s_app_state->linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
+ * linear_allocator_destroy(&linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
  * @endcode
  *
  * @param[in,out] memory_system_ memory_system_tハンドル
@@ -299,6 +302,7 @@ void memory_system_free(memory_system_t* const memory_system_, void* ptr_, size_
 /**
  * @brief memory_system_が管理しているメモリ確保状態を標準出力に出力する
  *
+ * 使用例:
  * @code
  * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
@@ -341,7 +345,7 @@ void memory_system_free(memory_system_t* const memory_system_, void* ptr_, size_
  *
  * // オブジェクトの破棄
  * memory_system_destroy(memory_system_ptr);
- * linear_allocator_destroy(&s_app_state->linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
+ * linear_allocator_destroy(&linear_allocator);    // linear_allocatorを使用してメモリを割り当てたため、linear_allocatorのみの破棄で良い
  * @endcode
  *
  * @param memory_system_ 出力対象memory_system_tハンドル
