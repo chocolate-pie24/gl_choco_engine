@@ -42,7 +42,6 @@ static app_state_t* s_app_state = NULL; /**< アプリケーション内部状�
 app_err_t application_create(void) {
     app_err_t ret = APPLICATION_RUNTIME_ERROR;
     linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     app_state_t* tmp = NULL;
 
@@ -73,7 +72,7 @@ app_err_t application_create(void) {
         goto cleanup;
     } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
         ERROR_MESSAGE("Failed to create linear allocator.");
-        ret = APPLICATION_RUNTIME_ERROR;
+        ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
     } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ERROR_MESSAGE("Failed to create linear allocator.");

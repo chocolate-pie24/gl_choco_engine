@@ -51,37 +51,9 @@ struct memory_system {
     const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリータグ文字列 */
 };
 
-#define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
-        ret = MEMORY_SYSTEM_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
-#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL != ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
-        ret = MEMORY_SYSTEM_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
-#define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
-        ret = MEMORY_SYSTEM_NO_MEMORY; \
-        goto cleanup;  \
-    } \
-
-#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, function_name_, variable_name_) \
-    if(!(is_valid_)) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
-        ret = MEMORY_SYSTEM_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
-void memory_system_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
+void memory_system_preinit(size_t* const memory_requirement_, size_t* const alignment_requirement_) {
     if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
         WARN_MESSAGE("memory_system_preinit - No-op: memory_requirement_ or alignment_requirement_ is NULL.");
         goto cleanup;
@@ -96,7 +68,7 @@ cleanup:
 
 memory_sys_err_t memory_system_init(memory_system_t* const memory_system_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, "memory_system_init", "memory_system_");
+    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_init", "memory_system_");
 
     memory_system_->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
@@ -128,10 +100,10 @@ memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, s
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, "memory_system_allocate", "memory_system_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, "memory_system_allocate", "out_ptr_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, "memory_system_allocate", "*out_ptr_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, "memory_system_allocate", "mem_tag_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "memory_system_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "out_ptr_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "*out_ptr_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "mem_tag_")
     if(0 == size_) {
         WARN_MESSAGE("memory_system_allocate - No-op: size_ is 0.");
         ret = MEMORY_SYSTEM_SUCCESS;
@@ -151,7 +123,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, s
     // Simulation.
     void* tmp = NULL;
     tmp = test_malloc(size_);    // TODO: FreeList
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, "memory_system_allocate", "tmp");
+    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp");
     memset(tmp, 0, size_);
 
     // commit.

@@ -10,14 +10,18 @@
   - [x] ヘッダガードのユニーク化
   - [] doxygenドキュメント
     - [x] Doxyfile用意
-    - [] doxygenコメント追加
+    - [x] doxygenコメント追加
     - [] doxygen GitHub pages
     - [] doxygenページをREADME.mdにリンク追加
-  - [] 別ブランチ エラーチェックマクロをmacros.hへ移動
-  - [] doxygenスクリプト
+  - [x] 別ブランチ エラーチェックマクロをmacros.hへ移動
   - [] エンジンレイヤー構成資料へのリンクをREADME.mdへ追加
   - [] clang-tidyセットアップ
   - [] サニタイザセットアップ
+  - [x] memory_system_preinitの引数をsize_t* constに変更する
+  - [x] linear_allocator.hのdoxygenコメントの各引数に[in]等をつける
+  - [x] application_createのlinear_allocator_createのエラーコードでinvalidをruntime_errorに集約している
+  - [x] memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;が未使用
+  - [x] message_outputリファクタリング(下記)
 
 ### application_scaffolding
 

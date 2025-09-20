@@ -56,6 +56,54 @@ extern "C" {
  */
 #define IS_POWER_OF_TWO(val_) ( ((size_t)(val_) != 0u) && ( (((size_t)(val_) & ((size_t)(val_) - 1u)) == 0u)))
 
+/**
+ * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
+ *
+ * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ */
+#define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+    if(NULL == ptr_) { \
+        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
+        ret = ret_; \
+        goto cleanup;  \
+    } \
+
+/**
+ * @brief 引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする
+ *
+ * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ */
+#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+    if(NULL != ptr_) { \
+        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
+        ret = ret_; \
+        goto cleanup;  \
+    } \
+
+/**
+ * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
+ *
+ * @note エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する
+ */
+#define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+    if(NULL == ptr_) { \
+        ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
+        ret = ret_; \
+        goto cleanup;  \
+    } \
+
+/**
+ * @brief 引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする
+ *
+ * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ */
+#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, ret_, function_name_, variable_name_) \
+    if(!(is_valid_)) { \
+        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
+        ret = ret_; \
+        goto cleanup;  \
+    } \
+
 #ifdef __cplusplus
 }
 #endif

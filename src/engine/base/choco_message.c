@@ -16,36 +16,27 @@
 
 #include "engine/base/choco_message.h"
 
-#define MESSAGE_BUFSIZE 1024
 #define HEADER_BUFSIZE 128
-#define TAIL_BUFSIZE 128
 
 static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]);
 
 void message_output(MESSAGE_SEVERITY severity_, const char* const format_, ...) {
-    FILE* out = (MESSAGE_SEVERITY_ERROR == severity_) ? stderr : stdout;
+    FILE* out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
 
-    char message[MESSAGE_BUFSIZE] = { 0 };
-    char header[HEADER_BUFSIZE] = { 0 };
-    char tail[TAIL_BUFSIZE] = { 0 };
-
-    const size_t message_len = strlen(format_);
-    if(message_len > (MESSAGE_BUFSIZE + HEADER_BUFSIZE + TAIL_BUFSIZE)) {
-        return;
-    }
-
+    char header[HEADER_BUFSIZE] = {0};
     msg_header_create(severity_, header);
-    strcpy(tail, "\033[0m\n");
 
-    // TODO: %s/%f等を展開した時の正確なバッファ長を計算し溢れを検知する
-    strcpy(message, header);
-    strcat(message, format_);
-    strcat(message, tail);
+    // header
+    fputs(header, out);
 
+    // body
     va_list args;
     va_start(args, format_);
-    vfprintf(out, message, args);
+    vfprintf(out, format_, args);
     va_end(args);
+
+    // tail (色リセット + 改行)
+    fputs("\033[0m\n", out);
 }
 
 static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]) {

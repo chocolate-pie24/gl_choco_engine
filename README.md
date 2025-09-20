@@ -66,6 +66,10 @@ Kohi Game Engine に触発されて開始しました。
         └── test_memory_system.h
 ```
 
+## エンジンレイヤー構成
+
+エンジンを構成するコンポーネントのレイヤー構成は、[docs/layer.md](docs/layer.md)に記載しています
+
 ## ビルド
 
 ### 必要環境

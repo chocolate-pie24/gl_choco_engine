@@ -81,7 +81,7 @@ typedef struct memory_system memory_system_t;
  *
  * @see memory_system_init
  */
-void memory_system_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
+void memory_system_preinit(size_t* const memory_requirement_, size_t* const alignment_requirement_);
 
 /**
  * @brief memory_system_preinitで取得したmemory_requirement, alignment_requirementを元に外部で確保したメモリを私、initで内部データを初期化する
