@@ -66,8 +66,8 @@ typedef enum {
  * linear_allocator_destroy(&alloc);    // オブジェクトを破棄
  * @endcode
  *
- * @param allocator_ linear_alloc_t*型オブジェクトへのポインタ(create内でsizeof(linear_alloc_t)のメモリを確保するためダブルポインタを使用)
- * @param capacity_ アロケータ保有メモリ容量(byte)
+ * @param[out] allocator_ linear_alloc_t*型オブジェクトへのポインタ(create内でsizeof(linear_alloc_t)のメモリを確保するためダブルポインタを使用)
+ * @param[in] capacity_ アロケータ保有メモリ容量(byte)
  *
  * @retval CORE_STRING_INVALID_ARGUMENT  引数allocator_ == NULL
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数*allocator_ != NULL
@@ -94,7 +94,7 @@ linear_alloc_err_t linear_allocator_create(linear_alloc_t** allocator_, size_t c
  * linear_allocator_destroy(&alloc);    // オブジェクトを破棄(これでalloc == NULLになる)
  * @endcode
  *
- * @param allocator_ linear_alloc_t*型オブジェクトへのポインタ(destroy内でallocator_が有しているメモリを解放するためダブルポインタを使用)
+ * @param[in,out] allocator_ linear_alloc_t*型オブジェクトへのポインタ(destroy内でallocator_が有しているメモリを解放するためダブルポインタを使用)
  */
 void linear_allocator_destroy(linear_alloc_t** allocator_);
 
@@ -118,10 +118,10 @@ void linear_allocator_destroy(linear_alloc_t** allocator_);
  * linear_allocator_destroy(&alloc);    // オブジェクトを破棄(これでalloc == NULLになる, int_ptrの再利用は不可)
  * @endcode
  *
- * @param allocator_ linear_alloc_t型オブジェクトへのポインタ
- * @param req_size_ 割り当て要領(byte)
- * @param req_align_ 割り当てるオブジェクトのアライメント要件
- * @param out_ptr_ 割り当てたアドレスを格納する
+ * @param[in] allocator_ linear_alloc_t型オブジェクトへのポインタ
+ * @param[in] req_size_ 割り当て要領(byte)
+ * @param[in] req_align_ 割り当てるオブジェクトのアライメント要件
+ * @param[out] out_ptr_ 割り当てたアドレスを格納する
  *
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数allocator_ == NULL
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数out_ptr_ == NULL
