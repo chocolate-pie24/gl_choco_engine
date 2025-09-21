@@ -66,7 +66,7 @@ cleanup:
     return;
 }
 
-memory_sys_err_t memory_system_init(memory_system_t* const memory_system_) {
+memory_sys_err_t memory_system_init(memory_system_t* memory_system_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_init", "memory_system_");
 
@@ -83,7 +83,7 @@ cleanup:
     return ret;
 }
 
-void memory_system_destroy(memory_system_t* const memory_system_) {
+void memory_system_destroy(memory_system_t* memory_system_) {
     if(NULL == memory_system_) {
         goto cleanup;
     }
@@ -96,7 +96,7 @@ cleanup:
     return;
 }
 
-memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
+memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions.
@@ -141,7 +141,7 @@ cleanup:
 // mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
 // mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
 // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-void memory_system_free(memory_system_t* const memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_) {
+void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_) {
     if(NULL == memory_system_) {
         WARN_MESSAGE("memory_system_free - No-op: memory_system_ is NULL.");
         goto cleanup;
@@ -170,7 +170,7 @@ cleanup:
     return;
 }
 
-void memory_system_report(const memory_system_t* const memory_system_) {
+void memory_system_report(const memory_system_t* memory_system_) {
     if(NULL == memory_system_) {
         WARN_MESSAGE("memory_system_report - No-op: memory_system_ is NULL.");
         goto cleanup;
@@ -180,7 +180,7 @@ void memory_system_report(const memory_system_t* const memory_system_) {
     fprintf(stdout, "\033[1;35m\tTotal allocated: %zu\n", memory_system_->total_allocated);
     fprintf(stdout, "\tMemory tag allocated:\n");
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        const char* tag_str = memory_system_->mem_tag_str[i];
+        const char* const tag_str = memory_system_->mem_tag_str[i];
         fprintf(stdout, "\t\ttag(%s): %zu\n", (NULL != tag_str) ? tag_str : "unknown", memory_system_->mem_tag_allocated[i]);
     }
     fprintf(stdout, "\033[0m\n");

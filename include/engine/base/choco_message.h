@@ -77,7 +77,7 @@ typedef enum MESSAGE_SEVERITY {
  * @param format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
  * @param ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
  */
-void message_output(MESSAGE_SEVERITY severity_, const char* const format_,  ...);
+void message_output(MESSAGE_SEVERITY severity_, const char* format_,  ...);
 
 #if ENABLE_MESSAGE_SEVERITY_ERROR
     /**

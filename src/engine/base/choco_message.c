@@ -16,18 +16,23 @@
 
 #include "engine/base/choco_message.h"
 
-#define HEADER_BUFSIZE 128
+void message_output(MESSAGE_SEVERITY severity_, const char* format_, ...) {
+    FILE* const out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
 
-static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]);
+    static const char head_err[] = "\033[1;31m[ERROR] ";
+    static const char head_war[] = "\033[1;33m[WARNING] ";
+    static const char head_inf[] = "\033[1;35m[INFORMATION] ";
+    static const char head_dbg[] = "\033[1;34m[DEBUG] ";
 
-void message_output(MESSAGE_SEVERITY severity_, const char* const format_, ...) {
-    FILE* out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
+    flockfile(out); // 同一ストリームの同時書き込みをまとめる
 
-    char header[HEADER_BUFSIZE] = {0};
-    msg_header_create(severity_, header);
-
-    // header
-    fputs(header, out);
+    switch (severity_) {
+        case MESSAGE_SEVERITY_ERROR:       fputs(head_err, out); break;
+        case MESSAGE_SEVERITY_WARNING:     fputs(head_war, out); break;
+        case MESSAGE_SEVERITY_INFORMATION: fputs(head_inf, out); break;
+        case MESSAGE_SEVERITY_DEBUG:       fputs(head_dbg, out); break;
+        default: break;
+    }
 
     // body
     va_list args;
@@ -36,26 +41,8 @@ void message_output(MESSAGE_SEVERITY severity_, const char* const format_, ...) 
     va_end(args);
 
     // tail (色リセット + 改行)
-    fputs("\033[0m\n", out);
-}
+    static const char s_color_reset[] = "\033[0m\n";
+    fputs(s_color_reset, out);
 
-static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]) {
-    memset(header_, 0, HEADER_BUFSIZE);
-
-    switch(severity_) {
-        case MESSAGE_SEVERITY_ERROR:
-            strcpy(header_, "\033[1;31m[ERROR] ");
-            break;
-        case MESSAGE_SEVERITY_WARNING:
-            strcpy(header_, "\033[1;33m[WARNING] ");
-            break;
-        case MESSAGE_SEVERITY_INFORMATION:
-            strcpy(header_, "\033[1;35m[INFORMATION] ");
-            break;
-        case MESSAGE_SEVERITY_DEBUG:
-            strcpy(header_, "\033[1;34m[DEBUG] ");
-            break;
-        default:
-            break;
-    }
+    funlockfile(out);
 }

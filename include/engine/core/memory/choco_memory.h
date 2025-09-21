@@ -130,7 +130,7 @@ void memory_system_preinit(size_t* const memory_requirement_, size_t* const alig
  * @see linear_allocator_create
  * @see linear_allocator_allocate
  */
-memory_sys_err_t memory_system_init(memory_system_t* const memory_system_);
+memory_sys_err_t memory_system_init(memory_system_t* memory_system_);
 
 /**
  * @brief memory_system_の内部状態を解放し初期化する
@@ -180,7 +180,7 @@ memory_sys_err_t memory_system_init(memory_system_t* const memory_system_);
  * @see linear_allocator_allocate
  * @see linear_allocator_destroy
  */
-void memory_system_destroy(memory_system_t* const memory_system_);
+void memory_system_destroy(memory_system_t* memory_system_);
 
 /**
  * @brief memory_system_を使用してメモリを割り当てる
@@ -242,7 +242,7 @@ void memory_system_destroy(memory_system_t* const memory_system_);
  *
  * @see memory_tag_t
  */
-memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
+memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
 /**
  * @brief memory_system_を使用してメモリを解放する
@@ -297,7 +297,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* const memory_system_, s
  *
  * @see memory_tag_t
  */
-void memory_system_free(memory_system_t* const memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_);
+void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_);
 
 /**
  * @brief memory_system_が管理しているメモリ確保状態を標準出力に出力する
@@ -350,7 +350,7 @@ void memory_system_free(memory_system_t* const memory_system_, void* ptr_, size_
  *
  * @param memory_system_ 出力対象memory_system_tハンドル
  */
-void memory_system_report(const memory_system_t* const memory_system_);
+void memory_system_report(const memory_system_t* memory_system_);
 
 #ifdef __cplusplus
 }

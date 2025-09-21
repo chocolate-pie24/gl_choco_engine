@@ -132,21 +132,21 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
 
     // Simulation
     uintptr_t head = (uintptr_t)allocator_->head_ptr;
-    uintptr_t align = (uintptr_t)req_align_;
-    uintptr_t size = (uintptr_t)req_size_;
+    const uintptr_t align = (uintptr_t)req_align_;
+    const uintptr_t size = (uintptr_t)req_size_;
     uintptr_t offset = head % align;
     if(0 != offset) {
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
 
-    uintptr_t start_addr = head + offset;
+    const uintptr_t start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
         ERROR_MESSAGE("linear_allocator_allocate(INVALID_ARGUMENT) - Requested size is too big.");
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
-    uintptr_t pool = (uintptr_t)allocator_->memory_pool;
-    uintptr_t cap = (uintptr_t)allocator_->capacity;
+    const uintptr_t pool = (uintptr_t)allocator_->memory_pool;
+    const uintptr_t cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
         ERROR_MESSAGE("linear_allocator_allocate(NO_MEMORY) - Can not allocate requested size. Requested size: %zu / Free space: %zu", req_size_, (size_t)free_space);
