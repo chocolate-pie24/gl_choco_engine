@@ -52,4 +52,4 @@ Intelの[Sponza scene](https://www.intel.com/content/www/us/en/developer/topic-t
 - Book1: 2D Rendering編（基盤構築と最小レンダリング）
 - Book2: 3D Rendering編（カメラ/メッシュ/ライティング）
 - Book3: Text Rendering編（フォントグリフ/カーニング/UI表示）
-- Book4: Sponza Rendering編（アセット管理/最終描画）
+- Book4: Sponza Rendering編（アセット管理/マテリアル/最終描画）
