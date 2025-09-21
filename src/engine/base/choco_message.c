@@ -16,55 +16,33 @@
 
 #include "engine/base/choco_message.h"
 
-#define MESSAGE_BUFSIZE 1024
-#define HEADER_BUFSIZE 128
-#define TAIL_BUFSIZE 128
+void message_output(MESSAGE_SEVERITY severity_, const char* format_, ...) {
+    FILE* const out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
 
-static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]);
+    static const char head_err[] = "\033[1;31m[ERROR] ";
+    static const char head_war[] = "\033[1;33m[WARNING] ";
+    static const char head_inf[] = "\033[1;35m[INFORMATION] ";
+    static const char head_dbg[] = "\033[1;34m[DEBUG] ";
 
-void message_output(MESSAGE_SEVERITY severity_, const char* const format_, ...) {
-    FILE* out = (MESSAGE_SEVERITY_ERROR == severity_) ? stderr : stdout;
+    flockfile(out); // 同一ストリームの同時書き込みをまとめる
 
-    char message[MESSAGE_BUFSIZE] = { 0 };
-    char header[HEADER_BUFSIZE] = { 0 };
-    char tail[TAIL_BUFSIZE] = { 0 };
-
-    const size_t message_len = strlen(format_);
-    if(message_len > (MESSAGE_BUFSIZE + HEADER_BUFSIZE + TAIL_BUFSIZE)) {
-        return;
+    switch (severity_) {
+        case MESSAGE_SEVERITY_ERROR:       fputs(head_err, out); break;
+        case MESSAGE_SEVERITY_WARNING:     fputs(head_war, out); break;
+        case MESSAGE_SEVERITY_INFORMATION: fputs(head_inf, out); break;
+        case MESSAGE_SEVERITY_DEBUG:       fputs(head_dbg, out); break;
+        // -Wswitch-enumで足りないものは警告してくれるのでdefaultは削除
     }
 
-    msg_header_create(severity_, header);
-    strcpy(tail, "\033[0m\n");
-
-    // TODO: %s/%f等を展開した時の正確なバッファ長を計算し溢れを検知する
-    strcpy(message, header);
-    strcat(message, format_);
-    strcat(message, tail);
-
+    // body
     va_list args;
     va_start(args, format_);
-    vfprintf(out, message, args);
+    vfprintf(out, format_, args);
     va_end(args);
-}
 
-static void msg_header_create(MESSAGE_SEVERITY severity_, char header_[HEADER_BUFSIZE]) {
-    memset(header_, 0, HEADER_BUFSIZE);
+    // tail (色リセット + 改行)
+    static const char s_color_reset[] = "\033[0m\n";
+    fputs(s_color_reset, out);
 
-    switch(severity_) {
-        case MESSAGE_SEVERITY_ERROR:
-            strcpy(header_, "\033[1;31m[ERROR] ");
-            break;
-        case MESSAGE_SEVERITY_WARNING:
-            strcpy(header_, "\033[1;33m[WARNING] ");
-            break;
-        case MESSAGE_SEVERITY_INFORMATION:
-            strcpy(header_, "\033[1;35m[INFORMATION] ");
-            break;
-        case MESSAGE_SEVERITY_DEBUG:
-            strcpy(header_, "\033[1;34m[DEBUG] ");
-            break;
-        default:
-            break;
-    }
+    funlockfile(out);
 }

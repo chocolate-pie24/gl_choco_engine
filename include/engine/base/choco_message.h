@@ -74,10 +74,10 @@ typedef enum MESSAGE_SEVERITY {
  * @brief メッセージ出力関数(メッセージの重要度に応じて出力フォーマットを変える)
  *
  * @param severity_ メッセージの重要度
- * @param fmt_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
+ * @param format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
  * @param ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
  */
-void message_output(MESSAGE_SEVERITY severity_, const char* const fmt_,  ...);
+void message_output(MESSAGE_SEVERITY severity_, const char* format_,  ...);
 
 #if ENABLE_MESSAGE_SEVERITY_ERROR
     /**

@@ -31,38 +31,6 @@ struct linear_alloc {
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
-// TODO: 引数にretvalを追加し、base/macros.hに移動
-#define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
-        ret = LINEAR_ALLOC_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
-// TODO: 引数にretvalを追加し、base/macros.hに移動
-#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL != ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
-        ret = LINEAR_ALLOC_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
-// TODO: 引数にretvalを追加し、base/macros.hに移動
-#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, function_name_, variable_name_) \
-    if(!(is_valid_)) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
-        ret = LINEAR_ALLOC_INVALID_ARGUMENT; \
-        goto cleanup;  \
-    } \
-
-// TODO: 引数にretvalを追加し、base/macros.hに移動
-#define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
-        ret = LINEAR_ALLOC_NO_MEMORY; \
-        goto cleanup;  \
-    } \
-
 #ifdef TEST_BUILD
 #include <assert.h>
 typedef struct malloc_test {
@@ -90,17 +58,17 @@ linear_alloc_err_t linear_allocator_create(linear_alloc_t** allocator_, size_t c
     linear_alloc_t* tmp = NULL;
 
     // Preconditions
-    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, "linear_allocator_create", "allocator_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*allocator_, "linear_allocator_create", "allocator_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != capacity_, "linear_allocator_create", "capacity_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_create", "allocator_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_create", "allocator_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_create", "capacity_")
 
     // Simulation
     tmp = (linear_alloc_t*)test_malloc(sizeof(*tmp));    // TODO: choco_malloc()
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, "linear_allocator_create", "tmp")
+    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, LINEAR_ALLOC_NO_MEMORY, "linear_allocator_create", "tmp")
     memset(tmp, 0, sizeof(*tmp));
 
     tmp->memory_pool = test_malloc(capacity_);   // TODO: choco_malloc()
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp->memory_pool, "linear_allocator_create", "tmp->memory_pool")
+    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp->memory_pool, LINEAR_ALLOC_NO_MEMORY, "linear_allocator_create", "tmp->memory_pool")
     memset(tmp->memory_pool, 0, capacity_);
 
     tmp->capacity = capacity_;
@@ -150,35 +118,42 @@ cleanup:
 
 linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
     linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+    uintptr_t head = 0;
+    uintptr_t align = 0;
+    uintptr_t size = 0;
+    uintptr_t offset = 0;
+    uintptr_t start_addr = 0;
+    uintptr_t pool = 0;
+    uintptr_t cap = 0;
 
     // Preconditions
-    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, "linear_allocator_allocate", "allocator_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, "linear_allocator_allocate", "out_ptr_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, "linear_allocator_allocate", "out_ptr_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "allocator_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
     if(0 == req_align_ || 0 == req_size_) {
         WARN_MESSAGE("linear_allocator_allocate - No-op: req_align_ or req_size_ is 0.");
         ret = LINEAR_ALLOC_SUCCESS;
         goto cleanup;
     }
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), "linear_allocator_allocate", "req_align_");
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_")
 
     // Simulation
-    uintptr_t head = (uintptr_t)allocator_->head_ptr;
-    uintptr_t align = (uintptr_t)req_align_;
-    uintptr_t size = (uintptr_t)req_size_;
-    uintptr_t offset = head % align;
+    head = (uintptr_t)allocator_->head_ptr;
+    align = (uintptr_t)req_align_;
+    size = (uintptr_t)req_size_;
+    offset = head % align;
     if(0 != offset) {
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
 
-    uintptr_t start_addr = head + offset;
+    start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
         ERROR_MESSAGE("linear_allocator_allocate(INVALID_ARGUMENT) - Requested size is too big.");
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
-    uintptr_t pool = (uintptr_t)allocator_->memory_pool;
-    uintptr_t cap = (uintptr_t)allocator_->capacity;
+    pool = (uintptr_t)allocator_->memory_pool;
+    cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
         ERROR_MESSAGE("linear_allocator_allocate(NO_MEMORY) - Can not allocate requested size. Requested size: %zu / Free space: %zu", req_size_, (size_t)free_space);

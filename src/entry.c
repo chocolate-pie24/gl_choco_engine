@@ -43,8 +43,10 @@ int main(int argc_, char** argv_) {
         test_memory_system();
     }
 #endif
+    app_err_t app_run_result = APPLICATION_INVALID_ARGUMENT;
+    app_err_t app_create_result = APPLICATION_INVALID_ARGUMENT;
 
-    const app_err_t app_create_result = application_create();
+    app_create_result = application_create();
     if(APPLICATION_SUCCESS != app_create_result) {
         ERROR_MESSAGE("Failed to initialize application.");
         goto cleanup;
@@ -52,7 +54,7 @@ int main(int argc_, char** argv_) {
         INFO_MESSAGE("Application created successfully.");
     }
 
-    const app_err_t app_run_result = application_run();
+    app_run_result = application_run();
     if(APPLICATION_SUCCESS != app_run_result) {
         ERROR_MESSAGE("Failed to execute application.");
         goto cleanup;

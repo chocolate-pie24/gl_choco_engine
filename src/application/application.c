@@ -42,9 +42,12 @@ static app_state_t* s_app_state = NULL; /**< アプリケーション内部状�
 app_err_t application_create(void) {
     app_err_t ret = APPLICATION_RUNTIME_ERROR;
     linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     app_state_t* tmp = NULL;
+    void* tmp_memory_system_ptr = NULL;
+
+    linear_alloc_err_t ret_memory_system_allocate = LINEAR_ALLOC_INVALID_ARGUMENT;
+    memory_sys_err_t ret_memory_system_init = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {   // TODO: CHECK_NOT_VALID_GOTO_CLEANUP()
@@ -73,7 +76,7 @@ app_err_t application_create(void) {
         goto cleanup;
     } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
         ERROR_MESSAGE("Failed to create linear allocator.");
-        ret = APPLICATION_RUNTIME_ERROR;
+        ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
     } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ERROR_MESSAGE("Failed to create linear allocator.");
@@ -84,8 +87,7 @@ app_err_t application_create(void) {
     // Simulation -> launch all systems -> create memory system.(Don't use s_app_state here.)
     tmp->memory_system = NULL;
     memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
-    void* tmp_memory_system_ptr = NULL;
-    linear_alloc_err_t ret_memory_system_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
+    ret_memory_system_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
     if(LINEAR_ALLOC_NO_MEMORY == ret_memory_system_allocate) {
         ERROR_MESSAGE("Failed to allocate memory system memory.");
         ret = APPLICATION_NO_MEMORY;
@@ -95,13 +97,13 @@ app_err_t application_create(void) {
         ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
     }
-    memory_sys_err_t ret_memory_system_init = memory_system_init(tmp_memory_system_ptr);
+    ret_memory_system_init = memory_system_init((memory_system_t*)tmp_memory_system_ptr);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_memory_system_init) {
         ERROR_MESSAGE("Failed to initialize memory system.");
         ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
     }
-    tmp->memory_system = tmp_memory_system_ptr;
+    tmp->memory_system = (memory_system_t*)tmp_memory_system_ptr;
 
     // end Simulation -> launch all systems.
     // end Simulation
