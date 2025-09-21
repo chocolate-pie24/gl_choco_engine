@@ -118,6 +118,13 @@ cleanup:
 
 linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
     linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+    uintptr_t head = 0;
+    uintptr_t align = 0;
+    uintptr_t size = 0;
+    uintptr_t offset = 0;
+    uintptr_t start_addr = 0;
+    uintptr_t pool = 0;
+    uintptr_t cap = 0;
 
     // Preconditions
     CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "allocator_")
@@ -128,25 +135,25 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
         ret = LINEAR_ALLOC_SUCCESS;
         goto cleanup;
     }
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_");
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_")
 
     // Simulation
-    uintptr_t head = (uintptr_t)allocator_->head_ptr;
-    const uintptr_t align = (uintptr_t)req_align_;
-    const uintptr_t size = (uintptr_t)req_size_;
-    uintptr_t offset = head % align;
+    head = (uintptr_t)allocator_->head_ptr;
+    align = (uintptr_t)req_align_;
+    size = (uintptr_t)req_size_;
+    offset = head % align;
     if(0 != offset) {
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
 
-    const uintptr_t start_addr = head + offset;
+    start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
         ERROR_MESSAGE("linear_allocator_allocate(INVALID_ARGUMENT) - Requested size is too big.");
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
-    const uintptr_t pool = (uintptr_t)allocator_->memory_pool;
-    const uintptr_t cap = (uintptr_t)allocator_->capacity;
+    pool = (uintptr_t)allocator_->memory_pool;
+    cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
         ERROR_MESSAGE("linear_allocator_allocate(NO_MEMORY) - Can not allocate requested size. Requested size: %zu / Free space: %zu", req_size_, (size_t)free_space);

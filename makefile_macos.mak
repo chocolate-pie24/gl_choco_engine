@@ -9,7 +9,6 @@ DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -Isrc/internal
 INCLUDE_FLAGS += -Itest/include
 CC = /opt/homebrew/opt/llvm/bin/clang
 
@@ -31,6 +30,11 @@ COMPILER_FLAGS += -Wdouble-promotion
 COMPILER_FLAGS += -Wcomma
 COMPILER_FLAGS += -Wfloat-equal
 COMPILER_FLAGS += -Wno-declaration-after-statement
+
+# 厳しすぎるワーニング除去
+COMPILER_FLAGS += -Wno-unsafe-buffer-usage
+COMPILER_FLAGS += -Wno-padded
+COMPILER_FLAGS += -Wno-switch-default
 
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
 	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS

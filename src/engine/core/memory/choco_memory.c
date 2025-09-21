@@ -68,7 +68,7 @@ cleanup:
 
 memory_sys_err_t memory_system_init(memory_system_t* memory_system_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_init", "memory_system_");
+    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_init", "memory_system_")
 
     memory_system_->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
@@ -98,6 +98,7 @@ cleanup:
 
 memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    void* tmp = NULL;
 
     // Preconditions.
     CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "memory_system_")
@@ -121,9 +122,8 @@ memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t 
     }
 
     // Simulation.
-    void* tmp = NULL;
     tmp = test_malloc(size_);    // TODO: FreeList
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp");
+    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
     memset(tmp, 0, size_);
 
     // commit.
@@ -246,7 +246,7 @@ static void NO_COVERAGE test_memory_system_init(void) {
     size_t memory = 0;
     size_t align = 0;
     memory_system_preinit(&memory, &align);
-    system = malloc(memory);
+    system = (memory_system_t*)malloc(memory);
     ret = memory_system_init(system);
     assert(0 == strcmp(system->mem_tag_str[MEMORY_TAG_SYSTEM], "system"));
     assert(0 == strcmp(system->mem_tag_str[MEMORY_TAG_STRING], "string"));
@@ -269,7 +269,7 @@ static void NO_COVERAGE test_memory_system_destroy(void) {
     size_t memory = 0;
     size_t align = 0;
     memory_system_preinit(&memory, &align);
-    system = malloc(memory);
+    system = (memory_system_t*)malloc(memory);
     ret = memory_system_init(system);
     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
@@ -292,7 +292,7 @@ static void NO_COVERAGE test_memory_system_allocate(void) {
     size_t memory = 0;
     size_t align = 0;
     memory_system_preinit(&memory, &align);
-    system = malloc(memory);
+    system = (memory_system_t*)malloc(memory);
     ret = memory_system_init(system);
     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
@@ -397,7 +397,7 @@ static void NO_COVERAGE test_memory_system_free(void) {
     size_t memory = 0;
     size_t align = 0;
     memory_system_preinit(&memory, &align);
-    system = malloc(memory);
+    system = (memory_system_t*)malloc(memory);
     ret = memory_system_init(system);
     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
@@ -472,7 +472,7 @@ static void NO_COVERAGE test_memory_system_report(void) {
     size_t memory = 0;
     size_t align = 0;
     memory_system_preinit(&memory, &align);
-    system = malloc(memory);
+    system = (memory_system_t*)malloc(memory);
     ret = memory_system_init(system);
     assert(MEMORY_SYSTEM_SUCCESS == ret);
 

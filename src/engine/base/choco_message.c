@@ -31,7 +31,7 @@ void message_output(MESSAGE_SEVERITY severity_, const char* format_, ...) {
         case MESSAGE_SEVERITY_WARNING:     fputs(head_war, out); break;
         case MESSAGE_SEVERITY_INFORMATION: fputs(head_inf, out); break;
         case MESSAGE_SEVERITY_DEBUG:       fputs(head_dbg, out); break;
-        default: break;
+        // -Wswitch-enumで足りないものは警告してくれるのでdefaultは削除
     }
 
     // body
