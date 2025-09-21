@@ -1,27 +1,12 @@
 # development_log.md
 
-## Step1_1: 実行基盤とメモリ管理レイヤの初期化
+そのうちやる
+- [] doxygen GitHub pages
+- [] doxygenページをREADME.mdにリンク追加
+- [] clang-tidyセットアップ
+- [] サニタイザセットアップ
 
-- TODO:
-  - [x] このログのセクションを増やす。アプリケーション土台作り(メモリーシステム構築まで)
-    - [x] base/macorsの誤記を修正
-  - [x] README.mdにビルド方法等を整備
-  - [x] memory_system_report で mem_tag_str[i] ?: "unknown" 的な防御（UB回避）。
-  - [x] ヘッダガードのユニーク化
-  - [] doxygenドキュメント
-    - [x] Doxyfile用意
-    - [x] doxygenコメント追加
-    - [] doxygen GitHub pages
-    - [] doxygenページをREADME.mdにリンク追加
-  - [x] 別ブランチ エラーチェックマクロをmacros.hへ移動
-  - [] エンジンレイヤー構成資料へのリンクをREADME.mdへ追加
-  - [] clang-tidyセットアップ
-  - [] サニタイザセットアップ
-  - [x] memory_system_preinitの引数をsize_t* constに変更する
-  - [x] linear_allocator.hのdoxygenコメントの各引数に[in]等をつける
-  - [x] application_createのlinear_allocator_createのエラーコードでinvalidをruntime_errorに集約している
-  - [x] memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;が未使用
-  - [x] message_outputリファクタリング(下記)
+## Step1_1: 実行基盤とメモリ管理レイヤの初期化
 
 ### application_scaffolding
 
@@ -73,7 +58,7 @@
   - 将来的にはメモリーシステムコンフィグレーションファイルを用意し、システム起動
 - ブランチ名称: feat/core-memory
 
-### Docs step1-wrapup
+### Docs step1_1-wrapup
 
 - 実装内容:
   - 本ドキュメントを含む各ドキュメントの整備
@@ -81,3 +66,14 @@
   - doxygenドキュメント
   - todo.md作成
 
+### Refactor step1_1-cleanup
+
+- 実装内容
+  - [x] 無駄に厳しいビルドワーニング修正
+  - [x] エラーチェックマクロをbase/macros.hへ移動し共通化
+  - [x] README.mdにレイヤー構成資料へのリンクを追加
+  - [x] message_outputのバッファオーバーフローの危険性バグを修正
+  - [x] memory_system_preinitの引数にconst付加
+  - [x] application_createの未使用変数削除
+  - [x] application_createの不適切なエラーコードの集約を修正
+  - [x] const付加
