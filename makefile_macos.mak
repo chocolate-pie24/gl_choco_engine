@@ -35,6 +35,7 @@ COMPILER_FLAGS += -Wno-declaration-after-statement
 COMPILER_FLAGS += -Wno-unsafe-buffer-usage
 COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
+COMPILER_FLAGS += -Wno-pre-c11-compat
 
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
 	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS
