@@ -1,7 +1,7 @@
 ---
 title: "C言語とGLFWで作るゲームエンジン開発記録: 全体のイントロダクション"
 type: "tech"
-topics: ["c", "opengl", "glfw", "gameengine"]
+topics: ["c", "c++", "opengl", "glfw", "gameengine"]
 published: false
 ---
 
