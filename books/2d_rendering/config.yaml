@@ -4,7 +4,7 @@ topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
 published: false
 price: 0
 chapters:
-  - step1_introduction
+  - step1_0_introduction
   - step1_1_application_base
   - step1_2_application_layer
   - step1_3_base_layer
