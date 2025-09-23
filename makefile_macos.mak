@@ -9,7 +9,10 @@ DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -Itest/include
+ifeq ($(BUILD_MODE), TEST_BUILD)
+  INCLUDE_FLAGS += -Itest/include
+endif
+
 CC = /opt/homebrew/opt/llvm/bin/clang
 
 COMPILER_FLAGS = -Wall -Wextra -std=c11
@@ -30,6 +33,7 @@ COMPILER_FLAGS += -Wdouble-promotion
 COMPILER_FLAGS += -Wcomma
 COMPILER_FLAGS += -Wfloat-equal
 COMPILER_FLAGS += -Wno-declaration-after-statement
+COMPILER_FLAGS += -MMD -MP
 
 # 厳しすぎるワーニング除去
 COMPILER_FLAGS += -Wno-unsafe-buffer-usage
@@ -79,3 +83,6 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -rf $(OBJ_DIR)
 	@rm -rf cov
+
+# 依存ファイルの取り込み（存在するときのみ）
+-include $(OBJ_FILES:.o=.d)
