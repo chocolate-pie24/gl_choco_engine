@@ -47,11 +47,11 @@ makefileを作るためには、ソースファイルの場所、ヘッダファ
 
 ## makefileの作成
 
-検討したプロジェクトディレクトリに従って、makefileを作成します。makefileはビルドプラットフォームごとに用意します。上位のビルドスクリプト内で実行プラットフォームを識別し、呼び出すmakefileを切り替える手法を取ります。なお、当面はmacOSを使用して開発していきますので、makefileはproject_root/makefile_macos.makとして作成していきます。
+検討したプロジェクトディレクトリ構造に従って、makefileを作成します。makefileはビルドプラットフォームごとに用意します。上位のビルドスクリプト内で実行プラットフォームを識別し、呼び出すmakefileを切り替える手法を取ります。なお、当面はmacOSを使用して開発していきますので、makefileはproject_root/makefile_macos.makとして作成していきます。
 
 以下が作成したmakefileになりますが、私自身、makefileについてはあまり細かい文法を覚えているわけではなく、得意ではないためネットで拾ったものを寄せ集めて使いまわしています。このため、プロジェクト固有の重要な部分のみを説明していきます。
 
-```make
+```makefile
 TARGET = gl_choco_engine
 
 SRC_DIR = src
@@ -63,7 +63,10 @@ DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -Itest/include
+ifeq ($(BUILD_MODE), TEST_BUILD)
+  INCLUDE_FLAGS += -Itest/include
+endif
+
 CC = /opt/homebrew/opt/llvm/bin/clang
 
 COMPILER_FLAGS = -Wall -Wextra -std=c11
@@ -84,6 +87,7 @@ COMPILER_FLAGS += -Wdouble-promotion
 COMPILER_FLAGS += -Wcomma
 COMPILER_FLAGS += -Wfloat-equal
 COMPILER_FLAGS += -Wno-declaration-after-statement
+COMPILER_FLAGS += -MMD -MP
 
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
 	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS
@@ -127,11 +131,14 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -rf $(OBJ_DIR)
 	@rm -rf cov
+
+# 依存ファイルの取り込み（存在するときのみ）
+-include $(OBJ_FILES:.o=.d)
 ```
 
 ### 実行バイナリファイル名、ディレクトリ、コンパイラーパス設定
 
-```make
+```makefile
 TARGET = gl_choco_engine
 
 SRC_DIR = src
@@ -143,17 +150,19 @@ DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -Itest/include
+ifeq ($(BUILD_MODE), TEST_BUILD)
+  INCLUDE_FLAGS += -Itest/include
+endif
 CC = /opt/homebrew/opt/llvm/bin/clang
 ```
 
-コンパイラーパスについては実行環境に応じて変更が必要です。
+コンパイラーパスについては実行環境に応じて変更が必要です。gccを使用している場合はgccのパスをCCに指定すれば動作します。ただし、その場合はいくつかのワーニング出力設定が無効になります。
 
 ### ワーニング出力設定
 
-ワーニングはかなり厳しく出力するよう設定されていますが、今後、使用しながら不要なワーニングを省いていく運用にします。なお、今回はコンパイラにclangを用いる前提です。gcc等を使用する場合には一部設定に変更が必要です。
+ワーニングはかなり厳しく出力するよう設定されていますが、今後、使用しながら不要なワーニングを省いていく運用にします。なお、COMPILER_FLAGSの最後の-MMD -MPについては、ヘッダファイルのみを変更した際にもビルドが走るよう、依存ファイルを作成するためのものです。
 
-```make
+```makefile
 COMPILER_FLAGS = -Wall -Wextra -std=c11
 COMPILER_FLAGS += -Wconversion -Wsign-conversion
 COMPILER_FLAGS += -Wformat=2 -Wformat-security
@@ -172,6 +181,7 @@ COMPILER_FLAGS += -Wdouble-promotion
 COMPILER_FLAGS += -Wcomma
 COMPILER_FLAGS += -Wfloat-equal
 COMPILER_FLAGS += -Wno-declaration-after-statement
+COMPILER_FLAGS += -MMD -MP
 ```
 
 ### ビルドモードに応じた設定
@@ -194,11 +204,11 @@ BUILD_MODEの値に応じて、設定を行います。各ビルドモードご�
 **テストビルド**
 
 - 最適化はO0
-- プログラム側で#ifdef DEBUG_BUILDでビルドモード識別可能
+- プログラム側で#ifdef TEST_BUILDでビルドモード識別可能
 - プログラム側で#ifdef PLATFORM_MACOSでプラットフォーム識別可能
 - カバレッジ計測のためのデータを出力するよう設定(clangコンパイラ使用前提)
 
-```make
+```makefile
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
 	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS
 else
@@ -298,7 +308,7 @@ fi
 以上でビルドができるようになったので、後はビルドモードに応じてVSCodeのワークスペースを設定するだけです。
 .vscode/tasks.jsonを作成し、下記を記載すればコマンドパレットからビルドモードに応じたビルドを行うことができます。
 
-```console
+```json
 {
     "version": "2.0.0",
     "tasks": [
@@ -344,7 +354,7 @@ fi
 
 最後に、VSCodeでF5キーを押すと実行ファイルを実行できるよう、.vscode/launch.jsonを作成します。
 
-```console
+```json
 {
     "version": "0.2.0",
     "configurations": [
@@ -358,3 +368,5 @@ fi
     ]
 }
 ```
+
+以上がアプリケーション土台作りについての説明です。次回は、アプリケーションレイヤーを作成し、アプリケーションの起動、実行、終了を最小構成で実装していきます。
