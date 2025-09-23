@@ -1,7 +1,8 @@
 ---
 title: "C言語とGLFWで作るゲームエンジン開発記録: 全体のイントロダクション"
 type: "tech"
-topics: ["c", "c++", "opengl", "glfw", "gameengine"]
+emoji: "😺"
+topics: ["c", "cpp", "opengl", "glfw", "gameengine"]
 published: false
 ---
 
@@ -9,8 +10,8 @@ published: false
 
 ## 記事連載の背景
 
-私は元々、仕事で簡単な3Dモデルを描画するOpenGLアプリケーションを開発していたのですが、
-誰かに指導してもらいながら開発していたわけではないため、下記の疑問を抱えていました。
+私は元々、仕事で簡単な3Dモデルを描画するOpenGLアプリケーションを開発していました。
+ただ、誰かに指導してもらいながら開発していたわけではないため、下記の疑問を抱えていました。
 
 - 3Dモデルと2Dモデルが混在したグラフィックアプリケーションはどうやって作るのか？
 - 複数の座標系を持つ3Dモデルを描画する際のデータ構造のベストプラクティスは何か？
@@ -20,7 +21,7 @@ published: false
 そんな時に、ちょうど仕事で抱えていたプロジェクトが終了し、ちょっと余裕ができたため、
 ゲームエンジンの開発技術を学ぶことでこれらの疑問を解決することにしました。
 
-ゲームエンジン開発の勉強にはTravisVroman氏の [Kohi Game Engine](https://www.youtube.com/watch?v=dHPuU-DJoBM&list=PLv8Ddw9K0JPg1BEO-RS-0MYs423cvLVtj) を使用しました。
+ゲームエンジンの開発技術は、TravisVroman氏の [Kohi Game Engine](https://www.youtube.com/watch?v=dHPuU-DJoBM&list=PLv8Ddw9K0JPg1BEO-RS-0MYs423cvLVtj) で学びました。
 
 氏の動画により学んだアーキテクチャ、作り方の手順、データ構造を参考にC言語、OpenGL、GLFWを使用して簡単なゲームエンジンを開発し、
 Intelの[Sponza scene](https://www.intel.com/content/www/us/en/developer/topic-technology/graphics-research/samples.html)を描画するところまではいきました。
@@ -28,12 +29,10 @@ Intelの[Sponza scene](https://www.intel.com/content/www/us/en/developer/topic-t
 ただ、作る過程の様々なノウハウや考え方を記録していなかったため、
 もう一度作れと言われたらちょっと難しいという状況に陥ってしまいました。
 
-本連載記事では、Sponza sceneを描画可能なゲームエンジンを再度一から作り直し、その過程を記事として残すことで、
-将来の自分のための記録にするとともに、グラフィックアプリケーション開発技術のレベルアップをしたいOpenGL初学者の方の参考になればと思い、
-記事を投稿することにしました。
+本連載記事では、Sponza sceneを描画可能なゲームエンジンを再度一から作り直します。
+その過程を記事として残すことで、将来の自分のための記録にするとともに、グラフィックアプリケーション開発技術のレベルアップをしたいOpenGL初学者の方の参考になればと思い、記事を投稿することにしました。
 
-なお、このゲームエンジンは、UnityやUnrealEngineのような高性能な商用エンジンではありません。
-私を含めたOpenGL初学者が次のステップとして開発する、小規模で学習寄りのエンジンです。
+なお、このゲームエンジンは、UnityやUnrealEngineのような高性能な商用エンジンではありません。私を含めたOpenGL初学者が次のステップとして開発する、小規模で学習寄りのエンジンです。
 
 そのため技術的に至らない点や誤りがあるかもしれません。
 もし気づかれた点があれば、ぜひコメントなどでフィードバックいただけると助かります。
@@ -50,6 +49,6 @@ Intelの[Sponza scene](https://www.intel.com/content/www/us/en/developer/topic-t
 ## シリーズの構成
 
 - Book1: 2D Rendering編（[step1_introduction.md](../books/2d_rendering/step1_introduction.md)）※ローカル用リンク
-- Book2: 3D Rendering編（執筆中）
-- Book3: Text Rendering編（執筆中）
-- Book4: Sponza Rendering編（執筆中）
+- Book2: 3D Rendering編（未実装）
+- Book3: Text Rendering編（未実装）
+- Book4: Sponza Rendering編（未実装）
