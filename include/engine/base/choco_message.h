@@ -23,12 +23,12 @@ extern "C" {
  * @author chocolate-pie24
  * @date 2024-10-13
  */
-typedef enum MESSAGE_SEVERITY {
+typedef enum {
     MESSAGE_SEVERITY_ERROR,         /**< 重要度: エラー */
     MESSAGE_SEVERITY_WARNING,       /**< 重要度: ワーニング */
     MESSAGE_SEVERITY_INFORMATION,   /**< 重要度: インフォメーション */
     MESSAGE_SEVERITY_DEBUG,         /**< 重要度: デバッグ情報 */
-} MESSAGE_SEVERITY;
+} message_severity_t;
 
 /**
  * @brief ビルドモードによるエラーメッセージ出力切り替えスイッチ用マクロ定義
@@ -77,7 +77,7 @@ typedef enum MESSAGE_SEVERITY {
  * @param format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
  * @param ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
  */
-void message_output(MESSAGE_SEVERITY severity_, const char* format_,  ...);
+void message_output(message_severity_t severity_, const char* format_,  ...);
 
 #if ENABLE_MESSAGE_SEVERITY_ERROR
     /**

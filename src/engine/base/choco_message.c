@@ -16,7 +16,7 @@
 
 #include "engine/base/choco_message.h"
 
-void message_output(MESSAGE_SEVERITY severity_, const char* format_, ...) {
+void message_output(message_severity_t severity_, const char* format_, ...) {
     FILE* const out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
 
     static const char head_err[] = "\033[1;31m[ERROR] ";
