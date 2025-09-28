@@ -629,5 +629,112 @@ ret = LINEAR_ALLOC_SUCCESS;
 
 今回の処理では、エラー発生後に解放するリソースはないため、cleanup以降のクリーンナップ処理は特にありません。
 
-以上がlinear_allocatorの解説になります。これでようやくエンジンのサブシステムを作成する準備が整いました。
+## リニアアロケータの配置
+
+以上がリニアアロケータの解説になります。最後に、作成したリニアアロケータをアプリケーションレイヤーに配置します。
+以前作成したアプリケーションの内部状態を管理するオブジェクト、app_state_tに入れることにします。
+
+```c
+typedef struct app_state {
+    // core/memory/linear_allocator
+    linear_alloc_t* linear_allocator;   /**< リニアアロケータオブジェクト */
+} app_state_t;
+```
+
+次に、リニアアロケータの初期化を行います。以前作成したapplication_createに初期化処理を追加します。
+メモリ確保量はとりあえず、1Kib(=1024byte)としています。
+
+```c
+app_err_t application_create(void) {
+    app_err_t ret = APPLICATION_RUNTIME_ERROR;
+
+    ////////////////////////////////////////
+    // 追加
+    ////////////////////////////////////////
+    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+    app_state_t* tmp = NULL;
+
+    // Preconditions
+    if(NULL != s_app_state) {
+        ERROR_MESSAGE("application_create(RUNTIME_ERROR) - Application state is already initialized.\n");
+        ret = APPLICATION_RUNTIME_ERROR;
+        goto cleanup;
+    }
+
+    // begin Simulation
+    tmp = (app_state_t*)malloc(sizeof(*tmp));
+    if(NULL == tmp) {
+        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate app_state memory.\n");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    }
+    memset(tmp, 0, sizeof(*tmp));
+
+    // begin Simulation -> launch all systems.(Don't use s_app_state here.)
+
+    ////////////////////////////////////////
+    // ここから追加
+    ////////////////////////////////////////
+    // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
+    tmp->linear_allocator = NULL;
+    ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to create linear allocator.");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+    ////////////////////////////////////////
+    // ここまで追加
+    ////////////////////////////////////////
+
+    // end Simulation -> launch all systems.
+    // end Simulation
+
+    // commit
+    s_app_state = tmp;
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        if(NULL != tmp) {
+            linear_allocator_destroy(&tmp->linear_allocator);
+            free(tmp);
+            tmp = NULL;
+        }
+    }
+
+    return ret;
+}
+```
+
+最後に、アプリケーション終了処理にリニアアロケータの破棄を追加します。
+
+```c
+void application_destroy(void) {
+    if(NULL == s_app_state) {
+        goto cleanup;
+    }
+
+    // begin cleanup all systems.
+    // 追加
+    linear_allocator_destroy(&s_app_state->linear_allocator);
+    // end cleanup all systems.
+
+    free(s_app_state);  // TODO: choco_free
+    s_app_state = NULL;
+cleanup:
+    return;
+}
+```
+
+これでようやくエンジンのサブシステムを作成する準備が整いました。
 次回はメモリ資源を管理するためのメモリシステムを構築していきます。
