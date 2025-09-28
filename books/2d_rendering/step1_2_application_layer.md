@@ -227,6 +227,7 @@ cleanup:
 ## application.c: application_destroyの実装
 
 最後にアプリケーション終了処理であるdestroyです。現状では静的変数s_app_stateのメモリ解放のみを行います。
+終了処理は、今後の作成する関数を含め、基本的に返り値がvoidになるよう統一しています。理由はc++のデストラクタがvoidであるため、それに揃えています。
 
 ```c
 void application_destroy(void) {
