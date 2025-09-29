@@ -3,7 +3,7 @@ title: "Step1_6: doxygen環境の整備"
 free: true
 ---
 
-※本記事は [全体イントロダクション](../../articles/introduction.md)のBook1に対応しています。
+※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook1に対応しています。
 
 ## このステップでやること
 
