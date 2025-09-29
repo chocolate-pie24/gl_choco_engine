@@ -1,12 +1,12 @@
 ---
-title: "C言語とGLFWで作るゲームエンジン開発記録: 全体のイントロダクション"
+title: "C言語とOpenGLで作るゲームエンジン開発記録: 全体のイントロダクション"
 type: "tech"
 emoji: "😺"
 topics: ["c", "cpp", "opengl", "glfw", "gameengine"]
 published: true
 ---
 
-> この記事は、C言語とGLFWを使用した自作ゲームエンジン **gl_choco_engine** の開発記録です。
+> この記事は、C言語とOpenGL、GLFWを使用した自作ゲームエンジン **gl_choco_engine** の開発記録です。
 
 ## 記事連載の背景
 
