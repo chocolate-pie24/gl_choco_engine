@@ -15,7 +15,10 @@ Kohi Game Engine に触発されて開始しました。
 
 ## 開発ログ
 
-実装の進め方や学習の過程は [docs/development_log.md](docs/development_log.md)(Development Log)に記録しています。
+実装の進め方や学習の過程は[記事](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)と
+[Book(Step1)](https://zenn.dev/chocolate_pie24/books/2d_rendering)にまとめてあります。
+
+- 最新タグ: `v0.1.0-step1`（Step1 完了）
 
 ## ディレクトリ構成
 
