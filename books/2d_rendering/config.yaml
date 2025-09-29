@@ -1,0 +1,13 @@
+title: "C言語とGLFWで作るゲームエンジン開発(2Dレンダリング編)"
+summary: "本Bookでは、実行基盤・メモリ管理レイヤーを整え、ウィンドウ生成から2Dレンダリングの最小構成までを扱います。"
+topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
+published: true
+price: 0
+chapters:
+  - step1_0_introduction
+  - step1_1_application_base
+  - step1_2_application_layer
+  - step1_3_base_layer
+  - step1_4_core_memory_linear_allocator
+  - step1_5_core_memory_system
+  - step1_6_doxygen

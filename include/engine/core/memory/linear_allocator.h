@@ -103,7 +103,7 @@ void linear_allocator_destroy(linear_alloc_t** allocator_);
  *
  *
  * @note 下記の場合は何もしない
- * - req_size_ == 0 または req_aling_ == 0(結果はLINEAR_ALLOC_SUCCESSでワーニングメッセージを出力)
+ * - req_size_ == 0 または req_align_ == 0(結果はLINEAR_ALLOC_SUCCESSでワーニングメッセージを出力)
  *
  * 使用例:
  * @code

@@ -73,7 +73,7 @@ typedef struct memory_system memory_system_t;
  * @code
  * size_t memory = 0;
  * size_t align = 0;
- * memory_system_preinit(&memory, &aling);
+ * memory_system_preinit(&memory, &align);
  * @endcode
  *
  * @param[out] memory_requirement_ memory_system_tに必要なメモリ量格納先
@@ -91,7 +91,7 @@ void memory_system_preinit(size_t* const memory_requirement_, size_t* const alig
  *
  * 使用例:
  * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
+ * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
  * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
  * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -139,7 +139,7 @@ memory_sys_err_t memory_system_init(memory_system_t* memory_system_);
  *
  * 使用例:
  * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
+ * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
  * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
  * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -194,7 +194,7 @@ void memory_system_destroy(memory_system_t* memory_system_);
  *
  * 使用例:
  * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
+ * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
  * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
  * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -249,7 +249,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t 
  *
  * 使用例:
  * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
+ * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
  * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
  * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
@@ -304,7 +304,7 @@ void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size
  *
  * 使用例:
  * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_allocator_tオブジェクトの作成
+ * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
  * linear_alloc_t* linear_allocator = NULL;
  * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
  * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {

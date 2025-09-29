@@ -145,7 +145,11 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
     if(0 != offset) {
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
-
+    if(UINTPTR_MAX - offset < head) {
+        ERROR_MESSAGE("linear_allocator_allocate(INVALID_ARGUMENT) - Requested offset is too big.");
+        ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        goto cleanup;
+    }
     start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
         ERROR_MESSAGE("linear_allocator_allocate(INVALID_ARGUMENT) - Requested size is too big.");

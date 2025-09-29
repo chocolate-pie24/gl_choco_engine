@@ -84,5 +84,5 @@ clean:
 	@rm -rf $(OBJ_DIR)
 	@rm -rf cov
 
-# 依存ファイルの取り込み（存在するときのみ）
+# 依存ファイルの取り込み(存在するときのみ)
 -include $(OBJ_FILES:.o=.d)
