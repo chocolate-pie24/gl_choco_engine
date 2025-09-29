@@ -9,8 +9,8 @@ EXCLUDEとEXCLUDE_PATTERNSを除外
 
 PROJECT_NAME = "gl_choco_engine"
 
-EXTRACT_ALL = YES（最初は一括抽出、のちに厳格化）
-EXTRACT_STATIC = YES（static関数も拾う）
+EXTRACT_ALL = YES(最初は一括抽出、のちに厳格化)
+EXTRACT_STATIC = YES(static関数も拾う)
 WARN_IF_UNDOCUMENTED = YES
 WARN_NO_PARAMDOC = YES
 

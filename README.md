@@ -15,7 +15,7 @@ Kohi Game Engine に触発されて開始しました。
 
 ## 開発ログ
 
-実装の進め方や学習の過程は [docs/development_log.md](docs/development_log.md) （Development Log）に記録しています。
+実装の進め方や学習の過程は [docs/development_log.md](docs/development_log.md)(Development Log)に記録しています。
 
 ## ディレクトリ構成
 

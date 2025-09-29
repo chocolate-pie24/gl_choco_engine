@@ -73,7 +73,7 @@ typedef struct memory_system memory_system_t;
  * @code
  * size_t memory = 0;
  * size_t align = 0;
- * memory_system_preinit(&memory, &aling);
+ * memory_system_preinit(&memory, &align);
  * @endcode
  *
  * @param[out] memory_requirement_ memory_system_tに必要なメモリ量格納先
