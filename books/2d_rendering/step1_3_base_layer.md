@@ -3,7 +3,7 @@ title: "Step1_3: ベースレイヤーの追加"
 free: true
 ---
 
-※本記事は [全体イントロダクション](../../articles/introduction.md)のBook1に対応しています。
+※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook1に対応しています。
 
 ## このステップでやること
 

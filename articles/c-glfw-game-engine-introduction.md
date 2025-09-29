@@ -44,7 +44,7 @@ published: true
 
 ## シリーズの構成
 
-- Book1: 2D Rendering編([step1_introduction.md](../books/2d_rendering/step1_introduction.md))※ローカル用リンク
+- Book1: 2D Rendering編([step1_introduction.md](https://zenn.dev/chocolate_pie24/books/2d_rendering))
 - Book2: 3D Rendering編(未実装)
 - Book3: Text Rendering編(未実装)
 - Book4: Sponza Rendering編(未実装)

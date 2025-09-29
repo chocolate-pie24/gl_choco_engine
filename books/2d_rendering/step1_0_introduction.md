@@ -3,7 +3,7 @@ title: "Step1: 実行基盤とメモリ管理レイヤの初期化(イントロ�
 free: true
 ---
 
-※本記事は [全体イントロダクション](../../articles/introduction.md)のBook1に対応しています。
+※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook1に対応しています。
 
 この記事は、「C言語とGLFWで作るゲームエンジン開発記録」のファーストステップです。
 
