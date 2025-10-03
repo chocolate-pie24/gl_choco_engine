@@ -77,3 +77,29 @@
   - [x] application_createの未使用変数削除
   - [x] application_createの不適切なエラーコードの集約を修正
   - [x] const付加
+
+## 2D-Rendering Step2: ウィンドウの生成とイベント、インプットシステムの作成
+
+目的: プラットフォーム(X-window / Win32 / GLFW...)に依存しないウィンドウ制御とマウス、キーボードイベント処理を実現する
+追加レイヤー: platform
+追加モジュール: core/input_system, core/event_system
+ブランチ: feat/2d-rendering-step2
+
+step2 TODO:
+ - [] platform/platform_glfwを作ってウィンドウ初期化
+   - [] 初期化コード / ウィンドウ生成コード作成
+   - [] makefile修正
+   - [] 実行確認
+ - [] platform層をstrategy化
+   - [] strategy化
+   - [] ChatGPTレビュー実施
+   - [] テスト実施
+ - [] core/event_system
+ - [] core/input_system
+ - [] books執筆
+   - [] articleに更新履歴を追加
+   - [] 前回、今回やるといった内容との整合性がとれているか確認
+   - [] booksのディレクトリ整理
+   - [] development_logのタイトル整理(2d_rendering/step1が前回まで)
+   - [] articleメンテナンス
+   - [] book執筆
