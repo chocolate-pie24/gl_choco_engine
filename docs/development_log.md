@@ -103,3 +103,8 @@ step2 TODO:
    - [] development_logのタイトル整理(2d_rendering/step1が前回まで)
    - [] articleメンテナンス
    - [] book執筆
+
+### platform/platform_glfwを作ってウィンドウ初期化
+
+実装内容: GLFW実行環境の整備, GLFWを使用したウィンドウ初期化 / 生成処理
+ブランチ: feat/2d-rendering-step2 -> feat/glfw-window-initialize
