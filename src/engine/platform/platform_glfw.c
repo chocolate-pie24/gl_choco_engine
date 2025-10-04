@@ -24,7 +24,7 @@ TODO:
  - [x] platform_stateにwindow_label追加(deep copy)
  - [x] platform_glfw_window_createエラー処理
  - [] strdup廃止(choco_malloc経由でメモリを確保したい)
- - [] docs step2TODOにchoco_string追加
+ - [x] docs step2TODOにchoco_string追加
  - [] free廃止
 */
 
