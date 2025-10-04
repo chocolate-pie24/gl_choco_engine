@@ -6,7 +6,9 @@ extern "C" {
 
 #include <stdbool.h>
 
-bool platform_glfw_window_create(const char* window_label_, int widow_width_, int window_height);
+#include "engine/interfaces/platform_interface.h"
+
+const platform_vtable_t* platform_glfw_vtable_get(void);
 
 #ifdef __cplusplus
 }

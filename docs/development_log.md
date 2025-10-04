@@ -86,10 +86,10 @@
 ブランチ: feat/2d-rendering-step2
 
 step2 TODO:
- - [] platform/platform_glfwを作ってウィンドウ初期化
-   - [] 初期化コード / ウィンドウ生成コード作成
-   - [] makefile修正
-   - [] 実行確認
+ - [x] platform/platform_glfwを作ってウィンドウ初期化
+   - [x] 初期化コード / ウィンドウ生成コード作成
+   - [x] makefile修正
+   - [x] 実行確認
  - [] platform層をstrategy化
    - [] strategy化
    - [] ChatGPTレビュー実施
@@ -108,3 +108,12 @@ step2 TODO:
 
 実装内容: GLFW実行環境の整備, GLFWを使用したウィンドウ初期化 / 生成処理
 ブランチ: feat/2d-rendering-step2 -> feat/glfw-window-initialize
+
+### platformへのstrategyパターンの適用
+
+実装内容: ウィンドウ生成処理をstrategyパターンを使用するように変更
+目的:
+ - プラットフォームを抽象化することにより、将来的なx-window, win32への拡張性を持たせる
+ - makefileに-DUSE_GLFWを追加し、ビルド時に使用プラットフォームを選択できるようにする
+ - 選択したプラットフォーム以外のライブラリ等が存在しなくてもビルドできるように#ifdef USE_XXXを入れる
+ブランチ: feat/2d-rendering-step2 -> feat/apply-strategy-to-platform
