@@ -91,9 +91,10 @@ step2 TODO:
    - [x] makefile修正
    - [x] 実行確認
  - [] platform層をstrategy化
-   - [] strategy化
+   - [x] strategy化
    - [] ChatGPTレビュー実施
    - [] テスト実施
+ - [] containers/choco_string
  - [] core/event_system
  - [] core/input_system
  - [] books執筆
