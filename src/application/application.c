@@ -22,6 +22,8 @@
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
 
+#include "engine/platform/platform_glfw.h"  // TODO: remove this!!
+
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
  *
@@ -107,6 +109,8 @@ app_err_t application_create(void) {
 
     // end Simulation -> launch all systems.
     // end Simulation
+
+    platform_glfw_window_create("test_window", 1024, 768);    // TODO: remove this!!
 
     // commit
     s_app_state = tmp;
