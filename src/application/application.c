@@ -23,7 +23,7 @@
 #include "engine/core/memory/choco_memory.h"
 
 // begin temporary
-#include "engine/platform/platform_glfw.h"
+#include "application/platform_registry.h"
 #include "engine/interfaces/platform_interface.h"
 // end temporary
 
@@ -116,7 +116,7 @@ app_err_t application_create(void) {
     // end Simulation
 
     // begin temporary
-    tmp->platform_vtable = platform_glfw_vtable_get();
+    tmp->platform_vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW);
     // end temporary
 
     // commit
