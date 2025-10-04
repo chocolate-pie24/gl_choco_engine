@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "engine/core/platform/platform_utils.h"
 #include "engine/interfaces/platform_interface.h"
 
 const platform_vtable_t* platform_registry_vtable_get(platform_type_t platform_type_);

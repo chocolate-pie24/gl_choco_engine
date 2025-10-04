@@ -24,6 +24,7 @@
 
 // begin temporary
 #include "application/platform_registry.h"
+#include "engine/core/platform/platform_utils.h"
 #include "engine/interfaces/platform_interface.h"
 // end temporary
 
