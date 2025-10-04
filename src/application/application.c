@@ -22,7 +22,10 @@
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/platform/platform_glfw.h"  // TODO: remove this!!
+// begin temporary
+#include "engine/platform/platform_glfw.h"
+#include "engine/interfaces/platform_interface.h"
+// end temporary
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
@@ -36,6 +39,8 @@ typedef struct app_state {
     size_t memory_system_memory_requirement;        /**< メモリーシステム要求メモリ量 */
     size_t memory_system_alignment_requirement;     /**< メモリーシステムメモリアライメント要件 */
     memory_system_t* memory_system;                 /**< メモリーシステム内部状態管理オブジェクトへのポインタ */
+
+    const platform_vtable_t* platform_vtable;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -110,10 +115,17 @@ app_err_t application_create(void) {
     // end Simulation -> launch all systems.
     // end Simulation
 
-    platform_glfw_window_create("test_window", 1024, 768);    // TODO: remove this!!
+    // begin temporary
+    tmp->platform_vtable = platform_glfw_vtable_get();
+    // end temporary
 
     // commit
     s_app_state = tmp;
+
+    // begin temporary
+    s_app_state->platform_vtable->platform_window_create("test_window", 1024, 768);
+    // end temporary
+
     ret = APPLICATION_SUCCESS;
 
 cleanup:

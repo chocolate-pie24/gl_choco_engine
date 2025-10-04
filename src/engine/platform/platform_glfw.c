@@ -8,11 +8,23 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/interfaces/platform_interface.h"
+
 static GLFWwindow* s_window = NULL; // TODO: remove this!!
+
+static platform_error_t platform_glfw_window_create(const char* window_label_, int window_width_, int window_height);
+
+static const platform_vtable_t s_glfw_vtable = {
+    .platform_window_create = platform_glfw_window_create,
+};
+
+const platform_vtable_t* platform_glfw_vtable_get(void) {
+    return &s_glfw_vtable;
+}
 
 // TODO: 引数エラーチェック
 // TODO: 返り値をエラーコード
-bool platform_glfw_window_create(const char* window_label_, int window_width_, int window_height) {
+static platform_error_t platform_glfw_window_create(const char* window_label_, int window_width_, int window_height) {
     if (GL_FALSE == glfwInit()) {
         ERROR_MESSAGE("platform_glfw_window_create - Failed to initialize glfw.");
         return false;
