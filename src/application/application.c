@@ -10,7 +10,6 @@
  *
  */
 #include <stddef.h> // for NULL
-#include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
 
 #include "application/application.h"
@@ -40,11 +39,6 @@ typedef struct app_state {
     // core/memory/linear_allocator
     linear_alloc_t* linear_allocator;   /**< リニアアロケータオブジェクト */
 
-    // core/memory/memory_system
-    size_t memory_system_memory_requirement;        /**< メモリーシステム要求メモリ量 */
-    size_t memory_system_alignment_requirement;     /**< メモリーシステムメモリアライメント要件 */
-    memory_system_t* memory_system;                 /**< メモリーシステム内部状態管理オブジェクトへのポインタ */
-
     // interfaces/platform_interface
     size_t platform_state_memory_requirement;
     size_t platform_state_alignment_requirement;
@@ -56,29 +50,53 @@ static app_state_t* s_app_state = NULL; /**< アプリケーション内部状�
 
 // TODO: oc_choco_malloc + テスト
 app_err_t application_create(void) {
-    app_err_t ret = APPLICATION_RUNTIME_ERROR;
-    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-
     app_state_t* tmp = NULL;
-    void* tmp_memory_system_ptr = NULL;
     void* tmp_platform_state_ptr = NULL;
 
-    linear_alloc_err_t ret_allocate = LINEAR_ALLOC_INVALID_ARGUMENT;
-    memory_sys_err_t ret_memory_system_init = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    app_err_t ret = APPLICATION_RUNTIME_ERROR;
+    memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_error_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
 
     // Preconditions
-    if(NULL != s_app_state) {   // TODO: CHECK_NOT_VALID_GOTO_CLEANUP()
+    if(NULL != s_app_state) {
         ERROR_MESSAGE("application_create(RUNTIME_ERROR) - Application state is already initialized.");
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
 
+    ret_mem_sys = memory_system_create();
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(INVALID_ARGUMENT) - Failed to create memory system.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_RUNTIME_ERROR == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(RUNTIME_ERROR) - Failed to create memory system.");
+        ret = APPLICATION_RUNTIME_ERROR;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_NO_MEMORY == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to create memory system.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ERROR_MESSAGE("application_create(UNDEFINED_ERROR) - Failed to create memory system.");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+
     // begin Simulation
-    tmp = (app_state_t*)malloc(sizeof(*tmp)); // TODO: choco_malloc
-    if(NULL == tmp) {   // TODO: CHECK_ALLOC_ERR_GOTO_CLEANUP()
+    ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(INVALID_ARGUMENT) - Failed to allocate app_state memory.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_NO_MEMORY == ret_mem_sys) {
         ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate app_state memory.");
         ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ERROR_MESSAGE("application_create(UNDEFINED_ERROR) - Failed to allocate app_state memory.");
+        ret = APPLICATION_UNDEFINED_ERROR;
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
@@ -104,37 +122,6 @@ app_err_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
-    // Simulation -> launch all systems -> create memory system.(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting memory_system initialize...");
-    tmp->memory_system = NULL;
-    memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
-    ret_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_allocate) {
-        ERROR_MESSAGE("Failed to allocate memory system memory. NO_MEMORY");
-        ret = APPLICATION_NO_MEMORY;
-        goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_allocate) {
-        ERROR_MESSAGE("Failed to allocate memory system memory. INVALID_ARGUMENT");
-        ret = APPLICATION_INVALID_ARGUMENT;
-        goto cleanup;
-    } else if(LINEAR_ALLOC_SUCCESS != ret_allocate) {
-        ERROR_MESSAGE("Failed to allocate memory system memory. UNDEFINED_ERROR");
-        ret = APPLICATION_UNDEFINED_ERROR;
-        goto cleanup;
-    }
-    ret_memory_system_init = memory_system_init((memory_system_t*)tmp_memory_system_ptr);
-    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_memory_system_init) {
-        ERROR_MESSAGE("Failed to initialize memory system. INVALID_ARGUMENT");
-        ret = APPLICATION_INVALID_ARGUMENT;
-        goto cleanup;
-    } else if(MEMORY_SYSTEM_SUCCESS != ret_memory_system_init) {
-        ERROR_MESSAGE("Failed to initialize memory system. UNDEFINED_ERROR");
-        ret = APPLICATION_UNDEFINED_ERROR;
-        goto cleanup;
-    }
-    tmp->memory_system = (memory_system_t*)tmp_memory_system_ptr;
-    INFO_MESSAGE("memory_system initialized successfully.");
-
     // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
     INFO_MESSAGE("Starting platform_state initialize...");
     tmp->platform_vtable = NULL;
@@ -146,16 +133,16 @@ app_err_t application_create(void) {
     }
     tmp->platform_state = NULL;
     tmp->platform_vtable->platform_state_preinit(&tmp->platform_state_memory_requirement, &tmp->platform_state_alignment_requirement);
-    ret_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_allocate) {
+    ret_linear_alloc = linear_allocator_allocate(tmp->linear_allocator, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
         ERROR_MESSAGE("Failed to allocate platform state memory. NO_MEMORY");
         ret = APPLICATION_NO_MEMORY;
         goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_allocate) {
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
         ERROR_MESSAGE("Failed to allocate platform state memory. INVALID_ARGUMENT");
         ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
-    } else if(LINEAR_ALLOC_SUCCESS != ret_allocate) {
+    } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ERROR_MESSAGE("Failed to allocate platform state memory. UNDEFINED_ERROR");
         ret = APPLICATION_UNDEFINED_ERROR;
         goto cleanup;
@@ -201,9 +188,11 @@ app_err_t application_create(void) {
         goto cleanup;
     }
     // end temporary
+
     // commit
     s_app_state = tmp;
     INFO_MESSAGE("Application created successfully.");
+    memory_system_report();
     ret = APPLICATION_SUCCESS;
 
 cleanup:
@@ -213,14 +202,12 @@ cleanup:
                 tmp->platform_vtable->platform_state_destroy(tmp->platform_state);
             }
         }
-        if(NULL != tmp && NULL != tmp->memory_system) {
-            memory_system_destroy(tmp->memory_system);
-        }
         if(NULL != tmp) {
             linear_allocator_destroy(&tmp->linear_allocator);
-            free(tmp);
+            memory_system_free(tmp, sizeof(*tmp), MEMORY_TAG_SYSTEM);
             tmp = NULL;
         }
+        memory_system_destroy();
     }
 
     return ret;
@@ -237,12 +224,15 @@ void application_destroy(void) {
     if(NULL != s_app_state->platform_vtable) {
         s_app_state->platform_vtable->platform_state_destroy(s_app_state->platform_state);
     }
-    memory_system_destroy(s_app_state->memory_system);
     linear_allocator_destroy(&s_app_state->linear_allocator);
+
+    memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
+    s_app_state = NULL;
+    INFO_MESSAGE("All memory freed.");
+    memory_system_report();
+    memory_system_destroy();
     // end cleanup all systems.
 
-    free(s_app_state);  // TODO: choco_free
-    s_app_state = NULL;
     INFO_MESSAGE("Application destroyed successfully.");
 cleanup:
     return;

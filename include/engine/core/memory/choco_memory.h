@@ -52,85 +52,7 @@ typedef enum {
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
 } memory_sys_err_t;
 
-/**
- * @brief memory_system構造体前方宣言
- * @note 内部データ構造はchoco_memory.cで定義し、外部からは隠蔽する
- */
-typedef struct memory_system memory_system_t;
-
-/**
- * @brief memory_system_tのメモリ確保のため、memory_system_tの必要メモリ量とメモリアライメント要件を取得する
- *
- * @note
- * 下記の理由から本APIと @ref memory_system_init() を使用した2段階でのシステムの初期化が必要
- * - memory_system_tのメモリは @ref linear_alloc_t を使用して外部で確保する
- * - @ref choco_memory.h は @ref linear_alloc_t には依存しない
- * - memory_system_tの内部構造を隠蔽しているため、外部システムはmemory_system_tのメモリ要件、メモリアライメント要件を知らない \n
- * なお、memory_systemは起動時から終了時まで存在し続けることを想定している \n
- * このため、不定期解放が必要なメモリアロケーションではなく、linear_allocatorによるメモリ確保を行った
- *
- * 使用例:
- * @code
- * size_t memory = 0;
- * size_t align = 0;
- * memory_system_preinit(&memory, &align);
- * @endcode
- *
- * @param[out] memory_requirement_ memory_system_tに必要なメモリ量格納先
- * @param[out] alignment_requirement_ memory_system_tのメモリアライメント要件
- *
- * @see memory_system_init
- */
-void memory_system_preinit(size_t* const memory_requirement_, size_t* const alignment_requirement_);
-
-/**
- * @brief memory_system_preinitで取得したmemory_requirement, alignment_requirementを元に外部で確保したメモリを私、initで内部データを初期化する
- *
- * @note
- * 本APIを使用する前に必ず @ref memory_system_preinit() を実行し、memory_system_のメモリを確保してから実行すること
- *
- * 使用例:
- * @code
- * // memory_system_tオブジェクトメモリを割り当てるためのlinear_alloc_tオブジェクトの作成
- * linear_alloc_t* linear_allocator = NULL;
- * linear_alloc_err_t ret_linear_alloc = linear_allocator_create(&linear_allocator, 1 * KIB);   // 1Kibでメモリ確保
- * if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
- *      // エラー処理
- * } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
- *      // エラー処理
- * } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
- *      // エラー処理
- * }
- *
- * // memory_system_tのメモリを割り当て
- * size_t memory = 0;
- * size_t align = 0;
- * memory_system_preinit(&memory, &align);
- * void* memory_system_ptr = NULL;
- * linear_alloc_err_t ret_memory_system_allocate = linear_allocator_allocate(linear_allocator, memory, align, &memory_system_ptr);
- * if(LINEAR_ALLOC_NO_MEMORY == ret_memory_system_allocate) {
- *      // エラー処理
- * } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_memory_system_allocate) {
- *      // エラー処理
- * }
- *
- * // memory_system初期化
- * memory_sys_err_t ret_memory_system_init = memory_system_init(memory_system_ptr);
- * if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_memory_system_init) {
- *      // エラー処理
- * }
- * @endcode
- *
- * @param[in,out] memory_system_ 初期化対象オブジェクト
- *
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT memory_system_がNULL
- * @retval MEMORY_SYSTEM_SUCCESS memory_system_の初期化に成功し正常終了
- *
- * @see memory_system_preinit
- * @see linear_allocator_create
- * @see linear_allocator_allocate
- */
-memory_sys_err_t memory_system_init(memory_system_t* memory_system_);
+memory_sys_err_t memory_system_create(void);
 
 /**
  * @brief memory_system_の内部状態を解放し初期化する
@@ -180,7 +102,7 @@ memory_sys_err_t memory_system_init(memory_system_t* memory_system_);
  * @see linear_allocator_allocate
  * @see linear_allocator_destroy
  */
-void memory_system_destroy(memory_system_t* memory_system_);
+void memory_system_destroy(void);
 
 /**
  * @brief memory_system_を使用してメモリを割り当てる
@@ -242,7 +164,7 @@ void memory_system_destroy(memory_system_t* memory_system_);
  *
  * @see memory_tag_t
  */
-memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
+memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
 /**
  * @brief memory_system_を使用してメモリを解放する
@@ -297,7 +219,7 @@ memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t 
  *
  * @see memory_tag_t
  */
-void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_);
+void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
 
 /**
  * @brief memory_system_が管理しているメモリ確保状態を標準出力に出力する
@@ -350,7 +272,7 @@ void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size
  *
  * @param memory_system_ 出力対象memory_system_tハンドル
  */
-void memory_system_report(const memory_system_t* memory_system_);
+void memory_system_report(void);
 
 #ifdef __cplusplus
 }
