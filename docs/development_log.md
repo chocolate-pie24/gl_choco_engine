@@ -86,10 +86,10 @@
 ブランチ: feat/2d-rendering-step2
 
 step2 TODO:
- - [] platform/platform_glfwを作ってウィンドウ初期化
-   - [] 初期化コード / ウィンドウ生成コード作成
-   - [] makefile修正
-   - [] 実行確認
+ - [x] platform/platform_glfwを作ってウィンドウ初期化
+   - [x] 初期化コード / ウィンドウ生成コード作成
+   - [x] makefile修正
+   - [x] 実行確認
  - [] platform層をstrategy化
    - [] strategy化
    - [] ChatGPTレビュー実施

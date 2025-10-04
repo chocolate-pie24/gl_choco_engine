@@ -41,6 +41,9 @@ typedef struct app_state {
     size_t memory_system_alignment_requirement;     /**< メモリーシステムメモリアライメント要件 */
     memory_system_t* memory_system;                 /**< メモリーシステム内部状態管理オブジェクトへのポインタ */
 
+    size_t platform_state_memory_requirement;
+    size_t platform_state_alignment_requirement;
+    platform_state_t* platform_state;
     const platform_vtable_t* platform_vtable;
 } app_state_t;
 
@@ -53,9 +56,11 @@ app_err_t application_create(void) {
 
     app_state_t* tmp = NULL;
     void* tmp_memory_system_ptr = NULL;
+    void* tmp_platform_state_ptr = NULL;
 
-    linear_alloc_err_t ret_memory_system_allocate = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_alloc_err_t ret_allocate = LINEAR_ALLOC_INVALID_ARGUMENT;
     memory_sys_err_t ret_memory_system_init = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    platform_error_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {   // TODO: CHECK_NOT_VALID_GOTO_CLEANUP()
@@ -95,12 +100,12 @@ app_err_t application_create(void) {
     // Simulation -> launch all systems -> create memory system.(Don't use s_app_state here.)
     tmp->memory_system = NULL;
     memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
-    ret_memory_system_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_memory_system_allocate) {
+    ret_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_allocate) {
         ERROR_MESSAGE("Failed to allocate memory system memory.");
         ret = APPLICATION_NO_MEMORY;
         goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_memory_system_allocate) {
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_allocate) {
         ERROR_MESSAGE("Failed to allocate memory system memory.");
         ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
@@ -113,24 +118,51 @@ app_err_t application_create(void) {
     }
     tmp->memory_system = (memory_system_t*)tmp_memory_system_ptr;
 
+    // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
+    tmp->platform_vtable = NULL;
+    tmp->platform_vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW); // TODO: #ifdefで切り分け
+    if(NULL == tmp->platform_vtable) {
+        ERROR_MESSAGE("Failed to get platform vtable.");
+        ret = APPLICATION_RUNTIME_ERROR;
+        goto cleanup;
+    }
+    tmp->platform_state = NULL;
+    tmp->platform_vtable->platform_state_preinit(&tmp->platform_state_memory_requirement, &tmp->platform_state_alignment_requirement);
+    ret_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_allocate) {
+        ERROR_MESSAGE("Failed to allocate platform state memory.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_allocate) {
+        ERROR_MESSAGE("Failed to allocate platform state memory.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+    ret_platform_state_init = tmp->platform_vtable->platform_state_init((platform_state_t*)tmp_platform_state_ptr);
+    if(PLATFORM_INVALID_ARGUMENT == ret_platform_state_init) {
+        ERROR_MESSAGE("Failed to initialize platform state.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+    tmp->platform_state = (platform_state_t*)tmp_platform_state_ptr;
+
     // end Simulation -> launch all systems.
     // end Simulation
-
-    // begin temporary
-    tmp->platform_vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW);
-    // end temporary
 
     // commit
     s_app_state = tmp;
 
     // begin temporary
-    s_app_state->platform_vtable->platform_window_create("test_window", 1024, 768);
+    s_app_state->platform_vtable->platform_window_create(s_app_state->platform_state, "test_window", 1024, 768);
     // end temporary
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
+        if(NULL != tmp && NULL != tmp->platform_state) {
+            s_app_state->platform_vtable->platform_state_destroy(tmp->platform_state);
+        }
         if(NULL != tmp && NULL != tmp->memory_system) {
             memory_system_destroy(tmp->memory_system);
         }
@@ -151,6 +183,7 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    s_app_state->platform_vtable->platform_state_destroy(s_app_state->platform_state);
     memory_system_destroy(s_app_state->memory_system);
     linear_allocator_destroy(&s_app_state->linear_allocator);
     // end cleanup all systems.

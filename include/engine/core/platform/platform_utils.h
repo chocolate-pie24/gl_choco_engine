@@ -8,7 +8,8 @@ extern "C" {
 typedef enum {
     PLATFORM_SUCCESS,
     PLATFORM_INVALID_ARGUMENT,
-    PLATFORM_GL_ERROR,
+    PLATFORM_RUNTIME_ERROR,
+    PLATFORM_NO_MEMORY,
 } platform_error_t;
 
 typedef enum {
