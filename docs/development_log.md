@@ -90,13 +90,17 @@ step2 TODO:
    - [x] 初期化コード / ウィンドウ生成コード作成
    - [x] makefile修正
    - [x] 実行確認
- - [] platform層をstrategy化
+ - [x] platform層をstrategy化
    - [x] strategy化
-   - [] ChatGPTレビュー実施
-   - [] テスト実施
- - [] containers/choco_string
+   - [x] ChatGPTレビュー実施
+ - [x] containers/choco_string
  - [] core/event_system
  - [] core/input_system
+ - [] テスト
+ - [] doxygenコメント追加
+ - [] doxygen(groups.doxメンテナンス)
+ - [] README.mdのtree修正
+ - [] layer.mdメンテナンス
  - [] books執筆
    - [] articleに更新履歴を追加
    - [] 前回、今回やるといった内容との整合性がとれているか確認
@@ -104,6 +108,15 @@ step2 TODO:
    - [] development_logのタイトル整理(2d_rendering/step1が前回まで)
    - [] articleメンテナンス
    - [] book執筆
+
+メモ:
+ - [] book/chapter1: glfw window
+ - [] book/chapter2: strategy
+ - [] book/chapter3: choco_string
+ - [] book/chapter4: memory_system仕様変更
+ - [] book/chapter5: sleep -> application run変更
+ - [] book/chapter6: input system
+ - [] book/chapter7: event system
 
 ### platform/platform_glfwを作ってウィンドウ初期化
 
@@ -118,3 +131,22 @@ step2 TODO:
  - makefileに-DUSE_GLFWを追加し、ビルド時に使用プラットフォームを選択できるようにする
  - 選択したプラットフォーム以外のライブラリ等が存在しなくてもビルドできるように#ifdef USE_XXXを入れる
 ブランチ: feat/2d-rendering-step2 -> feat/apply-strategy-to-platform
+
+### containers/choco_stringの追加
+
+実装内容: platform_stateのwindow_labelをリソース管理機能を持つchoco_stringに変更する
+ブランチ: feat/2d-rendering-step2 -> feat/choco-string
+
+### fix/memory-system, refactor/linear-allocator, refactor/application-create
+
+改善理由:
+memory_systemの実態をアプリケーション側に持たせるのはまずい。memory_system_allocateでいちいちmemory_systemを渡す必要がある
+特に、choco_stringのように様々なところから呼ばれる関数の場合、choco_string_xxxにすべてmemory_systemを渡す必要があり煩わしい
+memory_systemの改善に合わせ、linear_allocatorについても仕様を変更する
+
+- [] fix/memory_system           : 先にfix/memory_systemでmemory_systemの仕様変更を行う
+- [] refactor/linear-allocator.  : linear_allocatorのメモリをmemory_systemで確保するように仕様変更
+- [] refactor/application-create : 上記に合わせ、サブシステム用メモリ総容量を事前に計算してlinear_allocatorでメモリ確保するようapplication変更
+- [] test/memory-refactoring     : 上記仕様変更に合わせて全てのテストコードを追加、修正、テスト実施
+- [] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正
+- [] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正

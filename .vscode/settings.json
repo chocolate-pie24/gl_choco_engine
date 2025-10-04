@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "assert.h": "c",
-        "oc_hist.h": "c"
+        "oc_hist.h": "c",
+        "choco_macros.h": "c"
     }
 }
