@@ -1,8 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdalign.h>
-#include <stdlib.h> // for free() TODO: remove this!!
-#include <string.h> // for strdup(TODO: remove this!!)
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -14,6 +12,8 @@
 
 #include "engine/interfaces/platform_interface.h"
 
+#include "engine/containers/choco_string.h"
+
 /*
 TODO:
  - [x] platform_destroy
@@ -21,21 +21,26 @@ TODO:
  - [x] platform_glfw_window_createの引数にplatform_state追加
  - [x] platform_stateにwindow_label追加(deep copy)
  - [x] platform_glfw_window_createエラー処理
- - [] strdup廃止(choco_malloc経由でメモリを確保したい)+ string.hのincludeを削除
+ - [x] strdup廃止(choco_malloc経由でメモリを確保したい)+ string.hのincludeを削除
  - [x] docs step2TODOにchoco_string追加
- - [] free廃止
+ - [x] free廃止
+ - [] イベント処理
+   - [] インプットシステム
+   - [] イベントシステム
+   - [] sleep関数(c標準で行けたかをまず確認)
  - [] layer.mdメンテナンス
 */
 
 /*
 TODO: そのうちやる
  - [] glfwSetErrorCallback
+ - [] glfwSwapInterval
 */
 
 struct platform_state {
     int window_width;
     int window_height;
-    char* window_label; // TODO: choco_string
+    choco_string_t* window_label;
     GLFWwindow* window;
     bool initialized_glfw;
 };
@@ -114,10 +119,7 @@ static void platform_glfw_destroy(platform_state_t* platform_state_) {
     if(platform_state_->initialized_glfw) {
         glfwTerminate();
     }
-    if(NULL != platform_state_->window_label) {
-        free(platform_state_->window_label);
-        platform_state_->window_label = NULL;
-    }
+    choco_string_destroy(&platform_state_->window_label);
     platform_state_->window = NULL;
     platform_state_->window_height = 0;
     platform_state_->window_width = 0;
@@ -128,6 +130,7 @@ static void platform_glfw_destroy(platform_state_t* platform_state_) {
 // TODO: 返り値をエラーコード
 static platform_error_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_) {
     platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
+    choco_string_error_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "platform_state_")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_label_")
@@ -144,13 +147,22 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
         goto cleanup;
     }
 
-    platform_state_->window_label = strdup(window_label_);  // TODO: choco_string
-    if(NULL == platform_state_->window_label) {
-        ERROR_MESSAGE("platform_glfw_window_create(NO_MEMORY) - Failed to duplicate window label.");
+    ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
+    if(CHOCO_STRING_INVALID_ARGUMENT == ret_string) {
+        ERROR_MESSAGE("platform_glfw_window_create(INVALID_ARGUMENT) - Failed to create window label.");
+        ret = PLATFORM_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(CHOCO_STRING_NO_MEMORY == ret_string) {
+        ERROR_MESSAGE("platform_glfw_window_create(NO_MEMORY) - Failed to create window label.");
         ret = PLATFORM_NO_MEMORY;
         goto cleanup;
+    } else if(CHOCO_STRING_SUCCESS != ret_string) {
+        ERROR_MESSAGE("platform_glfw_window_create(UNDEFINED_ERROR) - Failed to create window label.");
+        ret = PLATFORM_UNDEFINED_ERROR;
+        goto cleanup;
     }
-    platform_state_->window = glfwCreateWindow(window_width_, window_height_, window_label_, 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
+
+    platform_state_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_state_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if (NULL == platform_state_->window) {
         ERROR_MESSAGE("platform_glfw_window_create(RUNTIME_ERROR) - Failed to create window.");
         ret = PLATFORM_RUNTIME_ERROR;
@@ -180,10 +192,7 @@ cleanup:
             glfwDestroyWindow(platform_state_->window);
             platform_state_->window = NULL;
         }
-        if(NULL != platform_state_->window_label) {
-            free(platform_state_->window_label);
-            platform_state_->window_label = NULL;
-        }
+        choco_string_destroy(&platform_state_->window_label);
     }
     return ret;
 }

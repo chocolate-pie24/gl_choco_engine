@@ -10,6 +10,7 @@ typedef enum {
     PLATFORM_INVALID_ARGUMENT,
     PLATFORM_RUNTIME_ERROR,
     PLATFORM_NO_MEMORY,
+    PLATFORM_UNDEFINED_ERROR,
 } platform_error_t;
 
 typedef enum {
