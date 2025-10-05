@@ -50,15 +50,20 @@ int main(int argc_, char** argv_) {
     if(APPLICATION_SUCCESS != app_create_result) {
         ERROR_MESSAGE("Failed to initialize application.");
         goto cleanup;
+    } else {
+        INFO_MESSAGE("Application created successfully.");
     }
 
     app_run_result = application_run();
     if(APPLICATION_SUCCESS != app_run_result) {
         ERROR_MESSAGE("Failed to execute application.");
         goto cleanup;
+    } else {
+        INFO_MESSAGE("Application executed successfully.");
     }
 
 cleanup:
     application_destroy();
+    INFO_MESSAGE("Application destroyed successfully.");
     return 0;
 }

@@ -12,8 +12,8 @@
  */
 #include <stddef.h>
 #include <stdalign.h>
-#include <string.h> // for memset strcmp(test only)
 #include <stdlib.h> // for malloc TODO: remove this!!
+#include <string.h> // for memset strcmp(test only)
 #include <stdio.h>  // for fprintf
 
 #include "engine/base/choco_macros.h"
@@ -33,6 +33,8 @@ typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだ�
 static malloc_test_t s_malloc_test;
 
 static void test_test_malloc(void); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
+static void test_memory_system_preinit(void);
+static void test_memory_system_init(void);
 static void test_memory_system_destroy(void);
 static void test_memory_system_allocate(void);
 static void test_memory_system_free(void);
@@ -43,63 +45,63 @@ static void test_memory_system_report(void);
  * @brief メモリーシステム内部状態管理オブジェクト
  *
  */
-typedef struct memory_system {
+struct memory_system {
     size_t total_allocated;                     /**< メモリ総割り当て量 */
     size_t mem_tag_allocated[MEMORY_TAG_MAX];   /**< 各メモリータグごとのメモリ割り当て量 */
     const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリータグ文字列 */
-} memory_system_t;
-
-static memory_system_t* s_mem_sys_ptr = NULL;
+};
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
-memory_sys_err_t memory_system_create(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    if(NULL != s_mem_sys_ptr) {
-        ERROR_MESSAGE("memory_system_create(RUNTIME_ERROR) - Memory system is already initialized.");
-        ret = MEMORY_SYSTEM_RUNTIME_ERROR;
+void memory_system_preinit(size_t* const memory_requirement_, size_t* const alignment_requirement_) {
+    if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
+        WARN_MESSAGE("memory_system_preinit - No-op: memory_requirement_ or alignment_requirement_ is NULL.");
         goto cleanup;
     }
-    s_mem_sys_ptr = (memory_system_t*)malloc(sizeof(memory_system_t));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "s_mem_sys_ptr")
-    memset(s_mem_sys_ptr, 0, sizeof(memory_system_t));
+    *memory_requirement_ = sizeof(memory_system_t);
+    *alignment_requirement_ = alignof(memory_system_t);
+    goto cleanup;
 
-    s_mem_sys_ptr->total_allocated = 0;
+cleanup:
+    return;
+}
+
+memory_sys_err_t memory_system_init(memory_system_t* memory_system_) {
+    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_init", "memory_system_")
+
+    memory_system_->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        s_mem_sys_ptr->mem_tag_allocated[i] = 0;
+        memory_system_->mem_tag_allocated[i] = 0;
     }
-    s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_SYSTEM] = "system";
-    s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING] = "string";
+    memory_system_->mem_tag_str[MEMORY_TAG_SYSTEM] = "system";
+    memory_system_->mem_tag_str[MEMORY_TAG_STRING] = "string";
+
     ret = MEMORY_SYSTEM_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-void memory_system_destroy(void) {
-    if(NULL == s_mem_sys_ptr) {
+void memory_system_destroy(memory_system_t* memory_system_) {
+    if(NULL == memory_system_) {
         goto cleanup;
     }
-    if(0 != s_mem_sys_ptr->total_allocated) {
-        WARN_MESSAGE("memory_system_destroy - total_allocated != 0. Check memory leaks.");
-    }
-    s_mem_sys_ptr->total_allocated = 0;
+    memory_system_->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        s_mem_sys_ptr->mem_tag_allocated[i] = 0;
+        memory_system_->mem_tag_allocated[i] = 0;
     }
-    free(s_mem_sys_ptr);
-    s_mem_sys_ptr = NULL;
 
 cleanup:
     return;
 }
 
-memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
+memory_sys_err_t memory_system_allocate(memory_system_t* memory_system_, size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* tmp = NULL;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "s_mem_sys_ptr")
+    CHECK_ARG_NULL_GOTO_CLEANUP(memory_system_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "memory_system_")
     CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "out_ptr_")
     CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "*out_ptr_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "mem_tag_")
@@ -108,13 +110,13 @@ memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, voi
         ret = MEMORY_SYSTEM_SUCCESS;
         goto cleanup;
     }
-    if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
+    if(memory_system_->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
+        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", memory_system_->mem_tag_str[mem_tag_], memory_system_->mem_tag_allocated[mem_tag_], size_);
         ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
         goto cleanup;
     }
-    if(s_mem_sys_ptr->total_allocated > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_mem_sys_ptr->total_allocated, size_);
+    if(memory_system_->total_allocated > (SIZE_MAX - size_)) {
+        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", memory_system_->total_allocated, size_);
         ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -126,8 +128,8 @@ memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, voi
 
     // commit.
     *out_ptr_ = tmp;
-    s_mem_sys_ptr->total_allocated += size_;
-    s_mem_sys_ptr->mem_tag_allocated[mem_tag_] += size_;
+    memory_system_->total_allocated += size_;
+    memory_system_->mem_tag_allocated[mem_tag_] += size_;
     ret = MEMORY_SYSTEM_SUCCESS;
 
 cleanup:
@@ -139,9 +141,9 @@ cleanup:
 // mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
 // mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
 // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
-    if(NULL == s_mem_sys_ptr) {
-        WARN_MESSAGE("memory_system_free - No-op: s_mem_sys_ptr is NULL.");
+void memory_system_free(memory_system_t* memory_system_, void* ptr_, size_t size_, memory_tag_t mem_tag_) {
+    if(NULL == memory_system_) {
+        WARN_MESSAGE("memory_system_free - No-op: memory_system_ is NULL.");
         goto cleanup;
     }
     if(NULL == ptr_) {
@@ -152,34 +154,34 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
         WARN_MESSAGE("memory_system_free - No-op: invalid mem_tag_.");
         goto cleanup;
     }
-    if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] < size_) {
+    if(memory_system_->mem_tag_allocated[mem_tag_] < size_) {
         WARN_MESSAGE("memory_system_free - No-op: mem_tag_allocated broken.");
         goto cleanup;
     }
-    if(s_mem_sys_ptr->total_allocated < size_) {
+    if(memory_system_->total_allocated < size_) {
         WARN_MESSAGE("memory_system_free: No-op: total_allocated broken.");
         goto cleanup;
     }
 
     free(ptr_);
-    s_mem_sys_ptr->total_allocated -= size_;
-    s_mem_sys_ptr->mem_tag_allocated[mem_tag_] -= size_;
+    memory_system_->total_allocated -= size_;
+    memory_system_->mem_tag_allocated[mem_tag_] -= size_;
 cleanup:
     return;
 }
 
-void memory_system_report(void) {
-    if(NULL == s_mem_sys_ptr) {
-        WARN_MESSAGE("memory_system_report - No-op: s_mem_sys_ptr is NULL.");
+void memory_system_report(const memory_system_t* memory_system_) {
+    if(NULL == memory_system_) {
+        WARN_MESSAGE("memory_system_report - No-op: memory_system_ is NULL.");
         goto cleanup;
     }
     INFO_MESSAGE("memory_system_report");
     // TODO: [INFORMATION]を出力しないINFO_MESSAGE_RAW(...)をbase/messageに追加し、fprintfを廃止する
-    fprintf(stdout, "\033[1;35m\tTotal allocated: %zu\n", s_mem_sys_ptr->total_allocated);
+    fprintf(stdout, "\033[1;35m\tTotal allocated: %zu\n", memory_system_->total_allocated);
     fprintf(stdout, "\tMemory tag allocated:\n");
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        const char* const tag_str = s_mem_sys_ptr->mem_tag_str[i];
-        fprintf(stdout, "\t\ttag(%s): %zu\n", (NULL != tag_str) ? tag_str : "unknown", s_mem_sys_ptr->mem_tag_allocated[i]);
+        const char* const tag_str = memory_system_->mem_tag_str[i];
+        fprintf(stdout, "\t\ttag(%s): %zu\n", (NULL != tag_str) ? tag_str : "unknown", memory_system_->mem_tag_allocated[i]);
     }
     fprintf(stdout, "\033[0m\n");
 cleanup:
@@ -208,10 +210,54 @@ static void* test_malloc(size_t size_) {
 #ifdef TEST_BUILD
 void test_memory_system(void) {
     test_test_malloc();
+    test_memory_system_preinit();
+    test_memory_system_init();
     test_memory_system_destroy();
     test_memory_system_allocate();
     test_memory_system_free();
     test_memory_system_report();
+}
+
+static void NO_COVERAGE test_memory_system_preinit(void) {
+    size_t memory = 0;
+    size_t align = 0;
+    // memory_requirement_ == NULLでワーニング -> No-op
+    memory_system_preinit(NULL, &align);
+    assert(0 == memory);
+    assert(0 == align);
+
+    // alignment_requirement_ == NULLでワーニング -> No-op
+    memory_system_preinit(&memory, NULL);
+    assert(0 == memory);
+    assert(0 == align);
+
+    memory_system_preinit(&memory, &align);
+    assert(sizeof(memory_system_t) == memory);
+    assert(alignof(memory_system_t) == align);
+}
+
+static void NO_COVERAGE test_memory_system_init(void) {
+    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    // memory_system_ == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
+    ret = memory_system_init(NULL);
+    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+
+    memory_system_t* system = NULL;
+    size_t memory = 0;
+    size_t align = 0;
+    memory_system_preinit(&memory, &align);
+    system = (memory_system_t*)malloc(memory);
+    ret = memory_system_init(system);
+    assert(0 == strcmp(system->mem_tag_str[MEMORY_TAG_SYSTEM], "system"));
+    assert(0 == strcmp(system->mem_tag_str[MEMORY_TAG_STRING], "string"));
+    assert(MEMORY_SYSTEM_SUCCESS == ret);
+    assert(0 == system->total_allocated);
+    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+        assert(0 == system->mem_tag_allocated[i]);
+    }
+
+    free(system);
+    system = NULL;
 }
 
 static void NO_COVERAGE test_memory_system_destroy(void) {
