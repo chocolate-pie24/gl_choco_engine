@@ -144,9 +144,10 @@ memory_systemの実態をアプリケーション側に持たせるのはまず�
 特に、choco_stringのように様々なところから呼ばれる関数の場合、choco_string_xxxにすべてmemory_systemを渡す必要があり煩わしい
 memory_systemの改善に合わせ、linear_allocatorについても仕様を変更する
 
-- [] fix/memory_system           : 先にfix/memory_systemでmemory_systemの仕様変更を行う
-- [] refactor/linear-allocator.  : linear_allocatorのメモリをmemory_systemで確保するように仕様変更
+- [x] fix/memory_system          : 先にfix/memory_systemでmemory_systemの仕様変更を行う
+- [x] refactor/linear-allocator  : linear_allocatorのメモリをmemory_systemで確保するように仕様変更
 - [] refactor/application-create : 上記に合わせ、サブシステム用メモリ総容量を事前に計算してlinear_allocatorでメモリ確保するようapplication変更
+- [] refactor/memory-system      : destroyの際にtotal_allocatedが0でない場合にワーニングを出力
 - [] test/memory-refactoring     : 上記仕様変更に合わせて全てのテストコードを追加、修正、テスト実施
-- [] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正
+- [] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正, memory_system_allocate_aligneをtodoに追加(FreeListの後)
 - [] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正

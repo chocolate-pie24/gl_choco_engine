@@ -51,52 +51,9 @@ typedef enum {
     LINEAR_ALLOC_INVALID_ARGUMENT,  /**< 無効な引数 */
 } linear_alloc_err_t;
 
-/**
- * @brief linear_alloc_tオブジェクトを生成する
- *
- * @note 使用の際の前提条件
- * - 引数allocator_はNULLで初期化したlinear_alloc_t*型変数のアドレスを渡すこと
- * - 引数capacity_は0より大きい値を使用すること
- *
- * 使用例:
- * @code
- * linear_alloc_t* alloc = NULL;    // 必ずNULL初期化をすること
- * linear_alloc_err_t ret = linear_allocator_create(&alloc, 128);   // 128byteの容量でアロケータを生成
- * // エラー処理
- * linear_allocator_destroy(&alloc);    // オブジェクトを破棄
- * @endcode
- *
- * @param[out] allocator_ linear_alloc_t*型オブジェクトへのポインタ(create内でsizeof(linear_alloc_t)のメモリを確保するためダブルポインタを使用)
- * @param[in] capacity_ アロケータ保有メモリ容量(byte)
- *
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数allocator_ == NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数*allocator_ != NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数capacity_ == 0
- * @retval LINEAR_ALLOC_NO_MEMORY        メモリ確保失敗
- * @retval LINEAR_ALLOC_SUCCESS          オブジェクトの生成に成功し正常終了
- */
-linear_alloc_err_t linear_allocator_create(linear_alloc_t** allocator_, size_t capacity_);
+void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_);
 
-/**
- * @brief linear_alloc_tオブジェクトを破棄する
- *
- * @note 本APIを使用することで、linear_alloc_t*型変数が有しているメモリも破棄され、*allocator_にはNULLが代入される
- *
- * @note 下記の場合は何もしない
- * - allocator_がNULL(linear_allocator_destroy(NULL)のケース)
- * - *allocator_がNULL(2重destroyをしたケース)
- *
- * 使用例:
- * @code
- * linear_alloc_t* alloc = NULL;    // 必ずNULL初期化をすること
- * linear_alloc_err_t ret = linear_allocator_create(&alloc, 128);   // 128byteの容量でアロケータを生成
- * // エラー処理
- * linear_allocator_destroy(&alloc);    // オブジェクトを破棄(これでalloc == NULLになる)
- * @endcode
- *
- * @param[in,out] allocator_ linear_alloc_t*型オブジェクトへのポインタ(destroy内でallocator_が有しているメモリを解放するためダブルポインタを使用)
- */
-void linear_allocator_destroy(linear_alloc_t** allocator_);
+linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_);
 
 /**
  * @brief linear_allocatorを使用してメモリを割り当てる

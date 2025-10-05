@@ -12,6 +12,7 @@
  */
 #include <stddef.h>
 #include <stdalign.h>
+#include <string.h> // for memset strcmp(test only)
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <stdio.h>  // for fprintf
 
@@ -21,7 +22,6 @@
 #include "engine/core/memory/choco_memory.h"
 
 #ifdef TEST_BUILD
-#include <string.h> // for memset strcmp(test only)
 #include <assert.h>
 #include <stdbool.h>
 typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く

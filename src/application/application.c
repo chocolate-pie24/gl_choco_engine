@@ -37,7 +37,11 @@ TODO:
  */
 typedef struct app_state {
     // core/memory/linear_allocator
-    linear_alloc_t* linear_allocator;   /**< リニアアロケータオブジェクト */
+    size_t linear_alloc_mem_req;
+    size_t linear_alloc_align_req;
+    size_t linear_alloc_pool_size;
+    void* linear_alloc_pool;
+    linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
 
     // interfaces/platform_interface
     size_t platform_state_memory_requirement;
@@ -105,18 +109,47 @@ app_err_t application_create(void) {
 
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
     INFO_MESSAGE("Starting linear_allocator initialize...");
-    tmp->linear_allocator = NULL;
-    ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator. NO_MEMORY");
+    tmp->linear_alloc = NULL;
+    linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
+    // TODO: memory_system_allocate_aligned作成後に入れ替え
+    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(INVALID_ARGUMENT) - Failed to allocate linear allocator memory.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_NO_MEMORY == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate linear allocator memory.");
         ret = APPLICATION_NO_MEMORY;
         goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator. INVALID_ARGUMENT");
+    } else if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ERROR_MESSAGE("application_create(UNDEFINED_ERROR) - Failed to allocate linear allocator memory.");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+
+    tmp->linear_alloc_pool_size = 1 * KIB;
+    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(INVALID_ARGUMENT) - Failed to allocate linear allocator pool memory.");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_NO_MEMORY == ret_mem_sys) {
+        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate linear allocator pool memory.");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ERROR_MESSAGE("application_create(UNDEFINED_ERROR) - Failed to allocate linear allocator pool memory.");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+
+    ret_linear_alloc = linear_allocator_init(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
+    if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
+        ERROR_MESSAGE("application_create(INVALID_ARGUMENT) - Failed to initialize linear allocator.");
         ret = APPLICATION_INVALID_ARGUMENT;
         goto cleanup;
     } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator. UNDEFINED_ERROR");
+        ERROR_MESSAGE("application_create(UNDEFINED_ERROR) - Failed to initialize linear allocator.");
         ret = APPLICATION_UNDEFINED_ERROR;
         goto cleanup;
     }
@@ -133,7 +166,7 @@ app_err_t application_create(void) {
     }
     tmp->platform_state = NULL;
     tmp->platform_vtable->platform_state_preinit(&tmp->platform_state_memory_requirement, &tmp->platform_state_alignment_requirement);
-    ret_linear_alloc = linear_allocator_allocate(tmp->linear_allocator, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
+    ret_linear_alloc = linear_allocator_allocate(tmp->linear_alloc, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
     if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
         ERROR_MESSAGE("Failed to allocate platform state memory. NO_MEMORY");
         ret = APPLICATION_NO_MEMORY;
@@ -203,7 +236,12 @@ cleanup:
             }
         }
         if(NULL != tmp) {
-            linear_allocator_destroy(&tmp->linear_allocator);
+            if(NULL != tmp->linear_alloc_pool) {
+                memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+            }
+            if(NULL != tmp->linear_alloc) {
+                memory_system_free(tmp->linear_alloc, tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+            }
             memory_system_free(tmp, sizeof(*tmp), MEMORY_TAG_SYSTEM);
             tmp = NULL;
         }
@@ -224,7 +262,14 @@ void application_destroy(void) {
     if(NULL != s_app_state->platform_vtable) {
         s_app_state->platform_vtable->platform_state_destroy(s_app_state->platform_state);
     }
-    linear_allocator_destroy(&s_app_state->linear_allocator);
+    if(NULL != s_app_state->linear_alloc_pool) {
+        memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+        s_app_state->linear_alloc_pool = NULL;
+    }
+    if(NULL != s_app_state->linear_alloc) {
+        memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+        s_app_state->linear_alloc = NULL;
+    }
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
