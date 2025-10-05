@@ -18,7 +18,6 @@
  * このため、linear_alloc_t型で変数を宣言することはできない \n
  * 使用の際は、linear_alloc_t*型で宣言すること
  *
- * @todo 必要であればmemory_systemへの統合を考える
  *
  * @version 0.1
  * @date 2025-09-16
