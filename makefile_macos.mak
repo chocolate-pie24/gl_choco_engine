@@ -9,6 +9,8 @@ DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 INCLUDE_FLAGS = -Iinclude
+INCLUDE_FLAGS += -I/opt/homebrew/Cellar/glew/2.2.0_1/include/
+INCLUDE_FLAGS += -I/opt/homebrew/Cellar/glfw/3.4/include/
 ifeq ($(BUILD_MODE), TEST_BUILD)
   INCLUDE_FLAGS += -Itest/include
 endif
@@ -41,6 +43,11 @@ COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
 COMPILER_FLAGS += -Wno-pre-c11-compat
 
+# glfw3のワーニング抑制
+COMPILER_FLAGS += -Wno-documentation-unknown-command
+COMPILER_FLAGS += -Wno-documentation
+COMPILER_FLAGS += -Wno-reserved-identifier
+
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
 	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS
 else
@@ -53,6 +60,14 @@ else
 		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
 	endif
 endif
+LINKER_FLAGS += -L/opt/homebrew/Cellar/glfw/3.4/lib/
+LINKER_FLAGS += -L/opt/homebrew/Cellar/glew/2.2.0_1/lib/
+LINKER_FLAGS += -L/opt/homebrew/Cellar/glfw/3.4/lib/
+LINKER_FLAGS += -lglfw
+LINKER_FLAGS += -lglew
+LINKER_FLAGS += -framework OpenGL
+LINKER_FLAGS += -framework IOKit
+LINKER_FLAGS += -framework Cocoa
 
 .PHONY: all
 all: scaffold link
