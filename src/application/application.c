@@ -26,11 +26,6 @@
 #include "engine/interfaces/platform_interface.h"
 // end temporary
 
-/*
-TODO:
- - [] application_createでは先に全サブシステムの必要メモリ量を合算してからリニアアロケータを作成する
-*/
-
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
  *
@@ -106,6 +101,11 @@ app_err_t application_create(void) {
     memset(tmp, 0, sizeof(*tmp));
 
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
+
+    // [NOTE] linear_allocatorのプールサイズについて
+    //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
+    //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
+    //   当面は実施せず、多めにメモリを確保する方針にする
 
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
     INFO_MESSAGE("Starting linear_allocator initialize...");
