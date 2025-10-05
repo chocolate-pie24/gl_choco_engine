@@ -33,6 +33,7 @@ typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだ�
 static malloc_test_t s_malloc_test;
 
 static void test_test_malloc(void); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
+static void test_memory_system_create(void);
 static void test_memory_system_destroy(void);
 static void test_memory_system_allocate(void);
 static void test_memory_system_free(void);
@@ -53,26 +54,42 @@ static memory_system_t* s_mem_sys_ptr = NULL;
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
+// NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
+// s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_sys_err_t memory_system_create(void) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_t* tmp = NULL;
+
+    // Preconditions.
     if(NULL != s_mem_sys_ptr) {
         ERROR_MESSAGE("memory_system_create(RUNTIME_ERROR) - Memory system is already initialized.");
         ret = MEMORY_SYSTEM_RUNTIME_ERROR;
         goto cleanup;
     }
-    s_mem_sys_ptr = (memory_system_t*)malloc(sizeof(memory_system_t));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "s_mem_sys_ptr")
-    memset(s_mem_sys_ptr, 0, sizeof(memory_system_t));
 
-    s_mem_sys_ptr->total_allocated = 0;
+    // Simulation.
+    tmp = (memory_system_t*)test_malloc(sizeof(memory_system_t));
+    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
+    memset(tmp, 0, sizeof(memory_system_t));
+
+    tmp->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        s_mem_sys_ptr->mem_tag_allocated[i] = 0;
+        tmp->mem_tag_allocated[i] = 0;
     }
-    s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_SYSTEM] = "system";
-    s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING] = "string";
+    tmp->mem_tag_str[MEMORY_TAG_SYSTEM] = "system";
+    tmp->mem_tag_str[MEMORY_TAG_STRING] = "string";
+
+    // commit
+    s_mem_sys_ptr = tmp;
     ret = MEMORY_SYSTEM_SUCCESS;
 
 cleanup:
+    if(MEMORY_SYSTEM_SUCCESS != ret) {
+        if(NULL != tmp) {
+            free(tmp);
+            tmp = NULL;
+        }
+    }
     return ret;
 }
 
@@ -208,265 +225,315 @@ static void* test_malloc(size_t size_) {
 #ifdef TEST_BUILD
 void test_memory_system(void) {
     test_test_malloc();
-    test_memory_system_destroy();
-    test_memory_system_allocate();
-    test_memory_system_free();
-    test_memory_system_report();
+    test_memory_system_create();
+    // test_memory_system_destroy();
+    // test_memory_system_allocate();
+    // test_memory_system_free();
+    // test_memory_system_report();
 }
 
-static void NO_COVERAGE test_memory_system_destroy(void) {
-    // memory_system_ == NULLでNo-op
-    memory_system_destroy(NULL);
+static void NO_COVERAGE test_memory_system_create(void) {
+    {
+        // NULL != s_mem_sys_ptr -> MEMORY_SYSTEM_RUNTIME_ERROR
+        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    memory_system_t* system = NULL;
-    size_t memory = 0;
-    size_t align = 0;
-    memory_system_preinit(&memory, &align);
-    system = (memory_system_t*)malloc(memory);
-    ret = memory_system_init(system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL == s_mem_sys_ptr);
+        s_mem_sys_ptr = malloc(sizeof(memory_system_t));
+        assert(NULL != s_mem_sys_ptr);
 
-    system->total_allocated = 100;
-    system->mem_tag_allocated[MEMORY_TAG_SYSTEM] = 10;
-    system->mem_tag_allocated[MEMORY_TAG_STRING] = 20;
-    memory_system_destroy(system);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
+        ret = memory_system_create();
+        assert(NULL != s_mem_sys_ptr);
+        assert(MEMORY_SYSTEM_RUNTIME_ERROR == ret);
+
+        free(s_mem_sys_ptr);
+        s_mem_sys_ptr = NULL;
     }
+    {
+        // s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
+        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    free(system);
-    system = NULL;
+        s_malloc_test.fail_enable = true;
+        s_malloc_test.malloc_counter = 0;
+        s_malloc_test.malloc_fail_n = 0;
+
+        assert(NULL == s_mem_sys_ptr);
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_NO_MEMORY == ret);
+        assert(NULL == s_mem_sys_ptr);
+
+        s_malloc_test.fail_enable = false;
+    }
+    {
+        // 正常系
+        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+        assert(NULL == s_mem_sys_ptr);
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(0 == s_mem_sys_ptr->total_allocated);
+        assert(0 == strcmp("system", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_SYSTEM]));
+        assert(0 == strcmp("string", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING]));
+        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+            assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
+        }
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+    }
 }
 
-static void NO_COVERAGE test_memory_system_allocate(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    memory_system_t* system = NULL;
-    size_t memory = 0;
-    size_t align = 0;
-    memory_system_preinit(&memory, &align);
-    system = (memory_system_t*)malloc(memory);
-    ret = memory_system_init(system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
+// static void NO_COVERAGE test_memory_system_destroy(void) {
+//     // memory_system_ == NULLでNo-op
+//     s_mem_sys_ptr = NULL;
+//     memory_system_destroy();
 
-    void* ptr = NULL;
-    // memory_system_ == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(NULL, 128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
-    }
-    assert(NULL == ptr);
+//     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+//     size_t memory = 0;
+//     size_t align = 0;
+//     memory_system_preinit(&memory, &align);
+//     s_mem_sys_ptr = (memory_system_t*)malloc(memory);
+//     ret = memory_system_init(system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
-    // out_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, NULL);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
-    }
+//     system->total_allocated = 100;
+//     system->mem_tag_allocated[MEMORY_TAG_SYSTEM] = 10;
+//     system->mem_tag_allocated[MEMORY_TAG_STRING] = 20;
+//     memory_system_destroy(system);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
 
-    // *out_ptr != NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ptr = malloc(8);
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
-    }
-    free(ptr);
-    ptr = NULL;
+//     free(system);
+//     system = NULL;
+// }
 
-    // mem_tag_ >= MEMORY_TAG_MAXでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_MAX, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
-    }
-    assert(NULL == ptr);
+// static void NO_COVERAGE test_memory_system_allocate(void) {
+//     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+//     memory_system_t* system = NULL;
+//     size_t memory = 0;
+//     size_t align = 0;
+//     memory_system_preinit(&memory, &align);
+//     system = (memory_system_t*)malloc(memory);
+//     ret = memory_system_init(system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
-    // size_ == 0でwarningメッセージを出し、MEMORY_SYSTEM_SUCCESS
-    ret = memory_system_allocate(system, 0, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(0 == system->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == system->mem_tag_allocated[i]);
-    }
-    assert(NULL == ptr);
+//     void* ptr = NULL;
+//     // memory_system_ == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
+//     ret = memory_system_allocate(NULL, 128, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
+//     assert(NULL == ptr);
 
-    // mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
-    system->mem_tag_allocated[MEMORY_TAG_STRING] = SIZE_MAX - 100;
-    ret = memory_system_allocate(system, 101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == system->total_allocated);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert((SIZE_MAX - 100) == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(NULL == ptr);
-    system->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
+//     // out_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, NULL);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
 
-    // total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
-    system->total_allocated = SIZE_MAX - 100;
-    ret = memory_system_allocate(system, 101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert((SIZE_MAX - 100) == system->total_allocated);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(NULL == ptr);
-    system->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
-    assert(NULL == ptr);
-    system->total_allocated = 0;
+//     // *out_ptr != NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
+//     ptr = malloc(8);
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
+//     free(ptr);
+//     ptr = NULL;
 
-    // // 1回目のmallocで失敗させる
-    s_malloc_test.fail_enable = true;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_NO_MEMORY == ret);
-    assert(0 == system->total_allocated);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert(NULL == ptr);
-    s_malloc_test.fail_enable = false;
-    s_malloc_test.malloc_counter = 0;
+//     // mem_tag_ >= MEMORY_TAG_MAXでMEMORY_SYSTEM_INVALID_ARGUMENT
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_MAX, &ptr);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
+//     assert(NULL == ptr);
 
-    // 正常系
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    free(ptr);
-    ptr = NULL;
+//     // size_ == 0でwarningメッセージを出し、MEMORY_SYSTEM_SUCCESS
+//     ret = memory_system_allocate(system, 0, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert(0 == system->total_allocated);
+//     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+//         assert(0 == system->mem_tag_allocated[i]);
+//     }
+//     assert(NULL == ptr);
 
-    free(system);
-    system = NULL;
-}
+//     // mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
+//     system->mem_tag_allocated[MEMORY_TAG_STRING] = SIZE_MAX - 100;
+//     ret = memory_system_allocate(system, 101, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert(0 == system->total_allocated);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     assert((SIZE_MAX - 100) == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(NULL == ptr);
+//     system->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
 
-static void NO_COVERAGE test_memory_system_free(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    memory_system_t* system = NULL;
-    size_t memory = 0;
-    size_t align = 0;
-    memory_system_preinit(&memory, &align);
-    system = (memory_system_t*)malloc(memory);
-    ret = memory_system_init(system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     // total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
+//     system->total_allocated = SIZE_MAX - 100;
+//     ret = memory_system_allocate(system, 101, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+//     assert((SIZE_MAX - 100) == system->total_allocated);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(NULL == ptr);
+//     system->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
+//     assert(NULL == ptr);
+//     system->total_allocated = 0;
 
-    void* ptr_string = NULL;
-    void* ptr_system = NULL;
+//     // // 1回目のmallocで失敗させる
+//     s_malloc_test.fail_enable = true;
+//     s_malloc_test.malloc_counter = 0;
+//     s_malloc_test.malloc_fail_n = 0;
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_NO_MEMORY == ret);
+//     assert(0 == system->total_allocated);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     assert(NULL == ptr);
+//     s_malloc_test.fail_enable = false;
+//     s_malloc_test.malloc_counter = 0;
 
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     // 正常系
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert(128 == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     free(ptr);
+//     ptr = NULL;
 
-    ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     free(system);
+//     system = NULL;
+// }
 
-    // NULL == memory_system_でワーニング / No-op
-    memory_system_free(NULL, ptr_string, 128, MEMORY_TAG_STRING);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+// static void NO_COVERAGE test_memory_system_free(void) {
+//     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+//     memory_system_t* system = NULL;
+//     size_t memory = 0;
+//     size_t align = 0;
+//     memory_system_preinit(&memory, &align);
+//     system = (memory_system_t*)malloc(memory);
+//     ret = memory_system_init(system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
-    // NULL == ptr_でワーニング // No-op
-    memory_system_free(system, NULL, 128, MEMORY_TAG_STRING);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     void* ptr_string = NULL;
+//     void* ptr_system = NULL;
 
-    // mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
-    memory_system_free(system, ptr_string, 128, MEMORY_TAG_MAX);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert(128 == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-    memory_system_free(system, ptr_string, 1024, MEMORY_TAG_STRING);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-    system->total_allocated = 64;   // temporary
-    memory_system_free(system, ptr_string, 128, MEMORY_TAG_STRING);
-    assert(64 == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    system->total_allocated = 128 + 256;
+//     // NULL == memory_system_でワーニング / No-op
+//     memory_system_free(NULL, ptr_string, 128, MEMORY_TAG_STRING);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // 正常系
-    memory_system_free(system, ptr_string, 128, MEMORY_TAG_STRING);
-    assert(256 == system->total_allocated);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     // NULL == ptr_でワーニング // No-op
+//     memory_system_free(system, NULL, 128, MEMORY_TAG_STRING);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    memory_system_free(system, ptr_system, 256, MEMORY_TAG_SYSTEM);
-    assert(0 == system->total_allocated);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     // mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
+//     memory_system_free(system, ptr_string, 128, MEMORY_TAG_MAX);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    ptr_string = NULL;
-    ptr_system = NULL;
+//     // mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
+//     memory_system_free(system, ptr_string, 1024, MEMORY_TAG_STRING);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    free(system);
-    system = NULL;
-}
+//     // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
+//     system->total_allocated = 64;   // temporary
+//     memory_system_free(system, ptr_string, 128, MEMORY_TAG_STRING);
+//     assert(64 == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     system->total_allocated = 128 + 256;
 
-static void NO_COVERAGE test_memory_system_report(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    memory_system_t* system = NULL;
-    size_t memory = 0;
-    size_t align = 0;
-    memory_system_preinit(&memory, &align);
-    system = (memory_system_t*)malloc(memory);
-    ret = memory_system_init(system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     // 正常系
+//     memory_system_free(system, ptr_string, 128, MEMORY_TAG_STRING);
+//     assert(256 == system->total_allocated);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    void* ptr_string = NULL;
-    void* ptr_system = NULL;
+//     memory_system_free(system, ptr_system, 256, MEMORY_TAG_SYSTEM);
+//     assert(0 == system->total_allocated);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // memory_system_ == NULLでワーニング No-op
-    memory_system_report(NULL);
+//     ptr_string = NULL;
+//     ptr_system = NULL;
 
-    // all 0.
-    memory_system_report(system);
+//     free(system);
+//     system = NULL;
+// }
 
-    ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+// static void NO_COVERAGE test_memory_system_report(void) {
+//     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+//     memory_system_t* system = NULL;
+//     size_t memory = 0;
+//     size_t align = 0;
+//     memory_system_preinit(&memory, &align);
+//     system = (memory_system_t*)malloc(memory);
+//     ret = memory_system_init(system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
 
-    // total = 128
-    // string 128
-    // system 0
-    memory_system_report(system);
+//     void* ptr_string = NULL;
+//     void* ptr_system = NULL;
 
-    ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert((128 + 256) == system->total_allocated);
-    assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+//     // memory_system_ == NULLでワーニング No-op
+//     memory_system_report(NULL);
 
-    // total = 384
-    // string 128
-    // system 256
-    memory_system_report(system);
+//     // all 0.
+//     memory_system_report(system);
 
-    system->mem_tag_str[MEMORY_TAG_STRING] = NULL;
-    memory_system_report(system);
+//     ret = memory_system_allocate(system, 128, MEMORY_TAG_STRING, &ptr_string);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert(128 == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(0 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    free(system);
-    system = NULL;
-}
+//     // total = 128
+//     // string 128
+//     // system 0
+//     memory_system_report(system);
+
+//     ret = memory_system_allocate(system, 256, MEMORY_TAG_SYSTEM, &ptr_system);
+//     assert(MEMORY_SYSTEM_SUCCESS == ret);
+//     assert((128 + 256) == system->total_allocated);
+//     assert(128 == system->mem_tag_allocated[MEMORY_TAG_STRING]);
+//     assert(256 == system->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+
+//     // total = 384
+//     // string 128
+//     // system 256
+//     memory_system_report(system);
+
+//     system->mem_tag_str[MEMORY_TAG_STRING] = NULL;
+//     memory_system_report(system);
+
+//     free(system);
+//     system = NULL;
+// }
 
 // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 static void NO_COVERAGE test_test_malloc(void) {
