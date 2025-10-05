@@ -41,8 +41,8 @@ typedef struct malloc_test {
 } malloc_test_t;
 
 static malloc_test_t s_malloc_test;
-void test_linear_allocator_preinit(void);
-void test_linear_allocator_init(void);
+static void test_linear_allocator_preinit(void);
+static void test_linear_allocator_init(void);
 static void test_test_malloc(void);
 static void test_linear_allocator_allocate(void);
 #endif
@@ -154,7 +154,7 @@ static void* test_malloc(size_t size_) {
 }
 
 #ifdef TEST_BUILD
-void test_linear_allocator(void) {
+void NO_COVERAGE test_linear_allocator(void) {
     s_malloc_test.fail_enable = false;
     s_malloc_test.malloc_counter = 0;
     s_malloc_test.malloc_fail_n = 0;
@@ -176,7 +176,7 @@ void test_linear_allocator(void) {
     INFO_MESSAGE("test_linear_allocator_allocate done successfully.");
 }
 
-void test_linear_allocator_preinit(void) {
+static void NO_COVERAGE test_linear_allocator_preinit(void) {
     {
         // 最初のif文のreturnを通ることをステップ実行で確認
         size_t mem = 0;
@@ -198,7 +198,7 @@ void test_linear_allocator_preinit(void) {
     }
 }
 
-void test_linear_allocator_init(void) {
+static void NO_COVERAGE test_linear_allocator_init(void) {
     {
         // 引数allocator_   == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
