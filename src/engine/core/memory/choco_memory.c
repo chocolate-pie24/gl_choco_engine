@@ -80,6 +80,9 @@ void memory_system_destroy(void) {
     if(NULL == s_mem_sys_ptr) {
         goto cleanup;
     }
+    if(0 != s_mem_sys_ptr->total_allocated) {
+        WARN_MESSAGE("memory_system_destroy - total_allocated != 0. Check memory leaks.");
+    }
     s_mem_sys_ptr->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
         s_mem_sys_ptr->mem_tag_allocated[i] = 0;
