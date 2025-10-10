@@ -8,7 +8,8 @@
  * @version 0.1
  * @date 2025-09-20
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_APPLICATION_APPLICATION_H
@@ -59,4 +60,4 @@ app_err_t application_run(void);
 #endif
 #endif
 
-/*@}*/
+/** @}*/

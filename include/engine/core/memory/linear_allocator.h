@@ -22,7 +22,8 @@
  * @version 0.1
  * @date 2025-09-16
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_MEMORY_LINEAR_ALLOCATOR_H
@@ -64,7 +65,7 @@ linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capa
  * 使用例:
  * @code
  * linear_alloc_t* alloc = NULL;    // 必ずNULL初期化をすること
- * linear_alloc_err_t ret = linear_allocator_create(&alloc, 128);   // 128byteの容量でアロケータを生成
+ * linear_alloc_err_t ret = linear_allocator_create(&alloc, 128);   // 128バイトの容量でアロケータを生成
  * // エラー処理
  *
  * int* int_ptr = NULL;
@@ -94,4 +95,4 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
 #endif
 #endif
 
-/*@}*/
+/** @}*/

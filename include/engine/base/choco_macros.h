@@ -8,7 +8,8 @@
  * @version 0.1
  * @date 2025-09-20
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_BASE_CHOCO_MACROS_H
@@ -109,4 +110,4 @@ extern "C" {
 #endif
 #endif
 
-/*@}*/
+/** @}*/
