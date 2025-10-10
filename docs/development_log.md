@@ -156,6 +156,10 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
     - [x] memory_system_allocate
     - [x] memory_system_free
     - [x] memory_system_report
-- [] linear_allocator_reset
-- [] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正, memory_system_allocate_aligneをtodoに追加(FreeListの後)
-- [] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正
+- [x] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正, memory_system_allocate_aligneをtodoに追加(FreeListの後)
+    - [x] memory_system_create
+    - [x] memory_system_destroy
+    - [x] memory_system_allocate
+    - [x] memory_system_free
+    - [x] memory_system_report
+- [x] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正

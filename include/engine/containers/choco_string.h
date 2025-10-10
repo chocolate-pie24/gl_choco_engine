@@ -13,7 +13,8 @@
  * @version 0.1
  * @date 2025-09-26
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  * @todo
  * - [] choco_string_move
@@ -240,4 +241,4 @@ const char* choco_string_c_str(const choco_string_t* string_);
 #endif
 #endif
 
-/*@}*/
+/** @}*/

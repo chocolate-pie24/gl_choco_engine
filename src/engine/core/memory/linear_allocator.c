@@ -7,7 +7,8 @@
  * @version 0.1
  * @date 2025-09-16
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stddef.h>
@@ -75,6 +76,15 @@ cleanup:
     return ret;
 }
 
+// LINEAR_ALLOC_INVALID_ARGUMENT allocator_ == NULL
+// LINEAR_ALLOC_INVALID_ARGUMENT out_ptr_ == NULL
+// LINEAR_ALLOC_INVALID_ARGUMENT *out_ptr_ != NULL
+// LINEAR_ALLOC_INVALID_ARGUMENT req_align_が2の冪乗ではない
+// LINEAR_ALLOC_INVALID_ARGUMENT メモリを割り当てた場合、割り当て先頭アドレスの値がUINTPTR_MAXを超過
+// LINEAR_ALLOC_INVALID_ARGUMENT メモリ割り当て先頭アドレス+割り当てサイズがUINTPTR_MAXを超過
+// LINEAR_ALLOC_NO_MEMORY        メモリを割り当てた場合、メモリプール内に収まらない
+// LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
+// LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
 linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
     linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     uintptr_t head = 0;
