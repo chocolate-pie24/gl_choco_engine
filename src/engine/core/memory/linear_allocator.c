@@ -80,7 +80,7 @@ cleanup:
 // LINEAR_ALLOC_INVALID_ARGUMENT out_ptr_ == NULL
 // LINEAR_ALLOC_INVALID_ARGUMENT *out_ptr_ != NULL
 // LINEAR_ALLOC_INVALID_ARGUMENT req_align_が2の冪乗ではない
-// LINEAR_ALLOC_INVALID_ARGUMENT メモリを割り当てた場合、メモリプール先頭アドレスの値がUINTPTR_MAXを超過
+// LINEAR_ALLOC_INVALID_ARGUMENT メモリを割り当てた場合、割り当て先頭アドレスの値がUINTPTR_MAXを超過
 // LINEAR_ALLOC_INVALID_ARGUMENT メモリ割り当て先頭アドレス+割り当てサイズがUINTPTR_MAXを超過
 // LINEAR_ALLOC_NO_MEMORY        メモリを割り当てた場合、メモリプール内に収まらない
 // LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない

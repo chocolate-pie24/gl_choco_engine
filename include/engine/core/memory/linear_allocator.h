@@ -18,6 +18,8 @@
  * このため、linear_alloc_t型で変数を宣言することはできない \n
  * 使用の際は、linear_alloc_t*型で宣言すること
  *
+ * @todo
+ * - TODO: linear_allocator_reset追加
  *
  * @version 0.1
  * @date 2025-09-16
