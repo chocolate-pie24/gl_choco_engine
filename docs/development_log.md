@@ -148,6 +148,14 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [x] refactor/linear-allocator  : linear_allocatorのメモリをmemory_systemで確保するように仕様変更
 - [x] refactor/application-create : 上記に合わせ、サブシステム用メモリ総容量を事前に計算してlinear_allocatorでメモリ確保するようapplication変更
 - [x] refactor/memory-system      : destroyの際にtotal_allocatedが0でない場合にワーニングを出力
-- [] test/memory-refactoring     : 上記仕様変更に合わせて全てのテストコードを追加、修正、テスト実施
+- [x] test/memory-refactoring     : 上記仕様変更に合わせて全てのテストコードを追加、修正、テスト実施
+  - [x] linear_allocatorテスト
+  - [x] memory_systemテスト
+    - [x] memory_system_create
+    - [x] memory_system_destroy
+    - [x] memory_system_allocate
+    - [x] memory_system_free
+    - [x] memory_system_report
+- [] linear_allocator_reset
 - [] docs/choco-memory           : choco_memory.h, .cのdoxygenコメント修正, memory_system_allocate_aligneをtodoに追加(FreeListの後)
 - [] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正
