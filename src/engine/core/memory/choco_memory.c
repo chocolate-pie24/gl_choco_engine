@@ -1,13 +1,14 @@
 /**
  * @file choco_memory.c
  * @author chocolate-pie24
- * @brief memory_system_tオブジェクトの内部状態定義と関連APIの実装
+ * @brief メモリシステム(不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能)関連APIの実装
  *
  *
  * @version 0.1
  * @date 2025-09-20
  *
- * @copyright Copyright (c) 2025
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stddef.h>
@@ -41,16 +42,16 @@ static void test_memory_system_report(void);
 #endif
 
 /**
- * @brief メモリーシステム内部状態管理オブジェクト
+ * @brief メモリシステム内部状態管理オブジェクト
  *
  */
 typedef struct memory_system {
     size_t total_allocated;                     /**< メモリ総割り当て量 */
-    size_t mem_tag_allocated[MEMORY_TAG_MAX];   /**< 各メモリータグごとのメモリ割り当て量 */
-    const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリータグ文字列 */
+    size_t mem_tag_allocated[MEMORY_TAG_MAX];   /**< 各メモリタグごとのメモリ割り当て量 */
+    const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリタグ文字列 */
 } memory_system_t;
 
-static memory_system_t* s_mem_sys_ptr = NULL;
+static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
@@ -113,6 +114,14 @@ cleanup:
     return;
 }
 
+// s_mem_sys_ptr == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// out_ptr_ == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// *out_ptr_ != NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// mem_tag_ >= MEMORY_TAG_MAX -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// size_ == 0 -> ワーニング出力し、MEMORY_SYSTEM_SUCCESS
+// 指定したmem_tagのメモリ割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// メモリ割り当て失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* tmp = NULL;
