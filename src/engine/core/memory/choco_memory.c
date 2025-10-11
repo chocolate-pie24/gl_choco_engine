@@ -261,7 +261,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
         assert(NULL == s_mem_sys_ptr);
-        s_mem_sys_ptr = malloc(sizeof(memory_system_t));
+        s_mem_sys_ptr = (memory_system_t*)malloc(sizeof(memory_system_t));
         assert(NULL != s_mem_sys_ptr);
 
         ret = memory_system_create();
