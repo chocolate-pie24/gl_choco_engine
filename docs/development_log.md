@@ -172,3 +172,9 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - キーボード、マウスイベントを取得する処理を追加する
 - application_runのループにsleepを追加する
 - escapeを押下でapplication_runを抜けるようにする
+
+- [] callbackはapplication層に配置する
+- [] containers/ring_queue -> 所有はapplication_state
+- [] core/input/mouse_event -> mouse_event_t
+- [] core/input/keyboard_event -> keyboard_event_t
+- [] platform/platform_glfw -> メッセージをキューにpush, applicatio層がpop

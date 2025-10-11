@@ -45,6 +45,7 @@ void event_system_destroy(event_system_state_t* event_system_state_) {
 
 event_system_error_t event_system_event_register(event_system_state_t* event_system_state_, event_code_t event_, event_system_error_t (*event_call_back)(event_arg_t arg_)) {
     event_system_error_t ret = EVENT_SYSTEM_INVALID_ARGUMENT;
+    // TODO: CHECK_ARG_NULL
     if(NULL == event_system_state_) {
         // TODO: エラー処理
         goto cleanup;
@@ -75,4 +76,19 @@ void event_system_event_unregister(event_system_state_t* event_system_state_, ev
         return;
     }
     event_system_state_->event_callback_functions[event_] = NULL;
+}
+
+event_system_error_t event_system_event_fire(event_system_state_t* event_system_state_, event_code_t event_, event_arg_t arg_) {
+    event_system_error_t ret = EVENT_SYSTEM_INVALID_ARGUMENT;
+    // CHECK_ARG_NULL
+    if(NULL == event_system_state_) {
+        goto cleanup;
+    }
+    if(NULL == event_system_state_->event_callback_functions[event_]) {
+    }
+
+    ret = event_system_state_->event_callback_functions[event_](arg_);
+
+cleanup:
+    return ret;
 }

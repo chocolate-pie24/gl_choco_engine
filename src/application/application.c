@@ -20,6 +20,7 @@
 
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/event_system.h"
 
 // begin temporary
 #include "application/platform_registry.h"
@@ -44,9 +45,16 @@ typedef struct app_state {
     size_t platform_state_alignment_requirement;
     platform_state_t* platform_state;
     const platform_vtable_t* platform_vtable;
+
+    // core/event
+    size_t event_system_state_memory_requirement;
+    size_t event_system_state_alignment_requirement;
+    event_system_state_t* event_system_state;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
+
+static event_system_error_t event_system_test_callback(event_arg_t arg_);
 
 // TODO: oc_choco_malloc + テスト
 app_err_t application_create(void) {
@@ -57,6 +65,7 @@ app_err_t application_create(void) {
     memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_error_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
+    event_system_error_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -156,6 +165,43 @@ app_err_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
+    // Simulation -> launch all systems -> create event system.(Don't use s_app_state here.)
+    INFO_MESSAGE("Starting event system initialize...");
+    tmp->event_system_state = NULL;
+    tmp->event_system_state_memory_requirement = 0;
+    tmp->event_system_state_alignment_requirement = 0;
+    event_system_preinit(&tmp->event_system_state_memory_requirement, &tmp->event_system_state_alignment_requirement);
+    if(0 == tmp->event_system_state_memory_requirement || 0 == tmp->event_system_state_alignment_requirement) {
+        ERROR_MESSAGE("Failed to preinit event system. RUNTIME_ERROR");
+        ret = APPLICATION_RUNTIME_ERROR;
+        goto cleanup;
+    }
+    ret_linear_alloc = linear_allocator_allocate(tmp->linear_alloc, tmp->event_system_state_memory_requirement, tmp->event_system_state_alignment_requirement, (void**)&tmp->event_system_state);
+    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to allocate event system state memory. NO_MEMORY");
+        ret = APPLICATION_NO_MEMORY;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to allocate event system state memory. INVALID_ARGUMENT");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ERROR_MESSAGE("Failed to allocate event system state memory. UNDEFINED_ERROR");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+    ret_event_system = event_system_init(tmp->event_system_state);
+    if(EVENT_SYSTEM_INVALID_ARGUMENT == ret_event_system) {
+        ERROR_MESSAGE("Failed to initialize event system. INVALID_ARGUMENT");
+        ret = APPLICATION_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
+        ERROR_MESSAGE("Failed to initialize event system. UNDEFINED_ERROR");
+        ret = APPLICATION_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+    INFO_MESSAGE("Event system initialized successfully.");
+
     // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
     INFO_MESSAGE("Starting platform_state initialize...");
     tmp->platform_vtable = NULL;
@@ -199,6 +245,11 @@ app_err_t application_create(void) {
     INFO_MESSAGE("platform_state initialized successfully.");
 
     // end Simulation -> launch all systems.
+
+    // begin Simulation -> event register.(Don't use s_app_state here.)
+    ret_event_system = event_system_event_register(tmp->event_system_state, EVENT_CODE_EVENT_TEST, event_system_test_callback);
+    // end Simulation -> event register.
+
     // end Simulation
 
     // begin temporary
@@ -263,6 +314,10 @@ void application_destroy(void) {
     if(NULL != s_app_state->platform_vtable) {
         s_app_state->platform_vtable->platform_state_destroy(s_app_state->platform_state);
     }
+    if(NULL != s_app_state->event_system_state) {
+        event_system_event_unregister(s_app_state->event_system_state, EVENT_CODE_EVENT_TEST);
+        event_system_destroy(s_app_state->event_system_state);
+    }
     if(NULL != s_app_state->linear_alloc_pool) {
         memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc_pool = NULL;
@@ -291,9 +346,17 @@ app_err_t application_run(void) {
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
+
+    event_arg_t event_test_arg = { 0 };
+    event_system_event_fire(s_app_state->event_system_state, EVENT_CODE_EVENT_TEST, event_test_arg);
     // while(APPLICATION_SUCCESS == ret) {
     // }
 
 cleanup:
     return ret;
+}
+
+static event_system_error_t event_system_test_callback(event_arg_t arg_) {
+    DEBUG_MESSAGE("event_system_test_callback - fire.");
+    return EVENT_SYSTEM_SUCCESS;
 }

@@ -22,6 +22,7 @@ typedef enum {
     EVENT_CODE_WINDOW_RESIZED,
     EVENT_CODE_MOUSE_PRESSED,
     EVENT_CODE_MOUSE_RELEASED,
+    EVENT_CODE_EVENT_TEST,
     EVENT_CODE_MAX,
 } event_code_t;
 
@@ -47,7 +48,7 @@ event_system_error_t event_system_event_register(event_system_state_t* event_sys
 
 void event_system_event_unregister(event_system_state_t* event_system_state_, event_code_t event_);
 
-// event_system_error_t event_system_event_fire(event_code_t event_, event_arg_t arg_);
+event_system_error_t event_system_event_fire(event_system_state_t* event_system_state_, event_code_t event_, event_arg_t arg_);
 
 #ifdef __cplusplus
 }
