@@ -189,7 +189,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
         // 引数memory_pool_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         size_t cap = 128;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
@@ -206,7 +206,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
         // 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
@@ -231,7 +231,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
         linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         size_t cap = 128;
 
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
@@ -262,7 +262,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
 
         // 引数out_ptr_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(128);
@@ -299,7 +299,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
     }
     {
         void* out_ptr = NULL;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
@@ -326,7 +326,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         pool = NULL;
     }
     {
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
@@ -347,7 +347,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
     }
     {
         void* out_ptr = NULL;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
@@ -368,7 +368,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
     }
     {
         void* out_ptr = NULL;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
@@ -388,7 +388,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
     }
     {
         void* out_ptr = NULL;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
@@ -408,7 +408,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
     }
     {
         void* out_ptr = NULL;
-        linear_alloc_t* alloc = malloc(sizeof(linear_alloc_t));
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
