@@ -165,3 +165,10 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
     - [x] memory_system_free
     - [x] memory_system_report
 - [x] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正
+
+### feat/event-system
+
+実装内容:
+- キーボード、マウスイベントを取得する処理を追加する
+- application_runのループにsleepを追加する
+- escapeを押下でapplication_runを抜けるようにする
