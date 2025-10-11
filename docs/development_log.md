@@ -137,13 +137,15 @@ step2 TODO:
 実装内容: platform_stateのwindow_labelをリソース管理機能を持つchoco_stringに変更する
 ブランチ: feat/2d-rendering-step2 -> feat/choco-string
 
-### fix/memory-system, refactor/linear-allocator, refactor/application-create
+### fix/memory-system, refactor/linear-allocator, refactor/application-create refactor/choco-string
 
 改善理由:
 memory_systemの実態をアプリケーション側に持たせるのはまずい。memory_system_allocateでいちいちmemory_systemを渡す必要がある
 特に、choco_stringのように様々なところから呼ばれる関数の場合、choco_string_xxxにすべてmemory_systemを渡す必要があり煩わしい
 memory_systemの改善に合わせ、linear_allocatorについても仕様を変更する
 
+- [x] test_malloc操作の外部公開APIを追加
+- [x] linear_allocatorのtest_mallocを除去
 - [x] fix/memory_system          : 先にfix/memory_systemでmemory_systemの仕様変更を行う
 - [x] refactor/linear-allocator  : linear_allocatorのメモリをmemory_systemで確保するように仕様変更
 - [x] refactor/application-create : 上記に合わせ、サブシステム用メモリ総容量を事前に計算してlinear_allocatorでメモリ確保するようapplication変更
