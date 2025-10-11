@@ -28,6 +28,10 @@ extern "C" {
 
 #include <stddef.h>
 
+#ifdef TEST_BUILD
+#include <stdint.h>
+#endif
+
 /**
  * @brief メモリタグリスト
  *
@@ -181,6 +185,20 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
  *
  */
 void memory_system_report(void);
+
+#ifdef TEST_BUILD
+// メモリシステムのmallocテスト構造体の値をセットする
+// - malloc_fail_nをmalloc_fail_n_
+// - fail_enableをtrue
+// - malloc_counterの値はそのまま
+void memory_system_test_param_set(int32_t malloc_fail_n_);
+
+// メモリシステムのmallocテスト構造体の値をリセットする
+// - malloc_fail_nを0
+// - faile_enableをfalse
+// - malloc_counterを0
+void memory_system_test_param_reset(void);
+#endif
 
 #ifdef __cplusplus
 }

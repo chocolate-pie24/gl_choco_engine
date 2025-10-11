@@ -25,6 +25,7 @@
 #ifdef TEST_BUILD
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
     bool fail_enable;
     int32_t malloc_counter;
@@ -234,6 +235,17 @@ static void* test_malloc(size_t size_) {
 }
 
 #ifdef TEST_BUILD
+void NO_COVERAGE memory_system_test_param_set(int32_t malloc_fail_n_) {
+    s_malloc_test.fail_enable = true;
+    s_malloc_test.malloc_fail_n = malloc_fail_n_;
+}
+
+void NO_COVERAGE memory_system_test_param_reset(void) {
+    s_malloc_test.fail_enable = false;
+    s_malloc_test.malloc_counter = 0;
+    s_malloc_test.malloc_fail_n = 0;
+}
+
 void test_memory_system(void) {
     test_test_malloc();
     test_memory_system_create();
@@ -263,16 +275,15 @@ static void NO_COVERAGE test_memory_system_create(void) {
         // s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
         memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-        s_malloc_test.fail_enable = true;
-        s_malloc_test.malloc_counter = 0;
-        s_malloc_test.malloc_fail_n = 0;
+        memory_system_test_param_reset();
+        memory_system_test_param_set(0);
 
         assert(NULL == s_mem_sys_ptr);
         ret = memory_system_create();
         assert(MEMORY_SYSTEM_NO_MEMORY == ret);
         assert(NULL == s_mem_sys_ptr);
 
-        s_malloc_test.fail_enable = false;
+        memory_system_test_param_reset();
     }
     {
         // 正常系
@@ -389,17 +400,17 @@ static void NO_COVERAGE test_memory_system_allocate(void) {
     s_mem_sys_ptr->total_allocated = 0;
 
     // // 1回目のmallocで失敗させる
-    s_malloc_test.fail_enable = true;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
+    memory_system_test_param_reset();
+    memory_system_test_param_set(0);
+
     ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
     assert(MEMORY_SYSTEM_NO_MEMORY == ret);
     assert(0 == s_mem_sys_ptr->total_allocated);
     assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
     assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
     assert(NULL == ptr);
-    s_malloc_test.fail_enable = false;
-    s_malloc_test.malloc_counter = 0;
+
+    memory_system_test_param_reset();
 
     // 正常系
     ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
@@ -531,9 +542,8 @@ static void NO_COVERAGE test_memory_system_report(void) {
 static void NO_COVERAGE test_test_malloc(void) {
     {
         DEBUG_MESSAGE("test_test_malloc test_case1");
-        s_malloc_test.fail_enable = false;
-        s_malloc_test.malloc_counter = 0;
-        s_malloc_test.malloc_fail_n = 0;
+
+        memory_system_test_param_reset();
         void* tmp = NULL;
         tmp = test_malloc(128);
         assert(NULL != tmp);
@@ -542,9 +552,9 @@ static void NO_COVERAGE test_test_malloc(void) {
     }
     {
         DEBUG_MESSAGE("test_test_malloc test_case2");
-        s_malloc_test.fail_enable = true;
-        s_malloc_test.malloc_counter = 0;
-        s_malloc_test.malloc_fail_n = 1;
+
+        memory_system_test_param_set(1);
+
         void* tmp = NULL;
         tmp = test_malloc(128); // 1回目は成功
         assert(NULL != tmp);
@@ -556,8 +566,6 @@ static void NO_COVERAGE test_test_malloc(void) {
         free(tmp);
         tmp = NULL;
     }
-    s_malloc_test.fail_enable = false;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
+    memory_system_test_param_reset();
 }
 #endif

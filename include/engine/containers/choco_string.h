@@ -46,6 +46,7 @@ typedef enum {
     CHOCO_STRING_SUCCESS,           /**< 処理成功 */
     CHOCO_STRING_NO_MEMORY,         /**< メモリ確保に失敗 */
     CHOCO_STRING_INVALID_ARGUMENT,  /**< 無効な引数 */
+    CHOCO_STRING_UNDEFINED_ERROR,   /**< 未定義エラー */
 } choco_string_error_t;
 
 /**
