@@ -19,6 +19,7 @@
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"
+#include "test_choco_string.h"
 #endif
 
 /**
@@ -42,6 +43,7 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         test_linear_allocator();
         test_memory_system();
+        test_choco_string();
     }
 #endif
     app_err_t app_run_result = APPLICATION_INVALID_ARGUMENT;

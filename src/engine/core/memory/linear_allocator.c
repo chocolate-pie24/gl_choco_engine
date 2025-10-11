@@ -35,20 +35,10 @@ struct linear_alloc {
 
 #ifdef TEST_BUILD
 #include <assert.h>
-typedef struct malloc_test {
-    bool fail_enable;
-    int32_t malloc_counter;
-    int32_t malloc_fail_n;
-} malloc_test_t;
-
-static malloc_test_t s_malloc_test;
 static void test_linear_allocator_preinit(void);
 static void test_linear_allocator_init(void);
-static void test_test_malloc(void);
 static void test_linear_allocator_allocate(void);
 #endif
-
-static void* test_malloc(size_t size_);
 
 void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_) {
     if(NULL == memory_requirement_ || NULL == align_requirement_) {
@@ -144,35 +134,8 @@ cleanup:
     return ret;
 }
 
-static void* test_malloc(size_t size_) {
-    void* ret = NULL;
-#ifdef TEST_BUILD
-    if(s_malloc_test.fail_enable) {
-        if(s_malloc_test.malloc_counter == s_malloc_test.malloc_fail_n) {
-            ret = NULL;
-        } else {
-            ret = malloc(size_);
-        }
-        s_malloc_test.malloc_counter++;
-    } else {
-        ret = malloc(size_);
-    }
-#else
-    ret = malloc(size_);
-#endif
-    return ret;
-}
-
 #ifdef TEST_BUILD
 void NO_COVERAGE test_linear_allocator(void) {
-    s_malloc_test.fail_enable = false;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
-
-    INFO_MESSAGE("test_test_malloc begin");
-    test_test_malloc();
-    INFO_MESSAGE("test_test_malloc done successfully.");
-
     INFO_MESSAGE("test_linear_allocator_preinit begin");
     test_linear_allocator_preinit();
     INFO_MESSAGE("test_linear_allocator_preinit done successfully.");
@@ -463,38 +426,5 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         alloc = NULL;
         pool = NULL;
     }
-}
-
-static void NO_COVERAGE test_test_malloc(void) {
-    {
-        DEBUG_MESSAGE("test_test_malloc test_case1");
-        s_malloc_test.fail_enable = false;
-        s_malloc_test.malloc_counter = 0;
-        s_malloc_test.malloc_fail_n = 0;
-        void* tmp = NULL;
-        tmp = test_malloc(128);
-        assert(NULL != tmp);
-        free(tmp);
-        tmp = NULL;
-    }
-    {
-        DEBUG_MESSAGE("test_test_malloc test_case2");
-        s_malloc_test.fail_enable = true;
-        s_malloc_test.malloc_counter = 0;
-        s_malloc_test.malloc_fail_n = 1;
-        void* tmp = NULL;
-        tmp = test_malloc(128); // 1回目は成功
-        assert(NULL != tmp);
-        free(tmp);
-        tmp = NULL;
-
-        tmp = test_malloc(128); // 2回目で失敗
-        assert(NULL == tmp);
-        free(tmp);
-        tmp = NULL;
-    }
-    s_malloc_test.fail_enable = false;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
 }
 #endif

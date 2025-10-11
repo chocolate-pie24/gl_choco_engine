@@ -8,36 +8,24 @@
  * @version 0.1
  * @date 2025-09-26
  *
+ * @todo
+ * - [] src_len + 1のオーバーフローチェックをしていない + テストケース追加
+ *
  * @copyright Copyright (c) 2025 chocolate-pie24
  * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
 
 #include "engine/containers/choco_string.h"
+
+#include "engine/core/memory/choco_memory.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-/*
-TODO:
- - [] src_len + 1のオーバーフローチェックをしていない + テストケース追加
-*/
-
 #ifdef TEST_BUILD
 #include <assert.h>
-
-typedef struct test_malloc {
-    bool test_enable;
-    size_t malloc_counter;
-    size_t malloc_fail_n;
-} test_malloc_t;
-
-static test_malloc_t s_test_malloc;
-
 static void test_choco_string_default_create(void);
 static void test_choco_string_create_from_char(void);
 static void test_choco_string_destroy(void);
@@ -53,7 +41,12 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
-static void* test_malloc(size_t size_);
+static const char* s_err_str_invalid_arg = "INVALID_ARGUMENT";
+static const char* s_err_str_no_mem = "NO_MEMORY";
+static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
+
+static const char* err_to_string(choco_string_error_t err_);
+static choco_string_error_t string_malloc(size_t size_, void** out_ptr_);
 
 // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
 // *string_ != NULLでCHOCO_STRING_INVALID_ARGUMENT
@@ -67,8 +60,11 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_) {
     CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*string_, CHOCO_STRING_INVALID_ARGUMENT, "choco_string_default_create", "*string_")
 
     // Simulation.
-    tmp_string = (choco_string_t*)test_malloc(sizeof(*tmp_string));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp_string, CHOCO_STRING_NO_MEMORY, "choco_string_default_create", "tmp_string")
+    ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret) {
+        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate tmp_string memory.", err_to_string(ret));
+        goto cleanup;
+    }
     memset(tmp_string, 0, sizeof(*tmp_string));
 
     // Commit.
@@ -78,7 +74,7 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_) {
 cleanup:
     if(CHOCO_STRING_SUCCESS != ret) {
         if(NULL != tmp_string) {
-            free(tmp_string);
+            memory_system_free(tmp_string, sizeof(*tmp_string), MEMORY_TAG_STRING);
             tmp_string = NULL;
         }
     }
@@ -102,14 +98,20 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
     CHECK_ARG_NULL_GOTO_CLEANUP(src_, CHOCO_STRING_INVALID_ARGUMENT, "choco_string_create_from_char", "src_")
 
     // Simulation.
-    tmp_string = (choco_string_t*)test_malloc(sizeof(*tmp_string));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp_string, CHOCO_STRING_NO_MEMORY, "choco_string_create_from_char", "tmp_string")
+    ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret) {
+        ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate tmp_string memory.", err_to_string(ret));
+        goto cleanup;
+    }
     memset(tmp_string, 0, sizeof(*tmp_string));
 
     src_len = strlen(src_);
     if(0 != src_len) {
-        tmp_string->buffer = (char*)test_malloc(src_len + 1);
-        CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp_string->buffer, CHOCO_STRING_NO_MEMORY, "choco_string_create_from_char", "tmp_string->buffer")
+        ret = string_malloc(src_len + 1, (void**)&tmp_string->buffer);
+        if(CHOCO_STRING_SUCCESS != ret) {
+            ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate tmp_string->buffer memory.", err_to_string(ret));
+            goto cleanup;
+        }
         memset(tmp_string->buffer, 0, src_len + 1);
         tmp_string->len = src_len;
         tmp_string->capacity = src_len + 1;
@@ -124,10 +126,10 @@ cleanup:
     if(CHOCO_STRING_SUCCESS != ret) {
         if(NULL != tmp_string) {
             if(NULL != tmp_string->buffer) {
-                free(tmp_string->buffer);
+                memory_system_free(tmp_string->buffer, src_len + 1, MEMORY_TAG_STRING);
                 tmp_string->buffer = NULL;
             }
-            free(tmp_string);
+            memory_system_free(tmp_string, sizeof(*tmp_string), MEMORY_TAG_STRING);
             tmp_string = NULL;
         }
     }
@@ -142,10 +144,10 @@ void choco_string_destroy(choco_string_t** string_) {
         goto cleanup;
     }
     if(NULL != (*string_)->buffer) {
-        free((*string_)->buffer);
+        memory_system_free((*string_)->buffer, (*string_)->capacity, MEMORY_TAG_STRING);
         (*string_)->buffer = NULL;
     }
-    free(*string_);
+    memory_system_free(*string_, sizeof(choco_string_t), MEMORY_TAG_STRING);
     *string_ = NULL;
 cleanup:
     return;
@@ -182,13 +184,16 @@ choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_
         dst_->len = src_->len;
     } else {
         // Simulation.
-        tmp_buffer = (char*)test_malloc(src_->len + 1);
-        CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp_buffer, CHOCO_STRING_NO_MEMORY, "choco_string_copy", "tmp_buffer")
+        ret = string_malloc(src_->len + 1, (void**)&tmp_buffer);
+        if(CHOCO_STRING_SUCCESS != ret) {
+            ERROR_MESSAGE("choco_string_copy(%s) - Failed to allocate tmp_buffer memory.", err_to_string(ret));
+            goto cleanup;
+        }
         memset(tmp_buffer, 0, src_->len + 1);
         memcpy(tmp_buffer, src_->buffer, src_->len + 1);  // 終端文字を含めてコピー
         // Commit.
         if(NULL != dst_->buffer) {
-            free(dst_->buffer);
+            memory_system_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
             dst_->buffer = NULL;
         }
         dst_->buffer = tmp_buffer;
@@ -200,7 +205,7 @@ choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_
 cleanup:
     if(CHOCO_STRING_SUCCESS != ret) {
         if(NULL != tmp_buffer) {
-            free(tmp_buffer);
+            memory_system_free(tmp_buffer, src_->len + 1, MEMORY_TAG_STRING);
             tmp_buffer = NULL;
         }
     }
@@ -217,11 +222,12 @@ cleanup:
 choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_) {
     choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     char* tmp_buffer = NULL;
+    size_t src_len = 0;
 
     // Preconditions.
     CHECK_ARG_NULL_GOTO_CLEANUP(dst_, CHOCO_STRING_INVALID_ARGUMENT, "choco_string_copy_from_char", "dst_")
     CHECK_ARG_NULL_GOTO_CLEANUP(src_, CHOCO_STRING_INVALID_ARGUMENT, "choco_string_copy_from_char", "src_")
-    const size_t src_len = strlen(src_);
+    src_len = strlen(src_);
     if(0 == src_len) {
         if(NULL != dst_->buffer) {
             memset(dst_->buffer, 0, dst_->len + 1);
@@ -236,16 +242,20 @@ choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const cha
         memcpy(dst_->buffer, src_, src_len + 1);
         dst_->len = src_len;
     } else {
-        tmp_buffer = (char*)test_malloc(src_len + 1);
-        CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp_buffer, CHOCO_STRING_NO_MEMORY, "choco_string_copy_from_char", "tmp_buffer")
+        ret = string_malloc(src_len + 1, (void**)&tmp_buffer);
+        if(CHOCO_STRING_SUCCESS != ret) {
+            ERROR_MESSAGE("choco_string_copy_from_char(%s) - Failed to allocate tmp_buffer memory.", err_to_string(ret));
+            goto cleanup;
+        }
         memset(tmp_buffer, 0, src_len + 1);
         memcpy(tmp_buffer, src_, src_len + 1);
-        dst_->len = src_len;
-        dst_->capacity = src_len + 1;
+
         if(NULL != dst_->buffer) {
-            free(dst_->buffer);
+            memory_system_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
             dst_->buffer = NULL;
         }
+        dst_->len = src_len;
+        dst_->capacity = src_len + 1;
         dst_->buffer = tmp_buffer;
     }
     ret = CHOCO_STRING_SUCCESS;
@@ -253,7 +263,7 @@ choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const cha
 cleanup:
     if(CHOCO_STRING_SUCCESS != ret) {
         if(NULL != tmp_buffer) {
-            free(tmp_buffer);
+            memory_system_free(tmp_buffer, src_len + 1, MEMORY_TAG_STRING);
             tmp_buffer = NULL;
         }
     }
@@ -280,42 +290,73 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
-static void* test_malloc(size_t size_) {
-    void* ret = NULL;
-#ifndef TEST_BUILD
-    ret = malloc(size_);
-#else
-    if(!s_test_malloc.test_enable) {
-        ret = malloc(size_);
-    } else {
-        if(s_test_malloc.malloc_counter == s_test_malloc.malloc_fail_n) {
-            ret = NULL;
-        } else {
-            ret = malloc(size_);
-        }
-        s_test_malloc.malloc_counter++;
+static const char* err_to_string(choco_string_error_t err_) {
+    switch(err_) {
+    case CHOCO_STRING_NO_MEMORY:
+        return s_err_str_no_mem;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return s_err_str_invalid_arg;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return s_err_str_undefined_err;
+    default:
+        return s_err_str_undefined_err;
     }
-#endif
+}
+
+static choco_string_error_t string_malloc(size_t size_, void** out_ptr_) {
+    void* tmp_ptr = NULL;
+    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+    memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    ret_mem = memory_system_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
+    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem) {
+        ret = CHOCO_STRING_INVALID_ARGUMENT;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_NO_MEMORY == ret_mem) {
+        ret = CHOCO_STRING_NO_MEMORY;
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = CHOCO_STRING_UNDEFINED_ERROR;
+        goto cleanup;
+    }
+    *out_ptr_ = tmp_ptr;
+    ret = CHOCO_STRING_SUCCESS;
+cleanup:
     return ret;
 }
 
 #ifdef TEST_BUILD
 void test_choco_string(void) {
+    memory_system_create();
+    memory_system_report();
+
     test_choco_string_default_create();
+    memory_system_report();
+
     test_choco_string_create_from_char();
+    memory_system_report();
+
     test_choco_string_destroy();
+    memory_system_report();
+
     test_choco_string_copy();
+    memory_system_report();
+
     test_choco_string_copy_from_char();
+    memory_system_report();
+
     test_choco_string_length();
+    memory_system_report();
+
     test_choco_string_c_str();
+    memory_system_report();
+
+    memory_system_destroy();
 }
 
 static void NO_COVERAGE test_choco_string_default_create(void) {
     {
         // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
 
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         ret = choco_string_default_create(NULL);
@@ -323,9 +364,7 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
     }
     {
         // *string_ != NULLでCHOCO_STRING_INVALID_ARGUMENT
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
 
         // 正常系テスト
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -347,17 +386,14 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY
-        s_test_malloc.test_enable = true;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;    // 1回目のメモリ確保で失敗
+        memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
+
         choco_string_t* string = NULL;
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_NO_MEMORY == ret);
         assert(NULL == string);
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
     }
 }
 
@@ -370,9 +406,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // *string_ != NULLでCHOCO_STRING_INVALID_ARGUMENT
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
 
         // 正常系テスト
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -414,41 +448,34 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
         // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
-        s_test_malloc.test_enable = true;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;    // 1回目のメモリ確保で失敗
+        memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
+
         choco_string_t* string = NULL;
         ret = choco_string_create_from_char(&string, "aaa");
         assert(CHOCO_STRING_NO_MEMORY == ret);
         assert(NULL == string);
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
     }
     {
         // tmp_string->bufferメモリ確保失敗でCHOCO_STRING_NO_MEMORY
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
-        s_test_malloc.test_enable = true;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 1;    // 2回目のメモリ確保で失敗
+        memory_system_test_param_set(1);    // 2回目のメモリ確保で失敗
+
         choco_string_t* string = NULL;
         ret = choco_string_create_from_char(&string, "aaa");
         assert(CHOCO_STRING_NO_MEMORY == ret);
         assert(NULL == string);
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
     }
     {
         // 正常系
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
+
         choco_string_t* string = NULL;
         ret = choco_string_create_from_char(&string, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -471,9 +498,7 @@ static void NO_COVERAGE test_choco_string_destroy(void) {
     }
     {
         // *string_ != NULLでCHOCO_STRING_INVALID_ARGUMENT
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
 
         // 正常系テスト
         choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -646,9 +671,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
         assert(4 == dst->capacity);
         assert(0 == strcmp(dst->buffer, "bbb"));
 
-        s_test_malloc.test_enable = true;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
 
         ret = choco_string_copy(dst, src);
         assert(CHOCO_STRING_NO_MEMORY == ret);
@@ -656,9 +679,10 @@ static void NO_COVERAGE test_choco_string_copy(void) {
         assert(4 == dst->capacity);
         assert(0 == strcmp(dst->buffer, "bbb"));
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
+
+        choco_string_destroy(&src);
+        choco_string_destroy(&dst);
     }
     {
         // dst->buffer = NULL, dst->capacity = 0の状態でaaaを割り当て
@@ -801,9 +825,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
         assert(4 == dst->capacity);
         assert(0 == strcmp(dst->buffer, "bbb"));
 
-        s_test_malloc.test_enable = true;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
 
         ret = choco_string_copy_from_char(dst, "aaaaa");
         assert(CHOCO_STRING_NO_MEMORY == ret);
@@ -811,9 +833,8 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
         assert(4 == dst->capacity);
         assert(0 == strcmp(dst->buffer, "bbb"));
 
-        s_test_malloc.test_enable = false;
-        s_test_malloc.malloc_counter = 0;
-        s_test_malloc.malloc_fail_n = 0;
+        memory_system_test_param_reset();
+        choco_string_destroy(&dst);
     }
     {
         // dst->buffer = NULL, dst->capacity = 0の状態でaaaを割り当て
@@ -851,6 +872,7 @@ static void NO_COVERAGE test_choco_string_length(void) {
 
         const size_t len = choco_string_length(string);
         assert(0 == len);
+        choco_string_destroy(&string);
     }
     {
         // "aaa"(length == 3)
@@ -865,6 +887,7 @@ static void NO_COVERAGE test_choco_string_length(void) {
 
         const size_t len = choco_string_length(string);
         assert(3 == len);
+        choco_string_destroy(&string);
     }
     {
         const size_t len = choco_string_length(NULL);
@@ -886,6 +909,8 @@ static void NO_COVERAGE test_choco_string_c_str(void) {
 
         const char* c_ptr = choco_string_c_str(string);
         assert(0 == strcmp(c_ptr, ""));
+
+        choco_string_destroy(&string);
     }
     {
         // "aaa"(length == 3)
@@ -900,6 +925,8 @@ static void NO_COVERAGE test_choco_string_c_str(void) {
 
         const char* c_ptr = choco_string_c_str(string);
         assert(0 == strcmp(c_ptr, "aaa"));
+
+        choco_string_destroy(&string);
     }
     {
         const char* c_ptr = choco_string_c_str(NULL);
