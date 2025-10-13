@@ -63,8 +63,8 @@ static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同
 
 // NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
 // s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
-memory_sys_err_t memory_system_create(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+memory_system_result_t memory_system_create(void) {
+    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     memory_system_t* tmp = NULL;
 
     // Preconditions.
@@ -129,8 +129,8 @@ cleanup:
 // 指定したmem_tagのメモリ割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
 // メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
 // メモリ割り当て失敗 -> MEMORY_SYSTEM_NO_MEMORY
-memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
+    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* tmp = NULL;
 
     // Preconditions.
@@ -264,7 +264,7 @@ void test_memory_system(void) {
 static void NO_COVERAGE test_memory_system_create(void) {
     {
         // NULL != s_mem_sys_ptr -> MEMORY_SYSTEM_RUNTIME_ERROR
-        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
         assert(NULL == s_mem_sys_ptr);
         s_mem_sys_ptr = (memory_system_t*)malloc(sizeof(memory_system_t));
@@ -279,7 +279,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
     }
     {
         // s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
-        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
         memory_system_test_param_reset();
         memory_system_test_param_set(0);
@@ -293,7 +293,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
     }
     {
         // 正常系
-        memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
         assert(NULL == s_mem_sys_ptr);
         ret = memory_system_create();
@@ -315,7 +315,7 @@ void NO_COVERAGE test_memory_system_destroy(void) {
     memory_system_destroy();
 
     // 正常処理
-    memory_sys_err_t ret = memory_system_create();
+    memory_system_result_t ret = memory_system_create();
     assert(MEMORY_SYSTEM_SUCCESS == ret);
     assert(NULL != s_mem_sys_ptr);
     memory_system_destroy();
@@ -334,7 +334,7 @@ void NO_COVERAGE test_memory_system_destroy(void) {
 }
 
 static void NO_COVERAGE test_memory_system_allocate(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* ptr = NULL;
 
     // s_mem_sys_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
@@ -432,7 +432,7 @@ static void NO_COVERAGE test_memory_system_allocate(void) {
 }
 
 static void NO_COVERAGE test_memory_system_free(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     void* ptr = malloc(8);
     assert(NULL != ptr);
@@ -503,7 +503,7 @@ static void NO_COVERAGE test_memory_system_free(void) {
 }
 
 static void NO_COVERAGE test_memory_system_report(void) {
-    memory_sys_err_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     void* ptr_string = NULL;
     void* ptr_system = NULL;

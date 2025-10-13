@@ -35,8 +35,8 @@ static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
 static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
 static const char* const s_err_str_empty = "EMPTY";
 
-static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_);
-static const char* ring_err_to_string(ring_queue_error_t err_);
+static ring_queue_result_t mem_err_to_ring_err(memory_system_result_t mem_err_);
+static const char* ring_err_to_string(ring_queue_result_t err_);
 
 #ifdef TEST_BUILD
 static void NO_COVERAGE test_ring_err_to_string(void);
@@ -64,9 +64,9 @@ static void NO_COVERAGE test_ring_queue_empty(void);
 // tmp_queueのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
 // tmp_queue->memory_poolのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
 // element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_INVALID_ARGUMENT
-ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
-    memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     ring_queue_t* tmp_queue = NULL;
     size_t capacity = 0;
     size_t stride = 0;
@@ -179,8 +179,8 @@ cleanup:
 // ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
 // ring_queue_がfullでワーニングメッセージ
 // 引数element_size_, element_align_は格納データの不整合のチェック用
-ring_queue_error_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* target_ptr = NULL;
 
@@ -217,8 +217,8 @@ cleanup:
 // ring_queueが空でRING_QUEUE_EMPTY
 
 // 引数element_size_, element_align_は格納データの不整合のチェック用
-ring_queue_error_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* head_ptr = NULL;
 
@@ -259,7 +259,7 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     }
 }
 
-static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_) {
+static ring_queue_result_t mem_err_to_ring_err(memory_system_result_t mem_err_) {
     switch(mem_err_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RING_QUEUE_SUCCESS;
@@ -274,7 +274,7 @@ static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_) {
     }
 }
 
-static const char* ring_err_to_string(ring_queue_error_t err_) {
+static const char* ring_err_to_string(ring_queue_result_t err_) {
     switch(err_) {
     case RING_QUEUE_SUCCESS:
         return s_err_str_success;
@@ -320,7 +320,7 @@ void test_ring_queue(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_create(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ret = ring_queue_create(128, 8, 8, NULL);
@@ -474,7 +474,7 @@ static void NO_COVERAGE test_ring_queue_destroy(void) {
     {
         // 正常系
         ring_queue_t* ring_queue = NULL;
-        ring_queue_error_t ret = ring_queue_create(8, 8, 8, &ring_queue);
+        ring_queue_result_t ret = ring_queue_create(8, 8, 8, &ring_queue);
         ring_queue_destroy(&ring_queue);
         assert(NULL == ring_queue);
         ring_queue_destroy(&ring_queue);    // 2重destroy
@@ -482,7 +482,7 @@ static void NO_COVERAGE test_ring_queue_destroy(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_push(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         int a = 0;
@@ -652,7 +652,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_pop(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     int a = 0;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
@@ -740,7 +740,7 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
     }
     {
         ring_queue_t* ring_queue = NULL;
-        ring_queue_error_t ret_create = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
+        ring_queue_result_t ret_create = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
         assert(RING_QUEUE_SUCCESS == ret_create);
 
         ret = ring_queue_empty(ring_queue);
@@ -794,7 +794,7 @@ static void NO_COVERAGE test_ring_err_to_string(void) {
 }
 
 static void NO_COVERAGE test_mem_err_to_ring_err(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
 
     ret = mem_err_to_ring_err(MEMORY_SYSTEM_SUCCESS);
     assert(RING_QUEUE_SUCCESS == ret);

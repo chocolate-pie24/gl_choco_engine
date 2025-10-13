@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 /**
- * @brief アプリケーションエラーコード定義
+ * @brief アプリケーション実行結果コード定義
  *
  */
 typedef enum {
@@ -29,7 +29,7 @@ typedef enum {
     APPLICATION_RUNTIME_ERROR,      /**< 実行時エラー */
     APPLICATION_INVALID_ARGUMENT,   /**< 引数異常 */
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
-} app_err_t;
+} application_result_t;
 
 /**
  * @brief エンジンを構成する各サブシステムを初期化する
@@ -40,7 +40,7 @@ typedef enum {
  * @retval APPLICATION_INVALID_ARGUMENT サブシステム初期化に無効な引数を指定した
  * @retval APPLICATION_SUCCESS          エンジンおよびアプリケーションの初期化に成功し、正常終了
  */
-app_err_t application_create(void);
+application_result_t application_create(void);
 
 /**
  * @brief エンジンを構成するサブシステムを停止し、アプリケーション終了する
@@ -51,9 +51,9 @@ void application_destroy(void);
 /**
  * @brief アプリケーションメインループ
  *
- * @return app_err_t
+ * @return application_result_t
  */
-app_err_t application_run(void);
+application_result_t application_run(void);
 
 #ifdef __cplusplus
 }

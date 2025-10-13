@@ -47,15 +47,15 @@ static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
 static const char* const s_err_str_window_close = "WINDOW_CLOSE";
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static platform_error_t platform_glfw_init(platform_state_t* platform_state_);
+static platform_result_t platform_glfw_init(platform_state_t* platform_state_);
 static void platform_glfw_destroy(platform_state_t* platform_state_);
-static platform_error_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_);
-static platform_error_t platform_pump_messages(platform_state_t* platform_state_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static platform_result_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_);
+static platform_result_t platform_pump_messages(platform_state_t* platform_state_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
-static const char* platform_err_to_str(platform_error_t err_);
+static const char* platform_err_to_str(platform_result_t err_);
 
-static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_);
+static platform_result_t choco_string_err_to_platform_err(choco_string_result_t err_);
 
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
@@ -81,8 +81,8 @@ cleanup:
     return;
 }
 
-static platform_error_t platform_glfw_init(platform_state_t* platform_state_) {
-    platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
+static platform_result_t platform_glfw_init(platform_state_t* platform_state_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_state_")
 
     platform_state_->initialized_glfw = false;
@@ -144,9 +144,9 @@ static void platform_glfw_destroy(platform_state_t* platform_state_) {
 
 // TODO: 引数エラーチェック
 // TODO: 返り値をエラーコード
-static platform_error_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_) {
-    platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
-    choco_string_error_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+static platform_result_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "platform_state_")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_label_")
@@ -205,13 +205,13 @@ cleanup:
     return ret;
 }
 
-static platform_error_t platform_pump_messages(
+static platform_result_t platform_pump_messages(
     platform_state_t* platform_state_,
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
-    platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     int width = 0;
     int height = 0;
     int button_state = 0;
@@ -303,7 +303,7 @@ cleanup:
     return ret;
 }
 
-static const char* platform_err_to_str(platform_error_t err_) {
+static const char* platform_err_to_str(platform_result_t err_) {
     switch(err_) {
     case PLATFORM_SUCCESS:
         return s_err_str_success;
@@ -442,7 +442,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     }
 }
 
-static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_) {
+static platform_result_t choco_string_err_to_platform_err(choco_string_result_t err_) {
     switch(err_) {
     case CHOCO_STRING_SUCCESS:
         return PLATFORM_SUCCESS;

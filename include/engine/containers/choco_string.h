@@ -40,14 +40,14 @@ extern "C" {
 typedef struct choco_string choco_string_t;
 
 /**
- * @brief 文字列APIエラーコードリスト
+ * @brief 文字列API実行結果コードリスト
  */
 typedef enum {
     CHOCO_STRING_SUCCESS,           /**< 処理成功 */
     CHOCO_STRING_NO_MEMORY,         /**< メモリ確保に失敗 */
     CHOCO_STRING_INVALID_ARGUMENT,  /**< 無効な引数 */
     CHOCO_STRING_UNDEFINED_ERROR,   /**< 未定義エラー */
-} choco_string_error_t;
+} choco_string_result_t;
 
 /**
  * @brief choco_string_tデフォルトコンストラクタ
@@ -56,7 +56,7 @@ typedef enum {
  *
  * @code
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
- * choco_string_error_t ret = choco_string_default_create(&string);
+ * choco_string_result_t ret = choco_string_default_create(&string);
  *
  * // エラー処理
  *
@@ -72,7 +72,7 @@ typedef enum {
  *
  * @see choco_string_create_from_char
  */
-choco_string_error_t choco_string_default_create(choco_string_t** string_);
+choco_string_result_t choco_string_default_create(choco_string_t** string_);
 
 /**
  * @brief 引数で与えた文字列src_でchoco_string_tオブジェクトを初期化し、生成する
@@ -82,7 +82,7 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_);
  *
  * @code
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
- * choco_string_error_t ret = choco_string_create_from_char(&string, "abc");
+ * choco_string_result_t ret = choco_string_create_from_char(&string, "abc");
  *
  * // エラー処理
  *
@@ -100,7 +100,7 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_);
  *
  * @see choco_string_default_create
  */
-choco_string_error_t choco_string_create_from_char(choco_string_t** string_, const char* src_);
+choco_string_result_t choco_string_create_from_char(choco_string_t** string_, const char* src_);
 
 /**
  * @brief choco_string_tが管理しているメモリおよびchoco_string_t*のメモリを解放する
@@ -112,7 +112,7 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
  *
  * @code
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
- * choco_string_error_t ret = choco_string_create_from_char(&string, "abc");
+ * choco_string_result_t ret = choco_string_create_from_char(&string, "abc");
  *
  * // エラー処理
  *
@@ -135,7 +135,7 @@ void choco_string_destroy(choco_string_t** string_);
  *
  * @code
  * choco_string_t* src = NULL;
- * choco_string_error_t ret = choco_string_create_from_char(&src, "aaaaa");
+ * choco_string_result_t ret = choco_string_create_from_char(&src, "aaaaa");
  *
  * // エラー処理
  *
@@ -159,7 +159,7 @@ void choco_string_destroy(choco_string_t** string_);
  * @retval CHOCO_STRING_INVALID_ARGUMENT src_ == NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保失敗
  */
-choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
+choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
 
 /**
  * @brief 文字列src_をdst_にコピーする
@@ -172,7 +172,7 @@ choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_
  *
  * @code
  * choco_string_t* src = NULL;
- * choco_string_error_t ret = choco_string_default_create(&dst);
+ * choco_string_result_t ret = choco_string_default_create(&dst);
  *
  * // エラー処理
  *
@@ -190,7 +190,7 @@ choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_
  * @retval CHOCO_STRING_INVALID_ARGUMENT src_ == NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保失敗
  */
-choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_);
+choco_string_result_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_);
 
 /**
  * @brief string_が管理する文字列の長さを取得する(終端文字を含まない長さが返される)
@@ -200,7 +200,7 @@ choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const cha
  *
  * @code
  * choco_string_t* string = NULL;
- * choco_string_error_t ret = choco_string_create_from_char(&string, "aaaaa");
+ * choco_string_result_t ret = choco_string_create_from_char(&string, "aaaaa");
  *
  * // エラー処理
  *
@@ -222,7 +222,7 @@ size_t choco_string_length(const choco_string_t* string_);
  *
  * @code
  * choco_string_t* string = NULL;
- * choco_string_error_t ret = choco_string_create_from_char(&string, "aaaaa");
+ * choco_string_result_t ret = choco_string_create_from_char(&string, "aaaaa");
  *
  * // エラー処理
  *

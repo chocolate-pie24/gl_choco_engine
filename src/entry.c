@@ -53,8 +53,8 @@ int main(int argc_, char** argv_) {
         memory_system_destroy();
     }
 #endif
-    app_err_t app_run_result = APPLICATION_INVALID_ARGUMENT;
-    app_err_t app_create_result = APPLICATION_INVALID_ARGUMENT;
+    application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
+    application_result_t app_create_result = APPLICATION_INVALID_ARGUMENT;
 
     app_create_result = application_create();
     if(APPLICATION_SUCCESS != app_create_result) {
