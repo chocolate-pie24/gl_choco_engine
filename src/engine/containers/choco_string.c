@@ -63,7 +63,7 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_) {
     // Simulation.
     ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate tmp_string memory.", err_to_string(ret));
+        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", err_to_string(ret));
         goto cleanup;
     }
     memset(tmp_string, 0, sizeof(*tmp_string));
@@ -101,7 +101,7 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
     // Simulation.
     ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate tmp_string memory.", err_to_string(ret));
+        ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string'.", err_to_string(ret));
         goto cleanup;
     }
     memset(tmp_string, 0, sizeof(*tmp_string));
@@ -110,7 +110,7 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
     if(0 != src_len) {
         ret = string_malloc(src_len + 1, (void**)&tmp_string->buffer);
         if(CHOCO_STRING_SUCCESS != ret) {
-            ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate tmp_string->buffer memory.", err_to_string(ret));
+            ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string->buffer'.", err_to_string(ret));
             goto cleanup;
         }
         memset(tmp_string->buffer, 0, src_len + 1);

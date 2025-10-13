@@ -115,7 +115,7 @@ app_err_t application_create(void) {
     ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate app_state memory.", app_err_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", app_err_to_str(ret));
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
@@ -128,7 +128,7 @@ app_err_t application_create(void) {
     //   当面は実施せず、多めにメモリを確保する方針にする
 
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting linear_allocator initialize...");
+    INFO_MESSAGE("Initializing linear allocator...");
     tmp->linear_alloc = NULL;
     linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
@@ -142,7 +142,7 @@ app_err_t application_create(void) {
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator pool memory.", app_err_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", app_err_to_str(ret));
         goto cleanup;
     }
 
@@ -155,7 +155,7 @@ app_err_t application_create(void) {
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
     // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting platform_state initialize...");
+    INFO_MESSAGE("Initializing platform state...");
     tmp->platform_vtable = NULL;
     tmp->platform_vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW); // TODO: #ifdefで切り分け
     if(NULL == tmp->platform_vtable) {
@@ -168,7 +168,7 @@ app_err_t application_create(void) {
     ret_linear_alloc = linear_allocator_allocate(tmp->linear_alloc, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = linear_alloc_err_to_app_err(ret_linear_alloc);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate platform state memory.", app_err_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for platform state.", app_err_to_str(ret));
         goto cleanup;
     }
     ret_platform_state_init = tmp->platform_vtable->platform_state_init((platform_state_t*)tmp_platform_state_ptr);
@@ -208,7 +208,7 @@ app_err_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", app_err_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("keyboard mouse queue initialized successfully.");
+    INFO_MESSAGE("mouse event queue initialized successfully.");
 
     // end Simulation -> launch all systems.
 
@@ -269,7 +269,7 @@ cleanup:
 
 // TODO: test
 void application_destroy(void) {
-    INFO_MESSAGE("starting application_destroy...");
+    INFO_MESSAGE("Starting application shutdown...");
     if(NULL == s_app_state) {
         goto cleanup;
     }
@@ -301,7 +301,7 @@ void application_destroy(void) {
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
-    INFO_MESSAGE("All memory freed.");
+    INFO_MESSAGE("Freed all memory.");
     memory_system_report();
     memory_system_destroy();
     // end cleanup all systems.
@@ -325,7 +325,7 @@ app_err_t application_run(void) {
             continue;
         } else if(PLATFORM_SUCCESS != ret_event) {
             ret = platform_err_to_app_err(ret_event);
-            WARN_MESSAGE("application_run(%s) - Failed to get events.", app_err_to_str(ret));
+            WARN_MESSAGE("application_run(%s) - Failed to pump events.", app_err_to_str(ret));
             continue;
         }
         app_state_update();
@@ -342,7 +342,7 @@ static void on_window(const window_event_t* event_) {
     ring_queue_error_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
     if(NULL == event_) {
-        WARN_MESSAGE("on_window - Argument event_ requires a valid pointer.");
+        WARN_MESSAGE("on_window - Argument 'event_' must not be NULL.");
         goto cleanup;
     }
     if(NULL == s_app_state) {
@@ -368,7 +368,7 @@ static void on_key(const keyboard_event_t* event_) {
         goto cleanup;
     }
     if(NULL == s_app_state) {
-        WARN_MESSAGE("on_key - Application state is not initialized.");
+        WARN_MESSAGE("on_key - Application state is uninitialized.");
         goto cleanup;
     }
 
@@ -397,7 +397,7 @@ static void on_mouse(const mouse_event_t* event_) {
     ret_push = ring_queue_push(s_app_state->mouse_event_queue, event_, sizeof(mouse_event_t), alignof(mouse_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
         app_err_t ret = ring_queue_err_to_app_err(ret_push);
-        WARN_MESSAGE("on_key(%s) - Failed to push mouse event.", app_err_to_str(ret));
+        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", app_err_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -427,7 +427,7 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
-                INFO_MESSAGE("window resized - width / height: [%d, %d] -> [%d, %d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
+                INFO_MESSAGE("Window resized: [%d×%d] -> [%d×%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
                 s_app_state->window_resized = true;
                 s_app_state->window_height = event.window_height;
                 s_app_state->window_width = event.window_width;
@@ -449,7 +449,7 @@ static void app_state_update(void) {
             WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", app_err_to_str(ret));
             goto cleanup;
         } else {
-            INFO_MESSAGE("keyboard event: keycode('%s')  %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+            INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
         }
     }
     // mouse events.
@@ -467,9 +467,9 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(MOUSE_BUTTON_LEFT == event.button) {
-                INFO_MESSAGE("mouse event: button('left')  %s pos %d %d", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
             } else if(MOUSE_BUTTON_RIGHT == event.button) {
-                INFO_MESSAGE("mouse event: button('right')  %s pos %d %d", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
             }
         }
     }
@@ -630,7 +630,7 @@ static const char* keycode_str(keycode_t keycode_) {
         return s_key_left;
     case KEY_UP:
         return s_key_up;
-    case KEY_DN:
+    case KEY_DOWN:
         return s_key_down;
     case KEY_SHIFT:
         return s_key_shift;
