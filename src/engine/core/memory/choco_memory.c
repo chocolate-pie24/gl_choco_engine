@@ -11,11 +11,11 @@
  * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include <stddef.h>
 #include <stdalign.h>
-#include <string.h> // for memset strcmp(test only)
-#include <stdlib.h> // for malloc TODO: remove this!!
+#include <stddef.h>
 #include <stdio.h>  // for fprintf
+#include <stdlib.h> // for malloc TODO: remove this!!
+#include <string.h> // for memset strcmp(test only)
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -54,10 +54,10 @@ typedef struct memory_system {
 
 static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
 
-static const char* s_err_str_success = "SUCCESS";
-static const char* s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* s_err_str_runtime_error = "RUNTIME_ERROR";
-static const char* s_err_str_no_memory = "NO_MEMORY";
+static const char* const s_err_str_success = "SUCCESS";
+static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_err_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_err_str_no_memory = "NO_MEMORY";
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 

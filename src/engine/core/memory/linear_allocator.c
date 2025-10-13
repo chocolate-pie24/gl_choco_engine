@@ -11,17 +11,17 @@
  * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include <stdalign.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
-#include <stdbool.h>
-#include <stdalign.h>
-#include <stdint.h>
 
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
 /**
  * @brief linear_alloc_t内部データ構造
@@ -33,9 +33,9 @@ struct linear_alloc {
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
-static const char* s_err_str_success = "SUCCESS";              /**< エラー種別文字列(処理成功) */
-static const char* s_err_str_no_memory = "NO_MEMORY";          /**< エラー種別文字列(メモリ確保失敗) */
-static const char* s_err_str_invalid_err = "INVALID_ERROR";    /**< エラー種別文字列(無効な引数) */
+static const char* const s_err_str_success = "SUCCESS";              /**< エラー種別文字列(処理成功) */
+static const char* const s_err_str_no_memory = "NO_MEMORY";          /**< エラー種別文字列(メモリ確保失敗) */
+static const char* const s_err_str_invalid_err = "INVALID_ERROR";    /**< エラー種別文字列(無効な引数) */
 
 #ifdef TEST_BUILD
 #include <assert.h>

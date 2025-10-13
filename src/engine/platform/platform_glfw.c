@@ -1,6 +1,6 @@
+#include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdalign.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -12,9 +12,9 @@
 
 #include "engine/core/platform/platform_utils.h"
 
-#include "engine/core/event/window_event.h"
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
 
 #include "engine/interfaces/platform_interface.h"
 
@@ -39,12 +39,12 @@ struct platform_state {
     bool right_button_state;
 };
 
-static const char* s_err_str_success = "SUCCESS";
-static const char* s_err_str_invalid_arg = "INVALID_ARGUMENT";
-static const char* s_err_str_runtime_err = "RUNTIME_ERROR";
-static const char* s_err_str_no_memory = "NO_MEMORY";
-static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
-static const char* s_err_str_window_close = "WINDOW_CLOSE";
+static const char* const s_err_str_success = "SUCCESS";
+static const char* const s_err_str_invalid_arg = "INVALID_ARGUMENT";
+static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
+static const char* const s_err_str_no_memory = "NO_MEMORY";
+static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* const s_err_str_window_close = "WINDOW_CLOSE";
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_error_t platform_glfw_init(platform_state_t* platform_state_);

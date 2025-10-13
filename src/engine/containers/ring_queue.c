@@ -1,8 +1,8 @@
-#include <stddef.h>
-#include <string.h> // for memset
 #include <stdalign.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h> // for memset
 
 #include "engine/containers/ring_queue.h"
 
@@ -28,12 +28,12 @@ struct ring_queue {
     void* memory_pool;
 };
 
-static const char* s_err_str_success = "SUCCESS";
-static const char* s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* s_err_str_no_memory = "NO_MEMORY";
-static const char* s_err_str_runtime_err = "RUNTIME_ERROR";
-static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
-static const char* s_err_str_empty = "EMPTY";
+static const char* const s_err_str_success = "SUCCESS";
+static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_err_str_no_memory = "NO_MEMORY";
+static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
+static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* const s_err_str_empty = "EMPTY";
 
 static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_);
 static const char* ring_err_to_string(ring_queue_error_t err_);
