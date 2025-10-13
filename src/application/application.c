@@ -411,13 +411,23 @@ static void app_state_update(void) {
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_err_to_str(ret));
         goto cleanup;
     }
-
-    // window events.
     if(NULL == s_app_state->window_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", app_err_to_str(ret));
         goto cleanup;
     }
+    if(NULL == s_app_state->keyboard_event_queue) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", app_err_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == s_app_state->mouse_event_queue) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", app_err_to_str(ret));
+        goto cleanup;
+    }
+
+    // window events.
     while(!ring_queue_empty(s_app_state->window_event_queue)) {
         window_event_t event;
         ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
@@ -427,7 +437,7 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
-                INFO_MESSAGE("Window resized: [%d×%d] -> [%d×%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
+                INFO_MESSAGE("Window resized: [%dx%d] -> [%dx%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
                 s_app_state->window_resized = true;
                 s_app_state->window_height = event.window_height;
                 s_app_state->window_width = event.window_width;
@@ -436,11 +446,6 @@ static void app_state_update(void) {
     }
 
     // keyboard events.
-    if(NULL == s_app_state->keyboard_event_queue) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", app_err_to_str(ret));
-        goto cleanup;
-    }
     while(!ring_queue_empty(s_app_state->keyboard_event_queue)) {
         keyboard_event_t event;
         ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
@@ -452,12 +457,8 @@ static void app_state_update(void) {
             INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
         }
     }
+
     // mouse events.
-    if(NULL == s_app_state->mouse_event_queue) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", app_err_to_str(ret));
-        goto cleanup;
-    }
     while(!ring_queue_empty(s_app_state->mouse_event_queue)) {
         mouse_event_t event;
         ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
@@ -473,6 +474,7 @@ static void app_state_update(void) {
             }
         }
     }
+
 cleanup:
     return;
 }
