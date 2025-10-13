@@ -47,7 +47,7 @@ typedef enum {
     KEY_RIGHT,
     KEY_LEFT,
     KEY_UP,
-    KEY_DN,
+    KEY_DOWN,
     KEY_SHIFT,
     KEY_SPACE,
     KEY_SEMICOLON,

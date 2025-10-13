@@ -71,7 +71,7 @@ const platform_vtable_t* platform_glfw_vtable_get(void) {
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
     if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("platform_state_preinit - No-op: memory_requirement_ or alignment_requirement_ is NULL.");
+        WARN_MESSAGE("platform_state_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
         goto cleanup;
     }
     *memory_requirement_ = sizeof(platform_state_t);
@@ -153,12 +153,12 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
     if(!platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW is not initialized.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
     if(NULL != platform_state_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window is already initialized.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -166,7 +166,7 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = choco_string_err_to_platform_err(ret_string);
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", platform_err_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_err_to_str(ret));
         goto cleanup;
     }
 
@@ -219,7 +219,7 @@ static platform_error_t platform_pump_messages(
     bool right_pressed = false;
 
     if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_pump_messages(%s) - Provided platform_state_ is not initialized.", s_err_str_invalid_arg);
+        ERROR_MESSAGE("platform_pump_messages(%s) - Argument 'platform_state_' is uninitialized.", s_err_str_invalid_arg);
         ret = PLATFORM_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -282,7 +282,7 @@ static platform_error_t platform_pump_messages(
 
     button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_RIGHT);
     right_pressed = (GLFW_PRESS == button_state) ? true : false;
-    if(platform_state_->left_button_state != right_pressed) {
+    if(platform_state_->right_button_state != right_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
         glfwGetCursorPos(platform_state_->window, &mouse_x, &mouse_y);
@@ -402,7 +402,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
         return GLFW_KEY_LEFT;
     case KEY_UP:
         return GLFW_KEY_UP;
-    case KEY_DN:
+    case KEY_DOWN:
         return GLFW_KEY_DOWN;
     case KEY_SHIFT:
         return GLFW_KEY_LEFT_SHIFT;

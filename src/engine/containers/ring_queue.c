@@ -82,7 +82,7 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     if(SIZE_MAX / element_size_ < max_element_count_) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided element_size_ and max_element_count_ is too big.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_err_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -100,7 +100,7 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
     }
     stride = element_size_ + padding;
     if(SIZE_MAX / max_element_count_ < stride) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided element is too big.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_err_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -123,7 +123,7 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
     memset(tmp_queue->memory_pool, 0, capacity);
     mem_pool_ptr = (uintptr_t)tmp_queue->memory_pool;
     if(0 != (mem_pool_ptr % element_align_)) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool align is not valid.", s_err_str_runtime_err);
+        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool alignment is invalid.", s_err_str_runtime_err);
         ret = RING_QUEUE_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -190,7 +190,7 @@ ring_queue_error_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_,
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_size == element_size_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "element_size_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_align == element_align_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "element_align_")
     if(ring_queue_->max_element_count == ring_queue_->len) {
-        DEBUG_MESSAGE("ring_queue_push - Ring queue is full.");
+        DEBUG_MESSAGE("Ring queue is full; overwriting the oldest element.");
     }
 
     mem_ptr = (char*)ring_queue_->memory_pool;
@@ -228,7 +228,7 @@ ring_queue_error_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_size == element_size_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "element_size_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_align == element_align_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "element_align_")
     if(ring_queue_empty(ring_queue_)) {
-        WARN_MESSAGE("ring_queue_pop(%s) - Ring queue is empty.", ring_err_to_string(RING_QUEUE_EMPTY));
+        DEBUG_MESSAGE("Ring queue is empty.");
         ret = RING_QUEUE_EMPTY;
         goto cleanup;
     }

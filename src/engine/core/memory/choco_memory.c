@@ -176,23 +176,23 @@ cleanup:
 // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
 void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
     if(NULL == s_mem_sys_ptr) {
-        WARN_MESSAGE("memory_system_free - No-op: s_mem_sys_ptr is NULL.");
+        WARN_MESSAGE("memory_system_free - No-op: memory system is uninitialized.");
         goto cleanup;
     }
     if(NULL == ptr_) {
-        WARN_MESSAGE("memory_system_free - No-op: ptr_ is NULL.");
+        WARN_MESSAGE("memory_system_free - No-op: 'ptr_' must not be NULL.");
         goto cleanup;
     }
     if(mem_tag_ >= MEMORY_TAG_MAX) {
-        WARN_MESSAGE("memory_system_free - No-op: invalid mem_tag_.");
+        WARN_MESSAGE("memory_system_free - No-op: 'mem_tag_' is invalid.");
         goto cleanup;
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] < size_) {
-        WARN_MESSAGE("memory_system_free - No-op: mem_tag_allocated broken.");
+        WARN_MESSAGE("memory_system_free - No-op: 'mem_tag_allocated' would underflow.");
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated < size_) {
-        WARN_MESSAGE("memory_system_free: No-op: total_allocated broken.");
+        WARN_MESSAGE("memory_system_free: No-op: 'total_allocated' would underflow.");
         goto cleanup;
     }
 

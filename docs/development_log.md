@@ -184,5 +184,6 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [x] platform/platform_glfw -> メッセージをキューにpush, applicatio層がpop
 - [] layer.md整理
 - [] memory_system_allocateの契約にmax_align_tにアラインされたメモリを返す、を追記
-- [] application.c エラーコード変換(application以外も全部 refactor/error-message)
-- [] clang-tidy include過不足チェック
+- [x] application.c エラーコード変換(application以外も全部 refactor/error-message)
+- [x] clang-tidy include過不足チェック
+- [] そのうちやる(application.cのエラー文字列周りを別ファイルに移す)
