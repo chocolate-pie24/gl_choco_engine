@@ -54,6 +54,11 @@ typedef struct memory_system {
 
 static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
 
+static const char* s_err_str_success = "SUCCESS";
+static const char* s_err_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* s_err_str_runtime_error = "RUNTIME_ERROR";
+static const char* s_err_str_no_memory = "NO_MEMORY";
+
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
 // NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
@@ -64,7 +69,7 @@ memory_sys_err_t memory_system_create(void) {
 
     // Preconditions.
     if(NULL != s_mem_sys_ptr) {
-        ERROR_MESSAGE("memory_system_create(RUNTIME_ERROR) - Memory system is already initialized.");
+        ERROR_MESSAGE("memory_system_create(%s) - Memory system is already initialized.", s_err_str_runtime_error);
         ret = MEMORY_SYSTEM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -139,12 +144,12 @@ memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, voi
         goto cleanup;
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_err_str_invalid_argument, s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
         ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(INVALID_ARGUMENT) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_mem_sys_ptr->total_allocated, size_);
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_err_str_invalid_argument, s_mem_sys_ptr->total_allocated, size_);
         ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
         goto cleanup;
     }

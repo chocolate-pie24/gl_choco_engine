@@ -55,7 +55,7 @@ static platform_error_t platform_pump_messages(platform_state_t* platform_state_
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 static const char* platform_err_to_str(platform_error_t err_);
 
-static platform_err_to_str choco_string_err_to_platform_err(choco_string_error_t err_);
+static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_);
 
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
@@ -166,21 +166,7 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = choco_string_err_to_platform_err(ret_string);
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", s_err_str_invalid_arg);
-        ret = PLATFORM_INVALID_ARGUMENT;
-        goto cleanup;
-    }
-    if(CHOCO_STRING_INVALID_ARGUMENT == ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", s_err_str_invalid_arg);
-        ret = PLATFORM_INVALID_ARGUMENT;
-        goto cleanup;
-    } else if(CHOCO_STRING_NO_MEMORY == ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", s_err_str_no_memory);
-        ret = PLATFORM_NO_MEMORY;
-        goto cleanup;
-    } else if(CHOCO_STRING_SUCCESS != ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", s_err_str_undefined_err);
-        ret = PLATFORM_UNDEFINED_ERROR;
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", platform_err_to_str(ret));
         goto cleanup;
     }
 
@@ -228,6 +214,9 @@ static platform_error_t platform_pump_messages(
     platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
     int width = 0;
     int height = 0;
+    int button_state = 0;
+    bool left_pressed = false;
+    bool right_pressed = false;
 
     if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
         ERROR_MESSAGE("platform_pump_messages(%s) - Provided platform_state_ is not initialized.", s_err_str_invalid_arg);
@@ -250,7 +239,7 @@ static platform_error_t platform_pump_messages(
         platform_state_->window_height = height;
         platform_state_->window_width = width;
 
-        window_event_t window_event = { 0 };
+        window_event_t window_event;
         window_event.event_code = WINDOW_EVENT_RESIZE;
         window_event.window_height = height;
         window_event.window_width = width;
@@ -274,9 +263,8 @@ static platform_error_t platform_pump_messages(
     }
 
     // mouse event.
-    int button_state = 0;
     button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_LEFT);
-    bool left_pressed = (GLFW_PRESS == button_state) ? true : false;
+    left_pressed = (GLFW_PRESS == button_state) ? true : false;
     if(platform_state_->left_button_state != left_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
@@ -293,7 +281,7 @@ static platform_error_t platform_pump_messages(
     }
 
     button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_RIGHT);
-    bool right_pressed = (GLFW_PRESS == button_state) ? true : false;
+    right_pressed = (GLFW_PRESS == button_state) ? true : false;
     if(platform_state_->left_button_state != right_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
@@ -454,7 +442,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     }
 }
 
-static platform_err_to_str choco_string_err_to_platform_err(choco_string_error_t err_) {
+static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_) {
     switch(err_) {
     case CHOCO_STRING_SUCCESS:
         return PLATFORM_SUCCESS;

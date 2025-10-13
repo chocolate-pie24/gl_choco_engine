@@ -41,6 +41,7 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
+static const char* s_err_str_success = "SUCCESS";
 static const char* s_err_str_invalid_arg = "INVALID_ARGUMENT";
 static const char* s_err_str_no_mem = "NO_MEMORY";
 static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
@@ -292,6 +293,8 @@ const char* choco_string_c_str(const choco_string_t* string_) {
 
 static const char* err_to_string(choco_string_error_t err_) {
     switch(err_) {
+    case CHOCO_STRING_SUCCESS:
+        return s_err_str_success;
     case CHOCO_STRING_NO_MEMORY:
         return s_err_str_no_mem;
     case CHOCO_STRING_INVALID_ARGUMENT:
