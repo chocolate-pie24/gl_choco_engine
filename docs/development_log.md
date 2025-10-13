@@ -94,8 +94,8 @@ step2 TODO:
    - [x] strategy化
    - [x] ChatGPTレビュー実施
  - [x] containers/choco_string
- - [] core/event_system
- - [] core/input_system
+ - [x] core/event_system
+ - [x] core/input_system
  - [] テスト
  - [] doxygenコメント追加
  - [] doxygen(groups.doxメンテナンス)
@@ -185,3 +185,4 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [] layer.md整理
 - [] memory_system_allocateの契約にmax_align_tにアラインされたメモリを返す、を追記
 - [] application.c エラーコード変換(application以外も全部 refactor/error-message)
+- [] clang-tidy include過不足チェック

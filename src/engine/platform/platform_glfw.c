@@ -55,6 +55,8 @@ static platform_error_t platform_pump_messages(platform_state_t* platform_state_
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 static const char* platform_err_to_str(platform_error_t err_);
 
+static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_);
+
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
     .platform_state_init = platform_glfw_init,
@@ -86,7 +88,7 @@ static platform_error_t platform_glfw_init(platform_state_t* platform_state_) {
     platform_state_->initialized_glfw = false;
 
     if (GL_FALSE == glfwInit()) {
-        ERROR_MESSAGE("platform_glfw_init(RUNTIME_ERROR) - Failed to initialize glfw.");
+        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -162,23 +164,15 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     }
 
     ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
-    if(CHOCO_STRING_INVALID_ARGUMENT == ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(INVALID_ARGUMENT) - Failed to create window label.");
-        ret = PLATFORM_INVALID_ARGUMENT;
-        goto cleanup;
-    } else if(CHOCO_STRING_NO_MEMORY == ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(NO_MEMORY) - Failed to create window label.");
-        ret = PLATFORM_NO_MEMORY;
-        goto cleanup;
-    } else if(CHOCO_STRING_SUCCESS != ret_string) {
-        ERROR_MESSAGE("platform_glfw_window_create(UNDEFINED_ERROR) - Failed to create window label.");
-        ret = PLATFORM_UNDEFINED_ERROR;
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = choco_string_err_to_platform_err(ret_string);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window label.", platform_err_to_str(ret));
         goto cleanup;
     }
 
     platform_state_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_state_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if (NULL == platform_state_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(RUNTIME_ERROR) - Failed to create window.");
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -189,7 +183,7 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     glfwMakeContextCurrent(platform_state_->window);
     glewExperimental = true;
     if (GLEW_OK != glewInit()) {
-        ERROR_MESSAGE("platform_glfw_window_create(RUNTIME_ERROR) - Failed to initialize GLEW.");
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -220,9 +214,12 @@ static platform_error_t platform_pump_messages(
     platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
     int width = 0;
     int height = 0;
+    int button_state = 0;
+    bool left_pressed = false;
+    bool right_pressed = false;
 
     if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_pump_messages(INVALID_ARGUMENT) - Provided platform_state_ is not initialized.");
+        ERROR_MESSAGE("platform_pump_messages(%s) - Provided platform_state_ is not initialized.", s_err_str_invalid_arg);
         ret = PLATFORM_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -242,7 +239,7 @@ static platform_error_t platform_pump_messages(
         platform_state_->window_height = height;
         platform_state_->window_width = width;
 
-        window_event_t window_event = { 0 };
+        window_event_t window_event;
         window_event.event_code = WINDOW_EVENT_RESIZE;
         window_event.window_height = height;
         window_event.window_width = width;
@@ -266,9 +263,8 @@ static platform_error_t platform_pump_messages(
     }
 
     // mouse event.
-    int button_state = 0;
     button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_LEFT);
-    bool left_pressed = (GLFW_PRESS == button_state) ? true : false;
+    left_pressed = (GLFW_PRESS == button_state) ? true : false;
     if(platform_state_->left_button_state != left_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
@@ -285,7 +281,7 @@ static platform_error_t platform_pump_messages(
     }
 
     button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_RIGHT);
-    bool right_pressed = (GLFW_PRESS == button_state) ? true : false;
+    right_pressed = (GLFW_PRESS == button_state) ? true : false;
     if(platform_state_->left_button_state != right_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
@@ -441,124 +437,22 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     case KEY_F12:
         return GLFW_KEY_F12;
     default:
-        ERROR_MESSAGE("keycode_to_glfw_keycode(INVALID_ARGUMENT) - Undefined key code. Returning key '0'");
+        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", s_err_str_invalid_arg);
         return GLFW_KEY_0;
     }
 }
 
-static keycode_t glfw_to_keycode(int glfw_key_) {
-    switch(glfw_key_) {
-    case GLFW_KEY_1:
-        return KEY_1;
-    case GLFW_KEY_2:
-        return KEY_2;
-    case GLFW_KEY_3:
-        return KEY_3;
-    case GLFW_KEY_4:
-        return KEY_4;
-    case GLFW_KEY_5:
-        return KEY_5;
-    case GLFW_KEY_6:
-        return KEY_6;
-    case GLFW_KEY_7:
-        return KEY_7;
-    case GLFW_KEY_8:
-        return KEY_8;
-    case GLFW_KEY_9:
-        return KEY_9;
-    case GLFW_KEY_0:
-        return KEY_0;
-    case GLFW_KEY_A:
-        return KEY_A;
-    case GLFW_KEY_B:
-        return KEY_B;
-    case GLFW_KEY_C:
-        return KEY_C;
-    case GLFW_KEY_D:
-        return KEY_D;
-    case GLFW_KEY_E:
-        return KEY_E;
-    case GLFW_KEY_F:
-        return KEY_F;
-    case GLFW_KEY_G:
-        return KEY_G;
-    case GLFW_KEY_H:
-        return KEY_H;
-    case GLFW_KEY_I:
-        return KEY_I;
-    case GLFW_KEY_J:
-        return KEY_J;
-    case GLFW_KEY_K:
-        return KEY_K;
-    case GLFW_KEY_L:
-        return KEY_L;
-    case GLFW_KEY_M:
-        return KEY_M;
-    case GLFW_KEY_N:
-        return KEY_N;
-    case GLFW_KEY_O:
-        return KEY_O;
-    case GLFW_KEY_P:
-        return KEY_P;
-    case GLFW_KEY_Q:
-        return KEY_Q;
-    case GLFW_KEY_R:
-        return KEY_R;
-    case GLFW_KEY_S:
-        return KEY_S;
-    case GLFW_KEY_T:
-        return KEY_T;
-    case GLFW_KEY_U:
-        return KEY_U;
-    case GLFW_KEY_V:
-        return KEY_V;
-    case GLFW_KEY_W:
-        return KEY_W;
-    case GLFW_KEY_X:
-        return KEY_X;
-    case GLFW_KEY_Y:
-        return KEY_Y;
-    case GLFW_KEY_Z:
-        return KEY_Z;
-    case GLFW_KEY_RIGHT:
-        return KEY_RIGHT;
-    case GLFW_KEY_LEFT:
-        return KEY_LEFT;
-    case GLFW_KEY_UP:
-        return KEY_UP;
-    case GLFW_KEY_DOWN:
-        return KEY_DN;
-    case GLFW_KEY_LEFT_SHIFT:
-        return KEY_SHIFT;
-    case GLFW_KEY_SPACE:
-        return KEY_SPACE;
-    case GLFW_KEY_SEMICOLON:
-        return KEY_SEMICOLON;
-    case GLFW_KEY_MINUS:
-        return KEY_MINUS;
-    case GLFW_KEY_F1:
-        return KEY_F1;
-    case GLFW_KEY_F2:
-        return KEY_F2;
-    case GLFW_KEY_F3:
-        return KEY_F3;
-    case GLFW_KEY_F4:
-        return KEY_F4;
-    case GLFW_KEY_F5:
-        return KEY_F5;
-    case GLFW_KEY_F6:
-        return KEY_F6;
-    case GLFW_KEY_F7:
-        return KEY_F7;
-    case GLFW_KEY_F8:
-        return KEY_F8;
-    case GLFW_KEY_F9:
-        return KEY_F9;
-    case GLFW_KEY_F10:
-        return KEY_F10;
-    case GLFW_KEY_F11:
-        return KEY_F11;
-    case GLFW_KEY_F12:
-        return KEY_F12;
+static platform_error_t choco_string_err_to_platform_err(choco_string_error_t err_) {
+    switch(err_) {
+    case CHOCO_STRING_SUCCESS:
+        return PLATFORM_SUCCESS;
+    case CHOCO_STRING_NO_MEMORY:
+        return PLATFORM_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return PLATFORM_INVALID_ARGUMENT;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return PLATFORM_UNDEFINED_ERROR;
+    default:
+        return PLATFORM_UNDEFINED_ERROR;
     }
 }
