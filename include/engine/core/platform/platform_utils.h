@@ -11,6 +11,7 @@ typedef enum {
     PLATFORM_RUNTIME_ERROR,
     PLATFORM_NO_MEMORY,
     PLATFORM_UNDEFINED_ERROR,
+    PLATFORM_WINDOW_CLOSE,
 } platform_error_t;
 
 typedef enum {

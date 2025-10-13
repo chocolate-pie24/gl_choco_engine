@@ -10,26 +10,15 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/core/platform/platform_utils.h"
+
+#include "engine/core/event/window_event.h"
+#include "engine/core/event/keyboard_event.h"
+#include "engine/core/event/mouse_event.h"
+
 #include "engine/interfaces/platform_interface.h"
 
 #include "engine/containers/choco_string.h"
-
-/*
-TODO:
- - [x] platform_destroy
- - [x] s_window削除
- - [x] platform_glfw_window_createの引数にplatform_state追加
- - [x] platform_stateにwindow_label追加(deep copy)
- - [x] platform_glfw_window_createエラー処理
- - [x] strdup廃止(choco_malloc経由でメモリを確保したい)+ string.hのincludeを削除
- - [x] docs step2TODOにchoco_string追加
- - [x] free廃止
- - [] イベント処理
-   - [] インプットシステム
-   - [] イベントシステム
-   - [] sleep関数(c標準で行けたかをまず確認)
- - [] layer.mdメンテナンス
-*/
 
 /*
 TODO: そのうちやる
@@ -43,18 +32,35 @@ struct platform_state {
     choco_string_t* window_label;
     GLFWwindow* window;
     bool initialized_glfw;
+
+    bool keycode_state[KEY_CODE_MAX];
+
+    bool left_button_state;
+    bool right_button_state;
 };
+
+static const char* s_err_str_success = "SUCCESS";
+static const char* s_err_str_invalid_arg = "INVALID_ARGUMENT";
+static const char* s_err_str_runtime_err = "RUNTIME_ERROR";
+static const char* s_err_str_no_memory = "NO_MEMORY";
+static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* s_err_str_window_close = "WINDOW_CLOSE";
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_error_t platform_glfw_init(platform_state_t* platform_state_);
 static void platform_glfw_destroy(platform_state_t* platform_state_);
 static platform_error_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_);
+static platform_error_t platform_pump_messages(platform_state_t* platform_state_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+
+static int keycode_to_glfw_keycode(keycode_t keycode_);
+static const char* platform_err_to_str(platform_error_t err_);
 
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
     .platform_state_init = platform_glfw_init,
     .platform_state_destroy = platform_glfw_destroy,
     .platform_window_create = platform_glfw_window_create,
+    .platform_pump_messages = platform_pump_messages,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
@@ -102,6 +108,14 @@ static platform_error_t platform_glfw_init(platform_state_t* platform_state_) {
     platform_state_->window_label = NULL;
 
     platform_state_->initialized_glfw = true;
+
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_state_->keycode_state[i] = false;
+    }
+
+    platform_state_->left_button_state = false;
+    platform_state_->right_button_state = false;
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -137,12 +151,12 @@ static platform_error_t platform_glfw_window_create(platform_state_t* platform_s
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
     if(!platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_glfw_window_create(RUNTIME_ERROR) - GLFW is not initialized.");
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW is not initialized.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
     if(NULL != platform_state_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(RUNTIME_ERROR) - GLFW window is already initialized.");
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window is already initialized.", s_err_str_runtime_err);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -195,4 +209,356 @@ cleanup:
         choco_string_destroy(&platform_state_->window_label);
     }
     return ret;
+}
+
+static platform_error_t platform_pump_messages(
+    platform_state_t* platform_state_,
+    void (*window_event_callback)(const window_event_t* event_),
+    void (*keyboard_event_callback)(const keyboard_event_t* event_),
+    void (*mouse_event_callback)(const mouse_event_t* event_)) {
+
+    platform_error_t ret = PLATFORM_INVALID_ARGUMENT;
+    int width = 0;
+    int height = 0;
+
+    if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
+        ERROR_MESSAGE("platform_pump_messages(INVALID_ARGUMENT) - Provided platform_state_ is not initialized.");
+        ret = PLATFORM_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+
+    // イベントの取得
+    glfwPollEvents();
+
+    // window events.
+    // window events -> window close
+    if(GLFW_PRESS == glfwGetKey(platform_state_->window, GLFW_KEY_ESCAPE) || 0 != glfwWindowShouldClose(platform_state_->window)) {
+        ret = PLATFORM_WINDOW_CLOSE;
+        goto cleanup;
+    }
+    // window events -> window resize
+    glfwGetWindowSize(platform_state_->window, &width, &height);
+    if (width != platform_state_->window_width || height != platform_state_->window_height) {
+        platform_state_->window_height = height;
+        platform_state_->window_width = width;
+
+        window_event_t window_event = { 0 };
+        window_event.event_code = WINDOW_EVENT_RESIZE;
+        window_event.window_height = height;
+        window_event.window_width = width;
+
+        window_event_callback(&window_event);
+    }
+
+    // keyboard events.
+    for (int i = KEY_1; i != KEY_CODE_MAX; ++i) {
+        const int glfw_key = keycode_to_glfw_keycode(i);
+        const int action = glfwGetKey(platform_state_->window, glfw_key);
+        if (GLFW_PRESS == action || GLFW_RELEASE == action) {
+            keyboard_event_t key_event;
+            key_event.key = (keycode_t)i;
+            key_event.pressed = (GLFW_PRESS == action) ? true : false;
+            if(platform_state_->keycode_state[i] != key_event.pressed) {
+                keyboard_event_callback(&key_event);
+                platform_state_->keycode_state[i] = key_event.pressed;
+            }
+        }
+    }
+
+    // mouse event.
+    int button_state = 0;
+    button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_LEFT);
+    bool left_pressed = (GLFW_PRESS == button_state) ? true : false;
+    if(platform_state_->left_button_state != left_pressed) {
+        double mouse_x = 0.0;
+        double mouse_y = 0.0;
+        glfwGetCursorPos(platform_state_->window, &mouse_x, &mouse_y);
+
+        mouse_event_t mouse_event;
+        mouse_event.button = MOUSE_BUTTON_LEFT;
+        mouse_event.pressed = left_pressed;
+        mouse_event.x = (int)mouse_x;
+        mouse_event.y = (int)mouse_y;
+        mouse_event_callback(&mouse_event);
+
+        platform_state_->left_button_state = left_pressed;
+    }
+
+    button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_RIGHT);
+    bool right_pressed = (GLFW_PRESS == button_state) ? true : false;
+    if(platform_state_->left_button_state != right_pressed) {
+        double mouse_x = 0.0;
+        double mouse_y = 0.0;
+        glfwGetCursorPos(platform_state_->window, &mouse_x, &mouse_y);
+
+        mouse_event_t mouse_event;
+        mouse_event.button = MOUSE_BUTTON_RIGHT;
+        mouse_event.pressed = right_pressed;
+        mouse_event.x = (int)mouse_x;
+        mouse_event.y = (int)mouse_y;
+        mouse_event_callback(&mouse_event);
+
+        platform_state_->right_button_state = right_pressed;
+    }
+
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static const char* platform_err_to_str(platform_error_t err_) {
+    switch(err_) {
+    case PLATFORM_SUCCESS:
+        return s_err_str_success;
+    case PLATFORM_INVALID_ARGUMENT:
+        return s_err_str_invalid_arg;
+    case PLATFORM_RUNTIME_ERROR:
+        return s_err_str_runtime_err;
+    case PLATFORM_NO_MEMORY:
+        return s_err_str_no_memory;
+    case PLATFORM_UNDEFINED_ERROR:
+        return s_err_str_undefined_err;
+    case PLATFORM_WINDOW_CLOSE:
+        return s_err_str_window_close;
+    default:
+        return s_err_str_undefined_err;
+    }
+}
+
+static int keycode_to_glfw_keycode(keycode_t keycode_) {
+    switch(keycode_) {
+    case KEY_1:
+        return GLFW_KEY_1;
+    case KEY_2:
+        return GLFW_KEY_2;
+    case KEY_3:
+        return GLFW_KEY_3;
+    case KEY_4:
+        return GLFW_KEY_4;
+    case KEY_5:
+        return GLFW_KEY_5;
+    case KEY_6:
+        return GLFW_KEY_6;
+    case KEY_7:
+        return GLFW_KEY_7;
+    case KEY_8:
+        return GLFW_KEY_8;
+    case KEY_9:
+        return GLFW_KEY_9;
+    case KEY_0:
+        return GLFW_KEY_0;
+    case KEY_A:
+        return GLFW_KEY_A;
+    case KEY_B:
+        return GLFW_KEY_B;
+    case KEY_C:
+        return GLFW_KEY_C;
+    case KEY_D:
+        return GLFW_KEY_D;
+    case KEY_E:
+        return GLFW_KEY_E;
+    case KEY_F:
+        return GLFW_KEY_F;
+    case KEY_G:
+        return GLFW_KEY_G;
+    case KEY_H:
+        return GLFW_KEY_H;
+    case KEY_I:
+        return GLFW_KEY_I;
+    case KEY_J:
+        return GLFW_KEY_J;
+    case KEY_K:
+        return GLFW_KEY_K;
+    case KEY_L:
+        return GLFW_KEY_L;
+    case KEY_M:
+        return GLFW_KEY_M;
+    case KEY_N:
+        return GLFW_KEY_N;
+    case KEY_O:
+        return GLFW_KEY_O;
+    case KEY_P:
+        return GLFW_KEY_P;
+    case KEY_Q:
+        return GLFW_KEY_Q;
+    case KEY_R:
+        return GLFW_KEY_R;
+    case KEY_S:
+        return GLFW_KEY_S;
+    case KEY_T:
+        return GLFW_KEY_T;
+    case KEY_U:
+        return GLFW_KEY_U;
+    case KEY_V:
+        return GLFW_KEY_V;
+    case KEY_W:
+        return GLFW_KEY_W;
+    case KEY_X:
+        return GLFW_KEY_X;
+    case KEY_Y:
+        return GLFW_KEY_Y;
+    case KEY_Z:
+        return GLFW_KEY_Z;
+    case KEY_RIGHT:
+        return GLFW_KEY_RIGHT;
+    case KEY_LEFT:
+        return GLFW_KEY_LEFT;
+    case KEY_UP:
+        return GLFW_KEY_UP;
+    case KEY_DN:
+        return GLFW_KEY_DOWN;
+    case KEY_SHIFT:
+        return GLFW_KEY_LEFT_SHIFT;
+    case KEY_SPACE:
+        return GLFW_KEY_SPACE;
+    case KEY_SEMICOLON:
+        return GLFW_KEY_SEMICOLON;
+    case KEY_MINUS:
+        return GLFW_KEY_MINUS;
+    case KEY_F1:
+        return GLFW_KEY_F1;
+    case KEY_F2:
+        return GLFW_KEY_F2;
+    case KEY_F3:
+        return GLFW_KEY_F3;
+    case KEY_F4:
+        return GLFW_KEY_F4;
+    case KEY_F5:
+        return GLFW_KEY_F5;
+    case KEY_F6:
+        return GLFW_KEY_F6;
+    case KEY_F7:
+        return GLFW_KEY_F7;
+    case KEY_F8:
+        return GLFW_KEY_F8;
+    case KEY_F9:
+        return GLFW_KEY_F9;
+    case KEY_F10:
+        return GLFW_KEY_F10;
+    case KEY_F11:
+        return GLFW_KEY_F11;
+    case KEY_F12:
+        return GLFW_KEY_F12;
+    default:
+        ERROR_MESSAGE("keycode_to_glfw_keycode(INVALID_ARGUMENT) - Undefined key code. Returning key '0'");
+        return GLFW_KEY_0;
+    }
+}
+
+static keycode_t glfw_to_keycode(int glfw_key_) {
+    switch(glfw_key_) {
+    case GLFW_KEY_1:
+        return KEY_1;
+    case GLFW_KEY_2:
+        return KEY_2;
+    case GLFW_KEY_3:
+        return KEY_3;
+    case GLFW_KEY_4:
+        return KEY_4;
+    case GLFW_KEY_5:
+        return KEY_5;
+    case GLFW_KEY_6:
+        return KEY_6;
+    case GLFW_KEY_7:
+        return KEY_7;
+    case GLFW_KEY_8:
+        return KEY_8;
+    case GLFW_KEY_9:
+        return KEY_9;
+    case GLFW_KEY_0:
+        return KEY_0;
+    case GLFW_KEY_A:
+        return KEY_A;
+    case GLFW_KEY_B:
+        return KEY_B;
+    case GLFW_KEY_C:
+        return KEY_C;
+    case GLFW_KEY_D:
+        return KEY_D;
+    case GLFW_KEY_E:
+        return KEY_E;
+    case GLFW_KEY_F:
+        return KEY_F;
+    case GLFW_KEY_G:
+        return KEY_G;
+    case GLFW_KEY_H:
+        return KEY_H;
+    case GLFW_KEY_I:
+        return KEY_I;
+    case GLFW_KEY_J:
+        return KEY_J;
+    case GLFW_KEY_K:
+        return KEY_K;
+    case GLFW_KEY_L:
+        return KEY_L;
+    case GLFW_KEY_M:
+        return KEY_M;
+    case GLFW_KEY_N:
+        return KEY_N;
+    case GLFW_KEY_O:
+        return KEY_O;
+    case GLFW_KEY_P:
+        return KEY_P;
+    case GLFW_KEY_Q:
+        return KEY_Q;
+    case GLFW_KEY_R:
+        return KEY_R;
+    case GLFW_KEY_S:
+        return KEY_S;
+    case GLFW_KEY_T:
+        return KEY_T;
+    case GLFW_KEY_U:
+        return KEY_U;
+    case GLFW_KEY_V:
+        return KEY_V;
+    case GLFW_KEY_W:
+        return KEY_W;
+    case GLFW_KEY_X:
+        return KEY_X;
+    case GLFW_KEY_Y:
+        return KEY_Y;
+    case GLFW_KEY_Z:
+        return KEY_Z;
+    case GLFW_KEY_RIGHT:
+        return KEY_RIGHT;
+    case GLFW_KEY_LEFT:
+        return KEY_LEFT;
+    case GLFW_KEY_UP:
+        return KEY_UP;
+    case GLFW_KEY_DOWN:
+        return KEY_DN;
+    case GLFW_KEY_LEFT_SHIFT:
+        return KEY_SHIFT;
+    case GLFW_KEY_SPACE:
+        return KEY_SPACE;
+    case GLFW_KEY_SEMICOLON:
+        return KEY_SEMICOLON;
+    case GLFW_KEY_MINUS:
+        return KEY_MINUS;
+    case GLFW_KEY_F1:
+        return KEY_F1;
+    case GLFW_KEY_F2:
+        return KEY_F2;
+    case GLFW_KEY_F3:
+        return KEY_F3;
+    case GLFW_KEY_F4:
+        return KEY_F4;
+    case GLFW_KEY_F5:
+        return KEY_F5;
+    case GLFW_KEY_F6:
+        return KEY_F6;
+    case GLFW_KEY_F7:
+        return KEY_F7;
+    case GLFW_KEY_F8:
+        return KEY_F8;
+    case GLFW_KEY_F9:
+        return KEY_F9;
+    case GLFW_KEY_F10:
+        return KEY_F10;
+    case GLFW_KEY_F11:
+        return KEY_F11;
+    case GLFW_KEY_F12:
+        return KEY_F12;
+    }
 }

@@ -8,6 +8,8 @@ extern "C" {
 
 #include "engine/interfaces/platform_interface.h"
 
+#include "engine/core/platform/platform_utils.h"
+
 const platform_vtable_t* platform_glfw_vtable_get(void);
 
 #ifdef __cplusplus
