@@ -101,6 +101,7 @@ step2 TODO:
  - [] doxygen(groups.doxメンテナンス)
  - [] README.mdのtree修正
  - [] layer.mdメンテナンス
+ - [] memory_system_allocateで確保されるメモリがmax_align_tである旨を明記する
  - [] books執筆
    - [] articleに更新履歴を追加
    - [] 前回、今回やるといった内容との整合性がとれているか確認
@@ -165,3 +166,22 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
     - [x] memory_system_free
     - [x] memory_system_report
 - [x] docs/linear-allocator       : linear_allocator.h, .cのdoxygenコメント修正
+
+### feat/event-system
+
+実装内容:
+- キーボード、マウスイベントを取得する処理を追加する
+- application_runのループにsleepを追加する
+- escapeを押下でapplication_runを抜けるようにする
+
+- [x] callbackはapplication層に配置する
+- [x] core/event/event_utils
+- [x] core/input/mouse_event -> mouse_event_t
+- [x] core/input/keyboard_event -> keyboard_event_t
+- [x] containers/ring_queue -> 所有はapplication_state
+  - [x] mouse_event_queue
+  - [x] keyboard_event_queue
+- [x] platform/platform_glfw -> メッセージをキューにpush, applicatio層がpop
+- [] layer.md整理
+- [] memory_system_allocateの契約にmax_align_tにアラインされたメモリを返す、を追記
+- [] application.c エラーコード変換(application以外も全部 refactor/error-message)

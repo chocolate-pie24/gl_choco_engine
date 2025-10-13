@@ -17,9 +17,12 @@
 #include "engine/base/choco_message.h"
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
+#include "engine/core/memory/choco_memory.h"
+
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"
 #include "test_choco_string.h"
+#include "test_ring_queue.h"
 #endif
 
 /**
@@ -44,6 +47,10 @@ int main(int argc_, char** argv_) {
         test_linear_allocator();
         test_memory_system();
         test_choco_string();
+
+        memory_system_create();
+        test_ring_queue();
+        memory_system_destroy();
     }
 #endif
     app_err_t app_run_result = APPLICATION_INVALID_ARGUMENT;
