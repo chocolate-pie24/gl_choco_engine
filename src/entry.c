@@ -9,8 +9,8 @@
  * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "application/application.h"
 

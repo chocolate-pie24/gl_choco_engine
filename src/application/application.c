@@ -10,22 +10,22 @@
  * @license MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include <stdalign.h>
 #include <stddef.h> // for NULL
 #include <string.h> // for memset
-#include <stdalign.h>
 
 #include "application/application.h"
 #include "application/platform_registry.h"
 
-#include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
-#include "engine/core/event/window_event.h"
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
 
 #include "engine/core/platform/platform_utils.h"
 
@@ -65,11 +65,11 @@ typedef struct app_state {
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
-static const char* s_err_str_success = "SUCCESS";
-static const char* s_err_str_no_memory = "NO_MEMORY";
-static const char* s_err_str_runtime_error = "RUNTIME_ERROR";
-static const char* s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* s_err_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_err_str_success = "SUCCESS";
+static const char* const s_err_str_no_memory = "NO_MEMORY";
+static const char* const s_err_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_err_str_undefined_error = "UNDEFINED_ERROR";
 
 static void on_window(const window_event_t* event_);
 static void on_key(const keyboard_event_t* event_);

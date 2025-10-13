@@ -41,10 +41,10 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
-static const char* s_err_str_success = "SUCCESS";
-static const char* s_err_str_invalid_arg = "INVALID_ARGUMENT";
-static const char* s_err_str_no_mem = "NO_MEMORY";
-static const char* s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* const s_err_str_success = "SUCCESS";
+static const char* const s_err_str_invalid_arg = "INVALID_ARGUMENT";
+static const char* const s_err_str_no_mem = "NO_MEMORY";
+static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
 
 static const char* err_to_string(choco_string_error_t err_);
 static choco_string_error_t string_malloc(size_t size_, void** out_ptr_);
