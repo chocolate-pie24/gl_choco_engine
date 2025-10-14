@@ -24,53 +24,94 @@ Kohi Game Engine に触発されて開始しました。
 
 ```console
 .
+├── articles
+│   └── c-glfw-game-engine-introduction.md
+├── books
+│   └── 2d_rendering
+│       ├── config.yaml
+│       ├── step1_0_introduction.md
+│       ├── step1_1_application_base.md
+│       ├── step1_2_application_layer.md
+│       ├── step1_3_base_layer.md
+│       ├── step1_4_core_memory_linear_allocator.md
+│       ├── step1_5_core_memory_system.md
+│       └── step1_6_doxygen.md
 ├── build.sh
 ├── cov.sh
 ├── docs
 │   ├── development_log.md
+│   ├── doxygen
+│   │   └── groups.dox
+│   ├── doxygen_config.md
 │   ├── layer.md
 │   └── todo.md
+├── Doxyfile
+├── images
+│   ├── log_example.png
+│   └── memory_system_report.png
 ├── include
 │   ├── application
-│   │   └── application.h
+│   │   ├── application.h
+│   │   └── platform_registry.h
 │   └── engine
 │       ├── base
 │       │   ├── choco_macros.h
 │       │   └── choco_message.h
-│       └── core
-│           └── memory
-│               ├── choco_memory.h
-│               └── linear_allocator.h
+│       ├── containers
+│       │   ├── choco_string.h
+│       │   └── ring_queue.h
+│       ├── core
+│       │   ├── event
+│       │   │   ├── keyboard_event.h
+│       │   │   ├── mouse_event.h
+│       │   │   └── window_event.h
+│       │   ├── memory
+│       │   │   ├── choco_memory.h
+│       │   │   └── linear_allocator.h
+│       │   └── platform
+│       │       └── platform_utils.h
+│       ├── interfaces
+│       │   └── platform_interface.h
+│       └── platform
+│           └── platform_glfw.h
 ├── LICENSE
+├── makefile_linux.mak
 ├── makefile_macos.mak
 ├── README.md
 ├── src
 │   ├── application
-│   │   └── application.c
+│   │   ├── application.c
+│   │   └── platform_registry.c
 │   ├── engine
 │   │   ├── base
 │   │   │   └── choco_message.c
-│   │   └── core
-│   │       └── memory
-│   │           ├── choco_memory.c
-│   │           └── linear_allocator.c
+│   │   ├── containers
+│   │   │   ├── choco_string.c
+│   │   │   └── ring_queue.c
+│   │   ├── core
+│   │   │   └── memory
+│   │   │       ├── choco_memory.c
+│   │   │       └── linear_allocator.c
+│   │   └── platform
+│   │       └── platform_glfw.c
 │   └── entry.c
 └── test
     └── include
+        ├── test_choco_string.h
         ├── test_linear_allocator.h
-        └── test_memory_system.h
+        ├── test_memory_system.h
+        └── test_ring_queue.h
 ```
 
 ## エンジンレイヤー構成
 
 エンジンを構成するコンポーネントのレイヤー構成は、[docs/layer.md](docs/layer.md)に記載しています
 
-## ビルド
+## 実行環境の構築
 
-### 必要環境
+### macOS
 
-現在、下記の環境で動作確認を行っています。
-gcc、Linux環境での動作確認は今後行なっていきます。
+***テスト環境***
 
 ```bash
 % sw_vers
@@ -86,16 +127,60 @@ InstalledDir: /opt/homebrew/Cellar/llvm/20.1.8/bin
 Configuration file: /opt/homebrew/etc/clang/arm64-apple-darwin24.cfg
 ```
 
-### ビルド
+***コンパイラのセットアップ***
+
+```bash
+brew install llvm
+echo 'export PATH="$(brew --prefix llvm)/bin:$PATH"' >> ~/.zshrc
+exec $SHELL -l
+```
+
+***必要ライブラのリセットアップ***
+
+```bash
+brew install glfw
+brew install glew
+```
+
+### Linux
+
+***テスト環境***
+
+```bash
+$ uname -a
+Linux chocolate-pie24 6.14.0-33-generic #33~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 19 17:02:30 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+$ clang --version
+Ubuntu clang version 18.1.3 (1ubuntu1)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+```
+
+***コンパイラのセットアップ***
+
+```bash
+sudo apt install clang lldb lld
+```
+
+***必要ライブラリのセットアップ***
+
+```bash
+sudo apt install libglew-dev
+sudo apt install libglfw3-dev
+```
+
+## ビルド
 
 ```bash
 chmod +x ./build.sh
 ./build.sh all DEBUG_BUILD    # デバッグビルド
 ./build.sh all RELEASE_BUILD  # リリースビルド
+./build.sh all TEST_BUILD     # テストビルド
 ./build.sh clean              # クリーン
 ```
 
-### 実行
+## 実行
 
 ```bash
 ./bin/gl_choco_engine

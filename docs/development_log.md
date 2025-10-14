@@ -188,3 +188,4 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [x] clang-tidy include過不足チェック
 - [] そのうちやる(application.cのエラー文字列周りを別ファイルに移す)
 - [] linux support
+- [] README.mdへのコンパイラ、ライブラリセットアップ追記

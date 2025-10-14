@@ -8,14 +8,17 @@ SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
+GLEW_PREFIX := $(shell brew --prefix glew)
+GLFW_PREFIX := $(shell brew --prefix glfw)
 INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -I/opt/homebrew/Cellar/glew/2.2.0_1/include/
-INCLUDE_FLAGS += -I/opt/homebrew/Cellar/glfw/3.4/include/
+INCLUDE_FLAGS += -I$(GLEW_PREFIX)/include
+INCLUDE_FLAGS += -I$(GLFW_PREFIX)/include
 ifeq ($(BUILD_MODE), TEST_BUILD)
   INCLUDE_FLAGS += -Itest/include
 endif
 
-CC = /opt/homebrew/opt/llvm/bin/clang
+LLVM_PREFIX := $(shell brew --prefix llvm)
+CC = $(LLVM_PREFIX)/bin/clang
 
 COMPILER_FLAGS = -Wall -Wextra -std=c11
 COMPILER_FLAGS += -Wconversion -Wsign-conversion
@@ -60,9 +63,8 @@ else
 		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
 	endif
 endif
-LINKER_FLAGS += -L/opt/homebrew/Cellar/glfw/3.4/lib/
-LINKER_FLAGS += -L/opt/homebrew/Cellar/glew/2.2.0_1/lib/
-LINKER_FLAGS += -L/opt/homebrew/Cellar/glfw/3.4/lib/
+LINKER_FLAGS += -L$(GLEW_PREFIX)/lib
+LINKER_FLAGS += -L$(GLFW_PREFIX)/lib
 LINKER_FLAGS += -lglfw
 LINKER_FLAGS += -lglew
 LINKER_FLAGS += -framework OpenGL
