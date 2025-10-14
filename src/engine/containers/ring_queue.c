@@ -28,19 +28,19 @@ struct ring_queue {
     void* memory_pool;
 };
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_err_str_no_memory = "NO_MEMORY";
-static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
-static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
-static const char* const s_err_str_empty = "EMPTY";
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_empty = "EMPTY";
 
-static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_);
-static const char* ring_err_to_string(ring_queue_error_t err_);
+static const char* rslt_to_str(ring_queue_result_t rslt_);
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 
 #ifdef TEST_BUILD
-static void NO_COVERAGE test_ring_err_to_string(void);
-static void NO_COVERAGE test_mem_err_to_ring_err(void);
+static void NO_COVERAGE test_rslt_to_str(void);
+static void NO_COVERAGE test_rslt_convert_mem_sys(void);
 static void NO_COVERAGE test_ring_queue_create(void);
 static void NO_COVERAGE test_ring_queue_destroy(void);
 static void NO_COVERAGE test_ring_queue_push(void);
@@ -64,9 +64,9 @@ static void NO_COVERAGE test_ring_queue_empty(void);
 // tmp_queueのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
 // tmp_queue->memory_poolのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
 // element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_INVALID_ARGUMENT
-ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
-    memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     ring_queue_t* tmp_queue = NULL;
     size_t capacity = 0;
     size_t stride = 0;
@@ -82,7 +82,7 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     if(SIZE_MAX / element_size_ < max_element_count_) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_rslt_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -100,7 +100,7 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
     }
     stride = element_size_ + padding;
     if(SIZE_MAX / max_element_count_ < stride) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_rslt_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -108,22 +108,22 @@ ring_queue_error_t ring_queue_create(size_t max_element_count_, size_t element_s
 
     ret_mem = memory_system_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = mem_err_to_ring_err(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", ring_err_to_string(ret));
+        ret = rslt_convert_mem_sys(ret_mem);
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue, 0, sizeof(*tmp_queue));
 
     ret_mem = memory_system_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = mem_err_to_ring_err(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", ring_err_to_string(ret));
+        ret = rslt_convert_mem_sys(ret_mem);
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue->memory_pool, 0, capacity);
     mem_pool_ptr = (uintptr_t)tmp_queue->memory_pool;
     if(0 != (mem_pool_ptr % element_align_)) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool alignment is invalid.", s_err_str_runtime_err);
+        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool alignment is invalid.", s_rslt_str_runtime_error);
         ret = RING_QUEUE_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -179,8 +179,8 @@ cleanup:
 // ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
 // ring_queue_がfullでワーニングメッセージ
 // 引数element_size_, element_align_は格納データの不整合のチェック用
-ring_queue_error_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* target_ptr = NULL;
 
@@ -217,8 +217,8 @@ cleanup:
 // ring_queueが空でRING_QUEUE_EMPTY
 
 // 引数element_size_, element_align_は格納データの不整合のチェック用
-ring_queue_error_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* head_ptr = NULL;
 
@@ -259,8 +259,8 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     }
 }
 
-static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_) {
-    switch(mem_err_) {
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
+    switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RING_QUEUE_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -274,22 +274,22 @@ static ring_queue_error_t mem_err_to_ring_err(memory_sys_err_t mem_err_) {
     }
 }
 
-static const char* ring_err_to_string(ring_queue_error_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(ring_queue_result_t rslt_) {
+    switch(rslt_) {
     case RING_QUEUE_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case RING_QUEUE_INVALID_ARGUMENT:
-        return s_err_str_invalid_argument;
+        return s_rslt_str_invalid_argument;
     case RING_QUEUE_NO_MEMORY:
-        return s_err_str_no_memory;
+        return s_rslt_str_no_memory;
     case RING_QUEUE_RUNTIME_ERROR:
-        return s_err_str_runtime_err;
+        return s_rslt_str_runtime_error;
     case RING_QUEUE_UNDEFINED_ERROR:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     case RING_QUEUE_EMPTY:
-        return s_err_str_empty;
+        return s_rslt_str_empty;
     default:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     }
 }
 
@@ -297,10 +297,10 @@ static const char* ring_err_to_string(ring_queue_error_t err_) {
 
 void test_ring_queue(void) {
     memory_system_report();
-    test_ring_err_to_string();
+    test_rslt_to_str();
     memory_system_report();
 
-    test_mem_err_to_ring_err();
+    test_rslt_convert_mem_sys();
     memory_system_report();
 
     test_ring_queue_create();
@@ -320,7 +320,7 @@ void test_ring_queue(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_create(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ret = ring_queue_create(128, 8, 8, NULL);
@@ -474,7 +474,7 @@ static void NO_COVERAGE test_ring_queue_destroy(void) {
     {
         // 正常系
         ring_queue_t* ring_queue = NULL;
-        ring_queue_error_t ret = ring_queue_create(8, 8, 8, &ring_queue);
+        ring_queue_result_t ret = ring_queue_create(8, 8, 8, &ring_queue);
         ring_queue_destroy(&ring_queue);
         assert(NULL == ring_queue);
         ring_queue_destroy(&ring_queue);    // 2重destroy
@@ -482,7 +482,7 @@ static void NO_COVERAGE test_ring_queue_destroy(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_push(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         int a = 0;
@@ -652,7 +652,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
 }
 
 static void NO_COVERAGE test_ring_queue_pop(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     int a = 0;
     {
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
@@ -740,7 +740,7 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
     }
     {
         ring_queue_t* ring_queue = NULL;
-        ring_queue_error_t ret_create = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
+        ring_queue_result_t ret_create = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
         assert(RING_QUEUE_SUCCESS == ret_create);
 
         ret = ring_queue_empty(ring_queue);
@@ -755,60 +755,60 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
     }
 }
 
-static void NO_COVERAGE test_ring_err_to_string(void) {
+static void NO_COVERAGE test_rslt_to_str(void) {
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_SUCCESS);
-        assert(0 == strcmp(tmp, s_err_str_success));
-        DEBUG_MESSAGE("test_ring_err_to_string - message success: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_SUCCESS);
+        assert(0 == strcmp(tmp, s_rslt_str_success));
+        DEBUG_MESSAGE("test_rslt_to_str - message success: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_INVALID_ARGUMENT);
-        assert(0 == strcmp(tmp, s_err_str_invalid_argument));
-        DEBUG_MESSAGE("test_ring_err_to_string - message invalid argument: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_INVALID_ARGUMENT);
+        assert(0 == strcmp(tmp, s_rslt_str_invalid_argument));
+        DEBUG_MESSAGE("test_rslt_to_str - message invalid argument: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_NO_MEMORY);
-        assert(0 == strcmp(tmp, s_err_str_no_memory));
-        DEBUG_MESSAGE("test_ring_err_to_string - message no memory: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_NO_MEMORY);
+        assert(0 == strcmp(tmp, s_rslt_str_no_memory));
+        DEBUG_MESSAGE("test_rslt_to_str - message no memory: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_RUNTIME_ERROR);
-        assert(0 == strcmp(tmp, s_err_str_runtime_err));
-        DEBUG_MESSAGE("test_ring_err_to_string - message runtime error: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_RUNTIME_ERROR);
+        assert(0 == strcmp(tmp, s_rslt_str_runtime_error));
+        DEBUG_MESSAGE("test_rslt_to_str - message runtime error: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_UNDEFINED_ERROR);
-        assert(0 == strcmp(tmp, s_err_str_undefined_err));
-        DEBUG_MESSAGE("test_ring_err_to_string - message undefined error: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_UNDEFINED_ERROR);
+        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
+        DEBUG_MESSAGE("test_rslt_to_str - message undefined error: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_EMPTY);
-        assert(0 == strcmp(tmp, s_err_str_empty));
-        DEBUG_MESSAGE("test_ring_err_to_string - message empty: %s", tmp);
+        const char* tmp = rslt_to_str(RING_QUEUE_EMPTY);
+        assert(0 == strcmp(tmp, s_rslt_str_empty));
+        DEBUG_MESSAGE("test_rslt_to_str - message empty: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(1024);
-        assert(0 == strcmp(tmp, s_err_str_undefined_err));
-        DEBUG_MESSAGE("test_ring_err_to_string - undefined error: %s", tmp);
+        const char* tmp = rslt_to_str(1024);
+        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
+        DEBUG_MESSAGE("test_rslt_to_str - undefined error: %s", tmp);
     }
 }
 
-static void NO_COVERAGE test_mem_err_to_ring_err(void) {
-    ring_queue_error_t ret = RING_QUEUE_INVALID_ARGUMENT;
+static void NO_COVERAGE test_rslt_convert_mem_sys(void) {
+    ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_SUCCESS);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS);
     assert(RING_QUEUE_SUCCESS == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_INVALID_ARGUMENT);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_INVALID_ARGUMENT);
     assert(RING_QUEUE_INVALID_ARGUMENT == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_RUNTIME_ERROR);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_RUNTIME_ERROR);
     assert(RING_QUEUE_RUNTIME_ERROR == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_NO_MEMORY);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY);
     assert(RING_QUEUE_NO_MEMORY == ret);
 
-    ret = mem_err_to_ring_err(1024);
+    ret = rslt_convert_mem_sys(1024);
     assert(RING_QUEUE_UNDEFINED_ERROR == ret);
 }
 

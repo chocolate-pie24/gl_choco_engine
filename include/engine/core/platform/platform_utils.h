@@ -6,13 +6,13 @@ extern "C" {
 #endif
 
 typedef enum {
-    PLATFORM_SUCCESS,
+    PLATFORM_SUCCESS = 0,
     PLATFORM_INVALID_ARGUMENT,
     PLATFORM_RUNTIME_ERROR,
     PLATFORM_NO_MEMORY,
     PLATFORM_UNDEFINED_ERROR,
     PLATFORM_WINDOW_CLOSE,
-} platform_error_t;
+} platform_result_t;
 
 typedef enum {
     PLATFORM_USE_GLFW,

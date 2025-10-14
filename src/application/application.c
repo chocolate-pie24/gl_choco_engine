@@ -65,12 +65,6 @@ typedef struct app_state {
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_no_memory = "NO_MEMORY";
-static const char* const s_err_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_err_str_undefined_error = "UNDEFINED_ERROR";
-
 static void on_window(const window_event_t* event_);
 static void on_key(const keyboard_event_t* event_);
 static void on_mouse(const mouse_event_t* event_);
@@ -80,42 +74,48 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 static const char* keycode_str(keycode_t keycode_);
 
-static const char* app_err_to_str(app_err_t err_);
-static app_err_t mem_err_to_app_err(memory_sys_err_t err_);
-static app_err_t linear_alloc_err_to_app_err(linear_alloc_err_t err_);
-static app_err_t platform_err_to_app_err(platform_error_t err_);
-static app_err_t ring_queue_err_to_app_err(ring_queue_error_t err_);
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+
+static const char* rslt_to_str(application_result_t rslt_);
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+static application_result_t rslt_convert_platform(platform_result_t rslt_);
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
 // TODO: oc_choco_malloc + テスト
-app_err_t application_create(void) {
+application_result_t application_create(void) {
     app_state_t* tmp = NULL;
     void* tmp_platform_state_ptr = NULL;
 
-    app_err_t ret = APPLICATION_RUNTIME_ERROR;
-    memory_sys_err_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    platform_error_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
-    ring_queue_error_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
+    application_result_t ret = APPLICATION_RUNTIME_ERROR;
+    memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    platform_result_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
+    ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
-        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_err_str_runtime_error);
+        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_rslt_str_runtime_error);
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
 
     ret_mem_sys = memory_system_create();
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", app_err_to_str(ret));
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", rslt_to_str(ret));
         goto cleanup;
     }
 
     // begin Simulation
     ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", app_err_to_str(ret));
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
@@ -133,23 +133,23 @@ app_err_t application_create(void) {
     linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", app_err_to_str(ret));
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp->linear_alloc_pool_size = 1 * KIB;
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = mem_err_to_app_err(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", app_err_to_str(ret));
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_linear_alloc = linear_allocator_init(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = linear_alloc_err_to_app_err(ret_linear_alloc);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", app_err_to_str(ret));
+        ret = rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
@@ -167,14 +167,14 @@ app_err_t application_create(void) {
     tmp->platform_vtable->platform_state_preinit(&tmp->platform_state_memory_requirement, &tmp->platform_state_alignment_requirement);
     ret_linear_alloc = linear_allocator_allocate(tmp->linear_alloc, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = linear_alloc_err_to_app_err(ret_linear_alloc);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for platform state.", app_err_to_str(ret));
+        ret = rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for platform state.", rslt_to_str(ret));
         goto cleanup;
     }
     ret_platform_state_init = tmp->platform_vtable->platform_state_init((platform_state_t*)tmp_platform_state_ptr);
     if(PLATFORM_SUCCESS != ret_platform_state_init) {
-        ret = platform_err_to_app_err(ret_platform_state_init);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform state.", app_err_to_str(ret));
+        ret = rslt_convert_platform(ret_platform_state_init);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform state.", rslt_to_str(ret));
         goto cleanup;
     }
     tmp->platform_state = (platform_state_t*)tmp_platform_state_ptr;
@@ -184,8 +184,8 @@ app_err_t application_create(void) {
     INFO_MESSAGE("Starting window event queue initialize...");
     ret_ring_queue = ring_queue_create(8, sizeof(window_event_t), alignof(window_event_t), &tmp->window_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = ring_queue_err_to_app_err(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", app_err_to_str(ret));
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("window event queue initialized successfully.");
@@ -194,8 +194,8 @@ app_err_t application_create(void) {
     INFO_MESSAGE("Starting keyboard event queue initialize...");
     ret_ring_queue = ring_queue_create(KEY_CODE_MAX, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp->keyboard_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = ring_queue_err_to_app_err(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", app_err_to_str(ret));
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("keyboard event queue initialized successfully.");
@@ -204,8 +204,8 @@ app_err_t application_create(void) {
     INFO_MESSAGE("Starting mouse event queue initialize...");
     ret_ring_queue = ring_queue_create(128, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp->mouse_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = ring_queue_err_to_app_err(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", app_err_to_str(ret));
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("mouse event queue initialized successfully.");
@@ -220,8 +220,8 @@ app_err_t application_create(void) {
     tmp->window_height = 768;
     ret_platform_state_init = tmp->platform_vtable->platform_window_create(tmp->platform_state, "test_window", 1024, 768);
     if(PLATFORM_SUCCESS != ret_platform_state_init) {
-        ret = platform_err_to_app_err(ret_platform_state_init);
-        ERROR_MESSAGE("application_create(%s) - Failed to create window.", app_err_to_str(ret));
+        ret = rslt_convert_platform(ret_platform_state_init);
+        ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
     }
     // end temporary
@@ -311,21 +311,21 @@ cleanup:
     return;
 }
 
-app_err_t application_run(void) {
-    app_err_t ret = APPLICATION_SUCCESS;
+application_result_t application_run(void) {
+    application_result_t ret = APPLICATION_SUCCESS;
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Application is not initialized.", app_err_to_str(ret));
+        ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
     while(!s_app_state->window_should_close) {
-        platform_error_t ret_event = s_app_state->platform_vtable->platform_pump_messages(s_app_state->platform_state, on_window, on_key, on_mouse);
+        platform_result_t ret_event = s_app_state->platform_vtable->platform_pump_messages(s_app_state->platform_state, on_window, on_key, on_mouse);
         if(PLATFORM_WINDOW_CLOSE == ret_event) {
             s_app_state->window_should_close = true;
             continue;
         } else if(PLATFORM_SUCCESS != ret_event) {
-            ret = platform_err_to_app_err(ret_event);
-            WARN_MESSAGE("application_run(%s) - Failed to pump events.", app_err_to_str(ret));
+            ret = rslt_convert_platform(ret_event);
+            WARN_MESSAGE("application_run(%s) - Failed to pump events.", rslt_to_str(ret));
             continue;
         }
         app_state_update();
@@ -339,7 +339,7 @@ cleanup:
 }
 
 static void on_window(const window_event_t* event_) {
-    ring_queue_error_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
     if(NULL == event_) {
         WARN_MESSAGE("on_window - Argument 'event_' must not be NULL.");
@@ -352,8 +352,8 @@ static void on_window(const window_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->window_event_queue, event_, sizeof(window_event_t), alignof(window_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        app_err_t ret = ring_queue_err_to_app_err(ret_push);
-        WARN_MESSAGE("on_window(%s) - Failed to push window event.", app_err_to_str(ret));
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_window(%s) - Failed to push window event.", rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -361,7 +361,7 @@ cleanup:
 }
 
 static void on_key(const keyboard_event_t* event_) {
-    ring_queue_error_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
     if(NULL == event_) {
         WARN_MESSAGE("on_key - Argument event_ requires a valid pointer.");
@@ -374,8 +374,8 @@ static void on_key(const keyboard_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->keyboard_event_queue, event_, sizeof(keyboard_event_t), alignof(keyboard_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        app_err_t ret = ring_queue_err_to_app_err(ret_push);
-        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", app_err_to_str(ret));
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -383,7 +383,7 @@ cleanup:
 }
 
 static void on_mouse(const mouse_event_t* event_) {
-    ring_queue_error_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
     if(NULL == event_) {
         WARN_MESSAGE("on_mouse - Argument event_ requires a valid pointer.");
@@ -396,8 +396,8 @@ static void on_mouse(const mouse_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->mouse_event_queue, event_, sizeof(mouse_event_t), alignof(mouse_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        app_err_t ret = ring_queue_err_to_app_err(ret_push);
-        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", app_err_to_str(ret));
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -405,35 +405,35 @@ cleanup:
 }
 
 static void app_state_update(void) {
-    app_err_t ret = APPLICATION_INVALID_ARGUMENT;
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_err_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->window_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", app_err_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->keyboard_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", app_err_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->mouse_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", app_err_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
 
     // window events.
     while(!ring_queue_empty(s_app_state->window_event_queue)) {
         window_event_t event;
-        ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = ring_queue_err_to_app_err(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", app_err_to_str(ret));
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", rslt_to_str(ret));
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
@@ -448,10 +448,10 @@ static void app_state_update(void) {
     // keyboard events.
     while(!ring_queue_empty(s_app_state->keyboard_event_queue)) {
         keyboard_event_t event;
-        ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = ring_queue_err_to_app_err(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", app_err_to_str(ret));
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
             goto cleanup;
         } else {
             INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
@@ -461,10 +461,10 @@ static void app_state_update(void) {
     // mouse events.
     while(!ring_queue_empty(s_app_state->mouse_event_queue)) {
         mouse_event_t event;
-        ring_queue_error_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = ring_queue_err_to_app_err(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", app_err_to_str(ret));
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", rslt_to_str(ret));
             goto cleanup;
         } else {
             if(MOUSE_BUTTON_LEFT == event.button) {
@@ -485,7 +485,7 @@ static void app_state_dispatch(void) {
 
 static void app_state_clean(void) {
     if(NULL == s_app_state) {
-        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", app_err_to_str(APPLICATION_RUNTIME_ERROR));
+        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
     s_app_state->window_resized = false;
@@ -671,25 +671,25 @@ static const char* keycode_str(keycode_t keycode_) {
     }
 }
 
-static const char* app_err_to_str(app_err_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(application_result_t rslt_) {
+    switch(rslt_) {
     case APPLICATION_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case APPLICATION_NO_MEMORY:
-        return s_err_str_no_memory;
+        return s_rslt_str_no_memory;
     case APPLICATION_RUNTIME_ERROR:
-        return s_err_str_runtime_error;
+        return s_rslt_str_runtime_error;
     case APPLICATION_INVALID_ARGUMENT:
-        return s_err_str_invalid_argument;
+        return s_rslt_str_invalid_argument;
     case APPLICATION_UNDEFINED_ERROR:
-        return s_err_str_undefined_error;
+        return s_rslt_str_undefined_error;
     default:
-        return s_err_str_undefined_error;
+        return s_rslt_str_undefined_error;
     }
 }
 
-static app_err_t mem_err_to_app_err(memory_sys_err_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
+    switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
         return APPLICATION_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -703,8 +703,8 @@ static app_err_t mem_err_to_app_err(memory_sys_err_t err_) {
     }
 }
 
-static app_err_t linear_alloc_err_to_app_err(linear_alloc_err_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
         return APPLICATION_SUCCESS;
     case LINEAR_ALLOC_NO_MEMORY:
@@ -716,8 +716,8 @@ static app_err_t linear_alloc_err_to_app_err(linear_alloc_err_t err_) {
     }
 }
 
-static app_err_t platform_err_to_app_err(platform_error_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_platform(platform_result_t rslt_) {
+    switch(rslt_) {
     case PLATFORM_SUCCESS:
         return APPLICATION_SUCCESS;
     case PLATFORM_INVALID_ARGUMENT:
@@ -735,8 +735,8 @@ static app_err_t platform_err_to_app_err(platform_error_t err_) {
     }
 }
 
-static app_err_t ring_queue_err_to_app_err(ring_queue_error_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
+    switch(rslt_) {
     case RING_QUEUE_SUCCESS:
         return APPLICATION_SUCCESS;
     case RING_QUEUE_INVALID_ARGUMENT:

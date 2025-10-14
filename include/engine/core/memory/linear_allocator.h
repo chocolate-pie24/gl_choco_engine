@@ -44,14 +44,14 @@ extern "C" {
 typedef struct linear_alloc linear_alloc_t;
 
 /**
- * @brief linear_allocator APIエラーコード
+ * @brief linear_allocator実行結果コードリスト
  *
  */
 typedef enum {
-    LINEAR_ALLOC_SUCCESS,           /**< 処理成功 */
+    LINEAR_ALLOC_SUCCESS = 0,       /**< 処理成功 */
     LINEAR_ALLOC_NO_MEMORY,         /**< メモリ不足 */
     LINEAR_ALLOC_INVALID_ARGUMENT,  /**< 無効な引数 */
-} linear_alloc_err_t;
+} linear_allocator_result_t;
 
 /**
  * @brief リニアアロケータオブジェクトのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する
@@ -86,8 +86,8 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
  *
  * 使用例:
  * @code
- * linear_alloc_err_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
- * memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+ * linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
+ * memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
  *
  * linear_alloc_t* linear_alloc = NULL;       // リニアアロケータ
  * void* linear_alloc_pool = NULL;            // リニアアロケータメモリプール先頭アドレス
@@ -125,7 +125,7 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
  * @see memory_system_allocate
  * @see memory_system_free
  */
-linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_);
+linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_);
 
 /**
  * @brief linear_allocatorを使用してメモリを割り当てる
@@ -139,8 +139,8 @@ linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capa
  *
  * 使用例:
  * @code
- * linear_alloc_err_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
- * memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+ * linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
+ * memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
  *
  * linear_alloc_t* linear_alloc = NULL;       // リニアアロケータ
  * void* linear_alloc_pool = NULL;            // リニアアロケータメモリプール先頭アドレス
@@ -180,7 +180,7 @@ linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capa
  * @retval LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
  *
  */
-linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_);
+linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_);
 
 #ifdef __cplusplus
 }

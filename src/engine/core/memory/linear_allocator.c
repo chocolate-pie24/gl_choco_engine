@@ -33,9 +33,9 @@ struct linear_alloc {
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
-static const char* const s_err_str_success = "SUCCESS";                     /**< エラー種別文字列(処理成功) */
-static const char* const s_err_str_no_memory = "NO_MEMORY";                 /**< エラー種別文字列(メモリ確保失敗) */
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";   /**< エラー種別文字列(無効な引数) */
+static const char* const s_rslt_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
 
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -55,8 +55,8 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
 // 引数allocator_   == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
 // 引数memory_pool_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
 // 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
-linear_alloc_err_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_) {
-    linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_) {
+    linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "allocator_")
     CHECK_ARG_NULL_GOTO_CLEANUP(memory_pool_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "memory_pool_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "capacity_")
@@ -79,8 +79,8 @@ cleanup:
 // LINEAR_ALLOC_NO_MEMORY        メモリを割り当てた場合、メモリプール内に収まらない
 // LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
 // LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
-linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
-    linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
+    linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     uintptr_t head = 0;
     uintptr_t align = 0;
     uintptr_t size = 0;
@@ -109,13 +109,13 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
     if(UINTPTR_MAX - offset < head) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
     start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -123,7 +123,7 @@ linear_alloc_err_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t 
     cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", s_err_str_no_memory, req_size_, (size_t)free_space);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", s_rslt_str_no_memory, req_size_, (size_t)free_space);
         ret = LINEAR_ALLOC_NO_MEMORY;
         goto cleanup;
     }
@@ -178,7 +178,7 @@ static void NO_COVERAGE test_linear_allocator_preinit(void) {
 static void NO_COVERAGE test_linear_allocator_init(void) {
     {
         // 引数allocator_   == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
-        linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         size_t cap = 128;
         void* pool = malloc(128);
         assert(NULL != pool);
@@ -191,7 +191,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
     }
     {
         // 引数memory_pool_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
-        linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         size_t cap = 128;
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
@@ -208,7 +208,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
     }
     {
         // 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
-        linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
@@ -232,7 +232,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
     }
     {
         // 正常系
-        linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         size_t cap = 128;
 
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
@@ -258,7 +258,7 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
 
 static void NO_COVERAGE test_linear_allocator_allocate(void) {
     {
-        linear_alloc_err_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
         // 引数allocator_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
         void* out_ptr = NULL;
@@ -308,7 +308,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);
@@ -335,7 +335,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);
@@ -356,7 +356,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);
@@ -377,7 +377,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);
@@ -397,7 +397,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);
@@ -417,7 +417,7 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         memset(alloc, 0, sizeof(linear_alloc_t));
         void* pool = malloc(8);
 
-        linear_alloc_err_t ret = linear_allocator_init(alloc, 8, pool);
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(8 == alloc->capacity);
         assert(alloc->head_ptr == alloc->memory_pool);

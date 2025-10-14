@@ -41,20 +41,20 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_invalid_arg = "INVALID_ARGUMENT";
-static const char* const s_err_str_no_mem = "NO_MEMORY";
-static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
-static const char* err_to_string(choco_string_error_t err_);
-static choco_string_error_t string_malloc(size_t size_, void** out_ptr_);
+static const char* rslt_to_str(choco_string_result_t rslt_);
+static choco_string_result_t string_malloc(size_t size_, void** out_ptr_);
 
 // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
 // *string_ != NULLでCHOCO_STRING_INVALID_ARGUMENT
 // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY
-choco_string_error_t choco_string_default_create(choco_string_t** string_) {
+choco_string_result_t choco_string_default_create(choco_string_t** string_) {
     choco_string_t* tmp_string = NULL;
-    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     // Preconditions.
     CHECK_ARG_NULL_GOTO_CLEANUP(string_, CHOCO_STRING_INVALID_ARGUMENT, "choco_string_default_create", "string_")
@@ -63,7 +63,7 @@ choco_string_error_t choco_string_default_create(choco_string_t** string_) {
     // Simulation.
     ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", err_to_string(ret));
+        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_string, 0, sizeof(*tmp_string));
@@ -88,9 +88,9 @@ cleanup:
 // src_文字列が""でbuffer = NULL, len = 0, capacity = 0(choco_string_default_createと同等の動作)
 // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY(choco_string_default_create内で判定される)
 // tmp_string->bufferメモリ確保失敗でCHOCO_STRING_NO_MEMORY
-choco_string_error_t choco_string_create_from_char(choco_string_t** string_, const char* src_) {
+choco_string_result_t choco_string_create_from_char(choco_string_t** string_, const char* src_) {
     choco_string_t* tmp_string = NULL;
-    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     size_t src_len = 0;
 
     // Preconditions.
@@ -101,7 +101,7 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
     // Simulation.
     ret = string_malloc(sizeof(*tmp_string), (void**)&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string'.", err_to_string(ret));
+        ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string'.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_string, 0, sizeof(*tmp_string));
@@ -110,7 +110,7 @@ choco_string_error_t choco_string_create_from_char(choco_string_t** string_, con
     if(0 != src_len) {
         ret = string_malloc(src_len + 1, (void**)&tmp_string->buffer);
         if(CHOCO_STRING_SUCCESS != ret) {
-            ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string->buffer'.", err_to_string(ret));
+            ERROR_MESSAGE("choco_string_create_from_char(%s) - Failed to allocate memory for 'tmp_string->buffer'.", rslt_to_str(ret));
             goto cleanup;
         }
         memset(tmp_string->buffer, 0, src_len + 1);
@@ -161,8 +161,8 @@ cleanup:
 // テストケース dst->capacity >= (src_->len + 1)のケース(CHOCO_STRING_SUCCESS)
 // テストケース dst->capacity < (src_->len + 1)のケース(CHOCO_STRING_SUCCESS)
 // テストケース dst_->capacity == 0かつsrc_が空文字列(CHOCO_STRING_SUCCESS)
-choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_) {
-    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_) {
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     char* tmp_buffer = NULL;
 
     // Preconditions.
@@ -187,7 +187,7 @@ choco_string_error_t choco_string_copy(choco_string_t* dst_, const choco_string_
         // Simulation.
         ret = string_malloc(src_->len + 1, (void**)&tmp_buffer);
         if(CHOCO_STRING_SUCCESS != ret) {
-            ERROR_MESSAGE("choco_string_copy(%s) - Failed to allocate tmp_buffer memory.", err_to_string(ret));
+            ERROR_MESSAGE("choco_string_copy(%s) - Failed to allocate tmp_buffer memory.", rslt_to_str(ret));
             goto cleanup;
         }
         memset(tmp_buffer, 0, src_->len + 1);
@@ -220,8 +220,8 @@ cleanup:
 // テストケース dst_->capacity >= (src_len + 1)のケース(CHOCO_STRING_SUCCESS)
 // テストケース dst_->capacity < (src_len + 1)のケース(CHOCO_STRING_SUCCESS)
 // テストケース dst_->capacity == 0かつsrc_が空文字列(CHOCO_STRING_SUCCESS)
-choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_) {
-    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+choco_string_result_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_) {
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     char* tmp_buffer = NULL;
     size_t src_len = 0;
 
@@ -245,7 +245,7 @@ choco_string_error_t choco_string_copy_from_char(choco_string_t* dst_, const cha
     } else {
         ret = string_malloc(src_len + 1, (void**)&tmp_buffer);
         if(CHOCO_STRING_SUCCESS != ret) {
-            ERROR_MESSAGE("choco_string_copy_from_char(%s) - Failed to allocate tmp_buffer memory.", err_to_string(ret));
+            ERROR_MESSAGE("choco_string_copy_from_char(%s) - Failed to allocate tmp_buffer memory.", rslt_to_str(ret));
             goto cleanup;
         }
         memset(tmp_buffer, 0, src_len + 1);
@@ -291,25 +291,25 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
-static const char* err_to_string(choco_string_error_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(choco_string_result_t rslt_) {
+    switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case CHOCO_STRING_NO_MEMORY:
-        return s_err_str_no_mem;
+        return s_rslt_str_no_memory;
     case CHOCO_STRING_INVALID_ARGUMENT:
-        return s_err_str_invalid_arg;
+        return s_rslt_str_invalid_argument;
     case CHOCO_STRING_UNDEFINED_ERROR:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     default:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     }
 }
 
-static choco_string_error_t string_malloc(size_t size_, void** out_ptr_) {
+static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
     void* tmp_ptr = NULL;
-    choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
-    memory_sys_err_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     ret_mem = memory_system_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_mem) {
         ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -361,7 +361,7 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
         // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
         memory_system_test_param_reset();
 
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         ret = choco_string_default_create(NULL);
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
@@ -370,7 +370,7 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
         memory_system_test_param_reset();
 
         // 正常系テスト
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* string = NULL;
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -386,7 +386,7 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
         assert(NULL == string);
     }
     {
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY
         memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
@@ -403,7 +403,7 @@ static void NO_COVERAGE test_choco_string_default_create(void) {
 static void NO_COVERAGE test_choco_string_create_from_char(void) {
     {
         // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         ret = choco_string_create_from_char(NULL, "aaa");
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
@@ -412,7 +412,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
         memory_system_test_param_reset();
 
         // 正常系テスト
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* string = NULL;
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -429,7 +429,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // src_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* string = NULL;
         ret = choco_string_create_from_char(&string, NULL);
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
@@ -437,7 +437,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // src_文字列が""でbuffer = NULL, len = 0, capacity = 0(choco_string_default_createと同等の動作)
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* string = NULL;
         ret = choco_string_create_from_char(&string, "");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -449,7 +449,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // tmp_stringメモリ確保失敗でCHOCO_STRING_NO_MEMORY
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         memory_system_test_param_set(0);    // 1回目のメモリ確保で失敗
 
@@ -462,7 +462,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // tmp_string->bufferメモリ確保失敗でCHOCO_STRING_NO_MEMORY
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         memory_system_test_param_set(1);    // 2回目のメモリ確保で失敗
 
@@ -475,7 +475,7 @@ static void NO_COVERAGE test_choco_string_create_from_char(void) {
     }
     {
         // 正常系
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         memory_system_test_param_reset();
 
@@ -504,7 +504,7 @@ static void NO_COVERAGE test_choco_string_destroy(void) {
         memory_system_test_param_reset();
 
         // 正常系テスト
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* string = NULL;
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -522,7 +522,7 @@ static void NO_COVERAGE test_choco_string_destroy(void) {
 static void NO_COVERAGE test_choco_string_copy(void) {
     {
         // dst_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* src = NULL;
         ret = choco_string_create_from_char(&src, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -537,7 +537,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // src_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -552,7 +552,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // src_->len == 0でdst_->bufferをクリアし、dst_->lenを0にする(CHOCO_STRING_SUCCESS)
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* src = NULL;
         ret = choco_string_default_create(&src);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -578,7 +578,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // テストケース dst->capacity >= (src_->len + 1)のケース
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* src = NULL;
         ret = choco_string_create_from_char(&src, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -604,7 +604,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // テストケース dst->capacity < (src_->len + 1)のケース(CHOCO_STRING_SUCCESS)
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* src = NULL;
         ret = choco_string_create_from_char(&src, "aaaaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -630,7 +630,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // dst_->capacity == 0かつsrc_が空文字列
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* dst = NULL;
         ret = choco_string_default_create(&dst);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -659,7 +659,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // malloc失敗
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* src = NULL;
         ret = choco_string_create_from_char(&src, "aaaaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -689,7 +689,7 @@ static void NO_COVERAGE test_choco_string_copy(void) {
     }
     {
         // dst->buffer = NULL, dst->capacity = 0の状態でaaaを割り当て
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         choco_string_t* src = NULL;
         ret = choco_string_create_from_char(&src, "aaaaa");
@@ -720,14 +720,14 @@ static void NO_COVERAGE test_choco_string_copy(void) {
 static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     {
         // dst_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         ret = choco_string_copy_from_char(NULL, "aaa");
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // src_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -743,7 +743,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     {
         // src_->len == 0でdst_->bufferをクリアし、dst_->lenを0にする(CHOCO_STRING_SUCCESS)
 
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "aaa");
@@ -762,7 +762,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     }
     {
         // テストケース dst->capacity >= (src_->len + 1)のケース
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "bbbbb");
@@ -781,7 +781,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     }
     {
         // テストケース dst->capacity < (src_len + 1)のケース(CHOCO_STRING_SUCCESS)
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "bbb");
@@ -800,7 +800,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     }
     {
         // dst_->capacity == 0かつsrc_が空文字列
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* dst = NULL;
         ret = choco_string_default_create(&dst);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -820,7 +820,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     }
     {
         // malloc失敗
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
         choco_string_t* dst = NULL;
         ret = choco_string_create_from_char(&dst, "bbb");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -841,7 +841,7 @@ static void NO_COVERAGE test_choco_string_copy_from_char(void) {
     }
     {
         // dst->buffer = NULL, dst->capacity = 0の状態でaaaを割り当て
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         choco_string_t* dst = NULL;
         ret = choco_string_default_create(&dst);
@@ -865,7 +865,7 @@ static void NO_COVERAGE test_choco_string_length(void) {
     {
         // ""(length == 0)
         choco_string_t* string = NULL;
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -880,7 +880,7 @@ static void NO_COVERAGE test_choco_string_length(void) {
     {
         // "aaa"(length == 3)
         choco_string_t* string = NULL;
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         ret = choco_string_create_from_char(&string, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -902,7 +902,7 @@ static void NO_COVERAGE test_choco_string_c_str(void) {
     {
         // ""(length == 0)
         choco_string_t* string = NULL;
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         ret = choco_string_default_create(&string);
         assert(CHOCO_STRING_SUCCESS == ret);
@@ -918,7 +918,7 @@ static void NO_COVERAGE test_choco_string_c_str(void) {
     {
         // "aaa"(length == 3)
         choco_string_t* string = NULL;
-        choco_string_error_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
         ret = choco_string_create_from_char(&string, "aaa");
         assert(CHOCO_STRING_SUCCESS == ret);

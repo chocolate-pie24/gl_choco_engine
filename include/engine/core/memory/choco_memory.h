@@ -44,15 +44,15 @@ typedef enum {
 } memory_tag_t;
 
 /**
- * @brief メモリシステムエラーコードリスト
+ * @brief メモリシステム実行結果コードリスト
  *
  */
 typedef enum {
-    MEMORY_SYSTEM_SUCCESS,          /**< メモリシステム成功 */
+    MEMORY_SYSTEM_SUCCESS = 0,      /**< メモリシステム成功 */
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
     MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
-} memory_sys_err_t;
+} memory_system_result_t;
 
 /**
  * @brief メモリシステムを起動する
@@ -64,7 +64,7 @@ typedef enum {
  *
  * 使用例:
  * @code
- * memory_sys_err_t ret = memory_system_create();   // メモリシステム内部状態管理オブジェクトが初期化される
+ * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理オブジェクトが初期化される
  * @endcode
  *
  * @retval MEMORY_SYSTEM_RUNTIME_ERROR メモリシステムが既に初期化済み
@@ -73,7 +73,7 @@ typedef enum {
  *
  * @see memory_system_destroy
  */
-memory_sys_err_t memory_system_create(void);
+memory_system_result_t memory_system_create(void);
 
 /**
  * @brief メモリシステムを停止する
@@ -89,7 +89,7 @@ memory_sys_err_t memory_system_create(void);
  *
  * 使用例:
  * @code
- * memory_sys_err_t ret = memory_system_create();
+ * memory_system_result_t ret = memory_system_create();
  * memory_system_destroy();
  * memory_system_destroy(); // 2重destroyは許可
  * @endcode
@@ -111,7 +111,7 @@ void memory_system_destroy(void);
  *
  * 使用例:
  * @code
- * memory_sys_err_t ret = memory_system_create(); // メモリシステム初期化
+ * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  * // エラー処理
  *
  * // メモリ割り当て
@@ -132,7 +132,7 @@ void memory_system_destroy(void);
  * @see memory_tag_t
  * @see memory_system_create
  */
-memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
+memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
 /**
  * @brief メモリシステムを使用してメモリを解放する
@@ -147,7 +147,7 @@ memory_sys_err_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, voi
  *
  * 使用例:
  * @code
- * memory_sys_err_t ret = memory_system_create(); // メモリシステム初期化
+ * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  *
  * // メモリ割り当て
  * void* ptr = NULL;
@@ -174,7 +174,7 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
  *
  * 使用例:
  * @code
- * memory_sys_err_t ret = memory_system_create(); // メモリシステム初期化
+ * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  *
  * // メモリ割り当て
  * void* ptr = NULL;
