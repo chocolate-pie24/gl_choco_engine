@@ -44,7 +44,7 @@ typedef enum {
 } memory_tag_t;
 
 /**
- * @brief メモリシステムエラーコードリスト
+ * @brief メモリシステム実行結果コードリスト
  *
  */
 typedef enum {

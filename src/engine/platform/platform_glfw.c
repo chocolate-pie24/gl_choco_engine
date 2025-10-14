@@ -54,8 +54,8 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
 
-static const char* rslt_to_str(platform_result_t err_);
-static platform_result_t rslt_convert_string(choco_string_result_t err_);
+static const char* rslt_to_str(platform_result_t rslt_);
+static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
 
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
@@ -142,8 +142,6 @@ static void platform_glfw_destroy(platform_state_t* platform_state_) {
     platform_state_->initialized_glfw = false;
 }
 
-// TODO: 引数エラーチェック
-// TODO: 返り値をエラーコード
 static platform_result_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -303,8 +301,8 @@ cleanup:
     return ret;
 }
 
-static const char* rslt_to_str(platform_result_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(platform_result_t rslt_) {
+    switch(rslt_) {
     case PLATFORM_SUCCESS:
         return s_rslt_str_success;
     case PLATFORM_INVALID_ARGUMENT:
@@ -442,8 +440,8 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     }
 }
 
-static platform_result_t rslt_convert_string(choco_string_result_t err_) {
-    switch(err_) {
+static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
+    switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
         return PLATFORM_SUCCESS;
     case CHOCO_STRING_NO_MEMORY:

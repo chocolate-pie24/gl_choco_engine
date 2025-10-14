@@ -44,7 +44,7 @@ extern "C" {
 typedef struct linear_alloc linear_alloc_t;
 
 /**
- * @brief linear_allocator APIエラーコード
+ * @brief linear_allocator実行結果コードリスト
  *
  */
 typedef enum {

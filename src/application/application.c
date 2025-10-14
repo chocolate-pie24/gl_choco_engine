@@ -80,11 +80,11 @@ static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
-static const char* rslt_to_str(application_result_t err_);
-static application_result_t rslt_convert_mem_sys(memory_system_result_t err_);
-static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t err_);
-static application_result_t rslt_convert_platform(platform_result_t err_);
-static application_result_t rslt_convert_ring_queue(ring_queue_result_t err_);
+static const char* rslt_to_str(application_result_t rslt_);
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+static application_result_t rslt_convert_platform(platform_result_t rslt_);
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
 // TODO: oc_choco_malloc + テスト
 application_result_t application_create(void) {
@@ -671,8 +671,8 @@ static const char* keycode_str(keycode_t keycode_) {
     }
 }
 
-static const char* rslt_to_str(application_result_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(application_result_t rslt_) {
+    switch(rslt_) {
     case APPLICATION_SUCCESS:
         return s_rslt_str_success;
     case APPLICATION_NO_MEMORY:
@@ -688,8 +688,8 @@ static const char* rslt_to_str(application_result_t err_) {
     }
 }
 
-static application_result_t rslt_convert_mem_sys(memory_system_result_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
+    switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
         return APPLICATION_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -703,8 +703,8 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t err_) {
     }
 }
 
-static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
         return APPLICATION_SUCCESS;
     case LINEAR_ALLOC_NO_MEMORY:
@@ -716,8 +716,8 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
     }
 }
 
-static application_result_t rslt_convert_platform(platform_result_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_platform(platform_result_t rslt_) {
+    switch(rslt_) {
     case PLATFORM_SUCCESS:
         return APPLICATION_SUCCESS;
     case PLATFORM_INVALID_ARGUMENT:
@@ -735,8 +735,8 @@ static application_result_t rslt_convert_platform(platform_result_t err_) {
     }
 }
 
-static application_result_t rslt_convert_ring_queue(ring_queue_result_t err_) {
-    switch(err_) {
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
+    switch(rslt_) {
     case RING_QUEUE_SUCCESS:
         return APPLICATION_SUCCESS;
     case RING_QUEUE_INVALID_ARGUMENT:

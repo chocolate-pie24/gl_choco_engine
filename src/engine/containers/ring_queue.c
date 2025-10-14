@@ -35,8 +35,8 @@ static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 static const char* const s_rslt_str_empty = "EMPTY";
 
-static const char* rslt_to_str(ring_queue_result_t err_);
-static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_);
+static const char* rslt_to_str(ring_queue_result_t rslt_);
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 
 #ifdef TEST_BUILD
 static void NO_COVERAGE test_rslt_to_str(void);
@@ -259,8 +259,8 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     }
 }
 
-static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_) {
-    switch(mem_err_) {
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
+    switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RING_QUEUE_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -274,8 +274,8 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_)
     }
 }
 
-static const char* rslt_to_str(ring_queue_result_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(ring_queue_result_t rslt_) {
+    switch(rslt_) {
     case RING_QUEUE_SUCCESS:
         return s_rslt_str_success;
     case RING_QUEUE_INVALID_ARGUMENT:

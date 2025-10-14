@@ -46,7 +46,7 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
-static const char* rslt_to_str(choco_string_result_t err_);
+static const char* rslt_to_str(choco_string_result_t rslt_);
 static choco_string_result_t string_malloc(size_t size_, void** out_ptr_);
 
 // string_ == NULLでCHOCO_STRING_INVALID_ARGUMENT
@@ -291,8 +291,8 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
-static const char* rslt_to_str(choco_string_result_t err_) {
-    switch(err_) {
+static const char* rslt_to_str(choco_string_result_t rslt_) {
+    switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
         return s_rslt_str_success;
     case CHOCO_STRING_NO_MEMORY:

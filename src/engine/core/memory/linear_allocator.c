@@ -33,9 +33,9 @@ struct linear_alloc {
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                     /**< エラー種別文字列(処理成功) */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                 /**< エラー種別文字列(メモリ確保失敗) */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< エラー種別文字列(無効な引数) */
+static const char* const s_rslt_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
 
 #ifdef TEST_BUILD
 #include <assert.h>
