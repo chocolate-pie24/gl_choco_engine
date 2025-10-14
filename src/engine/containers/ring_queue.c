@@ -28,12 +28,12 @@ struct ring_queue {
     void* memory_pool;
 };
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_err_str_no_memory = "NO_MEMORY";
-static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
-static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
-static const char* const s_err_str_empty = "EMPTY";
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_empty = "EMPTY";
 
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_);
 static const char* ring_err_to_string(ring_queue_result_t err_);
@@ -82,7 +82,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     if(SIZE_MAX / element_size_ < max_element_count_) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_rslt_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -100,7 +100,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     }
     stride = element_size_ + padding;
     if(SIZE_MAX / max_element_count_ < stride) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_rslt_str_invalid_argument);
         ret = RING_QUEUE_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -123,7 +123,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     memset(tmp_queue->memory_pool, 0, capacity);
     mem_pool_ptr = (uintptr_t)tmp_queue->memory_pool;
     if(0 != (mem_pool_ptr % element_align_)) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool alignment is invalid.", s_err_str_runtime_err);
+        ERROR_MESSAGE("ring_queue_create(%s) - Allocated memory pool alignment is invalid.", s_rslt_str_runtime_error);
         ret = RING_QUEUE_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -277,19 +277,19 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_)
 static const char* ring_err_to_string(ring_queue_result_t err_) {
     switch(err_) {
     case RING_QUEUE_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case RING_QUEUE_INVALID_ARGUMENT:
-        return s_err_str_invalid_argument;
+        return s_rslt_str_invalid_argument;
     case RING_QUEUE_NO_MEMORY:
-        return s_err_str_no_memory;
+        return s_rslt_str_no_memory;
     case RING_QUEUE_RUNTIME_ERROR:
-        return s_err_str_runtime_err;
+        return s_rslt_str_runtime_error;
     case RING_QUEUE_UNDEFINED_ERROR:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     case RING_QUEUE_EMPTY:
-        return s_err_str_empty;
+        return s_rslt_str_empty;
     default:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     }
 }
 
@@ -758,37 +758,37 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
 static void NO_COVERAGE test_ring_err_to_string(void) {
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_SUCCESS);
-        assert(0 == strcmp(tmp, s_err_str_success));
+        assert(0 == strcmp(tmp, s_rslt_str_success));
         DEBUG_MESSAGE("test_ring_err_to_string - message success: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_INVALID_ARGUMENT);
-        assert(0 == strcmp(tmp, s_err_str_invalid_argument));
+        assert(0 == strcmp(tmp, s_rslt_str_invalid_argument));
         DEBUG_MESSAGE("test_ring_err_to_string - message invalid argument: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_NO_MEMORY);
-        assert(0 == strcmp(tmp, s_err_str_no_memory));
+        assert(0 == strcmp(tmp, s_rslt_str_no_memory));
         DEBUG_MESSAGE("test_ring_err_to_string - message no memory: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_RUNTIME_ERROR);
-        assert(0 == strcmp(tmp, s_err_str_runtime_err));
+        assert(0 == strcmp(tmp, s_rslt_str_runtime_error));
         DEBUG_MESSAGE("test_ring_err_to_string - message runtime error: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_UNDEFINED_ERROR);
-        assert(0 == strcmp(tmp, s_err_str_undefined_err));
+        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
         DEBUG_MESSAGE("test_ring_err_to_string - message undefined error: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(RING_QUEUE_EMPTY);
-        assert(0 == strcmp(tmp, s_err_str_empty));
+        assert(0 == strcmp(tmp, s_rslt_str_empty));
         DEBUG_MESSAGE("test_ring_err_to_string - message empty: %s", tmp);
     }
     {
         const char* tmp = ring_err_to_string(1024);
-        assert(0 == strcmp(tmp, s_err_str_undefined_err));
+        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
         DEBUG_MESSAGE("test_ring_err_to_string - undefined error: %s", tmp);
     }
 }
