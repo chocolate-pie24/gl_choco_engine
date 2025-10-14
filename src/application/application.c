@@ -65,12 +65,6 @@ typedef struct app_state {
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_no_memory = "NO_MEMORY";
-static const char* const s_err_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_err_str_undefined_error = "UNDEFINED_ERROR";
-
 static void on_window(const window_event_t* event_);
 static void on_key(const keyboard_event_t* event_);
 static void on_mouse(const mouse_event_t* event_);
@@ -80,6 +74,11 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 static const char* keycode_str(keycode_t keycode_);
 
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 static const char* app_err_to_str(application_result_t err_);
 static application_result_t rslt_convert_mem_sys(memory_system_result_t err_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t err_);
@@ -99,7 +98,7 @@ application_result_t application_create(void) {
 
     // Preconditions
     if(NULL != s_app_state) {
-        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_err_str_runtime_error);
+        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_rslt_str_runtime_error);
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -674,17 +673,17 @@ static const char* keycode_str(keycode_t keycode_) {
 static const char* app_err_to_str(application_result_t err_) {
     switch(err_) {
     case APPLICATION_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case APPLICATION_NO_MEMORY:
-        return s_err_str_no_memory;
+        return s_rslt_str_no_memory;
     case APPLICATION_RUNTIME_ERROR:
-        return s_err_str_runtime_error;
+        return s_rslt_str_runtime_error;
     case APPLICATION_INVALID_ARGUMENT:
-        return s_err_str_invalid_argument;
+        return s_rslt_str_invalid_argument;
     case APPLICATION_UNDEFINED_ERROR:
-        return s_err_str_undefined_error;
+        return s_rslt_str_undefined_error;
     default:
-        return s_err_str_undefined_error;
+        return s_rslt_str_undefined_error;
     }
 }
 

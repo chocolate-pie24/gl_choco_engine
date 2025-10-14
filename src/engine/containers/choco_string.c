@@ -41,10 +41,10 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_invalid_arg = "INVALID_ARGUMENT";
-static const char* const s_err_str_no_mem = "NO_MEMORY";
-static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
 static const char* err_to_string(choco_string_result_t err_);
 static choco_string_result_t string_malloc(size_t size_, void** out_ptr_);
@@ -294,15 +294,15 @@ const char* choco_string_c_str(const choco_string_t* string_) {
 static const char* err_to_string(choco_string_result_t err_) {
     switch(err_) {
     case CHOCO_STRING_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case CHOCO_STRING_NO_MEMORY:
-        return s_err_str_no_mem;
+        return s_rslt_str_no_memory;
     case CHOCO_STRING_INVALID_ARGUMENT:
-        return s_err_str_invalid_arg;
+        return s_rslt_str_invalid_argument;
     case CHOCO_STRING_UNDEFINED_ERROR:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     default:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     }
 }
 

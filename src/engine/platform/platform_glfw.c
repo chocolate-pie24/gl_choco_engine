@@ -39,12 +39,12 @@ struct platform_state {
     bool right_button_state;
 };
 
-static const char* const s_err_str_success = "SUCCESS";
-static const char* const s_err_str_invalid_arg = "INVALID_ARGUMENT";
-static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
-static const char* const s_err_str_no_memory = "NO_MEMORY";
-static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
-static const char* const s_err_str_window_close = "WINDOW_CLOSE";
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_state_t* platform_state_);
@@ -88,7 +88,7 @@ static platform_result_t platform_glfw_init(platform_state_t* platform_state_) {
     platform_state_->initialized_glfw = false;
 
     if (GL_FALSE == glfwInit()) {
-        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -153,12 +153,12 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
     if(!platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
     if(NULL != platform_state_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -172,7 +172,7 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
 
     platform_state_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_state_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if (NULL == platform_state_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -183,7 +183,7 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
     glfwMakeContextCurrent(platform_state_->window);
     glewExperimental = true;
     if (GLEW_OK != glewInit()) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_err_str_runtime_err);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -219,7 +219,7 @@ static platform_result_t platform_pump_messages(
     bool right_pressed = false;
 
     if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_pump_messages(%s) - Argument 'platform_state_' is uninitialized.", s_err_str_invalid_arg);
+        ERROR_MESSAGE("platform_pump_messages(%s) - Argument 'platform_state_' is uninitialized.", s_rslt_str_invalid_argument);
         ret = PLATFORM_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -306,19 +306,19 @@ cleanup:
 static const char* platform_err_to_str(platform_result_t err_) {
     switch(err_) {
     case PLATFORM_SUCCESS:
-        return s_err_str_success;
+        return s_rslt_str_success;
     case PLATFORM_INVALID_ARGUMENT:
-        return s_err_str_invalid_arg;
+        return s_rslt_str_invalid_argument;
     case PLATFORM_RUNTIME_ERROR:
-        return s_err_str_runtime_err;
+        return s_rslt_str_runtime_error;
     case PLATFORM_NO_MEMORY:
-        return s_err_str_no_memory;
+        return s_rslt_str_no_memory;
     case PLATFORM_UNDEFINED_ERROR:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     case PLATFORM_WINDOW_CLOSE:
-        return s_err_str_window_close;
+        return s_rslt_str_window_close;
     default:
-        return s_err_str_undefined_err;
+        return s_rslt_str_undefined_error;
     }
 }
 
@@ -437,7 +437,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     case KEY_F12:
         return GLFW_KEY_F12;
     default:
-        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", s_err_str_invalid_arg);
+        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", s_rslt_str_invalid_argument);
         return GLFW_KEY_0;
     }
 }

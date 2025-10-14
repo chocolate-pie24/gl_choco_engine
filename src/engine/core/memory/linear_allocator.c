@@ -33,9 +33,9 @@ struct linear_alloc {
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 };
 
-static const char* const s_err_str_success = "SUCCESS";                     /**< エラー種別文字列(処理成功) */
-static const char* const s_err_str_no_memory = "NO_MEMORY";                 /**< エラー種別文字列(メモリ確保失敗) */
-static const char* const s_err_str_invalid_argument = "INVALID_ARGUMENT";   /**< エラー種別文字列(無効な引数) */
+static const char* const s_rslt_str_success = "SUCCESS";                     /**< エラー種別文字列(処理成功) */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                 /**< エラー種別文字列(メモリ確保失敗) */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< エラー種別文字列(無効な引数) */
 
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -109,13 +109,13 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
     if(UINTPTR_MAX - offset < head) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
     start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", s_err_str_invalid_argument);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
         goto cleanup;
     }
@@ -123,7 +123,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
     cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", s_err_str_no_memory, req_size_, (size_t)free_space);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", s_rslt_str_no_memory, req_size_, (size_t)free_space);
         ret = LINEAR_ALLOC_NO_MEMORY;
         goto cleanup;
     }
