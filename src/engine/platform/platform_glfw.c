@@ -39,13 +39,6 @@ struct platform_state {
     bool right_button_state;
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
-
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_state_t* platform_state_);
 static void platform_glfw_destroy(platform_state_t* platform_state_);
@@ -53,8 +46,15 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
 static platform_result_t platform_pump_messages(platform_state_t* platform_state_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
-static const char* platform_err_to_str(platform_result_t err_);
 
+static const char* const s_rslt_str_success = "SUCCESS";
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
+
+static const char* rslt_to_str(platform_result_t err_);
 static platform_result_t rslt_convert_string(choco_string_result_t err_);
 
 static const platform_vtable_t s_glfw_vtable = {
@@ -166,7 +166,7 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
     ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = rslt_convert_string(ret_string);
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_err_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -303,7 +303,7 @@ cleanup:
     return ret;
 }
 
-static const char* platform_err_to_str(platform_result_t err_) {
+static const char* rslt_to_str(platform_result_t err_) {
     switch(err_) {
     case PLATFORM_SUCCESS:
         return s_rslt_str_success;

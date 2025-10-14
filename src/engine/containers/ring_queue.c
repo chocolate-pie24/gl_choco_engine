@@ -35,11 +35,11 @@ static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 static const char* const s_rslt_str_empty = "EMPTY";
 
+static const char* rslt_to_str(ring_queue_result_t err_);
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_);
-static const char* ring_err_to_string(ring_queue_result_t err_);
 
 #ifdef TEST_BUILD
-static void NO_COVERAGE test_ring_err_to_string(void);
+static void NO_COVERAGE test_rslt_to_str(void);
 static void NO_COVERAGE test_rslt_convert_mem_sys(void);
 static void NO_COVERAGE test_ring_queue_create(void);
 static void NO_COVERAGE test_ring_queue_destroy(void);
@@ -109,7 +109,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     ret_mem = memory_system_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = rslt_convert_mem_sys(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", ring_err_to_string(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue, 0, sizeof(*tmp_queue));
@@ -117,7 +117,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     ret_mem = memory_system_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = rslt_convert_mem_sys(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", ring_err_to_string(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue->memory_pool, 0, capacity);
@@ -274,7 +274,7 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_)
     }
 }
 
-static const char* ring_err_to_string(ring_queue_result_t err_) {
+static const char* rslt_to_str(ring_queue_result_t err_) {
     switch(err_) {
     case RING_QUEUE_SUCCESS:
         return s_rslt_str_success;
@@ -297,7 +297,7 @@ static const char* ring_err_to_string(ring_queue_result_t err_) {
 
 void test_ring_queue(void) {
     memory_system_report();
-    test_ring_err_to_string();
+    test_rslt_to_str();
     memory_system_report();
 
     test_rslt_convert_mem_sys();
@@ -755,41 +755,41 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
     }
 }
 
-static void NO_COVERAGE test_ring_err_to_string(void) {
+static void NO_COVERAGE test_rslt_to_str(void) {
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_SUCCESS);
+        const char* tmp = rslt_to_str(RING_QUEUE_SUCCESS);
         assert(0 == strcmp(tmp, s_rslt_str_success));
-        DEBUG_MESSAGE("test_ring_err_to_string - message success: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message success: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_INVALID_ARGUMENT);
+        const char* tmp = rslt_to_str(RING_QUEUE_INVALID_ARGUMENT);
         assert(0 == strcmp(tmp, s_rslt_str_invalid_argument));
-        DEBUG_MESSAGE("test_ring_err_to_string - message invalid argument: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message invalid argument: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_NO_MEMORY);
+        const char* tmp = rslt_to_str(RING_QUEUE_NO_MEMORY);
         assert(0 == strcmp(tmp, s_rslt_str_no_memory));
-        DEBUG_MESSAGE("test_ring_err_to_string - message no memory: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message no memory: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_RUNTIME_ERROR);
+        const char* tmp = rslt_to_str(RING_QUEUE_RUNTIME_ERROR);
         assert(0 == strcmp(tmp, s_rslt_str_runtime_error));
-        DEBUG_MESSAGE("test_ring_err_to_string - message runtime error: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message runtime error: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_UNDEFINED_ERROR);
+        const char* tmp = rslt_to_str(RING_QUEUE_UNDEFINED_ERROR);
         assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
-        DEBUG_MESSAGE("test_ring_err_to_string - message undefined error: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message undefined error: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(RING_QUEUE_EMPTY);
+        const char* tmp = rslt_to_str(RING_QUEUE_EMPTY);
         assert(0 == strcmp(tmp, s_rslt_str_empty));
-        DEBUG_MESSAGE("test_ring_err_to_string - message empty: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - message empty: %s", tmp);
     }
     {
-        const char* tmp = ring_err_to_string(1024);
+        const char* tmp = rslt_to_str(1024);
         assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
-        DEBUG_MESSAGE("test_ring_err_to_string - undefined error: %s", tmp);
+        DEBUG_MESSAGE("test_rslt_to_str - undefined error: %s", tmp);
     }
 }
 
