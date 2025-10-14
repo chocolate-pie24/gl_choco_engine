@@ -189,3 +189,4 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [] そのうちやる(application.cのエラー文字列周りを別ファイルに移す)
 - [] linux support
 - [] README.mdへのコンパイラ、ライブラリセットアップ追記
+- [] macOS makefile修正(m1チップとintelチップでのhomebrewのインストールパスの違いを吸収)
