@@ -1,3 +1,15 @@
+/**
+ * @file ring_queue.c
+ * @author chocolate-pie24
+ * @brief ジェネリック型のリングキューオブジェクト定義と関連APIの実装
+ *
+ * @version 0.1
+ * @date 2025-10-14
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -15,6 +27,10 @@
 #include <assert.h>
 #endif
 
+/**
+ * @brief ring_queue_t内部データ構造
+ *
+ */
 struct ring_queue {
     size_t head;                /**< リングキュー配列の先頭インデックス */
     size_t tail;                /**< リングキューに次に追加する要素インデックス */
@@ -25,15 +41,15 @@ struct ring_queue {
     size_t element_size;        /**< 格納要素のサイズ(パディングは入れない実際のオブジェクト型のサイズ) */
     size_t stride;              /**< 1要素に必要なメモリ領域(element_size + padding) */
     size_t capacity;            /**< memory_poolのサイズ */
-    void* memory_pool;
+    void* memory_pool;          /**< 要素を格納するバッファ */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
-static const char* const s_rslt_str_empty = "EMPTY";
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< リングキューAPI実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< リングキューAPI実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< リングキューAPI実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
+static const char* const s_rslt_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
 
 static const char* rslt_to_str(ring_queue_result_t rslt_);
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
@@ -259,6 +275,12 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     }
 }
 
+/**
+ * @brief エラー伝播のため、メモリシステム実行結果コードをリングキューAPI実行結果コードに変換する
+ *
+ * @param rslt_ メモリシステム実行結果コード
+ * @return application_result_t 変換されたリングキュー実行結果コード
+ */
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
@@ -274,6 +296,12 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
     }
 }
 
+/**
+ * @brief リングキュー実行結果コードを文字列に変換し出力する
+ *
+ * @param rslt_ リングキュー実行結果コード
+ * @return const char* 変換された文字列
+ */
 static const char* rslt_to_str(ring_queue_result_t rslt_) {
     switch(rslt_) {
     case RING_QUEUE_SUCCESS:

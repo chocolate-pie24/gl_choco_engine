@@ -1,3 +1,17 @@
+/** @addtogroup core_event
+ * @{
+ *
+ * @file keyboard_event.h
+ * @author chocolate-pie24
+ * @brief 全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義
+ *
+ * @version 0.1
+ * @date 2025-10-14
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef ENGINE_CORE_KEYBOARD_EVENT_H
 #define ENGINE_CORE_KEYBOARD_EVENT_H
 
@@ -7,72 +21,84 @@ extern "C" {
 
 #include <stdbool.h>
 
+/**
+ * @brief 全プラットフォームで共通化するためのキーコード一覧定義
+ *
+ * @note
+ * - GLFW等のプラットフォーム固有キーコードをこのキーコードに変換してアプリケーションで使用する
+ */
 typedef enum {
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
-    KEY_0,
-    KEY_A,
-    KEY_B,
-    KEY_C,
-    KEY_D,
-    KEY_E,
-    KEY_F,
-    KEY_G,
-    KEY_H,
-    KEY_I,
-    KEY_J,
-    KEY_K,
-    KEY_L,
-    KEY_M,
-    KEY_N,
-    KEY_O,
-    KEY_P,
-    KEY_Q,
-    KEY_R,
-    KEY_S,
-    KEY_T,
-    KEY_U,
-    KEY_V,
-    KEY_W,
-    KEY_X,
-    KEY_Y,
-    KEY_Z,
-    KEY_RIGHT,
-    KEY_LEFT,
-    KEY_UP,
-    KEY_DOWN,
-    KEY_SHIFT,
-    KEY_SPACE,
-    KEY_SEMICOLON,
-    KEY_MINUS,
-    KEY_F1,
-    KEY_F2,
-    KEY_F3,
-    KEY_F4,
-    KEY_F5,
-    KEY_F6,
-    KEY_F7,
-    KEY_F8,
-    KEY_F9,
-    KEY_F10,
-    KEY_F11,
-    KEY_F12,
-    KEY_CODE_MAX,
+    KEY_1,          /**< key: 1 */
+    KEY_2,          /**< key: 2 */
+    KEY_3,          /**< key: 3 */
+    KEY_4,          /**< key: 4 */
+    KEY_5,          /**< key: 5 */
+    KEY_6,          /**< key: 6 */
+    KEY_7,          /**< key: 7 */
+    KEY_8,          /**< key: 8 */
+    KEY_9,          /**< key: 9 */
+    KEY_0,          /**< key: 0 */
+    KEY_A,          /**< key: a */
+    KEY_B,          /**< key: b */
+    KEY_C,          /**< key: c */
+    KEY_D,          /**< key: d */
+    KEY_E,          /**< key: e */
+    KEY_F,          /**< key: f */
+    KEY_G,          /**< key: g */
+    KEY_H,          /**< key: h */
+    KEY_I,          /**< key: i */
+    KEY_J,          /**< key: j */
+    KEY_K,          /**< key: k */
+    KEY_L,          /**< key: l */
+    KEY_M,          /**< key: m */
+    KEY_N,          /**< key: n */
+    KEY_O,          /**< key: o */
+    KEY_P,          /**< key: p */
+    KEY_Q,          /**< key: q */
+    KEY_R,          /**< key: r */
+    KEY_S,          /**< key: s */
+    KEY_T,          /**< key: t */
+    KEY_U,          /**< key: u */
+    KEY_V,          /**< key: v */
+    KEY_W,          /**< key: w */
+    KEY_X,          /**< key: x */
+    KEY_Y,          /**< key: y */
+    KEY_Z,          /**< key: z */
+    KEY_RIGHT,      /**< key: 右矢印キー */
+    KEY_LEFT,       /**< key: 左矢印キー */
+    KEY_UP,         /**< key: 上矢印キー */
+    KEY_DOWN,       /**< key: 下矢印キー */
+    KEY_SHIFT,      /**< key: 左シフトキー */
+    KEY_SPACE,      /**< key: スペース */
+    KEY_SEMICOLON,  /**< key: セミコロン */
+    KEY_MINUS,      /**< key: マイナス */
+    KEY_F1,         /**< key: f1 */
+    KEY_F2,         /**< key: f2 */
+    KEY_F3,         /**< key: f3 */
+    KEY_F4,         /**< key: f4 */
+    KEY_F5,         /**< key: f5 */
+    KEY_F6,         /**< key: f6 */
+    KEY_F7,         /**< key: f7 */
+    KEY_F8,         /**< key: f8 */
+    KEY_F9,         /**< key: f9 */
+    KEY_F10,        /**< key: f10 */
+    KEY_F11,        /**< key: f11 */
+    KEY_F12,        /**< key: f12 */
+    KEY_CODE_MAX,   /**< キーコード最大数 */
 } keycode_t;
 
+/**
+ * @brief キーボードイベントオブジェクト
+ *
+ */
 typedef struct keyboard_event {
-    keycode_t key;
-    bool pressed;
+    keycode_t key;  /**< イベントが発生したキー */
+    bool pressed;   /**< イベント(キー押下: true / キーを離した: false) */
 } keyboard_event_t;
 
 #ifdef __cplusplus
 }
 #endif
 #endif
+
+/** @}*/

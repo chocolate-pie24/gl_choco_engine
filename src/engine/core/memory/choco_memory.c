@@ -55,10 +55,10 @@ typedef struct memory_system {
 
 static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< メモリシステムAPI実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< メモリシステムAPI実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< メモリシステムAPI実行結果コード(実行時エラー)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< メモリシステムAPI実行結果コード(メモリ不足)に対応する文字列 */
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 

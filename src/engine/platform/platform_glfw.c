@@ -1,3 +1,17 @@
+/** @addtogroup platform
+ * @{
+ *
+ * @file platform_glfw.c
+ * @author chocolate-pie24
+ * @brief GLFWを使用する際の仮想関数テーブルを取得する処理の実装
+ *
+ * @version 0.1
+ * @date 2025-10-14
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,17 +40,21 @@ TODO: そのうちやる
  - [] glfwSwapInterval
 */
 
+/**
+ * @brief GLFWプラットフォーム内部状態管理オブジェクト
+ *
+ */
 struct platform_state {
-    int window_width;
-    int window_height;
-    choco_string_t* window_label;
-    GLFWwindow* window;
-    bool initialized_glfw;
+    int window_width;                   /**< ウィンドウ幅 */
+    int window_height;                  /**< ウィンドウ高さ */
+    choco_string_t* window_label;       /**< ウィンドウラベル */
+    GLFWwindow* window;                 /**< GLFWウィンドウオブジェクト */
+    bool initialized_glfw;              /**< GLFW初期済みフラグ */
 
-    bool keycode_state[KEY_CODE_MAX];
+    bool keycode_state[KEY_CODE_MAX];   /**< キーボード各キーコード押下状態 */
 
-    bool left_button_state;
-    bool right_button_state;
+    bool left_button_state;             /**< マウス左ボタン押下状態 */
+    bool right_button_state;            /**< マウス右ボタン押下状態 */
 };
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
@@ -47,16 +65,20 @@ static platform_result_t platform_pump_messages(platform_state_t* platform_state
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< プラットフォームAPI実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームAPI実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームAPI実行結果コード(実行時エラー)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< プラットフォームAPI実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
+static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
 static const char* rslt_to_str(platform_result_t rslt_);
 static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
 
+/**
+ * @brief GLFW用仮想関数テーブル定義
+ *
+ */
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
     .platform_state_init = platform_glfw_init,
@@ -69,6 +91,15 @@ const platform_vtable_t* platform_glfw_vtable_get(void) {
     return &s_glfw_vtable;
 }
 
+/**
+ * @brief プラットフォーム2段階初期化の1段階目でメモリ要件とメモリアライメント要件を取得する
+ *
+ * @note
+ * - memory_requirement_ == NULL または alignment_requirement_ == NULLの場合は何もしない
+ *
+ * @param[out] memory_requirement_ メモリ要件
+ * @param[out] alignment_requirement_ メモリアライメント要件
+ */
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
     if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
         WARN_MESSAGE("platform_state_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
@@ -255,6 +286,7 @@ static platform_result_t platform_pump_messages(
             key_event.pressed = (GLFW_PRESS == action) ? true : false;
             if(platform_state_->keycode_state[i] != key_event.pressed) {
                 keyboard_event_callback(&key_event);
+
                 platform_state_->keycode_state[i] = key_event.pressed;
             }
         }
@@ -273,6 +305,7 @@ static platform_result_t platform_pump_messages(
         mouse_event.pressed = left_pressed;
         mouse_event.x = (int)mouse_x;
         mouse_event.y = (int)mouse_y;
+
         mouse_event_callback(&mouse_event);
 
         platform_state_->left_button_state = left_pressed;
@@ -290,6 +323,7 @@ static platform_result_t platform_pump_messages(
         mouse_event.pressed = right_pressed;
         mouse_event.x = (int)mouse_x;
         mouse_event.y = (int)mouse_y;
+
         mouse_event_callback(&mouse_event);
 
         platform_state_->right_button_state = right_pressed;
@@ -301,6 +335,12 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 実行結果コード
+ * @return const char* 実行結果コードを文字列に変換した値
+ */
 static const char* rslt_to_str(platform_result_t rslt_) {
     switch(rslt_) {
     case PLATFORM_SUCCESS:
@@ -320,6 +360,12 @@ static const char* rslt_to_str(platform_result_t rslt_) {
     }
 }
 
+/**
+ * @brief 全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する
+ *
+ * @param keycode_ 全プラットフォーム共通キーコード
+ * @return int GLFWキーコード
+ */
 static int keycode_to_glfw_keycode(keycode_t keycode_) {
     switch(keycode_) {
     case KEY_1:
@@ -440,6 +486,12 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     }
 }
 
+/**
+ * @brief エラー伝播のため、文字列コンテナオブジェクトの実行結果コードをプラットフォーム実行結果コードに変換する
+ *
+ * @param rslt_ 文字列コンテナオブジェクト実行結果コード
+ * @return platform_result_t プラットフォーム実行結果コード
+ */
 static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
     switch(rslt_) {
     case CHOCO_STRING_SUCCESS:

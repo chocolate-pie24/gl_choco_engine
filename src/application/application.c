@@ -39,28 +39,28 @@
  */
 typedef struct app_state {
     // application status
-    bool window_should_close;
-    bool window_resized;
-    int window_width;
-    int window_height;
+    bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
+    bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
+    int window_width;           /**< ウィンドウ幅 */
+    int window_height;          /**< ウィンドウ高さ */
 
     // core/memory/linear_allocator
-    size_t linear_alloc_mem_req;
-    size_t linear_alloc_align_req;
-    size_t linear_alloc_pool_size;
-    void* linear_alloc_pool;
+    size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
+    size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
+    size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
+    void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
 
     // core/event
-    ring_queue_t* window_event_queue;
-    ring_queue_t* keyboard_event_queue;
-    ring_queue_t* mouse_event_queue;
+    ring_queue_t* window_event_queue;   /**< ウィンドウイベント格納用リングキュー */
+    ring_queue_t* keyboard_event_queue; /**< キーボードイベント格納用リングキュー */
+    ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */
 
     // interfaces/platform_interface
-    size_t platform_state_memory_requirement;
-    size_t platform_state_alignment_requirement;
-    platform_state_t* platform_state;
-    const platform_vtable_t* platform_vtable;
+    size_t platform_state_memory_requirement;       /**< プラットフォームシステム内部状態管理オブジェクトに必要なメモリ量 */
+    size_t platform_state_alignment_requirement;    /**< プラットフォームシステム内部状態管理オブジェクトが要求するメモリアライメント */
+    platform_state_t* platform_state;               /**< プラットフォームシステム内部状態管理オブジェクトへのポインタ */
+    const platform_vtable_t* platform_vtable;       /**< プラットフォーム(X11, win32, GLFW等)の差を吸収する仮想関数テーブル */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -74,11 +74,11 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 static const char* keycode_str(keycode_t keycode_);
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 static const char* rslt_to_str(application_result_t rslt_);
 static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
@@ -86,7 +86,6 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
-// TODO: oc_choco_malloc + テスト
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
     void* tmp_platform_state_ptr = NULL;
@@ -120,14 +119,16 @@ application_result_t application_create(void) {
     }
     memset(tmp, 0, sizeof(*tmp));
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
     // [NOTE] linear_allocatorのプールサイズについて
     //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
     //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
     //   当面は実施せず、多めにメモリを確保する方針にする
-
-    // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
     INFO_MESSAGE("Initializing linear allocator...");
     tmp->linear_alloc = NULL;
     linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
@@ -154,6 +155,7 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
     INFO_MESSAGE("Initializing platform state...");
     tmp->platform_vtable = NULL;
@@ -180,6 +182,7 @@ application_result_t application_create(void) {
     tmp->platform_state = (platform_state_t*)tmp_platform_state_ptr;
     INFO_MESSAGE("platform_state initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create event message queue(window event).(Don't use s_app_state here.)
     INFO_MESSAGE("Starting window event queue initialize...");
     ret_ring_queue = ring_queue_create(8, sizeof(window_event_t), alignof(window_event_t), &tmp->window_event_queue);
@@ -190,6 +193,7 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("window event queue initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create event message queue(keyboard event).(Don't use s_app_state here.)
     INFO_MESSAGE("Starting keyboard event queue initialize...");
     ret_ring_queue = ring_queue_create(KEY_CODE_MAX, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp->keyboard_event_queue);
@@ -200,6 +204,7 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("keyboard event queue initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create event message queue(mouse event).(Don't use s_app_state here.)
     INFO_MESSAGE("Starting mouse event queue initialize...");
     ret_ring_queue = ring_queue_create(128, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp->mouse_event_queue);
@@ -213,6 +218,7 @@ application_result_t application_create(void) {
     // end Simulation -> launch all systems.
 
     // end Simulation
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // begin temporary
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
@@ -338,6 +344,11 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief ウィンドウ関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
 static void on_window(const window_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
@@ -360,6 +371,11 @@ cleanup:
     return;
 }
 
+/**
+ * @brief キーボード関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
 static void on_key(const keyboard_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
@@ -382,6 +398,11 @@ cleanup:
     return;
 }
 
+/**
+ * @brief マウス関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
 static void on_mouse(const mouse_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
 
@@ -404,6 +425,10 @@ cleanup:
     return;
 }
 
+/**
+ * @brief イベントキューに格納されているイベントに基づきアプリケーションの状態を更新する
+ *
+ */
 static void app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
     if(NULL == s_app_state) {
@@ -479,10 +504,18 @@ cleanup:
     return;
 }
 
+/**
+ * @brief 更新されたアプリケーション状態によって、各サブシステムにイベントを通知する
+ *
+ */
 static void app_state_dispatch(void) {
     // 各サブシステムへイベントを通知 まだ処理はなし
 }
 
+/**
+ * @brief アプリケーション状態変化フラグの値を元に戻す
+ *
+ */
 static void app_state_clean(void) {
     if(NULL == s_app_state) {
         ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", rslt_to_str(APPLICATION_RUNTIME_ERROR));
@@ -494,6 +527,12 @@ cleanup:
     return;
 }
 
+/**
+ * @brief キーコードを文字列に変換する
+ *
+ * @param keycode_ 変換対象キーコード
+ * @return const char* 変換された文字列
+ */
 static const char* keycode_str(keycode_t keycode_) {
     static const char* s_key_1 = "key: '1'";
     static const char* s_key_2 = "key: '2'";
@@ -671,6 +710,12 @@ static const char* keycode_str(keycode_t keycode_) {
     }
 }
 
+/**
+ * @brief アプリケーション実行結果コードを文字列に変換し出力する
+ *
+ * @param rslt_ アプリケーション実行結果コード
+ * @return const char* 変換された文字列
+ */
 static const char* rslt_to_str(application_result_t rslt_) {
     switch(rslt_) {
     case APPLICATION_SUCCESS:
@@ -688,6 +733,12 @@ static const char* rslt_to_str(application_result_t rslt_) {
     }
 }
 
+/**
+ * @brief エラー伝播のため、メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ メモリシステム実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
 static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
@@ -703,6 +754,12 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
     }
 }
 
+/**
+ * @brief エラー伝播のため、リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ リニアアロケータ実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
     switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
@@ -716,6 +773,12 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
     }
 }
 
+/**
+ * @brief エラー伝播のため、プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ プラットフォームシステム実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
 static application_result_t rslt_convert_platform(platform_result_t rslt_) {
     switch(rslt_) {
     case PLATFORM_SUCCESS:
@@ -735,6 +798,12 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
     }
 }
 
+/**
+ * @brief エラー伝播のため、リングキュー実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ リングキュー実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     switch(rslt_) {
     case RING_QUEUE_SUCCESS:

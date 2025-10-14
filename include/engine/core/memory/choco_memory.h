@@ -10,6 +10,7 @@
  * メモリ確保は現状はmallocをラップしたAPIによって行う。将来的にはFreeListを実装予定 \n
  * メモリトラッキングは、メモリタグごとに確保されたメモリ量を管理する \n
  * メモリタグは @ref memory_tag_t を参照 \n
+ * なお、本APIで確保されるメモリは、全てmax_align_tにアライメントされている
  *
  *
  * @version 0.1
@@ -99,7 +100,7 @@ memory_system_result_t memory_system_create(void);
 void memory_system_destroy(void);
 
 /**
- * @brief メモリシステムを使用してメモリを割り当てる
+ * @brief メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)
  *
  * @note
  * - 割り当ての際にはmemory_tag_tを指定することで、各メモリタグごとの合計割り当てサイズと総メモリ割り当てサイズをトラッキングする

@@ -183,10 +183,10 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
   - [x] keyboard_event_queue
 - [x] platform/platform_glfw -> メッセージをキューにpush, applicatio層がpop
 - [] layer.md整理
-- [] memory_system_allocateの契約にmax_align_tにアラインされたメモリを返す、を追記
+- [x] memory_system_allocateの契約にmax_align_tにアラインされたメモリを返す、を追記
 - [x] application.c エラーコード変換(application以外も全部 refactor/error-message)
 - [x] clang-tidy include過不足チェック
 - [] そのうちやる(application.cのエラー文字列周りを別ファイルに移す)
-- [] linux support
-- [] README.mdへのコンパイラ、ライブラリセットアップ追記
-- [] macOS makefile修正(m1チップとintelチップでのhomebrewのインストールパスの違いを吸収)
+- [x] linux support
+- [x] README.mdへのコンパイラ、ライブラリセットアップ追記
+- [x] macOS makefile修正(m1チップとintelチップでのhomebrewのインストールパスの違いを吸収)
