@@ -48,7 +48,7 @@ typedef struct linear_alloc linear_alloc_t;
  *
  */
 typedef enum {
-    LINEAR_ALLOC_SUCCESS,           /**< 処理成功 */
+    LINEAR_ALLOC_SUCCESS = 0,       /**< 処理成功 */
     LINEAR_ALLOC_NO_MEMORY,         /**< メモリ不足 */
     LINEAR_ALLOC_INVALID_ARGUMENT,  /**< 無効な引数 */
 } linear_allocator_result_t;

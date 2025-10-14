@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 typedef enum {
-    PLATFORM_SUCCESS,
+    PLATFORM_SUCCESS = 0,
     PLATFORM_INVALID_ARGUMENT,
     PLATFORM_RUNTIME_ERROR,
     PLATFORM_NO_MEMORY,

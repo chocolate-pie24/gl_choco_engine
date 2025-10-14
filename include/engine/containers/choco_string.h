@@ -43,7 +43,7 @@ typedef struct choco_string choco_string_t;
  * @brief 文字列API実行結果コードリスト
  */
 typedef enum {
-    CHOCO_STRING_SUCCESS,           /**< 処理成功 */
+    CHOCO_STRING_SUCCESS = 0,       /**< 処理成功 */
     CHOCO_STRING_NO_MEMORY,         /**< メモリ確保に失敗 */
     CHOCO_STRING_INVALID_ARGUMENT,  /**< 無効な引数 */
     CHOCO_STRING_UNDEFINED_ERROR,   /**< 未定義エラー */

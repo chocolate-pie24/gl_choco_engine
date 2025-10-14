@@ -48,7 +48,7 @@ typedef enum {
  *
  */
 typedef enum {
-    MEMORY_SYSTEM_SUCCESS,          /**< メモリシステム成功 */
+    MEMORY_SYSTEM_SUCCESS = 0,      /**< メモリシステム成功 */
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
     MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */

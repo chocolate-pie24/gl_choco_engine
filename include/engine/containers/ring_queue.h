@@ -11,7 +11,7 @@ extern "C" {
 typedef struct ring_queue ring_queue_t;
 
 typedef enum {
-    RING_QUEUE_SUCCESS,
+    RING_QUEUE_SUCCESS = 0,
     RING_QUEUE_INVALID_ARGUMENT,
     RING_QUEUE_NO_MEMORY,
     RING_QUEUE_RUNTIME_ERROR,

@@ -24,7 +24,7 @@ extern "C" {
  *
  */
 typedef enum {
-    APPLICATION_SUCCESS,            /**< アプリケーション成功 */
+    APPLICATION_SUCCESS = 0,        /**< アプリケーション成功 */
     APPLICATION_NO_MEMORY,          /**< メモリ不足 */
     APPLICATION_RUNTIME_ERROR,      /**< 実行時エラー */
     APPLICATION_INVALID_ARGUMENT,   /**< 引数異常 */
