@@ -135,7 +135,7 @@ echo 'export PATH="$(brew --prefix llvm)/bin:$PATH"' >> ~/.zshrc
 exec $SHELL -l
 ```
 
-***必要ライブラのリセットアップ***
+***必要ライブラリのリセットアップ***
 
 ```bash
 brew install glfw
