@@ -384,7 +384,7 @@ static void NO_COVERAGE test_ring_queue_create(void) {
     {
         // element_align_がmax_align_tを超過 -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
-        ret = ring_queue_create(128, 10, 16, &ring_queue);
+        ret = ring_queue_create(128, 10, alignof(max_align_t) + 1, &ring_queue);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(NULL == ring_queue);
     }

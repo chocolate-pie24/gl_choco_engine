@@ -13,6 +13,7 @@
  */
 #include <stdalign.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset strcmp(test only)
