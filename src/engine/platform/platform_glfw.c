@@ -55,7 +55,7 @@ static platform_result_t platform_pump_messages(platform_state_t* platform_state
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 static const char* platform_err_to_str(platform_result_t err_);
 
-static platform_result_t choco_string_err_to_platform_err(choco_string_result_t err_);
+static platform_result_t rslt_convert_string(choco_string_result_t err_);
 
 static const platform_vtable_t s_glfw_vtable = {
     .platform_state_preinit = platform_glfw_preinit,
@@ -165,7 +165,7 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
 
     ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = choco_string_err_to_platform_err(ret_string);
+        ret = rslt_convert_string(ret_string);
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_err_to_str(ret));
         goto cleanup;
     }
@@ -442,7 +442,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     }
 }
 
-static platform_result_t choco_string_err_to_platform_err(choco_string_result_t err_) {
+static platform_result_t rslt_convert_string(choco_string_result_t err_) {
     switch(err_) {
     case CHOCO_STRING_SUCCESS:
         return PLATFORM_SUCCESS;

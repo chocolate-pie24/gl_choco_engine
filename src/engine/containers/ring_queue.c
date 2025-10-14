@@ -35,12 +35,12 @@ static const char* const s_err_str_runtime_err = "RUNTIME_ERROR";
 static const char* const s_err_str_undefined_err = "UNDEFINED_ERROR";
 static const char* const s_err_str_empty = "EMPTY";
 
-static ring_queue_result_t mem_err_to_ring_err(memory_system_result_t mem_err_);
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_);
 static const char* ring_err_to_string(ring_queue_result_t err_);
 
 #ifdef TEST_BUILD
 static void NO_COVERAGE test_ring_err_to_string(void);
-static void NO_COVERAGE test_mem_err_to_ring_err(void);
+static void NO_COVERAGE test_rslt_convert_mem_sys(void);
 static void NO_COVERAGE test_ring_queue_create(void);
 static void NO_COVERAGE test_ring_queue_destroy(void);
 static void NO_COVERAGE test_ring_queue_push(void);
@@ -108,7 +108,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 
     ret_mem = memory_system_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = mem_err_to_ring_err(ret_mem);
+        ret = rslt_convert_mem_sys(ret_mem);
         ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", ring_err_to_string(ret));
         goto cleanup;
     }
@@ -116,7 +116,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 
     ret_mem = memory_system_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = mem_err_to_ring_err(ret_mem);
+        ret = rslt_convert_mem_sys(ret_mem);
         ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", ring_err_to_string(ret));
         goto cleanup;
     }
@@ -259,7 +259,7 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     }
 }
 
-static ring_queue_result_t mem_err_to_ring_err(memory_system_result_t mem_err_) {
+static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t mem_err_) {
     switch(mem_err_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RING_QUEUE_SUCCESS;
@@ -300,7 +300,7 @@ void test_ring_queue(void) {
     test_ring_err_to_string();
     memory_system_report();
 
-    test_mem_err_to_ring_err();
+    test_rslt_convert_mem_sys();
     memory_system_report();
 
     test_ring_queue_create();
@@ -793,22 +793,22 @@ static void NO_COVERAGE test_ring_err_to_string(void) {
     }
 }
 
-static void NO_COVERAGE test_mem_err_to_ring_err(void) {
+static void NO_COVERAGE test_rslt_convert_mem_sys(void) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_SUCCESS);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS);
     assert(RING_QUEUE_SUCCESS == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_INVALID_ARGUMENT);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_INVALID_ARGUMENT);
     assert(RING_QUEUE_INVALID_ARGUMENT == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_RUNTIME_ERROR);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_RUNTIME_ERROR);
     assert(RING_QUEUE_RUNTIME_ERROR == ret);
 
-    ret = mem_err_to_ring_err(MEMORY_SYSTEM_NO_MEMORY);
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY);
     assert(RING_QUEUE_NO_MEMORY == ret);
 
-    ret = mem_err_to_ring_err(1024);
+    ret = rslt_convert_mem_sys(1024);
     assert(RING_QUEUE_UNDEFINED_ERROR == ret);
 }
 
