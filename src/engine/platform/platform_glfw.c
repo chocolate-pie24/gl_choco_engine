@@ -1,5 +1,4 @@
-/** @addtogroup platform
- * @{
+/**
  *
  * @file platform_glfw.c
  * @author chocolate-pie24
@@ -8,8 +7,13 @@
  * @version 0.1
  * @date 2025-10-14
  *
+ * @todo glfwSetErrorCallback
+ * @todo glfwSwapInterval
+ *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stdalign.h>
@@ -33,12 +37,6 @@
 #include "engine/interfaces/platform_interface.h"
 
 #include "engine/containers/choco_string.h"
-
-/*
-TODO: そのうちやる
- - [] glfwSetErrorCallback
- - [] glfwSwapInterval
-*/
 
 /**
  * @brief GLFWプラットフォーム内部状態管理オブジェクト
@@ -252,6 +250,10 @@ static platform_result_t platform_pump_messages(
         ret = PLATFORM_INVALID_ARGUMENT;
         goto cleanup;
     }
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_->window, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_state_->window")
 
     // イベントの取得
     glfwPollEvents();
@@ -448,7 +450,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
         return GLFW_KEY_UP;
     case KEY_DOWN:
         return GLFW_KEY_DOWN;
-    case KEY_SHIFT:
+    case KEY_LEFT_SHIFT:
         return GLFW_KEY_LEFT_SHIFT;
     case KEY_SPACE:
         return GLFW_KEY_SPACE;

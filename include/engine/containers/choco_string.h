@@ -14,14 +14,13 @@
  * @date 2025-09-26
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
  *
- * @todo
- * - [] choco_string_move
- * - [x] choco_string_createをdefault_createに変更し、capacity_を削除+テスト関数修正
- * - [x] choco_string_create_from_char
- * - [] choco_string_create_from_string
- * - [] choco_string_clone(deep copy - copyとの違いをきちんとドキュメントに書く)
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @todo choco_string_move
+ * @todo choco_string_create_from_string
+ * @todo choco_string_clone(deep copy - copyとの違いをきちんとドキュメントに書く)
  */
 #ifndef GLCE_ENGINE_CONTAINERS_CHOCO_STRING_H
 #define GLCE_ENGINE_CONTAINERS_CHOCO_STRING_H
@@ -54,7 +53,7 @@ typedef enum {
  *
  * @note 文字列格納用内部バッファサイズを0で初期化したchoco_string_tオブジェクトを生成する
  *
- * @code
+ * @code{.c}
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
  * choco_string_result_t ret = choco_string_default_create(&string);
  *
@@ -65,8 +64,9 @@ typedef enum {
  *
  * @param[out] string_ 生成対象オブジェクト
  *
- * @retval CHOCO_STRING_INVALID_ARGUMENT string_ == NULL
- * @retval CHOCO_STRING_INVALID_ARGUMENT *string_ != NULL
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
+ * - string_ == NULL
+ * - *string_ != NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保に失敗
  * @retval CHOCO_STRING_SUCCESS          choco_string_tの生成に成功し正常終了
  *
@@ -80,7 +80,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * @note
  * - 空文字列""が渡された場合は、文字列バッファがNULLで初期化されるため、choco_string_default_createと等価になる
  *
- * @code
+ * @code{.c}
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
  * choco_string_result_t ret = choco_string_create_from_char(&string, "abc");
  *
@@ -92,9 +92,10 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * @param string_ 生成対象オブジェクト
  * @param src_ 初期化文字列
  *
- * @retval CHOCO_STRING_INVALID_ARGUMENT string_ == NULL
- * @retval CHOCO_STRING_INVALID_ARGUMENT *string_ != NULL
- * @retval CHOCO_STRING_INVALID_ARGUMENT src_ == NULL
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
+ * - string_ == NULL
+ * - *string_ != NULL
+ * - src_ == NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保に失敗
  * @retval CHOCO_STRING_SUCCESS          choco_string_tの生成に成功し正常終了
  *
@@ -110,7 +111,7 @@ choco_string_result_t choco_string_create_from_char(choco_string_t** string_, co
  * - string == NULLの場合はno-op
  * - *string == NULLの場合はno-op
  *
- * @code
+ * @code{.c}
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
  * choco_string_result_t ret = choco_string_create_from_char(&string, "abc");
  *
@@ -133,7 +134,7 @@ void choco_string_destroy(choco_string_t** string_);
  * - src_が管理する文字列が空文字列だった場合は、dst_が管理する文字列を空文字列とし、バッファサイズは変更されない
  * - src_が管理する文字列が空文字列かつ、dst_が管理する文字列が空文字列の場合は何もしない
  *
- * @code
+ * @code{.c}
  * choco_string_t* src = NULL;
  * choco_string_result_t ret = choco_string_create_from_char(&src, "aaaaa");
  *
@@ -155,9 +156,11 @@ void choco_string_destroy(choco_string_t** string_);
  * @param dst_ コピー先オブジェクト
  * @param src_ コピー元オブジェクト
  *
- * @retval CHOCO_STRING_INVALID_ARGUMENT dst_ == NULL
- * @retval CHOCO_STRING_INVALID_ARGUMENT src_ == NULL
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
+ * - dst_ == NULL
+ * - src_ == NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保失敗
+ * @retval CHOCO_STRING_SUCCESS          文字列のコピーに成功し、正常終了
  */
 choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
 
@@ -170,7 +173,7 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
  * - src_が管理する文字列が空文字列だった場合は、dst_が管理する文字列を空文字列とし、バッファサイズは変更されない
  * - src_が管理する文字列が空文字列かつ、dst_が管理する文字列が空文字列の場合は何もしない
  *
- * @code
+ * @code{.c}
  * choco_string_t* src = NULL;
  * choco_string_result_t ret = choco_string_default_create(&dst);
  *
@@ -186,9 +189,11 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
  * @param dst_ コピー先オブジェクト
  * @param src_ コピー元文字列
  *
- * @retval CHOCO_STRING_INVALID_ARGUMENT dst_ == NULL
- * @retval CHOCO_STRING_INVALID_ARGUMENT src_ == NULL
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
+ * - dst_ == NULL
+ * - src_ == NULL
  * @retval CHOCO_STRING_NO_MEMORY        メモリ確保失敗
+ * @retval CHOCO_STRING_SUCCESS          文字列のコピーに成功し、正常終了
  */
 choco_string_result_t choco_string_copy_from_char(choco_string_t* dst_, const char* src_);
 
@@ -198,7 +203,7 @@ choco_string_result_t choco_string_copy_from_char(choco_string_t* dst_, const ch
  * @note
  * - string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す
  *
- * @code
+ * @code{.c}
  * choco_string_t* string = NULL;
  * choco_string_result_t ret = choco_string_create_from_char(&string, "aaaaa");
  *
@@ -220,7 +225,7 @@ size_t choco_string_length(const choco_string_t* string_);
  * @note
  * - string_がNULLまたは内部管理バッファがNULLで空の文字列を返す
  *
- * @code
+ * @code{.c}
  * choco_string_t* string = NULL;
  * choco_string_result_t ret = choco_string_create_from_char(&string, "aaaaa");
  *

@@ -9,8 +9,9 @@
  * @date 2025-10-14
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
  *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  */
 #ifndef GLCE_APP_PLATFORM_REGISTRY_H
 #define GLCE_APP_PLATFORM_REGISTRY_H
@@ -26,7 +27,7 @@ extern "C" {
  * @brief プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理
  *
  * 使用例:
- * @code
+ * @code{.c}
  * const platform_vtable_t vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW);    // GLFWを使用したテーブルを取得
  * @endcode
  *

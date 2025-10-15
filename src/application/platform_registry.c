@@ -7,7 +7,9 @@
  * @date 2025-10-14
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stddef.h>

@@ -1,5 +1,4 @@
-/** @addtogroup container
- * @{
+/**
  *
  * @file choco_string.c
  * @author chocolate-pie24
@@ -8,11 +7,12 @@
  * @version 0.1
  * @date 2025-09-26
  *
- * @todo
- * - [] src_len + 1のオーバーフローチェックをしていない + テストケース追加
+ * @todo src_len + 1のオーバーフローチェックをしていない + テストケース追加
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <string.h>

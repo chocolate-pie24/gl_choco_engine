@@ -6,8 +6,12 @@
  * @version 0.1
  * @date 2025-09-20
  *
+ * @todo application.cのエラー文字列周りを別ファイルに移す
+ *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stdalign.h>
@@ -673,7 +677,7 @@ static const char* keycode_str(keycode_t keycode_) {
         return s_key_up;
     case KEY_DOWN:
         return s_key_down;
-    case KEY_SHIFT:
+    case KEY_LEFT_SHIFT:
         return s_key_shift;
     case KEY_SPACE:
         return s_key_space;

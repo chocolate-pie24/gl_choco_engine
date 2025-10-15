@@ -25,7 +25,9 @@
  * @date 2025-10-14
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CONTAINERS_RING_QUEUE_H
@@ -61,7 +63,7 @@ typedef enum {
  * @brief ring_queue_tオブジェクトのメモリを確保し、初期化を行いリングキューを使用可能な状態にする
  *
  * 使用例:
- * @code
+ * @code{.c}
  * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
  * ring_queue_t* ring_queue = NULL;
  *
@@ -74,14 +76,15 @@ typedef enum {
  * @param[in] element_align_ 格納する要素のアライメント要件(2のべき乗 かつ max_align_t以下でなければいけない)
  * @param[out] ring_queue_ 初期化対象オブジェクト
  *
- * @retval RING_QUEUE_INVALID_ARGUMENT ring_queue_ == NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT *ring_queue_ != NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT 0 == max_element_count_
- * @retval RING_QUEUE_INVALID_ARGUMENT 0 == element_size_
- * @retval RING_QUEUE_INVALID_ARGUMENT element_align_が2の冪乗ではない
- * @retval RING_QUEUE_INVALID_ARGUMENT element_align_がmax_align_tを超過
+ * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
+ * - ring_queue_ == NULL
+ * - *ring_queue_ != NULL
+ * - 0 == max_element_count_
+ * - 0 == element_size_
+ * - element_align_が2の冪乗ではない
+ * - element_align_がmax_align_tを超過
+ * - 処理過程でオーバーフローが発生
  * @retval RING_QUEUE_NO_MEMORY        メモリ確保失敗
- * @retval RING_QUEUE_INVALID_ARGUMENT 処理過程でオーバーフローが発生
  * @retval RING_QUEUE_SUCCESS          初期化に成功し、正常終了
  */
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_);
@@ -93,7 +96,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
  * ring_queue_destroyは2重デストロイを許可する
  *
  * 使用例:
- * @code
+ * @code{.c}
  * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
  * ring_queue_t* ring_queue = NULL;
  *
@@ -117,7 +120,7 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * - 満杯で古いデータを捨てた場合でも、返り値はRING_QUEUE_SUCCESSとなる
  *
  * 使用例:
- * @code
+ * @code{.c}
  * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
  * ring_queue_t* ring_queue = NULL;
  *
@@ -136,11 +139,12 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
  *
- * @retval RING_QUEUE_INVALID_ARGUMENT ring_queue_ == NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT data_ == NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT データ格納バッファが未初期化
- * @retval RING_QUEUE_INVALID_ARGUMENT element_size_がring_queue_createを実行した時の値と異なる
- * @retval RING_QUEUE_INVALID_ARGUMENT element_align_がring_queue_createを実行した時の値と異なる
+ * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
+ * - ring_queue_ == NULL
+ * - data_ == NULL
+ * - データ格納バッファが未初期化
+ * - element_size_がring_queue_createを実行した時の値と異なる
+ * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_SUCCESS          データの格納に成功し、正常終了(バッファが満杯で古いデータを捨てて新しいデータを格納した場合でも成功となる)
  */
 ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_);
@@ -149,7 +153,7 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
  * @brief ring_queue_tからデータをpopする
  *
  * 使用例:
- * @code
+ * @code{.c}
  * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
  * ring_queue_t* ring_queue = NULL;
  *
@@ -171,11 +175,12 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
  * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
  *
- * @retval RING_QUEUE_INVALID_ARGUMENT ring_queue_ == NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT data_ == NULL
- * @retval RING_QUEUE_INVALID_ARGUMENT データ格納バッファが未初期化
- * @retval RING_QUEUE_INVALID_ARGUMENT element_size_がring_queue_createを実行した時の値と異なる
- * @retval RING_QUEUE_INVALID_ARGUMENT element_align_がring_queue_createを実行した時の値と異なる
+ * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
+ * - ring_queue_ == NULL
+ * - data_ == NULL
+ * - データ格納バッファが未初期化
+ * - element_size_がring_queue_createを実行した時の値と異なる
+ * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_EMPTY            ring_queueが空
  * @retval RING_QUEUE_SUCCESS          データの取得に成功し、正常終了
  */
@@ -188,7 +193,7 @@ ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_
  * - 引数で与えたring_queue_がNULLの場合は何もせず、true(=空)を返す
  *
  * 使用例:
- * @code
+ * @code{.c}
  * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
  * ring_queue_t* ring_queue = NULL;
  *

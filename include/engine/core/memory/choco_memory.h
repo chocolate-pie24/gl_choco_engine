@@ -17,7 +17,9 @@
  * @date 2025-09-20
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_MEMORY_CHOCO_MEMORY_H
@@ -64,7 +66,7 @@ typedef enum {
  * memory_system_createを再度実行する際には、memory_system_destroyを呼び出してから使用すること
  *
  * 使用例:
- * @code
+ * @code{.c}
  * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理オブジェクトが初期化される
  * @endcode
  *
@@ -89,7 +91,7 @@ memory_system_result_t memory_system_create(void);
  * - この関数を呼び出した時点でメモリシステムが管理しているメモリ使用量が0でない場合は、ワーニングメッセージを出力し、メモリシステムを破棄する
  *
  * 使用例:
- * @code
+ * @code{.c}
  * memory_system_result_t ret = memory_system_create();
  * memory_system_destroy();
  * memory_system_destroy(); // 2重destroyは許可
@@ -111,7 +113,7 @@ void memory_system_destroy(void);
  * @param[out] out_ptr_ 割り当てたメモリ格納先(ダブルポインタを渡す)
  *
  * 使用例:
- * @code
+ * @code{.c}
  * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  * // エラー処理
  *
@@ -121,12 +123,13 @@ void memory_system_destroy(void);
  * // エラー処理
  * @endcode
  *
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT メモリシステム未初期化
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT out_ptr == NULL
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT *out_ptr != NULL
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT mem_tag_ >= MEMORY_TAG_MAX
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
+ * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - メモリシステム未初期化
+ * - out_ptr == NULL
+ * - *out_ptr != NULL
+ * - mem_tag_ >= MEMORY_TAG_MAX
+ * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
+ * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
  * @retval MEMORY_SYSTEM_NO_MEMORY        メモリ割り当て失敗
  * @retval MEMORY_SYSTEM_SUCCESS          size_ == 0または割り当てに成功し正常終了
  *
@@ -147,7 +150,7 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
  *
  *
  * 使用例:
- * @code
+ * @code{.c}
  * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  *
  * // メモリ割り当て
@@ -174,7 +177,7 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
  * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
  *
  * 使用例:
- * @code
+ * @code{.c}
  * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
  *
  * // メモリ割り当て

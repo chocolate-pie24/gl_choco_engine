@@ -18,14 +18,15 @@
  * このため、linear_alloc_t型で変数を宣言することはできない \n
  * 使用の際は、linear_alloc_t*型で宣言すること
  *
- * @todo
- * - TODO: linear_allocator_reset追加
+ * @todo linear_allocator_reset追加
  *
  * @version 0.1
  * @date 2025-09-16
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
- * @license MIT License. See LICENSE file in the project root for full license text.
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_MEMORY_LINEAR_ALLOCATOR_H
@@ -63,7 +64,7 @@ typedef enum {
  * - 本APIを使用した後、リニアアロケータのメモリを確保し、linear_allocator_initを使用して初期化する
  *
  * 使用例:
- * @code
+ * @code{.c}
  * size_t memory_requirement = 0;   // メモリ使用量格納先
  * size_t align_requirement = 0;    // メモリアライメント要件格納先
  * linear_allocator_preinit(&memory_requirement, &align_requirement);
@@ -85,7 +86,7 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
  * - リニアアロケータオブジェクト自体の破棄は上位層で行う
  *
  * 使用例:
- * @code
+ * @code{.c}
  * linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
  * memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
  *
@@ -117,9 +118,11 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
  * @param[in] capacity_ メモリプール容量(byte)
  * @param[in] memory_pool_ メモリプールアドレス
  *
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数allocator_ == NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数memory_pool_ == NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT 引数capacity_ == 0
+ * @retval LINEAR_ALLOC_INVALID_ARGUMENT 以下のいずれか
+ * - 引数allocator_ == NULL
+ * - 引数memory_pool_ == NULL
+ * - 引数capacity_ == 0
+ * @retval LINEAR_ALLOC_SUCCESS          リニアアロケータの初期化に成功し、正常終了
  *
  * @see linear_allocator_preinit
  * @see memory_system_allocate
@@ -138,7 +141,7 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
  * - req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
  *
  * 使用例:
- * @code
+ * @code{.c}
  * linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
  * memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
  *
@@ -169,15 +172,17 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
  * @param[in] req_align_ 割り当てるオブジェクトのアライメント要件
  * @param[out] out_ptr_ 割り当てたアドレスを格納する
  *
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT allocator_ == NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT out_ptr_ == NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT *out_ptr_ != NULL
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT req_align_が2の冪乗ではない
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT メモリを割り当てた場合、割り当て開始アドレスの値がオーバーフロー
- * @retval LINEAR_ALLOC_INVALID_ARGUMENT メモリ割り当て先頭アドレス+割り当てサイズの値がオーバーフロー
+ * @retval LINEAR_ALLOC_INVALID_ARGUMENT 以下のいずれか
+ * - allocator_ == NULL
+ * - out_ptr_ == NULL
+ * - *out_ptr_ != NULL
+ * - req_align_が2の冪乗ではない
+ * - メモリを割り当てた場合、割り当て開始アドレスの値がオーバーフロー
+ * - メモリ割り当て先頭アドレス+割り当てサイズの値がオーバーフロー
  * @retval LINEAR_ALLOC_NO_MEMORY        メモリを割り当てた場合、メモリプール内に収まらない
- * @retval LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
- * @retval LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
+ * @retval LINEAR_ALLOC_SUCCESS 以下のいずれか
+ * - req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
+ * - メモリ割り当てに成功し正常終了
  *
  */
 linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_);
