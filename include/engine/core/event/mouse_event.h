@@ -1,4 +1,4 @@
-/** @addtogroup core_event
+/** @addtogroup event_mouse
  * @{
  *
  * @file mouse_event.h

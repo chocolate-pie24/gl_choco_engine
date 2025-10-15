@@ -1,4 +1,4 @@
-/** @addtogroup container
+/** @addtogroup containers_ring_queue
  * @{
  *
  * @file ring_queue.h

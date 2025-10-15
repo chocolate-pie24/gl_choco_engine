@@ -1,4 +1,4 @@
-/** @addtogroup base
+/** @addtogroup base_message
  * @{
  *
  * @file choco_message.h

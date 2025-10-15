@@ -1,4 +1,4 @@
-/** @addtogroup core_event
+/** @addtogroup event_window
  * @{
  *
  * @file window_event.h

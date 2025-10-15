@@ -1,4 +1,4 @@
-/** @addtogroup platform
+/** @addtogroup platform_glfw
  * @{
  *
  * @file platform_glfw.h

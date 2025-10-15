@@ -1,4 +1,4 @@
-/** @addtogroup container
+/** @addtogroup containers_string
  * @{
  *
  * @file choco_string.h

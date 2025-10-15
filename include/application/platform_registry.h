@@ -1,4 +1,4 @@
-/** @addtogroup application
+/** @addtogroup app_platform_registry
  * @{
  *
  * @file platform_registry.h

@@ -1,4 +1,4 @@
-/** @addtogroup core_memory
+/** @addtogroup memory_memory_system
  * @{
  *
  * @file choco_memory.h

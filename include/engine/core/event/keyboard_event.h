@@ -1,4 +1,4 @@
-/** @addtogroup core_event
+/** @addtogroup event_keyboard
  * @{
  *
  * @file keyboard_event.h

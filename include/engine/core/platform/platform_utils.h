@@ -1,4 +1,4 @@
-/** @addtogroup platform
+/** @addtogroup core_platform
  * @{
  *
  * @file platform_utils.h

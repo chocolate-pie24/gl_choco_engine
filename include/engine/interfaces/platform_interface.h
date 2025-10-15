@@ -1,4 +1,4 @@
-/** @addtogroup interfaces
+/** @addtogroup interfaces_platform
  * @{
  *
  * @file platform_interface.h

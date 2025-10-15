@@ -1,4 +1,4 @@
-/** @addtogroup base
+/** @addtogroup base_macros
  * @{
  *
  * @file choco_macros.h

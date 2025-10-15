@@ -1,4 +1,4 @@
-/** @addtogroup core_memory
+/** @addtogroup memory_linear_allocator
  * @{
  *
  * @file linear_allocator.h
