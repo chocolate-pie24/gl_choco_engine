@@ -19,7 +19,6 @@
 #include <string.h> // for memset
 
 #include "application/application.h"
-#include "application/platform_registry.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -35,7 +34,7 @@
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/interfaces/platform_interface.h"
+#include "engine/platform/platform_context.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
@@ -60,11 +59,8 @@ typedef struct app_state {
     ring_queue_t* keyboard_event_queue; /**< キーボードイベント格納用リングキュー */
     ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */
 
-    // interfaces/platform_interface
-    size_t platform_state_memory_requirement;       /**< プラットフォームシステム内部状態管理オブジェクトに必要なメモリ量 */
-    size_t platform_state_alignment_requirement;    /**< プラットフォームシステム内部状態管理オブジェクトが要求するメモリアライメント */
-    platform_state_t* platform_state;               /**< プラットフォームシステム内部状態管理オブジェクトへのポインタ */
-    const platform_vtable_t* platform_vtable;       /**< プラットフォーム(X11, win32, GLFW等)の差を吸収する仮想関数テーブル */
+    // platform/platform_context
+    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキストオブジェクト */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -78,26 +74,25 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 static const char* keycode_str(keycode_t keycode_);
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
-
 static const char* rslt_to_str(application_result_t rslt_);
 static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
+
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
-    void* tmp_platform_state_ptr = NULL;
 
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    platform_result_t ret_platform_state_init = PLATFORM_INVALID_ARGUMENT;
+    platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
 
     // Preconditions
@@ -160,31 +155,15 @@ application_result_t application_create(void) {
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create platform state.(Don't use s_app_state here.)
+    // Simulation -> launch all systems -> create platform.(Don't use s_app_state here.)
     INFO_MESSAGE("Initializing platform state...");
-    tmp->platform_vtable = NULL;
-    tmp->platform_vtable = platform_registry_vtable_get(PLATFORM_USE_GLFW); // TODO: #ifdefで切り分け
-    if(NULL == tmp->platform_vtable) {
-        ERROR_MESSAGE("Failed to get platform vtable.");
-        ret = APPLICATION_RUNTIME_ERROR;
+    ret_platform = platform_initialize(tmp->linear_alloc, PLATFORM_USE_GLFW, &tmp->platform_context);
+    if(PLATFORM_SUCCESS != ret_platform) {
+        ret = rslt_convert_platform(ret_platform);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", rslt_to_str(ret));
         goto cleanup;
     }
-    tmp->platform_state = NULL;
-    tmp->platform_vtable->platform_state_preinit(&tmp->platform_state_memory_requirement, &tmp->platform_state_alignment_requirement);
-    ret_linear_alloc = linear_allocator_allocate(tmp->linear_alloc, tmp->platform_state_memory_requirement, tmp->platform_state_alignment_requirement, &tmp_platform_state_ptr);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for platform state.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_platform_state_init = tmp->platform_vtable->platform_state_init((platform_state_t*)tmp_platform_state_ptr);
-    if(PLATFORM_SUCCESS != ret_platform_state_init) {
-        ret = rslt_convert_platform(ret_platform_state_init);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform state.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    tmp->platform_state = (platform_state_t*)tmp_platform_state_ptr;
-    INFO_MESSAGE("platform_state initialized successfully.");
+    INFO_MESSAGE("platform_backend initialized successfully.");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create event message queue(window event).(Don't use s_app_state here.)
@@ -228,9 +207,9 @@ application_result_t application_create(void) {
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
     tmp->window_width = 1024;
     tmp->window_height = 768;
-    ret_platform_state_init = tmp->platform_vtable->platform_window_create(tmp->platform_state, "test_window", 1024, 768);
-    if(PLATFORM_SUCCESS != ret_platform_state_init) {
-        ret = rslt_convert_platform(ret_platform_state_init);
+    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768);
+    if(PLATFORM_SUCCESS != ret_platform) {
+        ret = rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -257,10 +236,8 @@ cleanup:
                 ring_queue_destroy(&tmp->window_event_queue);
                 tmp->window_event_queue = NULL;
             }
-            if(NULL != tmp->platform_state) {
-                if(NULL != tmp->platform_vtable) {
-                    tmp->platform_vtable->platform_state_destroy(tmp->platform_state);
-                }
+            if(NULL != tmp->platform_context) {
+                platform_destroy(tmp->platform_context);
             }
             if(NULL != tmp->linear_alloc_pool) {
                 memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
@@ -297,8 +274,8 @@ void application_destroy(void) {
         ring_queue_destroy(&s_app_state->window_event_queue);
         s_app_state->window_event_queue = NULL;
     }
-    if(NULL != s_app_state->platform_vtable) {
-        s_app_state->platform_vtable->platform_state_destroy(s_app_state->platform_state);
+    if(NULL != s_app_state->platform_context) {
+        platform_destroy(s_app_state->platform_context);
     }
     if(NULL != s_app_state->linear_alloc_pool) {
         memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
@@ -329,7 +306,7 @@ application_result_t application_run(void) {
         goto cleanup;
     }
     while(!s_app_state->window_should_close) {
-        platform_result_t ret_event = s_app_state->platform_vtable->platform_pump_messages(s_app_state->platform_state, on_window, on_key, on_mouse);
+        platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
         if(PLATFORM_WINDOW_CLOSE == ret_event) {
             s_app_state->window_should_close = true;
             continue;

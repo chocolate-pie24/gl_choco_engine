@@ -96,12 +96,17 @@
         @brief プラットフォーム関連処理について、strategyパターンのinterfaceオブジェクトを提供する
     */
 
-/** @defgroup platform Platform
+/** @defgroup platform_concretes Concrete Platform
     @ingroup engine
     @brief プラットフォーム関連処理について、strategyパターンのconcreteオブジェクトを提供する
 */
 
     /** @defgroup platform_glfw Platform GLFW
-        @ingroup platform
+        @ingroup platform_concretes
         @brief GLFWを使用したプラットフォームAPIを提供する
     */
+
+/** @defgroup platform Context Platform
+    @ingroup engine
+    @brief プラットフォーム関連処理について、アプリケーション側への処理の窓口となるContextオブジェクトを提供する
+*/

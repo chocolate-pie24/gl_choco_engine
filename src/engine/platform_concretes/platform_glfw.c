@@ -23,7 +23,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "engine/platform/platform_glfw.h"
+#include "engine/platform_concretes/platform_glfw.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -42,7 +42,7 @@
  * @brief GLFWプラットフォーム内部状態管理オブジェクト
  *
  */
-struct platform_state {
+struct platform_backend {
     int window_width;                   /**< ウィンドウ幅 */
     int window_height;                  /**< ウィンドウ高さ */
     choco_string_t* window_label;       /**< ウィンドウラベル */
@@ -56,10 +56,10 @@ struct platform_state {
 };
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static platform_result_t platform_glfw_init(platform_state_t* platform_state_);
-static void platform_glfw_destroy(platform_state_t* platform_state_);
-static platform_result_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_);
-static platform_result_t platform_pump_messages(platform_state_t* platform_state_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
+static void platform_glfw_destroy(platform_backend_t* platform_backend_);
+static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_);
+static platform_result_t platform_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
@@ -78,9 +78,9 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
  *
  */
 static const platform_vtable_t s_glfw_vtable = {
-    .platform_state_preinit = platform_glfw_preinit,
-    .platform_state_init = platform_glfw_init,
-    .platform_state_destroy = platform_glfw_destroy,
+    .platform_backend_preinit = platform_glfw_preinit,
+    .platform_backend_init = platform_glfw_init,
+    .platform_backend_destroy = platform_glfw_destroy,
     .platform_window_create = platform_glfw_window_create,
     .platform_pump_messages = platform_pump_messages,
 };
@@ -100,21 +100,21 @@ const platform_vtable_t* platform_glfw_vtable_get(void) {
  */
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
     if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("platform_state_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
+        WARN_MESSAGE("platform_backend_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
         goto cleanup;
     }
-    *memory_requirement_ = sizeof(platform_state_t);
-    *alignment_requirement_ = alignof(platform_state_t);
+    *memory_requirement_ = sizeof(platform_backend_t);
+    *alignment_requirement_ = alignof(platform_backend_t);
     goto cleanup;
 cleanup:
     return;
 }
 
-static platform_result_t platform_glfw_init(platform_state_t* platform_state_) {
+static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_state_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_backend_")
 
-    platform_state_->initialized_glfw = false;
+    platform_backend_->initialized_glfw = false;
 
     if (GL_FALSE == glfwInit()) {
         ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
@@ -133,19 +133,19 @@ static platform_result_t platform_glfw_init(platform_state_t* platform_state_) {
     // - 今回は最新の機能のみを使用することにする
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 古いOpenGLは使用しない
 
-    platform_state_->window = NULL;
-    platform_state_->window_height = 0;
-    platform_state_->window_width = 0;
-    platform_state_->window_label = NULL;
+    platform_backend_->window = NULL;
+    platform_backend_->window_height = 0;
+    platform_backend_->window_width = 0;
+    platform_backend_->window_label = NULL;
 
-    platform_state_->initialized_glfw = true;
+    platform_backend_->initialized_glfw = true;
 
     for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_state_->keycode_state[i] = false;
+        platform_backend_->keycode_state[i] = false;
     }
 
-    platform_state_->left_button_state = false;
-    platform_state_->right_button_state = false;
+    platform_backend_->left_button_state = false;
+    platform_backend_->right_button_state = false;
 
     ret = PLATFORM_SUCCESS;
 
@@ -153,52 +153,52 @@ cleanup:
     return ret;
 }
 
-static void platform_glfw_destroy(platform_state_t* platform_state_) {
-    if(NULL == platform_state_) {
+static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
+    if(NULL == platform_backend_) {
         return;
     }
-    if(NULL != platform_state_->window) {
-        glfwDestroyWindow(platform_state_->window);
-        platform_state_->window = NULL;
+    if(NULL != platform_backend_->window) {
+        glfwDestroyWindow(platform_backend_->window);
+        platform_backend_->window = NULL;
     }
-    if(platform_state_->initialized_glfw) {
+    if(platform_backend_->initialized_glfw) {
         glfwTerminate();
     }
-    choco_string_destroy(&platform_state_->window_label);
-    platform_state_->window = NULL;
-    platform_state_->window_height = 0;
-    platform_state_->window_width = 0;
-    platform_state_->initialized_glfw = false;
+    choco_string_destroy(&platform_backend_->window_label);
+    platform_backend_->window = NULL;
+    platform_backend_->window_height = 0;
+    platform_backend_->window_width = 0;
+    platform_backend_->initialized_glfw = false;
 }
 
-static platform_result_t platform_glfw_window_create(platform_state_t* platform_state_, const char* window_label_, int window_width_, int window_height_) {
+static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "platform_state_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "platform_backend_")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_label_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
-    if(!platform_state_->initialized_glfw) {
+    if(!platform_backend_->initialized_glfw) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
-    if(NULL != platform_state_->window) {
+    if(NULL != platform_backend_->window) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
     }
 
-    ret_string = choco_string_create_from_char(&platform_state_->window_label, window_label_);
+    ret_string = choco_string_create_from_char(&platform_backend_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = rslt_convert_string(ret_string);
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    platform_state_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_state_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
-    if (NULL == platform_state_->window) {
+    platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
+    if (NULL == platform_backend_->window) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -207,7 +207,7 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
     // 引数windowに指定したハンドルのウィンドウのレンダリングコンテキストをカレント(処理対象)にする。
     // レンダリングコンテキストは描画に用いられる情報で、ウィンドウごとに保持される。
     // 図形の描画はこれをカレントに設定したウィンドウに対して行われる。
-    glfwMakeContextCurrent(platform_state_->window);
+    glfwMakeContextCurrent(platform_backend_->window);
     glewExperimental = true;
     if (GLEW_OK != glewInit()) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_rslt_str_runtime_error);
@@ -216,24 +216,24 @@ static platform_result_t platform_glfw_window_create(platform_state_t* platform_
     }
 
     // https://www.glfw.org/docs/latest/group__input.html#gaa92336e173da9c8834558b54ee80563b
-    glfwSetInputMode(platform_state_->window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
-    platform_state_->window_height = window_height_;
-    platform_state_->window_width = window_width_;
+    glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
+    platform_backend_->window_height = window_height_;
+    platform_backend_->window_width = window_width_;
     ret = PLATFORM_SUCCESS;
 
 cleanup:
     if(PLATFORM_SUCCESS != ret) {
-        if(NULL != platform_state_->window) {
-            glfwDestroyWindow(platform_state_->window);
-            platform_state_->window = NULL;
+        if(NULL != platform_backend_->window) {
+            glfwDestroyWindow(platform_backend_->window);
+            platform_backend_->window = NULL;
         }
-        choco_string_destroy(&platform_state_->window_label);
+        choco_string_destroy(&platform_backend_->window_label);
     }
     return ret;
 }
 
 static platform_result_t platform_pump_messages(
-    platform_state_t* platform_state_,
+    platform_backend_t* platform_backend_,
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
@@ -245,30 +245,30 @@ static platform_result_t platform_pump_messages(
     bool left_pressed = false;
     bool right_pressed = false;
 
-    if(NULL == platform_state_ || !platform_state_->initialized_glfw) {
-        ERROR_MESSAGE("platform_pump_messages(%s) - Argument 'platform_state_' is uninitialized.", s_rslt_str_invalid_argument);
+    if(NULL == platform_backend_ || !platform_backend_->initialized_glfw) {
+        ERROR_MESSAGE("platform_pump_messages(%s) - Argument 'platform_backend_' is uninitialized.", s_rslt_str_invalid_argument);
         ret = PLATFORM_INVALID_ARGUMENT;
         goto cleanup;
     }
     CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "window_event_callback")
     CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
     CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_state_->window, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_state_->window")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_backend_->window")
 
     // イベントの取得
     glfwPollEvents();
 
     // window events.
     // window events -> window close
-    if(GLFW_PRESS == glfwGetKey(platform_state_->window, GLFW_KEY_ESCAPE) || 0 != glfwWindowShouldClose(platform_state_->window)) {
+    if(GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE) || 0 != glfwWindowShouldClose(platform_backend_->window)) {
         ret = PLATFORM_WINDOW_CLOSE;
         goto cleanup;
     }
     // window events -> window resize
-    glfwGetWindowSize(platform_state_->window, &width, &height);
-    if (width != platform_state_->window_width || height != platform_state_->window_height) {
-        platform_state_->window_height = height;
-        platform_state_->window_width = width;
+    glfwGetWindowSize(platform_backend_->window, &width, &height);
+    if (width != platform_backend_->window_width || height != platform_backend_->window_height) {
+        platform_backend_->window_height = height;
+        platform_backend_->window_width = width;
 
         window_event_t window_event;
         window_event.event_code = WINDOW_EVENT_RESIZE;
@@ -281,26 +281,26 @@ static platform_result_t platform_pump_messages(
     // keyboard events.
     for (int i = KEY_1; i != KEY_CODE_MAX; ++i) {
         const int glfw_key = keycode_to_glfw_keycode(i);
-        const int action = glfwGetKey(platform_state_->window, glfw_key);
+        const int action = glfwGetKey(platform_backend_->window, glfw_key);
         if (GLFW_PRESS == action || GLFW_RELEASE == action) {
             keyboard_event_t key_event;
             key_event.key = (keycode_t)i;
             key_event.pressed = (GLFW_PRESS == action) ? true : false;
-            if(platform_state_->keycode_state[i] != key_event.pressed) {
+            if(platform_backend_->keycode_state[i] != key_event.pressed) {
                 keyboard_event_callback(&key_event);
 
-                platform_state_->keycode_state[i] = key_event.pressed;
+                platform_backend_->keycode_state[i] = key_event.pressed;
             }
         }
     }
 
     // mouse event.
-    button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_LEFT);
+    button_state = glfwGetMouseButton(platform_backend_->window, GLFW_MOUSE_BUTTON_LEFT);
     left_pressed = (GLFW_PRESS == button_state) ? true : false;
-    if(platform_state_->left_button_state != left_pressed) {
+    if(platform_backend_->left_button_state != left_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
-        glfwGetCursorPos(platform_state_->window, &mouse_x, &mouse_y);
+        glfwGetCursorPos(platform_backend_->window, &mouse_x, &mouse_y);
 
         mouse_event_t mouse_event;
         mouse_event.button = MOUSE_BUTTON_LEFT;
@@ -310,15 +310,15 @@ static platform_result_t platform_pump_messages(
 
         mouse_event_callback(&mouse_event);
 
-        platform_state_->left_button_state = left_pressed;
+        platform_backend_->left_button_state = left_pressed;
     }
 
-    button_state = glfwGetMouseButton(platform_state_->window, GLFW_MOUSE_BUTTON_RIGHT);
+    button_state = glfwGetMouseButton(platform_backend_->window, GLFW_MOUSE_BUTTON_RIGHT);
     right_pressed = (GLFW_PRESS == button_state) ? true : false;
-    if(platform_state_->right_button_state != right_pressed) {
+    if(platform_backend_->right_button_state != right_pressed) {
         double mouse_x = 0.0;
         double mouse_y = 0.0;
-        glfwGetCursorPos(platform_state_->window, &mouse_x, &mouse_y);
+        glfwGetCursorPos(platform_backend_->window, &mouse_x, &mouse_y);
 
         mouse_event_t mouse_event;
         mouse_event.button = MOUSE_BUTTON_RIGHT;
@@ -328,7 +328,7 @@ static platform_result_t platform_pump_messages(
 
         mouse_event_callback(&mouse_event);
 
-        platform_state_->right_button_state = right_pressed;
+        platform_backend_->right_button_state = right_pressed;
     }
 
     ret = PLATFORM_SUCCESS;

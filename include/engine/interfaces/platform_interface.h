@@ -34,7 +34,7 @@ extern "C" {
 #include "engine/core/event/mouse_event.h"
 
 /**< プラットフォーム内部状態管理オブジェクト前方宣言(実体は各ソースファイルで定義) */
-typedef struct platform_state platform_state_t;
+typedef struct platform_backend platform_backend_t;
 
 /**
  * @brief 内部状態管理オブジェクトのメモリ要件、メモリアライメント要件を取得する
@@ -42,36 +42,36 @@ typedef struct platform_state platform_state_t;
  * @note
  * - memory_requirement_ == NULL または alignment_requirement_ == NULLの場合は何もしない
  *
- * @param[out] memory_requirement_ platform_state_tのメモリ要件
- * @param[out] alignment_requirement_ platform_state_tのアライメント要件
+ * @param[out] memory_requirement_ platform_backend_tのメモリ要件
+ * @param[out] alignment_requirement_ platform_backend_tのアライメント要件
  *
  */
-typedef void (*pfn_platform_state_preinit)(size_t* memory_requirement_, size_t* alignment_requirement_);
+typedef void (*pfn_platform_backend_preinit)(size_t* memory_requirement_, size_t* alignment_requirement_);
 
 /**
  * @brief 内部状態管理オブジェクトメンバの初期化を行う
  *
  * @note
- * - platform_state_自身のメモリは呼び出し側で確保する
+ * - platform_backend_自身のメモリは呼び出し側で確保する
  *
- * @param[in,out] platform_state_ 初期化対象オブジェクト
+ * @param[in,out] platform_backend_ 初期化対象オブジェクト
  *
- * @retval PLATFORM_INVALID_ARGUMENT platform_state_ == NULL
+ * @retval PLATFORM_INVALID_ARGUMENT platform_backend_ == NULL
  * @retval PLATFORM_SUCCESS          初期化に成功し、正常終了
  * @retval その他                     各プラットフォーム実装依存
  */
-typedef platform_result_t (*pfn_platform_state_init)(platform_state_t* platform_state_);
+typedef platform_result_t (*pfn_platform_backend_init)(platform_backend_t* platform_backend_);
 
 /**
  * @brief 内部状態管理オブジェクトが保有するリソースを破棄する
  *
  * @note
- * - platform_state_自身のメモリは呼び出し側で解放する
- * - platform_state_ == NULLの場合は何もしない
+ * - platform_backend_自身のメモリは呼び出し側で解放する
+ * - platform_backend_ == NULLの場合は何もしない
  *
- * @param[in,out] platform_state_ 破棄対象オブジェクト
+ * @param[in,out] platform_backend_ 破棄対象オブジェクト
  */
-typedef void (*pfn_platform_state_destroy)(platform_state_t* platform_state_);
+typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backend_);
 
 /**
  * @brief ウィンドウを生成する
@@ -79,13 +79,13 @@ typedef void (*pfn_platform_state_destroy)(platform_state_t* platform_state_);
  * @note
  * - window_label_の文字列は内部でdeep copyされるため、window_label_自身のメモリは呼び出し側で破棄すること
  *
- * @param[in,out] platform_state_ 内部状態管理オブジェクト
+ * @param[in,out] platform_backend_ 内部状態管理オブジェクト
  * @param[in] window_label_ ウィンドウ名称文字列
  * @param[in] window_width_ 初期状態のウィンドウ幅
  * @param[in] window_height_ 初期状態のウィンドウ高さ
  *
  * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
- * - platform_state_ == NULL
+ * - platform_backend_ == NULL
  * - window_label_ == NULL
  * - window_width_ == 0
  * - window_height_ == 0
@@ -94,7 +94,7 @@ typedef void (*pfn_platform_state_destroy)(platform_state_t* platform_state_);
  * @retval その他                     プラットフォーム実装依存
  */
 typedef platform_result_t (*pfn_platform_window_create)(
-    platform_state_t* platform_state_,
+    platform_backend_t* platform_backend_,
     const char* window_label_,
     int window_width_,
     int window_height_);
@@ -105,13 +105,13 @@ typedef platform_result_t (*pfn_platform_window_create)(
  * @note
  * - ウィンドウクローズイベントについては、イベントキューが満杯時に破棄される可能性を考慮し、戻り値で返す
  *
- * @param[in,out] platform_state_ 処理対象プラットフォーム内部状態管理オブジェクト
+ * @param[in,out] platform_backend_ 処理対象プラットフォーム内部状態管理オブジェクト
  * @param[in] window_event_callback ウィンドウイベント発生時用コールバック関数
  * @param[in] keyboard_event_callback キーボードイベント発生時用コールバック関数
  * @param[in] mouse_event_callback マウスイベント発生時用コールバック関数
  *
  * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
- * - platform_state_ == NULL または プラットフォーム内部状態管理オブジェクトが未初期化
+ * - platform_backend_ == NULL または プラットフォーム内部状態管理オブジェクトが未初期化
  * - window_event_callback == NULL
  * - keyboard_event_callback == NULL
  * - mouse_event_callback == NULL
@@ -120,7 +120,7 @@ typedef platform_result_t (*pfn_platform_window_create)(
  * @retval その他                     プラットフォーム実装依存
  */
 typedef platform_result_t (*pfn_platform_pump_messages)(
-    platform_state_t* platform_state_,
+    platform_backend_t* platform_backend_,
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_));
@@ -129,11 +129,11 @@ typedef platform_result_t (*pfn_platform_pump_messages)(
  * @brief プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)
  */
 typedef struct platform_vtable {
-    pfn_platform_state_preinit platform_state_preinit;  /**< 関数ポインタ @ref pfn_platform_state_preinit 参照 */
-    pfn_platform_state_init    platform_state_init;     /**< 関数ポインタ @ref pfn_platform_state_init 参照 */
-    pfn_platform_state_destroy platform_state_destroy;  /**< 関数ポインタ @ref pfn_platform_state_destroy 参照 */
-    pfn_platform_window_create platform_window_create;  /**< 関数ポインタ @ref pfn_platform_window_create 参照 */
-    pfn_platform_pump_messages platform_pump_messages;  /**< 関数ポインタ @ref pfn_platform_pump_messages 参照 */
+    pfn_platform_backend_preinit platform_backend_preinit;  /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
+    pfn_platform_backend_init    platform_backend_init;     /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
+    pfn_platform_backend_destroy platform_backend_destroy;  /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
+    pfn_platform_window_create platform_window_create;      /**< 関数ポインタ @ref pfn_platform_window_create 参照 */
+    pfn_platform_pump_messages platform_pump_messages;      /**< 関数ポインタ @ref pfn_platform_pump_messages 参照 */
 } platform_vtable_t;
 
 #ifdef __cplusplus

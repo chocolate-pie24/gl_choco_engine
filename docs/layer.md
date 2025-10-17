@@ -186,6 +186,58 @@ graph TD
   APPLICATION --> PLATFORM_INTERFACE
 ```
 
+#### Platform System
+
+- event/keyboard_event, event/mouse_event, event/window_eventはeventに集約
+- baseレイヤーは省略
+
+```mermaid
+graph TD
+
+  %% engine/platform/platform_context
+  PLATFORM_CONTEXT[platform/platform_context]
+  style PLATFORM_CONTEXT fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
+
+  %% engine/platform_concretes/platform_glfw
+  PLATFORM_GLFW[platform_concretes/platform_glfw]
+  style PLATFORM_GLFW fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
+
+  %% engine/interfaces/platform_interface
+  PLATFORM_INTERFACE[interfaces/platform_interface]
+  style PLATFORM_INTERFACE fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
+
+  %% engine/containers/choco_string
+  CHOCO_STRING[containers/choco_string]
+  style PLATFORM_INTERFACE fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
+
+  %% core
+  subgraph CORE[core]
+    direction TB
+    PLATFORM_PLATFORM_UTILS[platform/platform_utils]
+    MEMORY_LINEAR_ALLOCATOR[memory/linear_allocator]
+    MEMORY_CHOCO_MEMORY[memory/choco_memory]
+    EVENT[event]
+  end
+  style CORE fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
+
+  PLATFORM_CONTEXT --> PLATFORM_GLFW
+  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
+  PLATFORM_CONTEXT --> PLATFORM_PLATFORM_UTILS
+  PLATFORM_CONTEXT --> MEMORY_LINEAR_ALLOCATOR
+  PLATFORM_CONTEXT --> EVENT
+
+  PLATFORM_GLFW --> PLATFORM_INTERFACE
+  PLATFORM_GLFW --> PLATFORM_PLATFORM_UTILS
+  PLATFORM_GLFW --> MEMORY_LINEAR_ALLOCATOR
+  PLATFORM_GLFW --> EVENT
+  PLATFORM_GLFW --> CHOCO_STRING
+
+  CHOCO_STRING --> MEMORY_CHOCO_MEMORY
+
+  PLATFORM_INTERFACE --> PLATFORM_PLATFORM_UTILS
+  PLATFORM_INTERFACE --> EVENT
+```
+
 ## 各レイヤー詳細
 
 ### application
