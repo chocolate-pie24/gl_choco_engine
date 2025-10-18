@@ -133,7 +133,7 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
 
     platform_backend_->initialized_glfw = false;
 
-    if (GL_FALSE == glfwInit()) {
+    if(GL_FALSE == glfwInit()) {
         ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -221,7 +221,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     }
 
     platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
-    if (NULL == platform_backend_->window) {
+    if(NULL == platform_backend_->window) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -232,7 +232,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     // 図形の描画はこれをカレントに設定したウィンドウに対して行われる。
     glfwMakeContextCurrent(platform_backend_->window);
     glewExperimental = true;
-    if (GLEW_OK != glewInit()) {
+    if(GLEW_OK != glewInit()) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -295,7 +295,7 @@ static platform_result_t platform_pump_messages(
     }
     // window events -> window resize
     glfwGetWindowSize(platform_backend_->window, &width, &height);
-    if (width != platform_backend_->window_width || height != platform_backend_->window_height) {
+    if(width != platform_backend_->window_width || height != platform_backend_->window_height) {
         platform_backend_->window_height = height;
         platform_backend_->window_width = width;
 
@@ -308,10 +308,10 @@ static platform_result_t platform_pump_messages(
     }
 
     // keyboard events.
-    for (int i = KEY_1; i != KEY_CODE_MAX; ++i) {
+    for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
         const int glfw_key = keycode_to_glfw_keycode(i);
         const int action = glfwGetKey(platform_backend_->window, glfw_key);
-        if (GLFW_PRESS == action || GLFW_RELEASE == action) {
+        if(GLFW_PRESS == action || GLFW_RELEASE == action) {
             keyboard_event_t key_event;
             key_event.key = (keycode_t)i;
             key_event.pressed = (GLFW_PRESS == action) ? true : false;

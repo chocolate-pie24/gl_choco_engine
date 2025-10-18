@@ -1,0 +1,46 @@
+url = <BASE_URL><BRANCH_NAME><FILE_PATH><OPTION>
+
+BASE_URL = https://github.com/chocolate-pie24/gl_choco_engine/blob/
+BRANCH_NAME = feat/2d-rendering-step2/
+OPTION = ?raw=1
+
+build.sh
+cov.sh
+docs/development_log.md
+docs/doxygen/groups.dox
+docs/doxygen_config.md
+docs/layer.md
+docs/todo.md
+Doxyfile
+include/application/application.h
+include/engine/base/choco_macros.h
+include/engine/base/choco_message.h
+include/engine/containers/choco_string.h
+include/engine/containers/ring_queue.h
+include/engine/core/event/keyboard_event.h
+include/engine/core/event/mouse_event.h
+include/engine/core/event/window_event.h
+include/engine/core/memory/choco_memory.h
+include/engine/core/memory/linear_allocator.h
+include/engine/core/platform/platform_utils.h
+include/engine/interfaces/platform_interface.h
+include/engine/platform_context/platform_context.h
+include/engine/platform_concretes/platform_glfw.h
+LICENSE
+makefile_linux.mak
+makefile_macos.mak
+README.md
+src/application/application.c
+src/engine/base/choco_message.c
+src/engine/containers/choco_string.c
+src/engine/containers/ring_queue.c
+src/engine/core/memory/choco_memory.c
+src/engine/core/memory/linear_allocator.c
+src/engine/platform_context/platform_context.c
+src/engine/platform_concretes/platform_glfw.c
+src/entry.c
+test/include/test_choco_string.h
+test/include/test_linear_allocator.h
+test/include/test_memory_system.h
+test/include/test_platform_context.h
+test/include/test_ring_queue.h

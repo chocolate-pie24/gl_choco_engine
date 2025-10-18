@@ -18,8 +18,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_PLATFORM_PLATFORM_CONTEXT_H
-#define GLCE_ENGINE_PLATFORM_PLATFORM_CONTEXT_H
+#ifndef GLCE_ENGINE_PLATFORM_CONTEXT_PLATFORM_CONTEXT_H
+#define GLCE_ENGINE_PLATFORM_CONTEXT_PLATFORM_CONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
