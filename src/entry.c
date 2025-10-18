@@ -25,6 +25,7 @@
 #include "test_memory_system.h"
 #include "test_choco_string.h"
 #include "test_ring_queue.h"
+#include "test_platform_context.h"
 #endif
 
 /**
@@ -52,6 +53,10 @@ int main(int argc_, char** argv_) {
 
         memory_system_create();
         test_ring_queue();
+        memory_system_destroy();
+
+        memory_system_create();
+        test_platform_context();
         memory_system_destroy();
     }
 #endif

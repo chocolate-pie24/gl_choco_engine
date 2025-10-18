@@ -41,6 +41,19 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**
 
 #ifdef TEST_BUILD
 #include <assert.h>
+
+/**
+ * @brief 外部からの返り値制御用構造体
+ *
+ */
+typedef struct test_param {
+    size_t malloc_counter;
+    size_t malloc_fail_n;
+    bool enable_malloc_fail;        /**< malloc失敗 */
+} test_param_t;
+
+static test_param_t s_test_param;
+
 static void test_linear_allocator_preinit(void);
 static void test_linear_allocator_init(void);
 static void test_linear_allocator_allocate(void);
@@ -82,6 +95,16 @@ cleanup:
 // LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
 // LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
 linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
+#ifdef TEST_BUILD
+    if(s_test_param.enable_malloc_fail) {
+        if(s_test_param.malloc_counter == s_test_param.malloc_fail_n) {
+            s_test_param.malloc_counter++;
+            return LINEAR_ALLOC_NO_MEMORY;
+        }
+        s_test_param.malloc_counter++;
+    }
+#endif
+
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     uintptr_t head = 0;
     uintptr_t align = 0;
@@ -141,7 +164,21 @@ cleanup:
 }
 
 #ifdef TEST_BUILD
+void linear_allocator_malloc_fail_set(size_t malloc_fail_n_) {
+    s_test_param.enable_malloc_fail = true;
+    s_test_param.malloc_counter = 0;
+    s_test_param.malloc_fail_n = malloc_fail_n_;
+}
+
+void linear_allocator_malloc_fail_reset(void) {
+    s_test_param.enable_malloc_fail = false;
+    s_test_param.malloc_counter = 0;
+    s_test_param.malloc_fail_n = 0;
+}
+
 void NO_COVERAGE test_linear_allocator(void) {
+    linear_allocator_malloc_fail_reset();
+
     INFO_MESSAGE("test_linear_allocator_preinit begin");
     test_linear_allocator_preinit();
     INFO_MESSAGE("test_linear_allocator_preinit done successfully.");

@@ -34,6 +34,18 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#ifdef TEST_BUILD
+#include <assert.h>
+#include "engine/core/memory/choco_memory.h"
+
+typedef struct platform_test {
+    platform_type_t type;
+    bool test_enable;
+} platform_test_t;
+
+static platform_test_t s_test_param;
+#endif
+
 /**
  * @brief プラットフォームコンテキストオブジェクト
  *
@@ -56,6 +68,11 @@ const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
 static bool platform_type_valid_check(platform_type_t platform_type_);
 static platform_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static const char* rslt_to_str(platform_result_t rslt_);
+
+#ifdef TEST_BUILD
+static void NO_COVERAGE test_platform_initialize(void);
+static void NO_COVERAGE test_rslt_to_str(void);
+#endif
 
 // PLATFORM_INVALID_ARGUMENT allocator_ == NULL
 // PLATFORM_INVALID_ARGUMENT out_platform_context_ == NULL
@@ -206,6 +223,12 @@ cleanup:
  * @return const platform_vtable_t* 仮想関数テーブル(引数で指定したプラットフォームが見つからない場合はNULL)
  */
 const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_) {
+#ifdef TEST_BUILD
+    if(s_test_param.test_enable) {
+        platform_type_ = s_test_param.type;
+    }
+#endif
+
     switch (platform_type_) {
     case PLATFORM_USE_GLFW:
         return platform_glfw_vtable_get();
@@ -254,3 +277,139 @@ static const char* rslt_to_str(platform_result_t rslt_) {
         return s_rslt_str_undefined_error;
     }
 }
+
+#ifdef TEST_BUILD
+void NO_COVERAGE test_platform_context(void) {
+    test_rslt_to_str();
+    test_platform_initialize();
+}
+
+static void NO_COVERAGE test_rslt_to_str(void) {
+    {
+        const char* test = rslt_to_str(PLATFORM_SUCCESS);
+        assert(0 == strcmp(s_rslt_str_success, test));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_NO_MEMORY);
+        assert(0 == strcmp(s_rslt_str_no_memory, test));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_RUNTIME_ERROR);
+        assert(0 == strcmp(s_rslt_str_runtime_error, test));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_INVALID_ARGUMENT);
+        assert(0 == strcmp(s_rslt_str_invalid_argument, test));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_UNDEFINED_ERROR);
+        assert(0 == strcmp(s_rslt_str_undefined_error, test));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_WINDOW_CLOSE);
+        assert(0 == strcmp(s_rslt_str_window_close, test));
+    }
+}
+
+static void NO_COVERAGE test_platform_initialize(void) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    size_t linear_alloc_mem_req = 0;
+    size_t linear_alloc_align_req = 0;
+    size_t linear_alloc_pool_size = 0;
+    void* linear_alloc_pool = NULL;
+    linear_alloc_t* linear_alloc = NULL;
+
+    linear_allocator_preinit(&linear_alloc_mem_req, &linear_alloc_align_req);
+    ret_mem_sys = memory_system_allocate(linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&linear_alloc);
+    assert(MEMORY_SYSTEM_SUCCESS == ret_mem_sys);
+
+    linear_alloc_pool_size = 1 * KIB;
+    ret_mem_sys = memory_system_allocate(linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &linear_alloc_pool);
+    assert(MEMORY_SYSTEM_SUCCESS == ret_mem_sys);
+
+    ret_linear_alloc = linear_allocator_init(linear_alloc, linear_alloc_pool_size, linear_alloc_pool);
+    assert(LINEAR_ALLOC_SUCCESS == ret_linear_alloc);
+
+    // ここからテスト
+    {
+        platform_context_t* context = NULL;
+        // PLATFORM_INVALID_ARGUMENT allocator_ == NULL
+        ret = platform_initialize(NULL, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        assert(NULL == context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT out_platform_context_ == NULL
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, NULL);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+    {
+        platform_context_t* context = NULL;
+        ret_mem_sys = memory_system_allocate(sizeof(platform_context_t), MEMORY_TAG_SYSTEM, (void**)&context);
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem_sys);
+        // PLATFORM_INVALID_ARGUMENT *out_platform_context_ != NULL
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        assert(NULL != context);
+
+        memory_system_free(context, sizeof(platform_context_t), MEMORY_TAG_SYSTEM);
+    }
+    {
+        platform_context_t* context = NULL;
+        // PLATFORM_INVALID_ARGUMENT platform_type_が無効値
+        ret = platform_initialize(linear_alloc, 100, &context);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        assert(NULL == context);
+    }
+    {
+        s_test_param.test_enable = true;
+        s_test_param.type = 100;
+
+        platform_context_t* context = NULL;
+        // PLATFORM_RUNTIME_ERROR vtable取得失敗
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(NULL == context);
+
+        s_test_param.test_enable = false;
+    }
+    {
+        platform_context_t* context = NULL;
+        // リニアアロケータによるメモリ確保失敗(1回目のメモリ確保)
+        linear_allocator_malloc_fail_set(0);
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_NO_MEMORY == ret);
+        assert(NULL == context);
+
+        linear_allocator_malloc_fail_reset();
+    }
+    {
+        platform_context_t* context = NULL;
+        // リニアアロケータによるメモリ確保失敗(2回目のメモリ確保)
+        linear_allocator_malloc_fail_set(1);
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_NO_MEMORY == ret);
+        assert(NULL == context);
+
+        linear_allocator_malloc_fail_reset();
+    }
+    {
+        platform_context_t* context = NULL;
+        // 正常系
+        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_SUCCESS == ret);
+        assert(NULL != context);
+        assert(PLATFORM_USE_GLFW == context->type);
+        assert(NULL != context->backend);
+        assert(NULL != context->vtable);
+        platform_destroy(context);
+    }
+    // ここまでテスト
+
+    memory_system_free(linear_alloc_pool, linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+    memory_system_free(linear_alloc, linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+}
+#endif

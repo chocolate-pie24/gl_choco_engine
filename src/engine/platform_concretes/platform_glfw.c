@@ -55,6 +55,17 @@ struct platform_backend {
     bool right_button_state;            /**< マウス右ボタン押下状態 */
 };
 
+/**
+ * @brief 外部からの返り値制御用構造体
+ *
+ */
+typedef struct test_controller {
+    platform_result_t ret;  /**< 強制的にこのエラーコードを返すようにする */
+    bool test_enable;       /**< テスト有効 */
+} test_contoller_t;
+
+static test_contoller_t s_test_controller;
+
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
 static void platform_glfw_destroy(platform_backend_t* platform_backend_);
@@ -111,6 +122,12 @@ cleanup:
 }
 
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
+#ifdef TEST_BUILD
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
+    }
+#endif
+
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_backend_")
 
@@ -172,6 +189,12 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 }
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
+#ifdef TEST_BUILD
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
+    }
+#endif
+
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
@@ -237,6 +260,12 @@ static platform_result_t platform_pump_messages(
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
+
+#ifdef TEST_BUILD
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
+    }
+#endif
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     int width = 0;
@@ -508,3 +537,15 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
         return PLATFORM_UNDEFINED_ERROR;
     }
 }
+
+#ifdef TEST_BUILD
+void platform_glfw_result_controller_set(platform_result_t ret_) {
+    s_test_controller.ret = ret_;
+    s_test_controller.test_enable = true;
+}
+
+void platform_glfw_result_controller_reset(void) {
+    s_test_controller.ret = PLATFORM_SUCCESS;
+    s_test_controller.test_enable = false;
+}
+#endif

@@ -33,6 +33,21 @@ extern "C" {
  */
 const platform_vtable_t* platform_glfw_vtable_get(void);
 
+#ifdef TEST_BUILD
+/**
+ * @brief テスト専用API(外部から強制的に引数で指定したret_を返すようにする)
+ *
+ * @param ret_ 返り値設定値
+ */
+void platform_glfw_result_controller_set(platform_result_t ret_);
+
+/**
+ * @brief テスト専用API(テスト設定値をリセットする)
+ *
+ */
+void platform_glfw_result_controller_reset(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
