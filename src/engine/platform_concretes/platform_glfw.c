@@ -38,6 +38,18 @@
 
 #include "engine/containers/choco_string.h"
 
+// TODO:
+// - [] 一つづつapiを差し替えていく
+// - [] テスト関数
+// - [] doxygenコメント
+/**
+ * @brief GLFW系のAPIの実行結果についてテスト可能にするため、モック化可能にする
+ *
+ */
+typedef struct glfw_apis {
+    void (*glfw_get_cursor_pos)(GLFWwindow* window_, double* cursor_x_, double* cusor_y_);
+} glfw_apis_t;
+
 typedef struct input_snapshot {
     double cursor_x;
     double cursor_y;
@@ -59,6 +71,7 @@ typedef struct input_snapshot {
  *
  */
 struct platform_backend {
+    glfw_apis_t apis;
     choco_string_t* window_label;   /**< ウィンドウラベル */
     GLFWwindow* window;             /**< GLFWウィンドウオブジェクト */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
