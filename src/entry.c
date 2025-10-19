@@ -26,6 +26,7 @@
 #include "test_choco_string.h"
 #include "test_ring_queue.h"
 #include "test_platform_context.h"
+#include "test_platform_glfw.h"
 #endif
 
 /**
@@ -58,6 +59,8 @@ int main(int argc_, char** argv_) {
         memory_system_create();
         test_platform_context();
         memory_system_destroy();
+
+        test_platform_glfw();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
