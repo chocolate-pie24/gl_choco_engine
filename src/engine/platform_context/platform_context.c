@@ -136,6 +136,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
         goto cleanup;
     }
     tmp_context->backend = backend_ptr;
+    tmp_context->type = platform_type_;
 
     // commit.
     *out_platform_context_ = tmp_context;
@@ -175,8 +176,8 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->vtable")
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->backend")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_label_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(window_width_ != 0, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
 
     ret = platform_context_->vtable->platform_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
     if(PLATFORM_SUCCESS != ret) {
@@ -450,6 +451,7 @@ static void NO_COVERAGE test_platform_destroy(void) {
         assert(NULL != context->backend);
 
         platform_destroy(context);
+        platform_destroy(context);  // 2重呼び出し
 
         free(context->backend);
         free(context);
@@ -691,7 +693,7 @@ static void NO_COVERAGE test_platform_pump_messages(void) {
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
 
-        ret = platform_pump_messages(context, test_callback_key, NULL, test_callback_mouse);
+        ret = platform_pump_messages(context, test_callback_window, NULL, test_callback_mouse);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context->backend);
@@ -714,7 +716,7 @@ static void NO_COVERAGE test_platform_pump_messages(void) {
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
 
-        ret = platform_pump_messages(context, test_callback_key, test_callback_window, NULL);
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, NULL);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context->backend);
@@ -739,7 +741,7 @@ static void NO_COVERAGE test_platform_pump_messages(void) {
 
         platform_glfw_result_controller_set(PLATFORM_WINDOW_CLOSE);
 
-        ret = platform_pump_messages(context, test_callback_key, test_callback_window, test_callback_mouse);
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
         assert(PLATFORM_WINDOW_CLOSE == ret);
 
         platform_glfw_result_controller_reset();
@@ -766,7 +768,7 @@ static void NO_COVERAGE test_platform_pump_messages(void) {
 
         platform_glfw_result_controller_set(PLATFORM_SUCCESS);
 
-        ret = platform_pump_messages(context, test_callback_key, test_callback_window, test_callback_mouse);
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
         assert(PLATFORM_SUCCESS == ret);
 
         platform_glfw_result_controller_reset();
@@ -793,7 +795,7 @@ static void NO_COVERAGE test_platform_pump_messages(void) {
 
         platform_glfw_result_controller_set(PLATFORM_NO_MEMORY);
 
-        ret = platform_pump_messages(context, test_callback_key, test_callback_window, test_callback_mouse);
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
         assert(PLATFORM_NO_MEMORY == ret);
 
         platform_glfw_result_controller_reset();
@@ -838,10 +840,13 @@ static void NO_COVERAGE test_rslt_convert_linear_alloc(void) {
     assert(PLATFORM_SUCCESS == ret);
 
     ret = rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY);
-    assert(PLATFORM_NO_MEMORY);
+    assert(PLATFORM_NO_MEMORY == ret);
 
     ret = rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT);
-    assert(PLATFORM_INVALID_ARGUMENT);
+    assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+    ret = rslt_convert_linear_alloc(100);
+    assert(PLATFORM_UNDEFINED_ERROR == ret);
 }
 
 static void NO_COVERAGE test_rslt_to_str(void) {
@@ -868,6 +873,10 @@ static void NO_COVERAGE test_rslt_to_str(void) {
     {
         const char* test = rslt_to_str(PLATFORM_WINDOW_CLOSE);
         assert(0 == strcmp(s_rslt_str_window_close, test));
+    }
+    {
+        const char* test = rslt_to_str(100);
+        assert(0 == strcmp(s_rslt_str_undefined_error, test));
     }
 }
 
