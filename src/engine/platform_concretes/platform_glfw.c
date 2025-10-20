@@ -38,18 +38,6 @@
 
 #include "engine/containers/choco_string.h"
 
-// TODO:
-// - [] 一つづつapiを差し替えていく
-// - [] テスト関数
-// - [] doxygenコメント
-/**
- * @brief GLFW系のAPIの実行結果についてテスト可能にするため、モック化可能にする
- *
- */
-typedef struct glfw_apis {
-    void (*glfw_get_cursor_pos)(GLFWwindow* window_, double* cursor_x_, double* cusor_y_);
-} glfw_apis_t;
-
 typedef struct input_snapshot {
     double cursor_x;
     double cursor_y;
@@ -66,29 +54,27 @@ typedef struct input_snapshot {
     bool right_button_pressed;
 } input_snapshot_t;
 
+typedef struct glfw_apis_vtable {
+    int (*glfw_init)(void);
+} glfw_apis_vtable_t;
+
+static const glfw_apis_vtable_t s_glfw_api = {
+    .glfw_init = glfwInit,
+};
+
 /**
  * @brief GLFWプラットフォーム内部状態管理オブジェクト
  *
  */
 struct platform_backend {
-    glfw_apis_t apis;
     choco_string_t* window_label;   /**< ウィンドウラベル */
     GLFWwindow* window;             /**< GLFWウィンドウオブジェクト */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
     input_snapshot_t current;       /**< 入力情報のスナップショット(最新値) */
     input_snapshot_t prev;          /**< 入力情報のスナップショット(前回値) */
+
+    glfw_apis_vtable_t api_vtable;
 };
-
-/**
- * @brief 外部からの返り値制御用構造体
- *
- */
-typedef struct test_controller {
-    platform_result_t ret;  /**< 強制的にこのエラーコードを返すようにする */
-    bool test_enable;       /**< テスト有効 */
-} test_contoller_t;
-
-static test_contoller_t s_test_controller;
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
@@ -113,10 +99,19 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
 #ifdef TEST_BUILD
 #include <assert.h>
 #include <string.h>
+#include "internal/platform_glfw_internal.h"
+
+test_control_glfw_t s_test_control_glfw;
 
 static void NO_COVERAGE test_rslt_to_str(void);
 static void NO_COVERAGE test_keycode_to_glfw_keycode(void);
 static void NO_COVERAGE test_rslt_convert_string(void);
+
+static int NO_COVERAGE test_glfw_init(void);
+
+static const glfw_apis_vtable_t s_test_api_vtable = {
+    .glfw_init = test_glfw_init,
+};
 #endif
 
 /**
@@ -158,17 +153,22 @@ cleanup:
 
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    if(s_test_control_glfw.result_control.test_enable) {
+        return s_test_control_glfw.result_control.result;
     }
 #endif
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_backend_")
 
+#ifdef TEST_BUILD
+    platform_backend_->api_vtable = s_test_api_vtable;
+#else
+    platform_backend_->api_vtable = s_glfw_api;
+#endif
     platform_backend_->initialized_glfw = false;
 
-    if(GL_FALSE == glfwInit()) {
+    if(GL_FALSE == platform_backend_->api_vtable.glfw_init()) {
         ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -232,8 +232,8 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    if(s_test_control_glfw.result_control.test_enable) {
+        return s_test_control_glfw.result_control.result;
     }
 #endif
 
@@ -452,8 +452,8 @@ static platform_result_t platform_pump_messages(
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    if(s_test_control_glfw.result_control.test_enable) {
+        return s_test_control_glfw.result_control.result;
     }
 #endif
 
@@ -894,12 +894,21 @@ static void NO_COVERAGE test_rslt_convert_string(void) {
 }
 
 void platform_glfw_result_controller_set(platform_result_t ret_) {
-    s_test_controller.ret = ret_;
-    s_test_controller.test_enable = true;
+    s_test_control_glfw.result_control.result = ret_;
+    s_test_control_glfw.result_control.test_enable = true;
 }
 
 void platform_glfw_result_controller_reset(void) {
-    s_test_controller.ret = PLATFORM_SUCCESS;
-    s_test_controller.test_enable = false;
+    s_test_control_glfw.result_control.result = PLATFORM_SUCCESS;
+    s_test_control_glfw.result_control.test_enable = false;
 }
+
+static int NO_COVERAGE test_glfw_init(void) {
+    if(s_test_control_glfw.glfw_init.test_enable) {
+        return s_test_control_glfw.glfw_init.result;
+    } else {
+        return GLFW_TRUE;
+    }
+}
+
 #endif
