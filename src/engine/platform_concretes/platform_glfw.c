@@ -38,29 +38,25 @@
 
 #include "engine/containers/choco_string.h"
 
+/**
+ * @brief 入力イベント情報
+ *
+ */
 typedef struct input_snapshot {
-    double cursor_x;
-    double cursor_y;
+    double cursor_x;    /**< マウス座標x */
+    double cursor_y;    /**< マウス座標y */
 
-    int window_width;
-    int window_height;
+    int window_width;   /**< ウィンドウ幅 */
+    int window_height;  /**< ウィンドウ高さ */
 
-    bool window_should_close;
-    bool escape_pressed;
+    bool window_should_close;   /**< ウィンドウクローズイベント発生 */
+    bool escape_pressed;        /**< エスケープボタン押下イベント発生 */
 
-    bool keycode_state[KEY_CODE_MAX];
+    bool keycode_state[KEY_CODE_MAX];   /**< キー押下状態 */
 
-    bool left_button_pressed;
-    bool right_button_pressed;
+    bool left_button_pressed;   /**< マウス左ボタン押下フラグ */
+    bool right_button_pressed;  /**< マウス右ボタン押下フラグ */
 } input_snapshot_t;
-
-typedef struct glfw_apis_vtable {
-    int (*glfw_init)(void);
-} glfw_apis_vtable_t;
-
-static const glfw_apis_vtable_t s_glfw_api = {
-    .glfw_init = glfwInit,
-};
 
 /**
  * @brief GLFWプラットフォーム内部状態管理オブジェクト
@@ -72,8 +68,6 @@ struct platform_backend {
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
     input_snapshot_t current;       /**< 入力情報のスナップショット(最新値) */
     input_snapshot_t prev;          /**< 入力情報のスナップショット(前回値) */
-
-    glfw_apis_vtable_t api_vtable;
 };
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
@@ -99,19 +93,17 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
 #ifdef TEST_BUILD
 #include <assert.h>
 #include <string.h>
-#include "internal/platform_glfw_internal.h"
 
-test_control_glfw_t s_test_control_glfw;
+typedef struct test_controller {
+    platform_result_t ret;  /**< 強制的にこのエラーコードを返すようにする */
+    bool test_enable;       /**< テスト有効 */
+} test_contoller_t;
+
+static test_contoller_t s_test_controller;
 
 static void NO_COVERAGE test_rslt_to_str(void);
 static void NO_COVERAGE test_keycode_to_glfw_keycode(void);
 static void NO_COVERAGE test_rslt_convert_string(void);
-
-static int NO_COVERAGE test_glfw_init(void);
-
-static const glfw_apis_vtable_t s_test_api_vtable = {
-    .glfw_init = test_glfw_init,
-};
 #endif
 
 /**
@@ -153,22 +145,17 @@ cleanup:
 
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
 #ifdef TEST_BUILD
-    if(s_test_control_glfw.result_control.test_enable) {
-        return s_test_control_glfw.result_control.result;
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
     }
 #endif
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_init", "platform_backend_")
 
-#ifdef TEST_BUILD
-    platform_backend_->api_vtable = s_test_api_vtable;
-#else
-    platform_backend_->api_vtable = s_glfw_api;
-#endif
     platform_backend_->initialized_glfw = false;
 
-    if(GL_FALSE == platform_backend_->api_vtable.glfw_init()) {
+    if(GL_FALSE == glfwInit()) {
         ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
         goto cleanup;
@@ -232,8 +219,8 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
 #ifdef TEST_BUILD
-    if(s_test_control_glfw.result_control.test_enable) {
-        return s_test_control_glfw.result_control.result;
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
     }
 #endif
 
@@ -297,46 +284,6 @@ cleanup:
         choco_string_destroy(&platform_backend_->window_label);
     }
     return ret;
-}
-
-static void NO_COVERAGE test_platform_pump_messages(void) {
-    // TODO: ここでウィンドウを生成する、最後にウィンドウをdestroyする
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: WINDOW_RESIZEのところにブレークを貼り、画面の幅だけを変えてテスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: WINDOW_RESIZEのところにブレークを貼り、画面の高さだけを変えてテスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: WINDOW_RESIZEのところにブレークを貼り、画面の幅と高さ同時に変えてテスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: マウス右クリックでイベント発生テスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: 上の後でリリースイベント発生テスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: マウス左クリックでイベント発生テスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: 上の後でリリースイベント発生テスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: キーボードをしてイベント発生テスト
-    }
-    {
-        DEBUG_MESSAGE("Test rubbish code.");
-        // NOTE: 上の後でリリースイベント発生テスト
-    }
 }
 
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_) {
@@ -452,8 +399,8 @@ static platform_result_t platform_pump_messages(
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
 #ifdef TEST_BUILD
-    if(s_test_control_glfw.result_control.test_enable) {
-        return s_test_control_glfw.result_control.result;
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
     }
 #endif
 
@@ -894,21 +841,13 @@ static void NO_COVERAGE test_rslt_convert_string(void) {
 }
 
 void platform_glfw_result_controller_set(platform_result_t ret_) {
-    s_test_control_glfw.result_control.result = ret_;
-    s_test_control_glfw.result_control.test_enable = true;
+    s_test_controller.ret = ret_;
+    s_test_controller.test_enable = true;
 }
 
 void platform_glfw_result_controller_reset(void) {
-    s_test_control_glfw.result_control.result = PLATFORM_SUCCESS;
-    s_test_control_glfw.result_control.test_enable = false;
-}
-
-static int NO_COVERAGE test_glfw_init(void) {
-    if(s_test_control_glfw.glfw_init.test_enable) {
-        return s_test_control_glfw.glfw_init.result;
-    } else {
-        return GLFW_TRUE;
-    }
+    s_test_controller.ret = PLATFORM_SUCCESS;
+    s_test_controller.test_enable = false;
 }
 
 #endif

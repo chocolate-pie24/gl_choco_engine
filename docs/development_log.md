@@ -189,3 +189,24 @@ memory_systemの改善に合わせ、linear_allocatorについても仕様を変
 - [x] linux support
 - [x] README.mdへのコンパイラ、ライブラリセットアップ追記
 - [x] macOS makefile修正(m1チップとintelチップでのhomebrewのインストールパスの違いを吸収)
+
+## 2D-Rendering Step2: 執筆
+
+- [] ソフトfix
+- [] ブランチ: docs/2d-rendering-step2
+- [] Step1タグをcloneしてそれをベースにソフト追加(エラー処理を省く)
+- [] articlesの構成変更
+- [] booksのディレクトリ構成変更
+- [] layer.md
+- [] step2構成
+  - [] linux対応
+  - [] メモリーシステム仕様変更
+  - [] リニアアロケータ仕様変更
+  - [] application.c確認
+  - [] コンテナ-string
+  - [] プラットフォーム(ウィンドウ生成)
+  - [] コンテナ-ring_queue
+  - [] イベントシステム(GLFW関連テストについて言及)
+  - [] development_log.md掃除
+  - [] books/step1が公開されているか確認
+  - [] articleの各種リンク動作確認
