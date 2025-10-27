@@ -9,8 +9,8 @@
 - [x] ソフトfix
 - [x] ブランチ: release/2d-rendering-step2
 - [x] Step1タグをcloneしてそれをベースにソフト追加(記事にはエラー処理を省く)
-- [] articlesの構成変更
-- [] booksのディレクトリ構成変更
+- [x] articlesの構成変更
+- [x] booksのディレクトリ構成変更
 - [] step2構成
   - [] step2_0_introduction.md            : イントロダクション
   - [] step2_1_change_memory_system.md    : メモリーシステム仕様変更

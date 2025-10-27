@@ -1,12 +1,12 @@
 ---
-title: "C言語とGLFWで作るゲームエンジン開発記録: 全体のイントロダクション"
+title: "C言語とOpenGLで作るゲームエンジン開発記録: 全体のイントロダクション"
 type: "tech"
 emoji: "😺"
 topics: ["c", "cpp", "opengl", "glfw", "gameengine"]
 published: true
 ---
 
-> この記事は、C言語とGLFWを使用した自作ゲームエンジン **gl_choco_engine** の開発記録です。
+> この記事は、C言語とOpenGL、GLFWを使用した自作ゲームエンジン **gl_choco_engine** の開発記録です。
 
 ## 記事連載の背景
 
@@ -44,7 +44,15 @@ published: true
 
 ## シリーズの構成
 
-- Book1: 2D Rendering編([step1_introduction.md](https://zenn.dev/chocolate_pie24/books/2d_rendering))
-- Book2: 3D Rendering編(未実装)
-- Book3: Text Rendering編(未実装)
-- Book4: Sponza Rendering編(未実装)
+### 2D Rendering編
+
+2D Rendering編では、実行基盤・メモリ管理レイヤーを整え、ウィンドウ生成から2Dレンダリングの最小構成までを扱います。
+
+- ([Book1: Step1 実行基盤とメモリ管理レイヤの初期化(イントロダクション)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1))
+- ([Book2: Step2 プラットフォームレイヤーの構築とイベントシステムの構築])(../books/2d_rendering/step2/step2_0_introduction.md)
+
+### 3D Rendering編(未実装)
+
+### Text Rendering編(未実装)
+
+### Sponza Rendering編(未実装)
