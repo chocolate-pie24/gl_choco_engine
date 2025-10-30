@@ -6,21 +6,25 @@
  * @version 0.1
  * @date 2025-09-20
  *
- * @copyright Copyright (c) 2025
+ * @todo application.cのエラー文字列周りを別ファイルに移す
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include <stddef.h> // for NULL
-#include <stdlib.h> // for malloc TODO: remove this!!
-#include <string.h> // for memset
 #include <stdalign.h>
+#include <stddef.h> // for NULL
+#include <string.h> // for memset
 
 #include "application/application.h"
 
-#include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
@@ -28,100 +32,110 @@
  */
 typedef struct app_state {
     // core/memory/linear_allocator
-    linear_alloc_t* linear_allocator;   /**< リニアアロケータオブジェクト */
-
-    // core/memory/memory_system
-    size_t memory_system_memory_requirement;        /**< メモリーシステム要求メモリ量 */
-    size_t memory_system_alignment_requirement;     /**< メモリーシステムメモリアライメント要件 */
-    memory_system_t* memory_system;                 /**< メモリーシステム内部状態管理オブジェクトへのポインタ */
+    size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
+    size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
+    size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
+    void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
+    linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
-// TODO: oc_choco_malloc + テスト
-app_err_t application_create(void) {
-    app_err_t ret = APPLICATION_RUNTIME_ERROR;
-    linear_alloc_err_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+static const char* rslt_to_str(application_result_t rslt_);
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
+
+application_result_t application_create(void) {
     app_state_t* tmp = NULL;
-    void* tmp_memory_system_ptr = NULL;
 
-    linear_alloc_err_t ret_memory_system_allocate = LINEAR_ALLOC_INVALID_ARGUMENT;
-    memory_sys_err_t ret_memory_system_init = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    application_result_t ret = APPLICATION_RUNTIME_ERROR;
+    memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
 
     // Preconditions
-    if(NULL != s_app_state) {   // TODO: CHECK_NOT_VALID_GOTO_CLEANUP()
-        ERROR_MESSAGE("application_create(RUNTIME_ERROR) - Application state is already initialized.\n");
+    if(NULL != s_app_state) {
+        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_rslt_str_runtime_error);
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
 
+    ret_mem_sys = memory_system_create();
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
     // begin Simulation
-    tmp = (app_state_t*)malloc(sizeof(*tmp)); // TODO: choco_malloc
-    if(NULL == tmp) {   // TODO: CHECK_ALLOC_ERR_GOTO_CLEANUP()
-        ERROR_MESSAGE("application_create(NO_MEMORY) - Failed to allocate app_state memory.\n");
-        ret = APPLICATION_NO_MEMORY;
+    ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
-    tmp->linear_allocator = NULL;
-    ret_linear_alloc = linear_allocator_create(&tmp->linear_allocator, 1 * KIB);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator.");
-        ret = APPLICATION_NO_MEMORY;
-        goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator.");
-        ret = APPLICATION_INVALID_ARGUMENT;
-        goto cleanup;
-    } else if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ERROR_MESSAGE("Failed to create linear allocator.");
-        ret = APPLICATION_UNDEFINED_ERROR;
+    // [NOTE] linear_allocatorのプールサイズについて
+    //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
+    //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
+    //   当面は実施せず、多めにメモリを確保する方針にする
+    INFO_MESSAGE("Initializing linear allocator...");
+    tmp->linear_alloc = NULL;
+    linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
+    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    // Simulation -> launch all systems -> create memory system.(Don't use s_app_state here.)
-    tmp->memory_system = NULL;
-    memory_system_preinit(&tmp->memory_system_memory_requirement, &tmp->memory_system_alignment_requirement);
-    ret_memory_system_allocate = linear_allocator_allocate(tmp->linear_allocator, tmp->memory_system_memory_requirement, tmp->memory_system_alignment_requirement, &tmp_memory_system_ptr);
-    if(LINEAR_ALLOC_NO_MEMORY == ret_memory_system_allocate) {
-        ERROR_MESSAGE("Failed to allocate memory system memory.");
-        ret = APPLICATION_NO_MEMORY;
-        goto cleanup;
-    } else if(LINEAR_ALLOC_INVALID_ARGUMENT == ret_memory_system_allocate) {
-        ERROR_MESSAGE("Failed to allocate memory system memory.");
-        ret = APPLICATION_INVALID_ARGUMENT;
+    tmp->linear_alloc_pool_size = 1 * KIB;
+    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ret = rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret_memory_system_init = memory_system_init((memory_system_t*)tmp_memory_system_ptr);
-    if(MEMORY_SYSTEM_INVALID_ARGUMENT == ret_memory_system_init) {
-        ERROR_MESSAGE("Failed to initialize memory system.");
-        ret = APPLICATION_INVALID_ARGUMENT;
-        goto cleanup;
-    }
-    tmp->memory_system = (memory_system_t*)tmp_memory_system_ptr;
 
-    // end Simulation -> launch all systems.
-    // end Simulation
+    ret_linear_alloc = linear_allocator_init(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("linear_allocator initialized successfully.");
 
     // commit
     s_app_state = tmp;
+    INFO_MESSAGE("Application created successfully.");
+    memory_system_report();
     ret = APPLICATION_SUCCESS;
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
-        if(NULL != tmp && NULL != tmp->memory_system) {
-            memory_system_destroy(tmp->memory_system);
-        }
         if(NULL != tmp) {
-            linear_allocator_destroy(&tmp->linear_allocator);
-            free(tmp);
+            if(NULL != tmp->linear_alloc_pool) {
+                memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+            }
+            if(NULL != tmp->linear_alloc) {
+                memory_system_free(tmp->linear_alloc, tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+            }
+            memory_system_free(tmp, sizeof(*tmp), MEMORY_TAG_SYSTEM);
             tmp = NULL;
         }
+        memory_system_destroy();
     }
 
     return ret;
@@ -129,31 +143,103 @@ cleanup:
 
 // TODO: test
 void application_destroy(void) {
+    INFO_MESSAGE("Starting application shutdown...");
     if(NULL == s_app_state) {
         goto cleanup;
     }
 
     // begin cleanup all systems.
-    memory_system_destroy(s_app_state->memory_system);
-    linear_allocator_destroy(&s_app_state->linear_allocator);
+    if(NULL != s_app_state->linear_alloc_pool) {
+        memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+        s_app_state->linear_alloc_pool = NULL;
+    }
+    if(NULL != s_app_state->linear_alloc) {
+        memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+        s_app_state->linear_alloc = NULL;
+    }
+
+    memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
+    s_app_state = NULL;
+    INFO_MESSAGE("Freed all memory.");
+    memory_system_report();
+    memory_system_destroy();
     // end cleanup all systems.
 
-    free(s_app_state);  // TODO: choco_free
-    s_app_state = NULL;
+    INFO_MESSAGE("Application destroyed successfully.");
 cleanup:
     return;
 }
 
-app_err_t application_run(void) {
-    app_err_t ret = APPLICATION_SUCCESS;
+application_result_t application_run(void) {
+    application_result_t ret = APPLICATION_SUCCESS;
     if(NULL == s_app_state) {
-        ERROR_MESSAGE("application_run(APPLICATION_RUNTIME_ERROR) - Application is not initialized.\n");
         ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
-    // while(APPLICATION_SUCCESS == ret) {
-    // }
-
 cleanup:
     return ret;
+}
+
+/**
+ * @brief アプリケーション実行結果コードを文字列に変換し出力する
+ *
+ * @param rslt_ アプリケーション実行結果コード
+ * @return const char* 変換された文字列
+ */
+static const char* rslt_to_str(application_result_t rslt_) {
+    switch(rslt_) {
+    case APPLICATION_SUCCESS:
+        return s_rslt_str_success;
+    case APPLICATION_NO_MEMORY:
+        return s_rslt_str_no_memory;
+    case APPLICATION_RUNTIME_ERROR:
+        return s_rslt_str_runtime_error;
+    case APPLICATION_INVALID_ARGUMENT:
+        return s_rslt_str_invalid_argument;
+    case APPLICATION_UNDEFINED_ERROR:
+        return s_rslt_str_undefined_error;
+    default:
+        return s_rslt_str_undefined_error;
+    }
+}
+
+/**
+ * @brief エラー伝播のため、メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ メモリシステム実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
+static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+/**
+ * @brief エラー伝播のため、リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ リニアアロケータ実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
+static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
+    case LINEAR_ALLOC_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case LINEAR_ALLOC_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case LINEAR_ALLOC_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
 }
