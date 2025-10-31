@@ -23,6 +23,7 @@
 
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"
+#include "test_choco_string.h"
 #endif
 
 /**
@@ -46,6 +47,7 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         test_linear_allocator();
         test_memory_system();
+        test_choco_string();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
