@@ -5,6 +5,21 @@ free: true
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook2に対応しています。
 
+- [このステップでやること](#このステップでやること)
+- [文字列コンテナレイヤー](#文字列コンテナレイヤー)
+- [今回作成する文字列コンテナ](#今回作成する文字列コンテナ)
+- [文字列コンテナ実装解説](#文字列コンテナ実装解説)
+  - [内部データ構造](#内部データ構造)
+  - [ヘルパー関数](#ヘルパー関数)
+  - [choco\_string\_default\_create](#choco_string_default_create)
+  - [choco\_string\_create\_from\_char](#choco_string_create_from_char)
+  - [choco\_string\_destroy](#choco_string_destroy)
+  - [choco\_string\_copy](#choco_string_copy)
+  - [choco\_string\_copy\_from\_char](#choco_string_copy_from_char)
+  - [choco\_string\_length](#choco_string_length)
+  - [choco\_string\_c\_str](#choco_string_c_str)
+
+
 ## このステップでやること
 
 ここからはGLFWを使ってウィンドウを生成する処理を作っていきます。ウィンドウには名称が必要で、名称は文字列として管理することになります。
