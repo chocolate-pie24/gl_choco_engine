@@ -5,6 +5,12 @@ free: true
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook2に対応しています。
 
+- [このステップでやること](#このステップでやること)
+- [macOS用makefileの修正](#macos用makefileの修正)
+- [Linux用makefileの追加とビルドシステムの変更](#linux用makefileの追加とビルドシステムの変更)
+	- [Linux用makefileの追加](#linux用makefileの追加)
+	- [ビルドスクリプトの修正](#ビルドスクリプトの修正)
+
 ## このステップでやること
 
 前回で、メモリシステム、リニアアロケータの仕様変更が完了しました。今回は、Book2のゴールであるGLFWを使用したウィンドウ生成の準備として、

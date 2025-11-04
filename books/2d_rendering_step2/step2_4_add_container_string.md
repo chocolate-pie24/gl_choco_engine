@@ -32,13 +32,6 @@ graph TD
   end
   style BASE fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
 
-  %% core/containers
-  subgraph CORE_CONTAINERS[containers]
-    direction TB
-    STRING[string]
-  end
-  style CORE_CONTAINERS fill:##8BC34A,stroke:#1565C0,stroke-width:2px
-
   %% core/memory
   subgraph CORE_MEMORY[memory]
     direction TB
@@ -53,6 +46,13 @@ graph TD
     CORE_MEMORY[memory]
   end
   style CORE fill:#E0E0E0,stroke:#1565C0,stroke-width:2px
+
+  %% containers
+  subgraph CORE_CONTAINERS[containers]
+    direction TB
+    STRING[string]
+  end
+  style CORE_CONTAINERS fill:##8BC34A,stroke:#1565C0,stroke-width:2px
 
   %% application
   subgraph APPLICATION_LAYER[application_layer]
