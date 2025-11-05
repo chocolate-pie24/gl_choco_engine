@@ -93,6 +93,47 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
  */
 void platform_destroy(platform_context_t* platform_context_);
 
+/**
+ * @brief プラットフォームに応じたウィンドウ生成処理を行う
+ *
+ * @note
+ * - window_label_はplatform_window_create内部でdeep copyするため、呼び出し側でメモリを破棄すること
+ *
+ * 使用例:
+ * @code{.c}
+ * linear_alloc_t* linear_alloc = NULL;
+ * // リニアアロケータ初期化
+ *
+ * platform_context_t* platform_context = NULL;
+ * platform_result_t ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
+ * // エラー処理
+ *
+ * ret = platform_window_create(platform_context, "test_window", 1024, 768);
+ * // エラー処理
+ *
+ * platform_destroy(platform_context);
+ *
+ * // リニアアロケータによるメモリ破棄
+ * @endcode
+ *
+ * @param platform_context_ プラットフォームstrategy contextオブジェクト
+ * @param window_label_ ウィンドウラベル
+ * @param window_width_ ウィンドウ幅
+ * @param window_height_ ウィンドウ高さ
+ *
+ * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
+ * - platform_context_ == NULL
+ * - platform_context_->vtable
+ * - platform_context_->backend
+ * - window_label_ == NULL
+ * - window_width_ == 0
+ * - window_height_ == 0
+ * @retval PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
+ * @retval 上記以外 各プラットフォーム実装依存
+ *
+ */
+platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_);
+
 #ifdef __cplusplus
 }
 #endif

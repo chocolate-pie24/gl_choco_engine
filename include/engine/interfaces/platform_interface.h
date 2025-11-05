@@ -70,12 +70,39 @@ typedef platform_result_t (*pfn_platform_backend_init)(platform_backend_t* platf
 typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backend_);
 
 /**
+ * @brief ウィンドウを生成する
+ *
+ * @note
+ * - window_label_の文字列は内部でdeep copyされるため、window_label_自身のメモリは呼び出し側で破棄すること
+ *
+ * @param[in,out] platform_backend_ 内部状態管理オブジェクト
+ * @param[in] window_label_ ウィンドウ名称文字列
+ * @param[in] window_width_ 初期状態のウィンドウ幅
+ * @param[in] window_height_ 初期状態のウィンドウ高さ
+ *
+ * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
+ * - platform_backend_ == NULL
+ * - window_label_ == NULL
+ * - window_width_ == 0
+ * - window_height_ == 0
+ * @retval PLATFORM_NO_MEMORY        メモリ確保失敗
+ * @retval PLATFORM_SUCCESS          ウィンドウの生成に成功し、正常終了
+ * @retval その他                     プラットフォーム実装依存
+ */
+typedef platform_result_t (*pfn_platform_window_create)(
+    platform_backend_t* platform_backend_,
+    const char* window_label_,
+    int window_width_,
+    int window_height_);
+
+/**
  * @brief プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)
  */
 typedef struct platform_vtable {
     pfn_platform_backend_preinit platform_backend_preinit;  /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
     pfn_platform_backend_init    platform_backend_init;     /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
     pfn_platform_backend_destroy platform_backend_destroy;  /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
+    pfn_platform_window_create platform_window_create;      /**< 関数ポインタ @ref pfn_platform_window_create 参照 */
 } platform_vtable_t;
 
 #ifdef __cplusplus

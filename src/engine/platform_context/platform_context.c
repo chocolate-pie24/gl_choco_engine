@@ -153,6 +153,33 @@ cleanup:
     return;
 }
 
+// PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
+// PLATFORM_INVALID_ARGUMENT platform_context_->vtable
+// PLATFORM_INVALID_ARGUMENT platform_context_->backend
+// PLATFORM_INVALID_ARGUMENT window_label_ == NULL
+// PLATFORM_INVALID_ARGUMENT window_width_ == 0
+// PLATFORM_INVALID_ARGUMENT window_height_ == 0
+// PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
+// 上記以外 各プラットフォーム実装依存
+platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->backend")
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_label_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
+
+    ret = platform_context_->vtable->platform_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
+    if(PLATFORM_SUCCESS != ret) {
+        ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = PLATFORM_SUCCESS;
+cleanup:
+    return ret;
+}
+
 /**
  * @brief プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理
  *

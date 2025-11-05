@@ -26,17 +26,28 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/core/platform/platform_utils.h"
+
+#include "engine/platform_context/platform_context.h"
+
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
  *
  */
 typedef struct app_state {
+    // application status
+    int window_width;           /**< ウィンドウ幅 */
+    int window_height;          /**< ウィンドウ高さ */
+
     // core/memory/linear_allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
     size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
     size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
     void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
+
+    // platform/platform_context
+    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキストオブジェクト */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -44,6 +55,7 @@ static app_state_t* s_app_state = NULL; /**< アプリケーション内部状�
 static const char* rslt_to_str(application_result_t rslt_);
 static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+static application_result_t rslt_convert_platform(platform_result_t rslt_);
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -57,6 +69,7 @@ application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -117,6 +130,29 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Simulation -> launch all systems -> create platform.(Don't use s_app_state here.)
+    INFO_MESSAGE("Initializing platform state...");
+    ret_platform = platform_initialize(tmp->linear_alloc, PLATFORM_USE_GLFW, &tmp->platform_context);
+    if(PLATFORM_SUCCESS != ret_platform) {
+        ret = rslt_convert_platform(ret_platform);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("platform_backend initialized successfully.");
+
+    // begin temporary
+    // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
+    tmp->window_width = 1024;
+    tmp->window_height = 768;
+    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768);
+    if(PLATFORM_SUCCESS != ret_platform) {
+        ret = rslt_convert_platform(ret_platform);
+        ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    // end temporary
+
     // commit
     s_app_state = tmp;
     INFO_MESSAGE("Application created successfully.");
@@ -126,6 +162,9 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->platform_context) {
+                platform_destroy(tmp->platform_context);
+            }
             if(NULL != tmp->linear_alloc_pool) {
                 memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
             }
@@ -149,6 +188,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->platform_context) {
+        platform_destroy(s_app_state->platform_context);
+    }
     if(NULL != s_app_state->linear_alloc_pool) {
         memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc_pool = NULL;
@@ -176,6 +218,8 @@ application_result_t application_run(void) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
+    }
+    while(1) {
     }
 cleanup:
     return ret;
@@ -239,6 +283,31 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
         return APPLICATION_NO_MEMORY;
     case LINEAR_ALLOC_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+/**
+ * @brief エラー伝播のため、プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ プラットフォームシステム実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
+static application_result_t rslt_convert_platform(platform_result_t rslt_) {
+    switch(rslt_) {
+    case PLATFORM_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case PLATFORM_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case PLATFORM_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case PLATFORM_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case PLATFORM_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    case PLATFORM_WINDOW_CLOSE:
+        return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

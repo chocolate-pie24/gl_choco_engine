@@ -15,7 +15,6 @@ free: true
 - [Contextの実装](#contextの実装)
 - [プラットフォームシステムの初期化処理の実行](#プラットフォームシステムの初期化処理の実行)
 
-
 ## このステップでやること
 
 前回は、ウィンドウの生成の準備として文字列コンテナを作成しました。今回も引き続きウィンドウ生成の準備となります。
@@ -1208,7 +1207,14 @@ cleanup:
 大分長くなってしまいましたが、これでstep2_5の最後になります。
 プラットフォームシステムの基盤が完成したので、最後にapplicationレイヤーに処理を組み込んでいきます。
 
-まずはアプリケーション内部状態管理構造体にプラットフォームシステムを組み込みます。
+application.cに下記のヘッダのincludeを追加します。
+
+```c
+#include "engine/core/platform/platform_utils.h"
+#include "engine/platform_context/platform_context.h"
+```
+
+次にアプリケーション内部状態管理構造体にプラットフォームシステムを組み込みます。
 
 ```c
 typedef struct app_state {
