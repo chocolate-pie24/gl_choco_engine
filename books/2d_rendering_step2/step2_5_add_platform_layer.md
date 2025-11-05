@@ -426,7 +426,9 @@ typedef enum {
 #endif
 ```
 
-データ構造の内容については特に説明は不要かと思いますので省略します。
+上記コードで、platform_result_tの中にPLATFORM_WINDOW_CLOSEというのがあります。
+これはウィンドウクローズのイベントが発生した場合に返すため、後で開発するイベント系として扱うべきという考え方もあります。
+ただ今回は、ウィンドウクローズイベントに関しては絶対に逃してはいけないイベントということで、キーボードやマウスイベントとは別格として扱います。
 
 ## Interfaceの実装
 
@@ -1130,7 +1132,10 @@ cleanup:
     memset(tmp_context, 0, sizeof(platform_context_t));
 ```
 
-まず、ここまでで引数のチェックを行い、platform_context_t型のメモリを確保しています。
+まず、Preconditionsで引数のチェックを行います。platform_type_valid_checkというのは、platform_glfwモジュールのプライベート関数で、
+platform_type_tで定義されている列挙子以外が入力されたらfalseを返す関数です。
+
+引数が正常であれば、platform_context_t型のメモリを確保します。
 以降の処理で失敗したときのために、一旦、tmp_contextに対してメモリ確保を行い、全ての処理が成功したら引数のout_platform_context_とアドレスを差し替えます。
 こうすることで、失敗時にout_platform_context_の値を変更しないようにします。
 
