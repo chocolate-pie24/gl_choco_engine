@@ -13,12 +13,11 @@ free: true
 
 ## このステップでやること
 
-前回で、メモリシステム、リニアアロケータの仕様変更が完了しました。今回は、Book2のゴールであるGLFWを使用したウィンドウ生成の準備として、
-既存のmakefileの修正をしていきます。また、ついでにLinux環境でのビルド用makefileを用意することで、Linux環境のサポートを追加することにします。
+前回で、メモリシステム、リニアアロケータの仕様変更が完了しました。
 
-なお、今回の内容は、makefileとbuild.shの変更のみとなっており、ソースコードの変更はありません。
-また、OpenGLやGLFWの環境構築方法は[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)のREADME.mdに記載してあります。
-なので、読み飛ばしていただいても今後の進行に差し支えはありません。
+今回は、Book2のゴールであるGLFWを使用したウィンドウ生成の準備として、既存のmakefileの修正をしていきます。また、ついでにLinux環境でのビルド用makefileを用意することで、Linux環境のサポートを追加します。
+
+なお、今回の内容は、makefileとbuild.shの変更のみとなっており、ソースコードの変更はありません。また、OpenGLやGLFWの環境構築方法は[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)のREADME.mdに記載してあります。なので、読み飛ばしていただいても今後の進行に差し支えはありません。
 
 ## macOS用makefileの修正
 
@@ -132,9 +131,9 @@ clean:
 -include $(OBJ_FILES:.o=.d)
 ```
 
-OpenGLとGLFWを使用するためには、ヘッダファイルのincludeディレクトリとライブラリのリンクのためのディレクトリを指定するのみです。
-macOSの場合はこのように設定することで使用可能になります。なお、GLFWのインストール方法については[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)の
-README.mdに記載してありますので、そちらを参照してください。
+OpenGLとGLFWを使用するためには、ヘッダファイルのincludeディレクトリとライブラリのリンクのためのディレクトリを指定が必要です。
+
+macOSの場合はこのように設定することで使用可能になります。なお、GLFWのインストール方法については[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)のREADME.mdに記載してありますので、そちらを参照してください。
 
 includeディレクトリの追加
 
@@ -161,11 +160,9 @@ LINKER_FLAGS += -framework Cocoa
 
 ### Linux用makefileの追加
 
-Linux用のmakefileですが、基本的な構造はmacOSと同じで良いのですが、各種ディレクトリが異なります。
-また、src/engine/choco_message.cで使用しているflockfileとfunlockfileがPOSIX関数で標準CのAPIではなく、ビルドができないため追加の設定を行います。
+Linux用のmakefileですが、基本的な構造はmacOSと同じで良いのですが、各種ディレクトリが異なります。また、src/engine/choco_message.cで使用しているflockfileとfunlockfileがPOSIX関数で標準Cではなく、ビルド可能にするために追加の設定を行います。
 
-Linux環境でのGLFWのインストール方法についても[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)の
-README.mdに記載してありますので、そちらを参照してください。
+Linux環境でのGLFWのインストール方法についても[リポジトリ](https://github.com/chocolate-pie24/gl_choco_engine)のREADME.mdに記載してありますので、そちらを参照してください。
 
 まずmakefile全体を貼り付けます。
 
@@ -303,4 +300,5 @@ fi
 ```
 
 以上でmakefileの修正と、Linux用のビルドシステムが完成しました。
+
 次回からは新しい機能の実装に取り掛かることにします。まずはシンプルな文字列コンテナの作成から行っていくことにします。

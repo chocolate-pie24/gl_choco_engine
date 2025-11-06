@@ -17,24 +17,22 @@ free: true
 
 ## このステップでやること
 
-前回は、ウィンドウの生成の準備として文字列コンテナを作成しました。今回も引き続きウィンドウ生成の準備となります。
-今回はプラットフォームシステムを構築していきます。
+前回は、ウィンドウの生成の準備として文字列コンテナを作成しました。
 
-プラットフォームシステムは、アプリケーションレイヤーの下層に位置し、アプリケーションの初期化完了時から終了時まで常駐し続けます。
-主な役割は、
+今回も引き続きウィンドウ生成の準備となります。今回はプラットフォームシステムを構築します。プラットフォームシステムは、アプリケーションレイヤーの下層に位置し、アプリケーションの初期化完了時から終了時まで常駐し続けます。主な役割は、
 
 - キーボードやマウス等のイベントを取得し、アプリケーションレイヤーへ伝える
 - ウィンドウの生成、ウィンドウのサイズ管理、ウィンドウクローズといった処理を担当
 
-となっています。
+です。
 
-今回のGL Choco Engineでは、GLFW APIを介してこれらの処理を行っていくのですが、
-将来的なwin32やX-windowシステムへの対応が可能なように作っていきます。
+GL Choco Engineでは、GLFW APIを介してこれらの処理を行うのですが、将来的なwin32やX Window Systemへの拡張が可能なように作っていきます。
 
 ## 今回作成するモジュール群のレイヤー構成
 
-今回作成するプラットフォームシステムを構成するモジュールのレイヤー構成は下記のようになります。緑色のブロックが今回追加していくブロックになります。
-なお、下図において、baseレイヤーのmessage, macrosについては図がわかりにくくなるため、省略してあります(ほぼ全てのモジュールが依存)。
+今回作成するプラットフォームシステムを構成するモジュールのレイヤー構成は下記のようになります。緑色のブロックが今回追加するモジュールです。
+
+なお、下図において、baseレイヤーのmessage, macrosについては依存関係の矢印が多くなりすぎるため、省略してあります。baseレイヤーはほぼ全てのモジュールが使用するため、省いても実用上問題はありません。
 
 ```mermaid
 graph TD
@@ -147,7 +145,7 @@ graph TD
 
 ## Strategyパターンの導入
 
-今回は、win32やX-window､GLFWの使用を前提としたプラットフォームシステムを作っていきます。これを実現するためには、例えば次のようなやり方があります。
+今回は、win32やX Window System､GLFWの使用を前提としたプラットフォームシステムを作ります。これを実現するためには、例えば次のようなやり方があります。
 mouse_eventを取得するmouse_event_getというAPIを例にします(実際に今後作成するmouse_event_getとはインターフェイスは異なります)。
 
 ```c
@@ -176,12 +174,9 @@ void mouse_event_get(platform_t platform_) {
 }
 ```
 
-上の例ではシンプルにif, elseでプラットフォームの処理を切り替えています。この方式は機能するのですが、
-デメリットとして、mouse_event_get以外の全てのイベント処理にも同じif, elseを書く必要があります。
-また、ターゲットプラットフォーム以外のコードをビルドしないようにするために、#ifdefを使用していますが、あまり読みやすいコードとも言えません。
+上の例ではシンプルにif, elseでプラットフォームの処理を切り替えています。この方式は機能するのですが、デメリットとして、mouse_event_get以外の全てのイベント処理にも同じif, elseを書く必要があります。また、ターゲットプラットフォーム以外のコードをビルドしないようにするために、#ifdefを使用していますが、あまり読みやすいコードとは言えません。
 
-なので、別の手段を考えるのですが、このようなケースで便利なのがオブジェクト指向のGoFデザインパターンの一つであるStrategyを使用するとキレイにまとまります。
-Strategyパターンの詳細については既に詳しく解説されている方が多くいるためここでは説明を省略します。
+なので、別の手段を考えるのですが、このようなケースで便利なのがオブジェクト指向のGoFデザインパターンの一つであるStrategyです。Strategyパターンの詳細については既に詳しく解説されている方が多くいるためここでは説明を省略します。
 
 [Strategyパターン解説例](https://qiita.com/hankehly/items/1848f2fd8e09812d1aaf)
 
@@ -212,8 +207,8 @@ classDiagram
 ```
 
 まだ具体的な実装や効果がイメージできないかと思いますので、簡単な実装例を用いて説明していきます。
-ここで、Strategyパターンはオブジェクト指向のデザインパターンであるため、オブジェクト指向言語ではないC言語で実装することは余り無いかもしれません。
-ただ、C言語でも関数ポインタと構造体を使用することで同じ効果を持つ実装を行うことが可能です。
+
+ここで、Strategyパターンはオブジェクト指向のデザインパターンであるため、オブジェクト指向言語ではないC言語で実装することは余り無いかもしれません。ただ、C言語でも関数ポインタと構造体を使用することで同じ効果を持つ実装を行うことが可能です。
 
 まず、このような構造体を用意します。なお、vtableとは仮想関数テーブルの略であり、pfnとは関数ポインタを意味しています。
 
@@ -250,8 +245,7 @@ static void concrete_obj1_function_c(void) {
 }
 ```
 
-これが具象クラスになります。concreteという具象クラス用のfunction_a､function_b､function_cを用意し、それをvtableにまとめてあります。
-こうしておけば、例えば、
+これが具象クラスになります。concreteという具象クラス用のfunction_a､function_b､function_cを用意し、それをvtableにまとめてあります。こうしておけば、例えば、
 
 ```c
 const vtable_t* vtable = vtable_concrete_get();
@@ -266,18 +260,19 @@ vtable->pfn_function_a();
 ## 外部公開API検討
 
 プラットフォームシステムの作成に先立ち、まずはvtableが保有するAPIを検討します(先程の例でのpfn_function_a,pfn_function_b,pfn_function_c)｡
+
 今回、プラットフォームシステムは次のような仕様で作ることにします。
 
-- 内部状態管理オブジェクトのハンドルをapplicationに持たせる(APIとしてアプリケーションから独立して存在可能にするため)
-- 内部状態管理オブジェクトのメモリはリニアアロケータで確保する(起動時から終了時まで存在し続けるシステム系のメモリであるため)
+- 内部状態管理構造体インスタンスのハンドルをapplicationに持たせる(APIとしてアプリケーションから独立して存在可能にするため)
+- 内部状態管理構造体インスタンスのメモリはリニアアロケータで確保する(起動時から終了時まで存在し続けるシステム系のメモリであるため)
 
-なので、
+なので、プラットフォームシステムの構築手順は、
 
-1. アプリケーション側で内部状態管理オブジェクトのメモリ要件を取得
+1. アプリケーション側で内部状態管理構造体のメモリ要件を取得
 2. 取得したメモリ要件でメモリを確保
 3. 確保したメモリでプラットフォーム初期化
 
-といった流れで構築することになります。なので、外部公開APIとして今回3つのAPIを作成していきます。
+という流れになります。なので、外部公開APIとして今回3つのAPIを作成します。
 
 - platform_backend_preinit() : アプリケーション側で内部状態管理オブジェクトのメモリ要件を取得
 - platform_backend_init()    : 確保したメモリでプラットフォームシステム初期化
@@ -395,8 +390,7 @@ graph TD
   APPLICATION --> PLATFORM_UTILS
 ```
 
-次に、ファイルの中身を作成します。実行結果コードと、プラットフォームリストを作成します。
-プラットフォームリストは現状ではGLFWのみにしておきます。将来、x-windowやwin32へ拡張する際に増えることになります。
+次に、ファイルの中身を作成します。実行結果コードと、プラットフォームリストを作成します。プラットフォームリストは現状ではGLFWのみにしておきます。将来、X Window Systemやwin32へ拡張する際に増えることになります。
 
 ```c
 #ifndef GLCE_ENGINE_CORE_PLATFORM_PLATFORM_UTILS_H
@@ -426,8 +420,8 @@ typedef enum {
 ```
 
 上記コードで、platform_result_tの中にPLATFORM_WINDOW_CLOSEというのがあります。
-これはウィンドウクローズのイベントが発生した場合に返すため、後で開発するイベント系として扱うべきという考え方もあります。
-ただ今回は、ウィンドウクローズイベントに関しては絶対に逃してはいけないイベントということで、キーボードやマウスイベントとは別格として扱います。
+
+これはウィンドウクローズのイベントが発生した場合に返すため、後で開発するイベント列挙体で扱うべきという考え方もあります。ただ今回は、ウィンドウクローズイベントに関しては絶対に逃してはいけないイベントということで、キーボードやマウスイベントとは別格として扱います。
 
 ## Interfaceの実装
 
@@ -565,9 +559,7 @@ typedef platform_result_t (*pfn_platform_backend_init)(platform_backend_t* platf
 typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backend_);
 ```
 
-関数ポインタへのtypedefが余り見慣れないかもしれませんが、この書式は、pfn_platform_backend_initの例で言えば、
-「platform_backend_t*型のplatform_backend_を受け取って、platform_result_tを返す関数のポインタ型にpfn_platform_backend_initという名前をつける」
-という意味になります。
+関数ポインタへのtypedefが余り見慣れないかもしれませんが、この書式は、pfn_platform_backend_initの例で言えば、「platform_backend_t*型のplatform_backend_を受け取って、platform_result_tを返す関数のポインタ型にpfn_platform_backend_initという名前をつける」という意味になります。
 
 typedefしておくことにより、関数ポインタをまとめたvtableはこのように書けます。
 
@@ -583,18 +575,14 @@ typedef struct platform_vtable {
 
 ## ConcreteObjectの実装
 
-ConcreteObjectは、インターフェイスオブジェクトであるInterfaceの具象クラスになります。
-Interfaceがwin-32､X-window､GLFWそれぞれの固有実装を抽象化したオブジェクトであるのに対し、
-ConcreteObjectは各プラットフォーム固有の実装を格納するオブジェクトになります。
+ConcreteObjectは、インターフェイスオブジェクトであるInterfaceの具象クラスになります。Interfaceがwin-32､X Window System､GLFWそれぞれの固有実装を抽象化したオブジェクトであるのに対し、ConcreteObjectは各プラットフォーム固有の実装を格納するオブジェクトになります。
 
-なので、次の機能を実装していきます。
+なので、次の機能を実装します。
 
 - platform_backend_t構造体の内部実装
 - platform_glfw_preinit : pfn_platform_backend_preinitのGLFW実装版
 - platform_glfw_init    : pfn_platform_backend_initのGLFW実装版
 - platform_glfw_destroy : pfn_platform_backend_destroyのGLFW実装版
-
-を実装していきます。
 
 レイヤー構成図における位置づけは下記のようになります。
 
@@ -704,7 +692,7 @@ graph TD
   APPLICATION --> PLATFORM_UTILS
 ```
 
-先ずはヘッダファイルを用意します。外部に公開するAPIは、GLFW実装版の関数へのポインタが格納されたvtableを取得する機能のみです。
+先ずはヘッダファイルを用意します。外部に公開するAPIは、GLFW実装版の関数へのポインタが格納されたvtableを取得する機能のみです。その他のAPIは実装を外部から隠蔽します。
 
 include/engine/platform_concretes/platform_glfw.h
 
@@ -733,8 +721,7 @@ const platform_vtable_t* platform_glfw_vtable_get(void);
 
 src/engine/platform_concretes/platform_glfw.c
 
-ヘッダのinclude､内部状態管理構造体の定義、関数プロトタイプ宣言までを貼り付けます。
-platform_backend_t構造体は今のところは最小限の変数しか入れておりません。次回以降、変数が追加されていくことになります。
+ヘッダのinclude､内部状態管理構造体の定義、関数プロトタイプ宣言までを貼り付けます。platform_backend_t構造体は今のところは最小限の変数しか入れておりません。次回以降、変数が追加されていくことになります。
 
 ```c
 #include <stdalign.h>
@@ -781,8 +768,7 @@ cleanup:
 }
 ```
 
-内容はplatform_backend_tの構造体サイズとアライメント要件を取得し、引数に入れているだけになります。
-次はplatform_glfw_initです。
+内容はplatform_backend_tの構造体サイズとアライメント要件を取得し、引数に入れているだけです。次はplatform_glfw_initです。
 
 ```c
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
@@ -802,8 +788,7 @@ cleanup:
 }
 ```
 
-現状では初期化する構造体メンバがinitialized_glfwのみなので、initialized_glfwを初期化するのみです。
-次はplatform_glfw_destroyです。
+現状では初期化する構造体メンバがinitialized_glfwのみなので、initialized_glfwを初期化するのみです。次はplatform_glfw_destroyです。
 
 ```c
 static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
@@ -815,10 +800,8 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 ```
 
 こちらも特に説明が必要な箇所はないと思います。
-以上で外部公開APIのGLFW版実装が完成しましたので、vtableを作成していきます。
 
-GLFW版vtableは実行時に変更する必要はないので、構造体のインスタンスを静的に保持することにします。
-ソースファイルの関数プロトタイプ宣言の下に以下を追加します。
+以上で外部公開APIのGLFW版実装が完成しましたので、vtableを作成していきます。GLFW版vtableは実行時に変更する必要はないので、構造体のインスタンスを静的に保持することにします。ソースファイルの関数プロトタイプ宣言の下に以下を追加します。
 
 ```c
 static const platform_vtable_t s_glfw_vtable = {
@@ -836,19 +819,11 @@ const platform_vtable_t* platform_glfw_vtable_get(void) {
 }
 ```
 
-以上でInterfaceの実装までが完了しました。ここまでを実装することにより、
-アプリケーション側ではvtableを取得し、プラットフォーム固有実装のAPIを呼び出すことが可能になります。
-例えば以下のようになります。
+以上でInterfaceの実装までが完了しました。ここまでを実装することにより、アプリケーション側ではvtableを取得し、プラットフォーム固有実装のAPIを呼び出すことが可能になります。例えば以下のようになります。
 
 ```c
 typedef struct app_state {
-    // core/memory/linear_allocator
-    size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
-    size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
-    size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
-    void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
-    linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
-
+    // vtable以外は省略
     platform_vtable_t* vtable;
 } app_state_t;
 
@@ -862,16 +837,13 @@ application_result_t application_create(void) {
 }
 ```
 
-これでの十分に機能はするのですが、vtableを直にapp_state_tに持たせていることにより、
-vtableの構造をユーザーが知っておく必要があります。また、上の例では省略しましたが、リニアアロケータによるメモリ確保手順も煩雑です。
+これでも十分に機能はするのですが、vtableを直にapp_state_tに持たせていることにより、vtableの構造をユーザーが知っておく必要があります。また、上の例では省略しましたが、リニアアロケータによるメモリ確保手順も煩雑です。
 
-今回はもう一段レイヤーを噛ませることにより、よりシンプルにプラットフォームシステムを初期化、使用できるようにしていきます。
-この役割がStrategyパターンのContextになります。
+今回はもう一段レイヤーを噛ませることにより、よりシンプルにプラットフォームシステムを初期化、使用できるようにします。この役割がStrategyパターンのContextになります。
 
 ## Contextの実装
 
-Contextの役割は、これまで作成したAPIを簡便に扱えるようにすることと、それに伴い、不要な依存関係を減らすことにあります。
-作成するレイヤーの位置づけは下図の通りです。
+Contextの役割は、これまで作成したAPIを簡便に扱えるようにすることと、それに伴い、不要な依存関係を減らすことにあります。作成するレイヤーの位置づけは下図の通りです。
 
 ```mermaid
 graph TD
@@ -1007,8 +979,7 @@ void platform_destroy(platform_context_t* platform_context_);
 #endif
 ```
 
-内容は、プラットフォームコンテキストの構造体の前方宣言と、プラットフォームシステムの初期化、破棄になっています。
-プラットフォームコンテキストの構造体は後ほど詳細に説明しますが、
+内容は、プラットフォームコンテキスト構造体の前方宣言と、プラットフォームシステムの初期化、破棄になっています。プラットフォームコンテキストの構造体は後ほど詳細に説明しますが、
 
 - プラットフォーム識別子
 - プラットフォームシステム内部状態管理構造体(platform_backend_t_t)インスタンス
@@ -1131,16 +1102,13 @@ cleanup:
     memset(tmp_context, 0, sizeof(platform_context_t));
 ```
 
-まず、Preconditionsで引数のチェックを行います。platform_type_valid_checkというのは、platform_glfwモジュールのプライベート関数で、
-platform_type_tで定義されている列挙子以外が入力されたらfalseを返す関数です。
+まず、Preconditionsで引数のチェックを行います。platform_type_valid_checkというのは、platform_glfwモジュールのプライベート関数で、platform_type_tで定義されている列挙子以外が入力されたらfalseを返す関数です。
 
-引数が正常であれば、platform_context_t型のメモリを確保します。
-以降の処理で失敗したときのために、一旦、tmp_contextに対してメモリ確保を行い、全ての処理が成功したら引数のout_platform_context_とアドレスを差し替えます。
-こうすることで、失敗時にout_platform_context_の値を変更しないようにします。
+引数が正常であれば、platform_context_t型のメモリを確保します。以降の処理で失敗したときのために、一旦、tmp_contextに対してメモリ確保を行い、全ての処理が成功したら引数のout_platform_context_とアドレスを差し替えます。こうすることで、失敗時にout_platform_context_の状態を変更しないようにします。
 
 また、プラットフォームシステムは起動時から終了時まで常駐するシステムです。よって、メモリの確保にはリニアアロケータを使用しています。
 
-その他、rslt_convert_linear_allocやrslt_to_strはエラー処理を統一するためのヘルパー関数です。説明は省略します。
+その他、rslt_convert_linear_allocやrslt_to_strはエラー処理を統一するためのプライベート関数です。説明は省略します。
 
 ```c
     tmp_context->vtable = platform_vtable_get(platform_type_);
@@ -1151,8 +1119,7 @@ platform_type_tで定義されている列挙子以外が入力されたらfalse
     }
 ```
 
-次がプラットフォーム固有のvtableの取得処理です。これは引数で与えたplatform_type_に応じたvtableを取得します。
-platform_vtable_getはplatform_contextモジュールのプライベート関数になっており、実装はこのようになっています。
+次がプラットフォーム固有のvtableの取得処理です。これは引数で与えたplatform_type_に応じたvtableを取得します。platform_vtable_getはplatform_contextモジュールのプライベート関数になっており、実装はこのようになっています。
 
 ```c
 const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_) {
@@ -1198,13 +1165,14 @@ cleanup:
 }
 ```
 
-内容は、プラットフォーム固有のplatform_backend_destroyを呼び出すだけです。
-メモリリソースについてはリニアアロケータを使用して確保したメモリであるため、解放は不要です。
+内容は、プラットフォーム固有のplatform_backend_destroyを呼び出すだけです。メモリリソースについてはリニアアロケータを使用して確保したメモリであるため、解放は不要です。
+
 以上でStrategyパターンのContextまでの実装が完了しました。次は、作成したプラットフォームシステムをアプリケーションレイヤーで初期化していきます。
 
 ## プラットフォームシステムの初期化処理の実行
 
 大分長くなってしまいましたが、これでstep2_5の最後になります。
+
 プラットフォームシステムの基盤が完成したので、最後にapplicationレイヤーに処理を組み込んでいきます。
 
 application.cに下記のヘッダのincludeを追加します。
@@ -1326,11 +1294,8 @@ cleanup:
 
 platform_destroyの呼び出しを追加するだけなので、特に説明は不要かと思います。
 
-以上でプラットフォームシステムの基盤が完成しました。これでX-window-systemやwin32環境への対応が今後必要になっても、
-プラットフォームコンテキストのvtableの差し替えと、プラットフォーム固有実装の追加のみで対応が可能になっています。
+以上でプラットフォームシステムの基盤が完成しました。これでX Window Systemやwin32環境への対応が今後必要になっても、プラットフォームコンテキストのvtableの差し替えと、プラットフォーム固有実装の追加のみで対応が可能になっています。
 
-今回は作成したファイル数が多いため、大分ボリュームが多いと感じるかもしれませんが、
-やっている内容自体は冒頭に説明したStrategyパターンのC言語実装例をそのままなぞっているだけです。
+今回は作成したファイル数が多いため、大分ボリュームが多いと感じるかもしれませんが、やっている内容自体は冒頭に説明したStrategyパターンのC言語実装例をそのままなぞっているだけです。
 
-次は、本ブックの最終となるウィンドウの生成に進みます。
-次のステップを実行すればようやくグラフィックアプリケーションの第一歩となるHello window!!を動かすことができます。
+次は、本ブックの最後となるウィンドウの生成に進みます。次のステップを実行すればようやくグラフィックアプリケーションの第一歩となるHello window!!を動かすことができます。

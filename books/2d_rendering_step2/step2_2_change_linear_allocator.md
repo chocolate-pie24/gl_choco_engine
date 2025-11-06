@@ -13,15 +13,9 @@ free: true
 
 ## このステップでやること
 
-前回、メモリシステムの仕様変更を行いました。今後は、全てのメモリ確保をメモリシステムで一元管理するよう変更していきます。
-その一環で、今回はリニアアロケータのメモリをメモリシステムを使用して確保できるように仕様変更を行っていきます。
+前回、メモリシステムの仕様変更を行いました。今後は、全てのメモリ確保をメモリシステムで一元管理するよう変更していきます。その一環で、今回はリニアアロケータ自身のメモリをメモリシステムを使用して確保できるように仕様変更を行っていきます。
 
-リニアアロケータは、最初に大きなメモリプールを確保し、あとはそのメモリプールからメモリを割り当てます。
-このため、メモリシステムを使用したメモリ確保はメモリプールの確保のみになります。
-
-前回作成したリニアアロケータでは、linear_allocator_create APIによってメモリプールのメモリを確保していました。
-このメモリ確保にメモリシステムを使用したいのですが、リニアアロケータとメモリシステムが同一レイヤー(core/memory)に配置されているため、
-linear_allocator_createの中でメモリシステムのAPIを呼びたくありません。そこで、次のようなやり方を取ることにします。
+前回作成したリニアアロケータでは、linear_allocator_create APIによってメモリプールのメモリを確保していました。このメモリ確保にメモリシステムを使用したいのですが、リニアアロケータとメモリシステムが同一レイヤー(core/memory)に配置されているため、linear_allocator_createの中でメモリシステムのAPIを呼びたくありません。そこで、次のようなやり方を取ることにします。
 
 ```c
 memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -48,8 +42,8 @@ ret_linear_alloc = linear_allocator_init(linear_alloc, linear_alloc_pool_size, l
 ```
 
 このやり方では、リニアアロケータ自身でメモリプールを確保するのではなく、使用側となる上位層でメモリ確保を行い、リニアアロケータに渡します。
-こうすることで、リニアアロケータのメモリシステムへの依存を排除でき、上から下のみへの依存を維持することができます。
-使い方として若干手間ではあるのですが、リニアアロケータを使用する箇所というのは限定的であるため、この方式で行くことにします。
+
+こうすることで、リニアアロケータのメモリシステムへの依存を排除でき、上から下のみへの依存を維持することができます。使い方として若干手間ではあるのですが、リニアアロケータを使用する箇所というのは限定的であるため、この方式で行くことにします。
 
 この方式を取ることにより、メモリの確保がAPI呼び出し側の責務になりました。それに伴い、不要となるAPIは、
 
@@ -66,12 +60,12 @@ ret_linear_alloc = linear_allocator_init(linear_alloc, linear_alloc_pool_size, l
 
 ## linear_allocator_preinit実装
 
-linear_allocator_preinitでは、APIの呼び出し側にlinear_allocator_tのメモリを確保するために必要な、
+linear_allocator_preinitは、APIの呼び出し側に対して以下を伝える役目があります。
 
-- メモリ容量
-- メモリアライメント
+- linear_allocator_tのメモリを確保するために必要な、メモリ容量
+- linear_allocator_tのメモリを確保するために必要な、メモリアライメント
 
-を伝えるために使用します。実装はこのようになります。
+実装はこのようになります。
 
 ```c
 void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_) {
@@ -85,9 +79,9 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
 
 ## linear_allocator_init実装
 
-次にlinear_allocator_initの実装です。linear_allocator_initでは、API呼び出し側で確保された
+次にlinear_allocator_initの実装です。linear_allocator_initは、API呼び出し側で確保された
 
-- linear_alloc_tオブジェクトのメモリ
+- linear_alloc_t構造体インスタンスのメモリ
 - メモリプールの先頭アドレス
 
 を渡してlinear_alloc_tオブジェクトを初期化します。実装はこのようになります。
@@ -112,8 +106,8 @@ cleanup:
 ## アプリケーション側実装変更
 
 以上に変更により、application_createのリニアアロケータ初期化処理が変更になります。
-変更後のapplication_create(エラー処理は省略)を貼り付けます。
-linear_allocatorのメモリ確保をapplication_create内で行うようになったため、エラー発生時のクリーンナップが少し複雑になっています。
+
+変更後のapplication_create(エラー処理は省略)を貼り付けます。linear_allocatorのメモリ確保をapplication_create内で行うようになったため、エラー発生時のクリーンナップが少し複雑になっています。
 
 ```c
 application_result_t application_create(void) {
@@ -165,8 +159,7 @@ cleanup:
 }
 ```
 
-次に、application_destroyについてもリニアアロケータのメモリ解放が必要となるため、修正が必要です。
-修正後の実装を貼り付けます。
+次に、application_destroyについてもリニアアロケータのメモリ解放が必要となるため、修正が必要です。修正後の実装を貼り付けます。
 
 ```c
 void application_destroy(void) {
@@ -202,14 +195,12 @@ cleanup:
 
 ***app_err_t列挙体をapplication_result_tに名称変更***
 
-列挙子にAPPLICATION_SUCCESSが含まれ、名前の矛盾があるため名称を変更しました。
-同様に、memory_sys_err_tをmemory_system_result_tに、linear_alloc_err_tをlinear_allocator_result_tに変更しました。
+列挙子にAPPLICATION_SUCCESSが含まれ、名前の矛盾があるため名称を変更しました。同様に、memory_sys_err_tをmemory_system_result_tに、linear_alloc_err_tをlinear_allocator_result_tに変更しました。
 
 ***application_result_t列挙体の列挙子SUCCESSは必ず0に固定***
 
-一般的なエラーコードの慣習に習い、実行結果の値は成功を必ず0になるようにします。
-memory_system_result_tとlinear_allocator_result_tについても同様の変更を適用しています。
+一般的なエラーコードの慣習に習い、実行結果の値は成功は必ず0になるようにします。memory_system_result_tとlinear_allocator_result_tについても同様の変更を適用しています。
 
+以上で前回からの仕様変更についての解説は終了です。
 
-以上で前回からの仕様変更についての解説は終了です。次回からは前回の仕様変更ではなく、新しい機能の追加についての解説を行っていきます。
-次回の解説内容はLinux環境のサポートを追加することと、OpenGLの実行環境の整備について解説していきます。
+次回からは新しい機能の追加についての解説を行っていきます。次回の解説内容はLinux環境のサポートを追加することと、OpenGLの実行環境の整備について解説します。

@@ -6,20 +6,20 @@ free: true
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook2に対応しています。
 
 - [このステップでやること](#このステップでやること)
-- [interfaces/platform\_interface.h](#interfacesplatform_interfaceh)
-- [platform\_concretes/platform\_glfw.c](#platform_concretesplatform_glfwc)
+- [platform\_interfaceヘッダ](#platform_interfaceヘッダ)
+- [platform\_glfwソース](#platform_glfwソース)
   - [platform\_glfw\_window\_create](#platform_glfw_window_create)
   - [platform\_glfw\_destroy](#platform_glfw_destroy)
-- [platform\_context/platform\_context.h(.c)](#platform_contextplatform_contexthc)
-- [application.c](#applicationc)
+- [platform\_context](#platform_context)
+- [application](#application)
   - [内部状態管理構造体へのメンバの追加](#内部状態管理構造体へのメンバの追加)
   - [application\_create](#application_create)
   - [application\_run](#application_run)
 
+
 ## このステップでやること
 
-前回までで、win32, X-window-systemへの拡張を前提としたプラットフォームシステムを完成させました。
-今回は、このBookの最後のステップで、GLFW APIを使用してウィンドウを生成していきます。
+前回までで、win32, X Window Systemへの拡張を前提としたプラットフォームシステムを完成させました。今回は、このBookの最後のステップで、GLFW APIを使用してウィンドウを生成していきます。
 
 具体的なやり方としては、前回、プラットフォームシステムに以下のような仮想関数テーブルを作りました。
 
@@ -33,8 +33,7 @@ typedef struct platform_vtable {
 } platform_vtable_t;
 ```
 
-今回はこの仮想関数テーブルにplatform_backend_window_createを追加していきます。
-具体的な手順は、
+今回はこの仮想関数テーブルにplatform_backend_window_createを追加していきます。具体的な手順は、
 
 1. interfaces/platform_interface.hにplatform_backend_window_createを追加
 2. platform_glfwにplatform_glfw_window_createを追加
@@ -44,7 +43,7 @@ typedef struct platform_vtable {
 
 という流れになります。以降、順を追って説明していきます。
 
-## interfaces/platform_interface.h
+## platform_interfaceヘッダ
 
 pfn_platform_backend_destroyの関数ポインタ定義の下にpfn_platform_backend_window_createの定義を追加します。
 
@@ -60,13 +59,11 @@ typedef platform_result_t (*pfn_platform_backend_window_create)(
 
 ウィンドウの生成には、初期化用の変数として、
 
-- ウィンドウのタイトルとなるwindow_label_
+- ウィンドウのタイトル文字列
 - ウィンドウの幅(単位: pixel)
 - ウィンドウの高さ(単位: pixel)
 
-を与えます。なお、platform_glfwでの内部状態管理構造体の中でウィンドウタイトルはchoco_stringモジュールを使用することになりますが、
-platform_interface.hでのcontainers/choco_string.hへの依存を避けるため、const char*を渡しています。
-依存関係は利便性を失わない程度に減らすことで、テストを用意にし、全体の構成をシンプルに保ちます。
+を与えます。なお、platform_glfwでの内部状態管理構造体の中でウィンドウタイトルはchoco_stringモジュールを使用することになりますが、platform_interface.hでのcontainers/choco_string.hへの依存を避けるため、const char*を渡しています。依存関係は利便性を失わない程度に減らすことで、テストを用意にし、全体の構成をシンプルに保ちます。
 
 関数ポインタの定義を追加したら、仮想関数テーブルにpfn_platform_backend_window_createを追加します。
 
@@ -81,10 +78,9 @@ typedef struct platform_vtable {
 
 以上でinterfaces/platform_interface.hの準備が完了しました。次はplatform_glfwに具体的な実装を追加していきます。
 
-## platform_concretes/platform_glfw.c
+## platform_glfwソース
 
-今回から外部APIとしてGLFWを使用していきます。また、ウィンドウラベルにchoco_stringモジュールを使用するため、
-ヘッダincludeに以下を追加します。
+今回から外部APIとしてGLFWを使用していきます。また、ウィンドウラベルにchoco_stringモジュールを使用するため、ヘッダincludeに以下を追加します。
 
 ```c
 #include <stdalign.h>
@@ -106,8 +102,7 @@ typedef struct platform_vtable {
 #include "engine/containers/choco_string.h" // <-- 追加
 ```
 
-GLFWと一緒にglewのincludeも行っていますが、glewはOpenGLの様々な拡張機能を使うためのAPIになります。
-注意点としてはglfw3.hよりも前にglew.hをincludeする必要があります。こうしないとincludeヘッダの衝突が発生するため、glfwとglewを使う際の定番の処理だと思ってください。
+GLFWと一緒にglewのincludeも行っていますが、glewはOpenGLの様々な拡張機能を使うためのAPIになります。注意点としてはglfw3.hよりも前にglew.hをincludeする必要があります。こうしないとincludeヘッダの衝突が発生するため、glfwとglewを使う際の定番の書き方だと思ってください。
 
 次に、platform_glfwモジュールの内部状態管理構造体に下記を追加します。
 
@@ -119,8 +114,7 @@ struct platform_backend {
 };
 ```
 
-GLFWwindowというのがGLFWで生成したウィンドウへのハンドルになります。
-GLFWを使用して各種操作は、このウィンドウハンドルを渡すことで行います。
+GLFWwindowというのがGLFWで生成したウィンドウへのハンドルになります。GLFWを使用した各種操作は、このウィンドウハンドルを渡すことで行います。
 
 次がplatform_glfw_initの変更です。
 
@@ -164,14 +158,11 @@ cleanup:
 }
 ```
 
-追加した内容は、glfwInitによるglfwの初期化処理と、GLFWの設定です。
-OpenGLは古いバージョンに互換性を持たせたAPIです。ただ、バージョン2.0以降で大きな変更がありました。
+追加した内容は、glfwInitによるglfwの初期化処理と、GLFWの設定です。OpenGLは古いバージョンに互換性を持たせたAPIです。ただ、バージョン2.0以降で大きな変更がありました。
 
-古いOpenGL(glBeginを使ってプログラミングするスタイル)では固定シェーダーといってGPU側のプログラムを自分で書く必要はなかったのですが、
-最近では自分でプログラミングするようになっています。このため、プログラムの作りが古いバージョンと新しいバージョンで全く異なります。
+古いOpenGL(glBeginを使ってプログラミングするスタイル)では固定シェーダーといってGPU側のプログラムを自分で書く必要はなかったのですが、最近では自分でプログラミングするようになっています。このため、プログラムの作りが古いバージョンと新しいバージョンで全く異なります。
 
-新しいバージョンのOpenGLでは古いAPIは非推奨となっています。これら古いバージョンの互換性をどうするかという設定をここでは行っています。
-今回開発するゲームエンジンは、古いAPIは使わない方針でいきますので、このような設定としています。
+新しいバージョンのOpenGLでは古いAPIは非推奨となっています。これら古いバージョンの互換性をどうするかという設定をここでは行っています。今回開発するゲームエンジンは、古いAPIは使わない方針でいきますので、このような設定としています。
 
 以上でウィンドウ生成処理を作成する準備ができましたので、先ずは関数プロトタイプ宣言に以下を追加します。
 
@@ -199,8 +190,7 @@ static const platform_vtable_t s_glfw_vtable = {
 
 ### platform_glfw_window_create
 
-次にplatform_glfw_window_createの実装です。まずは全体を貼り付けます。
-ちょっと長いのでエラー処理やテスト専用コードは省いてあります。
+次にplatform_glfw_window_createの実装です。まずは全体を貼り付けます。ちょっと長いのでエラー処理やテスト専用コードは省いてあります。
 
 ```c
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
@@ -242,8 +232,7 @@ ret_string = choco_string_create_from_char(&platform_backend_->window_label, win
     platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), NULL, NULL);
 ```
 
-glfwCreateWindowというのはGLFWが提供するAPIで、ウィンドウの生成を行ってくれます。
-API仕様を[GLFW window API仕様](https://www.glfw.org/docs/3.3/group__window.html#ga3555a418df92ad53f917597fe2f64aeb)から引用します。
+glfwCreateWindowというのはGLFWが提供するAPIで、ウィンドウの生成を行ってくれます。API仕様を[GLFW window API仕様](https://www.glfw.org/docs/3.3/group__window.html#ga3555a418df92ad53f917597fe2f64aeb)から引用します。
 
 ```console
 Parameters
@@ -262,12 +251,9 @@ Parameters
     glfwMakeContextCurrent(platform_backend_->window);
 ```
 
-ここでは、引数windowに指定したハンドルのレンダリングコンテキストをカレント(処理対象)にする処理を行っています。
-レンダリングコンテキストとは、描画に用いられる情報で、ウィンドウごとに保持されます。
-今後行っていく様々な描画はカレントに設定したウィンドウに対して行われます。
+ここでは、引数に指定したウィンドウハンドルのレンダリングコンテキストをカレント(処理対象)にする処理を行っています。レンダリングコンテキストとは、描画に用いられる情報で、ウィンドウごとに保持されます。今後行っていく様々な描画はカレントに設定したウィンドウに対して行われます。
 
-次が、glewの初期化処理になります。これは必ずglfwMakeContextCurrentを実行した後で行うようにします。
-GLEWによる拡張機能の取得はカレントコンテキストに対して紐づくため、こうしないとglewInitが失敗します。
+次が、glewの初期化処理になります。これは必ずglfwMakeContextCurrentを実行した後で行うようにします。GLEWによる拡張機能の取得はカレントコンテキストに対して紐づくため、こうしないとglewInitが失敗します。
 
 ```c
     glewExperimental = true;
@@ -278,9 +264,7 @@ GLEWによる拡張機能の取得はカレントコンテキストに対して�
     }
 ```
 
-glewExperimentalをtrueにすることで、より多くのOpenGL拡張関数を取得することができるようになります。
-なくても構わないのですが、とりあえず入れておくのが一般的です。筆者もこの辺は詳しくないのですが、とりあえず入れる運用にしています。
-この状態でglewInitを実行してglewを初期化しています。
+glewExperimentalをtrueにすることで、より多くのOpenGL拡張関数を取得することができるようになります。なくても構わないのですが、とりあえず入れておくのが一般的です。筆者もこの辺は詳しくないのですが、とりあえず入れる運用にしています。この状態でglewInitを実行してglewを初期化しています。
 
 glewの初期化の次が、キーボード押下イベントに対する設定です。
 
@@ -294,8 +278,7 @@ glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
 ### platform_glfw_destroy
 
-ウィンドウの破棄はプラットフォームシステムの終了時に行います。なので、platform_glfw_destroyに処理を追加していきます。
-ウィンドウの破棄処理を追加したコードが以下になります。
+ウィンドウの破棄はプラットフォームシステムの終了時に行います。なので、platform_glfw_destroyに処理を追加していきます。ウィンドウの破棄処理を追加したコードが以下になります。
 
 ```c
 static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
@@ -315,15 +298,13 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 }
 ```
 
-glfwDestroyWindowがウィンドウを破棄するAPIになります。ウィンドウを破棄したらglfwTerminateを呼び出してglfwを終了します。
-最後にwindow_labelの文字列リソースを破棄して終了となります。なお、glewについては初期化は行いましたが、terminate処理は不要です。
+glfwDestroyWindowがウィンドウを破棄するAPIになります。ウィンドウを破棄したらglfwTerminateを呼び出してglfwを終了します。最後にwindow_labelの文字列リソースを破棄して終了となります。なお、glewについては初期化を行いましたが、terminate処理は不要です。
 
 以上でウィンドウの生成と破棄の具体的な処理ができました。次からはcontextモジュールにウィンドウの生成と破棄を追加することで、アプリケーションからの呼び出しを可能にしていきます。
 
-## platform_context/platform_context.h(.c)
+## platform_context
 
-Contextの変更はシンプルで、backendのvtableから関数を呼び出すだけです。
-先ずはヘッダに以下を追加します。
+Contextの変更はシンプルで、backendのvtableから関数を呼び出すだけです。先ずはヘッダに以下を追加します。
 
 include/engine/platform_context/platform_context.h
 
@@ -360,19 +341,17 @@ cleanup:
 
 これでInterface, Concrete, Contextの実装が完了しましたので、最後にapplicationモジュールへウィンドウ生成処理を追加していきます。
 
-## application.c
+## application
 
 ### 内部状態管理構造体へのメンバの追加
 
-ウィンドウを生成する処理では引数にウィンドウの幅と高さを渡しました。当然、ウィンドウはサイズが変化します。
-ウィンドウサイズが変化したら当然、画面に描画する内容も変更する必要があります。その際、以下のようなデータの流れで描画内容を変更することになります。
+ウィンドウを生成する処理では引数にウィンドウの幅と高さを渡しました。当然、ウィンドウはサイズが変化します。ウィンドウサイズが変化したら当然、画面に描画する内容も変更する必要があります。その際、以下のようなデータの流れで描画内容を変更することになります。
 
 1. プラットフォームシステムで変化を取得
 2. サイズ変化をアプリケーション側に通知
 3. アプリケーションからレンダリングシステムにサイズ変化を通知
 
-このような仕組みを取る予定なので、アプリケーション側にもウィンドウサイズを持たせるようにします。
-app_state_tを以下のように変更します。
+このような仕組みを取る予定なので、アプリケーション側にもウィンドウサイズを持たせるようにします。app_state_tを以下のように変更します。
 
 ```c
 typedef struct app_state {
@@ -396,8 +375,7 @@ window_widthとwindow_heightを追加してあります。
 
 ### application_create
 
-次がapplication_createでのウィンドウ生成処理を追加していきます。追加後のコードが以下のようになります。
-長いのでエラー処理やエラー処理関連変数の定義は省いてあります。
+次がapplication_createでウィンドウ生成処理を追加していきます。追加後のコードが以下のようになります。長いのでエラー処理やエラー処理関連変数の定義は省いてあります。
 
 ```c
 application_result_t application_create(void) {
@@ -461,9 +439,7 @@ cleanup:
 }
 ```
 
-なお、ウィンドウの生成処理は本来、レンダリングシステムが担当する処理になります。
-ただ、現状ではまだレンダリングシステムがありませんので、仮のコードとしてapplication_createで実行するようにしています。
-レンダリングシステムの作成時に移動することになります。
+なお、ウィンドウの生成処理は本来、レンダリングシステムが担当する処理になります。ただ、現状ではまだレンダリングシステムがありませんので、仮のコードとしてapplication_createで実行するようにしています。レンダリングシステムの作成時に移動することになります。
 
 なお、ウィンドウの破棄については、既に作成してあるplatform_destroyで行われるため、application_destroyの変更は不要です。
 
@@ -486,13 +462,12 @@ cleanup:
 }
 ```
 
-本来であればwhileループの中にsleepを入れるべきですが、sleep時間は目標FPSとループ内の計算時間をもとに決定する必要があり、
-それらの処理はまだないため当面はこのままで活きます。
+本来であればwhileループの中にsleepを入れるべきですが、sleep時間は目標FPSとループ内の計算時間をもとに決定する必要があり、それらの処理がまだないため、余り良くはないのですが当面はこのままで行きます。
 
-この状態でビルド、実行し、ウィンドウが出ればOKです。なお、ウィンドウを閉じる処理はまだ追加していないため、Ctrl-C等で強制的に終了してください。
+この状態でビルド、実行し、ウィンドウが出ればOKです。なお、ウィンドウを閉じる処理はまだ追加していないため、Ctrl-c等で強制的に終了してください。
 
-以上でBook2(2d-rendering-step2)が完成となります。今回でようやくグラフィックアプリケーションの描画の土台となるウィンドウが生成できました。
-次回は、今回作成したシステムをさらに拡張し、キーボード、マウス等のイベント処理を追加していきます。
+以上でBook2(2d-rendering-step2)で目標とした機能が完成です。今回でようやくグラフィックアプリケーションの描画の土台となるウィンドウが生成できました。次回は、今回作成したシステムをさらに拡張し、キーボード、マウス等のイベント処理を追加していきます。
+
 なお、イベント処理についてはリポジトリでは既に実装済であるため、次回は今回よりは早いリリースができるかと思います。
 
 // TODO: リポジトリTag
