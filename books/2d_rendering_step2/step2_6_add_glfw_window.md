@@ -16,7 +16,6 @@ free: true
   - [application\_create](#application_create)
   - [application\_run](#application_run)
 
-
 ## このステップでやること
 
 前回までで、win32, X Window Systemへの拡張を前提としたプラットフォームシステムを完成させました。今回は、このBookの最後のステップで、GLFW APIを使用してウィンドウを生成していきます。
