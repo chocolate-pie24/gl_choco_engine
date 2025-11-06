@@ -1,5 +1,5 @@
 ---
-title: "Step2_2: シンプルな文字列コンテナの作成"
+title: "step2_4: シンプルな文字列コンテナの作成"
 free: true
 ---
 
@@ -19,7 +19,6 @@ free: true
   - [choco\_string\_length](#choco_string_length)
   - [choco\_string\_c\_str](#choco_string_c_str)
 
-
 ## このステップでやること
 
 ここからはGLFWを使ってウィンドウを生成する処理を作っていきます。ウィンドウには名称が必要で、名称は文字列として管理することになります。
@@ -36,8 +35,6 @@ free: true
 文字列コンテナは自身でリソースの管理を行いますが、これは不定期に発生するメモリ確保であるため、メモリシステムを使用してメモリを確保、解放することにします。
 よって、coreレイヤーの上位にcontainersレイヤーを追加して配置することにします。
 
-TODO: 色調整
-
 ```mermaid
 graph TD
   subgraph BASE[base]
@@ -45,7 +42,6 @@ graph TD
     MACROS[macros]
     MESSAGE[message]
   end
-  style BASE fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
 
   %% core/memory
   subgraph CORE_MEMORY[memory]
@@ -53,28 +49,25 @@ graph TD
     MEMORY[memory]
     LINEAR_ALLOCATOR[linear_allocator]
   end
-  style CORE_MEMORY fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
 
   %% core
   subgraph CORE[core]
     direction TB
     CORE_MEMORY[memory]
   end
-  style CORE fill:#E0E0E0,stroke:#1565C0,stroke-width:2px
 
   %% containers
   subgraph CORE_CONTAINERS[containers]
     direction TB
     STRING[string]
   end
-  style CORE_CONTAINERS fill:##8BC34A,stroke:#1565C0,stroke-width:2px
+  style CORE_CONTAINERS fill:#8BC34A
 
   %% application
   subgraph APPLICATION_LAYER[application_layer]
     direction TB
     APPLICATION[application]
   end
-  style APPLICATION_LAYER fill:#9E9E9E,stroke:#1565C0,stroke-width:2px
 
   STRING --> MEMORY
   STRING --> MACROS

@@ -1,5 +1,5 @@
 ---
-title: "Step2_1: メモリシステムの仕様変更"
+title: "step2_1: メモリシステムの仕様変更"
 free: true
 ---
 

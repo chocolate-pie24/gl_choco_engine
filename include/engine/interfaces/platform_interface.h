@@ -89,7 +89,7 @@ typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backen
  * @retval PLATFORM_SUCCESS          ウィンドウの生成に成功し、正常終了
  * @retval その他                     プラットフォーム実装依存
  */
-typedef platform_result_t (*pfn_platform_window_create)(
+typedef platform_result_t (*pfn_platform_backend_window_create)(
     platform_backend_t* platform_backend_,
     const char* window_label_,
     int window_width_,
@@ -99,10 +99,10 @@ typedef platform_result_t (*pfn_platform_window_create)(
  * @brief プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)
  */
 typedef struct platform_vtable {
-    pfn_platform_backend_preinit platform_backend_preinit;  /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
-    pfn_platform_backend_init    platform_backend_init;     /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
-    pfn_platform_backend_destroy platform_backend_destroy;  /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
-    pfn_platform_window_create platform_window_create;      /**< 関数ポインタ @ref pfn_platform_window_create 参照 */
+    pfn_platform_backend_preinit        platform_backend_preinit;           /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
+    pfn_platform_backend_init           platform_backend_init;              /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
+    pfn_platform_backend_destroy        platform_backend_destroy;           /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
+    pfn_platform_backend_window_create  platform_backend_window_create;     /**< 関数ポインタ @ref pfn_platform_backend_window_create 参照 */
 } platform_vtable_t;
 
 #ifdef __cplusplus

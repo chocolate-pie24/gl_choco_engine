@@ -82,7 +82,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_preinit = platform_glfw_preinit,
     .platform_backend_init = platform_glfw_init,
     .platform_backend_destroy = platform_glfw_destroy,
-    .platform_window_create = platform_glfw_window_create,
+    .platform_backend_window_create = platform_glfw_window_create,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {

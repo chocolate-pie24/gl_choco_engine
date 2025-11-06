@@ -170,7 +170,7 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
 
-    ret = platform_context_->vtable->platform_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
+    ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
     if(PLATFORM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;

@@ -1,9 +1,20 @@
 ---
-title: "Step2_2: GLFWを使用したウィンドウの生成"
+title: "step2_6: GLFWを使用したウィンドウの生成"
 free: true
 ---
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook2に対応しています。
+
+- [このステップでやること](#このステップでやること)
+- [interfaces/platform\_interface.h](#interfacesplatform_interfaceh)
+- [platform\_concretes/platform\_glfw.c](#platform_concretesplatform_glfwc)
+  - [platform\_glfw\_window\_create](#platform_glfw_window_create)
+  - [platform\_glfw\_destroy](#platform_glfw_destroy)
+- [platform\_context/platform\_context.h(.c)](#platform_contextplatform_contexthc)
+- [application.c](#applicationc)
+  - [内部状態管理構造体へのメンバの追加](#内部状態管理構造体へのメンバの追加)
+  - [application\_create](#application_create)
+  - [application\_run](#application_run)
 
 ## このステップでやること
 
@@ -27,7 +38,7 @@ typedef struct platform_vtable {
 
 1. interfaces/platform_interface.hにplatform_backend_window_createを追加
 2. platform_glfwにplatform_glfw_window_createを追加
-3. platform_glfwのplatform_glfw_destoryでウィンドウ破棄処理を追加
+3. platform_glfwのplatform_glfw_destroyでウィンドウ破棄処理を追加
 4. platform_contextにplatform_window_createを追加
 5. application_runtimeにウィンドウ生成処理を追加
 
@@ -35,12 +46,12 @@ typedef struct platform_vtable {
 
 ## interfaces/platform_interface.h
 
-pfn_platform_backend_destroyの関数ポインタ定義の下にpfn_platform_window_createの定義を追加します。
+pfn_platform_backend_destroyの関数ポインタ定義の下にpfn_platform_backend_window_createの定義を追加します。
 
 ```c
 typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backend_);
 
-typedef platform_result_t (*pfn_platform_window_create)(
+typedef platform_result_t (*pfn_platform_backend_window_create)(
     platform_backend_t* platform_backend_,
     const char* window_label_,
     int window_width_,
@@ -57,14 +68,14 @@ typedef platform_result_t (*pfn_platform_window_create)(
 platform_interface.hでのcontainers/choco_string.hへの依存を避けるため、const char*を渡しています。
 依存関係は利便性を失わない程度に減らすことで、テストを用意にし、全体の構成をシンプルに保ちます。
 
-関数ポインタの定義を追加したら、仮想関数テーブルにpfn_platform_window_createを追加します。
+関数ポインタの定義を追加したら、仮想関数テーブルにpfn_platform_backend_window_createを追加します。
 
 ```c
 typedef struct platform_vtable {
-    pfn_platform_backend_preinit platform_backend_preinit;  /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
-    pfn_platform_backend_init    platform_backend_init;     /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
-    pfn_platform_backend_destroy platform_backend_destroy;  /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
-    pfn_platform_window_create platform_window_create;      /**< 関数ポインタ @ref pfn_platform_window_create 参照 */
+    pfn_platform_backend_preinit        platform_backend_preinit;           /**< 関数ポインタ @ref pfn_platform_backend_preinit 参照 */
+    pfn_platform_backend_init           platform_backend_init;              /**< 関数ポインタ @ref pfn_platform_backend_init 参照 */
+    pfn_platform_backend_destroy        platform_backend_destroy;           /**< 関数ポインタ @ref pfn_platform_backend_destroy 参照 */
+    pfn_platform_backend_window_create  platform_backend_window_create;     /**< 関数ポインタ @ref pfn_platform_backend_window_create 参照 */
 } platform_vtable_t;
 ```
 
@@ -180,7 +191,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_preinit = platform_glfw_preinit,
     .platform_backend_init = platform_glfw_init,
     .platform_backend_destroy = platform_glfw_destroy,
-    .platform_window_create = platform_glfw_window_create,  // <-- 追加
+    .platform_backend_window_create = platform_glfw_window_create,  // <-- 追加
 };
 ```
 
@@ -255,7 +266,8 @@ Parameters
 レンダリングコンテキストとは、描画に用いられる情報で、ウィンドウごとに保持されます。
 今後行っていく様々な描画はカレントに設定したウィンドウに対して行われます。
 
-次が、glewの初期化処理になります。これは必ずglfwMakeContextCurrentを実行した後で行うようにします。こうしないとglewInitが失敗します。
+次が、glewの初期化処理になります。これは必ずglfwMakeContextCurrentを実行した後で行うようにします。
+GLEWによる拡張機能の取得はカレントコンテキストに対して紐づくため、こうしないとglewInitが失敗します。
 
 ```c
     glewExperimental = true;
@@ -270,19 +282,19 @@ glewExperimentalをtrueにすることで、より多くのOpenGL拡張関数を
 なくても構わないのですが、とりあえず入れておくのが一般的です。筆者もこの辺は詳しくないのですが、とりあえず入れる運用にしています。
 この状態でglewInitを実行してglewを初期化しています。
 
-glewの初期化の次が、キーボード押下イベントを確実に取得するための処理です。
+glewの初期化の次が、キーボード押下イベントに対する設定です。
 
 ```c
 glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);
 ```
 
-これを実行しておくことで、キーボードの押下イベントの取りこぼしがなくなる効果があります。
+これを実行しておくことで、キーボードの押下イベントを取りこぼしにくくする効果があります。
 
 以上でウィンドウの生成とglewの初期化、glfwの追加設定が完了しました。次はウィンドウの破棄処理を作成していきます。
 
-### platform_glfw_destory
+### platform_glfw_destroy
 
-ウィンドウの破棄はプラットフォームシステムの終了時に行います。なので、platform_glfw_destoryに処理を追加していきます。
+ウィンドウの破棄はプラットフォームシステムの終了時に行います。なので、platform_glfw_destroyに処理を追加していきます。
 ウィンドウの破棄処理を追加したコードが以下になります。
 
 ```c
@@ -333,7 +345,7 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
 
-    ret = platform_context_->vtable->platform_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
+    ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
     if(PLATFORM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
@@ -344,7 +356,7 @@ cleanup:
 }
 ```
 
-引数のエラーチェックが多いため長くなっていますが、実際に行う処理としては、platform_window_createを呼び出すだけです。
+引数のエラーチェックが多いため長くなっていますが、実際に行う処理としては、platform_backend_window_createを呼び出すだけです。
 
 これでInterface, Concrete, Contextの実装が完了しましたので、最後にapplicationモジュールへウィンドウ生成処理を追加していきます。
 
@@ -480,7 +492,7 @@ cleanup:
 この状態でビルド、実行し、ウィンドウが出ればOKです。なお、ウィンドウを閉じる処理はまだ追加していないため、Ctrl-C等で強制的に終了してください。
 
 以上でBook2(2d-rendering-step2)が完成となります。今回でようやくグラフィックアプリケーションの描画の土台となるウィンドウが生成できました。
-次回は、今回作成したシステムをさらに拡張子、キーボード、マウス等のイベント処理を追加していきます。
+次回は、今回作成したシステムをさらに拡張し、キーボード、マウス等のイベント処理を追加していきます。
 なお、イベント処理についてはリポジトリでは既に実装済であるため、次回は今回よりは早いリリースができるかと思います。
 
 // TODO: リポジトリTag

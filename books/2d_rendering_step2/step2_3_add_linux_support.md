@@ -1,5 +1,5 @@
 ---
-title: "Step2_2: OpenGL環境整備, Linuxサポート"
+title: "step2_3: OpenGL環境整備, Linuxサポート"
 free: true
 ---
 

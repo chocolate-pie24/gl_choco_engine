@@ -1,5 +1,5 @@
 ---
-title: "Step2_2: マルチプラットフォームを想定したプラットフォームシステムの構築"
+title: "step2_5: マルチプラットフォームを想定したプラットフォームシステムの構築"
 free: true
 ---
 
@@ -558,7 +558,7 @@ typedef struct platform_backend platform_backend_t;
 // アプリケーション側で内部状態管理オブジェクトのメモリ要件を取得
 typedef void (*pfn_platform_backend_preinit)(size_t* memory_requirement_, size_t* alignment_requirement_);
 
-// フォームシステム初期化
+// プラットフォームシステム初期化
 typedef platform_result_t (*pfn_platform_backend_init)(platform_backend_t* platform_backend_);
 
 // プラットフォームシステムの破棄
