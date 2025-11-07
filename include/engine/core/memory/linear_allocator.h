@@ -13,7 +13,7 @@
  * gl_choco_engineでは、起動時の各サブシステム用メモリの取得に使用する
  *
  * @note
- * linear_alloc_tオブジェクトは、内部データを隠蔽している \n
+ * linear_alloc_t構造体は、内部データを隠蔽している \n
  * このため、linear_alloc_t型で変数を宣言することはできない \n
  * 使用の際は、linear_alloc_t*型で宣言すること
  *

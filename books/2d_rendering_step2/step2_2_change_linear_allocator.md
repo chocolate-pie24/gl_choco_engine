@@ -21,10 +21,10 @@ free: true
 memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
 linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
 
-size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
-size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
-size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
-void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
+size_t linear_alloc_mem_req;    /**< リニアアロケータ内部状態管理構造体に必要なメモリ量 */
+size_t linear_alloc_align_req;  /**< リニアアロケータ内部状態管理構造体が要求するメモリアライメント */
+size_t linear_alloc_pool_size;  /**< リニアアロケータ内部状態管理構造体が使用するメモリプールのサイズ */
+void* linear_alloc_pool;        /**< リニアアロケータ内部状態管理構造体が使用するメモリプールのアドレス */
 
 // linear_alloc_t用メモリ確保のためのメモリ要件取得
 linear_alloc_t* linear_alloc = NULL;

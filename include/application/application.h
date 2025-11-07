@@ -56,7 +56,7 @@ void application_destroy(void);
 /**
  * @brief アプリケーションメインループ
  *
- * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理オブジェクトが未初期化
+ * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理構造体インスタンスが未初期化
  * @retval APPLICATION_SUCCESS       正常終了
  * @retval 上記以外                   プラットフォーム固有エラー(各プラットフォーム実装依存)
  */

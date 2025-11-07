@@ -28,11 +28,11 @@ extern "C" {
 
 #include "engine/core/platform/platform_utils.h"
 
-/**< プラットフォーム内部状態管理オブジェクト前方宣言(実体は各ソースファイルで定義) */
+/**< プラットフォーム内部状態管理構造体前方宣言(実体は各ソースファイルで定義) */
 typedef struct platform_backend platform_backend_t;
 
 /**
- * @brief 内部状態管理オブジェクトのメモリ要件、メモリアライメント要件を取得する
+ * @brief 内部状態管理構造体のメモリ要件、メモリアライメント要件を取得する
  *
  * @note
  * - memory_requirement_ == NULL または alignment_requirement_ == NULLの場合は何もしない

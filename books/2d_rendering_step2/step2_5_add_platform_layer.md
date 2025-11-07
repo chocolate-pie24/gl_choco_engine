@@ -274,7 +274,7 @@ vtable->pfn_function_a();
 
 という流れになります。なので、外部公開APIとして今回3つのAPIを作成します。
 
-- platform_backend_preinit() : アプリケーション側で内部状態管理オブジェクトのメモリ要件を取得
+- platform_backend_preinit() : アプリケーション側で内部状態管理構造体のメモリ要件を取得
 - platform_backend_init()    : 確保したメモリでプラットフォームシステム初期化
 - platform_backend_destroy() : プラットフォームシステムの破棄
 

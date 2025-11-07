@@ -47,7 +47,7 @@ static void test_memory_system_report(void);
 #endif
 
 /**
- * @brief メモリシステム内部状態管理オブジェクト
+ * @brief メモリシステム内部状態管理構造体
  *
  */
 typedef struct memory_system {

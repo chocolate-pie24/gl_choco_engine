@@ -7,7 +7,7 @@
  * @details 文字列比較や文字列連結等の文字列処理機能も提供する
  *
  * @note
- * choco_string_tオブジェクトは、内部データを隠蔽している \n
+ * choco_string_t構造体は、内部データを隠蔽している \n
  * このため、choco_string_t型で変数を宣言することはできない \n
  * 使用の際は、choco_string_t*型で宣言すること
  *

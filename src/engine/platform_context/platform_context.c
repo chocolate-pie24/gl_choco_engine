@@ -44,7 +44,7 @@ static platform_test_t s_test_param;
 #endif
 
 /**
- * @brief プラットフォームコンテキストオブジェクト
+ * @brief プラットフォームコンテキスト構造体
  *
  */
 struct platform_context {

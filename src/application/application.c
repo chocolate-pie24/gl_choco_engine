@@ -32,7 +32,7 @@
 #include "engine/platform_context/platform_context.h"
 
 /**
- * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
+ * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
  */
 typedef struct app_state {

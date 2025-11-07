@@ -58,7 +58,7 @@ typedef struct memory_system {
 } memory_system_t;
 
 // choco_memory.cで内部状態を保有するように変更
-static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
+static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理構造体インスタンス */
 ```
 
 次に、s_mem_sys_ptrの初期化関数を作っていきます(エラー処理は省略してあります)。

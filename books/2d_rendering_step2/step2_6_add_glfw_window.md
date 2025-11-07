@@ -359,14 +359,14 @@ typedef struct app_state {
     int window_height;          /**< ウィンドウ高さ */
 
     // core/memory/linear_allocator
-    size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
-    size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
-    size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
-    void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
-    linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
+    size_t linear_alloc_mem_req;    /**< リニアアロケータ内部状態管理構造体に必要なメモリ量 */
+    size_t linear_alloc_align_req;  /**< リニアアロケータ内部状態管理構造体が要求するメモリアライメント */
+    size_t linear_alloc_pool_size;  /**< リニアアロケータ内部状態管理構造体が使用するメモリプールのサイズ */
+    void* linear_alloc_pool;        /**< リニアアロケータ内部状態管理構造体が使用するメモリプールのアドレス */
+    linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     // platform/platform_context
-    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキストオブジェクト */
+    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 } app_state_t;
 ```
 

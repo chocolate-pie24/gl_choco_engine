@@ -61,13 +61,13 @@ typedef enum {
  * @brief メモリシステムを起動する
  *
  * @note
- * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理オブジェクトを初期化する
+ * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスを初期化する
  * このため、メモリシステムが既に初期化済みであった場合はMEMORY_SYSTEM_RUNTIME_ERRORを返す
  * memory_system_createを再度実行する際には、memory_system_destroyを呼び出してから使用すること
  *
  * 使用例:
  * @code{.c}
- * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理オブジェクトが初期化される
+ * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理構造体インスタンスが初期化される
  * @endcode
  *
  * @retval MEMORY_SYSTEM_RUNTIME_ERROR メモリシステムが既に初期化済み

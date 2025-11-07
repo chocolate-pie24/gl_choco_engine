@@ -29,7 +29,7 @@ extern "C" {
 #include "engine/core/memory/linear_allocator.h"
 
 /**
- * @brief プラットフォームコンテキストオブジェクト前方宣言
+ * @brief プラットフォームコンテキスト構造体前方宣言
  *
  */
 typedef struct platform_context platform_context_t;
