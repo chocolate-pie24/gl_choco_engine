@@ -249,7 +249,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
         goto cleanup;
     }
 
-    platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), 0, 0);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
+    platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), NULL, NULL);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if(NULL == platform_backend_->window) {
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;

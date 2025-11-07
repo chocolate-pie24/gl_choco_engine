@@ -4,6 +4,7 @@
         "oc_hist.h": "c",
         "choco_macros.h": "c",
         "mouse_event.h": "c",
-        "choco_string.h": "c"
+        "choco_string.h": "c",
+        "test_platform_context.h": "c"
     }
 }
