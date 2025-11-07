@@ -1,7 +1,8 @@
-/**
- * @file choco_memory.c
+/** @ingroup choco_memory
+ *
+ * @file choco_memory.h
  * @author chocolate-pie24
- * @brief メモリシステム(不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能)関連APIの実装
+ * @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装
  *
  *
  * @version 0.1

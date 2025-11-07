@@ -1,9 +1,8 @@
-/** @addtogroup core_platform
- * @{
+/** @ingroup platform_utils
  *
  * @file platform_utils.h
  * @author chocolate-pie24
- * @brief 各プラットフォーム固有処理で全プラットフォーム(x11, win32, glfw...)共通のデータ構造を提供する
+ * @brief プラットフォームシステムで共通に使用されるデータ型を提供する
  *
  * @version 0.1
  * @date 2025-10-14
@@ -46,5 +45,3 @@ typedef enum {
 }
 #endif
 #endif
-
-/** @}*/

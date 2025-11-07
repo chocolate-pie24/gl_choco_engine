@@ -1,9 +1,10 @@
-/** @addtogroup memory_memory_system
- * @{
+/** @ingroup choco_memory
  *
  * @file choco_memory.h
  * @author chocolate-pie24
- * @brief メモリシステム(不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能)関連APIの宣言
+ * @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義
+ *
+ * @details メモリトラッキング機能も有する
  *
  * @details
  * 不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能を提供する \n
@@ -208,5 +209,3 @@ void memory_system_test_param_reset(void);
 }
 #endif
 #endif
-
-/** @}*/

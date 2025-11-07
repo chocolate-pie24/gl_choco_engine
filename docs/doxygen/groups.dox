@@ -1,22 +1,71 @@
 /** @defgroup application Application
-    @brief エンジンが保有する各サブシステムのオーケストレーション。サブシステム初期化、メインループ駆動、終了処理
-*/
-
-/** @defgroup engine Engine
-    @brief エンジンの最上位レイヤー。ゲームアプリケーション側に描画/リソース管理/イベント処理等の機能を提供する
+    @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行う。以下の機能を提供する
+    - 全サブシステムの起動、終了処理
+    - アプリケーションメインループ
+    @details システムの起動時から終了時まで常駐
 */
 
 /** @defgroup base Base
-    @ingroup engine
-    @brief 最下層の“横断ユーティリティ”。全レイヤーから安心して使える小道具を提供する
+    @brief 最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供
+    @details 外部ライブラリ/OS依存なし(標準Cのみ)。初期化不要でシステム起動直後から使用可能
+*/
+
+/** @defgroup choco_message Choco Message
+    @ingroup base
+    @brief stdout, stderrへの色付きメッセージ出力機能を提供
+*/
+
+/** @defgroup choco_macros Choco Macros
+    @ingroup base
+    @brief 全レイヤーで使用される共通マクロ定義
 */
 
 /** @defgroup core Core
-    @ingroup engine
     @brief プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
 */
 
-/** @defgroup core_memory Core Memory
+/** @defgroup choco_memory Choco Memory
     @ingroup core
-    @brief メモリアロケータ/メモリトラッキング
+    @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する
+*/
+
+/** @defgroup linear_allocator Linear Allocator
+    @ingroup core
+    @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
+*/
+
+/** @defgroup platform_utils Platform Utils
+    @ingroup core
+    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
+*/
+
+/** @defgroup containers Containers
+    @brief リソースの管理責務を有する各種データを格納可能なコンテナを提供する
+*/
+
+/** @defgroup choco_string Choco String
+    @ingroup containers
+    @brief 文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する
+*/
+
+/** @defgroup interfaces Interfaces
+    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
+*/
+
+/** @defgroup platform_interface Platform Interface
+    @ingroup interfaces
+    @brief プラットフォームシステムのInterface構造体を提供する
+*/
+
+/** @defgroup platform_concretes Platform Concretes
+    @brief プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
+*/
+
+/** @defgroup platform_glfw Platform GLFW
+    @ingroup platform_concretes
+    @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
+*/
+
+/** @defgroup platform_context Platform Context
+    @brief プラットフォームシステムのStrategy Contextモジュールを提供する
 */

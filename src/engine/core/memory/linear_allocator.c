@@ -1,8 +1,8 @@
-/**
+/** @ingroup linear_allocator
  *
  * @file linear_allocator.c
  * @author chocolate-pie24
- * @brief linear_alloc_tオブジェクトの定義と関連APIの内部実装
+ * @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装
  *
  * @version 0.1
  * @date 2025-09-16

@@ -1,12 +1,13 @@
-/**
+/** @ingroup application
+ *
  * @file application.c
  * @author chocolate-pie24
- * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理の実装
+ * @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装
+ *
+ * @todo application.cのエラー文字列周りを別ファイルに移す
  *
  * @version 0.1
  * @date 2025-09-20
- *
- * @todo application.cのエラー文字列周りを別ファイルに移す
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *

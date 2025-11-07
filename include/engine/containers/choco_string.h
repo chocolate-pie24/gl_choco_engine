@@ -1,9 +1,10 @@
-/** @addtogroup containers_string
- * @{
+/** @ingroup choco_string
  *
  * @file choco_string.h
  * @author chocolate-pie24
- * @brief 文字列のコピー、生成の際のリソース管理を含めた文字列操作APIを提供する
+ * @brief 文字列を格納するコンテナモジュールAPIの定義
+ *
+ * @details 文字列比較や文字列連結等の文字列処理機能も提供する
  *
  * @note
  * choco_string_tオブジェクトは、内部データを隠蔽している \n
@@ -246,5 +247,3 @@ const char* choco_string_c_str(const choco_string_t* string_);
 }
 #endif
 #endif
-
-/** @}*/

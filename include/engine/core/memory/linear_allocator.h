@@ -1,9 +1,8 @@
-/** @addtogroup memory_linear_allocator
- * @{
+/** @ingroup linear_allocator
  *
  * @file linear_allocator.h
  * @author chocolate-pie24
- * @brief linear_alloc_tオブジェクトの定義と関連APIの宣言
+ * @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義
  *
  * @details
  * メモリアロケータの一つであるLinearAllocatorを実装。特徴は、

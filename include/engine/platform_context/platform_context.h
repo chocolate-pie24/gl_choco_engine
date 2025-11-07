@@ -1,9 +1,8 @@
-/** @addtogroup platform
- * @{
+/** @ingroup platform_context
  *
  * @file platform_context.h
  * @author chocolate-pie24
- * @brief プラットフォームstrategyパターンへの窓口となる処理を外部へ提供する
+ * @brief プラットフォームシステムのStrategy Contextモジュールを提供する
  *
  * @details
  * ウィンドウ制御、マウス、キーボード処理を全プラットフォーム(x11, win32, glfw...)で共通化するために、
@@ -138,5 +137,3 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
 }
 #endif
 #endif
-
-/** @}*/

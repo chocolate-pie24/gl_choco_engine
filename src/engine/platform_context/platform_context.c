@@ -1,8 +1,8 @@
-/**
+/** @ingroup platform_context
  *
  * @file platform_context.c
  * @author chocolate-pie24
- * @brief プラットフォームstrategyパターンへの窓口となる処理の実装
+ * @brief プラットフォームシステムのStrategy Contextモジュールの実装
  *
  * @version 0.1
  * @date 2025-10-14

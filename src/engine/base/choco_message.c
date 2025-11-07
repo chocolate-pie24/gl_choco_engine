@@ -1,12 +1,13 @@
-/**
+/** @ingroup choco_message
+ *
  * @file choco_message.c
  * @author chocolate-pie24
- * @brief メッセージ標準出力、標準エラー出力処理実装
+ * @brief stdout, stderrへの色付きメッセージ出力機能APIの実装
  *
  * @version 0.1
  * @date 2025-09-20
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2025
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.

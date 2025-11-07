@@ -1,9 +1,12 @@
-/** @addtogroup application
- * @{
+/** @ingroup application
  *
  * @file application.h
  * @author chocolate-pie24
- * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理を提供
+ * @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義
+ * @details 以下の機能を提供する
+ * - 全サブシステムの起動、終了処理
+ * - アプリケーションメインループ
+ * @details システムの起動時から終了時まで常駐
  *
  * @version 0.1
  * @date 2025-09-20
@@ -63,5 +66,3 @@ application_result_t application_run(void);
 }
 #endif
 #endif
-
-/** @}*/

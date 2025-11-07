@@ -1,9 +1,8 @@
-/** @addtogroup interfaces_platform
- * @{
+/** @ingroup platform_interface
  *
  * @file platform_interface.h
  * @author chocolate-pie24
- * @brief 全プラットフォーム共通の仮想関数テーブルを提供する
+ * @brief プラットフォームシステムのInterface構造体を提供する
  *
  * @details
  * ウィンドウ制御、マウス、キーボード処理を全プラットフォーム(x11, win32, glfw...)で共通化するために、
@@ -109,5 +108,3 @@ typedef struct platform_vtable {
 }
 #endif
 #endif
-
-/** @}*/
