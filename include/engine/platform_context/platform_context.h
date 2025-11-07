@@ -5,8 +5,8 @@
  * @brief プラットフォームシステムのStrategy Contextモジュールを提供する
  *
  * @details
- * ウィンドウ制御、マウス、キーボード処理を全プラットフォーム(x11, win32, glfw...)で共通化するために、
- * strategyパターンを使用する。このレイヤーではstrategyパターンのcontextに相当するオブジェクトを提供する
+ * ウィンドウ制御、マウス、キーボード処理を全プラットフォーム(X Window System, win32, glfw...)で共通化するために、
+ * Strategyパターンを使用する。このレイヤーではStrategyパターンのContextに相当する構造体インスタンスを提供する
  *
  * @version 0.1
  * @date 2025-10-14
@@ -35,7 +35,7 @@ extern "C" {
 typedef struct platform_context platform_context_t;
 
 /**
- * @brief プラットフォームstrategyパターンを初期化する
+ * @brief プラットフォームStrategyパターンを初期化する
  *
  * @note
  * - allocator_は初期化済みのリニアアロケータを渡すこと
@@ -52,7 +52,7 @@ typedef struct platform_context platform_context_t;
  *
  * @param[in,out] allocator_ メモリ確保用リニアアロケータ
  * @param[in] platform_type_ プラットフォーム種別
- * @param[out] out_platform_context_ プラットフォームコンテキストオブジェクト
+ * @param[out] out_platform_context_ プラットフォームコンテキスト構造体インスタンス
  *
  * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
  * - allocator_ == NULL
@@ -69,7 +69,7 @@ typedef struct platform_context platform_context_t;
 platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_t platform_type_, platform_context_t** out_platform_context_);
 
 /**
- * @brief プラットフォームstrategyパターンのcontextオブジェクトの内部データをクリアする
+ * @brief プラットフォームStrategyパターンのContext構造体インスタンスの内部データをクリアする
  *
  * @note
  * - platform_context_のメモリはlinear_allocatorによって確保しているため、内部メモリおよび自身のメモリは呼び出し側で行うこと
@@ -88,7 +88,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
  * // リニアアロケータによるメモリ破棄
  * @endcode
  *
- * @param[in,out] platform_context_ クリア対象オブジェクト
+ * @param[in,out] platform_context_ クリア対象構造体インスタンス
  */
 void platform_destroy(platform_context_t* platform_context_);
 
@@ -115,7 +115,7 @@ void platform_destroy(platform_context_t* platform_context_);
  * // リニアアロケータによるメモリ破棄
  * @endcode
  *
- * @param platform_context_ プラットフォームstrategy contextオブジェクト
+ * @param platform_context_ プラットフォームStrategy Context構造体インスタンス
  * @param window_label_ ウィンドウラベル
  * @param window_width_ ウィンドウ幅
  * @param window_height_ ウィンドウ高さ

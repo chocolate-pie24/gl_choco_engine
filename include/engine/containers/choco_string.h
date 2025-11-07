@@ -52,7 +52,7 @@ typedef enum {
 /**
  * @brief choco_string_tデフォルトコンストラクタ
  *
- * @note 文字列格納用内部バッファサイズを0で初期化したchoco_string_tオブジェクトを生成する
+ * @note 文字列格納用内部バッファサイズを0で初期化したchoco_string_t構造体インスタンスを生成する
  *
  * @code{.c}
  * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
@@ -63,7 +63,7 @@ typedef enum {
  * choco_string_destroy(&string);
  * @endcode
  *
- * @param[out] string_ 生成対象オブジェクト
+ * @param[out] string_ 生成対象構造体インスタンス
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - string_ == NULL
@@ -76,7 +76,7 @@ typedef enum {
 choco_string_result_t choco_string_default_create(choco_string_t** string_);
 
 /**
- * @brief 引数で与えた文字列src_でchoco_string_tオブジェクトを初期化し、生成する
+ * @brief 引数で与えた文字列src_でchoco_string_t構造体インスタンスを初期化し、生成する
  *
  * @note
  * - 空文字列""が渡された場合は、文字列バッファがNULLで初期化されるため、choco_string_default_createと等価になる
@@ -90,7 +90,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * choco_string_destroy(&string);
  * @endcode
  *
- * @param string_ 生成対象オブジェクト
+ * @param string_ 生成対象構造体インスタンス
  * @param src_ 初期化文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
@@ -122,7 +122,7 @@ choco_string_result_t choco_string_create_from_char(choco_string_t** string_, co
  * choco_string_destroy(&string);   // 2重デストロイ(何もしない)
  * @endcode
  *
- * @param string_ 破棄対象オブジェクト
+ * @param string_ 破棄対象構造体インスタンス
  */
 void choco_string_destroy(choco_string_t** string_);
 
@@ -154,8 +154,8 @@ void choco_string_destroy(choco_string_t** string_);
  * choco_string_destroy(&src);
  * @endcode
  *
- * @param dst_ コピー先オブジェクト
- * @param src_ コピー元オブジェクト
+ * @param dst_ コピー先構造体インスタンス
+ * @param src_ コピー元構造体インスタンス
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -187,7 +187,7 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
  * choco_string_destroy(&dst);
  * @endcode
  *
- * @param dst_ コピー先オブジェクト
+ * @param dst_ コピー先構造体インスタンス
  * @param src_ コピー元文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
@@ -215,7 +215,7 @@ choco_string_result_t choco_string_copy_from_char(choco_string_t* dst_, const ch
  * choco_string_destroy(&string);
  * @endcode
  *
- * @param string_ 文字列長さ取得元オブジェクト
+ * @param string_ 文字列長さ取得元構造体インスタンス
  * @return size_t 文字列長さ
  */
 size_t choco_string_length(const choco_string_t* string_);
@@ -238,7 +238,7 @@ size_t choco_string_length(const choco_string_t* string_);
  * choco_string_destroy(&string);
  * @endcode
  *
- * @param string_ 文字列先頭アドレス取得元オブジェクト
+ * @param string_ 文字列先頭アドレス取得元構造体インスタンス
  * @return const char* 文字列先頭アドレス
  */
 const char* choco_string_c_str(const choco_string_t* string_);

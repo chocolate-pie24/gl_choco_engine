@@ -82,7 +82,7 @@ memory_system_result_t memory_system_create(void);
  * @brief メモリシステムを停止する
  *
  * @note
- * memory_system_destroyでは、シングルトンで定義されたメモリシステム状態管理オブジェクトのメモリを破棄する
+ * memory_system_destroyでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスのメモリを破棄する
  * このため、memory_system_destroyを呼び出した後で、memory_system_allocate, memory_system_freeを呼び出すことはできない
  * 再度memory_system_allocate, memory_system_freeを使用する際には、memory_system_createを実行してからにすること
  *

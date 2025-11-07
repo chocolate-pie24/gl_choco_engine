@@ -54,7 +54,7 @@ typedef enum {
 } linear_allocator_result_t;
 
 /**
- * @brief リニアアロケータオブジェクトのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する
+ * @brief リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する
  *
  * @note
  * - リニアアロケータのメモリ確保には、メモリシステムを使用する
@@ -78,11 +78,11 @@ typedef enum {
 void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_);
 
 /**
- * @brief リニアアロケータオブジェクトを初期化する
+ * @brief リニアアロケータ構造体インスタンスを初期化する
  *
  * @note
- * - リニアアロケータオブジェクトは自身のメモリを破棄するAPIを持たない
- * - リニアアロケータオブジェクト自体の破棄は上位層で行う
+ * - リニアアロケータ構造体インスタンスは自身のメモリを破棄するAPIを持たない
+ * - リニアアロケータ構造体インスタンス自体の破棄は上位層で行う
  *
  * 使用例:
  * @code{.c}
@@ -113,7 +113,7 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
  * memory_system_free(linear_alloc, linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
  * @endcode
  *
- * @param[in,out] allocator_ リニアアロケータオブジェクトアドレス
+ * @param[in,out] allocator_ リニアアロケータ構造体インスタンスアドレス
  * @param[in] capacity_ メモリプール容量(byte)
  * @param[in] memory_pool_ メモリプールアドレス
  *
@@ -166,9 +166,9 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
  * ret_linear = linear_allocator_allocate(linear_alloc, 128, 8, &ptr);  // ptrにアライメント8バイト, 容量128バイトでメモリ割り当て
  * @endcode
  *
- * @param[in] allocator_ linear_alloc_t型オブジェクトへのポインタ
+ * @param[in] allocator_ linear_alloc_t型構造体インスタンスへのポインタ
  * @param[in] req_size_ 割り当て容量(byte)
- * @param[in] req_align_ 割り当てるオブジェクトのアライメント要件
+ * @param[in] req_align_ 割り当てる構造体インスタンスのアライメント要件
  * @param[out] out_ptr_ 割り当てたアドレスを格納する
  *
  * @retval LINEAR_ALLOC_INVALID_ARGUMENT 以下のいずれか

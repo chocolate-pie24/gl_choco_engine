@@ -366,7 +366,7 @@ typedef struct app_state {
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     // platform/platform_context
-    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
+    platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 } app_state_t;
 ```
 

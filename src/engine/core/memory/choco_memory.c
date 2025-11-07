@@ -56,7 +56,7 @@ typedef struct memory_system {
     const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリタグ文字列 */
 } memory_system_t;
 
-static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
+static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理構造体インスタンス */
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< メモリシステムAPI実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< メモリシステムAPI実行結果コード(無効な引数)に対応する文字列 */

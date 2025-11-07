@@ -6,7 +6,7 @@
  *
  * @details
  * ウィンドウ制御、マウス、キーボード処理を全プラットフォーム(x11, win32, glfw...)で共通化するために、
- * strategyパターンを使用する。このレイヤーではstrategyパターンのinterfaceに相当するオブジェクトを提供する
+ * Strategyパターンを使用する。このレイヤーではStrategyパターンのinterfaceに相当する構造体インスタンスを提供する
  *
  * @version 0.1
  * @date 2025-10-14
@@ -44,12 +44,12 @@ typedef struct platform_backend platform_backend_t;
 typedef void (*pfn_platform_backend_preinit)(size_t* memory_requirement_, size_t* alignment_requirement_);
 
 /**
- * @brief 内部状態管理オブジェクトメンバの初期化を行う
+ * @brief 内部状態管理構造体インスタンスメンバの初期化を行う
  *
  * @note
  * - platform_backend_自身のメモリは呼び出し側で確保する
  *
- * @param[in,out] platform_backend_ 初期化対象オブジェクト
+ * @param[in,out] platform_backend_ 初期化対象構造体インスタンス
  *
  * @retval PLATFORM_INVALID_ARGUMENT platform_backend_ == NULL
  * @retval PLATFORM_SUCCESS          初期化に成功し、正常終了
@@ -58,13 +58,13 @@ typedef void (*pfn_platform_backend_preinit)(size_t* memory_requirement_, size_t
 typedef platform_result_t (*pfn_platform_backend_init)(platform_backend_t* platform_backend_);
 
 /**
- * @brief 内部状態管理オブジェクトが保有するリソースを破棄する
+ * @brief 内部状態管理構造体インスタンスが保有するリソースを破棄する
  *
  * @note
  * - platform_backend_自身のメモリは呼び出し側で解放する
  * - platform_backend_ == NULLの場合は何もしない
  *
- * @param[in,out] platform_backend_ 破棄対象オブジェクト
+ * @param[in,out] platform_backend_ 破棄対象構造体インスタンス
  */
 typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backend_);
 
@@ -74,7 +74,7 @@ typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backen
  * @note
  * - window_label_の文字列は内部でdeep copyされるため、window_label_自身のメモリは呼び出し側で破棄すること
  *
- * @param[in,out] platform_backend_ 内部状態管理オブジェクト
+ * @param[in,out] platform_backend_ 内部状態管理構造体インスタンス
  * @param[in] window_label_ ウィンドウ名称文字列
  * @param[in] window_width_ 初期状態のウィンドウ幅
  * @param[in] window_height_ 初期状態のウィンドウ高さ

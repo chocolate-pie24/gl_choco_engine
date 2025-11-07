@@ -35,12 +35,12 @@
 #include "engine/containers/choco_string.h"
 
 /**
- * @brief GLFWプラットフォーム内部状態管理オブジェクト
+ * @brief GLFWプラットフォーム内部状態管理構造体
  *
  */
 struct platform_backend {
     choco_string_t* window_label;   /**< ウィンドウラベル */
-    GLFWwindow* window;             /**< GLFWウィンドウオブジェクト */
+    GLFWwindow* window;             /**< GLFWウィンドウ構造体インスタンス */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
 };
 
@@ -256,9 +256,9 @@ static const char* rslt_to_str(platform_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、文字列コンテナオブジェクトの実行結果コードをプラットフォーム実行結果コードに変換する
+ * @brief エラー伝播のため、文字列コンテナモジュールの実行結果コードをプラットフォーム実行結果コードに変換する
  *
- * @param rslt_ 文字列コンテナオブジェクト実行結果コード
+ * @param rslt_ 文字列コンテナモジュール実行結果コード
  * @return platform_result_t プラットフォーム実行結果コード
  */
 static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {

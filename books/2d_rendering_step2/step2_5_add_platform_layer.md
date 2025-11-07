@@ -1194,7 +1194,7 @@ typedef struct app_state {
     linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
 
     // platform/platform_context
-    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキストオブジェクト */
+    platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキストオブジェクト */
 } app_state_t;
 ```
 
