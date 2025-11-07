@@ -1,5 +1,5 @@
 title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step2)"
-summary: "本Bookでは、ウィンドウの生成と、キーボード、マウスイベントの処理を行なっていきます。"
+summary: "本Bookでは、プラットフォーム基盤の構築とウィンドウ生成を行っていきます。"
 topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
 published: true
 price: 0
