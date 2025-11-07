@@ -26,13 +26,13 @@ free: true
 
 そのため、メモリシステムの機能を使用する際には、メモリシステム構造体のインスタンスを持っておく必要があります。これではこれから開発していく各サブシステム全てにインスタンスを用意する必要があり、非常に不便です。なので、先ずはここを修正していきます。
 
-[メモリシステムの仕様変更](./step2_1_change_memory_system.md)
+[メモリシステムの仕様変更](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_1_change_memory_system)
 
 ### リニアアロケータの仕様変更
 
 前回作成したリニアアロケータは、自身のメモリ確保のためにmallocを使用していました。ただ、せっかくメモリシステムを構築したので、リニアアロケータ自身のメモリ確保もメモリシステムを使用することにします。これにより、全てのメモリ確保、解放処理をメモリシステム経由で行います。
 
-[リニアアロケータの仕様変更](./step2_2_change_linear_allocator.md)
+[リニアアロケータの仕様変更](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_2_change_linear_allocator)
 
 ### OpenGL環境の整備とLinuxサポート
 
@@ -40,25 +40,25 @@ free: true
 
 先ずは、OpenGL、GLFWを使用していくために、makefileを修正します。同時にLinux環境用のmakefileも用意し、Linux環境をサポートします。
 
-[OpenGL環境の整備とLinuxサポート](./step2_3_add_linux_support.md)
+[OpenGL環境の整備とLinuxサポート](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_3_add_linux_support)
 
 ### containers/stringの追加
 
 ここからはGLFW APIを使用してウィンドウを生成する準備をしていきます。先ずは、文字列処理や、文字列リソース管理を行うコンテナモジュールとしてstringモジュールを作成します。
 
-[containers/stringの追加](./step2_4_add_container_string.md)
+[containers/stringの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_4_add_container_string)
 
 ### プラットフォーム基盤の作成
 
 今回、ウィンドウの生成にはGLFW APIを使用しますが、X Window SystemやWin32へ機能拡張が可能なプラットフォーム基盤を作成していきます。そのために、オブジェクト指向のデザインパターンであるStrategyをC言語で実装します。
 
-[プラットフォーム基盤の作成](./step2_5_add_platform_layer.md)
+[プラットフォーム基盤の作成](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_5_add_platform_layer)
 
 ### GLFWを使用したウィンドウ生成
 
 GLFW APIを使用してウィンドウを生成する準備が整いましたので、ウィンドウを生成する処理を作成します。
 
-[GLFWを使用したウィンドウ生成](./step2_6_add_glfw_window.md)
+[GLFWを使用したウィンドウ生成](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2/viewer/step2_6_add_glfw_window)
 
 ### まとめ
 

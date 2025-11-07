@@ -48,8 +48,8 @@ published: true
 
 2D Rendering編では、実行基盤・メモリ管理レイヤーを整え、ウィンドウ生成から2Dレンダリングの最小構成までを扱います。
 
-- ([Book1: Step1 実行基盤とメモリ管理レイヤの初期化(イントロダクション)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1))
-- ([Book2: Step2 プラットフォームレイヤーの構築とイベントシステムの構築])(../books/2d_rendering/step2/step2_0_introduction.md)
+- [Book1: 実行基盤とメモリ管理レイヤの初期化(イントロダクション)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1)
+- [Book2: プラットフォーム基盤の構築とウィンドウ生成](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2)
 
 ### 3D Rendering編(未実装)
 
