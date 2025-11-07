@@ -1,14 +1,14 @@
-/**
+/** @ingroup platform_glfw
  *
  * @file platform_glfw.c
  * @author chocolate-pie24
- * @brief GLFWを使用する際の仮想関数テーブルを取得する処理の実装
- *
- * @version 0.1
- * @date 2025-10-14
+ * @brief GLFW APIで実装されたプラットフォームシステムAPIの実装
  *
  * @todo glfwSetErrorCallback
  * @todo glfwSwapInterval
+ *
+ * @version 0.1
+ * @date 2025-10-14
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
