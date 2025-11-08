@@ -8,17 +8,13 @@ SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
-GLEW_PREFIX := $(shell brew --prefix glew)
-GLFW_PREFIX := $(shell brew --prefix glfw)
-INCLUDE_FLAGS = -Iinclude
-INCLUDE_FLAGS += -I$(GLEW_PREFIX)/include
-INCLUDE_FLAGS += -I$(GLFW_PREFIX)/include
+INCLUDE_FLAGS = -I/usr/include/
+INCLUDE_FLAGS += -Iinclude
 ifeq ($(BUILD_MODE), TEST_BUILD)
   INCLUDE_FLAGS += -Itest/include
 endif
 
-LLVM_PREFIX := $(shell brew --prefix llvm)
-CC = $(LLVM_PREFIX)/bin/clang
+CC = /usr/bin/clang
 
 COMPILER_FLAGS = -Wall -Wextra -std=c11
 COMPILER_FLAGS += -Wconversion -Wsign-conversion
@@ -44,32 +40,32 @@ COMPILER_FLAGS += -MMD -MP
 COMPILER_FLAGS += -Wno-unsafe-buffer-usage
 COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
-COMPILER_FLAGS += -Wno-pre-c11-compat
+# COMPILER_FLAGS += -Wno-pre-c11-compat
 
 # glfw3のワーニング抑制
 COMPILER_FLAGS += -Wno-documentation-unknown-command
 COMPILER_FLAGS += -Wno-documentation
 COMPILER_FLAGS += -Wno-reserved-identifier
+# flockfile / funlockfileを使用するために必要(非標準CのPOSIX関数)
+COMPILER_FLAGS += -D_POSIX_C_SOURCE=200809L
 
 ifeq ($(BUILD_MODE), RELEASE_BUILD)
-	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_MACOS
+	COMPILER_FLAGS += -O3 -DRELEASE_BUILD -DPLATFORM_LINUX
 else
 	ifeq ($(BUILD_MODE), DEBUG_BUILD)
-		COMPILER_FLAGS += -g -O0 -DDEBUG_BUILD -DPLATFORM_MACOS
+		COMPILER_FLAGS += -g -O0 -DDEBUG_BUILD -DPLATFORM_LINUX
 	endif
 	ifeq ($(BUILD_MODE), TEST_BUILD)
-		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_MACOS
+		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_LINUX
 		COMPILER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
 		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
 	endif
 endif
-LINKER_FLAGS += -L$(GLEW_PREFIX)/lib
-LINKER_FLAGS += -L$(GLFW_PREFIX)/lib
+LINKER_FLAGS = -L/usr/lib/x86_64-linux-gnu/
+LINKER_FLAGS += -lm
+LINKER_FLAGS += -lGL
 LINKER_FLAGS += -lglfw
-LINKER_FLAGS += -lglew
-LINKER_FLAGS += -framework OpenGL
-LINKER_FLAGS += -framework IOKit
-LINKER_FLAGS += -framework Cocoa
+LINKER_FLAGS += -lGLEW
 
 .PHONY: all
 all: scaffold link
@@ -103,3 +99,5 @@ clean:
 
 # 依存ファイルの取り込み(存在するときのみ)
 -include $(OBJ_FILES:.o=.d)
+
+

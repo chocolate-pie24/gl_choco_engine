@@ -44,7 +44,15 @@ published: true
 
 ## シリーズの構成
 
-- Book1: 2D Rendering編([step1_introduction.md](https://zenn.dev/chocolate_pie24/books/2d_rendering))
-- Book2: 3D Rendering編(未実装)
-- Book3: Text Rendering編(未実装)
-- Book4: Sponza Rendering編(未実装)
+### 2D Rendering編
+
+2D Rendering編では、実行基盤・メモリ管理レイヤーを整え、ウィンドウ生成から2Dレンダリングの最小構成までを扱います。
+
+- [Book1: 実行基盤とメモリ管理レイヤの初期化(イントロダクション)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1)
+- [Book2: プラットフォーム基盤の構築とウィンドウ生成](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2)
+
+### 3D Rendering編(未実装)
+
+### Text Rendering編(未実装)
+
+### Sponza Rendering編(未実装)
