@@ -19,6 +19,8 @@
 #include <stddef.h> // for NULL
 #include <string.h> // for memset
 
+#include <time.h>   // for nanosleep TODO: remove this!!
+
 #include "application/application.h"
 
 #include "engine/base/choco_macros.h"
@@ -220,7 +222,9 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
+    struct timespec  req = {0, 1000000};
     while(1) {
+        nanosleep(&req, NULL);
     }
 cleanup:
     return ret;
