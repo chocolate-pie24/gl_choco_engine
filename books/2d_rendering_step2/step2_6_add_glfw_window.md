@@ -447,6 +447,10 @@ cleanup:
 最後に、このままだとウィンドウを生成し、即、終了となるため、アプリケーションが終了しないよう、無限ループを追加します。
 
 ```c
+#include <time.h>   // nanosleep用に追加
+
+// 途中省略
+
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     if(NULL == s_app_state) {
@@ -454,22 +458,21 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
+    struct timespec  req = {0, 1000000};
     while(1) {
+        nanosleep(&req, NULL);
     }
 cleanup:
     return ret;
 }
 ```
 
-本来であればwhileループの中にsleepを入れるべきですが、sleep時間は目標FPSとループ内の計算時間をもとに決定する必要があり、それらの処理がまだないため、余り良くはないのですが当面はこのままで行きます。
+nanosleepでは1msecのsleepを入れています。sleep時間は本来、実行時間を計測し、目標FPSとなる時間を設定すべきです。これについては今後実装する予定で、当面はこれでいきます。
 
 この状態でビルド、実行し、ウィンドウが出ればOKです。なお、ウィンドウを閉じる処理はまだ追加していないため、Ctrl-c等で強制的に終了してください。
 
 以上でBook2(2d-rendering-step2)で目標とした機能が完成です。今回でようやくグラフィックアプリケーションの描画の土台となるウィンドウが生成できました。次回は、今回作成したシステムをさらに拡張し、キーボード、マウス等のイベント処理を追加していきます。
 
 なお、イベント処理についてはリポジトリでは既に実装済であるため、次回は今回よりは早いリリースができるかと思います。
-
-// TODO: リポジトリTag
-// TODO: レビュー方法 mainブランチをまず伝えて、その後にこのブランチ、差分と記事は一致しているか？不足はないか？
 
 ここまで読んでいただきありがとうございました。
