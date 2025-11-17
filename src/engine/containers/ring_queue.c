@@ -256,6 +256,12 @@ ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_
     memcpy(data_, head_ptr, ring_queue_->element_size);
     ring_queue_->len--;
     ring_queue_->head = (ring_queue_->head + 1) % ring_queue_->max_element_count;
+
+    if(0 == ring_queue_->len) {
+        ring_queue_->head = 0;
+        ring_queue_->tail = 0;
+    }
+
     ret = RING_QUEUE_SUCCESS;
 
 cleanup:
@@ -666,16 +672,16 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         ret = ring_queue_pop(ring_queue, &a, sizeof(int), alignof(int));
         assert(RING_QUEUE_SUCCESS == ret);
         assert(5 == a);
-        assert(2 == ring_queue->head);
+        assert(0 == ring_queue->head);
         assert(0 == ring_queue->len);
-        assert(2 == ring_queue->tail);
+        assert(0 == ring_queue->tail);
 
         ret = ring_queue_pop(ring_queue, &a, sizeof(int), alignof(int));
         assert(RING_QUEUE_EMPTY == ret);
         assert(5 == a);
-        assert(2 == ring_queue->head);
+        assert(0 == ring_queue->head);
         assert(0 == ring_queue->len);
-        assert(2 == ring_queue->tail);
+        assert(0 == ring_queue->tail);
 
         ring_queue_destroy(&ring_queue);
     }
