@@ -446,8 +446,9 @@ static void NO_COVERAGE test_platform_destroy(void) {
         size_t backend_mem_req = 0;
         size_t backend_align_req = 0;
         context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+        context->backend = (platform_backend_t*)malloc(backend_mem_req);
+        context->vtable->platform_backend_init(context->backend);
 
-        context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
 
         platform_destroy(context);
