@@ -732,7 +732,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
-        // ring_queue_->element_align == element_align_ -> RING_QUEUE_INVALID_ARGUMENT
+        // ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
