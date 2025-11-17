@@ -503,7 +503,6 @@ static void app_state_clean(void) {
         goto cleanup;
     }
     s_app_state->window_resized = false;
-    s_app_state->window_should_close = false;
 cleanup:
     return;
 }
