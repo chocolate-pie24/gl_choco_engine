@@ -54,7 +54,7 @@ typedef struct app_state {
     void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
 
-    // core/event
+    // event message queues
     ring_queue_t* window_event_queue;   /**< ウィンドウイベント格納用リングキュー */
     ring_queue_t* keyboard_event_queue; /**< キーボードイベント格納用リングキュー */
     ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */

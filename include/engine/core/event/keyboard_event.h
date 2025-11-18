@@ -90,7 +90,7 @@ typedef enum {
 } keycode_t;
 
 /**
- * @brief キーボードイベントオブジェクト
+ * @brief キーボードイベント構造体
  *
  */
 typedef struct keyboard_event {

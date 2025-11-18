@@ -39,7 +39,7 @@
 #include "engine/containers/choco_string.h"
 
 /**
- * @brief 入力イベント情報
+ * @brief 入力状態格納構造体
  *
  */
 typedef struct input_snapshot {
@@ -66,8 +66,8 @@ struct platform_backend {
     choco_string_t* window_label;   /**< ウィンドウラベル */
     GLFWwindow* window;             /**< GLFWウィンドウオブジェクト */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
-    input_snapshot_t current;       /**< 入力情報のスナップショット(最新値) */
-    input_snapshot_t prev;          /**< 入力情報のスナップショット(前回値) */
+    input_snapshot_t current;       /**< 入力状態のスナップショット(最新値) */
+    input_snapshot_t prev;          /**< 入力状態のスナップショット(前回値) */
 };
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
@@ -76,7 +76,7 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_);
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_);
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
-static platform_result_t platform_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
@@ -115,7 +115,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_init = platform_glfw_init,
     .platform_backend_destroy = platform_glfw_destroy,
     .platform_window_create = platform_glfw_window_create,
-    .platform_pump_messages = platform_pump_messages,
+    .platform_pump_messages = platform_glfw_pump_messages,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
@@ -173,23 +173,33 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 古いOpenGLは使用しない
 
     platform_backend_->window = NULL;
-    platform_backend_->prev.window_height = 0;
-    platform_backend_->prev.window_width = 0;
-    platform_backend_->current.window_height = 0;
-    platform_backend_->current.window_width = 0;
     platform_backend_->window_label = NULL;
 
     platform_backend_->initialized_glfw = true;
 
-    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_backend_->prev.keycode_state[i] = false;
-        platform_backend_->current.keycode_state[i] = false;
-    }
-
     platform_backend_->prev.left_button_pressed = false;
     platform_backend_->prev.right_button_pressed = false;
+    platform_backend_->prev.cursor_x = 0.0;
+    platform_backend_->prev.cursor_y = 0.0;
+    platform_backend_->prev.window_width = 0;
+    platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.window_should_close = false;
+    platform_backend_->prev.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->prev.keycode_state[i] = false;
+    }
+
     platform_backend_->current.left_button_pressed = false;
     platform_backend_->current.right_button_pressed = false;
+    platform_backend_->current.cursor_x = 0.0;
+    platform_backend_->current.cursor_y = 0.0;
+    platform_backend_->current.window_width = 0;
+    platform_backend_->current.window_height = 0;
+    platform_backend_->current.window_should_close = false;
+    platform_backend_->current.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->current.keycode_state[i] = false;
+    }
 
     ret = PLATFORM_SUCCESS;
 
@@ -210,11 +220,31 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
     }
     choco_string_destroy(&platform_backend_->window_label);
     platform_backend_->window = NULL;
-    platform_backend_->prev.window_height = 0;
-    platform_backend_->prev.window_width = 0;
-    platform_backend_->current.window_height = 0;
-    platform_backend_->current.window_width = 0;
     platform_backend_->initialized_glfw = false;
+
+    platform_backend_->prev.left_button_pressed = false;
+    platform_backend_->prev.right_button_pressed = false;
+    platform_backend_->prev.cursor_x = 0.0;
+    platform_backend_->prev.cursor_y = 0.0;
+    platform_backend_->prev.window_width = 0;
+    platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.window_should_close = false;
+    platform_backend_->prev.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->prev.keycode_state[i] = false;
+    }
+
+    platform_backend_->current.left_button_pressed = false;
+    platform_backend_->current.right_button_pressed = false;
+    platform_backend_->current.cursor_x = 0.0;
+    platform_backend_->current.cursor_y = 0.0;
+    platform_backend_->current.window_width = 0;
+    platform_backend_->current.window_height = 0;
+    platform_backend_->current.window_should_close = false;
+    platform_backend_->current.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->current.keycode_state[i] = false;
+    }
 }
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
@@ -295,6 +325,7 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_->window")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_->initialized_glfw")
 
+    // window events.
     platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
     platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
 
@@ -329,7 +360,7 @@ static platform_result_t platform_snapshot_process(
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_")
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_->window")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_->initialized_glfw")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "window_event_callback")
@@ -392,7 +423,7 @@ cleanup:
     return ret;
 }
 
-static platform_result_t platform_pump_messages(
+static platform_result_t platform_glfw_pump_messages(
     platform_backend_t* platform_backend_,
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
@@ -406,19 +437,19 @@ static platform_result_t platform_pump_messages(
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_backend_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_backend_->initialized_glfw")
-    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "window_event_callback")
-    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
-    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
-    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_backend_->window")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_->initialized_glfw")
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "keyboard_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "mouse_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_->window")
 
     // イベントの取得
     glfwPollEvents();
 
     ret = platform_snapshot_collect(platform_backend_);
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_snapshot_collect(%s) - Failed to correct snapshot.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to collect snapshot.", rslt_to_str(ret));
         goto cleanup;
     }
     ret = platform_snapshot_process(platform_backend_, window_event_callback, keyboard_event_callback, mouse_event_callback);
@@ -426,7 +457,7 @@ static platform_result_t platform_pump_messages(
         goto cleanup;
     }
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_snapshot_collect(%s) - Failed to process snapshot.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", rslt_to_str(ret));
         goto cleanup;
     }
     ret = PLATFORM_SUCCESS;
