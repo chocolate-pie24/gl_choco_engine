@@ -50,9 +50,9 @@ typedef struct input_snapshot {
     int window_height;  /**< ウィンドウ高さ */
 
     bool window_should_close;   /**< ウィンドウクローズイベント発生 */
-    bool escape_pressed;        /**< エスケープボタン押下イベント発生 */
+    bool escape_pressed;        /**< エスケープキー押下イベント発生 */
 
-    bool keycode_state[KEY_CODE_MAX];   /**< キー押下状態 */
+    bool keycode_state[KEY_CODE_MAX];   /**< 各キーコード（keycode_t）ごとの押下状態(true: 押下中 / false: 非押下) */
 
     bool left_button_pressed;   /**< マウス左ボタン押下フラグ */
     bool right_button_pressed;  /**< マウス右ボタン押下フラグ */
