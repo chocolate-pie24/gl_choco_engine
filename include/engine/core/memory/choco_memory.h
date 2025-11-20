@@ -1,9 +1,10 @@
-/** @addtogroup memory_memory_system
- * @{
+/** @ingroup choco_memory
  *
  * @file choco_memory.h
  * @author chocolate-pie24
- * @brief メモリシステム(不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能)関連APIの宣言
+ * @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義
+ *
+ * @details メモリトラッキング機能も有する
  *
  * @details
  * 不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能を提供する \n
@@ -61,13 +62,13 @@ typedef enum {
  * @brief メモリシステムを起動する
  *
  * @note
- * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理オブジェクトを初期化する
+ * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスを初期化する
  * このため、メモリシステムが既に初期化済みであった場合はMEMORY_SYSTEM_RUNTIME_ERRORを返す
  * memory_system_createを再度実行する際には、memory_system_destroyを呼び出してから使用すること
  *
  * 使用例:
  * @code{.c}
- * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理オブジェクトが初期化される
+ * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理構造体インスタンスが初期化される
  * @endcode
  *
  * @retval MEMORY_SYSTEM_RUNTIME_ERROR メモリシステムが既に初期化済み
@@ -82,7 +83,7 @@ memory_system_result_t memory_system_create(void);
  * @brief メモリシステムを停止する
  *
  * @note
- * memory_system_destroyでは、シングルトンで定義されたメモリシステム状態管理オブジェクトのメモリを破棄する
+ * memory_system_destroyでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスのメモリを破棄する
  * このため、memory_system_destroyを呼び出した後で、memory_system_allocate, memory_system_freeを呼び出すことはできない
  * 再度memory_system_allocate, memory_system_freeを使用する際には、memory_system_createを実行してからにすること
  *
@@ -209,5 +210,3 @@ void memory_system_test_param_reset(void);
 }
 #endif
 #endif
-
-/** @}*/

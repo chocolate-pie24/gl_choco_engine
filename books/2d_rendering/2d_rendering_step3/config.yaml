@@ -1,0 +1,13 @@
+title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step3)"
+summary: "本Bookでは、プラットフォーム基盤にイベントシステムを追加していきます。"
+topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
+published: true
+price: 0
+chapters:
+  - step3_0_introduction
+  - step3_1_event_system_abstract
+  - step3_2_ring_queue
+  - step3_3_event_pump_refactoring
+  - step3_4_mouse_event
+  - step3_5_keyboard_event
+

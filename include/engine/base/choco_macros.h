@@ -1,9 +1,8 @@
-/** @addtogroup base_macros
- * @{
+/** @ingroup choco_macros
  *
  * @file choco_macros.h
  * @author chocolate-pie24
- * @brief システム全体で使用する共通マクロ定義
+ * @brief 全レイヤーで使用される共通マクロ定義
  *
  * @version 0.1
  * @date 2025-09-20
@@ -111,5 +110,3 @@ extern "C" {
 }
 #endif
 #endif
-
-/** @}*/

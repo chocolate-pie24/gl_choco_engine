@@ -1,9 +1,8 @@
-/** @addtogroup platform_glfw
- * @{
+/** @ingroup platform_glfw
  *
  * @file platform_glfw.h
  * @author chocolate-pie24
- * @brief GLFWを使用する際の仮想関数テーブルを取得する(Strategyパターンのconcreteオブジェクトに相当)
+ * @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
  *
  * @version 0.1
  * @date 2025-10-14
@@ -52,5 +51,3 @@ void platform_glfw_result_controller_reset(void);
 }
 #endif
 #endif
-
-/** @}*/

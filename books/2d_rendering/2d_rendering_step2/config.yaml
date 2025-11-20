@@ -1,0 +1,13 @@
+title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step2)"
+summary: "本Bookでは、プラットフォーム基盤の構築とウィンドウ生成を行っていきます。"
+topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
+published: true
+price: 0
+chapters:
+  - step2_0_introduction
+  - step2_1_change_memory_system
+  - step2_2_change_linear_allocator
+  - step2_3_add_linux_support
+  - step2_4_add_container_string
+  - step2_5_add_platform_layer
+  - step2_6_add_glfw_window

@@ -1,11 +1,17 @@
 # gl_choco_engine
 
-C言語・OpenGL・GLFWを用いてゲームエンジンを作っていきます。
-このリポジトリは学習用で、以下のステップで開発を進めていきます：
+gl_choco_engine は、
 
-- **Step 1**: STL形式の3Dモデル描画
-- **Step 2**: UIテキストの描画
-- **Step 3**: 最終的に Sponza base シーンを描画
+- C言語とOpenGLでゲームエンジンの内部構造を学びたい中級者
+- Raspberry Piなどの比較的非力な環境で、軽量な描画基盤を試したいエンジニア
+
+を主な対象とした、小規模で学習寄りのゲームエンジンです。
+UnityやUnreal Engine のようなフル機能の商用エンジンではなく、
+「中身を自分でいじれ、自分で拡張できるツール」という立ち位置を想定しています。
+
+エンジンの立ち位置や連載全体の背景については、Zennの全体イントロダクションで詳しく解説しています。
+
+- https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction
 
 ## Inspired by
 
@@ -15,10 +21,9 @@ Kohi Game Engine に触発されて開始しました。
 
 ## 開発ログ
 
-実装の進め方や学習の過程は[記事](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)と
-[Book(Step1)](https://zenn.dev/chocolate_pie24/books/2d_rendering)にまとめてあります。
+実装の進め方や学習の過程は[記事](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)にまとめてあります。
 
-- 最新タグ: `v0.1.0-step1`（Step1 完了）
+- 最新タグ: `v0.1.0-step2`（2D Rendering Step2 完了）
 
 ## ディレクトリ構成
 
@@ -27,44 +32,42 @@ Kohi Game Engine に触発されて開始しました。
 ├── articles
 │   └── c-glfw-game-engine-introduction.md
 ├── books
-│   └── 2d_rendering
+│   ├── 2d_rendering_step1
+│   │   ├── config.yaml
+│   │   ├── step1_0_introduction.md
+│   │   ├── step1_1_application_base.md
+│   │   ├── step1_2_application_layer.md
+│   │   ├── step1_3_base_layer.md
+│   │   ├── step1_4_core_memory_linear_allocator.md
+│   │   ├── step1_5_core_memory_system.md
+│   │   └── step1_6_doxygen.md
+│   └── 2d_rendering_step2
 │       ├── config.yaml
-│       ├── step1_0_introduction.md
-│       ├── step1_1_application_base.md
-│       ├── step1_2_application_layer.md
-│       ├── step1_3_base_layer.md
-│       ├── step1_4_core_memory_linear_allocator.md
-│       ├── step1_5_core_memory_system.md
-│       └── step1_6_doxygen.md
+│       ├── step2_0_introduction.md
+│       ├── step2_1_change_memory_system.md
+│       ├── step2_2_change_linear_allocator.md
+│       ├── step2_3_add_linux_support.md
+│       ├── step2_4_add_container_string.md
+│       ├── step2_5_add_platform_layer.md
+│       └── step2_6_add_glfw_window.md
 ├── build.sh
 ├── cov.sh
 ├── docs
 │   ├── development_log.md
 │   ├── doxygen
 │   │   └── groups.dox
-│   ├── doxygen_config.md
-│   ├── layer.md
-│   └── todo.md
+│   └── layer.md
 ├── Doxyfile
-├── images
-│   ├── log_example.png
-│   └── memory_system_report.png
 ├── include
 │   ├── application
-│   │   ├── application.h
-│   │   └── platform_registry.h
+│   │   └── application.h
 │   └── engine
 │       ├── base
 │       │   ├── choco_macros.h
 │       │   └── choco_message.h
 │       ├── containers
-│       │   ├── choco_string.h
-│       │   └── ring_queue.h
+│       │   └── choco_string.h
 │       ├── core
-│       │   ├── event
-│       │   │   ├── keyboard_event.h
-│       │   │   ├── mouse_event.h
-│       │   │   └── window_event.h
 │       │   ├── memory
 │       │   │   ├── choco_memory.h
 │       │   │   └── linear_allocator.h
@@ -72,40 +75,41 @@ Kohi Game Engine に触発されて開始しました。
 │       │       └── platform_utils.h
 │       ├── interfaces
 │       │   └── platform_interface.h
-│       └── platform
-│           └── platform_glfw.h
+│       ├── platform_concretes
+│       │   └── platform_glfw.h
+│       └── platform_context
+│           └── platform_context.h
 ├── LICENSE
 ├── makefile_linux.mak
 ├── makefile_macos.mak
 ├── README.md
 ├── src
 │   ├── application
-│   │   ├── application.c
-│   │   └── platform_registry.c
+│   │   └── application.c
 │   ├── engine
 │   │   ├── base
 │   │   │   └── choco_message.c
 │   │   ├── containers
-│   │   │   ├── choco_string.c
-│   │   │   └── ring_queue.c
+│   │   │   └── choco_string.c
 │   │   ├── core
 │   │   │   └── memory
 │   │   │       ├── choco_memory.c
 │   │   │       └── linear_allocator.c
-│   │   └── platform
-│   │       └── platform_glfw.c
+│   │   ├── platform_concretes
+│   │   │   └── platform_glfw.c
+│   │   └── platform_context
+│   │       └── platform_context.c
 │   └── entry.c
 └── test
     └── include
         ├── test_choco_string.h
         ├── test_linear_allocator.h
-        ├── test_memory_system.h
-        └── test_ring_queue.h
+        └── test_memory_system.h
 ```
 
 ## エンジンレイヤー構成
 
-エンジンを構成するコンポーネントのレイヤー構成は、[docs/layer.md](docs/layer.md)に記載しています
+エンジンを構成するモジュールのレイヤー構成は、[docs/layer.md](docs/layer.md)に記載しています
 
 ## 実行環境の構築
 
@@ -135,7 +139,7 @@ echo 'export PATH="$(brew --prefix llvm)/bin:$PATH"' >> ~/.zshrc
 exec $SHELL -l
 ```
 
-***必要ライブラリのリセットアップ***
+***必要ライブラリのセットアップ***
 
 ```bash
 brew install glfw

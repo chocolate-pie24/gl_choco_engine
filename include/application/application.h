@@ -1,9 +1,12 @@
-/** @addtogroup application
- * @{
+/** @ingroup application
  *
  * @file application.h
  * @author chocolate-pie24
- * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理を提供
+ * @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義
+ * @details 以下の機能を提供する
+ * - 全サブシステムの起動、終了処理
+ * - アプリケーションメインループ
+ * @details システムの起動時から終了時まで常駐
  *
  * @version 0.1
  * @date 2025-09-20
@@ -53,7 +56,7 @@ void application_destroy(void);
 /**
  * @brief アプリケーションメインループ
  *
- * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理オブジェクトが未初期化
+ * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理構造体インスタンスが未初期化
  * @retval APPLICATION_SUCCESS       正常終了
  * @retval 上記以外                   プラットフォーム固有エラー(各プラットフォーム実装依存)
  */
@@ -63,5 +66,3 @@ application_result_t application_run(void);
 }
 #endif
 #endif
-
-/** @}*/

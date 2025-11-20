@@ -1,8 +1,8 @@
-/**
+/** @ingroup platform_context
  *
  * @file platform_context.c
  * @author chocolate-pie24
- * @brief プラットフォームstrategyパターンへの窓口となる処理の実装
+ * @brief プラットフォームシステムのStrategy Contextモジュールの実装
  *
  * @version 0.1
  * @date 2025-10-14
@@ -25,11 +25,11 @@
 
 #include "engine/core/platform/platform_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
-
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
+
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -48,7 +48,7 @@ static platform_test_t s_test_param;
 #endif
 
 /**
- * @brief プラットフォームコンテキストオブジェクト
+ * @brief プラットフォームコンテキスト構造体
  *
  */
 struct platform_context {
@@ -179,7 +179,7 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
 
-    ret = platform_context_->vtable->platform_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
+    ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
     if(PLATFORM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
@@ -212,7 +212,7 @@ platform_result_t platform_pump_messages(
     CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
     CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
 
-    ret = platform_context_->vtable->platform_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
+    ret = platform_context_->vtable->platform_backend_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
     if(PLATFORM_SUCCESS != ret && PLATFORM_WINDOW_CLOSE != ret) {
         ERROR_MESSAGE("platform_pump_messages(%s) - Failed to pump messages.", rslt_to_str(ret));
         goto cleanup;

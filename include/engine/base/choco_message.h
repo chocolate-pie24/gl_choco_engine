@@ -1,9 +1,8 @@
-/** @addtogroup base_message
- * @{
+/** @ingroup choco_message
  *
  * @file choco_message.h
  * @author chocolate-pie24
- * @brief メッセージ標準出力、標準エラー出力処理
+ * @brief stdout, stderrへの色付きメッセージ出力機能APIの定義
  *
  * @version 0.1
  * @date 2025-09-20
@@ -142,5 +141,3 @@ void message_output(message_severity_t severity_, const char* format_,  ...);
 }
 #endif
 #endif
-
-/** @}*/

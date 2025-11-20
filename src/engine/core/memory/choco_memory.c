@@ -1,8 +1,8 @@
-/**
+/** @ingroup choco_memory
+ *
  * @file choco_memory.c
  * @author chocolate-pie24
- * @brief メモリシステム(不定期に発生するメモリ確保要求に対するメモリ確保と、メモリトラッキング機能)関連APIの実装
- *
+ * @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装
  *
  * @version 0.1
  * @date 2025-09-20
@@ -46,7 +46,7 @@ static void test_memory_system_report(void);
 #endif
 
 /**
- * @brief メモリシステム内部状態管理オブジェクト
+ * @brief メモリシステム内部状態管理構造体
  *
  */
 typedef struct memory_system {
@@ -55,7 +55,7 @@ typedef struct memory_system {
     const char* mem_tag_str[MEMORY_TAG_MAX];    /**< 各メモリタグ文字列 */
 } memory_system_t;
 
-static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理オブジェクトインスタンス */
+static memory_system_t* s_mem_sys_ptr = NULL;   /**< メモリシステム内部状態管理構造体インスタンス */
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< メモリシステムAPI実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< メモリシステムAPI実行結果コード(無効な引数)に対応する文字列 */

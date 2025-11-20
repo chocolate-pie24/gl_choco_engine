@@ -1,13 +1,13 @@
-/**
+/** @ingroup choco_string
  *
  * @file choco_string.c
  * @author chocolate-pie24
- * @brief 文字列のコピー、生成の際のリソース管理を含めた文字列操作API内部実装
+ * @brief 文字列を格納するコンテナモジュールAPIの実装
+ *
+ * @todo src_len + 1のオーバーフローチェックをしていない + テストケース追加
  *
  * @version 0.1
  * @date 2025-09-26
- *
- * @todo src_len + 1のオーバーフローチェックをしていない + テストケース追加
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *

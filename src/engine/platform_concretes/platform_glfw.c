@@ -1,14 +1,14 @@
-/**
+/** @ingroup platform_glfw
  *
  * @file platform_glfw.c
  * @author chocolate-pie24
- * @brief GLFWを使用する際の仮想関数テーブルを取得する処理の実装
- *
- * @version 0.1
- * @date 2025-10-14
+ * @brief GLFW APIで実装されたプラットフォームシステムAPIの実装
  *
  * @todo glfwSetErrorCallback
  * @todo glfwSwapInterval
+ *
+ * @version 0.1
+ * @date 2025-10-14
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
@@ -59,14 +59,14 @@ typedef struct input_snapshot {
 } input_snapshot_t;
 
 /**
- * @brief GLFWプラットフォーム内部状態管理オブジェクト
+ * @brief GLFWプラットフォーム内部状態管理構造体
  *
  */
 struct platform_backend {
     choco_string_t* window_label;   /**< ウィンドウラベル */
-    GLFWwindow* window;             /**< GLFWウィンドウオブジェクト */
+    GLFWwindow* window;             /**< GLFWウィンドウ構造体インスタンス */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
-    input_snapshot_t current;       /**< 入力状態のスナップショット(最新値) */
+    input_snapshot_t current;       /**< 入力状態のスナップショット(現在値) */
     input_snapshot_t prev;          /**< 入力状態のスナップショット(前回値) */
 };
 
@@ -114,8 +114,8 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_preinit = platform_glfw_preinit,
     .platform_backend_init = platform_glfw_init,
     .platform_backend_destroy = platform_glfw_destroy,
-    .platform_window_create = platform_glfw_window_create,
-    .platform_pump_messages = platform_glfw_pump_messages,
+    .platform_backend_window_create = platform_glfw_window_create,
+    .platform_backend_pump_messages = platform_glfw_pump_messages,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
@@ -326,12 +326,12 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_->initialized_glfw")
 
     // window events.
-    platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
     platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
 
     glfwGetWindowSize(platform_backend_->window, &platform_backend_->current.window_width, &platform_backend_->current.window_height);
 
     // keyboard events.
+    platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
     for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
         const int glfw_key = keycode_to_glfw_keycode(i);
         const int action = glfwGetKey(platform_backend_->window, glfw_key);
@@ -618,9 +618,9 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
 }
 
 /**
- * @brief エラー伝播のため、文字列コンテナオブジェクトの実行結果コードをプラットフォーム実行結果コードに変換する
+ * @brief エラー伝播のため、文字列コンテナモジュールの実行結果コードをプラットフォーム実行結果コードに変換する
  *
- * @param rslt_ 文字列コンテナオブジェクト実行結果コード
+ * @param rslt_ 文字列コンテナモジュール実行結果コード
  * @return platform_result_t プラットフォーム実行結果コード
  */
 static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {

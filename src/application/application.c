@@ -1,12 +1,13 @@
-/**
+/** @ingroup application
+ *
  * @file application.c
  * @author chocolate-pie24
- * @brief 最上位のオーケストレーション。サブシステム初期化、メインループ駆動、終了処理の実装
+ * @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装
+ *
+ * @todo application.cのエラー文字列周りを別ファイルに移す
  *
  * @version 0.1
  * @date 2025-09-20
- *
- * @todo application.cのエラー文字列周りを別ファイルに移す
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
@@ -17,6 +18,9 @@
 #include <stdalign.h>
 #include <stddef.h> // for NULL
 #include <string.h> // for memset
+#include <stdbool.h>
+
+#include <time.h>   // for nanosleep TODO: remove this!!
 
 #include "application/application.h"
 
@@ -37,7 +41,7 @@
 #include "engine/platform_context/platform_context.h"
 
 /**
- * @brief アプリケーション内部状態とエンジン各サブシステム状態管理オブジェクトを保持するオブジェクト
+ * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
  */
 typedef struct app_state {
@@ -48,11 +52,11 @@ typedef struct app_state {
     int window_height;          /**< ウィンドウ高さ */
 
     // core/memory/linear_allocator
-    size_t linear_alloc_mem_req;    /**< リニアアロケータオブジェクトに必要なメモリ量 */
-    size_t linear_alloc_align_req;  /**< リニアアロケータオブジェクトが要求するメモリアライメント */
-    size_t linear_alloc_pool_size;  /**< リニアアロケータオブジェクトが使用するメモリプールのサイズ */
-    void* linear_alloc_pool;        /**< リニアアロケータオブジェクトが使用するメモリプールのアドレス */
-    linear_alloc_t* linear_alloc;   /**< リニアアロケータオブジェクト */
+    size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
+    size_t linear_alloc_align_req;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
+    size_t linear_alloc_pool_size;  /**< リニアアロケータ構造体インスタンスが使用するメモリプールのサイズ */
+    void* linear_alloc_pool;        /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
+    linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     // event message queues
     ring_queue_t* window_event_queue;   /**< ウィンドウイベント格納用リングキュー */
@@ -60,7 +64,7 @@ typedef struct app_state {
     ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */
 
     // platform/platform_context
-    platform_context_t* platform_context; /**< プラットフォームstrategyパターンへの窓口としてのコンテキストオブジェクト */
+    platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -305,6 +309,7 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
+    struct timespec  req = {0, 1000000};
     while(!s_app_state->window_should_close) {
         platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
         if(PLATFORM_WINDOW_CLOSE == ret_event) {
@@ -318,8 +323,7 @@ application_result_t application_run(void) {
         app_state_update();
         app_state_dispatch();
         app_state_clean();
-        // sleep(1);
-        // TODO: platform_sleep
+        nanosleep(&req, NULL);
     }
 cleanup:
     return ret;
@@ -460,7 +464,11 @@ static void app_state_update(void) {
             WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
             goto cleanup;
         } else {
-            INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+            if(KEY_M == event.key && !event.pressed) {
+                memory_system_report();
+            } else {
+                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+            }
         }
     }
 

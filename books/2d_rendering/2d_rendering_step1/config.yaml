@@ -1,5 +1,5 @@
-title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編)"
-summary: "本Bookでは、実行基盤・メモリ管理レイヤーを整え、ウィンドウ生成から2Dレンダリングの最小構成までを扱います。"
+title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step1)"
+summary: "本Bookでは、実行基盤とメモリ管理レイヤの初期化を行なっていきます。"
 topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
 published: true
 price: 0

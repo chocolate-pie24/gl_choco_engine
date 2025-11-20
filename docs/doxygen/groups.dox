@@ -1,112 +1,91 @@
 /** @defgroup application Application
-    @brief エンジンが保有する各サブシステムのオーケストレーション。サブシステム初期化、メインループ駆動、終了処理
-*/
-
-    /** @defgroup app_platform_registry Application Platform Registry
-        @ingroup application
-        @brief プラットフォームの差異を吸収するためのインターフェイスvtable取得機能を提供する
-    */
-
-/** @defgroup engine Engine
-    @brief エンジンの最上位レイヤー。ゲームアプリケーション側に描画/リソース管理/イベント処理等の機能を提供する
+    @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行う。以下の機能を提供する
+    - 全サブシステムの起動、終了処理
+    - アプリケーションメインループ
+    @details システムの起動時から終了時まで常駐
 */
 
 /** @defgroup base Base
-    @ingroup engine
-    @brief 最下層の“横断ユーティリティ”。全レイヤーから安心して使える小道具を提供する
+    @brief 最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供
+    @details 外部ライブラリ/OS依存なし(標準Cのみ)。初期化不要でシステム起動直後から使用可能
 */
 
-    /** @defgroup base_macros Base Macros
-        @ingroup base
-        @brief 全レイヤーで共通して使用されるマクロを提供する
-    */
-
-    /** @defgroup base_message Base Message
-        @ingroup base
-        @brief 全レイヤーで共通して使用されるメッセージ出力機能を提供する
-    */
-
-/** @defgroup containers Containers
-    @ingroup engine
-    @brief リソース管理機能を有するコンテナオブジェクトを提供する
+/** @defgroup choco_macros Choco Macros
+    @ingroup base
+    @brief 全レイヤーで使用される共通マクロ定義
 */
 
-    /** @defgroup containers_string String
-        @ingroup containers
-        @brief 文字列コンテナオブジェクトを提供する
-    */
-
-    /** @defgroup containers_ring_queue RingQueue
-        @ingroup containers
-        @brief リングキューオブジェクトを提供する
-    */
+/** @defgroup choco_message Choco Message
+    @ingroup base
+    @brief stdout, stderrへの色付きメッセージ出力機能を提供
+*/
 
 /** @defgroup core Core
-    @ingroup engine
     @brief プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
 */
 
-/** @defgroup core_event Event
+/** @defgroup keyboard_event Keyboard Event
     @ingroup core
-    @brief キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する
+    @brief キーボードイベントの型を提供する
 */
 
-    /** @defgroup event_keyboard Keyboard Event
-        @ingroup core_event
-        @brief キーボードイベントの型を提供する
-    */
-
-    /** @defgroup event_mouse Mouse Event
-        @ingroup core_event
-        @brief マウスイベントの型を提供する
-    */
-
-    /** @defgroup event_window Window Event
-        @ingroup core_event
-        @brief ウィンドウイベントの型を提供する
-    */
-
-/** @defgroup core_memory Core Memory
+/** @defgroup mouse_event Mouse Event
     @ingroup core
-    @brief メモリアロケータ/メモリトラッキング
+    @brief マウスイベントの型を提供する
 */
 
-    /** @defgroup memory_memory_system Memory System
-        @ingroup core_memory
-        @brief メモリトラッキング機能を有するメモリ取得 / 解放APIを提供する
-    */
-
-    /** @defgroup memory_linear_allocator Linear Allocator
-        @ingroup core_memory
-        @brief リニアアロケータAPIを提供する
-    */
-
-/** @defgroup core_platform Core Platform
+/** @defgroup window_event Window Event
     @ingroup core
-    @brief エラーコードなどのプラットフォームレイヤーで共通して使用されるデータ型を提供する
+    @brief ウィンドウイベントの型を提供する
+*/
+
+/** @defgroup choco_memory Choco Memory
+    @ingroup core
+    @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する
+*/
+
+/** @defgroup linear_allocator Linear Allocator
+    @ingroup core
+    @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
+*/
+
+/** @defgroup platform_utils Platform Utils
+    @ingroup core
+    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
+*/
+
+/** @defgroup containers Containers
+    @brief リソースの管理責務を有する各種データを格納可能なコンテナを提供する
+*/
+
+/** @defgroup choco_string Choco String
+    @ingroup containers
+    @brief 文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する
+*/
+
+/** @defgroup ring_queue Ring Queue
+    @ingroup containers
+    @brief ジェネリック型のリングキューオブジェクト定義と関連APIを提供する
 */
 
 /** @defgroup interfaces Interfaces
-    @ingroup engine
-    @brief strategyパターンのinterfaceに相当するオブジェクトを提供する
+    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
 */
 
-    /** @defgroup interfaces_platform Interfaces Platform
-        @ingroup interfaces
-        @brief プラットフォーム関連処理について、strategyパターンのinterfaceオブジェクトを提供する
-    */
-
-/** @defgroup platform_concretes Concrete Platform
-    @ingroup engine
-    @brief プラットフォーム関連処理について、strategyパターンのconcreteオブジェクトを提供する
+/** @defgroup platform_interface Platform Interface
+    @ingroup interfaces
+    @brief プラットフォームシステムのInterface構造体を提供する
 */
 
-    /** @defgroup platform_glfw Platform GLFW
-        @ingroup platform_concretes
-        @brief GLFWを使用したプラットフォームAPIを提供する
-    */
+/** @defgroup platform_concretes Platform Concretes
+    @brief プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
+*/
 
-/** @defgroup platform Context Platform
-    @ingroup engine
-    @brief プラットフォーム関連処理について、アプリケーション側への処理の窓口となるContextオブジェクトを提供する
+/** @defgroup platform_glfw Platform GLFW
+    @ingroup platform_concretes
+    @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
+*/
+
+/** @defgroup platform_context Platform Context
+    @brief プラットフォームシステムのStrategy Contextモジュールを提供する
 */

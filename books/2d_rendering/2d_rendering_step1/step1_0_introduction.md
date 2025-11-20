@@ -79,37 +79,37 @@ Step1では、「実行基盤とメモリ管理レイヤの初期化」を行っ
 
 一番最初にすべきことは、とりあえずビルドし、実行できる環境を整えることです。このために、最小限のエントリーポイントと、ビルドシステムを作っていきます。さらに、今回はVSCodeを使用して開発していくので、ビルドシステムとワークスペース設定も行います。
 
-[アプリケーション土台作り](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_1_application_base)
+[アプリケーション土台作り](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_1_application_base)
 
 ### Step1_2: アプリケーションレイヤーの追加
 
 「アプリケーション土台作り」では、エントリーポイントとなるmain関数を作成し、実行する環境を整えました。次は、今後開発していくことになる様々なサブシステムのオーケストレーションを行うためのアプリケーションレイヤーを作成していきます。この段階を踏むことで、サブシステム実装、動作確認を適切な場所で行なっていくことができます。
 
-[アプリケーションレイヤーの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_2_application_layer)
+[アプリケーションレイヤーの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_2_application_layer)
 
 ### Step1_3: ベースレイヤーの追加
 
 ここまでで、これから開発していく各機能をインストールする場所を作ることができました。次は、各サブシステムの開発に使用するためのユーティリティ機能を詰め込むベースレイヤーを作成していきます。
 
-[ベースレイヤーの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_3_base_layer)
+[ベースレイヤーの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_3_base_layer)
 
 ### Step1_4: core/memoryレイヤーの追加(linear_allocator)
 
 ここからは具体的な機能の開発に移っていきます。まずは、これから開発していく各機能に対してメモリリソースを割り当てるためのリニアアロケータを作成します。
 
-[core/memoryレイヤーの追加(linear_allocator)](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_4_core_memory_linear_allocator)
+[core/memoryレイヤーの追加(linear_allocator)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_4_core_memory_linear_allocator)
 
 ### Step1_5: core/memoryレイヤーの追加(memory_system)
 
 リニアアロケータの作成により、サブシステムを実装し、初期化し、実行する準備が整いました。次は、メモリリソースの管理をするためのメモリトラッキングシステムを作成します。
 
-[core/memoryレイヤーの追加(memory_system)](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_5_core_memory_system)
+[core/memoryレイヤーの追加(memory_system)](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_5_core_memory_system)
 
 ### Step1_6: Doxygenドキュメンテーション
 
 以上が「Step1_1: 実行基盤とメモリ管理レイヤの初期化」の開発内容になります。ここで、これまで作成した成果物のドキュメントを整理するため、Doxygen環境をセットアップします。
 
-[Doxygenドキュメンテーション](https://zenn.dev/chocolate_pie24/books/2d_rendering/viewer/step1_6_doxygen)
+[Doxygenドキュメンテーション](https://zenn.dev/chocolate_pie24/books/2d_rendering_step1/viewer/step1_6_doxygen)
 
 ## まとめ
 
