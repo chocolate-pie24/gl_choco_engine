@@ -10,32 +10,37 @@
     @details 外部ライブラリ/OS依存なし(標準Cのみ)。初期化不要でシステム起動直後から使用可能
 */
 
-/** @defgroup choco_macros Choco Macros
-    @ingroup base
-    @brief 全レイヤーで使用される共通マクロ定義
-*/
-
 /** @defgroup choco_message Choco Message
     @ingroup base
     @brief stdout, stderrへの色付きメッセージ出力機能を提供
+*/
+
+/** @defgroup choco_macros Choco Macros
+    @ingroup base
+    @brief 全レイヤーで使用される共通マクロ定義
 */
 
 /** @defgroup core Core
     @brief プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
 */
 
-/** @defgroup keyboard_event Keyboard Event
+/** @defgroup core_event Event
     @ingroup core
+    @brief キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する
+*/
+
+/** @defgroup event_keyboard Keyboard Event
+    @ingroup core_event
     @brief キーボードイベントの型を提供する
 */
 
-/** @defgroup mouse_event Mouse Event
-    @ingroup core
+/** @defgroup event_mouse Mouse Event
+    @ingroup core_event
     @brief マウスイベントの型を提供する
 */
 
-/** @defgroup window_event Window Event
-    @ingroup core
+/** @defgroup event_window Window Event
+    @ingroup core_event
     @brief ウィンドウイベントの型を提供する
 */
 
