@@ -38,7 +38,7 @@ typedef struct platform_vtable {
 2. platform_glfwにplatform_glfw_window_createを追加
 3. platform_glfwのplatform_glfw_destroyでウィンドウ破棄処理を追加
 4. platform_contextにplatform_window_createを追加
-5. application_runにウィンドウ生成処理を追加
+5. application_createにウィンドウ生成処理を追加
 
 という流れになります。以降、順を追って説明していきます。
 

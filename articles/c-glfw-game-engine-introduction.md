@@ -8,6 +8,7 @@ published: true
 
 > この記事は、C言語とOpenGL、GLFWを使用した自作ゲームエンジン **gl_choco_engine** の開発記録です。
 
+- [ChangeLog](#changelog)
 - [記事連載の背景](#記事連載の背景)
 - [本連載記事のゴール](#本連載記事のゴール)
 - [ところでゲームエンジンって何](#ところでゲームエンジンって何)
@@ -19,6 +20,10 @@ published: true
   - [3D Rendering編(未実装)](#3d-rendering編未実装)
   - [Text Rendering編(未実装)](#text-rendering編未実装)
   - [Sponza Rendering編(未実装)](#sponza-rendering編未実装)
+
+## ChangeLog
+
+- 2025-11-21 step2_6「このステップでやること」における、ウィンドウ生成処理を行う関数名の誤記修正(application_run -> application_create)
 
 ## 記事連載の背景
 

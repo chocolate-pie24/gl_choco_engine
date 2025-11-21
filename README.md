@@ -41,23 +41,41 @@ Kohi Game Engine に触発されて開始しました。
 │   │   ├── step1_4_core_memory_linear_allocator.md
 │   │   ├── step1_5_core_memory_system.md
 │   │   └── step1_6_doxygen.md
-│   └── 2d_rendering_step2
+│   ├── 2d_rendering_step2
+│   │   ├── config.yaml
+│   │   ├── step2_0_introduction.md
+│   │   ├── step2_1_change_memory_system.md
+│   │   ├── step2_2_change_linear_allocator.md
+│   │   ├── step2_3_add_linux_support.md
+│   │   ├── step2_4_add_container_string.md
+│   │   ├── step2_5_add_platform_layer.md
+│   │   └── step2_6_add_glfw_window.md
+│   └── 2d_rendering_step3
 │       ├── config.yaml
-│       ├── step2_0_introduction.md
-│       ├── step2_1_change_memory_system.md
-│       ├── step2_2_change_linear_allocator.md
-│       ├── step2_3_add_linux_support.md
-│       ├── step2_4_add_container_string.md
-│       ├── step2_5_add_platform_layer.md
-│       └── step2_6_add_glfw_window.md
+│       ├── step3_0_introduction.md
+│       ├── step3_1_event_system_abstract.md
+│       ├── step3_2_ring_queue.md
+│       ├── step3_3_event_pump_refactoring.md
+│       ├── step3_4_mouse_event.md
+│       └── step3_5_keyboard_event.md
 ├── build.sh
 ├── cov.sh
 ├── docs
 │   ├── development_log.md
 │   ├── doxygen
 │   │   └── groups.dox
-│   └── layer.md
+│   ├── doxygen_config.md
+│   ├── layer.md
+│   ├── memo_mermaid_color.md
+│   └── todo.md
 ├── Doxyfile
+├── images
+│   ├── event_system_diagram.png
+│   ├── log_example.png
+│   ├── memory_system_report.png
+│   ├── ring_queue_memory_alignment.png
+│   ├── ring_queue_pop.png
+│   └── ring_queue_push.png
 ├── include
 │   ├── application
 │   │   └── application.h
@@ -66,8 +84,13 @@ Kohi Game Engine に触発されて開始しました。
 │       │   ├── choco_macros.h
 │       │   └── choco_message.h
 │       ├── containers
-│       │   └── choco_string.h
+│       │   ├── choco_string.h
+│       │   └── ring_queue.h
 │       ├── core
+│       │   ├── event
+│       │   │   ├── keyboard_event.h
+│       │   │   ├── mouse_event.h
+│       │   │   └── window_event.h
 │       │   ├── memory
 │       │   │   ├── choco_memory.h
 │       │   │   └── linear_allocator.h
@@ -83,6 +106,7 @@ Kohi Game Engine に触発されて開始しました。
 ├── makefile_linux.mak
 ├── makefile_macos.mak
 ├── README.md
+├── REVIEW_FILES
 ├── src
 │   ├── application
 │   │   └── application.c
@@ -90,7 +114,8 @@ Kohi Game Engine に触発されて開始しました。
 │   │   ├── base
 │   │   │   └── choco_message.c
 │   │   ├── containers
-│   │   │   └── choco_string.c
+│   │   │   ├── choco_string.c
+│   │   │   └── ring_queue.c
 │   │   ├── core
 │   │   │   └── memory
 │   │   │       ├── choco_memory.c
@@ -104,7 +129,11 @@ Kohi Game Engine に触発されて開始しました。
     └── include
         ├── test_choco_string.h
         ├── test_linear_allocator.h
-        └── test_memory_system.h
+        ├── test_memory_system.h
+        ├── test_platform_context.h
+        ├── test_platform_glfw.h
+        └── test_ring_queue.h
+
 ```
 
 ## エンジンレイヤー構成
