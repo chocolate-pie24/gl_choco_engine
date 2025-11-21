@@ -142,15 +142,15 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
  *
  * 使用例:
  * @code{.c}
- * void mouse_event_callback(mouse_event_t event_) {
+ * void mouse_event_callback(const mouse_event_t* event_) {
  *      // イベント処理
  * }
  *
- * void keyboard_event_callback(keyboard_event_t event_) {
+ * void keyboard_event_callback(const keyboard_event_t* event_) {
  *      // イベント処理
  * }
  *
- * void window_event_callback(window_event_t event_) {
+ * void window_event_callback(const window_event_t* event_) {
  *      // イベント処理
  * }
  *
