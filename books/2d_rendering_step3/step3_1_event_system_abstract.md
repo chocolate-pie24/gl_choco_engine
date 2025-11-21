@@ -290,7 +290,7 @@ struct platform_backend {
 };
 ```
 
-次に、platform_backend_window_createで与えられたウィンドウサイズをplatform_backend_tのウィンドウサイズに代入し初期化します。
+次に、platform_glfw_window_createで与えられたウィンドウサイズをplatform_backend_tのウィンドウサイズに代入し初期化します。
 
 ```c
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {

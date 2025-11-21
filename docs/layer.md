@@ -1,5 +1,17 @@
 # gl_choco_engineレイヤーツリー
 
+- [gl\_choco\_engineレイヤーツリー](#gl_choco_engineレイヤーツリー)
+  - [Public(API) Dependencies](#publicapi-dependencies)
+  - [Implementation(Private) Dependencies](#implementationprivate-dependencies)
+  - [各レイヤー詳細](#各レイヤー詳細)
+    - [application](#application)
+    - [base](#base)
+    - [core](#core)
+    - [containers](#containers)
+    - [interfaces](#interfaces)
+    - [platform\_concretes](#platform_concretes)
+    - [platform\_context](#platform_context)
+
 ## Public(API) Dependencies
 
 凡例: A->BはAがBに依存を表す
