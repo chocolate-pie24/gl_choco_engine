@@ -1,5 +1,4 @@
-/** @addtogroup containers_ring_queue
- * @{
+/** @ingroup ring_queue
  *
  * @file ring_queue.h
  * @author chocolate-pie24
@@ -228,5 +227,3 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_);
 }
 #endif
 #endif
-
-/** @}*/

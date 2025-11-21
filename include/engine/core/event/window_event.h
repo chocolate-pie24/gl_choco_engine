@@ -1,5 +1,4 @@
-/** @addtogroup event_window
- * @{
+/** @ingroup event_window
  *
  * @file window_event.h
  * @author chocolate-pie24
@@ -43,5 +42,3 @@ typedef struct window_event {
 }
 #endif
 #endif
-
-/** @}*/

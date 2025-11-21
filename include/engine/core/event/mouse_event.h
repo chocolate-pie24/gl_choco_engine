@@ -1,5 +1,4 @@
-/** @addtogroup event_mouse
- * @{
+/** @ingroup event_mouse
  *
  * @file mouse_event.h
  * @author chocolate-pie24
@@ -47,5 +46,3 @@ typedef struct mouse_event {
 }
 #endif
 #endif
-
-/** @}*/

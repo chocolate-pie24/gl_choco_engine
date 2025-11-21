@@ -1,4 +1,5 @@
-/**
+/** @ingroup ring_queue
+ *
  * @file ring_queue.c
  * @author chocolate-pie24
  * @brief ジェネリック型のリングキューオブジェクト定義と関連APIの実装

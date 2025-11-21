@@ -1,5 +1,4 @@
-/** @addtogroup event_keyboard
- * @{
+/** @ingroup event_keyboard
  *
  * @file keyboard_event.h
  * @author chocolate-pie24
@@ -102,5 +101,3 @@ typedef struct keyboard_event {
 }
 #endif
 #endif
-
-/** @}*/
