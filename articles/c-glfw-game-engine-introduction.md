@@ -24,6 +24,8 @@ published: true
 ## ChangeLog
 
 - 2025-11-21 step2_6「このステップでやること」における、ウィンドウ生成処理を行う関数名の誤記修正(application_run -> application_create)
+- 2025-11-xx GL Choco Engineの立ち位置を本記事に追加
+- 2025-11-xx Book3(2d-rendering-step3)リリース
 
 ## 記事連載の背景
 

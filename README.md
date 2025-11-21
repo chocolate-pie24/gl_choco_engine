@@ -23,7 +23,7 @@ Kohi Game Engine に触発されて開始しました。
 
 実装の進め方や学習の過程は[記事](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)にまとめてあります。
 
-- 最新タグ: `v0.1.0-step2`（2D Rendering Step2 完了）
+- 最新タグ: `v0.1.0-step3`（2D Rendering Step3 完了）
 
 ## ディレクトリ構成
 
@@ -66,8 +66,7 @@ Kohi Game Engine に触発されて開始しました。
 │   │   └── groups.dox
 │   ├── doxygen_config.md
 │   ├── layer.md
-│   ├── memo_mermaid_color.md
-│   └── todo.md
+│   └── memo_mermaid_color.md
 ├── Doxyfile
 ├── images
 │   ├── event_system_diagram.png
