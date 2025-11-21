@@ -1,9 +1,8 @@
 /** @ingroup choco_memory
  *
- * @file choco_memory.h
+ * @file choco_memory.c
  * @author chocolate-pie24
  * @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装
- *
  *
  * @version 0.1
  * @date 2025-09-20
@@ -89,6 +88,7 @@ memory_system_result_t memory_system_create(void) {
     }
     tmp->mem_tag_str[MEMORY_TAG_SYSTEM] = "system";
     tmp->mem_tag_str[MEMORY_TAG_STRING] = "string";
+    tmp->mem_tag_str[MEMORY_TAG_RING_QUEUE] = "ring_queue";
 
     // commit
     s_mem_sys_ptr = tmp;
@@ -304,6 +304,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         assert(0 == s_mem_sys_ptr->total_allocated);
         assert(0 == strcmp("system", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_SYSTEM]));
         assert(0 == strcmp("string", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING]));
+        assert(0 == strcmp("ring_queue", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RING_QUEUE]));
         for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
             assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
         }

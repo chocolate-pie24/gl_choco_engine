@@ -18,6 +18,10 @@ free: true
 
 を行なっていきます。
 
+## ChangeLog
+
+- 2025-11-21 step2_6「このステップでやること」における、ウィンドウ生成処理を行う関数名の誤記修正(application_run -> application_create)
+
 ## Step2実装解説
 
 ### メモリシステムの仕様変更

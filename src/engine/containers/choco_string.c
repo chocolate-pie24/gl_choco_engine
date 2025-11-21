@@ -4,6 +4,8 @@
  * @author chocolate-pie24
  * @brief 文字列を格納するコンテナモジュールAPIの実装
  *
+ * @todo src_len + 1のオーバーフローチェックをしていない + テストケース追加
+ *
  * @version 0.1
  * @date 2025-09-26
  *
@@ -12,7 +14,6 @@
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
  *
- * @todo src_len + 1のオーバーフローチェックをしていない + テストケース追加
  */
 #include <string.h>
 

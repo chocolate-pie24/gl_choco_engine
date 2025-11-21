@@ -25,6 +25,10 @@
 
 #include "engine/core/platform/platform_utils.h"
 
+#include "engine/core/event/keyboard_event.h"
+#include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
+
 #include "engine/core/memory/linear_allocator.h"
 
 #include "engine/base/choco_macros.h"
@@ -69,10 +73,15 @@ static const char* rslt_to_str(platform_result_t rslt_);
 #ifdef TEST_BUILD
 static void NO_COVERAGE test_platform_initialize(void);
 static void NO_COVERAGE test_platform_destroy(void);
+static void NO_COVERAGE test_platform_window_create(void);
+static void NO_COVERAGE test_platform_pump_messages(void);
 static void NO_COVERAGE test_platform_vtable_get(void);
 static void NO_COVERAGE test_platform_type_valid_check(void);
 static void NO_COVERAGE test_rslt_convert_linear_alloc(void);
 static void NO_COVERAGE test_rslt_to_str(void);
+static void NO_COVERAGE test_callback_key(const keyboard_event_t* event_);
+static void NO_COVERAGE test_callback_mouse(const mouse_event_t* event_);
+static void NO_COVERAGE test_callback_window(const window_event_t* event_);
 #endif
 
 // PLATFORM_INVALID_ARGUMENT allocator_ == NULL
@@ -180,6 +189,39 @@ cleanup:
     return ret;
 }
 
+// PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
+// PLATFORM_INVALID_ARGUMENT platform_context_->vtable == NULL
+// PLATFORM_INVALID_ARGUMENT platform_context_->backend == NULL
+// PLATFORM_INVALID_ARGUMENT window_event_callback == NULL
+// PLATFORM_INVALID_ARGUMENT keyboard_event_callback == NULL
+// PLATFORM_INVALID_ARGUMENT mouse_event_callback == NULL
+// PLATFORM_WINDOW_CLOSE ウィンドウクローズイベント発生(これは絶対に補足しなくてはいけないため、コールバックとは別に処理する)
+// PLATFORM_SUCCESS イベントの吸い上げに成功し、正常終了
+// 上記以外 プラットフォーム実装依存
+platform_result_t platform_pump_messages(
+    platform_context_t* platform_context_,
+    void (*window_event_callback)(const window_event_t* event_),
+    void (*keyboard_event_callback)(const keyboard_event_t* event_),
+    void (*mouse_event_callback)(const mouse_event_t* event_)) {
+
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_->vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_->backend")
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
+
+    ret = platform_context_->vtable->platform_backend_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
+    if(PLATFORM_SUCCESS != ret && PLATFORM_WINDOW_CLOSE != ret) {
+        ERROR_MESSAGE("platform_pump_messages(%s) - Failed to pump messages.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
 /**
  * @brief プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理
  *
@@ -255,6 +297,8 @@ void NO_COVERAGE test_platform_context(void) {
     test_rslt_to_str();
     test_platform_initialize();
     test_platform_destroy();
+    test_platform_window_create();
+    test_platform_pump_messages();
 }
 
 static void NO_COVERAGE test_platform_initialize(void) {
@@ -402,12 +446,360 @@ static void NO_COVERAGE test_platform_destroy(void) {
         size_t backend_mem_req = 0;
         size_t backend_align_req = 0;
         context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+        context->backend = (platform_backend_t*)malloc(backend_mem_req);
+        context->vtable->platform_backend_init(context->backend);
 
-        context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
 
         platform_destroy(context);
         platform_destroy(context);  // 2重呼び出し
+
+        free(context->backend);
+        free(context);
+    }
+}
+
+static void NO_COVERAGE test_platform_window_create(void) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
+        ret = platform_window_create(NULL, "test_window", 1024, 768);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_->vtable == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        ret = platform_window_create(context, "test_window", 1024, 768);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_->backend == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        ret = platform_window_create(context, "test_window", 1024, 768);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT window_label_ == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_window_create(context, NULL, 1024, 768);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT window_width_ == 0
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_window_create(context, "test_window", 0, 768);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT window_height_ == 0
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_window_create(context, "test_window", 1024, 0);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        platform_glfw_result_controller_set(PLATFORM_SUCCESS);
+
+        ret = platform_window_create(context, "test_window", 1024, 768);
+
+        assert(PLATFORM_SUCCESS == ret);
+
+        free(context->backend);
+        free(context);
+
+        platform_glfw_result_controller_reset();
+    }
+    {
+        // その他のエラーを返す
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        platform_glfw_result_controller_set(PLATFORM_NO_MEMORY);
+
+        ret = platform_window_create(context, "test_window", 1024, 768);
+
+        assert(PLATFORM_NO_MEMORY == ret);
+
+        free(context->backend);
+        free(context);
+
+        platform_glfw_result_controller_reset();
+    }
+}
+
+static void NO_COVERAGE test_platform_pump_messages(void) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
+        ret = platform_pump_messages(NULL, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_->vtable == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT platform_context_->backend == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT window_event_callback == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_pump_messages(context, NULL, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT keyboard_event_callback == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_pump_messages(context, test_callback_window, NULL, test_callback_mouse);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_INVALID_ARGUMENT mouse_event_callback == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, NULL);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_WINDOW_CLOSE ウィンドウクローズイベント発生(これは絶対に補足しなくてはいけないため、コールバックとは別に処理する)
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        platform_glfw_result_controller_set(PLATFORM_WINDOW_CLOSE);
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_WINDOW_CLOSE == ret);
+
+        platform_glfw_result_controller_reset();
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // PLATFORM_SUCCESS イベントの吸い上げに成功し、正常終了
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        platform_glfw_result_controller_set(PLATFORM_SUCCESS);
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_SUCCESS == ret);
+
+        platform_glfw_result_controller_reset();
+
+        free(context->backend);
+        free(context);
+    }
+    {
+        // WINDOW_CLOSE, SUCCESS以外のエラーを返す
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+
+        platform_glfw_result_controller_set(PLATFORM_NO_MEMORY);
+
+        ret = platform_pump_messages(context, test_callback_window, test_callback_key, test_callback_mouse);
+        assert(PLATFORM_NO_MEMORY == ret);
+
+        platform_glfw_result_controller_reset();
 
         free(context->backend);
         free(context);
@@ -489,4 +881,15 @@ static void NO_COVERAGE test_rslt_to_str(void) {
     }
 }
 
+static void NO_COVERAGE test_callback_key(const keyboard_event_t* event_) {
+    (void)event_;
+}
+
+static void NO_COVERAGE test_callback_mouse(const mouse_event_t* event_) {
+    (void)event_;
+}
+
+static void NO_COVERAGE test_callback_window(const window_event_t* event_) {
+    (void)event_;
+}
 #endif

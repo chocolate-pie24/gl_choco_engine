@@ -30,9 +30,33 @@
 
 #include "engine/core/platform/platform_utils.h"
 
+#include "engine/core/event/keyboard_event.h"
+#include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
+
 #include "engine/interfaces/platform_interface.h"
 
 #include "engine/containers/choco_string.h"
+
+/**
+ * @brief 入力状態格納構造体
+ *
+ */
+typedef struct input_snapshot {
+    double cursor_x;    /**< マウス座標x */
+    double cursor_y;    /**< マウス座標y */
+
+    int window_width;   /**< ウィンドウ幅 */
+    int window_height;  /**< ウィンドウ高さ */
+
+    bool window_should_close;   /**< ウィンドウクローズイベント発生 */
+    bool escape_pressed;        /**< エスケープキー押下イベント発生 */
+
+    bool keycode_state[KEY_CODE_MAX];   /**< 各キーコード（keycode_t）ごとの押下状態(true: 押下中 / false: 非押下) */
+
+    bool left_button_pressed;   /**< マウス左ボタン押下フラグ */
+    bool right_button_pressed;  /**< マウス右ボタン押下フラグ */
+} input_snapshot_t;
 
 /**
  * @brief GLFWプラットフォーム内部状態管理構造体
@@ -42,12 +66,19 @@ struct platform_backend {
     choco_string_t* window_label;   /**< ウィンドウラベル */
     GLFWwindow* window;             /**< GLFWウィンドウ構造体インスタンス */
     bool initialized_glfw;          /**< GLFW初期済みフラグ */
+    input_snapshot_t current;       /**< 入力状態のスナップショット(現在値) */
+    input_snapshot_t prev;          /**< 入力状態のスナップショット(前回値) */
 };
 
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
 static void platform_glfw_destroy(platform_backend_t* platform_backend_);
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_);
+static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
+static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+
+static int keycode_to_glfw_keycode(keycode_t keycode_);
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< プラットフォームAPI実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームAPI実行結果コード(無効な引数)に対応する文字列 */
@@ -71,6 +102,7 @@ typedef struct test_controller {
 static test_contoller_t s_test_controller;
 
 static void NO_COVERAGE test_rslt_to_str(void);
+static void NO_COVERAGE test_keycode_to_glfw_keycode(void);
 static void NO_COVERAGE test_rslt_convert_string(void);
 #endif
 
@@ -83,6 +115,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_init = platform_glfw_init,
     .platform_backend_destroy = platform_glfw_destroy,
     .platform_backend_window_create = platform_glfw_window_create,
+    .platform_backend_pump_messages = platform_glfw_pump_messages,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
@@ -141,7 +174,32 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
 
     platform_backend_->window = NULL;
     platform_backend_->window_label = NULL;
+
     platform_backend_->initialized_glfw = true;
+
+    platform_backend_->prev.left_button_pressed = false;
+    platform_backend_->prev.right_button_pressed = false;
+    platform_backend_->prev.cursor_x = 0.0;
+    platform_backend_->prev.cursor_y = 0.0;
+    platform_backend_->prev.window_width = 0;
+    platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.window_should_close = false;
+    platform_backend_->prev.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->prev.keycode_state[i] = false;
+    }
+
+    platform_backend_->current.left_button_pressed = false;
+    platform_backend_->current.right_button_pressed = false;
+    platform_backend_->current.cursor_x = 0.0;
+    platform_backend_->current.cursor_y = 0.0;
+    platform_backend_->current.window_width = 0;
+    platform_backend_->current.window_height = 0;
+    platform_backend_->current.window_should_close = false;
+    platform_backend_->current.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->current.keycode_state[i] = false;
+    }
 
     ret = PLATFORM_SUCCESS;
 
@@ -163,6 +221,30 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
     choco_string_destroy(&platform_backend_->window_label);
     platform_backend_->window = NULL;
     platform_backend_->initialized_glfw = false;
+
+    platform_backend_->prev.left_button_pressed = false;
+    platform_backend_->prev.right_button_pressed = false;
+    platform_backend_->prev.cursor_x = 0.0;
+    platform_backend_->prev.cursor_y = 0.0;
+    platform_backend_->prev.window_width = 0;
+    platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.window_should_close = false;
+    platform_backend_->prev.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->prev.keycode_state[i] = false;
+    }
+
+    platform_backend_->current.left_button_pressed = false;
+    platform_backend_->current.right_button_pressed = false;
+    platform_backend_->current.cursor_x = 0.0;
+    platform_backend_->current.cursor_y = 0.0;
+    platform_backend_->current.window_width = 0;
+    platform_backend_->current.window_height = 0;
+    platform_backend_->current.window_should_close = false;
+    platform_backend_->current.escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        platform_backend_->current.keycode_state[i] = false;
+    }
 }
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
@@ -217,6 +299,10 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     // https://www.glfw.org/docs/latest/group__input.html#gaa92336e173da9c8834558b54ee80563b
     glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
+    platform_backend_->prev.window_height = window_height_;
+    platform_backend_->prev.window_width = window_width_;
+    platform_backend_->current.window_height = window_height_;
+    platform_backend_->current.window_width = window_width_;
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -227,6 +313,156 @@ cleanup:
         }
         choco_string_destroy(&platform_backend_->window_label);
     }
+    return ret;
+}
+
+static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    int left_button_state = 0;
+    int right_button_state = 0;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_->window")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_collect", "platform_backend_->initialized_glfw")
+
+    // window events.
+    platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
+
+    glfwGetWindowSize(platform_backend_->window, &platform_backend_->current.window_width, &platform_backend_->current.window_height);
+
+    // keyboard events.
+    platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
+    for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
+        const int glfw_key = keycode_to_glfw_keycode(i);
+        const int action = glfwGetKey(platform_backend_->window, glfw_key);
+        platform_backend_->current.keycode_state[i] = (GLFW_PRESS == action) ? true : false;
+    }
+
+    // mouse event.
+    glfwGetCursorPos(platform_backend_->window, &platform_backend_->current.cursor_x, &platform_backend_->current.cursor_y);
+
+    left_button_state = glfwGetMouseButton(platform_backend_->window, GLFW_MOUSE_BUTTON_LEFT);
+    platform_backend_->current.left_button_pressed = (GLFW_PRESS == left_button_state) ? true : false;
+
+    right_button_state = glfwGetMouseButton(platform_backend_->window, GLFW_MOUSE_BUTTON_RIGHT);
+    platform_backend_->current.right_button_pressed = (GLFW_PRESS == right_button_state) ? true : false;
+
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static platform_result_t platform_snapshot_process(
+    platform_backend_t* platform_backend_,
+    void (*window_event_callback)(const window_event_t* event_),
+    void (*keyboard_event_callback)(const keyboard_event_t* event_),
+    void (*mouse_event_callback)(const mouse_event_t* event_)) {
+
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_->window")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "platform_backend_->initialized_glfw")
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "keyboard_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_snapshot_process", "mouse_event_callback")
+
+    if(platform_backend_->current.escape_pressed) {
+        ret = PLATFORM_WINDOW_CLOSE;
+        platform_backend_->prev = platform_backend_->current;
+        goto cleanup;
+    }
+    if(platform_backend_->current.window_should_close) {
+        ret = PLATFORM_WINDOW_CLOSE;
+        platform_backend_->prev = platform_backend_->current;
+        goto cleanup;
+    }
+
+    // window event
+    if(platform_backend_->current.window_width != platform_backend_->prev.window_width || platform_backend_->current.window_height != platform_backend_->prev.window_height) {
+        window_event_t window_event;
+        window_event.event_code = WINDOW_EVENT_RESIZE;
+        window_event.window_height = platform_backend_->current.window_height;
+        window_event.window_width = platform_backend_->current.window_width;
+
+        window_event_callback(&window_event);
+    }
+
+    // keyboard events.
+    for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
+        if(platform_backend_->prev.keycode_state[i] != platform_backend_->current.keycode_state[i]) {
+            keyboard_event_t key_event;
+            key_event.key = (keycode_t)i;
+            key_event.pressed = platform_backend_->current.keycode_state[i];
+            keyboard_event_callback(&key_event);
+        }
+    }
+
+    // mouse events.
+    if(platform_backend_->prev.left_button_pressed != platform_backend_->current.left_button_pressed) {
+        mouse_event_t mouse_event;
+        mouse_event.button = MOUSE_BUTTON_LEFT;
+        mouse_event.pressed = platform_backend_->current.left_button_pressed;
+        mouse_event.x = (int)platform_backend_->current.cursor_x;
+        mouse_event.y = (int)platform_backend_->current.cursor_y;
+        mouse_event_callback(&mouse_event);
+    }
+    if(platform_backend_->prev.right_button_pressed != platform_backend_->current.right_button_pressed) {
+        mouse_event_t mouse_event;
+        mouse_event.button = MOUSE_BUTTON_RIGHT;
+        mouse_event.pressed = platform_backend_->current.right_button_pressed;
+        mouse_event.x = (int)platform_backend_->current.cursor_x;
+        mouse_event.y = (int)platform_backend_->current.cursor_y;
+        mouse_event_callback(&mouse_event);
+    }
+
+    platform_backend_->prev = platform_backend_->current;
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static platform_result_t platform_glfw_pump_messages(
+    platform_backend_t* platform_backend_,
+    void (*window_event_callback)(const window_event_t* event_),
+    void (*keyboard_event_callback)(const keyboard_event_t* event_),
+    void (*mouse_event_callback)(const mouse_event_t* event_)) {
+
+#ifdef TEST_BUILD
+    if(s_test_controller.test_enable) {
+        return s_test_controller.ret;
+    }
+#endif
+
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_->initialized_glfw")
+    CHECK_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "window_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "keyboard_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "mouse_event_callback")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_INVALID_ARGUMENT, "platform_glfw_pump_messages", "platform_backend_->window")
+
+    // イベントの取得
+    glfwPollEvents();
+
+    ret = platform_snapshot_collect(platform_backend_);
+    if(PLATFORM_SUCCESS != ret) {
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to collect snapshot.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = platform_snapshot_process(platform_backend_, window_event_callback, keyboard_event_callback, mouse_event_callback);
+    if(PLATFORM_WINDOW_CLOSE == ret) {
+        goto cleanup;
+    }
+    if(PLATFORM_SUCCESS != ret) {
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
     return ret;
 }
 
@@ -256,6 +492,132 @@ static const char* rslt_to_str(platform_result_t rslt_) {
 }
 
 /**
+ * @brief 全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する
+ *
+ * @param keycode_ 全プラットフォーム共通キーコード
+ * @return int GLFWキーコード
+ */
+static int keycode_to_glfw_keycode(keycode_t keycode_) {
+    switch(keycode_) {
+    case KEY_1:
+        return GLFW_KEY_1;
+    case KEY_2:
+        return GLFW_KEY_2;
+    case KEY_3:
+        return GLFW_KEY_3;
+    case KEY_4:
+        return GLFW_KEY_4;
+    case KEY_5:
+        return GLFW_KEY_5;
+    case KEY_6:
+        return GLFW_KEY_6;
+    case KEY_7:
+        return GLFW_KEY_7;
+    case KEY_8:
+        return GLFW_KEY_8;
+    case KEY_9:
+        return GLFW_KEY_9;
+    case KEY_0:
+        return GLFW_KEY_0;
+    case KEY_A:
+        return GLFW_KEY_A;
+    case KEY_B:
+        return GLFW_KEY_B;
+    case KEY_C:
+        return GLFW_KEY_C;
+    case KEY_D:
+        return GLFW_KEY_D;
+    case KEY_E:
+        return GLFW_KEY_E;
+    case KEY_F:
+        return GLFW_KEY_F;
+    case KEY_G:
+        return GLFW_KEY_G;
+    case KEY_H:
+        return GLFW_KEY_H;
+    case KEY_I:
+        return GLFW_KEY_I;
+    case KEY_J:
+        return GLFW_KEY_J;
+    case KEY_K:
+        return GLFW_KEY_K;
+    case KEY_L:
+        return GLFW_KEY_L;
+    case KEY_M:
+        return GLFW_KEY_M;
+    case KEY_N:
+        return GLFW_KEY_N;
+    case KEY_O:
+        return GLFW_KEY_O;
+    case KEY_P:
+        return GLFW_KEY_P;
+    case KEY_Q:
+        return GLFW_KEY_Q;
+    case KEY_R:
+        return GLFW_KEY_R;
+    case KEY_S:
+        return GLFW_KEY_S;
+    case KEY_T:
+        return GLFW_KEY_T;
+    case KEY_U:
+        return GLFW_KEY_U;
+    case KEY_V:
+        return GLFW_KEY_V;
+    case KEY_W:
+        return GLFW_KEY_W;
+    case KEY_X:
+        return GLFW_KEY_X;
+    case KEY_Y:
+        return GLFW_KEY_Y;
+    case KEY_Z:
+        return GLFW_KEY_Z;
+    case KEY_RIGHT:
+        return GLFW_KEY_RIGHT;
+    case KEY_LEFT:
+        return GLFW_KEY_LEFT;
+    case KEY_UP:
+        return GLFW_KEY_UP;
+    case KEY_DOWN:
+        return GLFW_KEY_DOWN;
+    case KEY_LEFT_SHIFT:
+        return GLFW_KEY_LEFT_SHIFT;
+    case KEY_SPACE:
+        return GLFW_KEY_SPACE;
+    case KEY_SEMICOLON:
+        return GLFW_KEY_SEMICOLON;
+    case KEY_MINUS:
+        return GLFW_KEY_MINUS;
+    case KEY_F1:
+        return GLFW_KEY_F1;
+    case KEY_F2:
+        return GLFW_KEY_F2;
+    case KEY_F3:
+        return GLFW_KEY_F3;
+    case KEY_F4:
+        return GLFW_KEY_F4;
+    case KEY_F5:
+        return GLFW_KEY_F5;
+    case KEY_F6:
+        return GLFW_KEY_F6;
+    case KEY_F7:
+        return GLFW_KEY_F7;
+    case KEY_F8:
+        return GLFW_KEY_F8;
+    case KEY_F9:
+        return GLFW_KEY_F9;
+    case KEY_F10:
+        return GLFW_KEY_F10;
+    case KEY_F11:
+        return GLFW_KEY_F11;
+    case KEY_F12:
+        return GLFW_KEY_F12;
+    default:
+        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", s_rslt_str_invalid_argument);
+        return GLFW_KEY_0;
+    }
+}
+
+/**
  * @brief エラー伝播のため、文字列コンテナモジュールの実行結果コードをプラットフォーム実行結果コードに変換する
  *
  * @param rslt_ 文字列コンテナモジュール実行結果コード
@@ -280,6 +642,7 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
 
 void test_platform_glfw(void) {
     test_rslt_to_str();
+    test_keycode_to_glfw_keycode();
     test_rslt_convert_string();
 }
 
@@ -312,6 +675,182 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         const char* test = rslt_to_str(100);
         assert(0 == strcmp(test, s_rslt_str_undefined_error));
     }
+}
+
+static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
+    int glfw_key = GLFW_KEY_1;
+
+    glfw_key = keycode_to_glfw_keycode(KEY_1);
+    assert(GLFW_KEY_1 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_2);
+    assert(GLFW_KEY_2 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_3);
+    assert(GLFW_KEY_3 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_4);
+    assert(GLFW_KEY_4 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_5);
+    assert(GLFW_KEY_5 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_6);
+    assert(GLFW_KEY_6 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_7);
+    assert(GLFW_KEY_7 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_8);
+    assert(GLFW_KEY_8 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_9);
+    assert(GLFW_KEY_9 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_0);
+    assert(GLFW_KEY_0 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_A);
+    assert(GLFW_KEY_A == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_B);
+    assert(GLFW_KEY_B == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_C);
+    assert(GLFW_KEY_C == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_D);
+    assert(GLFW_KEY_D == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_E);
+    assert(GLFW_KEY_E == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F);
+    assert(GLFW_KEY_F == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_G);
+    assert(GLFW_KEY_G == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_H);
+    assert(GLFW_KEY_H == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_I);
+    assert(GLFW_KEY_I == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_J);
+    assert(GLFW_KEY_J == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_K);
+    assert(GLFW_KEY_K == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_L);
+    assert(GLFW_KEY_L == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_M);
+    assert(GLFW_KEY_M == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_N);
+    assert(GLFW_KEY_N == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_O);
+    assert(GLFW_KEY_O == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_P);
+    assert(GLFW_KEY_P == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_Q);
+    assert(GLFW_KEY_Q == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_R);
+    assert(GLFW_KEY_R == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_S);
+    assert(GLFW_KEY_S == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_T);
+    assert(GLFW_KEY_T == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_U);
+    assert(GLFW_KEY_U == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_V);
+    assert(GLFW_KEY_V == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_W);
+    assert(GLFW_KEY_W == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_X);
+    assert(GLFW_KEY_X == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_Y);
+    assert(GLFW_KEY_Y == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_Z);
+    assert(GLFW_KEY_Z == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_RIGHT);
+    assert(GLFW_KEY_RIGHT == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_LEFT);
+    assert(GLFW_KEY_LEFT == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_UP);
+    assert(GLFW_KEY_UP == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_DOWN);
+    assert(GLFW_KEY_DOWN == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_LEFT_SHIFT);
+    assert(GLFW_KEY_LEFT_SHIFT == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_SPACE);
+    assert(GLFW_KEY_SPACE == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_SEMICOLON);
+    assert(GLFW_KEY_SEMICOLON == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_MINUS);
+    assert(GLFW_KEY_MINUS == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F1);
+    assert(GLFW_KEY_F1 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F2);
+    assert(GLFW_KEY_F2 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F3);
+    assert(GLFW_KEY_F3 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F4);
+    assert(GLFW_KEY_F4 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F5);
+    assert(GLFW_KEY_F5 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F6);
+    assert(GLFW_KEY_F6 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F7);
+    assert(GLFW_KEY_F7 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F8);
+    assert(GLFW_KEY_F8 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F9);
+    assert(GLFW_KEY_F9 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F10);
+    assert(GLFW_KEY_F10 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F11);
+    assert(GLFW_KEY_F11 == glfw_key);
+
+    glfw_key = keycode_to_glfw_keycode(KEY_F12);
+    assert(GLFW_KEY_F12 == glfw_key);
+
+    // エラーメッセージ確認
+    glfw_key = keycode_to_glfw_keycode(1000);
+    assert(GLFW_KEY_0 == glfw_key);
 }
 
 static void NO_COVERAGE test_rslt_convert_string(void) {

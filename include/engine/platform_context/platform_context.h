@@ -28,6 +28,10 @@ extern "C" {
 
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/core/event/keyboard_event.h"
+#include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
+
 /**
  * @brief プラットフォームコンテキスト構造体前方宣言
  *
@@ -132,6 +136,65 @@ void platform_destroy(platform_context_t* platform_context_);
  *
  */
 platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_);
+
+/**
+ * @brief OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す
+ *
+ * 使用例:
+ * @code{.c}
+ * void mouse_event_callback(const mouse_event_t* event_) {
+ *      // イベント処理
+ * }
+ *
+ * void keyboard_event_callback(const keyboard_event_t* event_) {
+ *      // イベント処理
+ * }
+ *
+ * void window_event_callback(const window_event_t* event_) {
+ *      // イベント処理
+ * }
+ *
+ * void test_func(void) {
+ *      linear_alloc_t* linear_alloc = NULL;
+ *      // リニアアロケータ初期化
+ *
+ *      platform_context_t* platform_context = NULL;
+ *      platform_result_t ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
+ *      // エラー処理
+ *
+ *      ret = platform_window_create(platform_context, "test_window", 1024, 768);
+ *      // エラー処理
+ *
+ *      ret = platform_pump_messages(platform_context, window_event_callback, keyboard_event_callback, mouse_event_callback);
+ *      // エラー処理
+ *
+ *      platform_destroy(platform_context);
+ *
+ * // リニアアロケータによるメモリ破棄
+ * }
+ * @endcode
+ *
+ * @param platform_context_ プラットフォームstrategy contextオブジェクト
+ * @param window_event_callback ウィンドウイベントコールバック
+ * @param keyboard_event_callback キーボードイベントコールバック
+ * @param mouse_event_callback マウスイベントコールバック
+ *
+ * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
+ * - platform_context_ == NULL
+ * - platform_context_->vtable == NULL
+ * - platform_context_->backend == NULL
+ * - window_event_callback == NULL
+ * - keyboard_event_callback == NULL
+ * - mouse_event_callback == NULL
+ * @retval PLATFORM_WINDOW_CLOSE ウィンドウクローズイベント発生(これは絶対に補足しなくてはいけないため、コールバックとは別に処理する)
+ * @retval PLATFORM_SUCCESS イベントの吸い上げに成功し、正常終了
+ * @retval 上記以外 プラットフォーム実装依存
+ */
+platform_result_t platform_pump_messages(
+    platform_context_t* platform_context_,
+    void (*window_event_callback)(const window_event_t* event_),
+    void (*keyboard_event_callback)(const keyboard_event_t* event_),
+    void (*mouse_event_callback)(const mouse_event_t* event_));
 
 #ifdef __cplusplus
 }

@@ -43,6 +43,7 @@ extern "C" {
 typedef enum {
     MEMORY_TAG_SYSTEM,      /**< メモリタグ: システム系 */
     MEMORY_TAG_STRING,      /**< メモリタグ: 文字列系 */
+    MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
