@@ -48,9 +48,9 @@ https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/fea
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/core/memory/choco_memory.h
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/core/memory/linear_allocator.h
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/core/platform/platform_utils.h
-https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/interfaces/platform_interface.h
-https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/platform_concretes/platform_glfw.h
-https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/platform_contextplatform_context.h
+https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/interfaces/platform_interface.h
+https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/platform_concretes/platform_glfw.h
+https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/include/engine/platform_contextplatform_context.h
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/LICENSE
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/makefile_linux.mak
 https://raw.githubusercontent.com/chocolate-pie24/gl_choco_engine/refs/heads/feat_merge/makefile_macos.mak

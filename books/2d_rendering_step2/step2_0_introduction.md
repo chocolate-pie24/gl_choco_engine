@@ -18,6 +18,10 @@ free: true
 
 を行なっていきます。
 
+## ChangeLog
+
+- 2025-11-21 step2_6における関数名の誤記修正(application_runtime -> application_run)
+
 ## Step2実装解説
 
 ### メモリシステムの仕様変更
