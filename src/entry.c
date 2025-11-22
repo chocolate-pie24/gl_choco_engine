@@ -24,6 +24,9 @@
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"
 #include "test_choco_string.h"
+#include "test_ring_queue.h"
+#include "test_platform_context.h"
+#include "test_platform_glfw.h"
 #endif
 
 /**
@@ -48,6 +51,16 @@ int main(int argc_, char** argv_) {
         test_linear_allocator();
         test_memory_system();
         test_choco_string();
+
+        memory_system_create();
+        test_ring_queue();
+        memory_system_destroy();
+
+        memory_system_create();
+        test_platform_context();
+        memory_system_destroy();
+
+        test_platform_glfw();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

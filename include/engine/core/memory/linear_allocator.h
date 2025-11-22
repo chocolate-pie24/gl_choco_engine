@@ -205,5 +205,3 @@ void linear_allocator_malloc_fail_reset(void);
 }
 #endif
 #endif
-
-/** @}*/

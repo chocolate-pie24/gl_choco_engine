@@ -18,6 +18,7 @@
 #include <stdalign.h>
 #include <stddef.h> // for NULL
 #include <string.h> // for memset
+#include <stdbool.h>
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
@@ -29,7 +30,13 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/core/event/keyboard_event.h"
+#include "engine/core/event/mouse_event.h"
+#include "engine/core/event/window_event.h"
+
 #include "engine/core/platform/platform_utils.h"
+
+#include "engine/containers/ring_queue.h"
 
 #include "engine/platform_context/platform_context.h"
 
@@ -39,6 +46,8 @@
  */
 typedef struct app_state {
     // application status
+    bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
+    bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
     int window_width;           /**< ウィンドウ幅 */
     int window_height;          /**< ウィンドウ高さ */
 
@@ -49,16 +58,31 @@ typedef struct app_state {
     void* linear_alloc_pool;        /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
+    // event message queues
+    ring_queue_t* window_event_queue;   /**< ウィンドウイベント格納用リングキュー */
+    ring_queue_t* keyboard_event_queue; /**< キーボードイベント格納用リングキュー */
+    ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */
+
     // platform/platform_context
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
+static void on_window(const window_event_t* event_);
+static void on_key(const keyboard_event_t* event_);
+static void on_mouse(const mouse_event_t* event_);
+
+static void app_state_update(void);
+static void app_state_dispatch(void);
+static void app_state_clean(void);
+static const char* keycode_str(keycode_t keycode_);
+
 static const char* rslt_to_str(application_result_t rslt_);
 static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -73,6 +97,7 @@ application_result_t application_create(void) {
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
+    ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -144,6 +169,44 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("platform_backend initialized successfully.");
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Simulation -> launch all systems -> create event message queue(window event).(Don't use s_app_state here.)
+    INFO_MESSAGE("Starting window event queue initialize...");
+    ret_ring_queue = ring_queue_create(8, sizeof(window_event_t), alignof(window_event_t), &tmp->window_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("window event queue initialized successfully.");
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Simulation -> launch all systems -> create event message queue(keyboard event).(Don't use s_app_state here.)
+    INFO_MESSAGE("Starting keyboard event queue initialize...");
+    ret_ring_queue = ring_queue_create(KEY_CODE_MAX, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp->keyboard_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("keyboard event queue initialized successfully.");
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Simulation -> launch all systems -> create event message queue(mouse event).(Don't use s_app_state here.)
+    INFO_MESSAGE("Starting mouse event queue initialize...");
+    ret_ring_queue = ring_queue_create(128, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp->mouse_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("mouse event queue initialized successfully.");
+
+    // end Simulation -> launch all systems.
+
+    // end Simulation
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // begin temporary
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
     tmp->window_width = 1024;
@@ -165,6 +228,18 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->mouse_event_queue) {
+                ring_queue_destroy(&tmp->mouse_event_queue);
+                tmp->mouse_event_queue = NULL;
+            }
+            if(NULL != tmp->keyboard_event_queue) {
+                ring_queue_destroy(&tmp->keyboard_event_queue);
+                tmp->keyboard_event_queue = NULL;
+            }
+            if(NULL != tmp->window_event_queue) {
+                ring_queue_destroy(&tmp->window_event_queue);
+                tmp->window_event_queue = NULL;
+            }
             if(NULL != tmp->platform_context) {
                 platform_destroy(tmp->platform_context);
             }
@@ -191,6 +266,18 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->mouse_event_queue) {
+        ring_queue_destroy(&s_app_state->mouse_event_queue);
+        s_app_state->mouse_event_queue = NULL;
+    }
+    if(NULL != s_app_state->keyboard_event_queue) {
+        ring_queue_destroy(&s_app_state->keyboard_event_queue);
+        s_app_state->keyboard_event_queue = NULL;
+    }
+    if(NULL != s_app_state->window_event_queue) {
+        ring_queue_destroy(&s_app_state->window_event_queue);
+        s_app_state->window_event_queue = NULL;
+    }
     if(NULL != s_app_state->platform_context) {
         platform_destroy(s_app_state->platform_context);
     }
@@ -223,11 +310,392 @@ application_result_t application_run(void) {
         goto cleanup;
     }
     struct timespec  req = {0, 1000000};
-    while(1) {
+    while(!s_app_state->window_should_close) {
+        platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
+        if(PLATFORM_WINDOW_CLOSE == ret_event) {
+            s_app_state->window_should_close = true;
+            continue;
+        } else if(PLATFORM_SUCCESS != ret_event) {
+            ret = rslt_convert_platform(ret_event);
+            WARN_MESSAGE("application_run(%s) - Failed to pump events.", rslt_to_str(ret));
+            continue;
+        }
+        app_state_update();
+        app_state_dispatch();
+        app_state_clean();
         nanosleep(&req, NULL);
     }
 cleanup:
     return ret;
+}
+
+/**
+ * @brief ウィンドウ関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
+static void on_window(const window_event_t* event_) {
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+
+    if(NULL == event_) {
+        WARN_MESSAGE("on_window - Argument 'event_' must not be NULL.");
+        goto cleanup;
+    }
+    if(NULL == s_app_state) {
+        WARN_MESSAGE("on_window - Application state is not initialized.");
+        goto cleanup;
+    }
+
+    ret_push = ring_queue_push(s_app_state->window_event_queue, event_, sizeof(window_event_t), alignof(window_event_t));
+    if(RING_QUEUE_SUCCESS != ret_push) {
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_window(%s) - Failed to push window event.", rslt_to_str(ret));
+        goto cleanup;
+    }
+cleanup:
+    return;
+}
+
+/**
+ * @brief キーボード関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
+static void on_key(const keyboard_event_t* event_) {
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+
+    if(NULL == event_) {
+        WARN_MESSAGE("on_key - Argument event_ requires a valid pointer.");
+        goto cleanup;
+    }
+    if(NULL == s_app_state) {
+        WARN_MESSAGE("on_key - Application state is uninitialized.");
+        goto cleanup;
+    }
+
+    ret_push = ring_queue_push(s_app_state->keyboard_event_queue, event_, sizeof(keyboard_event_t), alignof(keyboard_event_t));
+    if(RING_QUEUE_SUCCESS != ret_push) {
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", rslt_to_str(ret));
+        goto cleanup;
+    }
+cleanup:
+    return;
+}
+
+/**
+ * @brief マウス関連イベントコールバック
+ *
+ * @param event_ イベントキューに格納するイベントオブジェクト
+ */
+static void on_mouse(const mouse_event_t* event_) {
+    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
+
+    if(NULL == event_) {
+        WARN_MESSAGE("on_mouse - Argument event_ requires a valid pointer.");
+        goto cleanup;
+    }
+    if(NULL == s_app_state) {
+        WARN_MESSAGE("on_mouse - Application state is not initialized.");
+        goto cleanup;
+    }
+
+    ret_push = ring_queue_push(s_app_state->mouse_event_queue, event_, sizeof(mouse_event_t), alignof(mouse_event_t));
+    if(RING_QUEUE_SUCCESS != ret_push) {
+        application_result_t ret = rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", rslt_to_str(ret));
+        goto cleanup;
+    }
+cleanup:
+    return;
+}
+
+/**
+ * @brief イベントキューに格納されているイベントに基づきアプリケーションの状態を更新する
+ *
+ */
+static void app_state_update(void) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    if(NULL == s_app_state) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == s_app_state->window_event_queue) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == s_app_state->keyboard_event_queue) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == s_app_state->mouse_event_queue) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // window events.
+    while(!ring_queue_empty(s_app_state->window_event_queue)) {
+        window_event_t event;
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
+        if(RING_QUEUE_SUCCESS != ret_ring) {
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            if(WINDOW_EVENT_RESIZE == event.event_code) {
+                INFO_MESSAGE("Window resized: [%dx%d] -> [%dx%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
+                s_app_state->window_resized = true;
+                s_app_state->window_height = event.window_height;
+                s_app_state->window_width = event.window_width;
+            }
+        }
+    }
+
+    // keyboard events.
+    while(!ring_queue_empty(s_app_state->keyboard_event_queue)) {
+        keyboard_event_t event;
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
+        if(RING_QUEUE_SUCCESS != ret_ring) {
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            if(KEY_M == event.key && !event.pressed) {
+                memory_system_report();
+            } else {
+                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+            }
+        }
+    }
+
+    // mouse events.
+    while(!ring_queue_empty(s_app_state->mouse_event_queue)) {
+        mouse_event_t event;
+        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
+        if(RING_QUEUE_SUCCESS != ret_ring) {
+            ret = rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            if(MOUSE_BUTTON_LEFT == event.button) {
+                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+            } else if(MOUSE_BUTTON_RIGHT == event.button) {
+                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+            }
+        }
+    }
+
+cleanup:
+    return;
+}
+
+/**
+ * @brief 更新されたアプリケーション状態によって、各サブシステムにイベントを通知する
+ *
+ */
+static void app_state_dispatch(void) {
+    // 各サブシステムへイベントを通知 まだ処理はなし
+}
+
+/**
+ * @brief アプリケーション状態変化フラグの値を元に戻す
+ *
+ */
+static void app_state_clean(void) {
+    if(NULL == s_app_state) {
+        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        goto cleanup;
+    }
+    s_app_state->window_resized = false;
+cleanup:
+    return;
+}
+
+/**
+ * @brief キーコードを文字列に変換する
+ *
+ * @param keycode_ 変換対象キーコード
+ * @return const char* 変換された文字列
+ */
+static const char* keycode_str(keycode_t keycode_) {
+    static const char* s_key_1 = "key: '1'";
+    static const char* s_key_2 = "key: '2'";
+    static const char* s_key_3 = "key: '3'";
+    static const char* s_key_4 = "key: '4'";
+    static const char* s_key_5 = "key: '5'";
+    static const char* s_key_6 = "key: '6'";
+    static const char* s_key_7 = "key: '7'";
+    static const char* s_key_8 = "key: '8'";
+    static const char* s_key_9 = "key: '9'";
+    static const char* s_key_0 = "key: '0'";
+    static const char* s_key_a = "key: 'a'";
+    static const char* s_key_b = "key: 'b'";
+    static const char* s_key_c = "key: 'c'";
+    static const char* s_key_d = "key: 'd'";
+    static const char* s_key_e = "key: 'e'";
+    static const char* s_key_f = "key: 'f'";
+    static const char* s_key_g = "key: 'g'";
+    static const char* s_key_h = "key: 'h'";
+    static const char* s_key_i = "key: 'i'";
+    static const char* s_key_j = "key: 'j'";
+    static const char* s_key_k = "key: 'k'";
+    static const char* s_key_l = "key: 'l'";
+    static const char* s_key_m = "key: 'm'";
+    static const char* s_key_n = "key: 'n'";
+    static const char* s_key_o = "key: 'o'";
+    static const char* s_key_p = "key: 'p'";
+    static const char* s_key_q = "key: 'q'";
+    static const char* s_key_r = "key: 'r'";
+    static const char* s_key_s = "key: 's'";
+    static const char* s_key_t = "key: 't'";
+    static const char* s_key_u = "key: 'u'";
+    static const char* s_key_v = "key: 'v'";
+    static const char* s_key_w = "key: 'w'";
+    static const char* s_key_x = "key: 'x'";
+    static const char* s_key_y = "key: 'y'";
+    static const char* s_key_z = "key: 'z'";
+    static const char* s_key_right = "key: 'right'";
+    static const char* s_key_left = "key: 'left'";
+    static const char* s_key_up = "key: 'up'";
+    static const char* s_key_down = "key: 'down'";
+    static const char* s_key_shift = "key: 'shift'";
+    static const char* s_key_space = "key: 'space'";
+    static const char* s_key_semicolon = "key: 'semicolon'";
+    static const char* s_key_minus = "key: 'minus'";
+    static const char* s_key_f1 = "key: 'f1'";
+    static const char* s_key_f2 = "key: 'f2'";
+    static const char* s_key_f3 = "key: 'f3'";
+    static const char* s_key_f4 = "key: 'f4'";
+    static const char* s_key_f5 = "key: 'f5'";
+    static const char* s_key_f6 = "key: 'f6'";
+    static const char* s_key_f7 = "key: 'f7'";
+    static const char* s_key_f8 = "key: 'f8'";
+    static const char* s_key_f9 = "key: 'f9'";
+    static const char* s_key_f10 = "key: 'f10'";
+    static const char* s_key_f11 = "key: 'f11'";
+    static const char* s_key_f12 = "key: 'f12'";
+    static const char* s_key_undefined = "key: 'undefined'";
+
+    switch(keycode_) {
+    case KEY_1:
+        return s_key_1;
+    case KEY_2:
+        return s_key_2;
+    case KEY_3:
+        return s_key_3;
+    case KEY_4:
+        return s_key_4;
+    case KEY_5:
+        return s_key_5;
+    case KEY_6:
+        return s_key_6;
+    case KEY_7:
+        return s_key_7;
+    case KEY_8:
+        return s_key_8;
+    case KEY_9:
+        return s_key_9;
+    case KEY_0:
+        return s_key_0;
+    case KEY_A:
+        return s_key_a;
+    case KEY_B:
+        return s_key_b;
+    case KEY_C:
+        return s_key_c;
+    case KEY_D:
+        return s_key_d;
+    case KEY_E:
+        return s_key_e;
+    case KEY_F:
+        return s_key_f;
+    case KEY_G:
+        return s_key_g;
+    case KEY_H:
+        return s_key_h;
+    case KEY_I:
+        return s_key_i;
+    case KEY_J:
+        return s_key_j;
+    case KEY_K:
+        return s_key_k;
+    case KEY_L:
+        return s_key_l;
+    case KEY_M:
+        return s_key_m;
+    case KEY_N:
+        return s_key_n;
+    case KEY_O:
+        return s_key_o;
+    case KEY_P:
+        return s_key_p;
+    case KEY_Q:
+        return s_key_q;
+    case KEY_R:
+        return s_key_r;
+    case KEY_S:
+        return s_key_s;
+    case KEY_T:
+        return s_key_t;
+    case KEY_U:
+        return s_key_u;
+    case KEY_V:
+        return s_key_v;
+    case KEY_W:
+        return s_key_w;
+    case KEY_X:
+        return s_key_x;
+    case KEY_Y:
+        return s_key_y;
+    case KEY_Z:
+        return s_key_z;
+    case KEY_RIGHT:
+        return s_key_right;
+    case KEY_LEFT:
+        return s_key_left;
+    case KEY_UP:
+        return s_key_up;
+    case KEY_DOWN:
+        return s_key_down;
+    case KEY_LEFT_SHIFT:
+        return s_key_shift;
+    case KEY_SPACE:
+        return s_key_space;
+    case KEY_SEMICOLON:
+        return s_key_semicolon;
+    case KEY_MINUS:
+        return s_key_minus;
+    case KEY_F1:
+        return s_key_f1;
+    case KEY_F2:
+        return s_key_f2;
+    case KEY_F3:
+        return s_key_f3;
+    case KEY_F4:
+        return s_key_f4;
+    case KEY_F5:
+        return s_key_f5;
+    case KEY_F6:
+        return s_key_f6;
+    case KEY_F7:
+        return s_key_f7;
+    case KEY_F8:
+        return s_key_f8;
+    case KEY_F9:
+        return s_key_f9;
+    case KEY_F10:
+        return s_key_f10;
+    case KEY_F11:
+        return s_key_f11;
+    case KEY_F12:
+        return s_key_f12;
+    default:
+        return s_key_undefined;
+    }
 }
 
 /**
@@ -313,6 +781,31 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
         return APPLICATION_UNDEFINED_ERROR;
     case PLATFORM_WINDOW_CLOSE:
         return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+/**
+ * @brief エラー伝播のため、リングキュー実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ リングキュー実行結果コード
+ * @return application_result_t 変換されたアプリケーション実行結果コード
+ */
+static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
+    switch(rslt_) {
+    case RING_QUEUE_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RING_QUEUE_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RING_QUEUE_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RING_QUEUE_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RING_QUEUE_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    case RING_QUEUE_EMPTY:
+        return APPLICATION_RUNTIME_ERROR;   // リングキュー空はRuntime errorに変換
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
