@@ -1,6 +1,10 @@
-# gl_choco_engine
+<p align="center">
+  <img src="assets/logo/choco_engine_banner_768x256.png" alt="GL CHOCO ENGINE" width="640">
+</p>
 
-gl_choco_engine は、
+## GL CHOCO ENGINE
+
+GL CHOCO ENGINE(gl_choco_engine)は、
 
 - C言語とOpenGLでゲームエンジンの内部構造を学びたい中級者
 - Raspberry Piなどの比較的非力な環境で、軽量な描画基盤を試したいエンジニア
