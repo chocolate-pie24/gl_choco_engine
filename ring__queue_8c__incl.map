@@ -1,0 +1,12 @@
+<map id="src/engine/containers/ring_queue.c" name="src/engine/containers/ring_queue.c">
+<area shape="rect" id="node1" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="408,5,569,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,101,92,126"/>
+<area shape="rect" id="node3" title=" " alt="" coords="150,181,233,207"/>
+<area shape="rect" id="node4" title=" " alt="" coords="582,181,657,207"/>
+<area shape="rect" id="node5" title=" " alt="" coords="359,101,429,126"/>
+<area shape="rect" id="node6" title=" " alt="" coords="453,101,524,126"/>
+<area shape="rect" id="node7" href="$ring__queue_8h.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIを提供する" alt="" coords="168,93,335,133"/>
+<area shape="rect" id="node8" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="599,93,757,133"/>
+<area shape="rect" id="node9" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="781,101,991,126"/>
+<area shape="rect" id="node10" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1015,101,1237,126"/>
+</map>

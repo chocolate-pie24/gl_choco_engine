@@ -1,0 +1,26 @@
+var application_8c =
+[
+    [ "app_state", "structapp__state.html", "structapp__state" ],
+    [ "app_state_t", "application_8c.html#a1ef3ca30e05aeabe580e27a5c6fdad99", null ],
+    [ "app_state_clean", "application_8c.html#a29e054ced9e162f361558a62d5646ad1", null ],
+    [ "app_state_dispatch", "application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0", null ],
+    [ "app_state_update", "application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d", null ],
+    [ "application_create", "application_8c.html#a5d98cff72b3ed418fb620bf929f8101e", null ],
+    [ "application_destroy", "application_8c.html#ac144189ace156c3751aea1fa25480a40", null ],
+    [ "application_run", "application_8c.html#a625d4385834abd6a3da348778c08d4f1", null ],
+    [ "keycode_str", "application_8c.html#aa0844147b8444e20bc26f17cd9047d57", null ],
+    [ "on_key", "application_8c.html#a921844a501723a8e4165f4d1647018e6", null ],
+    [ "on_mouse", "application_8c.html#a1124ce3342cc8e51866392fd69ce2d21", null ],
+    [ "on_window", "application_8c.html#a6c7683f460692f59fb10ab5733fecde4", null ],
+    [ "rslt_convert_linear_alloc", "application_8c.html#a52744fadf900b6ec41067b438ab03602", null ],
+    [ "rslt_convert_mem_sys", "application_8c.html#ab6b4254db17e5c4bbfe09eec73d9c50b", null ],
+    [ "rslt_convert_platform", "application_8c.html#aaba82e2284097f9f913987f0f34b3657", null ],
+    [ "rslt_convert_ring_queue", "application_8c.html#a859076ee05bdf90ad397ef167760fb3f", null ],
+    [ "rslt_to_str", "application_8c.html#a2c1313359993ebcf91d1925df9ef1c8d", null ],
+    [ "s_app_state", "application_8c.html#a774bf922493fea3e466d4bd6d3513b51", null ],
+    [ "s_rslt_str_invalid_argument", "application_8c.html#ad513e1a68ecf78755351532812c75359", null ],
+    [ "s_rslt_str_no_memory", "application_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0", null ],
+    [ "s_rslt_str_runtime_error", "application_8c.html#af80cea0f3487047ba34d8b89614ddbc1", null ],
+    [ "s_rslt_str_success", "application_8c.html#a9b05c9aea264bb27d264cedaee3422f1", null ],
+    [ "s_rslt_str_undefined_error", "application_8c.html#a9607c9be9a0515dee65f769e2add8719", null ]
+];

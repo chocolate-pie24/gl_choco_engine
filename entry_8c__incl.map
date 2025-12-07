@@ -1,0 +1,7 @@
+<map id="src/entry.c" name="src/entry.c">
+<area shape="rect" id="node1" title="ゲームアプリケーションエントリーポイント" alt="" coords="165,5,253,31"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,79,76,104"/>
+<area shape="rect" id="node3" title=" " alt="" coords="101,79,167,104"/>
+<area shape="rect" id="node4" href="$application_8h.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義" alt="" coords="192,79,375,104"/>
+<area shape="rect" id="node5" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="399,79,621,104"/>
+</map>

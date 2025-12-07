@@ -1,0 +1,12 @@
+<map id="src/engine/core/memory/choco_memory.c" name="src/engine/core/memory/choco_memory.c">
+<area shape="rect" id="node1" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="300,5,480,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,101,92,126"/>
+<area shape="rect" id="node3" title=" " alt="" coords="611,181,686,207"/>
+<area shape="rect" id="node4" title=" " alt="" coords="168,101,239,126"/>
+<area shape="rect" id="node5" title=" " alt="" coords="263,101,330,126"/>
+<area shape="rect" id="node6" title=" " alt="" coords="355,101,425,126"/>
+<area shape="rect" id="node7" title=" " alt="" coords="449,101,520,126"/>
+<area shape="rect" id="node8" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="543,101,754,126"/>
+<area shape="rect" id="node9" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="778,101,999,126"/>
+<area shape="rect" id="node10" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1023,93,1181,133"/>
+</map>

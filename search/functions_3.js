@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['linear_5fallocator_5fallocate_0',['linear_allocator_allocate',['../linear__allocator_8h.html#abf00fe44f8d0e799d5704236be18478f',1,'linear_allocator_allocate(linear_alloc_t *allocator_, size_t req_size_, size_t req_align_, void **out_ptr_):&#160;linear_allocator.c'],['../linear__allocator_8c.html#abf00fe44f8d0e799d5704236be18478f',1,'linear_allocator_allocate(linear_alloc_t *allocator_, size_t req_size_, size_t req_align_, void **out_ptr_):&#160;linear_allocator.c']]],
+  ['linear_5fallocator_5finit_1',['linear_allocator_init',['../linear__allocator_8h.html#a649d70d63d4cc247442901df0f4d836b',1,'linear_allocator_init(linear_alloc_t *allocator_, size_t capacity_, void *memory_pool_):&#160;linear_allocator.c'],['../linear__allocator_8c.html#a649d70d63d4cc247442901df0f4d836b',1,'linear_allocator_init(linear_alloc_t *allocator_, size_t capacity_, void *memory_pool_):&#160;linear_allocator.c']]],
+  ['linear_5fallocator_5fpreinit_2',['linear_allocator_preinit',['../linear__allocator_8h.html#a1311c38151210f58772647a858fd6937',1,'linear_allocator_preinit(size_t *memory_requirement_, size_t *align_requirement_):&#160;linear_allocator.c'],['../linear__allocator_8c.html#a1311c38151210f58772647a858fd6937',1,'linear_allocator_preinit(size_t *memory_requirement_, size_t *align_requirement_):&#160;linear_allocator.c']]]
+];

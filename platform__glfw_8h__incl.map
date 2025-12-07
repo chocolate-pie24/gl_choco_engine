@@ -1,0 +1,10 @@
+<map id="include/engine/platform_concretes/platform_glfw.h" name="include/engine/platform_concretes/platform_glfw.h">
+<area shape="rect" id="node1" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="14,5,211,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="375,269,458,295"/>
+<area shape="rect" id="node3" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="238,93,433,133"/>
+<area shape="rect" id="node5" href="$platform__utils_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="33,181,192,221"/>
+<area shape="rect" id="node4" title=" " alt="" coords="217,189,291,214"/>
+<area shape="rect" id="node6" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義" alt="" coords="315,181,518,221"/>
+<area shape="rect" id="node7" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="542,181,729,221"/>
+<area shape="rect" id="node8" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義" alt="" coords="753,181,947,221"/>
+</map>

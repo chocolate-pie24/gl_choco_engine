@@ -1,0 +1,7 @@
+<map id="Event" name="Event">
+<area shape="rect" id="node1" href="$group__core.html" title="プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)" alt="" coords="5,55,57,80"/>
+<area shape="rect" id="node2" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="105,55,164,80"/>
+<area shape="rect" id="node3" href="$group__event__keyboard.html" title="キーボードイベントの型を提供する" alt="" coords="212,5,336,31"/>
+<area shape="rect" id="node4" href="$group__event__mouse.html" title="マウスイベントの型を提供する" alt="" coords="221,55,327,80"/>
+<area shape="rect" id="node5" href="$group__event__window.html" title="ウィンドウイベントの型を提供する" alt="" coords="217,104,331,129"/>
+</map>

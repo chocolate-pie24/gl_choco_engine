@@ -1,0 +1,10 @@
+<map id="include/engine/platform_context/platform_context.h" name="include/engine/platform_context/platform_context.h">
+<area shape="rect" id="node1" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="368,5,575,45"/>
+<area shape="rect" id="node2" href="$platform__utils_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="5,93,164,133"/>
+<area shape="rect" id="node3" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="189,93,346,133"/>
+<area shape="rect" id="node5" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義" alt="" coords="370,93,573,133"/>
+<area shape="rect" id="node7" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="597,93,783,133"/>
+<area shape="rect" id="node8" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義" alt="" coords="808,93,1001,133"/>
+<area shape="rect" id="node4" title=" " alt="" coords="230,181,305,207"/>
+<area shape="rect" id="node6" title=" " alt="" coords="539,181,622,207"/>
+</map>

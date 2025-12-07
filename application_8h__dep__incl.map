@@ -1,0 +1,5 @@
+<map id="include/application/application.h" name="include/application/application.h">
+<area shape="rect" id="node1" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義" alt="" coords="120,5,265,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,93,209,119"/>
+<area shape="rect" id="node3" href="$entry_8c.html" title="ゲームアプリケーションエントリーポイント" alt="" coords="234,93,322,119"/>
+</map>

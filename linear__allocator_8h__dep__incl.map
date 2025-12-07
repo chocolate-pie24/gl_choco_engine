@@ -1,0 +1,7 @@
+<map id="include/engine/core/memory/linear_allocator.h" name="include/engine/core/memory/linear_allocator.h">
+<area shape="rect" id="node1" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="194,5,391,45"/>
+<area shape="rect" id="node2" href="$platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="119,93,325,133"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,189,209,214"/>
+<area shape="rect" id="node4" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="247,181,453,221"/>
+<area shape="rect" id="node5" href="$linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="401,93,581,133"/>
+</map>

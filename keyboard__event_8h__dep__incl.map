@@ -1,0 +1,9 @@
+<map id="include/engine/core/event/keyboard_event.h" name="include/engine/core/event/keyboard_event.h">
+<area shape="rect" id="node1" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義" alt="" coords="313,5,495,45"/>
+<area shape="rect" id="node2" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="152,93,339,133"/>
+<area shape="rect" id="node4" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,269,157,324"/>
+<area shape="rect" id="node5" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="276,277,481,317"/>
+<area shape="rect" id="node6" href="$platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="442,93,649,133"/>
+<area shape="rect" id="node7" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="585,189,789,214"/>
+<area shape="rect" id="node3" href="$platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="119,181,316,221"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="include/engine/base/choco_macros.h" name="include/engine/base/choco_macros.h">
+<area shape="rect" id="node1" title="全レイヤーで使用される共通マクロ定義" alt="" coords="618,5,770,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
+<area shape="rect" id="node3" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="233,101,395,141"/>
+<area shape="rect" id="node4" href="$ring__queue_8c.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="419,101,580,141"/>
+<area shape="rect" id="node5" href="$choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="604,101,784,141"/>
+<area shape="rect" id="node6" href="$linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="808,101,988,141"/>
+<area shape="rect" id="node7" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="1013,93,1165,148"/>
+<area shape="rect" id="node8" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="1189,101,1394,141"/>
+</map>

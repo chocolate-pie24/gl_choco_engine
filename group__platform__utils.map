@@ -1,0 +1,4 @@
+<map id="Platform Utils" name="Platform Utils">
+<area shape="rect" id="node1" href="$group__core.html" title="プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)" alt="" coords="5,5,57,31"/>
+<area shape="rect" id="node2" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="105,5,217,31"/>
+</map>

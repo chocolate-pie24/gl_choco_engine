@@ -1,0 +1,4 @@
+<map id="Choco Message" name="Choco Message">
+<area shape="rect" id="node1" href="$group__base.html" title="最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供" alt="" coords="5,5,60,31"/>
+<area shape="rect" id="node2" title="stdout, stderrへの色付きメッセージ出力機能を提供" alt="" coords="108,5,232,31"/>
+</map>

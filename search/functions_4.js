@@ -1,0 +1,10 @@
+var searchData=
+[
+  ['main_0',['main',['../entry_8c.html#a73df23ab851a91f06e21d676e56bcacd',1,'entry.c']]],
+  ['memory_5fsystem_5fallocate_1',['memory_system_allocate',['../choco__memory_8h.html#a0874ee6816154203790c2c3630530557',1,'memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_):&#160;choco_memory.c'],['../choco__memory_8c.html#a0874ee6816154203790c2c3630530557',1,'memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_):&#160;choco_memory.c']]],
+  ['memory_5fsystem_5fcreate_2',['memory_system_create',['../choco__memory_8h.html#a2cea61704c0f9bfd202130c7ed569e52',1,'memory_system_create(void):&#160;choco_memory.c'],['../choco__memory_8c.html#a2cea61704c0f9bfd202130c7ed569e52',1,'memory_system_create(void):&#160;choco_memory.c']]],
+  ['memory_5fsystem_5fdestroy_3',['memory_system_destroy',['../choco__memory_8h.html#ae1118adb36e9654346d1e67d540cd7e3',1,'memory_system_destroy(void):&#160;choco_memory.c'],['../choco__memory_8c.html#ae1118adb36e9654346d1e67d540cd7e3',1,'memory_system_destroy(void):&#160;choco_memory.c']]],
+  ['memory_5fsystem_5ffree_4',['memory_system_free',['../choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a',1,'memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_):&#160;choco_memory.c'],['../choco__memory_8c.html#ad1809307ab820a30f8078e2f73bd9a8a',1,'memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_):&#160;choco_memory.c']]],
+  ['memory_5fsystem_5freport_5',['memory_system_report',['../choco__memory_8h.html#a3fee6b34093672dbcf70f443b46c348c',1,'memory_system_report(void):&#160;choco_memory.c'],['../choco__memory_8c.html#a3fee6b34093672dbcf70f443b46c348c',1,'memory_system_report(void):&#160;choco_memory.c']]],
+  ['message_5foutput_6',['message_output',['../choco__message_8h.html#a06ae09e35dc738b88aae7696c5e833d8',1,'message_output(message_severity_t severity_, const char *format_,...):&#160;choco_message.c'],['../choco__message_8c.html#a06ae09e35dc738b88aae7696c5e833d8',1,'message_output(message_severity_t severity_, const char *format_,...):&#160;choco_message.c']]]
+];

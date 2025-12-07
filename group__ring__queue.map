@@ -1,0 +1,4 @@
+<map id="Ring Queue" name="Ring Queue">
+<area shape="rect" id="node1" href="$group__containers.html" title="リソースの管理責務を有する各種データを格納可能なコンテナを提供する" alt="" coords="5,5,97,31"/>
+<area shape="rect" id="node2" title="ジェネリック型のリングキューオブジェクト定義と関連APIを提供する" alt="" coords="145,5,243,31"/>
+</map>

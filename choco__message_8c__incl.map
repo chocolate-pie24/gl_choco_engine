@@ -1,0 +1,8 @@
+<map id="src/engine/base/choco_message.c" name="src/engine/base/choco_message.c">
+<area shape="rect" id="node1" title="stdout, stderrへの色付きメッセージ出力機能APIの実装" alt="" coords="153,5,319,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,93,80,119"/>
+<area shape="rect" id="node3" title=" " alt="" coords="104,93,179,119"/>
+<area shape="rect" id="node4" title=" " alt="" coords="203,93,269,119"/>
+<area shape="rect" id="node5" title=" " alt="" coords="294,93,365,119"/>
+<area shape="rect" id="node6" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="389,93,611,119"/>
+</map>

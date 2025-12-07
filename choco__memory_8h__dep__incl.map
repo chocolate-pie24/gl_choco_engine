@@ -1,0 +1,7 @@
+<map id="include/engine/core/memory/choco_memory.h" name="include/engine/core/memory/choco_memory.h">
+<area shape="rect" id="node1" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="309,5,503,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
+<area shape="rect" id="node3" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="233,93,395,133"/>
+<area shape="rect" id="node4" href="$ring__queue_8c.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="419,93,580,133"/>
+<area shape="rect" id="node5" href="$choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="604,93,784,133"/>
+</map>

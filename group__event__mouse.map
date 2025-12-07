@@ -1,0 +1,4 @@
+<map id="Mouse Event" name="Mouse Event">
+<area shape="rect" id="node1" href="$group__core__event.html" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="5,5,64,31"/>
+<area shape="rect" id="node2" title="マウスイベントの型を提供する" alt="" coords="112,5,219,31"/>
+</map>

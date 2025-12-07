@@ -1,0 +1,12 @@
+<map id="include/engine/base/choco_message.h" name="include/engine/base/choco_message.h">
+<area shape="rect" id="node1" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="809,5,961,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
+<area shape="rect" id="node3" href="$choco__message_8c.html" title="stdout, stderrへの色付きメッセージ出力機能APIの実装" alt="" coords="233,101,400,141"/>
+<area shape="rect" id="node4" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="424,101,585,141"/>
+<area shape="rect" id="node5" href="$ring__queue_8c.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="609,101,771,141"/>
+<area shape="rect" id="node6" href="$choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="795,101,975,141"/>
+<area shape="rect" id="node7" href="$linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="999,101,1179,141"/>
+<area shape="rect" id="node8" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="1203,93,1355,148"/>
+<area shape="rect" id="node9" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="1379,101,1585,141"/>
+<area shape="rect" id="node10" href="$entry_8c.html" title="ゲームアプリケーションエントリーポイント" alt="" coords="1609,108,1697,133"/>
+</map>

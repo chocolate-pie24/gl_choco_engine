@@ -1,0 +1,5 @@
+<map id="Containers" name="Containers">
+<area shape="rect" id="node1" href="$group__choco__string.html" title="文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する" alt="" coords="145,5,249,31"/>
+<area shape="rect" id="node2" title="リソースの管理責務を有する各種データを格納可能なコンテナを提供する" alt="" coords="5,31,97,56"/>
+<area shape="rect" id="node3" href="$group__ring__queue.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIを提供する" alt="" coords="149,55,246,80"/>
+</map>
