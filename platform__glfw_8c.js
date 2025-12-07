@@ -10,6 +10,7 @@ var platform__glfw_8c =
     [ "platform_glfw_pump_messages", "platform__glfw_8c.html#aefc083a86c890dce0fbc509823a31e31", null ],
     [ "platform_glfw_vtable_get", "platform__glfw_8c.html#a46c7631d531bf7f9b4dff673bb0a5878", null ],
     [ "platform_glfw_window_create", "platform__glfw_8c.html#a9e7304178c19bd6d3b7ce6c9f243ffc6", null ],
+    [ "platform_glfw_window_surface_get", "platform__glfw_8c.html#a1d2878913fd25f5a837ff980ff138f41", null ],
     [ "platform_snapshot_collect", "platform__glfw_8c.html#a438378fbaba336bb8f186ab3dc671bc7", null ],
     [ "platform_snapshot_process", "platform__glfw_8c.html#a255161b93bef01d49a6335c30d447057", null ],
     [ "rslt_convert_string", "platform__glfw_8c.html#a1f16ebc66602e6c8c2cd5d85213de754", null ],

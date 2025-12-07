@@ -6,7 +6,9 @@ var searchData=
   ['platform_5fbackend_5fpreinit_3',['platform_backend_preinit',['../structplatform__vtable.html#ab0174315cf40677841b186065d6bd0ce',1,'platform_vtable']]],
   ['platform_5fbackend_5fpump_5fmessages_4',['platform_backend_pump_messages',['../structplatform__vtable.html#a6b8643c867e5a6c141c8127daf1cc0ad',1,'platform_vtable']]],
   ['platform_5fbackend_5fwindow_5fcreate_5',['platform_backend_window_create',['../structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b',1,'platform_vtable']]],
-  ['platform_5fcontext_6',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
-  ['pressed_7',['pressed',['../structkeyboard__event.html#a292a6be1e1a61456463e40ff0c4bb967',1,'keyboard_event::pressed()'],['../structmouse__event.html#a36bf6e45d6799fdf8bc431d87c0fe30f',1,'mouse_event::pressed()']]],
-  ['prev_8',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]]
+  ['platform_5fbackend_5fwindow_5fsurface_5fget_6',['platform_backend_window_surface_get',['../structplatform__vtable.html#ac75253294b8967647fe835c9a4863d60',1,'platform_vtable']]],
+  ['platform_5fcontext_7',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
+  ['pressed_8',['pressed',['../structkeyboard__event.html#a292a6be1e1a61456463e40ff0c4bb967',1,'keyboard_event::pressed()'],['../structmouse__event.html#a36bf6e45d6799fdf8bc431d87c0fe30f',1,'mouse_event::pressed()']]],
+  ['prev_9',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]],
+  ['program_5fid_10',['program_id',['../structapp__state.html#ac19427c5c011ea1ff0573f577c34f8b2',1,'app_state']]]
 ];

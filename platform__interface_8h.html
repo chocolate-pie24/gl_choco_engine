@@ -158,6 +158,8 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a3c9fae21c839b68511ca6844b5566b9c"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="platform__utils_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__interface_8h.html#a3c9fae21c839b68511ca6844b5566b9c">pfn_platform_backend_pump_messages</a>) (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_, void(*window_event_callback) (const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *event_), void(*keyboard_event_callback) (const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *event_), void(*mouse_event_callback) (const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *event_))</td></tr>
 <tr class="memdesc:a3c9fae21c839b68511ca6844b5566b9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウ、キーボード、マウスイベントを吸い上げ、各イベントをコールバック内で処理する  <br /></td></tr>
 <tr class="separator:a3c9fae21c839b68511ca6844b5566b9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a711f509de75571eac055a88dc0b4aa6b"><td class="memItemLeft" align="right" valign="top">typedef void *(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__interface_8h.html#a711f509de75571eac055a88dc0b4aa6b">pfn_platform_backend_window_surface_get</a>) (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td></tr>
+<tr class="separator:a711f509de75571eac055a88dc0b4aa6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a451a85773847bb9686adfac95d35d532"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structplatform__vtable.html">platform_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__interface_8h.html#a451a85773847bb9686adfac95d35d532">platform_vtable_t</a></td></tr>
 <tr class="memdesc:a451a85773847bb9686adfac95d35d532"><td class="mdescLeft">&#160;</td><td class="mdescRight">プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)  <br /></td></tr>
 <tr class="separator:a451a85773847bb9686adfac95d35d532"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -344,6 +346,20 @@ Typedefs</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a711f509de75571eac055a88dc0b4aa6b" name="a711f509de75571eac055a88dc0b4aa6b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a711f509de75571eac055a88dc0b4aa6b">&#9670;&#160;</a></span>pfn_platform_backend_window_surface_get</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void *(* pfn_platform_backend_window_surface_get) (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

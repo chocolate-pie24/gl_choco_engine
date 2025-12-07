@@ -7,6 +7,7 @@ var platform__context_8c =
     [ "platform_type_valid_check", "platform__context_8c.html#a1a90613712134b4eddae2b8866d4e232", null ],
     [ "platform_vtable_get", "platform__context_8c.html#a2de2db3f3094646a9d32e6a7aa6ddf53", null ],
     [ "platform_window_create", "platform__context_8c.html#a5e355214618cb2863ab4bd5f50adab82", null ],
+    [ "platform_window_surface_get", "platform__context_8c.html#ad6be6c7987028aca06f72b8b5c4b1e41", null ],
     [ "rslt_convert_linear_alloc", "platform__context_8c.html#ad156d086288f57c2c9174ff3e90c05b1", null ],
     [ "rslt_to_str", "platform__context_8c.html#ab6e5d7177f909e4cddbb03cd202df36d", null ],
     [ "s_rslt_str_invalid_argument", "platform__context_8c.html#ad513e1a68ecf78755351532812c75359", null ],

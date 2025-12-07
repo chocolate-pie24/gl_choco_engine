@@ -166,6 +166,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ab719441d87f981040fedc46aba9c5fd1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__utils_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__context_8c.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a> (<a class="el" href="platform__context_8h.html#a4720dd0138e53f1a7ff9398c9377cd53">platform_context_t</a> *platform_context_, void(*window_event_callback)(const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *event_), void(*keyboard_event_callback)(const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *event_), void(*mouse_event_callback)(const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *event_))</td></tr>
 <tr class="memdesc:ab719441d87f981040fedc46aba9c5fd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す  <br /></td></tr>
 <tr class="separator:ab719441d87f981040fedc46aba9c5fd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6be6c7987028aca06f72b8b5c4b1e41"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__context_8c.html#ad6be6c7987028aca06f72b8b5c4b1e41">platform_window_surface_get</a> (<a class="el" href="platform__context_8h.html#a4720dd0138e53f1a7ff9398c9377cd53">platform_context_t</a> *platform_context_)</td></tr>
+<tr class="separator:ad6be6c7987028aca06f72b8b5c4b1e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -455,7 +457,7 @@ Variables</h2></td></tr>
 
 <p>プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理 </p>
 <p>使用例: </p><div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code hl_struct" href="structplatform__vtable.html">platform_vtable_t</a> vtable = platform_registry_vtable_get(<a class="code hl_enumvalue" href="platform__utils_8h.html#a2ac3ce8ab152a6ec490b8a846ae28905a974591108e0c4e3673140fe016fc13ea">PLATFORM_USE_GLFW</a>);    <span class="comment">// GLFWを使用したテーブルを取得</span></div>
-<div class="ttc" id="astructplatform__vtable_html"><div class="ttname"><a href="structplatform__vtable.html">platform_vtable</a></div><div class="ttdoc">プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)</div><div class="ttdef"><b>Definition:</b> platform_interface.h:130</div></div>
+<div class="ttc" id="astructplatform__vtable_html"><div class="ttname"><a href="structplatform__vtable.html">platform_vtable</a></div><div class="ttdoc">プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)</div><div class="ttdef"><b>Definition:</b> platform_interface.h:132</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">platform_type_</td><td>仮想関数テーブルを取得するプラットフォーム種別 </td></tr>
@@ -547,6 +549,24 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ad6be6c7987028aca06f72b8b5c4b1e41" name="ad6be6c7987028aca06f72b8b5c4b1e41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6be6c7987028aca06f72b8b5c4b1e41">&#9670;&#160;</a></span>platform_window_surface_get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void * platform_window_surface_get </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="platform__context_8h.html#a4720dd0138e53f1a7ff9398c9377cd53">platform_context_t</a> *&#160;</td>
+          <td class="paramname"><em>platform_context_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

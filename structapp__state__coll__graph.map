@@ -1,10 +1,10 @@
 <map id="app_state" name="app_state">
-<area shape="rect" id="node1" title="アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する" alt="" coords="131,475,217,500"/>
-<area shape="rect" id="node2" href="$structlinear__alloc.html" title="linear_alloc_t内部データ構造" alt="" coords="5,357,103,383"/>
-<area shape="rect" id="node3" href="$structring__queue.html" title="ring_queue_t内部データ構造" alt="" coords="127,357,221,383"/>
-<area shape="rect" id="node4" href="$structplatform__context.html" title="プラットフォームコンテキスト構造体" alt="" coords="293,357,428,383"/>
+<area shape="rect" id="node1" title="アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する" alt="" coords="131,504,217,529"/>
+<area shape="rect" id="node2" href="$structlinear__alloc.html" title="linear_alloc_t内部データ構造" alt="" coords="5,387,103,412"/>
+<area shape="rect" id="node3" href="$structring__queue.html" title="ring_queue_t内部データ構造" alt="" coords="127,387,221,412"/>
+<area shape="rect" id="node4" href="$structplatform__context.html" title="プラットフォームコンテキスト構造体" alt="" coords="293,387,428,412"/>
 <area shape="rect" id="node5" href="$structplatform__backend.html" title="GLFWプラットフォーム内部状態管理構造体" alt="" coords="265,108,403,133"/>
-<area shape="rect" id="node8" href="$structplatform__vtable.html" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="396,269,523,295"/>
+<area shape="rect" id="node8" href="$structplatform__vtable.html" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="396,299,523,324"/>
 <area shape="rect" id="node6" href="$structchoco__string.html" title=" " alt="" coords="214,5,318,31"/>
 <area shape="rect" id="node7" href="$structinput__snapshot.html" title="入力状態格納構造体" alt="" coords="343,5,464,31"/>
 </map>

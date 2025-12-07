@@ -6,6 +6,7 @@ var platform__interface_8h =
     [ "pfn_platform_backend_preinit", "platform__interface_8h.html#af4ad5df408b7d791746c109412e26fbf", null ],
     [ "pfn_platform_backend_pump_messages", "platform__interface_8h.html#a3c9fae21c839b68511ca6844b5566b9c", null ],
     [ "pfn_platform_backend_window_create", "platform__interface_8h.html#a26b8e93cbacc6bdc50b1adba844fd40b", null ],
+    [ "pfn_platform_backend_window_surface_get", "platform__interface_8h.html#a711f509de75571eac055a88dc0b4aa6b", null ],
     [ "platform_backend_t", "platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0", null ],
     [ "platform_vtable_t", "platform__interface_8h.html#a451a85773847bb9686adfac95d35d532", null ]
 ];
