@@ -98,25 +98,21 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <p><img src="assets/logo/choco_engine_banner_768x256.png" alt="GL CHOCO ENGINE" width="640" class="inline"/> </p>
 <h2><a class="anchor" id="autotoc_md0"></a>
 GL CHOCO ENGINE</h2>
-<p>Test Doxygen GitHub Pages workflow</p>
 <p>GL CHOCO ENGINE(gl_choco_engine)は、</p>
 <ul>
 <li>C言語とOpenGLでゲームエンジンの内部構造を学びたい中級者</li>
 <li>Raspberry Piなどの比較的非力な環境で、軽量な描画基盤を試したいエンジニア</li>
 </ul>
 <p>を主な対象とした、小規模で学習寄りのゲームエンジンです。 UnityやUnreal Engine のようなフル機能の商用エンジンではなく、 「中身を自分でいじれ、自分で拡張できるツール」という立ち位置を想定しています。</p>
-<p>エンジンの立ち位置や連載全体の背景については、Zennの全体イントロダクションで詳しく解説しています。</p>
-<ul>
-<li><a href="https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction">https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction</a></li>
-</ul>
 <h2><a class="anchor" id="autotoc_md1"></a>
 Inspired by</h2>
-<p>本プロジェクトは、<a href="https://kohiengine.com/">Travis Vroman 氏</a>の Kohi Game Engine に触発されて開始しました。 氏の作り方を参考にしつつ、本リポジトリでは OpenGL/GLFW を用いて独自に実装を進めています。</p>
+<p>本プロジェクトは、<a href="https://kohiengine.com/">Kohi Game Engine</a> に触発されて開始しました。 Kohi Game Engine の作者である Travis Vroman 氏の作り方を参考にしつつ、 本リポジトリでは OpenGL/GLFW を用いて独自に実装を進めています。</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
-開発ログ</h2>
-<p>実装の進め方や学習の過程は<a href="https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction">記事</a>にまとめてあります。</p>
+ドキュメント</h2>
 <ul>
-<li>最新タグ: <code>v0.1.0-step3</code>（2D Rendering Step3 完了）</li>
+<li><a href="https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction">エンジンの立ち位置の説明と開発ログ</a></li>
+<li><a href="https://chocolate-pie24.github.io/gl_choco_engine/">APIドキュメント(Doxygen)</a></li>
+<li>エンジンレイヤー構成</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md3"></a>
 ディレクトリ構成</h2>
@@ -225,11 +221,8 @@ Inspired by</h2>
 <div class="line">        ├── test_platform_glfw.h</div>
 <div class="line">        └── test_ring_queue.h</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md4"></a>
-エンジンレイヤー構成</h2>
-<p>エンジンを構成するモジュールのレイヤー構成は、docs/layer.mdに記載しています</p>
-<h2><a class="anchor" id="autotoc_md5"></a>
 実行環境の構築</h2>
-<h3><a class="anchor" id="autotoc_md6"></a>
+<h3><a class="anchor" id="autotoc_md5"></a>
 macOS</h3>
 <p><em><b>テスト環境</b></em></p>
 <div class="fragment"><div class="line">% sw_vers</div>
@@ -250,7 +243,7 @@ macOS</h3>
 </div><!-- fragment --><p><em><b>必要ライブラリのセットアップ</b></em></p>
 <div class="fragment"><div class="line">brew install glfw</div>
 <div class="line">brew install glew</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md7"></a>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md6"></a>
 Linux</h3>
 <p><em><b>テスト環境</b></em></p>
 <div class="fragment"><div class="line">$ uname -a</div>
@@ -266,20 +259,20 @@ Linux</h3>
 </div><!-- fragment --><p><em><b>必要ライブラリのセットアップ</b></em></p>
 <div class="fragment"><div class="line">sudo apt install libglew-dev</div>
 <div class="line">sudo apt install libglfw3-dev</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md8"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md7"></a>
 ビルド</h2>
 <div class="fragment"><div class="line">chmod +x ./build.sh</div>
 <div class="line">./build.sh all DEBUG_BUILD    # デバッグビルド</div>
 <div class="line">./build.sh all RELEASE_BUILD  # リリースビルド</div>
 <div class="line">./build.sh all TEST_BUILD     # テストビルド</div>
 <div class="line">./build.sh clean              # クリーン</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md8"></a>
 実行</h2>
 <div class="fragment"><div class="line">./bin/gl_choco_engine</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
 ライセンス</h2>
 <p>このプロジェクトは <b>MITライセンス</b> で公開されています。 詳細は [LICENSE](LICENSE) を参照してください。</p>
-<h2><a class="anchor" id="autotoc_md11"></a>
+<h2><a class="anchor" id="autotoc_md10"></a>
 作者</h2>
 <p><b>chocolate-pie24</b> GitHub: <a href="https://github.com/chocolate-pie24">https://github.com/chocolate-pie24</a> </p>
 </div></div><!-- PageDoc -->
