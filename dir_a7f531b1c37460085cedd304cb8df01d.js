@@ -5,5 +5,6 @@ var dir_a7f531b1c37460085cedd304cb8df01d =
     [ "core", "dir_7f643b58e2241519524527f42d96aecd.html", "dir_7f643b58e2241519524527f42d96aecd" ],
     [ "interfaces", "dir_2398ac2968295cd3cf46a3b9430e0d4d.html", "dir_2398ac2968295cd3cf46a3b9430e0d4d" ],
     [ "platform_concretes", "dir_317493eb37dd8860eda101e50eac07c0.html", "dir_317493eb37dd8860eda101e50eac07c0" ],
-    [ "platform_context", "dir_708fbeda2ec5e52718362fcd0e590c58.html", "dir_708fbeda2ec5e52718362fcd0e590c58" ]
+    [ "platform_context", "dir_708fbeda2ec5e52718362fcd0e590c58.html", "dir_708fbeda2ec5e52718362fcd0e590c58" ],
+    [ "renderer", "dir_5d68752ef0a05e0368378c003c0899ae.html", "dir_5d68752ef0a05e0368378c003c0899ae" ]
 ];

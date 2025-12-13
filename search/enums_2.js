@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['keycode_5ft_0',['keycode_t',['../keyboard__event_8h.html#a6e68664bf6d0e0a4dac76a07ae630c52',1,'keyboard_event.h']]]
+  ['choco_5fstring_5fresult_5ft_0',['choco_string_result_t',['../choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7',1,'choco_string.h']]]
 ];

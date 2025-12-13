@@ -18,5 +18,6 @@ var modules =
     [ "Containers", "group__containers.html", "group__containers" ],
     [ "Interfaces", "group__interfaces.html", "group__interfaces" ],
     [ "Platform Concretes", "group__platform__concretes.html", "group__platform__concretes" ],
-    [ "Platform Context", "group__platform__context.html", "group__platform__context" ]
+    [ "Platform Context", "group__platform__context.html", "group__platform__context" ],
+    [ "RENDERER", "group__renderer.html", "group__renderer" ]
 ];

@@ -11,5 +11,7 @@ var annotated_dup =
     [ "platform_context", "structplatform__context.html", "structplatform__context" ],
     [ "platform_vtable", "structplatform__vtable.html", "structplatform__vtable" ],
     [ "ring_queue", "structring__queue.html", "structring__queue" ],
+    [ "vertex_array_object", "structvertex__array__object.html", "structvertex__array__object" ],
+    [ "vertex_buffer_object", "structvertex__buffer__object.html", "structvertex__buffer__object" ],
     [ "window_event", "structwindow__event.html", "structwindow__event" ]
 ];

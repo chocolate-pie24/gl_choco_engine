@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['choco_5fstring_5fresult_5ft_0',['choco_string_result_t',['../choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7',1,'choco_string.h']]]
+  ['buffer_5fusage_5ft_0',['buffer_usage_t',['../renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73',1,'renderer_types.h']]]
 ];

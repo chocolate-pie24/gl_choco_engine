@@ -1,0 +1,11 @@
+<map id="src/engine/renderer/renderer_core/renderer_memory.c" name="src/engine/renderer/renderer_core/renderer_memory.c">
+<area shape="rect" id="node1" title=" " alt="" coords="310,5,485,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,203,88,229"/>
+<area shape="rect" id="node3" title=" " alt="" coords="133,203,203,229"/>
+<area shape="rect" id="node4" title=" " alt="" coords="360,203,435,229"/>
+<area shape="rect" id="node5" href="$renderer__memory_8h.html" title=" " alt="" coords="114,108,302,148"/>
+<area shape="rect" id="node6" href="$renderer__types_8h.html" title=" " alt="" coords="615,196,799,236"/>
+<area shape="rect" id="node7" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="377,108,535,148"/>
+<area shape="rect" id="node8" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="559,115,769,141"/>
+<area shape="rect" id="node9" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="844,115,1065,141"/>
+</map>
