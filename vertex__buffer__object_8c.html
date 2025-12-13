@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('vertex__buffer__object_8c.html',''); i
   <div class="headertitle"><div class="title">vertex_buffer_object.c File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;GL/glew.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
+<code>#include &lt;GL/glew.h&gt;</code><br />
 <code>#include &lt;GLFW/glfw3.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_base/renderer_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__err__utils_8h_source.html">engine/renderer/renderer_core/renderer_err_utils.h</a>&quot;</code><br />
@@ -111,19 +112,19 @@ Include dependency graph for vertex_buffer_object.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="vertex__buffer__object_8c__incl.png" border="0" usemap="#asrc_2engine_2renderer_2renderer__backend_2gl33_2vertex__buffer__object_8c" alt=""/></div>
 <map name="asrc_2engine_2renderer_2renderer__backend_2gl33_2vertex__buffer__object_8c" id="asrc_2engine_2renderer_2renderer__backend_2gl33_2vertex__buffer__object_8c">
-<area shape="rect" title=" " alt="" coords="530,5,705,60"/>
-<area shape="rect" title=" " alt="" coords="5,123,91,148"/>
-<area shape="rect" title=" " alt="" coords="115,123,226,148"/>
-<area shape="rect" href="renderer__types_8h.html" title=" " alt="" coords="445,211,629,251"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title=" " alt="" coords="302,115,490,155"/>
-<area shape="rect" href="renderer__memory_8h.html" title=" " alt="" coords="745,115,933,155"/>
-<area shape="rect" href="vertex__buffer__object_8h.html" title=" " alt="" coords="514,108,721,163"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="957,115,1115,155"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1139,123,1349,148"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1373,123,1595,148"/>
-<area shape="rect" title=" " alt="" coords="745,218,828,243"/>
-<area shape="rect" title=" " alt="" coords="853,218,923,243"/>
-<area shape="rect" title=" " alt="" coords="999,218,1073,243"/>
+<area shape="rect" title=" " alt="" coords="592,5,767,60"/>
+<area shape="rect" title=" " alt="" coords="38,218,121,243"/>
+<area shape="rect" title=" " alt="" coords="1115,123,1201,148"/>
+<area shape="rect" title=" " alt="" coords="1225,123,1336,148"/>
+<area shape="rect" href="renderer__types_8h.html" title=" " alt="" coords="157,211,341,251"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title=" " alt="" coords="44,115,232,155"/>
+<area shape="rect" href="renderer__memory_8h.html" title=" " alt="" coords="487,115,675,155"/>
+<area shape="rect" href="vertex__buffer__object_8h.html" title=" " alt="" coords="256,108,463,163"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="699,115,857,155"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="881,123,1091,148"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1361,123,1582,148"/>
+<area shape="rect" title=" " alt="" coords="545,218,616,243"/>
+<area shape="rect" title=" " alt="" coords="741,218,815,243"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -138,16 +139,16 @@ Functions</h2></td></tr>
 <tr class="separator:addb09099d189498348f79d9d7491cade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a289f0111d588c59530675de3e57364ee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a289f0111d588c59530675de3e57364ee">vertex_buffer_destroy</a> (<a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> **vertex_buffer_)</td></tr>
 <tr class="separator:a289f0111d588c59530675de3e57364ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30546a4934e1f6f61fb8a0b899828af8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a30546a4934e1f6f61fb8a0b899828af8">vertex_buffer_bind</a> (const <a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *vertex_buffer_)</td></tr>
-<tr class="separator:a30546a4934e1f6f61fb8a0b899828af8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5c080caeb716ebb430738f8f0a9bf0a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#ac5c080caeb716ebb430738f8f0a9bf0a">vertex_buffer_unbind</a> (void)</td></tr>
-<tr class="separator:ac5c080caeb716ebb430738f8f0a9bf0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01d0f895187aae6076c59d17d4312491"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a01d0f895187aae6076c59d17d4312491">vertex_buffer_vertex_load</a> (size_t load_size_, void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td></tr>
-<tr class="separator:a01d0f895187aae6076c59d17d4312491"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f54de9e2693f6b5a84f4ed02ef165be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a2f54de9e2693f6b5a84f4ed02ef165be">vertex_buffer_bind</a> (<a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *vertex_buffer_)</td></tr>
+<tr class="separator:a2f54de9e2693f6b5a84f4ed02ef165be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bcd3cb5382aecd6dbd1b3fe6e60c875"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a4bcd3cb5382aecd6dbd1b3fe6e60c875">vertex_buffer_unbind</a> (<a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *vertex_buffer_)</td></tr>
+<tr class="separator:a4bcd3cb5382aecd6dbd1b3fe6e60c875"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a676498defc6c7a5a0de535bef223571c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex__buffer__object_8c.html#a676498defc6c7a5a0de535bef223571c">vertex_buffer_vertex_load</a> (const <a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *vertex_buffer_, size_t load_size_, void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td></tr>
+<tr class="separator:a676498defc6c7a5a0de535bef223571c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a30546a4934e1f6f61fb8a0b899828af8" name="a30546a4934e1f6f61fb8a0b899828af8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30546a4934e1f6f61fb8a0b899828af8">&#9670;&#160;</a></span>vertex_buffer_bind()</h2>
+<a id="a2f54de9e2693f6b5a84f4ed02ef165be" name="a2f54de9e2693f6b5a84f4ed02ef165be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f54de9e2693f6b5a84f4ed02ef165be">&#9670;&#160;</a></span>vertex_buffer_bind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -155,7 +156,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> vertex_buffer_bind </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *&#160;</td>
           <td class="paramname"><em>vertex_buffer_</em></td><td>)</td>
           <td></td>
         </tr>
@@ -200,8 +201,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac5c080caeb716ebb430738f8f0a9bf0a" name="ac5c080caeb716ebb430738f8f0a9bf0a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5c080caeb716ebb430738f8f0a9bf0a">&#9670;&#160;</a></span>vertex_buffer_unbind()</h2>
+<a id="a4bcd3cb5382aecd6dbd1b3fe6e60c875" name="a4bcd3cb5382aecd6dbd1b3fe6e60c875"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4bcd3cb5382aecd6dbd1b3fe6e60c875">&#9670;&#160;</a></span>vertex_buffer_unbind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,8 +210,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> vertex_buffer_unbind </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *&#160;</td>
+          <td class="paramname"><em>vertex_buffer_</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -218,8 +219,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a01d0f895187aae6076c59d17d4312491" name="a01d0f895187aae6076c59d17d4312491"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a01d0f895187aae6076c59d17d4312491">&#9670;&#160;</a></span>vertex_buffer_vertex_load()</h2>
+<a id="a676498defc6c7a5a0de535bef223571c" name="a676498defc6c7a5a0de535bef223571c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a676498defc6c7a5a0de535bef223571c">&#9670;&#160;</a></span>vertex_buffer_vertex_load()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -227,6 +228,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> vertex_buffer_vertex_load </td>
           <td>(</td>
+          <td class="paramtype">const <a class="el" href="vertex__buffer__object_8h.html#ac30fa04d4ae67ff1ab77b40949cbbbc0">vertex_buffer_object_t</a> *&#160;</td>
+          <td class="paramname"><em>vertex_buffer_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>load_size_</em>, </td>
         </tr>
