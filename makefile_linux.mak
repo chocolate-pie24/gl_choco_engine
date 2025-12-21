@@ -61,7 +61,7 @@ else
 		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
 	endif
 endif
-LINKER_FLAGS = -L/usr/lib/x86_64-linux-gnu/
+LINKER_FLAGS += -L/usr/lib/x86_64-linux-gnu/
 LINKER_FLAGS += -lm
 LINKER_FLAGS += -lGL
 LINKER_FLAGS += -lglfw
