@@ -44,6 +44,7 @@ typedef enum {
     MEMORY_TAG_SYSTEM,      /**< メモリタグ: システム系 */
     MEMORY_TAG_STRING,      /**< メモリタグ: 文字列系 */
     MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
+    MEMORY_TAG_RENDERER,    /**< メモリタグ: レンダラー */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
@@ -199,10 +200,14 @@ void memory_system_report(void);
 // - malloc_counterの値はそのまま
 void memory_system_test_param_set(int32_t malloc_fail_n_);
 
+// 引数で与えたerr_code_を強制的に出力させる
+void memory_system_err_code_set(memory_system_result_t err_code_);
+
 // メモリシステムのmallocテスト構造体の値をリセットする
 // - malloc_fail_nを0
-// - faile_enableをfalse
+// - enable_malloc_failをfalse
 // - malloc_counterを0
+// - enable_err_codeをfalse
 void memory_system_test_param_reset(void);
 #endif
 

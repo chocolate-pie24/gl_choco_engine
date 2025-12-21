@@ -43,6 +43,10 @@
 
 #include "engine/platform_context/platform_context.h"
 
+#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
+#include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
+
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
@@ -329,11 +333,9 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    GLuint vertex_array_id;
-
-    glGenVertexArrays(1, &vertex_array_id);
-
-    glBindVertexArray(vertex_array_id);
+    vertex_array_object_t* vao = NULL;
+    vertex_array_create(&vao);
+    vertex_array_bind(vao);
 
     static const GLfloat vertex_buffer_data[] = {
     -1.0f, -1.0f, 0.0f,
@@ -341,30 +343,16 @@ application_result_t application_run(void) {
     0.0f,  1.0f, 0.0f,
     };
 
-    GLuint vertexbuffer;
+    vertex_buffer_object_t* vbo = NULL;
+    vertex_buffer_create(&vbo); // TODO: エラー処理
+    vertex_buffer_bind(vbo);
 
-    glGenBuffers(1, &vertexbuffer);
+    vertex_buffer_vertex_load(sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    vertex_array_attribute_set(0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
-
-    // 最初の属性バッファ：頂点
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-
-    glVertexAttribPointer(
-    0,
-    3,
-    GL_FLOAT,
-    GL_FALSE,
-    sizeof(GLfloat) * 3,
-    (void*)0
-    );
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
+    vertex_buffer_unbind();
+    vertex_array_unbind();
 
     GLFWwindow* window = (GLFWwindow*)platform_window_surface_get(s_app_state->platform_context);
     // TODO: window NULLチェック
@@ -393,11 +381,11 @@ application_result_t application_run(void) {
 
         glViewport(0, 0, s_app_state->window_width, s_app_state->window_height);
 
-        glBindVertexArray(vertex_array_id);
+        vertex_array_bind(vao);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glBindVertexArray(0);
+        vertex_array_unbind();
 
         glfwSwapBuffers(window);
         // end temporary
@@ -405,6 +393,10 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
+    // TODO: begin temporary
+    vertex_buffer_destroy(&vbo);
+    vertex_array_destroy(&vao);
+    // end temporary
     return ret;
 }
 

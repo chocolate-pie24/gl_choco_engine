@@ -27,6 +27,11 @@
 #include "test_ring_queue.h"
 #include "test_platform_context.h"
 #include "test_platform_glfw.h"
+#include "renderer/test_renderer_memory.h"
+#include "renderer/test_renderer_err_utils.h"
+#include "renderer/test_vertex_buffer_object.h"
+#include "renderer/test_vertex_array_object.h"
+
 #endif
 
 /**
@@ -61,6 +66,14 @@ int main(int argc_, char** argv_) {
         memory_system_destroy();
 
         test_platform_glfw();
+
+        memory_system_create();
+        test_renderer_memory();
+        memory_system_destroy();
+
+        test_renderer_result_str();
+        test_vertex_buffer_object();
+        test_vertex_array_object();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
