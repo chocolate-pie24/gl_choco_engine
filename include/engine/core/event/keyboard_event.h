@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef ENGINE_CORE_KEYBOARD_EVENT_H
-#define ENGINE_CORE_KEYBOARD_EVENT_H
+#ifndef GLCE_ENGINE_CORE_KEYBOARD_EVENT_H
+#define GLCE_ENGINE_CORE_KEYBOARD_EVENT_H
 
 #ifdef __cplusplus
 extern "C" {
