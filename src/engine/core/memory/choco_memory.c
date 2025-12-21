@@ -30,9 +30,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
-    bool fail_enable;
-    int32_t malloc_counter;
-    int32_t malloc_fail_n;
+    bool enable_malloc_fail;               /**< 強制的にmallocを擬似的に失敗させる機能の有効フラグ */
+    bool enable_err_code;           /**< 強制的に指定した実行結果コードを返す機能の有効フラグ */
+    int32_t malloc_counter;         /**< malloc実行回数(0...) */
+    int32_t malloc_fail_n;          /**< 何回目のmallocで失敗させるかを指定(初回なら0を指定する)(malloc_failがfalseなら機能しない) */
+
+    memory_system_result_t code;    /**< enable_err_codeがtrueのときにはこのcodeの値が強制的に出力される */
 } malloc_test_t;
 
 static malloc_test_t s_malloc_test;
@@ -91,6 +94,7 @@ memory_system_result_t memory_system_create(void) {
     tmp->mem_tag_str[MEMORY_TAG_RING_QUEUE] = "ring_queue";
     tmp->mem_tag_str[MEMORY_TAG_RENDERER] = "renderer";
 
+
     // commit
     s_mem_sys_ptr = tmp;
     ret = MEMORY_SYSTEM_SUCCESS;
@@ -134,6 +138,11 @@ cleanup:
 // メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
 // メモリ割り当て失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
+#ifdef TEST_BUILD
+    if(s_malloc_test.enable_err_code) {
+        return s_malloc_test.code;
+    }
+#endif
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* tmp = NULL;
 
@@ -228,7 +237,7 @@ cleanup:
 static void* test_malloc(size_t size_) {
     void* ret = NULL;
 #ifdef TEST_BUILD
-    if(s_malloc_test.fail_enable) {
+    if(s_malloc_test.enable_malloc_fail) {
         if(s_malloc_test.malloc_counter == s_malloc_test.malloc_fail_n) {
             ret = NULL;
         } else {
@@ -246,14 +255,22 @@ static void* test_malloc(size_t size_) {
 
 #ifdef TEST_BUILD
 void NO_COVERAGE memory_system_test_param_set(int32_t malloc_fail_n_) {
-    s_malloc_test.fail_enable = true;
+    s_malloc_test.enable_malloc_fail = true;
     s_malloc_test.malloc_fail_n = malloc_fail_n_;
 }
 
+void NO_COVERAGE memory_system_err_code_set(memory_system_result_t err_code_) {
+    s_malloc_test.enable_err_code = true;
+    s_malloc_test.code = err_code_;
+
+}
+
 void NO_COVERAGE memory_system_test_param_reset(void) {
-    s_malloc_test.fail_enable = false;
+    s_malloc_test.enable_malloc_fail = false;
     s_malloc_test.malloc_counter = 0;
     s_malloc_test.malloc_fail_n = 0;
+
+    s_malloc_test.enable_err_code = false;
 }
 
 void test_memory_system(void) {
