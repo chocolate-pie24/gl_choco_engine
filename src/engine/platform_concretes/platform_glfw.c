@@ -77,6 +77,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static void* platform_glfw_window_surface_get(platform_backend_t* platform_backend_);
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
@@ -116,6 +117,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_destroy = platform_glfw_destroy,
     .platform_backend_window_create = platform_glfw_window_create,
     .platform_backend_pump_messages = platform_glfw_pump_messages,
+    .platform_backend_window_surface_get = platform_glfw_window_surface_get,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
@@ -464,6 +466,23 @@ static platform_result_t platform_glfw_pump_messages(
 
 cleanup:
     return ret;
+}
+
+// PLATFORM_INVALID_ARGUMENT platform_backend_ == NULL
+// PLATFORM_INVALID_ARGUMENT platform_backend_->initialized_glfw == false
+// PLATFORM_SUCCESS ウィンドウサーフェイスの取得に成功し、正常終了
+static void* platform_glfw_window_surface_get(platform_backend_t* platform_backend_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    void* surface = NULL;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_surface_get", "platform_backend_")
+    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_surface_get", "platform_backend_->initialized_glfw")
+
+    surface = platform_backend_->window;
+
+    ret = PLATFORM_SUCCESS;
+cleanup:
+    return surface;
 }
 
 /**
