@@ -1,0 +1,22 @@
+name: Doxygen GitHub Pages Deploy Action
+
+on:
+  push:
+    branches:
+      - main
+      - feat/hello-triangle   # 今回はこのブランチだけで動かす
+  workflow_dispatch:          # 必要に応じて手動実行もできるようにしておく
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write         # gh-pages ブランチに push するために必要
+
+    steps:
+      - uses: DenverCoder1/doxygen-github-pages-action@v2.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages                 # Doxygen を配置する公開用ブランチ
+          folder: docs/doxygen/html        # Doxygen の HTML 出力フォルダ
+          config_file: Doxyfile            # Doxygen 設定ファイル（名前が違うなら修正）
