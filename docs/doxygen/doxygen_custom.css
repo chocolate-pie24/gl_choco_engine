@@ -1,0 +1,168 @@
+/* ページ全体の背景色をロゴと合わせる */
+body {
+    background-color: #efe0c7;  /* 好きなベージュに変更してOK */
+}
+
+/* 中身の白背景を透過させたい場合 */
+div.contents,
+div.header,
+div.navpath {
+    background-color: transparent;
+}
+/* 上部タブナビ＋タイトル周りをベージュに */
+div#titlearea,
+div#navrow1,
+div#navrow2,
+div.tabs,
+div.tabs2,
+div#main-nav {
+    background-color: #efe0c7;
+}
+
+/* サイドナビ（ツリー部分）もベージュに */
+div#side-nav,
+div#nav-tree {
+    background-color: #efe0c7;
+}
+
+/* 下側の nav-path（パンくず＋フッター部分）の青帯をベージュに揃える */
+div.navpath ul,
+div.navpath ul li,
+div.navpath ul li a {
+    background-color: #efe0c7 !important;
+    border: none;  /* 枠線がうるさければ消す */
+}
+
+/* メインナビ全体の背景 */
+div#main-nav,
+div#main-nav ul.sm,
+div#main-nav ul.sm li {
+    background-color: #efe0c7 !important;
+}
+
+/* タブのリンク部分の背景色と文字色 */
+div#main-nav ul.sm li a {
+    background-color: #efe0c7 !important;
+    color: #333 !important;
+}
+
+/* ホバー / フォーカス時の色 */
+div#main-nav ul.sm li a:hover,
+div#main-nav ul.sm li:hover > a {
+    background-color: #e8dac5 !important;
+}
+
+/* 上部ナビ行自体の帯色をベージュに */
+div#navrow1,
+div#navrow2,
+div#navrow3,
+div#navrow4,
+div#navrow5 {
+    background-color: #efe0c7 !important;
+    border: none !important;
+}
+
+/* navpathの親帯そのものの色をベージュに */
+div.navpath {
+    background-color: #efe0c7 !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+/* その中のリストもベージュに統一（既に書いていても上からかぶせてOK） */
+div.navpath ul,
+div.navpath ul li,
+div.navpath ul li a {
+    background-color: #efe0c7 !important;
+}
+
+/* 上部ナビ行の青い帯ごと殺す（背景画像含めてリセット） */
+div#titlearea,
+div#navrow1,
+div#navrow2,
+div#navrow3,
+div#navrow4,
+div#navrow5,
+div#main-nav {
+    background: #efe0c7 !important;  /* color + image + repeat まとめて上書き */
+    border: none !important;
+}
+
+/* 下部 navpath 帯の背景画像もまとめてリセット */
+div.navpath,
+div.navpath ul,
+div.navpath ul li,
+div.navpath ul li a {
+    background: #efe0c7 !important;
+    border: none !important;
+}
+/* ページ最上部の帯 (#top) の青い背景をベージュに */
+div#top {
+    background: #efe0c7 !important;  /* 画像込みでリセット */
+    border: none !important;
+}
+
+/* サイドバーとメインコンテンツの境界線 (#splitbar) の青を消す */
+div#splitbar {
+    background: #efe0c7 !important;  /* 境界のバー自体の色 */
+    border: none !important;        /* 不要なラインがあれば消す */
+}
+
+/* 念のため、境界まわりの枠線も全部消しておく */
+div#side-nav,
+div#nav-tree,
+div#doc-content {
+    border: none !important;
+}
+
+/* 一番上の帯（タイトル行）の青い背景とグラデーションを全部ベージュに */
+div#top,
+div#titlearea,
+div#titlearea table,
+div#titlearea tr,
+div#titlearea td {
+    background: #efe0c7 !important;  /* 画像も含めてリセット */
+    border: none !important;
+}
+
+/* サイドバーとメインコンテンツの境界の青いバーを消す */
+
+/* サイドバーのリサイズ用ハンドル（細い縦バー） */
+div.ui-resizable-handle {
+    background: #efe0c7 !important;
+    border: none !important;
+}
+
+/* サイドバー側・メイン側に残っている境界線も全部消す */
+div#side-nav,
+div#nav-tree,
+div#doc-content {
+    border: none !important;
+    box-shadow: none !important;  /* 影で線っぽく見える場合も消す */
+}
+
+/* splitbar はドラッグ領域はそのまま、見た目の線は 1px 黒にする */
+div#splitbar,
+div.ui-resizable-handle {
+    background: transparent !important;        /* バー全体の塗りつぶしはやめる */
+    border: none !important;
+    border-left: 1px solid #000000 !important; /* 左端にだけ細い黒線を描く */
+    /* 必要なら幅も調整できる（デフォルトのままでOKならコメントアウトしていい） */
+    /* width: 6px !important; */
+}
+
+/* ページ最上部（タイトル＋ロゴ＋タブまわり）の青を根こそぎベージュに統一 */
+div#top,
+div#top *,
+div#titlearea,
+div#titlearea * {
+    background: #efe0c7 !important;   /* 背景画像も含めてリセット */
+    border: none !important;
+}
+/* メインコンテンツ上部の白い帯（ヘッダ部分）をベージュ背景に揃える */
+div#doc-content,
+div#doc-content .header,
+div#doc-content .headertitle {
+    background: #efe0c7 !important;
+    border: none !important;
+}
