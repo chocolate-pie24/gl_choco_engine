@@ -1,6 +1,10 @@
-# gl_choco_engine
+<p align="center">
+  <img src="assets/logo/choco_engine_banner_768x256.png" alt="GL CHOCO ENGINE" width="640">
+</p>
 
-gl_choco_engine は、
+## GL CHOCO ENGINE
+
+GL CHOCO ENGINE(gl_choco_engine)は、
 
 - C言語とOpenGLでゲームエンジンの内部構造を学びたい中級者
 - Raspberry Piなどの比較的非力な環境で、軽量な描画基盤を試したいエンジニア
@@ -9,21 +13,17 @@ gl_choco_engine は、
 UnityやUnreal Engine のようなフル機能の商用エンジンではなく、
 「中身を自分でいじれ、自分で拡張できるツール」という立ち位置を想定しています。
 
-エンジンの立ち位置や連載全体の背景については、Zennの全体イントロダクションで詳しく解説しています。
-
-- https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction
-
 ## Inspired by
 
-本プロジェクトは、[Travis Vroman 氏](https://kohiengine.com/)の
-Kohi Game Engine に触発されて開始しました。
-氏の作り方を参考にしつつ、本リポジトリでは OpenGL/GLFW を用いて独自に実装を進めています。
+本プロジェクトは、[Kohi Game Engine](https://kohiengine.com/) に触発されて開始しました。
+Kohi Game Engine の作者である Travis Vroman 氏の作り方を参考にしつつ、
+本リポジトリでは OpenGL/GLFW を用いて独自に実装を進めています。
 
-## 開発ログ
+## ドキュメント
 
-実装の進め方や学習の過程は[記事](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)にまとめてあります。
-
-- 最新タグ: `v0.1.0-step3`（2D Rendering Step3 完了）
+- [エンジンの立ち位置の説明と開発ログ](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)
+- [APIドキュメント(Doxygen)](https://chocolate-pie24.github.io/gl_choco_engine/)
+- [エンジンレイヤー構成](docs/layer.md)
 
 ## ディレクトリ構成
 
@@ -134,10 +134,6 @@ Kohi Game Engine に触発されて開始しました。
         └── test_ring_queue.h
 
 ```
-
-## エンジンレイヤー構成
-
-エンジンを構成するモジュールのレイヤー構成は、[docs/layer.md](docs/layer.md)に記載しています
 
 ## 実行環境の構築
 
