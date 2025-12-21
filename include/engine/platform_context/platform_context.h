@@ -196,6 +196,24 @@ platform_result_t platform_pump_messages(
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_));
 
+
+/**
+ * @brief プラットフォーム固有のウィンドウサーフェイス(GLFWであればGLFWwindow)を取得する
+ *
+ * 使用例:
+ * @code{.c}
+ * GLFWwindow* window = (GLFWwindow*)platform_window_surface_get(platform_context);
+ * @endcode
+ *
+ * @param platform_context_ プラットフォームstrategy context構造体インスタンスへのポインタ
+ *
+ * @retval ウィンドウサーフェイスへのポインタ 正常終了時
+ * @retval NULL 以下のいずれか
+ * - platform_context_ == NULL
+ * - platform_context_->vtable == NULL
+ */
+void* platform_window_surface_get(platform_context_t* platform_context_);
+
 #ifdef __cplusplus
 }
 #endif
