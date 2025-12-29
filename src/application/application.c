@@ -41,11 +41,14 @@
 
 #include "engine/containers/ring_queue.h"
 
+#include "engine/io_utils/fs_utils/fs_utils.h"
+
 #include "engine/platform_context/platform_context.h"
 
 #include "engine/renderer/renderer_base/renderer_types.h"
 #include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
+
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -94,6 +97,7 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
+
 
 // begin temporary TODO: remove this!!
 static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_);
@@ -373,7 +377,6 @@ application_result_t application_run(void) {
         app_state_dispatch();
         app_state_clean();
 
-
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -397,6 +400,7 @@ cleanup:
     vertex_buffer_destroy(&vbo);
     vertex_array_destroy(&vao);
     // end temporary
+
     return ret;
 }
 
@@ -808,6 +812,8 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;
     case MEMORY_SYSTEM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
@@ -882,6 +888,7 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     }
 }
 
+
 static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_) {
     bool ret = false;
     GLint result = GL_FALSE;
@@ -904,7 +911,6 @@ static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuin
             ret = false;
             goto cleanup;
         }
-
         glGetShaderInfoLog(*shader_id_, info_log_length, NULL, err_mes);
         if(GL_VERTEX_SHADER == shader_type_) {
             INFO_MESSAGE("shader_create(vertex shader) compile log: '%s'", err_mes);
@@ -938,26 +944,26 @@ static bool program_create(void) {
     GLuint fragment_shader_id = 0;
     int info_log_length = 0;
 
-    static const char* vertex_shader_source =
-        "#version 330 core \n"
-        "layout(location = 0) in vec3 vertexPosition_modelspace; \n"
-        "void main(){ \n"
-        "    gl_Position.xyz = vertexPosition_modelspace; \n"
-        "    gl_Position.w = 1.0; \n"
-        "} \n";
-    if(!shader_create(vertex_shader_source, GL_VERTEX_SHADER, &vertex_shader_id)) {
+    fs_utils_t* frag_fs_utils = NULL;
+    fs_utils_t* vert_fs_utils = NULL;
+    choco_string_t* vert_shader_source = NULL;
+    choco_string_t* frag_shader_source = NULL;
+
+    choco_string_default_create(&vert_shader_source);   // TODO: エラー処理
+    choco_string_default_create(&frag_shader_source);   // TODO: エラー処理
+    fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);   // TODO: エラー処理
+    fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);     // TODO: エラー処理
+
+    fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
+    fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
+
+    if(!shader_create(choco_string_c_str(vert_shader_source), GL_VERTEX_SHADER, &vertex_shader_id)) {
         ERROR_MESSAGE("Failed to create vertex shader.");
         ret = false;
         goto cleanup;
     }
 
-    static const char* fragment_shader_source =
-        "#version 330 core \n"
-        "out vec3 color; \n"
-        "void main(){ \n"
-        "    color = vec3(1,0,0);\n"
-        "} \n";
-    if(!shader_create(fragment_shader_source, GL_FRAGMENT_SHADER, &fragment_shader_id)) {
+    if(!shader_create(choco_string_c_str(frag_shader_source), GL_FRAGMENT_SHADER, &fragment_shader_id)) {
         ERROR_MESSAGE("Failed to create vertex shader.");
         ret = false;
         goto cleanup;
@@ -999,6 +1005,11 @@ static bool program_create(void) {
     // 既にシェーダープログラムに組み込まれたので削除
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
+
+    choco_string_destroy(&vert_shader_source);
+    choco_string_destroy(&frag_shader_source);
+    fs_utils_destroy(&vert_fs_utils);
+    fs_utils_destroy(&frag_fs_utils);
 
     ret = true;
 cleanup:

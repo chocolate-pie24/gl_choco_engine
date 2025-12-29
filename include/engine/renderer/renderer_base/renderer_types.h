@@ -29,6 +29,7 @@ typedef enum {
     RENDERER_INVALID_ARGUMENT,  /**< 無効な引数 */
     RENDERER_RUNTIME_ERROR,     /**< 実行時エラー */
     RENDERER_NO_MEMORY,         /**< メモリ確保失敗 */
+    RENDERER_LIMIT_EXCEEDED,    /**< システム使用可能範囲上限超過 */
     RENDERER_UNDEFINED_ERROR,   /**< 不明なエラー */
 } renderer_result_t;
 

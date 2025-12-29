@@ -45,20 +45,24 @@ renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_) {
 
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     memory_system_result_t ret_msys = memory_system_allocate(size_, MEMORY_TAG_RENDERER, out_ptr_);
-    if(MEMORY_SYSTEM_SUCCESS != ret_msys) {
-        switch(ret_msys) {
-        case MEMORY_SYSTEM_INVALID_ARGUMENT:
-            ret = RENDERER_INVALID_ARGUMENT;
-            break;
-        case MEMORY_SYSTEM_NO_MEMORY:
-            ret = RENDERER_NO_MEMORY;
-            break;
-        default:
-            ret = RENDERER_UNDEFINED_ERROR;
-            break;
-        }
-    } else {
+    switch(ret_msys) {
+    case MEMORY_SYSTEM_SUCCESS:
         ret = RENDERER_SUCCESS;
+        break;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        ret = RENDERER_INVALID_ARGUMENT;
+        break;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        ret = RENDERER_RUNTIME_ERROR;
+        break;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        ret = RENDERER_LIMIT_EXCEEDED;
+        break;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        ret = RENDERER_NO_MEMORY;
+        break;
+    default:
+        ret = RENDERER_UNDEFINED_ERROR;
     }
 
     return ret;
@@ -127,6 +131,28 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         memory_system_test_param_reset();
     }
     {
+        // memory_system_allocateに強制的にMEMORY_SYSTEM_RUNTIME_ERRORを出力させて結果をテスト
+        memory_system_err_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
+
+        char* ptr = NULL;
+        ret = render_mem_allocate(64, NULL);
+        assert(ret == RENDERER_RUNTIME_ERROR);
+        assert(NULL == ptr);
+
+        memory_system_test_param_reset();
+    }
+    {
+        // memory_system_allocateに強制的にMEMORY_SYSTEM_LIMIT_EXCEEDEDを出力させて結果をテスト
+        memory_system_err_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+
+        char* ptr = NULL;
+        ret = render_mem_allocate(64, NULL);
+        assert(ret == RENDERER_LIMIT_EXCEEDED);
+        assert(NULL == ptr);
+
+        memory_system_test_param_reset();
+    }
+    {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_NO_MEMORYを出力させて結果をテスト
         memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
@@ -138,8 +164,8 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         memory_system_test_param_reset();
     }
     {
-        // memory_system_allocateに強制的にMEMORY_SYSTEM_NO_MEMORY, MEMORY_SYSTEM_INVALID_ARGUMENT以外を出力させて結果をテスト
-        memory_system_err_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
+        // memory_system_allocateに強制的に既定値以外を出力させて結果をテスト
+        memory_system_err_code_set(100);
 
         char* ptr = NULL;
         ret = render_mem_allocate(64, NULL);

@@ -45,6 +45,7 @@ typedef enum {
     MEMORY_TAG_STRING,      /**< メモリタグ: 文字列系 */
     MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
     MEMORY_TAG_RENDERER,    /**< メモリタグ: レンダラー */
+    MEMORY_TAG_FILE_IO,     /**< メモリタグ: ファイルI/O */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
@@ -56,6 +57,7 @@ typedef enum {
     MEMORY_SYSTEM_SUCCESS = 0,      /**< メモリシステム成功 */
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
     MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
+    MEMORY_SYSTEM_LIMIT_EXCEEDED,   /**< メモリ使用量管理システムの使用量が使用範囲上限を超過 */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
 } memory_system_result_t;
 
@@ -130,6 +132,7 @@ void memory_system_destroy(void);
  * - out_ptr == NULL
  * - *out_ptr != NULL
  * - mem_tag_ >= MEMORY_TAG_MAX
+ * @retval MEMORY_SYSTEM_LIMIT_EXCEEDED 以下のいずれか
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
  * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
  * @retval MEMORY_SYSTEM_NO_MEMORY        メモリ割り当て失敗
@@ -142,6 +145,9 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
 
 /**
  * @brief メモリシステムを使用してメモリを解放する
+ *
+ * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
+ * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。
  *
  * @note
  * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
@@ -162,9 +168,10 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
  *
  * // メモリ解放
  * memory_system_free(ptr, 128, MEMORY_TAG_SYSTEM);
+ * ptr = NULL;
  * @endcode
  *
- * @param[in,out] ptr_ 解放メモリアドレス
+ * @param[in] ptr_ 解放メモリアドレス
  * @param[in] size_ 解放サイズ
  * @param[in] mem_tag_ メモリタグ
  *

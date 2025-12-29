@@ -274,7 +274,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
         goto cleanup;
     }
 
-    ret_string = choco_string_create_from_char(&platform_backend_->window_label, window_label_);
+    ret_string = choco_string_create_from_c_string(&platform_backend_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = rslt_convert_string(ret_string);
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", rslt_to_str(ret));
