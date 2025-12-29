@@ -35,10 +35,9 @@ extern "C" {
  * - out_ptr == NULL
  * - *out_ptr != NULL
  * - mem_tag_ >= MEMORY_TAG_MAX
- * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
- * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
- * @retval RENDERER_NO_MEMORY        メモリ割り当て失敗
- * @retval RENDERER_SUCCESS          size_ == 0または割り当てに成功し正常終了
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_SUCCESS size_ == 0または割り当てに成功し正常終了
  */
 renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_);
 

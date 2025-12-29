@@ -52,6 +52,7 @@ typedef struct vertex_buffer_object vertex_buffer_object_t;
  * - *vertex_buffer_が非NULL
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 renderer_result_t vertex_buffer_create(vertex_buffer_object_t** vertex_buffer_);
