@@ -27,6 +27,7 @@ static const char* s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実
 static const char* s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コードRENDERER_RUNTIME_ERRORの文字列 */
 static const char* s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コードRENDERER_NO_MEMORYの文字列 */
 static const char* s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRENDERER_UNDEFINED_ERRORの文字列 */
+static const char* s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
 
 const char* renderer_result_to_str(renderer_result_t result_) {
     const char* ret_str;
@@ -45,6 +46,9 @@ const char* renderer_result_to_str(renderer_result_t result_) {
         break;
     case RENDERER_UNDEFINED_ERROR:
         ret_str = s_result_str_undefined_error;
+        break;
+    case RENDERER_LIMIT_EXCEEDED:
+        ret_str = s_result_str_limit_exceeded;
         break;
     default:
         ret_str = s_result_str_undefined_error;
@@ -74,6 +78,10 @@ void test_renderer_result_str(void) {
     {
         const char* tmp = renderer_result_to_str(RENDERER_UNDEFINED_ERROR);
         assert(0 == strcmp(tmp, s_result_str_undefined_error));
+    }
+    {
+        const char* tmp = renderer_result_to_str(RENDERER_LIMIT_EXCEEDED);
+        assert(0 == strcmp(tmp, s_result_str_limit_exceeded));
     }
     {
         const char* tmp = renderer_result_to_str(1000);
