@@ -64,6 +64,7 @@ static const char* const s_rslt_str_success = "SUCCESS";                    /**<
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< メモリシステムAPI実行結果コード(無効な引数)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< メモリシステムAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< メモリシステムAPI実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< メモリシステムAPI実行結果コード(システム使用上限超過)に対応する文字列 */
 
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
@@ -93,19 +94,20 @@ memory_system_result_t memory_system_create(void) {
     tmp->mem_tag_str[MEMORY_TAG_STRING] = "string";
     tmp->mem_tag_str[MEMORY_TAG_RING_QUEUE] = "ring_queue";
     tmp->mem_tag_str[MEMORY_TAG_RENDERER] = "renderer";
-
+    tmp->mem_tag_str[MEMORY_TAG_FILE_IO] = "file_io";
 
     // commit
     s_mem_sys_ptr = tmp;
     ret = MEMORY_SYSTEM_SUCCESS;
 
 cleanup:
+    // NOTE: test_malloc以降でエラーの発生は現状ではないためリソース解放コードはなし
+    // ただし、将来的に構造体への変数追加等で仕様変更が発生し、リソース解放が必要になった際に即気付けるよう、assertを仕込んでおく
+#ifdef TEST_BUILD
     if(MEMORY_SYSTEM_SUCCESS != ret) {
-        if(NULL != tmp) {
-            free(tmp);
-            tmp = NULL;
-        }
+        assert(NULL == tmp);
     }
+#endif
     return ret;
 }
 
@@ -134,8 +136,8 @@ cleanup:
 // *out_ptr_ != NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
 // mem_tag_ >= MEMORY_TAG_MAX -> MEMORY_SYSTEM_INVALID_ARGUMENT
 // size_ == 0 -> ワーニング出力し、MEMORY_SYSTEM_SUCCESS
-// 指定したmem_tagのメモリ割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
-// メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_INVALID_ARGUMENT
+// 指定したmem_tagのメモリ割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_LIMIT_EXCEEDED
+// メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_LIMIT_EXCEEDED
 // メモリ割り当て失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
 #ifdef TEST_BUILD
@@ -157,13 +159,13 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
         goto cleanup;
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_invalid_argument, s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
-        ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_limit_exceeded, s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated > (SIZE_MAX - size_)) {
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_invalid_argument, s_mem_sys_ptr->total_allocated, size_);
-        ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_limit_exceeded, s_mem_sys_ptr->total_allocated, size_);
         goto cleanup;
     }
 
@@ -324,6 +326,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         assert(0 == strcmp("string", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING]));
         assert(0 == strcmp("ring_queue", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RING_QUEUE]));
         assert(0 == strcmp("renderer", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RENDERER]));
+        assert(0 == strcmp("file_io", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_FILE_IO]));
         for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
             assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
         }
@@ -406,20 +409,20 @@ static void NO_COVERAGE test_memory_system_allocate(void) {
     }
     assert(NULL == ptr);
 
-    // mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
+    // mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_LIMIT_EXCEEDED
     s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = SIZE_MAX - 100;
     ret = memory_system_allocate(101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+    assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
     assert(0 == s_mem_sys_ptr->total_allocated);
     assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
     assert((SIZE_MAX - 100) == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
     assert(NULL == ptr);
     s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
 
-    // total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_INVALID_ARGUMENT
+    // total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_LIMIT_EXCEEDED
     s_mem_sys_ptr->total_allocated = SIZE_MAX - 100;
     ret = memory_system_allocate(101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+    assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
     assert((SIZE_MAX - 100) == s_mem_sys_ptr->total_allocated);
     assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
     assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
