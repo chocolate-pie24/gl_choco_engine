@@ -31,6 +31,7 @@
 #include "renderer/test_renderer_err_utils.h"
 #include "renderer/test_vertex_buffer_object.h"
 #include "renderer/test_vertex_array_object.h"
+#include "test_filesystem.h"
 
 #endif
 
@@ -53,6 +54,8 @@ int main(int argc_, char** argv_) {
 #ifdef TEST_BUILD
     INFO_MESSAGE("Build mode: TEST.");
     for(uint8_t i = 0; i != 200; ++i) {
+        message_output(100, NULL);
+
         test_linear_allocator();
         test_memory_system();
         test_choco_string();
@@ -74,6 +77,8 @@ int main(int argc_, char** argv_) {
         test_renderer_result_str();
         test_vertex_buffer_object();
         test_vertex_array_object();
+
+        test_filesystem();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
