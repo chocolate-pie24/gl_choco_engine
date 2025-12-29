@@ -52,6 +52,8 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**<
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< リングキューAPI実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
 static const char* const s_rslt_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
 
 static const char* rslt_to_str(ring_queue_result_t rslt_);
@@ -82,7 +84,7 @@ static void NO_COVERAGE test_ring_queue_empty(void);
 // element_align_がmax_align_tを超過 -> RING_QUEUE_INVALID_ARGUMENT
 // tmp_queueのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
 // tmp_queue->memory_poolのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
-// element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_INVALID_ARGUMENT
+// element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_OVERFLOW
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -101,12 +103,12 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
     if(SIZE_MAX / element_size_ < max_element_count_) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_rslt_str_invalid_argument);
-        ret = RING_QUEUE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", s_rslt_str_overflow);
+        ret = RING_QUEUE_OVERFLOW;
         goto cleanup;
     }
 
-    // Simulation.)
+    // Simulation.
     diff = element_size_ % element_align_;   // アライメントのズレ量
     if(0 == diff) {
         padding = 0;
@@ -119,8 +121,8 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     }
     stride = element_size_ + padding;
     if(SIZE_MAX / max_element_count_ < stride) {
-        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_rslt_str_invalid_argument);
-        ret = RING_QUEUE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", s_rslt_str_overflow);
+        ret = RING_QUEUE_OVERFLOW;
         goto cleanup;
     }
     capacity = stride * max_element_count_;
@@ -300,6 +302,8 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return RING_QUEUE_RUNTIME_ERROR;
     case MEMORY_SYSTEM_NO_MEMORY:
         return RING_QUEUE_NO_MEMORY;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return RING_QUEUE_LIMIT_EXCEEDED;
     default:
         return RING_QUEUE_UNDEFINED_ERROR;
     }
@@ -323,6 +327,10 @@ static const char* rslt_to_str(ring_queue_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case RING_QUEUE_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
+    case RING_QUEUE_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
+    case RING_QUEUE_OVERFLOW:
+        return s_rslt_str_overflow;
     case RING_QUEUE_EMPTY:
         return s_rslt_str_empty;
     default:
@@ -444,10 +452,17 @@ static void NO_COVERAGE test_ring_queue_create(void) {
         memory_system_test_param_reset();
     }
     {
-        // element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_INVALID_ARGUMENT
+        // element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_OVERFLOW
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(128, SIZE_MAX, 8, &ring_queue);
-        assert(RING_QUEUE_INVALID_ARGUMENT == ret);
+        assert(RING_QUEUE_OVERFLOW == ret);
+        assert(NULL == ring_queue);
+    }
+    {
+        // max_element_count_ * strideがSIZE_MAXを超過 -> RING_QUEUE_OVERFLOW
+        ring_queue_t* ring_queue = NULL;
+        ret = ring_queue_create(SIZE_MAX, 1, alignof(max_align_t), &ring_queue);
+        assert(RING_QUEUE_OVERFLOW == ret);
         assert(NULL == ring_queue);
     }
     {
@@ -819,6 +834,16 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         DEBUG_MESSAGE("test_rslt_to_str - message undefined error: %s", tmp);
     }
     {
+        const char* tmp = rslt_to_str(RING_QUEUE_LIMIT_EXCEEDED);
+        assert(0 == strcmp(tmp, s_rslt_str_limit_exceeded));
+        DEBUG_MESSAGE("test_rslt_to_str - message limit exceeded: %s", tmp);
+    }
+    {
+        const char* tmp = rslt_to_str(RING_QUEUE_OVERFLOW);
+        assert(0 == strcmp(tmp, s_rslt_str_overflow));
+        DEBUG_MESSAGE("test_rslt_to_str - message overflow: %s", tmp);
+    }
+    {
         const char* tmp = rslt_to_str(RING_QUEUE_EMPTY);
         assert(0 == strcmp(tmp, s_rslt_str_empty));
         DEBUG_MESSAGE("test_rslt_to_str - message empty: %s", tmp);
@@ -844,6 +869,9 @@ static void NO_COVERAGE test_rslt_convert_mem_sys(void) {
 
     ret = rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY);
     assert(RING_QUEUE_NO_MEMORY == ret);
+
+    ret = rslt_convert_mem_sys(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+    assert(RING_QUEUE_LIMIT_EXCEEDED == ret);
 
     ret = rslt_convert_mem_sys(1024);
     assert(RING_QUEUE_UNDEFINED_ERROR == ret);
