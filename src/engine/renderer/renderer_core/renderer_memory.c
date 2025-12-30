@@ -52,9 +52,6 @@ renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_) {
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         ret = RENDERER_INVALID_ARGUMENT;
         break;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        ret = RENDERER_RUNTIME_ERROR;
-        break;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         ret = RENDERER_LIMIT_EXCEEDED;
         break;
