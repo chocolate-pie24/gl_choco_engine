@@ -12,9 +12,6 @@
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
  *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
- *
  */
 #ifndef GLCE_ENGINE_BASE_CHOCO_MESSAGE_H
 #define GLCE_ENGINE_BASE_CHOCO_MESSAGE_H

@@ -12,9 +12,6 @@
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
  *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
- *
  */
 #include <stdarg.h>
 #include <stddef.h>
