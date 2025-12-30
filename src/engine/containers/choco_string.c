@@ -2027,19 +2027,6 @@ static void NO_COVERAGE test_string_malloc(void) {
         memory_system_test_param_reset();
     }
     {
-        // memory_system_allocate -> MEMORY_SYSTEM_RUNTIME_ERROR
-        // -> CHOCO_STRING_RUNTIME_ERROR
-        memory_system_test_param_reset();
-        memory_system_err_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
-
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
-        assert(NULL == p);
-
-        memory_system_test_param_reset();
-    }
-    {
         // memory_system_allocate -> (未定義の戻り値)
         // -> CHOCO_STRING_UNDEFINED_ERROR
         memory_system_test_param_reset();

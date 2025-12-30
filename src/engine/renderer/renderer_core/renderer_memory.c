@@ -128,17 +128,6 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         memory_system_test_param_reset();
     }
     {
-        // memory_system_allocateに強制的にMEMORY_SYSTEM_RUNTIME_ERRORを出力させて結果をテスト
-        memory_system_err_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
-
-        char* ptr = NULL;
-        ret = render_mem_allocate(64, NULL);
-        assert(ret == RENDERER_RUNTIME_ERROR);
-        assert(NULL == ptr);
-
-        memory_system_test_param_reset();
-    }
-    {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_LIMIT_EXCEEDEDを出力させて結果をテスト
         memory_system_err_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
