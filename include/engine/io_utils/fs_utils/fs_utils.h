@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/filesystem/filesystem.h"
@@ -49,8 +47,93 @@ typedef enum {
     FS_UTILS_UNDEFINED_ERROR,   /**< 実行結果コード: 想定していないエラーが発生 */
 } fs_utils_result_t;
 
+/**
+ * @brief fs_utils_t構造体インスタンスのメモリを確保し初期化する(指定されたファイルのオープンも行う)
+ *
+ * @warning 引数の値は以下に注意する
+ * - filepath_の末尾には必ず'/'をつける
+ * - extensionは必ず'.'から始めること
+ *
+ * @code{.c}
+ * fs_utils_t* fs_utils = NULL;
+ * fs_utils_result_t ret = fs_utils_create("path/to/", "filename", ".txt", FILESYSTEM_MODE_READ, &fs_utils);    // path/to/filename.txtがオープンされる
+ * // エラー処理
+ * @endcode
+ *
+ * @param filepath_ ファイルパス
+ * @param filename_ ファイル名
+ * @param extension_ 拡張子(拡張子がない場合はNULLを指定する)
+ * @param open_mode_ ファイルオープンモード @ref filesystem_open_mode_t
+ * @param fs_utils_ 初期化対象構造体インスタンスへのダブルポインタ
+ *
+ * @retval FS_UTILS_INVALID_ARGUMENT 以下のいずれか
+ * - filepath_ == NULL
+ * - filename_ == NULL
+ * - fs_utils_ == NULL
+ * - *fs_utils_ != NULL
+ * - open_mode_ == FILESYSTEM_MODE_NONE
+ * - メモリシステム未初期化
+ * @retval FS_UTILS_LIMIT_EXCEEDED メモリシステムのシステム使用可能範囲上限を超過
+ * @retval FS_UTILS_NO_MEMORY メモリ割り当て失敗
+ * @retval FS_UTILS_OVERFLOW 文字列が長すぎてオーバーフロー
+ * @retval FS_UTILS_UNDEFINED_ERROR 想定していないエラー(バグorエラー処理漏れ)
+ * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
+ * @retval FS_UTILS_FILE_OPEN_ERROR ファイルオープンエラー
+ * @retval FS_UTILS_RUNTIME_ERROR 既にオープン済みのファイルハンドル(初期化済みのハンドルは引数チェックで弾かれるため起こり得ない。発生したらバグ)
+ * @retval FS_UTILS_SUCCESS メモリ確保と初期化に成功し、正常終了
+ */
 fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, filesystem_open_mode_t open_mode_, fs_utils_t** fs_utils_);
+
+/**
+ * @brief fs_utils_のメモリを解放する
+ *
+ * @note
+ * - 2重デストロイを許可する
+ * - filesystem_destroy内でファイルがクローズされる
+ *
+ * @code{.c}
+ * fs_utils_t* fs_utils = NULL;
+ * fs_utils_result_t ret = fs_utils_create("path/to/", "filename", ".txt", FILESYSTEM_MODE_READ, &fs_utils);    // path/to/filename.txtがオープンされる
+ * // エラー処理
+ *
+ * fs_utils_destroy(&fs_utils);
+ * fs_utils_destroy(&fs_utils); // 2重デストロイ許可
+ * @endcode
+ *
+ * @param fs_utils_ メモリ解放対象構造体インスタンスへのダブルポインタ
+ */
 void fs_utils_destroy(fs_utils_t** fs_utils_);
+
+/**
+ * @ref fs_utils_create で指定したファイルについて、ファイルの中身を全て読み込む
+ *
+ * @warning 内部ではchoco_string_concat_from_c_stringを使用して文字列を連結する。各文字列処理には終端文字による判定処理が存在する。
+ * ここで、バイナリファイルには終端文字(0)が普通に含まれるため、バイナリファイルの読み込みには使用してはいけない。
+ *
+ * @code{.c}
+ * fs_utils_t* fs_utils = NULL;
+ * fs_utils_result_t ret = fs_utils_create("path/to/", "filename", ".txt", FILESYSTEM_MODE_READ, &fs_utils);    // path/to/filename.txtがオープンされる
+ * // エラー処理
+ *
+ * choco_string_t* string = NULL;
+ * choco_string_result_t ret_str = choco_string_default_create(&string);
+ * // エラー処理
+ *
+ * ret = fs_utils_text_file_read(fs_utils, string); // path/to/filename.txtの中身が全て読み込まれ、stringに格納される
+ * // エラー処理
+ * @endcode
+ *
+ * @param fs_utils_ fs_utils_t構造体インスタンスへのポインタ
+ * @param out_string_ 読み込んだ文字列の格納先
+ *
+ * @retval FS_UTILS_INVALID_ARGUMENT 以下のいずれか
+ * - fs_utils_ == NULL
+ * - out_string_ == NULL
+ * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
+ * @retval FS_UTILS_BAD_OPERATION 読み込み用ではないファイルオープンモードが渡された
+ * @retval FS_UTILS_RUNTIME_ERROR ファイル読み込み中にエラーが発生
+ * @retval FS_UTILS_SUCCESS ファイルの読み込みに成功し、正常終了
+ */
 fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t* out_string_);
 
 /**
@@ -89,6 +172,12 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
  * @retval FS_UTILS_SUCCESS フルパス文字列の生成に成功し,正常終了
  */
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_);
+
+#ifdef TEST_BUILD
+// 引数で与えた実行結果コードを強制的に出力させる
+void fs_utils_fail_enable(fs_utils_result_t result_code_);
+void fs_utils_fail_disable(void);
+#endif
 
 #ifdef __cplusplus
 }

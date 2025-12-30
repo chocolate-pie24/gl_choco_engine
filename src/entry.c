@@ -32,6 +32,7 @@
 #include "renderer/test_vertex_buffer_object.h"
 #include "renderer/test_vertex_array_object.h"
 #include "test_filesystem.h"
+#include "test_fs_utils.h"
 
 #endif
 
@@ -79,6 +80,8 @@ int main(int argc_, char** argv_) {
         test_vertex_array_object();
 
         test_filesystem();
+
+        test_fs_utils();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
