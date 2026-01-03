@@ -594,7 +594,7 @@ static size_t NO_COVERAGE mock_strlen(const char* str_) {
 
 #ifdef TEST_BUILD
 void test_choco_string(void) {
-    memory_system_create();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_choco_string_default_create();
     test_choco_string_create_from_c_string();
@@ -2188,7 +2188,6 @@ static void NO_COVERAGE test_buffer_reserve(void) {
     }
 }
 
-
 static void NO_COVERAGE test_buffer_resize(void) {
     {
         // 分岐: resize_test_enable == true による早期 return
@@ -2472,7 +2471,6 @@ static void NO_COVERAGE test_is_string_valid(void) {
         assert(true == ok);
     }
 }
-
 
 static void test_param_reset(void) {
     s_choco_string_test.reserve_test_enable = false;

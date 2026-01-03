@@ -80,7 +80,11 @@ void render_mem_test_param_reset(void) {
 }
 
 void test_renderer_memory(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
     test_render_mem_allocate();
+
+    memory_system_destroy();
 }
 
 static void NO_COVERAGE test_render_mem_allocate(void) {

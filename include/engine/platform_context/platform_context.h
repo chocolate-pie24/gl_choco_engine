@@ -132,8 +132,8 @@ void platform_destroy(platform_context_t* platform_context_);
  * - window_width_ == 0
  * - window_height_ == 0
  * @retval PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
- * @retval 上記以外 各プラットフォーム実装依存
  *
+ * @note 上記以外の実行結果コードは各プラットフォーム実装依存
  */
 platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_);
 
@@ -188,14 +188,14 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
  * - mouse_event_callback == NULL
  * @retval PLATFORM_WINDOW_CLOSE ウィンドウクローズイベント発生(これは絶対に補足しなくてはいけないため、コールバックとは別に処理する)
  * @retval PLATFORM_SUCCESS イベントの吸い上げに成功し、正常終了
- * @retval 上記以外 プラットフォーム実装依存
+ *
+ * @note 上記以外の実行結果コードはプラットフォーム実装依存
  */
 platform_result_t platform_pump_messages(
     platform_context_t* platform_context_,
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_));
-
 
 /**
  * @brief プラットフォーム固有のウィンドウサーフェイス(GLFWであればGLFWwindow)を取得する

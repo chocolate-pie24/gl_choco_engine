@@ -85,6 +85,10 @@ static const char* const s_rslt_str_success = "SUCCESS";                    /**<
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームAPI実行結果コード(無効な引数)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< プラットフォームAPI実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< プラットフォームAPI実行結果コード(メモリ破損)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< プラットフォームAPI実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< プラットフォームAPI実行結果コード(オーバーフロー)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
@@ -501,6 +505,14 @@ static const char* rslt_to_str(platform_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case PLATFORM_NO_MEMORY:
         return s_rslt_str_no_memory;
+    case PLATFORM_DATA_CORRUPTED:
+        return s_rslt_str_data_corrupted;
+    case PLATFORM_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
+    case PLATFORM_OVERFLOW:
+        return s_rslt_str_overflow;
+    case PLATFORM_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
     case PLATFORM_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     case PLATFORM_WINDOW_CLOSE:
@@ -652,6 +664,16 @@ static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
         return PLATFORM_INVALID_ARGUMENT;
     case CHOCO_STRING_UNDEFINED_ERROR:
         return PLATFORM_UNDEFINED_ERROR;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return PLATFORM_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return PLATFORM_BAD_OPERATION;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return PLATFORM_RUNTIME_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return PLATFORM_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return PLATFORM_LIMIT_EXCEEDED;
     default:
         return PLATFORM_UNDEFINED_ERROR;
     }
@@ -689,6 +711,22 @@ static void NO_COVERAGE test_rslt_to_str(void) {
     {
         const char* test = rslt_to_str(PLATFORM_WINDOW_CLOSE);
         assert(0 == strcmp(test, s_rslt_str_window_close));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_DATA_CORRUPTED);
+        assert(0 == strcmp(test, s_rslt_str_data_corrupted));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_BAD_OPERATION);
+        assert(0 == strcmp(test, s_rslt_str_bad_operation));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_OVERFLOW);
+        assert(0 == strcmp(test, s_rslt_str_overflow));
+    }
+    {
+        const char* test = rslt_to_str(PLATFORM_LIMIT_EXCEEDED);
+        assert(0 == strcmp(test, s_rslt_str_limit_exceeded));
     }
     {
         const char* test = rslt_to_str(100);
@@ -885,6 +923,21 @@ static void NO_COVERAGE test_rslt_convert_string(void) {
 
     ret = rslt_convert_string(CHOCO_STRING_UNDEFINED_ERROR);
     assert(PLATFORM_UNDEFINED_ERROR == ret);
+
+    ret = rslt_convert_string(CHOCO_STRING_DATA_CORRUPTED);
+    assert(PLATFORM_DATA_CORRUPTED == ret);
+
+    ret = rslt_convert_string(CHOCO_STRING_BAD_OPERATION);
+    assert(PLATFORM_BAD_OPERATION == ret);
+
+    ret = rslt_convert_string(CHOCO_STRING_RUNTIME_ERROR);
+    assert(PLATFORM_RUNTIME_ERROR == ret);
+
+    ret = rslt_convert_string(CHOCO_STRING_OVERFLOW);
+    assert(PLATFORM_OVERFLOW == ret);
+
+    ret = rslt_convert_string(CHOCO_STRING_LIMIT_EXCEEDED);
+    assert(PLATFORM_LIMIT_EXCEEDED == ret);
 
     ret = rslt_convert_string(100);
     assert(PLATFORM_UNDEFINED_ERROR == ret);

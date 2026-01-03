@@ -60,27 +60,14 @@ int main(int argc_, char** argv_) {
         test_linear_allocator();
         test_memory_system();
         test_choco_string();
-
-        memory_system_create();
         test_ring_queue();
-        memory_system_destroy();
-
-        memory_system_create();
         test_platform_context();
-        memory_system_destroy();
-
         test_platform_glfw();
-
-        memory_system_create();
         test_renderer_memory();
-        memory_system_destroy();
-
         test_renderer_result_str();
         test_vertex_buffer_object();
         test_vertex_array_object();
-
         test_filesystem();
-
         test_fs_utils();
     }
 #endif

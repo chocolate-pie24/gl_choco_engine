@@ -17,6 +17,7 @@
  */
 #include <string.h> // for memset
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
@@ -34,7 +35,6 @@
 
 #ifdef TEST_BUILD
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 
 /**
@@ -431,7 +431,7 @@ void fs_utils_fail_disable(void) {
 }
 
 void test_fs_utils(void) {
-    memory_system_create();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_fs_utils_create();
     test_fs_utils_destroy();

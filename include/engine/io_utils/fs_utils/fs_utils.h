@@ -132,6 +132,9 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
  * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
  * @retval FS_UTILS_BAD_OPERATION 読み込み用ではないファイルオープンモードが渡された
  * @retval FS_UTILS_RUNTIME_ERROR ファイル読み込み中にエラーが発生
+ * @retval FS_UTILS_NO_MEMORY メモリ確保に失敗
+ * @retval FS_UTILS_OVERFLOW 処理過程でオーバーフローが発生
+ * @retval FS_UTILS_LIMIT_EXCEEDED メモリ管理システムが管理するメモリ使用量上限超過
  * @retval FS_UTILS_SUCCESS ファイルの読み込みに成功し、正常終了
  */
 fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t* out_string_);

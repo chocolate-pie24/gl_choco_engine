@@ -34,9 +34,9 @@ extern "C" {
  * - メモリシステム未初期化
  * - out_ptr == NULL
  * - *out_ptr != NULL
- * - mem_tag_ >= MEMORY_TAG_MAX
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った
  * @retval RENDERER_SUCCESS size_ == 0または割り当てに成功し正常終了
  */
 renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_);

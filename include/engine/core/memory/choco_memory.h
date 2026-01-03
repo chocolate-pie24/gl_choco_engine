@@ -129,8 +129,8 @@ void memory_system_destroy(void);
  *
  * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - メモリシステム未初期化
- * - out_ptr == NULL
- * - *out_ptr != NULL
+ * - out_ptr_ == NULL
+ * - *out_ptr_ != NULL
  * - mem_tag_ >= MEMORY_TAG_MAX
  * @retval MEMORY_SYSTEM_LIMIT_EXCEEDED 以下のいずれか
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過

@@ -29,6 +29,10 @@ typedef enum {
     PLATFORM_INVALID_ARGUMENT,  /**< 実行結果: 無効な引数が与えられてエラー */
     PLATFORM_RUNTIME_ERROR,     /**< 実行結果: 実行時エラー */
     PLATFORM_NO_MEMORY,         /**< 実行結果: メモリ不足エラー */
+    PLATFORM_DATA_CORRUPTED,    /**< 実行結果: メモリ破損, API誤用, データ未初期化 */
+    PLATFORM_BAD_OPERATION,     /**< 実行結果: API誤用 */
+    PLATFORM_OVERFLOW,          /**< 実行結果: 計算過程でオーバーフロー発生 */
+    PLATFORM_LIMIT_EXCEEDED,    /**< 実行結果: システムで使用可能な上限範囲を超過 */
     PLATFORM_UNDEFINED_ERROR,   /**< 実行結果: 未定義エラー */
     PLATFORM_WINDOW_CLOSE,      /**< 実行結果: ウィンドウクローズ(これは絶対に落としてはいけないイベントであるため、イベントキューには入れない(キューが満杯時に捨てられる可能性があるため)) */
 } platform_result_t;

@@ -33,6 +33,9 @@ typedef enum {
     APPLICATION_NO_MEMORY,          /**< メモリ不足 */
     APPLICATION_RUNTIME_ERROR,      /**< 実行時エラー */
     APPLICATION_INVALID_ARGUMENT,   /**< 引数異常 */
+    APPLICATION_DATA_CORRUPTED,     /**< メモリ破壊, 未初期化 */
+    APPLICATION_BAD_OPERATION,      /**< API誤用 */
+    APPLICATION_OVERFLOW,           /**< 計算過程でオーバーフロー発生 */
     APPLICATION_LIMIT_EXCEEDED,     /**< システム使用可能範囲上限超過 */
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;
@@ -60,7 +63,8 @@ void application_destroy(void);
  *
  * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理構造体インスタンスが未初期化
  * @retval APPLICATION_SUCCESS       正常終了
- * @retval 上記以外                   プラットフォーム固有エラー(各プラットフォーム実装依存)
+ *
+ * @note 上記以外の実行結果コードはプラットフォーム固有エラー(各プラットフォーム実装依存)
  */
 application_result_t application_run(void);
 

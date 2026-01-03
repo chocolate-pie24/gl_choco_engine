@@ -370,6 +370,9 @@ static const char* result_to_str(filesystem_result_t result_) {
     case FILESYSTEM_LIMIT_EXCEEDED:
         result_str = s_fs_result_limit_exceeded;
         break;
+    case FILESYSTEM_UNDEFINED_ERROR:
+        result_str = s_fs_result_undefined_error;
+        break;
     default:
         result_str = s_fs_result_undefined_error;
         break;
@@ -542,7 +545,7 @@ void filesystem_test_param_reset(void) {
 }
 
 void test_filesystem(void) {
-    memory_system_create();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_filesystem_create();
     test_filesystem_destroy();

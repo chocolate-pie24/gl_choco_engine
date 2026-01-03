@@ -66,7 +66,6 @@ typedef enum {
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
  * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
- * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
 choco_string_result_t choco_string_default_create(choco_string_t** string_);
 

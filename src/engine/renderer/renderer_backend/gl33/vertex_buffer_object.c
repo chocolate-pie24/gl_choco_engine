@@ -92,7 +92,9 @@ void vertex_buffer_destroy(vertex_buffer_object_t** vertex_buffer_) {
     if(NULL == *vertex_buffer_) {
         goto cleanup;
     }
-    vertex_buffer_unbind();
+    if(RENDERER_SUCCESS != vertex_buffer_unbind()) {
+        WARN_MESSAGE("vertex_buffer_destroy(RUNTIME_ERROR) - Failed to unbind vertex buffer.");
+    }
     mock_glDeleteBuffers(1, &(*vertex_buffer_)->vbo_handle);
     render_mem_free(*vertex_buffer_, sizeof(vertex_buffer_object_t));
     *vertex_buffer_ = NULL;
@@ -194,7 +196,7 @@ static void NO_COVERAGE mock_glBufferData(GLenum target_, GLsizeiptr size_, cons
 #ifdef TEST_BUILD
 void test_vertex_buffer_object(void) {
     s_vertex_buffer_object_test = true;
-    memory_system_create();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_vertex_buffer_create();
     test_vertex_buffer_destroy();
@@ -214,7 +216,7 @@ static void NO_COVERAGE test_vertex_buffer_create(void) {
     }
     {
         vertex_buffer_object_t* test_vbo = NULL;
-        render_mem_allocate(sizeof(vertex_buffer_object_t), (void**)&test_vbo);
+        assert(RENDERER_SUCCESS == render_mem_allocate(sizeof(vertex_buffer_object_t), (void**)&test_vbo));
         assert(NULL != test_vbo);
 
         ret = vertex_buffer_create(&test_vbo);
@@ -278,7 +280,7 @@ static void NO_COVERAGE test_vertex_buffer_bind(void) {
 }
 
 static void NO_COVERAGE test_vertex_buffer_unbind(void) {
-    vertex_buffer_unbind();
+    assert(RENDERER_SUCCESS == vertex_buffer_unbind());
 }
 
 static void NO_COVERAGE test_vertex_buffer_vertex_load(void) {

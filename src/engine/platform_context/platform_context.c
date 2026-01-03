@@ -61,6 +61,10 @@ static const char* const s_rslt_str_success = "SUCCESS";                    /**<
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< プラットフォームコンテキスト実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームコンテキスト実行結果コード(ランタイムエラー)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームコンテキスト実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< プラットフォームコンテキスト実行結果コード(メモリ破損,未初期化)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< プラットフォームコンテキスト実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< プラットフォームコンテキスト実行結果コード(計算過程オーバーフロー)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームコンテキスト実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームコンテキスト実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームコンテキスト実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
@@ -85,13 +89,6 @@ static void NO_COVERAGE test_callback_window(const window_event_t* event_);
 static void NO_COVERAGE test_platform_window_surface_get(void);
 #endif
 
-// PLATFORM_INVALID_ARGUMENT allocator_ == NULL
-// PLATFORM_INVALID_ARGUMENT out_platform_context_ == NULL
-// PLATFORM_INVALID_ARGUMENT *out_platform_context_ != NULL
-// PLATFORM_INVALID_ARGUMENT platform_type_が無効値
-// PLATFORM_RUNTIME_ERROR vtable取得失敗
-// PLATFORM_SUCCESS 初期化およびメモリ確保に成功し、正常終了
-// 上記以外 リニアアロケータによるメモリ確保失敗
 platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_t platform_type_, platform_context_t** out_platform_context_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -163,14 +160,6 @@ cleanup:
     return;
 }
 
-// PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
-// PLATFORM_INVALID_ARGUMENT platform_context_->vtable
-// PLATFORM_INVALID_ARGUMENT platform_context_->backend
-// PLATFORM_INVALID_ARGUMENT window_label_ == NULL
-// PLATFORM_INVALID_ARGUMENT window_width_ == 0
-// PLATFORM_INVALID_ARGUMENT window_height_ == 0
-// PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
-// 上記以外 各プラットフォーム実装依存
 platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_")
@@ -190,15 +179,6 @@ cleanup:
     return ret;
 }
 
-// PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
-// PLATFORM_INVALID_ARGUMENT platform_context_->vtable == NULL
-// PLATFORM_INVALID_ARGUMENT platform_context_->backend == NULL
-// PLATFORM_INVALID_ARGUMENT window_event_callback == NULL
-// PLATFORM_INVALID_ARGUMENT keyboard_event_callback == NULL
-// PLATFORM_INVALID_ARGUMENT mouse_event_callback == NULL
-// PLATFORM_WINDOW_CLOSE ウィンドウクローズイベント発生(これは絶対に補足しなくてはいけないため、コールバックとは別に処理する)
-// PLATFORM_SUCCESS イベントの吸い上げに成功し、正常終了
-// 上記以外 プラットフォーム実装依存
 platform_result_t platform_pump_messages(
     platform_context_t* platform_context_,
     void (*window_event_callback)(const window_event_t* event_),
@@ -295,6 +275,14 @@ static const char* rslt_to_str(platform_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case PLATFORM_NO_MEMORY:
         return s_rslt_str_no_memory;
+    case PLATFORM_DATA_CORRUPTED:
+        return s_rslt_str_data_corrupted;
+    case PLATFORM_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
+    case PLATFORM_OVERFLOW:
+        return s_rslt_str_overflow;
+    case PLATFORM_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
     case PLATFORM_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     case PLATFORM_WINDOW_CLOSE:
@@ -306,6 +294,8 @@ static const char* rslt_to_str(platform_result_t rslt_) {
 
 #ifdef TEST_BUILD
 void NO_COVERAGE test_platform_context(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
     test_platform_vtable_get();
     test_platform_type_valid_check();
     test_rslt_convert_linear_alloc();
@@ -315,6 +305,8 @@ void NO_COVERAGE test_platform_context(void) {
     test_platform_window_create();
     test_platform_pump_messages();
     test_platform_window_surface_get();
+
+    memory_system_destroy();
 }
 
 static void NO_COVERAGE test_platform_initialize(void) {

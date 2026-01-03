@@ -131,14 +131,6 @@ cleanup:
     return;
 }
 
-// s_mem_sys_ptr == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
-// out_ptr_ == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
-// *out_ptr_ != NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
-// mem_tag_ >= MEMORY_TAG_MAX -> MEMORY_SYSTEM_INVALID_ARGUMENT
-// size_ == 0 -> ワーニング出力し、MEMORY_SYSTEM_SUCCESS
-// 指定したmem_tagのメモリ割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_LIMIT_EXCEEDED
-// メモリ総割当量がsize_を加算することでSIZE_MAXを超過 -> MEMORY_SYSTEM_LIMIT_EXCEEDED
-// メモリ割り当て失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
 #ifdef TEST_BUILD
     if(s_malloc_test.enable_err_code) {

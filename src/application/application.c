@@ -49,7 +49,6 @@
 #include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
 
-
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
@@ -98,7 +97,6 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
-
 // begin temporary TODO: remove this!!
 static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_);
 static bool program_create(void);
@@ -108,6 +106,10 @@ static const char* const s_rslt_str_success = "SUCCESS";                    /**<
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 application_result_t application_create(void) {
@@ -789,6 +791,14 @@ static const char* rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case APPLICATION_INVALID_ARGUMENT:
         return s_rslt_str_invalid_argument;
+    case APPLICATION_DATA_CORRUPTED:
+        return s_rslt_str_data_corrupted;
+    case APPLICATION_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
+    case APPLICATION_OVERFLOW:
+        return s_rslt_str_overflow;
+    case APPLICATION_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -854,8 +864,16 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;
     case PLATFORM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
+    case PLATFORM_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case PLATFORM_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
     case PLATFORM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
+    case PLATFORM_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case PLATFORM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     case PLATFORM_WINDOW_CLOSE:
         return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
     default:
@@ -883,11 +901,14 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
         return APPLICATION_UNDEFINED_ERROR;
     case RING_QUEUE_EMPTY:
         return APPLICATION_RUNTIME_ERROR;   // リングキュー空はRuntime errorに変換
+    case RING_QUEUE_OVERFLOW:
+        return APPLICATION_RUNTIME_ERROR;   // オーバーフローもRuntime errorに変換
+    case RING_QUEUE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
-
 
 static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_) {
     bool ret = false;

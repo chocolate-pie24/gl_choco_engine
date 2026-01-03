@@ -124,7 +124,12 @@ renderer_result_t vertex_buffer_unbind(void);
  * @param load_size_ 転送サイズ(byte)
  * @param load_data_ 転送データの先頭アドレス
  * @param usage_ バッファデータの取り扱い @ref buffer_usage_t
- * @return renderer_re
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - load_data_ == NULL
+ * - load_size_ == 0
+ * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
+ * @retval RENDERER_SUCCESS データの転送に成功し、正常終了
  */
 renderer_result_t vertex_buffer_vertex_load(size_t load_size_, void* load_data_, buffer_usage_t usage_);
 

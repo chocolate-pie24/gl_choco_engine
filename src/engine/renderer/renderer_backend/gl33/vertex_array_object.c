@@ -93,7 +93,9 @@ void vertex_array_destroy(vertex_array_object_t** vertex_array_) {
     if(NULL == *vertex_array_) {
         goto cleanup;
     }
-    vertex_array_unbind();
+    if(RENDERER_SUCCESS != vertex_array_unbind()) {
+        WARN_MESSAGE("vertex_array_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
+    }
     mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
     render_mem_free(*vertex_array_, sizeof(vertex_array_object_t));
     *vertex_array_ = NULL;
@@ -202,7 +204,7 @@ static void NO_COVERAGE mock_glEnableVertexAttribArray(GLuint index_) {
 #ifdef TEST_BUILD
 void test_vertex_array_object(void) {
     s_vertex_array_object_test = true;
-    memory_system_create();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_vertex_array_create();
     test_vertex_array_destroy();
@@ -222,7 +224,7 @@ static void NO_COVERAGE test_vertex_array_create(void) {
     }
     {
         vertex_array_object_t* tmp = NULL;
-        render_mem_allocate(sizeof(vertex_array_object_t), (void**)&tmp);
+        assert(RENDERER_SUCCESS == render_mem_allocate(sizeof(vertex_array_object_t), (void**)&tmp));
         assert(NULL != tmp);
         ret = vertex_array_create(&tmp);
         assert(RENDERER_INVALID_ARGUMENT == ret);

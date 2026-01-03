@@ -341,27 +341,17 @@ static const char* rslt_to_str(ring_queue_result_t rslt_) {
 #ifdef TEST_BUILD
 
 void test_ring_queue(void) {
-    memory_system_report();
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
     test_rslt_to_str();
-    memory_system_report();
-
     test_rslt_convert_mem_sys();
-    memory_system_report();
-
     test_ring_queue_create();
-    memory_system_report();
-
     test_ring_queue_destroy();
-    memory_system_report();
-
     test_ring_queue_push();
-    memory_system_report();
-
     test_ring_queue_pop();
-    memory_system_report();
-
     test_ring_queue_empty();
-    memory_system_report();
+
+    memory_system_destroy();
 }
 
 static void NO_COVERAGE test_ring_queue_create(void) {
@@ -510,7 +500,7 @@ static void NO_COVERAGE test_ring_queue_destroy(void) {
         // memory_pool == NULL
         // メモリ使用量が戻ること
         ring_queue_t* ring_queue = NULL;
-        memory_system_allocate(sizeof(*ring_queue), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue);
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(*ring_queue), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
         memory_system_report();
         assert(NULL != ring_queue);
         memset(ring_queue, 0, sizeof(*ring_queue));
@@ -555,7 +545,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
     {
         // ring_queue_->memory_pool == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
-        memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue);
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
         assert(NULL != ring_queue);
 
         int a = 0;
@@ -726,7 +716,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
     {
         // ring_queue->memory_pool == NULL ->RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
-        memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue);
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
         memset(ring_queue, 0, sizeof(ring_queue_t));
 
         ret = ring_queue_pop(ring_queue, &a, sizeof(int), alignof(int));
@@ -782,7 +772,7 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
     }
     {
         ring_queue_t* ring_queue = NULL;
-        memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue);
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
         assert(NULL != ring_queue);
         memset(ring_queue, 0, sizeof(ring_queue_t));
         ret = ring_queue_empty(ring_queue);
@@ -799,7 +789,7 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
         assert(true == ret);
 
         int a = 0;
-        ring_queue_push(ring_queue, &a, sizeof(int), alignof(int));
+        assert(RING_QUEUE_SUCCESS == ring_queue_push(ring_queue, &a, sizeof(int), alignof(int)));
         ret = ring_queue_empty(ring_queue);
         assert(false == ret);
 
