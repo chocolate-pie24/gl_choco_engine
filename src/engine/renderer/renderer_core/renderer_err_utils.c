@@ -22,12 +22,16 @@
 
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 
-static const char* s_result_str_success = "SUCCESS";                    /**< 実行結果コードRENDERER_SUCCESSの文字列 */
-static const char* s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コードRENDERER_INVALID_ARGUMENTの文字列 */
-static const char* s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コードRENDERER_RUNTIME_ERRORの文字列 */
-static const char* s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コードRENDERER_NO_MEMORYの文字列 */
-static const char* s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRENDERER_UNDEFINED_ERRORの文字列 */
-static const char* s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
+static const char* s_result_str_success = "SUCCESS";                            /**< 実行結果コードRENDERER_SUCCESSの文字列 */
+static const char* s_result_str_invalid_argument = "INVALID_ARGUMENT";          /**< 実行結果コードRENDERER_INVALID_ARGUMENTの文字列 */
+static const char* s_result_str_runtime_error = "RUNTIME_ERROR";                /**< 実行結果コードRENDERER_RUNTIME_ERRORの文字列 */
+static const char* s_result_str_no_memory = "NO_MEMORY";                        /**< 実行結果コードRENDERER_NO_MEMORYの文字列 */
+static const char* s_result_str_shader_compile_error = "SHADER_COMPILE_ERROR";  /**< 実行結果コードRENDERER_SHADER_COMPILE_ERRORの文字列 */
+static const char* s_result_str_shader_link_error = "SHADER_LINK_ERROR";        /**< 実行結果コードRENDERER_SHADER_LINK_ERRORの文字列 */
+static const char* s_result_str_undefined_error = "UNDEFINED_ERROR";            /**< 実行結果コードRENDERER_UNDEFINED_ERRORの文字列 */
+static const char* s_result_str_limit_exceeded = "LIMIT_EXCEEDED";              /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
+static const char* s_result_str_bad_operation = "BAD_OPERATION";                /**< 実行結果コードRENDERER_BAD_OPERATIONの文字列 */
+static const char* s_result_str_data_corrupted = "DATA_CORRUPTED";              /**< 実行結果コードRENDERER_DATA_CORRUPTEDの文字列 */
 
 const char* renderer_result_to_str(renderer_result_t result_) {
     const char* ret_str;
@@ -44,11 +48,23 @@ const char* renderer_result_to_str(renderer_result_t result_) {
     case RENDERER_NO_MEMORY:
         ret_str = s_result_str_no_memory;
         break;
+    case RENDERER_SHADER_COMPILE_ERROR:
+        ret_str = s_result_str_shader_compile_error;
+        break;
+    case RENDERER_SHADER_LINK_ERROR:
+        ret_str = s_result_str_shader_link_error;
+        break;
     case RENDERER_UNDEFINED_ERROR:
         ret_str = s_result_str_undefined_error;
         break;
     case RENDERER_LIMIT_EXCEEDED:
         ret_str = s_result_str_limit_exceeded;
+        break;
+    case RENDERER_BAD_OPERATION:
+        ret_str = s_result_str_bad_operation;
+        break;
+    case RENDERER_DATA_CORRUPTED:
+        ret_str = s_result_str_data_corrupted;
         break;
     default:
         ret_str = s_result_str_undefined_error;
@@ -76,12 +92,28 @@ void test_renderer_result_str(void) {
         assert(0 == strcmp(tmp, s_result_str_no_memory));
     }
     {
+        const char* tmp = renderer_result_to_str(RENDERER_SHADER_COMPILE_ERROR);
+        assert(0 == strcmp(tmp, s_result_str_shader_compile_error));
+    }
+    {
+        const char* tmp = renderer_result_to_str(RENDERER_SHADER_LINK_ERROR);
+        assert(0 == strcmp(tmp, s_result_str_shader_link_error));
+    }
+    {
         const char* tmp = renderer_result_to_str(RENDERER_UNDEFINED_ERROR);
         assert(0 == strcmp(tmp, s_result_str_undefined_error));
     }
     {
         const char* tmp = renderer_result_to_str(RENDERER_LIMIT_EXCEEDED);
         assert(0 == strcmp(tmp, s_result_str_limit_exceeded));
+    }
+    {
+        const char* tmp = renderer_result_to_str(RENDERER_BAD_OPERATION);
+        assert(0 == strcmp(tmp, s_result_str_bad_operation));
+    }
+    {
+        const char* tmp = renderer_result_to_str(RENDERER_DATA_CORRUPTED);
+        assert(0 == strcmp(tmp, s_result_str_data_corrupted));
     }
     {
         const char* tmp = renderer_result_to_str(1000);

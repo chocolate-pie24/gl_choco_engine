@@ -25,12 +25,16 @@ extern "C" {
  *
  */
 typedef enum {
-    RENDERER_SUCCESS = 0,       /**< 処理成功 */
-    RENDERER_INVALID_ARGUMENT,  /**< 無効な引数 */
-    RENDERER_RUNTIME_ERROR,     /**< 実行時エラー */
-    RENDERER_NO_MEMORY,         /**< メモリ確保失敗 */
-    RENDERER_LIMIT_EXCEEDED,    /**< システム使用可能範囲上限超過 */
-    RENDERER_UNDEFINED_ERROR,   /**< 不明なエラー */
+    RENDERER_SUCCESS = 0,           /**< 処理成功 */
+    RENDERER_INVALID_ARGUMENT,      /**< 無効な引数 */
+    RENDERER_RUNTIME_ERROR,         /**< 実行時エラー */
+    RENDERER_NO_MEMORY,             /**< メモリ確保失敗 */
+    RENDERER_SHADER_COMPILE_ERROR,  /**< シェーダーコンパイルエラー */
+    RENDERER_SHADER_LINK_ERROR,     /**< シェーダーリンクエラー */
+    RENDERER_LIMIT_EXCEEDED,        /**< システム使用可能範囲上限超過 */
+    RENDERER_BAD_OPERATION,         /**< API誤用 */
+    RENDERER_DATA_CORRUPTED,        /**< メモリ破損,未初期化 */
+    RENDERER_UNDEFINED_ERROR,       /**< 不明なエラー */
 } renderer_result_t;
 
 /**
@@ -49,6 +53,11 @@ typedef enum {
 typedef enum {
     RENDERER_TYPE_FLOAT,    /**< データ型: GLfloat */
 } renderer_type_t;
+
+typedef enum {
+    SHADER_TYPE_VERTEX,
+    SHADER_TYPE_FRAGMENT,
+} shader_type_t;
 
 #ifdef __cplusplus
 }

@@ -48,6 +48,7 @@
 #include "engine/renderer/renderer_base/renderer_types.h"
 #include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
+#include "engine/renderer/renderer_backend/gl33/gl33_shader.h"          // TODO: remove this!!
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -76,7 +77,7 @@ typedef struct app_state {
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
     // begin temporary TODO: remove this!!
-    GLuint program_id;
+    gl33_shader_t* ui_shader_handle;
     // end temporary
 } app_state_t;
 
@@ -311,6 +312,10 @@ void application_destroy(void) {
         memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc = NULL;
     }
+    if(NULL != s_app_state->ui_shader_handle) {
+        gl33_shader_destroy(&s_app_state->ui_shader_handle);
+        s_app_state->ui_shader_handle = NULL;
+    }
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
@@ -382,7 +387,7 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(s_app_state->program_id);
+        gl33_shader_use(s_app_state->ui_shader_handle);
 
         glViewport(0, 0, s_app_state->window_width, s_app_state->window_height);
 
@@ -910,54 +915,6 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     }
 }
 
-static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_) {
-    bool ret = false;
-    GLint result = GL_FALSE;
-    int info_log_length = 0;
-
-    *shader_id_ = glCreateShader(shader_type_);
-
-    // 頂点シェーダをコンパイル
-    glShaderSource(*shader_id_, 1, &shader_source_ , NULL);
-    glCompileShader(*shader_id_);
-
-    // 頂点シェーダをチェック
-    glGetShaderiv(*shader_id_, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
-    glGetShaderiv(*shader_id_, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
-    if(0 != info_log_length && GL_TRUE != result) {
-        char* err_mes = NULL;
-        memory_system_result_t result_mem = memory_system_allocate(info_log_length, MEMORY_TAG_STRING, (void**)&err_mes);
-        if(MEMORY_SYSTEM_SUCCESS != result_mem) {
-            ERROR_MESSAGE("shader_create - Failed to allocate log memory.");
-            ret = false;
-            goto cleanup;
-        }
-        glGetShaderInfoLog(*shader_id_, info_log_length, NULL, err_mes);
-        if(GL_VERTEX_SHADER == shader_type_) {
-            INFO_MESSAGE("shader_create(vertex shader) compile log: '%s'", err_mes);
-        } else if(GL_FRAGMENT_SHADER == shader_type_) {
-            INFO_MESSAGE("shader_create(fragment shader) compile log: '%s'", err_mes);
-        } else {
-            INFO_MESSAGE("shader_create(undefined shader type) compile log: '%s'", err_mes);
-        }
-        memory_system_free(err_mes, info_log_length, MEMORY_TAG_STRING);
-        err_mes = NULL;
-        ret = false;
-        goto cleanup;
-    } else if(0 != info_log_length) {
-        ERROR_MESSAGE("shader_create - Unknown error.");
-        ret = false;
-        goto cleanup;
-    } else if(GL_TRUE != result) {
-        ERROR_MESSAGE("shader_create - Unknown error.");
-        ret = false;
-        goto cleanup;
-    }
-    ret = true;
-cleanup:
-    return ret;
-}
-
 static bool program_create(void) {
     bool ret = false;
     GLint result = GL_FALSE;
@@ -978,54 +935,10 @@ static bool program_create(void) {
     fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
     fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
 
-    if(!shader_create(choco_string_c_str(vert_shader_source), GL_VERTEX_SHADER, &vertex_shader_id)) {
-        ERROR_MESSAGE("Failed to create vertex shader.");
-        ret = false;
-        goto cleanup;
-    }
-
-    if(!shader_create(choco_string_c_str(frag_shader_source), GL_FRAGMENT_SHADER, &fragment_shader_id)) {
-        ERROR_MESSAGE("Failed to create vertex shader.");
-        ret = false;
-        goto cleanup;
-    }
-
-    // プログラムをリンクします。
-    s_app_state->program_id = glCreateProgram();
-    glAttachShader(s_app_state->program_id, vertex_shader_id);
-    glAttachShader(s_app_state->program_id, fragment_shader_id);
-    glLinkProgram(s_app_state->program_id);
-
-    // プログラムをチェックします。
-    glGetProgramiv(s_app_state->program_id, GL_LINK_STATUS, &result);
-    glGetProgramiv(s_app_state->program_id, GL_INFO_LOG_LENGTH, &info_log_length);
-    if(0 != info_log_length && GL_TRUE != result) {
-        char* err_mes = NULL;
-        memory_system_result_t result_mem = memory_system_allocate(info_log_length, MEMORY_TAG_STRING, (void**)&err_mes);
-        if(MEMORY_SYSTEM_SUCCESS != result_mem) {
-            ERROR_MESSAGE("program_create - Failed to allocate log memory.");
-            ret = false;
-            goto cleanup;
-        }
-        glGetProgramInfoLog(s_app_state->program_id, info_log_length, NULL, err_mes);
-        INFO_MESSAGE("program_create compile log: '%s'", err_mes);
-        memory_system_free(err_mes, info_log_length, MEMORY_TAG_STRING);
-        err_mes = NULL;
-        ret = false;
-        goto cleanup;
-    } else if(0 != info_log_length) {
-        ERROR_MESSAGE("program_create - Unknown error.");
-        ret = false;
-        goto cleanup;
-    } else if(GL_TRUE != result) {
-        ERROR_MESSAGE("program_create - Unknown error.");
-        ret = false;
-        goto cleanup;
-    }
-
-    // 既にシェーダープログラムに組み込まれたので削除
-    glDeleteShader(vertex_shader_id);
-    glDeleteShader(fragment_shader_id);
+    gl33_shader_create(&s_app_state->ui_shader_handle); // TODO: エラー処理
+    gl33_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_shader_handle);
+    gl33_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_shader_handle);
+    gl33_shader_link(s_app_state->ui_shader_handle);
 
     choco_string_destroy(&vert_shader_source);
     choco_string_destroy(&frag_shader_source);
