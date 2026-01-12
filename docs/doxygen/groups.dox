@@ -94,3 +94,17 @@
 /** @defgroup platform_context Platform Context
     @brief プラットフォームシステムのStrategy Contextモジュールを提供する
 */
+
+/** @defgroup renderer RENDERER
+    @brief 描画関連APIを提供する
+*/
+
+/** @defgroup renderer_base RENDERER_BASE
+    @ingroup renderer
+    @brief 描画関連APIの最下層で全モジュールから使用されるAPI, データ構造を提供する
+*/
+
+/** @defgroup renderer_types RENDERER_TYPES
+    @ingroup renderer_base
+    @brief 描画関連APIレイヤーにおいて、全モジュールから使用されるデータ構造を提供する
+*/
