@@ -16,8 +16,7 @@
 #include <stddef.h>
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
-
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 

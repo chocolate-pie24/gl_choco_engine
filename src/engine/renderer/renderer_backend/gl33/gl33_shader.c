@@ -21,8 +21,7 @@
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
-
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

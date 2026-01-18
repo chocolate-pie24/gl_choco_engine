@@ -22,7 +22,7 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 /**
  * @brief memory_system_allocateのラッパーAPI

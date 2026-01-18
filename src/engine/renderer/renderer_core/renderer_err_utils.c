@@ -18,8 +18,7 @@
 #include <assert.h>
 #endif
 
-#include "engine/renderer/renderer_base/renderer_types.h"
-
+#include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 
 static const char* s_result_str_success = "SUCCESS";                            /**< 実行結果コードRENDERER_SUCCESSの文字列 */

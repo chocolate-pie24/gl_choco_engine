@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 typedef struct gl33_shader gl33_shader_t; /**< OpenGL3.3用シェーダーモジュール内部状態管理構造体前方宣言 */
 

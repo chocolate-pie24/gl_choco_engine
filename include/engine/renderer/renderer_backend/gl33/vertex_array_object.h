@@ -24,7 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 /**
  * @brief VAO構造体前方宣言

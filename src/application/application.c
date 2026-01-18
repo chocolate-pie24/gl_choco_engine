@@ -45,7 +45,7 @@
 
 #include "engine/platform_context/platform_context.h"
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/gl33_shader.h"          // TODO: remove this!!

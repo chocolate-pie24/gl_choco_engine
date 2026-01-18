@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 /**
  * @brief レンダラーレイヤー実行結果コードを文字列に変換する

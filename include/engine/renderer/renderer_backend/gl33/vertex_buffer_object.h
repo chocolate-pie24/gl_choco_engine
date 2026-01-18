@@ -24,7 +24,7 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/renderer/renderer_base/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_types.h"
 
 /**
  * @brief VBO構造体前方宣言
