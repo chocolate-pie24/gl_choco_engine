@@ -37,15 +37,15 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/core/platform/platform_utils.h"
-
 #include "engine/containers/ring_queue.h"
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
-#include "engine/platform_context/platform_context.h"
+#include "engine/platform/platform_core/platform_types.h"
+#include "engine/platform/platform_context.h"
 
 #include "engine/renderer/renderer_core/renderer_types.h"
+
 #include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/gl33_shader.h"          // TODO: remove this!!

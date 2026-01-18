@@ -21,9 +21,8 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "engine/interfaces/platform_interface.h"
-
-#include "engine/core/platform/platform_utils.h"
+#include "engine/platform/platform_interface.h"
+#include "engine/platform/platform_core/platform_types.h"
 
 /**
  * @brief GLFWプラットフォームを使用する際の仮想関数テーブルを取得する

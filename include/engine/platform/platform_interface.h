@@ -26,11 +26,11 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/core/platform/platform_utils.h"
-
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
+
+#include "engine/platform/platform_core/platform_types.h"
 
 /**< プラットフォーム内部状態管理構造体前方宣言(実体は各ソースファイルで定義) */
 typedef struct platform_backend platform_backend_t;

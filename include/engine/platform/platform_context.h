@@ -24,13 +24,13 @@
 extern "C" {
 #endif
 
-#include "engine/core/platform/platform_utils.h"
-
 #include "engine/core/memory/linear_allocator.h"
 
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
+
+#include "engine/platform/platform_core/platform_types.h"
 
 /**
  * @brief プラットフォームコンテキスト構造体前方宣言

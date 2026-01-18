@@ -17,13 +17,8 @@
 #include <stdalign.h>
 #include <string.h>
 
-#include "engine/platform_context/platform_context.h"
-
-#include "engine/interfaces/platform_interface.h"
-
-#include "engine/platform_concretes/platform_glfw.h"
-
-#include "engine/core/platform/platform_utils.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
@@ -31,8 +26,10 @@
 
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/platform/platform_context.h"
+#include "engine/platform/platform_interface.h"
+#include "engine/platform/platform_concretes/platform_glfw.h"
+#include "engine/platform/platform_core/platform_types.h"
 
 #ifdef TEST_BUILD
 #include <assert.h>
