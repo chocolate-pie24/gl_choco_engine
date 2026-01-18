@@ -4,77 +4,78 @@
 
 ## GL CHOCO ENGINE
 
-GL CHOCO ENGINE(gl_choco_engine)は、
+GL CHOCO ENGINE (GLCE) is a C/OpenGL engine focused on clarity, controllability,
+and long-term maintainability.
 
-- C言語とOpenGLでゲームエンジンの内部構造を学びたい中級者
-- Raspberry Piなどの比較的非力な環境で、軽量な描画基盤を試したいエンジニア
+It uses GLFW to keep the platform subsystem portable across desktop environments, while keeping dependencies intentionally small.
 
-を主な対象とした、小規模で学習寄りのゲームエンジンです。
-UnityやUnreal Engine のようなフル機能の商用エンジンではなく、
-「中身を自分でいじれ、自分で拡張できるツール」という立ち位置を想定しています。
+The codebase is written with a quality-first mindset—explicit architecture, predictable low-level behavior,
+and a preference for testable, well-documented modules—so engineers outside the graphics domain can still understand, modify, and extend it with confidence.
+
+The goal is a practical baseline you can own end-to-end, rather than a full-featured alternative to Unity or Unreal.
+
+## Motivation / Positioning
+
+GL CHOCO ENGINE is designed as a lightweight, dependency-minimal C/OpenGL engine that you can understand and own end-to-end.
+
+In addition to “game engine” use cases, the project targets practical visualization and tooling scenarios often seen in robotics, industrial systems, and embedded-adjacent environments—where you may not want (or cannot afford) large middleware stacks or heavyweight engines. Lower-power devices such as Raspberry Pi-class boards are a longer-term target, so the feature set is intentionally scoped.
+
+### Non-goals
+
+- Heavy visual effects and advanced rendering (e.g., complex post-processing, high-end lighting)
+- Large-scale physics simulation
+- A full editor ecosystem or massive asset pipeline
+- “All-in-one” frameworks with large dependency surfaces
+- Unicode / multibyte text support (ASCII-only)
+
+### Who it’s for
+
+- Engineers who want a small, readable rendering/application baseline in C/OpenGL
+- Teams who need “just enough” 2D / lightweight 3D visualization without Unity/Unreal/ROS2
+- Developers who want to learn and control the full stack rather than rely on middleware
+
+For the full background and the development log (Japanese), see the Zenn series linked in the Documentation section.
 
 ## Inspired by
 
-本プロジェクトは、[Kohi Game Engine](https://kohiengine.com/) に触発されて開始しました。
-Kohi Game Engine の作者である Travis Vroman 氏の作り方を参考にしつつ、
-本リポジトリでは OpenGL/GLFW を用いて独自に実装を進めています。
+This project was originally inspired by Kohi Game Engine and Travis Vroman’s work.
+I’m grateful for the motivation and the educational value of seeing an engine built from the ground up.
+GL CHOCO ENGINE is an independent codebase with its own architecture and design decisions, evolving according to its goals and constraints.
 
-## ドキュメント
+## Documentation
 
-- [エンジンの立ち位置の説明と開発ログ](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)
-- [APIドキュメント(Doxygen)](https://chocolate-pie24.github.io/gl_choco_engine/)
-- [エンジンレイヤー構成](docs/layer.md)
+- [Architecture / Layering](docs/layer.md)
+- [API reference (generated from Japanese Doxygen comments)](https://chocolate-pie24.github.io/gl_choco_engine/)
+- [Development log (Zenn article series; Japanese)](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)
 
-## ディレクトリ構成
+## Contributing
+
+GL CHOCO ENGINE is currently maintained by a single developer,
+and I’m not accepting pull requests at this time.
+
+If you find a bug, have a question, or want to suggest an improvement, please open an Issue.
+Feedback from users is very welcome.
+
+Forks are welcome for your own experiments and use.
+
+## Directory layout
+
+<details>
+<summary>Show directory tree</summary
 
 ```console
 .
-├── articles
-│   └── c-glfw-game-engine-introduction.md
-├── books
-│   ├── 2d_rendering_step1
-│   │   ├── config.yaml
-│   │   ├── step1_0_introduction.md
-│   │   ├── step1_1_application_base.md
-│   │   ├── step1_2_application_layer.md
-│   │   ├── step1_3_base_layer.md
-│   │   ├── step1_4_core_memory_linear_allocator.md
-│   │   ├── step1_5_core_memory_system.md
-│   │   └── step1_6_doxygen.md
-│   ├── 2d_rendering_step2
-│   │   ├── config.yaml
-│   │   ├── step2_0_introduction.md
-│   │   ├── step2_1_change_memory_system.md
-│   │   ├── step2_2_change_linear_allocator.md
-│   │   ├── step2_3_add_linux_support.md
-│   │   ├── step2_4_add_container_string.md
-│   │   ├── step2_5_add_platform_layer.md
-│   │   └── step2_6_add_glfw_window.md
-│   └── 2d_rendering_step3
-│       ├── config.yaml
-│       ├── step3_0_introduction.md
-│       ├── step3_1_event_system_abstract.md
-│       ├── step3_2_ring_queue.md
-│       ├── step3_3_event_pump_refactoring.md
-│       ├── step3_4_mouse_event.md
-│       └── step3_5_keyboard_event.md
+├── assets
+│   └── shaders
+│   │   └── test_shader
+│   │       ├── fragment_shader.frag
+│   │       └── vertex_shader.vert
+│   └── test
+│       └── filesystem
+│           ├── test_file.txt
+│           └── test_file_w.txt
 ├── build.sh
-├── cov.sh
-├── docs
-│   ├── development_log.md
-│   ├── doxygen
-│   │   └── groups.dox
-│   ├── doxygen_config.md
-│   ├── layer.md
-│   └── memo_mermaid_color.md
 ├── Doxyfile
-├── images
-│   ├── event_system_diagram.png
-│   ├── log_example.png
-│   ├── memory_system_report.png
-│   ├── ring_queue_memory_alignment.png
-│   ├── ring_queue_pop.png
-│   └── ring_queue_push.png
 ├── include
 │   ├── application
 │   │   └── application.h
@@ -90,22 +91,35 @@ Kohi Game Engine の作者である Travis Vroman 氏の作り方を参考にし
 │       │   │   ├── keyboard_event.h
 │       │   │   ├── mouse_event.h
 │       │   │   └── window_event.h
-│       │   ├── memory
-│       │   │   ├── choco_memory.h
-│       │   │   └── linear_allocator.h
-│       │   └── platform
-│       │       └── platform_utils.h
-│       ├── interfaces
+│       │   ├── filesystem
+│       │   │   └── filesystem.h
+│       │   └── memory
+│       │       ├── choco_memory.h
+│       │       └── linear_allocator.h
+│       ├── io_utils
+│       │   └── fs_utils
+│       │       └── fs_utils.h
+│       ├── platform
+│       │   ├── platform_concretes
+│       │   │   └── platform_glfw.h
+│       │   ├── platform_context.h
+│       │   ├── platform_core
+│       │   │   └── platform_types.h
 │       │   └── platform_interface.h
-│       ├── platform_concretes
-│       │   └── platform_glfw.h
-│       └── platform_context
-│           └── platform_context.h
+│       └── renderer
+│           ├── renderer_backend
+│           │   └── gl33
+│           │       ├── gl33_shader.h
+│           │       ├── vertex_array_object.h
+│           │       └── vertex_buffer_object.h
+│           └── renderer_core
+│               ├── renderer_err_utils.h
+│               ├── renderer_memory.h
+│               └── renderer_types.h
 ├── LICENSE
 ├── makefile_linux.mak
 ├── makefile_macos.mak
 ├── README.md
-├── REVIEW_FILES
 ├── src
 │   ├── application
 │   │   └── application.c
@@ -116,30 +130,53 @@ Kohi Game Engine の作者である Travis Vroman 氏の作り方を参考にし
 │   │   │   ├── choco_string.c
 │   │   │   └── ring_queue.c
 │   │   ├── core
+│   │   │   ├── filesystem
+│   │   │   │   └── filesystem.c
 │   │   │   └── memory
 │   │   │       ├── choco_memory.c
 │   │   │       └── linear_allocator.c
-│   │   ├── platform_concretes
-│   │   │   └── platform_glfw.c
-│   │   └── platform_context
-│   │       └── platform_context.c
+│   │   ├── io_utils
+│   │   │   └── fs_utils
+│   │   │       └── fs_utils.c
+│   │   ├── platform
+│   │   │   ├── platform_concretes
+│   │   │   │   └── platform_glfw.c
+│   │   │   └── platform_context.c
+│   │   └── renderer
+│   │       ├── renderer_backend
+│   │       │   └── gl33
+│   │       │       ├── gl33_shader.c
+│   │       │       ├── vertex_array_object.c
+│   │       │       └── vertex_buffer_object.c
+│   │       └── renderer_core
+│   │           ├── renderer_err_utils.c
+│   │           └── renderer_memory.c
 │   └── entry.c
 └── test
     └── include
+        ├── renderer
+        │   ├── test_gl33_shader.h
+        │   ├── test_renderer_err_utils.h
+        │   ├── test_renderer_memory.h
+        │   ├── test_vertex_array_object.h
+        │   └── test_vertex_buffer_object.h
         ├── test_choco_string.h
+        ├── test_filesystem.h
+        ├── test_fs_utils.h
         ├── test_linear_allocator.h
         ├── test_memory_system.h
         ├── test_platform_context.h
         ├── test_platform_glfw.h
         └── test_ring_queue.h
-
 ```
 
-## 実行環境の構築
+</details>
+
+## Setup
 
 ### macOS
 
-***テスト環境***
+Tested on
 
 ```bash
 % sw_vers
@@ -155,7 +192,7 @@ InstalledDir: /opt/homebrew/Cellar/llvm/20.1.8/bin
 Configuration file: /opt/homebrew/etc/clang/arm64-apple-darwin24.cfg
 ```
 
-***コンパイラのセットアップ***
+Install Compiler
 
 ```bash
 brew install llvm
@@ -163,7 +200,7 @@ echo 'export PATH="$(brew --prefix llvm)/bin:$PATH"' >> ~/.zshrc
 exec $SHELL -l
 ```
 
-***必要ライブラリのセットアップ***
+Install Dependencies
 
 ```bash
 brew install glfw
@@ -172,7 +209,7 @@ brew install glew
 
 ### Linux
 
-***テスト環境***
+Tested on
 
 ```bash
 $ uname -a
@@ -185,41 +222,39 @@ Thread model: posix
 InstalledDir: /usr/bin
 ```
 
-***コンパイラのセットアップ***
+Install Compiler
 
 ```bash
 sudo apt install clang lldb lld
 ```
 
-***必要ライブラリのセットアップ***
+Install Dependencies
 
 ```bash
 sudo apt install libglew-dev
 sudo apt install libglfw3-dev
 ```
 
-## ビルド
+## Build
 
 ```bash
 chmod +x ./build.sh
-./build.sh all DEBUG_BUILD    # デバッグビルド
-./build.sh all RELEASE_BUILD  # リリースビルド
-./build.sh all TEST_BUILD     # テストビルド
-./build.sh clean              # クリーン
+./build.sh all DEBUG_BUILD    # Debug build
+./build.sh all RELEASE_BUILD  # Release build
+./build.sh all TEST_BUILD     # Test build
+./build.sh clean              # Clean
 ```
 
-## 実行
+## Run
 
 ```bash
 ./bin/gl_choco_engine
 ```
 
-## ライセンス
+## License
 
-このプロジェクトは **MITライセンス** で公開されています。
-詳細は [LICENSE](LICENSE) を参照してください。
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-## 作者
+## Author
 
-**chocolate-pie24**
-GitHub: [https://github.com/chocolate-pie24](https://github.com/chocolate-pie24)
+GitHub: https://github.com/chocolate-pie24

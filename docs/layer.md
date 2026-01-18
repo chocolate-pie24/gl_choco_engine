@@ -1,33 +1,31 @@
-# gl_choco_engineレイヤーツリー
+# GLCE Architecture (Layered Architecture)
 
-- [gl\_choco\_engineレイヤーツリー](#gl_choco_engineレイヤーツリー)
-  - [Software Architecture](#software-architecture)
-    - [EngineFoundation](#enginefoundation)
-    - [EngineOverview](#engineoverview)
-    - [LocalLayer: Platform](#locallayer-platform)
-  - [LocalLayer: Renderer](#locallayer-renderer)
-  - [Layer Reference(各レイヤー詳細)](#layer-reference各レイヤー詳細)
+This document describes the high-level layering and module dependencies of GL CHOCO ENGINE (GLCE).
+
+- [GLCE Architecture (Layered Architecture)](#glce-architecture-layered-architecture)
+  - [Dependency rules](#dependency-rules)
+  - [Engine foundation](#engine-foundation)
+  - [Engine overview](#engine-overview)
+  - [Detailed view: Platform](#detailed-view-platform)
+  - [Detailed view: Renderer](#detailed-view-renderer)
+  - [Layer Reference](#layer-reference)
     - [application](#application)
-    - [engine\_foundation](#engine_foundation)
-      - [base](#base)
-      - [core](#core)
-    - [engine](#engine)
-      - [containers](#containers)
-      - [interfaces](#interfaces)
-      - [platform\_concretes](#platform_concretes)
-      - [platform\_context](#platform_context)
-      - [io\_utils](#io_utils)
-        - [fs\_utils](#fs_utils)
-      - [renderer\_backend](#renderer_backend)
-        - [gl33](#gl33)
+    - [engine/base](#enginebase)
+    - [engine/core](#enginecore)
+    - [engine/containers](#enginecontainers)
+    - [engine/io\_utils](#engineio_utils)
+    - [engine/platform](#engineplatform)
+    - [engine/renderer](#enginerenderer)
 
-## Software Architecture
+## Dependency rules
 
-### EngineFoundation
+- Dependencies are allowed only from higher layers to lower layers.
+- Circular dependencies are not allowed.
 
-全モジュールが使用可能なエンジン基盤モジュールの依存関係を示す。
+## Engine foundation
 
-凡例: A->BはAがBに依存を表す
+The foundation layer provides modules that are available across the entire engine.
+This section corresponds to engine/base and engine/core.
 
 ```mermaid
 graph TD
@@ -54,7 +52,6 @@ graph TD
     end
 
     FILESYSTEM[filesystem]
-    PLATFORM_UTILS[platform_utils]
   end
   FILESYSTEM --> CHOCO_MACROS
   FILESYSTEM --> CHOCO_MESSAGE
@@ -65,17 +62,14 @@ graph TD
   LINEAR_ALLOCATOR --> CHOCO_MESSAGE
 ```
 
-### EngineOverview
+## Engine overview
 
-エンジン全体のモジュール依存関係を示す。
+This diagram shows the module dependencies at the engine level.
 
-baseレイヤー、coreレイヤーについては、全モジュールが使用可能であるため、
-依存関係を書くと複雑になりすぎるため、省略している。
+In this overview, dependencies on the base and core layers are omitted to keep the diagram readable,
+since all engine modules may depend on them.
 
-現状ではレンダラー層を抽象化したフロントエンドが未作成であるため、
-バックエンド内のモジュールをアプリケーション側が直に使用しているが将来的に廃止予定。
-
-凡例: A->BはAがBに依存を表す
+The renderer frontend has not been implemented yet, so the application currently uses some backend modules directly; this will be removed once the frontend is introduced.
 
 ```mermaid
 graph TD
@@ -87,6 +81,7 @@ graph TD
   APPLICATION --> VERTEX_BUFFER_OBJECT
   APPLICATION --> VERTEX_ARRAY_OBJECT
   APPLICATION --> GL33_SHADER
+  APPLICATION --> PLATFORM_TYPES
 
   subgraph ENGINE[engine]
     direction TB
@@ -105,20 +100,25 @@ graph TD
 
     subgraph PLATFORM[platform]
       PLATFORM_CONTEXT[platform_context]
+      PLATFORM_INTERFACE[platform_interface]
+
       direction TB
-      subgraph INTERFACES[interfaces]
+      subgraph PLATFORM_CORE[platform_core]
         direction TB
-        PLATFORM_INTERFACE[platform_interface]
+        PLATFORM_TYPES[platform_types]
       end
       subgraph PLATFORM_CONCRETES[platform_concretes]
         direction TB
         PLATFORM_GLFW[platform_glfw]
       end
     end
+    PLATFORM_INTERFACE --> PLATFORM_TYPES
     PLATFORM_GLFW --> PLATFORM_INTERFACE
     PLATFORM_GLFW --> CHOCO_STRING
+    PLATFORM_GLFW --> PLATFORM_TYPES
     PLATFORM_CONTEXT --> PLATFORM_INTERFACE
     PLATFORM_CONTEXT --> PLATFORM_GLFW
+    PLATFORM_CONTEXT --> PLATFORM_TYPES
 
     subgraph RENDERER[renderer]
       direction TB
@@ -131,14 +131,11 @@ graph TD
           VERTEX_BUFFER_OBJECT[vertex_buffer_object]
         end
       end
-      subgraph RENDERER_BASE[renderer_base]
-        direction TB
-        RENDERER_TYPES[renderer_types]
-      end
       subgraph RENDERER_CORE[renderer_core]
         direction TB
         RENDERER_ERR_UTILS[renderer_err_utils]
         RENDERER_MEMORY[renderer_memory]
+        RENDERER_TYPES[renderer_types]
       end
     end
     GL33_SHADER --> RENDERER_TYPES
@@ -156,47 +153,42 @@ graph TD
   end
 ```
 
-### LocalLayer: Platform
+## Detailed view: Platform
 
 ```mermaid
 graph TD
-  ENGINE_FOUNDATION[engine_foundation]
-
   subgraph CONTAINERS[containers]
     direction TB
     CHOCO_STRING[choco_string]
     RING_QUEUE[ring_queue]
   end
-  CHOCO_STRING --> ENGINE_FOUNDATION
-  RING_QUEUE --> ENGINE_FOUNDATION
 
   subgraph PLATFORM[platform]
     PLATFORM_CONTEXT[platform_context]
+    PLATFORM_INTERFACE[platform_interface]
     direction TB
-    subgraph INTERFACES[interfaces]
+    subgraph PLATFORM_CORE[platform_core]
       direction TB
-      PLATFORM_INTERFACE[platform_interface]
+      PLATFORM_TYPES[platform_types]
     end
     subgraph PLATFORM_CONCRETES[platform_concretes]
       direction TB
       PLATFORM_GLFW[platform_glfw]
     end
   end
-  PLATFORM_INTERFACE --> ENGINE_FOUNDATION
+  PLATFORM_INTERFACE --> PLATFORM_TYPES
   PLATFORM_GLFW --> PLATFORM_INTERFACE
-  PLATFORM_GLFW --> ENGINE_FOUNDATION
   PLATFORM_GLFW --> CHOCO_STRING
-  PLATFORM_CONTEXT --> ENGINE_FOUNDATION
+  PLATFORM_GLFW --> PLATFORM_TYPES
   PLATFORM_CONTEXT --> PLATFORM_INTERFACE
   PLATFORM_CONTEXT --> PLATFORM_GLFW
+  PLATFORM_CONTEXT --> PLATFORM_TYPES
 ```
 
-## LocalLayer: Renderer
+## Detailed view: Renderer
 
 ```mermaid
 graph TD
-  ENGINE_FOUNDATION[engine_foundation]
-
   subgraph RENDERER[renderer]
     direction TB
     subgraph RENDERER_BACKEND[renderer_backend]
@@ -208,145 +200,92 @@ graph TD
         VERTEX_BUFFER_OBJECT[vertex_buffer_object]
       end
     end
-    subgraph RENDERER_BASE[renderer_base]
-      direction TB
-      RENDERER_TYPES[renderer_types]
-    end
     subgraph RENDERER_CORE[renderer_core]
       direction TB
       RENDERER_ERR_UTILS[renderer_err_utils]
       RENDERER_MEMORY[renderer_memory]
+      RENDERER_TYPES[renderer_types]
     end
   end
   GL33_SHADER --> RENDERER_TYPES
   GL33_SHADER --> RENDERER_MEMORY
   GL33_SHADER --> RENDERER_ERR_UTILS
-  GL33_SHADER --> ENGINE_FOUNDATION
 
   VERTEX_ARRAY_OBJECT --> RENDERER_TYPES
   VERTEX_ARRAY_OBJECT --> RENDERER_ERR_UTILS
   VERTEX_ARRAY_OBJECT --> RENDERER_MEMORY
-  VERTEX_ARRAY_OBJECT --> ENGINE_FOUNDATION
   VERTEX_BUFFER_OBJECT --> RENDERER_TYPES
   VERTEX_BUFFER_OBJECT --> RENDERER_ERR_UTILS
   VERTEX_BUFFER_OBJECT --> RENDERER_MEMORY
-  VERTEX_BUFFER_OBJECT --> ENGINE_FOUNDATION
   RENDERER_ERR_UTILS --> RENDERER_TYPES
   RENDERER_MEMORY --> RENDERER_TYPES
-  RENDERER_MEMORY --> ENGINE_FOUNDATION
 ```
 
-## Layer Reference(各レイヤー詳細)
+## Layer Reference
 
 ### application
 
-- 目的: プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行う。以下の機能を提供する
-  - 全サブシステムの起動、終了処理
-  - アプリケーションメインループ
-- 性質: システムの起動時から終了時まで常駐
+- Purpose: The top-level layer of the project, responsible for orchestrating all subsystems. It provides:
+  - Initialization and shutdown of all subsystems
+  - The application main loop
+- Characteristics: Runs for the full lifetime of the application (startup to shutdown).
 
-### engine_foundation
+### engine/base
 
-#### base
+- Purpose: Engine-wide, project-agnostic utilities reusable beyond GLCE.
+- Characteristics: Initialization-free; usable immediately at startup.
+- Modules:
+  - choco_macros: Common macro definitions.
+  - choco_message: Colored logging/output helpers for stdout/stderr.
 
-- 目的: 最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供
-- 性質:
-  - 外部ライブラリ/OS依存なし(標準Cのみ)
-  - 初期化不要でシステム起動直後から使用可能
-- 保有機能:
-  - ***choco_message***: stdout, stderrへの色付きメッセージ出力
-  - ***choco_macros***: 共通マクロ定義
+### engine/core
 
-#### core
+- Purpose: GLCE-specific engine foundations used across the whole engine.
+- Characteristics: Some modules require explicit initialization.
+- Modules:
+  - keyboard_event / mouse_event / window_event: Event-related data types.
+  - choco_memory: Allocation/free with memory tracking.
+  - linear_allocator: Linear allocator for fixed-lifecycle allocations.
+  - filesystem: Basic file I/O (open/close, byte reads).
 
-- 目的: プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
-- 性質:
-  - baseレイヤーのみに依存
-  - core, baseレイヤー以外のモジュールへの依存は禁止
-- 保有機能:
-  - ***choco_memory***: 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する
-  - ***linear_allocator***: サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
-  - ***platform/platform_utils***: プラットフォームシステムで共通に使用されるデータ型を提供する
-  - ***event/keyboard_event***: キーボードイベントに使用されるデータ型を提供する
-  - ***event/mouse_event***: マウスイベントに使用されるデータ型を提供する
-  - ***event/window_event***: ウィンドウイベントに使用されるデータ型を提供する
-  - ***filesystem/filesystem***: ファイル入出力について、最も基本的な機能(オープン、クローズ、バイト単位での読み取り)とデータ型を提供する
+### engine/containers
 
-### engine
+- Purpose: Provides container modules that encapsulate resource ownership and management.
+- Characteristics: Initialization-free; usable immediately at startup.
+- Modules:
+  - ring_queue: Generic ring queue (ring buffer) container module.
+  - choco_string: String container module with basic string operations.
 
-#### containers
+### engine/io_utils
 
-- 目的: リソースの管理責務を有する各種データを格納可能なコンテナを提供する
-- 保有機能:
-  - ***choco_string***: 文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する
-  - ***ring_queue***: ジェネリック型のリングキューモジュールで、push, pop, empty, create, destroyを提供する
+- Purpose: Provides higher-level I/O utilities that go beyond the standard C library by building on other GLCE modules.
+- Characteristics: Initialization-free; usable immediately at startup.
+- Modules:
+  - fs_utils: Higher-level file I/O utilities on top of **filesystem**, such as loading an entire text file.
 
-#### interfaces
+### engine/platform
 
-- 目的: StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
-- 保有機能:
-  - ***platform_interface***: プラットフォームシステムのInterface構造体を提供する
+- Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency.
+To keep room for future non-GLFW implementations,
+GLCE abstracts the platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.
+- Characteristics: Requires explicit initialization. Once initialized, the platform subsystem remains active for the lifetime of the application (until shutdown).
+- Modules:
+  - platform_core/platform_types: Common data types used across the platform subsystem.
+  - platform_interface: Defines the platform interface as a function table (vtable-like) shared by all platform backends.
+  - platform_concretes/platform_glfw: GLFW-based backend implementation that provides the concrete function table for the platform interface.
+  - platform_context: Strategy context and public entry point for the platform subsystem, responsible for initialization, backend selection, lifecycle management, and dispatching API calls through the interface.
 
-#### platform_concretes
+### engine/renderer
 
-- 目的: プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
-- 保有機能:
-  - ***platform_glfw***: GLFW APIで実装されたプラットフォームシステムAPIを提供する
+*Note*: A renderer frontend has not been implemented yet, so the application currently uses some backend modules directly.
+This will be removed once the frontend is introduced.
 
-#### platform_context
-
-- 目的: プラットフォームシステムのStrategy Contextモジュールを提供する
-
-#### io_utils
-
-##### fs_utils
-
-- 目的: core/filesystem、choco_stringを用いて高度なファイルI/O処理を提供する
-- 性質:
-  - 前提条件: engine_foundation が使用可能であること
-  - ライフサイクル: 任意のタイミングで呼び出し可能(常駐状態を持たない)
-- リソース所有権: 本モジュールが使用する全てのリソースは、本モジュールが提供するAPIによってリソース確保、破棄を行う
-- 実行結果コード: fs_utils_result_t
-- 外部依存: 下記レイヤーへの依存を許可、それ以外は禁止
-  - containers/choco_string
-  - core/filesystem
-  - core/memory/choco_memory
-  - base/choco_macros
-  - base/choco_message
-- 保有機能:
-  - テキストファイルの一括読み込み
-  - ファイルパス、ファイル名、拡張子からフルパス文字列を生成
-
-#### renderer_backend
-
-- 目的: OpenGL、VulkanといったグラフィックスAPIの違いや、OpenGLのバージョン違いによる実装の差異を吸収する
-- 性質: グラフィックスAPIに依存した処理はこのレイヤーに閉じ込め、外部に漏らさない
-- 使用可能グラフィックスAPI+バージョン
-  - OpenGL 3.3
-
-##### gl33
-
-- 目的: OpenGL Version3.3用にOpenGL APIのラッパーAPIを提供し、上位レイヤーのOpenGL 3.3への依存を解消する
-- 保有機能:
-  - ***gl33_shader***: OpenGL 3.3用にシェーダープログラム取扱モジュールで、以下の機能を提供する
-    - シェーダープログラムのコンパイル
-    - シェーダープログラムのリンク
-    - リンクしたシェーダープログラムの使用開始通知
-  - ***vertex_array_object***: OpenGL 3.3用のVAO取扱モジュールで、以下の機能を提供する
-    - VAOのbind
-    - VAOのunbind
-    - 頂点情報のアトリビュート設定
-  - ***vertex_buffer_object***: OpenGL 3.3用のVBO取扱モジュールで、以下の機能を提供する
-    - VBOのbind
-    - VBOのunbind
-    - GPUへのデータ転送
-
-- [] 各モジュールのヘッダファイルにはfs_utilsと同様の情報を書くようにする
-- [] layer.mdのモジュール説明は、以下のようにする
-  - レイヤー名称
-    - 保有モジュール
-      - モジュールA: 一行で説明
-      - モジュールB: 一行で説明
-- [] renderer_base/renderer_typesが抜けている
-- [] renderer_core/renderer_memoryが抜けている
-- [] renderer_err_utilsが抜けている
+- Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future (e.g., other OpenGL versions or Vulkan). The long-term design separates a frontend (API-agnostic layer) from backend implementations (graphics-API-specific layers).
+- Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).
+- Modules:
+  - renderer_backend/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
+  - renderer_backend/gl33/vertex_array_object: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
+  - renderer_backend/gl33/vertex_buffer_object: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
+  - renderer_core/renderer_err_utils: Utilities for converting renderer result/error codes to human-readable strings.
+  - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
+  - renderer_core/renderer_types: Common data types shared across the renderer subsystem.
