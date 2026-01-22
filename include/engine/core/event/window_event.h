@@ -36,6 +36,8 @@ typedef struct window_event {
     window_event_code_t event_code; /**< ウィンドウイベント種別 */
     int window_width;               /**< イベントが発生した際のウィンドウ幅 */
     int window_height;              /**< イベントが発生した際のウィンドウ高さ */
+    int framebuffer_width;          /**< イベントが発生した際のフレームバッファサイズ(幅) */
+    int framebuffer_height;         /**< イベントが発生した際のフレームバッファサイズ(高さ) */
 } window_event_t;
 
 #ifdef __cplusplus

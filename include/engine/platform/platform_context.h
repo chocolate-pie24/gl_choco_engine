@@ -111,7 +111,9 @@ void platform_destroy(platform_context_t* platform_context_);
  * platform_result_t ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
  * // エラー処理
  *
- * ret = platform_window_create(platform_context, "test_window", 1024, 768);
+ * int framebuffer_width = 0;
+ * int framebuffer_height = 0;
+ * ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
  * // エラー処理
  *
  * platform_destroy(platform_context);
@@ -119,10 +121,12 @@ void platform_destroy(platform_context_t* platform_context_);
  * // リニアアロケータによるメモリ破棄
  * @endcode
  *
- * @param platform_context_ プラットフォームStrategy Context構造体インスタンス
- * @param window_label_ ウィンドウラベル
- * @param window_width_ ウィンドウ幅
- * @param window_height_ ウィンドウ高さ
+ * @param[in,out] platform_context_ プラットフォームStrategy Context構造体インスタンス
+ * @param[in] window_label_ ウィンドウラベル
+ * @param[in] window_width_ ウィンドウ幅
+ * @param[in] window_height_ ウィンドウ高さ
+ * @param[out] framebuffer_width_ フレームバッファサイズ(幅)格納先ポインタ
+ * @param[out] framebuffer_height_ フレームバッファサイズ(高さ)格納先ポインタ
  *
  * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
  * - platform_context_ == NULL
@@ -131,11 +135,13 @@ void platform_destroy(platform_context_t* platform_context_);
  * - window_label_ == NULL
  * - window_width_ == 0
  * - window_height_ == 0
+ * - framebuffer_width_ == NULL
+ * - framebuffer_height_ == NULL
  * @retval PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
  *
  * @note 上記以外の実行結果コードは各プラットフォーム実装依存
  */
-platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_);
+platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_);
 
 /**
  * @brief OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す
@@ -199,6 +205,10 @@ platform_result_t platform_pump_messages(
 
 /**
  * @brief プラットフォーム固有のウィンドウサーフェイス(GLFWであればGLFWwindow)を取得する
+ *
+ * @warning 呼び出し側での返り値のメモリ解放、中身の変更は禁止
+ * @warning 呼び出し前で @ref platform_initialize によってプラットフォームサブシステムが初期化されている必要がある
+ * @warning @ref platform_destroy 呼び出し後は使用不可
  *
  * 使用例:
  * @code{.c}

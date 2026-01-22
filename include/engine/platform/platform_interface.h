@@ -82,12 +82,16 @@ typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backen
  * @param[in] window_label_ ウィンドウ名称文字列
  * @param[in] window_width_ 初期状態のウィンドウ幅
  * @param[in] window_height_ 初期状態のウィンドウ高さ
+ * @param[out] framebuffer_width_ フレームバッファサイズ(幅)格納先ポインタ
+ * @param[out] framebuffer_height_ フレームバッファサイズ(高さ)格納先ポインタ
  *
  * @retval PLATFORM_INVALID_ARGUMENT 以下のいずれか
  * - platform_backend_ == NULL
  * - window_label_ == NULL
  * - window_width_ == 0
  * - window_height_ == 0
+ * - framebuffer_width_ == NULL
+ * - framebuffer_height_ == NULL
  * @retval PLATFORM_NO_MEMORY        メモリ確保失敗
  * @retval PLATFORM_SUCCESS          ウィンドウの生成に成功し、正常終了
  * @retval その他                     プラットフォーム実装依存
@@ -96,7 +100,9 @@ typedef platform_result_t (*pfn_platform_backend_window_create)(
     platform_backend_t* platform_backend_,
     const char* window_label_,
     int window_width_,
-    int window_height_);
+    int window_height_,
+    int* framebuffer_width_,
+    int* framebuffer_height_);
 
 /**
  * @brief ウィンドウ、キーボード、マウスイベントを吸い上げ、各イベントをコールバック内で処理する
