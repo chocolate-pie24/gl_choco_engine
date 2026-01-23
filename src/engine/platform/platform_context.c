@@ -218,6 +218,19 @@ void* platform_window_surface_get(platform_context_t* platform_context_) {
     return platform_context_->vtable->platform_backend_window_surface_get(platform_context_->backend);
 }
 
+platform_result_t platform_swap_buffers(platform_context_t* platform_context_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_swap_buffers", "platform_context_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_BAD_OPERATION, "platform_swap_buffers", "platform_context_->vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_BAD_OPERATION, "platform_swap_buffers", "platform_context_->backend")
+
+    platform_context_->vtable->platform_backend_swap_buffers(platform_context_->backend);
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 /**
  * @brief プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理
  *

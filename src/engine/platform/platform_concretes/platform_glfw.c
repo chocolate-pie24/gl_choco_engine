@@ -78,6 +78,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
+static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform_backend_);
 static void* platform_glfw_window_surface_get(platform_backend_t* platform_backend_);
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
@@ -122,6 +123,7 @@ static const platform_vtable_t s_glfw_vtable = {
     .platform_backend_destroy = platform_glfw_destroy,
     .platform_backend_window_create = platform_glfw_window_create,
     .platform_backend_pump_messages = platform_glfw_pump_messages,
+    .platform_backend_swap_buffers = platform_glfw_swap_buffers,
     .platform_backend_window_surface_get = platform_glfw_window_surface_get,
 };
 
@@ -490,6 +492,20 @@ static platform_result_t platform_glfw_pump_messages(
         ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", rslt_to_str(ret));
         goto cleanup;
     }
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform_backend_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_swap_buffers", "platform_backend_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, PLATFORM_BAD_OPERATION, "platform_glfw_swap_buffers", "platform_backend_->window")
+
+    glfwSwapBuffers(platform_backend_->window);
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:

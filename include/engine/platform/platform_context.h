@@ -224,6 +224,24 @@ platform_result_t platform_pump_messages(
  */
 void* platform_window_surface_get(platform_context_t* platform_context_);
 
+/**
+ * @brief 描画サーフェイスのフロント/バックバッファをスワップする
+ *
+ * @note
+ * - GLFWを使用している場合はglfwSwapBuffersに相当
+ *
+ * @warning 呼び出し前で @ref platform_initialize によってプラットフォームサブシステムが初期化されている必要がある
+ * @warning @ref platform_destroy 呼び出し後は使用不可
+ *
+ * @param platform_context_ プラットフォームstrategy context構造体インスタンスへのポインタ
+ *
+ * @retval PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
+ * @retval PLATFORM_BAD_OPERATION platform_context_->vtable == NULL
+ * @retval PLATFORM_BAD_OPERATION platform_context_->backend == NULL
+ * @retval その他 プラットフォーム実装依存
+ */
+platform_result_t platform_swap_buffers(platform_context_t* platform_context_);
+
 #ifdef __cplusplus
 }
 #endif
