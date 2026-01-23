@@ -204,20 +204,6 @@ cleanup:
     return ret;
 }
 
-// NULL platform_context_ == NULL
-// NULL platform_context_->vtable == NULL
-void* platform_window_surface_get(platform_context_t* platform_context_) {
-    if(NULL == platform_context_) {
-        ERROR_MESSAGE("platform_window_surface_get(%s) - Argument platform_context_ requires a valid pointer.", rslt_to_str(PLATFORM_INVALID_ARGUMENT));
-        return NULL;
-    } else if(NULL == platform_context_->vtable) {
-        ERROR_MESSAGE("platform_window_surface_get(%s) - Argument platform_context_->vtable requires a valid pointer.", rslt_to_str(PLATFORM_INVALID_ARGUMENT));
-        return NULL;
-    }
-
-    return platform_context_->vtable->platform_backend_window_surface_get(platform_context_->backend);
-}
-
 platform_result_t platform_swap_buffers(platform_context_t* platform_context_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_swap_buffers", "platform_context_")
@@ -318,7 +304,6 @@ void NO_COVERAGE test_platform_context(void) {
     test_platform_destroy();
     test_platform_window_create();
     test_platform_pump_messages();
-    test_platform_window_surface_get();
 
     memory_system_destroy();
 }
@@ -1002,24 +987,4 @@ static void NO_COVERAGE test_callback_window(const window_event_t* event_) {
     (void)event_;
 }
 
-// 正常系は普通に実行すればOKなので省略
-static void NO_COVERAGE test_platform_window_surface_get(void) {
-    {
-        void* ret = NULL;
-        ret = platform_window_surface_get(NULL);
-        assert(NULL == ret);
-    }
-    {
-        void* ret = NULL;
-        platform_context_t* tmp_context = NULL;
-        tmp_context = malloc(sizeof(platform_context_t));
-        memset(tmp_context, 0, sizeof(platform_context_t));
-        tmp_context->vtable = NULL;
-
-        ret = platform_window_surface_get(tmp_context);
-        assert(NULL == ret);
-        free(tmp_context);
-        tmp_context = NULL;
-    }
-}
 #endif

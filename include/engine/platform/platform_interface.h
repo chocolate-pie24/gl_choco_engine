@@ -131,16 +131,6 @@ typedef platform_result_t (*pfn_platform_backend_pump_messages)(
     void (*mouse_event_callback)(const mouse_event_t* event_));
 
 /**
- * @brief プラットフォーム固有のウィンドウサーフェイス(GLFWであればGLFWwindow)へのポインタを取得する
- *
- * @param[in,out] platform_backend_ 処理対象プラットフォーム内部状態管理オブジェクト
- *
- * @retval PLATFORM_INVALID_ARGUMENT platform_backend_がNULL
- * @retval その他                     プラットフォーム実装依存
- */
-typedef void* (*pfn_platform_backend_window_surface_get)(platform_backend_t* platform_backend_);
-
-/**
  * @brief 描画サーフェイスのフロント/バックバッファをスワップする
  *
  * @param[in,out] platform_backend_ 処理対象プラットフォーム内部状態管理オブジェクト
@@ -160,7 +150,6 @@ typedef struct platform_vtable {
     pfn_platform_backend_window_create  platform_backend_window_create;             /**< 関数ポインタ @ref pfn_platform_backend_window_create 参照 */
     pfn_platform_backend_pump_messages  platform_backend_pump_messages;             /**< 関数ポインタ @ref pfn_platform_backend_pump_messages 参照 */
     pfn_platform_backend_swap_buffers   platform_backend_swap_buffers;              /**< 関数ポインタ @ref pfn_platform_backend_swap_buffers 参照 */
-    pfn_platform_backend_window_surface_get  platform_backend_window_surface_get;   /**< 関数ポインタ @ref pfn_platform_backend_window_surface_get 参照 */
 } platform_vtable_t;
 
 #ifdef __cplusplus

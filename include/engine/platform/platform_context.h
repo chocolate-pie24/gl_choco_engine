@@ -204,27 +204,6 @@ platform_result_t platform_pump_messages(
     void (*mouse_event_callback)(const mouse_event_t* event_));
 
 /**
- * @brief プラットフォーム固有のウィンドウサーフェイス(GLFWであればGLFWwindow)を取得する
- *
- * @warning 呼び出し側での返り値のメモリ解放、中身の変更は禁止
- * @warning 呼び出し前で @ref platform_initialize によってプラットフォームサブシステムが初期化されている必要がある
- * @warning @ref platform_destroy 呼び出し後は使用不可
- *
- * 使用例:
- * @code{.c}
- * GLFWwindow* window = (GLFWwindow*)platform_window_surface_get(platform_context);
- * @endcode
- *
- * @param platform_context_ プラットフォームstrategy context構造体インスタンスへのポインタ
- *
- * @retval ウィンドウサーフェイスへのポインタ 正常終了時
- * @retval NULL 以下のいずれか
- * - platform_context_ == NULL
- * - platform_context_->vtable == NULL
- */
-void* platform_window_surface_get(platform_context_t* platform_context_);
-
-/**
  * @brief 描画サーフェイスのフロント/バックバッファをスワップする
  *
  * @note
