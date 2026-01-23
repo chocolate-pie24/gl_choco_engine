@@ -399,7 +399,7 @@ application_result_t application_run(void) {
 
         vertex_array_unbind();
 
-        glfwSwapBuffers(window);
+        platform_swap_buffers(s_app_state->platform_context);
         // end temporary
 
         nanosleep(&req, NULL);
