@@ -31,6 +31,8 @@
 #include "engine/platform/platform_concretes/platform_glfw.h"
 #include "engine/platform/platform_core/platform_types.h"
 
+// #define TEST_BUILD
+
 #ifdef TEST_BUILD
 #include <assert.h>
 #include <stdlib.h> // for malloc
@@ -157,16 +159,18 @@ cleanup:
     return;
 }
 
-platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_) {
+platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_")
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->vtable")
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->backend")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_label_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(framebuffer_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "framebuffer_width_")
+    CHECK_ARG_NULL_GOTO_CLEANUP(framebuffer_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "framebuffer_height_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
 
-    ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_);
+    ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_, framebuffer_width_, framebuffer_height_);
     if(PLATFORM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
@@ -468,7 +472,9 @@ static void NO_COVERAGE test_platform_window_create(void) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     {
         // PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
-        ret = platform_window_create(NULL, "test_window", 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(NULL, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
     }
     {
@@ -478,7 +484,9 @@ static void NO_COVERAGE test_platform_window_create(void) {
         assert(NULL != context);
         memset(context, 0, sizeof(platform_context_t));
 
-        ret = platform_window_create(context, "test_window", 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context);
@@ -493,7 +501,9 @@ static void NO_COVERAGE test_platform_window_create(void) {
         context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
         assert(NULL != context->vtable);
 
-        ret = platform_window_create(context, "test_window", 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context);
@@ -514,11 +524,16 @@ static void NO_COVERAGE test_platform_window_create(void) {
 
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
 
-        ret = platform_window_create(context, NULL, 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, NULL, 1024, 768, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
         free(context);
     }
     {
@@ -537,11 +552,16 @@ static void NO_COVERAGE test_platform_window_create(void) {
 
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
 
-        ret = platform_window_create(context, "test_window", 0, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 0, 768, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
         free(context);
     }
     {
@@ -560,11 +580,72 @@ static void NO_COVERAGE test_platform_window_create(void) {
 
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
 
-        ret = platform_window_create(context, "test_window", 1024, 0);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 0, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
+        free(context);
+    }
+    {
+        // framebuffer_width == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
+
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, NULL, &framebuffer_height);
+
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
+        free(context);
+    }
+    {
+        // framebuffer_height == NULL
+        platform_context_t* context = NULL;
+        context = (platform_context_t*)malloc(sizeof(platform_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(platform_context_t));
+
+        context->vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != context->vtable);
+
+        size_t backend_mem_req = 0;
+        size_t backend_align_req = 0;
+        context->vtable->platform_backend_preinit(&backend_mem_req, &backend_align_req);
+
+        context->backend = malloc(backend_mem_req);
+        assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
+
+        int framebuffer_width = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, &framebuffer_width, NULL);
+
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+
+        free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
         free(context);
     }
     {
@@ -583,14 +664,19 @@ static void NO_COVERAGE test_platform_window_create(void) {
 
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
 
         platform_glfw_result_controller_set(PLATFORM_SUCCESS);
 
-        ret = platform_window_create(context, "test_window", 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
 
         assert(PLATFORM_SUCCESS == ret);
 
         free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
         free(context);
 
         platform_glfw_result_controller_reset();
@@ -611,14 +697,19 @@ static void NO_COVERAGE test_platform_window_create(void) {
 
         context->backend = malloc(backend_mem_req);
         assert(NULL != context->backend);
+        memset(context->backend, 0, backend_mem_req);
 
         platform_glfw_result_controller_set(PLATFORM_NO_MEMORY);
 
-        ret = platform_window_create(context, "test_window", 1024, 768);
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+        ret = platform_window_create(context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
 
         assert(PLATFORM_NO_MEMORY == ret);
 
         free(context->backend);
+        context->backend = NULL;
+        context->vtable = NULL;
         free(context);
 
         platform_glfw_result_controller_reset();

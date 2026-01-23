@@ -47,6 +47,9 @@ typedef struct input_snapshot {
     int window_width;   /**< ウィンドウ幅 */
     int window_height;  /**< ウィンドウ高さ */
 
+    int framebuffer_width;  /**< フレームバッファサイズ(幅) */
+    int framebuffer_height; /**< フレームバッファサイズ(高さ) */
+
     bool window_should_close;   /**< ウィンドウクローズイベント発生 */
     bool escape_pressed;        /**< エスケープキー押下イベント発生 */
 
@@ -71,7 +74,7 @@ struct platform_backend {
 static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
 static void platform_glfw_destroy(platform_backend_t* platform_backend_);
-static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_);
+static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_);
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
@@ -187,6 +190,8 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
     platform_backend_->prev.cursor_y = 0.0;
     platform_backend_->prev.window_width = 0;
     platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.framebuffer_width = 0;
+    platform_backend_->prev.framebuffer_height = 0;
     platform_backend_->prev.window_should_close = false;
     platform_backend_->prev.escape_pressed = false;
     for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
@@ -199,6 +204,8 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
     platform_backend_->current.cursor_y = 0.0;
     platform_backend_->current.window_width = 0;
     platform_backend_->current.window_height = 0;
+    platform_backend_->current.framebuffer_width = 0;
+    platform_backend_->current.framebuffer_height = 0;
     platform_backend_->current.window_should_close = false;
     platform_backend_->current.escape_pressed = false;
     for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
@@ -232,6 +239,8 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
     platform_backend_->prev.cursor_y = 0.0;
     platform_backend_->prev.window_width = 0;
     platform_backend_->prev.window_height = 0;
+    platform_backend_->prev.framebuffer_width = 0;
+    platform_backend_->prev.framebuffer_height = 0;
     platform_backend_->prev.window_should_close = false;
     platform_backend_->prev.escape_pressed = false;
     for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
@@ -244,6 +253,8 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
     platform_backend_->current.cursor_y = 0.0;
     platform_backend_->current.window_width = 0;
     platform_backend_->current.window_height = 0;
+    platform_backend_->current.framebuffer_width = 0;
+    platform_backend_->current.framebuffer_height = 0;
     platform_backend_->current.window_should_close = false;
     platform_backend_->current.escape_pressed = false;
     for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
@@ -251,7 +262,7 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
     }
 }
 
-static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_) {
+static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
 #ifdef TEST_BUILD
     if(s_test_controller.test_enable) {
         return s_test_controller.ret;
@@ -260,6 +271,8 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    int framebuffer_width = 0;
+    int framebuffer_height = 0;
 
     CHECK_ARG_NULL_GOTO_CLEANUP(platform_backend_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "platform_backend_")
     CHECK_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_label_")
@@ -303,10 +316,20 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     // https://www.glfw.org/docs/latest/group__input.html#gaa92336e173da9c8834558b54ee80563b
     glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
+
+    glfwGetFramebufferSize(platform_backend_->window, &framebuffer_width, &framebuffer_height);
+
     platform_backend_->prev.window_height = window_height_;
     platform_backend_->prev.window_width = window_width_;
+    platform_backend_->prev.framebuffer_width = framebuffer_width;
+    platform_backend_->prev.framebuffer_height = framebuffer_height;
     platform_backend_->current.window_height = window_height_;
     platform_backend_->current.window_width = window_width_;
+    platform_backend_->current.framebuffer_width = framebuffer_width;
+    platform_backend_->current.framebuffer_height = framebuffer_height;
+
+    *framebuffer_width_ = framebuffer_width;
+    *framebuffer_height_ = framebuffer_height;
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -333,6 +356,7 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
     platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
 
     glfwGetWindowSize(platform_backend_->window, &platform_backend_->current.window_width, &platform_backend_->current.window_height);
+    glfwGetFramebufferSize(platform_backend_->window, &platform_backend_->current.framebuffer_width, &platform_backend_->current.framebuffer_height);
 
     // keyboard events.
     platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
@@ -388,6 +412,8 @@ static platform_result_t platform_snapshot_process(
         window_event.event_code = WINDOW_EVENT_RESIZE;
         window_event.window_height = platform_backend_->current.window_height;
         window_event.window_width = platform_backend_->current.window_width;
+        window_event.framebuffer_height = platform_backend_->current.framebuffer_height;
+        window_event.framebuffer_width = platform_backend_->current.framebuffer_width;
 
         window_event_callback(&window_event);
     }

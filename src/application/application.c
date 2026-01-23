@@ -60,6 +60,8 @@ typedef struct app_state {
     bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
     int window_width;           /**< ウィンドウ幅 */
     int window_height;          /**< ウィンドウ高さ */
+    int framebuffer_width;      /**< フレームバッファサイズ(幅) */
+    int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
     // core/memory/linear_allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
@@ -234,7 +236,7 @@ application_result_t application_create(void) {
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
     tmp->window_width = 1024;
     tmp->window_height = 768;
-    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768);
+    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768, &tmp->framebuffer_width, &tmp->framebuffer_height);
     if(PLATFORM_SUCCESS != ret_platform) {
         ret = rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
@@ -389,7 +391,7 @@ application_result_t application_run(void) {
 
         gl33_shader_use(s_app_state->ui_shader_handle);
 
-        glViewport(0, 0, s_app_state->window_width, s_app_state->window_height);
+        glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
         vertex_array_bind(vao);
 
@@ -529,10 +531,15 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
-                INFO_MESSAGE("Window resized: [%dx%d] -> [%dx%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
+                INFO_MESSAGE("Window resized: window([%dx%d] -> [%dx%d]), framebuffer([%dx%d] -> [%dx%d])",
+                    s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height,
+                    s_app_state->framebuffer_width, s_app_state->framebuffer_height, event.framebuffer_width, event.framebuffer_height);
+
                 s_app_state->window_resized = true;
                 s_app_state->window_height = event.window_height;
                 s_app_state->window_width = event.window_width;
+                s_app_state->framebuffer_height = event.framebuffer_height;
+                s_app_state->framebuffer_width = event.framebuffer_width;
             }
         }
     }
