@@ -30,6 +30,15 @@
         },
         {
             "type": "shell",
+            "label": "build_san",
+            "command": "${workspaceFolder}/build.sh all TEST_BUILD 1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "type": "shell",
             "label": "clean",
             "command": "${workspaceFolder}/build.sh clean",
             "options": {
