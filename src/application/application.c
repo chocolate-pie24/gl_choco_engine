@@ -367,7 +367,6 @@ application_result_t application_run(void) {
     vertex_buffer_unbind();
     vertex_array_unbind();
 
-    GLFWwindow* window = (GLFWwindow*)platform_window_surface_get(s_app_state->platform_context);
     // TODO: window NULLチェック
     // end temporary
 
