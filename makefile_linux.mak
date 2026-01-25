@@ -4,6 +4,8 @@ SRC_DIR = src
 BUILD_DIR = bin
 OBJ_DIR = obj
 
+SAN ?= 0
+
 SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
@@ -57,10 +59,31 @@ else
 	endif
 	ifeq ($(BUILD_MODE), TEST_BUILD)
 		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_LINUX
-		COMPILER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
-		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
+# サニタイザ有効時はログをきれいにするためカバレッジを無効化
+		ifneq ($(SAN), 1)
+			COMPILER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
+			LINKER_FLAGS   += -fprofile-instr-generate -fcoverage-mapping
+		endif
 	endif
 endif
+
+ifeq ($(SAN), 1)
+  # まずは ASan + UBSan が最優先（Leak は ASan に内包されることが多い）
+  SAN_CFLAGS  += -fsanitize=address,undefined -fno-sanitize-recover=all
+  SAN_CFLAGS  += -fno-omit-frame-pointer
+  # 追加で有効にすると刺さりやすいことがある（Clang向け）
+  SAN_CFLAGS  += -fsanitize-address-use-after-scope
+
+  SAN_LDFLAGS += -fsanitize=address,undefined
+
+  # DEBUG/TEST でも -O0 固定だと再現性が落ちることがあるので、SAN時だけ -O1 推奨
+  # （あなたの設計上、DEBUG_BUILD/TEST_BUILD で -O0 を入れているため上書きの意図）
+  SAN_CFLAGS  += -O1
+endif
+
+COMPILER_FLAGS += $(SAN_CFLAGS)
+LINKER_FLAGS   += $(SAN_LDFLAGS)
+
 LINKER_FLAGS += -L/usr/lib/x86_64-linux-gnu/
 LINKER_FLAGS += -lm
 LINKER_FLAGS += -lGL
