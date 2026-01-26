@@ -557,6 +557,10 @@ static void NO_COVERAGE test_memory_system_report(void) {
     memory_system_report();
 
     s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING] = NULL;
+
+    memory_system_free(ptr_system, 256, MEMORY_TAG_SYSTEM);
+    memory_system_free(ptr_string, 128, MEMORY_TAG_STRING);
+
     memory_system_report();
 
     memory_system_destroy();
