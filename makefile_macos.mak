@@ -6,6 +6,9 @@ OBJ_DIR = obj
 
 SAN ?= 0
 
+# カバレッジ計測用変数(coverage.sh経由で与える、カバレッジ計測時以外は何もなし)
+COV_FLAGS ?=
+
 SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
@@ -61,11 +64,8 @@ else
 	endif
 	ifeq ($(BUILD_MODE), TEST_BUILD)
 		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_MACOS
-# サニタイザ有効時はログをきれいにするためカバレッジを無効化
-		ifneq ($(SAN), 1)
-			COMPILER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
-			LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
-		endif
+		COMPILER_FLAGS += $(COV_FLAGS)
+		LINKER_FLAGS += $(COV_FLAGS)
 	endif
 endif
 
