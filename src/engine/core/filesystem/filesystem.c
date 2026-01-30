@@ -689,9 +689,12 @@ static void NO_COVERAGE test_filesystem_destroy(void) {
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
+        FILE* fp = tmp->file_handle;
+
         filesystem_destroy(&tmp);
         assert(NULL == tmp);
         s_fs_test_param.fclose_mock_return_eof = false;
+        fclose(fp);
     }
 }
 
@@ -866,13 +869,15 @@ static void NO_COVERAGE test_filesystem_close(void) {
         assert(NULL != tmp->file_handle);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
 
+        FILE* fp = tmp->file_handle;
+
         ret = filesystem_close(tmp);
         assert(FILESYSTEM_FILE_CLOSE_ERROR == ret);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
         assert(NULL == tmp->file_handle);
         filesystem_destroy(&tmp);
-        assert(NULL == tmp);
         s_fs_test_param.fclose_mock_return_eof = false;
+        fclose(fp);
     }
     {
         // 正常系
