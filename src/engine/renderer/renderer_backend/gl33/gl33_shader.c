@@ -145,6 +145,8 @@ renderer_result_t gl33_shader_create(gl33_shader_t** shader_handle_) {
 
 cleanup:
 #ifdef TEST_BUILD
+    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // ここはカバレッジ到達不可だけど許容する
     if(RENDERER_SUCCESS != ret && NULL != tmp) {
         assert(false);
     }
