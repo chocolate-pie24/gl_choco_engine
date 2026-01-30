@@ -1270,5 +1270,9 @@ static void NO_COVERAGE test_result_to_str(void) {
         const char* str = result_to_str(FILESYSTEM_EOF);
         assert(0 == strcmp(str, s_fs_result_eof));
     }
+    {
+        const char* str = result_to_str(100);
+        assert(0 == strcmp(str, s_fs_result_undefined_error));
+    }
 }
 #endif
