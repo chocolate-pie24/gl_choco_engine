@@ -75,13 +75,13 @@ renderer_result_t vertex_array_create(vertex_array_object_t** vertex_array_) {
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    // NOTE: 現状ではrender_mem_allocate以降で失敗することはないので、エラー発生かつtmpがNULL以外になることはないためコメントアウト
-    // if(RENDERER_SUCCESS != ret) {
-    //     if(NULL != tmp) {
-    //         render_mem_free(tmp, sizeof(vertex_array_object_t));
-    //         tmp = NULL;
-    //     }
-    // }
+#ifdef TEST_BUILD
+    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // ここはカバレッジ到達不可だけど許容する
+    if(RENDERER_SUCCESS != ret && NULL != tmp) {
+        assert(false);
+    }
+#endif
     return ret;
 }
 
@@ -92,6 +92,8 @@ void vertex_array_destroy(vertex_array_object_t** vertex_array_) {
     if(NULL == *vertex_array_) {
         goto cleanup;
     }
+
+    // NOTE: 現状ではvertex_buffer_unbindはエラーを返さないため、このif文内は到達不可でカバレッジは100にはならないが許容する
     if(RENDERER_SUCCESS != vertex_array_unbind()) {
         WARN_MESSAGE("vertex_array_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
