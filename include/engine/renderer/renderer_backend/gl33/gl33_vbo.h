@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file vertex_buffer_object.h
+ * @file gl33_vbo.h
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIを提供する
  *
@@ -15,8 +15,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_VERTEX_BUFFER_OBJECT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_VERTEX_BUFFER_OBJECT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VBO_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VBO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,16 +33,16 @@ extern "C" {
  * ただ、この構造体のインスタンスは最終的にシェーダー構造体で持つことになる。
  * このため、更新頻度は多くないため、内部データを隠蔽する
  */
-typedef struct vertex_buffer_object vertex_buffer_object_t;
+typedef struct gl33_vbo gl33_vbo_t;
 
 /**
  * @brief VBO構造体インスタンスのメモリを確保し初期化する
  *
- * @param vertex_buffer_ vertex_buffer_object_t構造体インスタンスへのダブルポインタ
+ * @param vertex_buffer_ gl33_vbo_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}
- * vertex_buffer_object_t* vbo = NULL;
+ * gl33_vbo_t* vbo = NULL;
  * renderer_result_t ret = vertex_buffer_create(&vbo);
  * // エラー処理
  * @endcode
@@ -55,22 +55,22 @@ typedef struct vertex_buffer_object vertex_buffer_object_t;
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t vertex_buffer_create(vertex_buffer_object_t** vertex_buffer_);
+renderer_result_t vertex_buffer_create(gl33_vbo_t** vertex_buffer_);
 
 /**
- * @brief vertex_buffer_object_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する
+ * @brief gl33_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する
  *
- * @param vertex_buffer_ vertex_buffer_object_t構造体インスタンスへのダブルポインタ
+ * @param vertex_buffer_ gl33_vbo_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}
- * vertex_buffer_object_t* vbo = NULL;
+ * gl33_vbo_t* vbo = NULL;
  * renderer_result_t ret = vertex_buffer_create(&vbo);
  * // エラー処理
  * vertex_buffer_destroy(&vbo);
  * @endcode
  */
-void vertex_buffer_destroy(vertex_buffer_object_t** vertex_buffer_);
+void vertex_buffer_destroy(gl33_vbo_t** vertex_buffer_);
 
 /**
  * @brief glBindBuffer APIのラッパーAPI
@@ -80,7 +80,7 @@ void vertex_buffer_destroy(vertex_buffer_object_t** vertex_buffer_);
  *
  * 使用例:
  * @code{.c}
- * vertex_buffer_object_t* vbo = NULL;
+ * gl33_vbo_t* vbo = NULL;
  * renderer_result_t ret = vertex_buffer_create(&vbo);
  * // エラー処理
  * ret = vertex_buffer_bind(vbo);
@@ -90,14 +90,14 @@ void vertex_buffer_destroy(vertex_buffer_object_t** vertex_buffer_);
  * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_がNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t vertex_buffer_bind(const vertex_buffer_object_t* vertex_buffer_);
+renderer_result_t vertex_buffer_bind(const gl33_vbo_t* vertex_buffer_);
 
 /**
  * @brief VBOアンバインド処理
  *
  * 使用例:
  * @code{.c}
- * vertex_buffer_object_t* vbo = NULL;
+ * gl33_vbo_t* vbo = NULL;
  * renderer_result_t ret = vertex_buffer_create(&vbo);
  * // エラー処理
  * ret = vertex_buffer_bind(vbo);

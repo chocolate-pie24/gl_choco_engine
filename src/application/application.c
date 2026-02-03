@@ -46,8 +46,8 @@
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend/gl33/vertex_buffer_object.h" // TODO: remove this!!
-#include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"  // TODO: remove this!!
+#include "engine/renderer/renderer_backend/gl33/gl33_vbo.h" // TODO: remove this!!
+#include "engine/renderer/renderer_backend/gl33/gl33_vao.h"  // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/gl33_shader.h"          // TODO: remove this!!
 
 /**
@@ -346,7 +346,7 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    vertex_array_object_t* vao = NULL;
+    gl33_vao_t* vao = NULL;
     vertex_array_create(&vao);
     vertex_array_bind(vao);
 
@@ -356,7 +356,7 @@ application_result_t application_run(void) {
     0.0f,  1.0f, 0.0f,
     };
 
-    vertex_buffer_object_t* vbo = NULL;
+    gl33_vbo_t* vbo = NULL;
     vertex_buffer_create(&vbo); // TODO: エラー処理
     vertex_buffer_bind(vbo);
 

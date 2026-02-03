@@ -78,8 +78,8 @@ graph TD
   APPLICATION --> FS_UTILS
   APPLICATION --> PLATFORM_CONTEXT
   APPLICATION --> RENDERER_TYPES
-  APPLICATION --> VERTEX_BUFFER_OBJECT
-  APPLICATION --> VERTEX_ARRAY_OBJECT
+  APPLICATION --> GL33_VBO
+  APPLICATION --> GL33_VAO
   APPLICATION --> GL33_SHADER
   APPLICATION --> PLATFORM_TYPES
 
@@ -127,8 +127,8 @@ graph TD
         subgraph GL33[gl33]
           direction TB
           GL33_SHADER[gl33_shader]
-          VERTEX_ARRAY_OBJECT[vertex_array_object]
-          VERTEX_BUFFER_OBJECT[vertex_buffer_object]
+          GL33_VAO[gl33_vao]
+          GL33_VBO[gl33_vbo]
         end
       end
       subgraph RENDERER_CORE[renderer_core]
@@ -142,12 +142,12 @@ graph TD
     GL33_SHADER --> RENDERER_MEMORY
     GL33_SHADER --> RENDERER_ERR_UTILS
 
-    VERTEX_ARRAY_OBJECT --> RENDERER_TYPES
-    VERTEX_ARRAY_OBJECT --> RENDERER_ERR_UTILS
-    VERTEX_ARRAY_OBJECT --> RENDERER_MEMORY
-    VERTEX_BUFFER_OBJECT --> RENDERER_TYPES
-    VERTEX_BUFFER_OBJECT --> RENDERER_ERR_UTILS
-    VERTEX_BUFFER_OBJECT --> RENDERER_MEMORY
+    GL33_VAO --> RENDERER_TYPES
+    GL33_VAO --> RENDERER_ERR_UTILS
+    GL33_VAO --> RENDERER_MEMORY
+    GL33_VBO --> RENDERER_TYPES
+    GL33_VBO --> RENDERER_ERR_UTILS
+    GL33_VBO --> RENDERER_MEMORY
     RENDERER_ERR_UTILS --> RENDERER_TYPES
     RENDERER_MEMORY --> RENDERER_TYPES
   end
@@ -196,8 +196,8 @@ graph TD
       subgraph GL33[gl33]
         direction TB
         GL33_SHADER[gl33_shader]
-        VERTEX_ARRAY_OBJECT[vertex_array_object]
-        VERTEX_BUFFER_OBJECT[vertex_buffer_object]
+        GL33_VAO[gl33_vao]
+        GL33_VBO[gl33_vbo]
       end
     end
     subgraph RENDERER_CORE[renderer_core]
@@ -211,12 +211,12 @@ graph TD
   GL33_SHADER --> RENDERER_MEMORY
   GL33_SHADER --> RENDERER_ERR_UTILS
 
-  VERTEX_ARRAY_OBJECT --> RENDERER_TYPES
-  VERTEX_ARRAY_OBJECT --> RENDERER_ERR_UTILS
-  VERTEX_ARRAY_OBJECT --> RENDERER_MEMORY
-  VERTEX_BUFFER_OBJECT --> RENDERER_TYPES
-  VERTEX_BUFFER_OBJECT --> RENDERER_ERR_UTILS
-  VERTEX_BUFFER_OBJECT --> RENDERER_MEMORY
+  GL33_VAO --> RENDERER_TYPES
+  GL33_VAO --> RENDERER_ERR_UTILS
+  GL33_VAO --> RENDERER_MEMORY
+  GL33_VBO --> RENDERER_TYPES
+  GL33_VBO --> RENDERER_ERR_UTILS
+  GL33_VBO --> RENDERER_MEMORY
   RENDERER_ERR_UTILS --> RENDERER_TYPES
   RENDERER_MEMORY --> RENDERER_TYPES
 ```
@@ -284,8 +284,8 @@ This will be removed once the frontend is introduced.
 - Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).
 - Modules:
   - renderer_backend/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
-  - renderer_backend/gl33/vertex_array_object: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
-  - renderer_backend/gl33/vertex_buffer_object: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
+  - renderer_backend/gl33/gl33_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
+  - renderer_backend/gl33/gl33_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
   - renderer_core/renderer_err_utils: Utilities for converting renderer result/error codes to human-readable strings.
   - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
   - renderer_core/renderer_types: Common data types shared across the renderer subsystem.

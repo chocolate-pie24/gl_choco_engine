@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file vertex_array_object.h
+ * @file gl33_vao.h
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIを提供する
  *
@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_VERTEX_ARRAY_OBJECT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_VERTEX_ARRAY_OBJECT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VAO_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VAO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,16 +33,16 @@ extern "C" {
  * ただ、この構造体のインスタンスは最終的にシェーダー構造体で持つことになる。
  * このため、更新頻度は多くないため、内部データを隠蔽する
  */
-typedef struct vertex_array_object vertex_array_object_t;
+typedef struct gl33_vao gl33_vao_t;
 
 /**
  * @brief VAO構造体インスタンスのメモリを確保し初期化する
  *
- * @param vertex_array_ vertex_array_object_t構造体インスタンスへのダブルポインタ
+ * @param vertex_array_ gl33_vao_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}
- * vertex_array_object_t* vao = NULL;
+ * gl33_vao_t* vao = NULL;
  * renderer_result_t ret = vertex_array_create(&vao);
  * // エラー処理
  * @endcode
@@ -55,22 +55,22 @@ typedef struct vertex_array_object vertex_array_object_t;
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t vertex_array_create(vertex_array_object_t** vertex_array_);
+renderer_result_t vertex_array_create(gl33_vao_t** vertex_array_);
 
 /**
- * @brief vertex_array_object_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する
+ * @brief gl33_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する
  *
- * @param vertex_array_ vertex_array_object_t構造体インスタンスへのダブルポインタ
+ * @param vertex_array_ gl33_vao_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}
- * vertex_array_object_t* vao = NULL;
+ * gl33_vao_t* vao = NULL;
  * renderer_result_t ret = vertex_array_create(&vao);
  * // エラー処理
  * vertex_array_destroy(&vao);
  * @endcode
  */
-void vertex_array_destroy(vertex_array_object_t** vertex_array_);
+void vertex_array_destroy(gl33_vao_t** vertex_array_);
 
 /**
  * @brief glBindVertexArray APIのラッパーAPI
@@ -80,7 +80,7 @@ void vertex_array_destroy(vertex_array_object_t** vertex_array_);
  *
  * 使用例:
  * @code{.c}
- * vertex_array_object_t* vao = NULL;
+ * gl33_vao_t* vao = NULL;
  * renderer_result_t ret = vertex_array_create(&vao);
  * // エラー処理
  * ret = vertex_array_bind(vao);
@@ -90,14 +90,14 @@ void vertex_array_destroy(vertex_array_object_t** vertex_array_);
  * @retval RENDERER_INVALID_ARGUMENT vertex_array_がNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t vertex_array_bind(const vertex_array_object_t* vertex_array_);
+renderer_result_t vertex_array_bind(const gl33_vao_t* vertex_array_);
 
 /**
  * @brief VAOアンバインド処理
  *
  * 使用例:
  * @code{.c}
- * vertex_array_object_t* vao = NULL;
+ * gl33_vao_t* vao = NULL;
  * renderer_result_t ret = vertex_array_create(&vao);
  * // エラー処理
  * ret = vertex_array_bind(vao);

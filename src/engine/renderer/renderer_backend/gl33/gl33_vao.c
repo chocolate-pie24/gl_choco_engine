@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file vertex_array_object.c
+ * @file gl33_vao.c
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装
  *
@@ -23,7 +23,7 @@
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/renderer/renderer_core/renderer_memory.h"
 
-#include "engine/renderer/renderer_backend/gl33/vertex_array_object.h"
+#include "engine/renderer/renderer_backend/gl33/gl33_vao.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -32,7 +32,7 @@
  * @brief VAOモジュール内部状態管理構造体
  *
  */
-struct vertex_array_object {
+struct gl33_vao {
     GLuint vao_handle;  /**< VAO */
 };
 
@@ -56,14 +56,14 @@ static void test_vertex_array_attribute_set(void);
 
 #endif
 
-renderer_result_t vertex_array_create(vertex_array_object_t** vertex_array_) {
+renderer_result_t vertex_array_create(gl33_vao_t** vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    vertex_array_object_t* tmp = NULL;
+    gl33_vao_t* tmp = NULL;
 
     CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "vertex_array_create", "vertex_array_")
     CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "vertex_array_create", "vertex_array_")
 
-    ret = render_mem_allocate(sizeof(vertex_array_object_t), (void**)&tmp);
+    ret = render_mem_allocate(sizeof(gl33_vao_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("vertex_array_create(%s) - Failed to allocate memory for 'tmp'.", renderer_result_to_str(ret));
         goto cleanup;
@@ -85,7 +85,7 @@ cleanup:
     return ret;
 }
 
-void vertex_array_destroy(vertex_array_object_t** vertex_array_) {
+void vertex_array_destroy(gl33_vao_t** vertex_array_) {
     if(NULL == vertex_array_) {
         goto cleanup;
     }
@@ -98,13 +98,13 @@ void vertex_array_destroy(vertex_array_object_t** vertex_array_) {
         WARN_MESSAGE("vertex_array_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
-    render_mem_free(*vertex_array_, sizeof(vertex_array_object_t));
+    render_mem_free(*vertex_array_, sizeof(gl33_vao_t));
     *vertex_array_ = NULL;
 cleanup:
     return;
 }
 
-renderer_result_t vertex_array_bind(const vertex_array_object_t* vertex_array_) {
+renderer_result_t vertex_array_bind(const gl33_vao_t* vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "vertex_array_bind", "vertex_array_")
@@ -203,7 +203,7 @@ static void NO_COVERAGE mock_glEnableVertexAttribArray(GLuint index_) {
 }
 
 #ifdef TEST_BUILD
-void test_vertex_array_object(void) {
+void test_gl33_vao(void) {
     s_vertex_array_object_test = true;
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
@@ -224,23 +224,23 @@ static void NO_COVERAGE test_vertex_array_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
     }
     {
-        vertex_array_object_t* tmp = NULL;
-        assert(RENDERER_SUCCESS == render_mem_allocate(sizeof(vertex_array_object_t), (void**)&tmp));
+        gl33_vao_t* tmp = NULL;
+        assert(RENDERER_SUCCESS == render_mem_allocate(sizeof(gl33_vao_t), (void**)&tmp));
         assert(NULL != tmp);
         ret = vertex_array_create(&tmp);
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        render_mem_free(tmp, sizeof(vertex_array_object_t));
+        render_mem_free(tmp, sizeof(gl33_vao_t));
     }
     {
         memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
-        vertex_array_object_t* tmp = NULL;
+        gl33_vao_t* tmp = NULL;
         ret = vertex_array_create(&tmp);
         assert(RENDERER_NO_MEMORY == ret);
         assert(NULL == tmp);
         memory_system_test_param_reset();
     }
     {
-        vertex_array_object_t* tmp = NULL;
+        gl33_vao_t* tmp = NULL;
         ret = vertex_array_create(&tmp);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != tmp);
@@ -254,11 +254,11 @@ static void NO_COVERAGE test_vertex_array_destroy(void) {
         vertex_array_destroy(NULL);
     }
     {
-        vertex_array_object_t* tmp = NULL;
+        gl33_vao_t* tmp = NULL;
         vertex_array_destroy(&tmp);
     }
     {
-        vertex_array_object_t* tmp = NULL;
+        gl33_vao_t* tmp = NULL;
         renderer_result_t ret = vertex_array_create(&tmp);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != tmp);
@@ -274,7 +274,7 @@ static void NO_COVERAGE test_vertex_array_bind(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
     }
     {
-        vertex_array_object_t* tmp = NULL;
+        gl33_vao_t* tmp = NULL;
         ret = vertex_array_create(&tmp);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != tmp);

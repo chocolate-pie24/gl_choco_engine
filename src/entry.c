@@ -29,8 +29,8 @@
 #include "test_platform_glfw.h"
 #include "renderer/test_renderer_memory.h"
 #include "renderer/test_renderer_err_utils.h"
-#include "renderer/test_vertex_buffer_object.h"
-#include "renderer/test_vertex_array_object.h"
+#include "renderer/test_gl33_vbo.h"
+#include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
 #include "test_filesystem.h"
 #include "test_fs_utils.h"
@@ -66,8 +66,8 @@ int main(int argc_, char** argv_) {
         test_platform_glfw();
         test_renderer_memory();
         test_renderer_result_str();
-        test_vertex_buffer_object();
-        test_vertex_array_object();
+        test_gl33_vbo();
+        test_gl33_vao();
         test_filesystem();
         test_fs_utils();
         test_gl33_shader();
