@@ -46,9 +46,11 @@
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
+#include "engine/renderer/renderer_interface/shader.h"
+
 #include "engine/renderer/renderer_backend/gl33/gl33_vbo.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/gl33_vao.h"  // TODO: remove this!!
-#include "engine/renderer/renderer_backend/gl33/gl33_shader.h"          // TODO: remove this!!
+#include "engine/renderer/renderer_backend/gl33/gl33_shader.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -79,7 +81,8 @@ typedef struct app_state {
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
     // begin temporary TODO: remove this!!
-    gl33_shader_t* ui_shader_handle;
+    const renderer_shader_vtable_t* ui_shader_vtable;
+    renderer_backend_shader_t* ui_shader_backend_data;
     // end temporary
 } app_state_t;
 
@@ -242,6 +245,10 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
     }
+
+    tmp->ui_shader_backend_data = NULL;
+    tmp->ui_shader_vtable = NULL;
+    tmp->ui_shader_vtable = gl33_shader_vtable_get();
     // end temporary
 
     // commit
@@ -314,9 +321,9 @@ void application_destroy(void) {
         memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc = NULL;
     }
-    if(NULL != s_app_state->ui_shader_handle) {
-        gl33_shader_destroy(&s_app_state->ui_shader_handle);
-        s_app_state->ui_shader_handle = NULL;
+    if(NULL != s_app_state->ui_shader_backend_data) {
+        s_app_state->ui_shader_vtable->renderer_shader_destroy(&s_app_state->ui_shader_backend_data);
+        s_app_state->ui_shader_backend_data = NULL;
     }
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
@@ -388,7 +395,7 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        gl33_shader_use(s_app_state->ui_shader_handle);
+        s_app_state->ui_shader_vtable->renderer_shader_use(s_app_state->ui_shader_backend_data);
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
@@ -941,10 +948,10 @@ static bool program_create(void) {
     fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
     fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
 
-    gl33_shader_create(&s_app_state->ui_shader_handle); // TODO: エラー処理
-    gl33_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_shader_handle);
-    gl33_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_shader_handle);
-    gl33_shader_link(s_app_state->ui_shader_handle);
+    s_app_state->ui_shader_vtable->renderer_shader_create(&s_app_state->ui_shader_backend_data);
+    s_app_state->ui_shader_vtable->renderer_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_shader_backend_data);
+    s_app_state->ui_shader_vtable->renderer_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_shader_backend_data);
+    s_app_state->ui_shader_vtable->renderer_shader_link(s_app_state->ui_shader_backend_data);
 
     choco_string_destroy(&vert_shader_source);
     choco_string_destroy(&frag_shader_source);

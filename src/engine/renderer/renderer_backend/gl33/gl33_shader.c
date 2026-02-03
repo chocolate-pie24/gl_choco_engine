@@ -17,6 +17,8 @@
 
 #include <GL/glew.h>
 
+#include "engine/renderer/renderer_interface/shader.h"
+
 #include "engine/renderer/renderer_backend/gl33/gl33_shader.h"
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
@@ -93,17 +95,23 @@ static void test_shader_is_compiled(void);
 #endif
 
 /**
- * @brief OpenGL3.3用シェーダーハンドル構造体
+ * @brief シェーダーハンドル構造体
  *
  */
-struct gl33_shader {
+struct renderer_backend_shader {
     GLuint program_id;              /**< リンクしたOpenGlシェーダープログラムへのハンドル */
     GLuint vertex_shader_handle;    /**< コンパイルしたバーテックスシェーダープログラムへのハンドル */
     GLuint fragment_shader_handle;  /**< コンパイルしたフラグメントシェーダープログラムへのハンドル */
 };
 
-static renderer_result_t gl33_shader_resolve_target(gl33_shader_t* shader_handle_, shader_type_t shader_type_, GLenum* out_gl33_type_, GLuint** out_target_);
-static bool shader_is_compiled(shader_type_t shader_type_, gl33_shader_t* shader_handle_);
+static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_);
+static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
+static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
+static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
+static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_);
+
+static renderer_result_t gl33_shader_resolve_target(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLenum* out_gl33_type_, GLuint** out_target_);
+static bool shader_is_compiled(shader_type_t shader_type_, renderer_backend_shader_t* shader_handle_);
 
 static void mock_glDeleteShader(GLuint shader_);
 static void mock_glDeleteProgram(GLuint program_);
@@ -119,9 +127,41 @@ static void mock_glGetProgramiv(GLuint program_, GLenum pname_, GLint *params_);
 static void mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_);
 static void mock_glUseProgram(GLuint program_);
 
-renderer_result_t gl33_shader_create(gl33_shader_t** shader_handle_) {
+static const renderer_shader_vtable_t s_gl33_shader_vtable = {
+    .renderer_shader_create = gl33_shader_create,
+    .renderer_shader_destroy = gl33_shader_destroy,
+    .renderer_shader_compile = gl33_shader_compile,
+    .renderer_shader_link = gl33_shader_link,
+    .renderer_shader_use = gl33_shader_use,
+};
+
+const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
+    return &s_gl33_shader_vtable;
+}
+
+/**
+ * @brief OpenGL3.3用のシェーダーモジュールのメモリを確保し初期化する
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ * @endcode
+ *
+ * @param shader_handle_ 内部状態管理構造体へのダブルポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - *shader_handle_ != NULL
+ * - メモリシステム未初期化(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_SUCCESS メモリ確保および初期化に成功し、正常終了
+ */
+static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    gl33_shader_t* tmp = NULL;
+    renderer_backend_shader_t* tmp = NULL;
 
 #ifdef TEST_BUILD
     if(s_fail_injection.is_enabled) {
@@ -132,7 +172,7 @@ renderer_result_t gl33_shader_create(gl33_shader_t** shader_handle_) {
     CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "shader_handle_")
     CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "*shader_handle_")
 
-    ret = render_mem_allocate(sizeof(gl33_shader_t), (void**)&tmp);
+    ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_result_to_str(ret));
         goto cleanup;
@@ -154,7 +194,22 @@ cleanup:
     return ret;
 }
 
-void gl33_shader_destroy(gl33_shader_t** shader_handle_) {
+/**
+ * @brief shader_handle_が保持するシェーダーハンドルを削除、シェーダープログラムを削除し、shader_handle_のメモリを解放する
+ *
+ * @note 本APIは2重デストロイを許可する
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ * gl33_shader_destroy(&shader_handle); // shader_handle == NULLになる
+ * gl33_shader_destroy(&shader_handle); // 2重デストロイ許可
+ * @endcode
+ *
+ * @param shader_handle_ 破棄対象シェーダーハンドル構造体インスタンスへのダブルポインタ
+ */
+static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     if(NULL == shader_handle_) {
         return;
     }
@@ -171,11 +226,44 @@ void gl33_shader_destroy(gl33_shader_t** shader_handle_) {
         mock_glDeleteProgram((*shader_handle_)->program_id);
     }
 
-    render_mem_free(*shader_handle_, sizeof(gl33_shader_t));
+    render_mem_free(*shader_handle_, sizeof(renderer_backend_shader_t));
     *shader_handle_ = NULL;
 }
 
-renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, gl33_shader_t* shader_handle_) {
+/**
+ * @brief シェーダープログラムをコンパイルする
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ *
+ * char* shader_source = NULL;
+ * // シェーダーソース取得処理
+ *
+ * ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader_handle);
+ * // エラー処理
+ * @endcode
+ *
+ * @param shader_type_ シェーダー種別 @ref shader_type_t
+ * @param shader_source_ シェーダプログラムソースコード文字列
+ * @param shader_handle_ シェーダーハンドル構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_source_ == NULL
+ * - shader_handle_ == NULL
+ * - shader_type_が規定値外
+ * - メモリシステム未初期化(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - 指定したシェーダー種別のシェーダープログラムが既にコンパイル済み
+ * - 指定したシェーダーハンドルが保持するシェーダープログラムが既にリンク済み
+ * @retval RENDERER_SHADER_COMPILE_ERROR シェーダープログラムコンパイルエラー
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_SUCCESS シェーダープログラムのコンパイルに成功し、正常終了
+ */
+static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLenum gl33_shader_type;
     GLint result = GL_FALSE;
@@ -255,7 +343,47 @@ cleanup:
     return ret;
 }
 
-renderer_result_t gl33_shader_link(gl33_shader_t* shader_handle_) {
+/**
+ * @brief コンパイル済みの各シェーダープログラムをリンクしOpenGLプログラムを生成する
+ *
+ * @note OpenGLシェーダープログラムのリンク後は、各シェーダープログラムへのハンドルを破棄してもOpenGLの仕様上は問題ないが、
+ * 本モジュール仕様では、データ破損判定に用いるため、破棄を行わない。シェーダプログラムへのハンドルの破棄は @ref gl33_shader_destroy で行われる。
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ *
+ * char* vertex_shader_source = NULL;
+ * // バーテックスシェーダーソース取得処理
+ * ret = gl33_shader_compile(SHADER_TYPE_VERTEX, vertex_shader_source, shader_handle); // バーテックスシェーダーコンパイル
+ * // エラー処理
+ *
+ * char* fragment_shader_source = NULL;
+ * // フラグメントシェーダーソース取得処理
+ * ret = gl33_shader_compile(SHADER_TYPE_FRAGMENT, fragment_shader_source, shader_handle); // フラグメントシェーダーコンパイル
+ * // エラー処理
+ *
+ * ret = gl33_shader_link(shader_handle);
+ * // エラー処理
+ * @endcode
+ *
+ * @param shader_handle_ シェーダーハンドル構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - メモリシステム未初期化(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムがリンク済み
+ * - バーテックスシェーダーが未コンパイル
+ * - フラグメントシェーダーが未コンパイル
+ * @retval RENDERER_SHADER_LINK_ERROR シェーダープログラムのリンクに失敗
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_SUCCESS シェーダープログラムのリンクに成功し、正常終了
+ */
+static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLuint tmp_program_id = 0;
     GLint result = GL_FALSE;
@@ -322,7 +450,30 @@ cleanup:
     return ret;
 }
 
-renderer_result_t gl33_shader_use(gl33_shader_t* shader_handle_) {
+/**
+ * @brief OpenGLコンテキストにshader_handle_が保持するOpenGLシェーダープログラムの使用開始を伝える
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ *
+ * // OpenGLシェーダーのコンパイル、リンク処理
+ *
+ * ret = gl33_shader_use(shader_handle);
+ * // エラー処理
+ * @endcode
+ *
+ * @param shader_handle_ リンク済みOpenGLシェーダープログラムを保持するシェーダーハンドル構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
+ * @retval RENDERER_BAD_OPERATION OpenGLシェーダープログラムが未リンク
+ * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+ * - シェーダープログラムがリンク済みであるにも関わらず、バーテックスシェーダーが未コンパイル
+ * - シェーダープログラムがリンク済みであるにも関わらず、フラグメントシェーダーが未コンパイル
+ * @retval RENDERER_SUCCESS OpenGLシェーダプログラムの使用開始に成功し、正常終了
+ */
+static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD
@@ -367,7 +518,7 @@ cleanup:
  * - shader_type_の値が本関数で認識できない値
  * @retval RENDERER_SUCCESS シェーダー種別およびシェーダーハンドルへのポインタの取得に成功し、正常終了
  */
-static renderer_result_t gl33_shader_resolve_target(gl33_shader_t* shader_handle_, shader_type_t shader_type_, GLenum* out_gl33_type_, GLuint** out_target_) {
+static renderer_result_t gl33_shader_resolve_target(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLenum* out_gl33_type_, GLuint** out_target_) {
     GLenum tmp_type;
     GLuint* tmp_handle;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
@@ -411,7 +562,7 @@ cleanup:
  * - shader_handle_ == NULL
  * - shader_type_が本関数で未対応の種別
  */
-static bool shader_is_compiled(shader_type_t shader_type_, gl33_shader_t* shader_handle_) {
+static bool shader_is_compiled(shader_type_t shader_type_, renderer_backend_shader_t* shader_handle_) {
     bool ret = false;
     if(NULL == shader_handle_) {
         ret = false;
@@ -671,7 +822,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
         // 強制エラー出力（gl33_shader_create先頭のfail_injection分岐のカバレッジ確保）
         gl33_shader_fail_enable(RENDERER_RUNTIME_ERROR);
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_RUNTIME_ERROR == ret);
         assert(NULL == shader);
@@ -685,8 +836,8 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
     }
     {
         // 異常系: *shader_handle_ がNULL以外（2重create防止）
-        gl33_shader_t dummy;
-        gl33_shader_t* shader = &dummy;
+        renderer_backend_shader_t dummy;
+        renderer_backend_shader_t* shader = &dummy;
 
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_INVALID_ARGUMENT == ret);
@@ -696,7 +847,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
         // 異常系: render_mem_allocate失敗
         render_mem_test_param_set(RENDERER_NO_MEMORY);
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_NO_MEMORY == ret);
         assert(NULL == shader);
@@ -705,7 +856,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
     }
     {
         // 正常系
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
 
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
@@ -728,7 +879,7 @@ static void NO_COVERAGE test_gl33_shader_destroy(void) {
     }
     {
         // 異常系: *shader_handle_ == NULL（何もせずreturn）
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         gl33_shader_destroy(&shader);
         assert(NULL == shader);
     }
@@ -737,7 +888,7 @@ static void NO_COVERAGE test_gl33_shader_destroy(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -756,7 +907,7 @@ static void NO_COVERAGE test_gl33_shader_destroy(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -784,7 +935,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         // 強制エラー出力（gl33_shader_compile先頭のfail_injection分岐のカバレッジ確保）
         gl33_shader_fail_enable(RENDERER_RUNTIME_ERROR);
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_compile(SHADER_TYPE_VERTEX, dummy_src, shader);
         assert(RENDERER_RUNTIME_ERROR == ret);
 
@@ -792,7 +943,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
     }
     {
         // 異常系: shader_source_ == NULL
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -819,7 +970,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -843,7 +994,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -868,7 +1019,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -889,7 +1040,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -914,7 +1065,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -944,7 +1095,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -977,7 +1128,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1011,7 +1162,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1045,7 +1196,7 @@ static void NO_COVERAGE test_gl33_shader_compile(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1092,7 +1243,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1118,7 +1269,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1143,7 +1294,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1168,7 +1319,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1197,7 +1348,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1234,7 +1385,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1274,7 +1425,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1313,7 +1464,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1353,7 +1504,7 @@ static void NO_COVERAGE test_gl33_shader_link(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1406,7 +1557,7 @@ static void NO_COVERAGE test_gl33_shader_use(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1432,7 +1583,7 @@ static void NO_COVERAGE test_gl33_shader_use(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1457,7 +1608,7 @@ static void NO_COVERAGE test_gl33_shader_use(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1482,7 +1633,7 @@ static void NO_COVERAGE test_gl33_shader_use(void) {
         gl33_shader_fail_disable();
         render_mem_test_param_reset();
 
-        gl33_shader_t* shader = NULL;
+        renderer_backend_shader_t* shader = NULL;
         renderer_result_t ret = gl33_shader_create(&shader);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != shader);
@@ -1519,7 +1670,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 異常系: out_gl33_type_ == NULL
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         GLuint* out_target = NULL;
 
         renderer_result_t ret = gl33_shader_resolve_target(&shader, SHADER_TYPE_VERTEX, NULL, &out_target);
@@ -1528,7 +1679,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 異常系: out_target_ == NULL
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         GLenum out_type = 0;
 
         renderer_result_t ret = gl33_shader_resolve_target(&shader, SHADER_TYPE_VERTEX, &out_type, NULL);
@@ -1536,7 +1687,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 異常系: *out_target_ != NULL（出力先が既にセット済み）
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         GLenum out_type = 0;
 
         GLuint dummy = 0;
@@ -1548,7 +1699,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 異常系: 未対応の shader_type_
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         GLenum out_type = 0;
         GLuint* out_target = NULL;
 
@@ -1558,7 +1709,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 正常系: VERTEX
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 0;
         shader.fragment_shader_handle = 0;
 
@@ -1575,7 +1726,7 @@ static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
     }
     {
         // 正常系: FRAGMENT
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 0;
         shader.fragment_shader_handle = 0;
 
@@ -1606,7 +1757,7 @@ static void NO_COVERAGE test_shader_is_compiled(void) {
     }
     {
         // VERTEX: handle == 0 -> false
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 0;
         shader.fragment_shader_handle = 0;
         shader.program_id = 0;
@@ -1616,7 +1767,7 @@ static void NO_COVERAGE test_shader_is_compiled(void) {
     }
     {
         // VERTEX: handle != 0 -> true
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 1;
         shader.fragment_shader_handle = 0;
         shader.program_id = 0;
@@ -1626,7 +1777,7 @@ static void NO_COVERAGE test_shader_is_compiled(void) {
     }
     {
         // FRAGMENT: handle == 0 -> false
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 0;
         shader.fragment_shader_handle = 0;
         shader.program_id = 0;
@@ -1636,7 +1787,7 @@ static void NO_COVERAGE test_shader_is_compiled(void) {
     }
     {
         // FRAGMENT: handle != 0 -> true
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 0;
         shader.fragment_shader_handle = 2;
         shader.program_id = 0;
@@ -1646,7 +1797,7 @@ static void NO_COVERAGE test_shader_is_compiled(void) {
     }
     {
         // 異常系: 未対応の shader_type_ -> false
-        gl33_shader_t shader;
+        renderer_backend_shader_t shader;
         shader.vertex_shader_handle = 1;
         shader.fragment_shader_handle = 2;
         shader.program_id = 0;
