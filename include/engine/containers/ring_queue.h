@@ -2,10 +2,10 @@
  *
  * @file ring_queue.h
  * @author chocolate-pie24
- * @brief ジェネリック型のリングキューオブジェクト定義と関連APIを提供する
+ * @brief ジェネリック型のリングキューモジュールを提供する
  *
  * @note
- * ring_queue_tオブジェクトは、内部データを隠蔽している \n
+ * ring_queue_tは、内部データを隠蔽している \n
  * このため、ring_queue_t型で変数を宣言することはできない \n
  * 使用の際は、ring_queue_t*型で宣言すること
  *
@@ -56,12 +56,13 @@ typedef enum {
     RING_QUEUE_RUNTIME_ERROR,       /**< 実行時エラー */
     RING_QUEUE_UNDEFINED_ERROR,     /**< 未定義エラー */
     RING_QUEUE_LIMIT_EXCEEDED,      /**< システム使用可能範囲上限超過 */
+    RING_QUEUE_DATA_CORRUPTED,      /**< 内部データ破損 */
     RING_QUEUE_OVERFLOW,            /**< 計算過程のオーバーフロー */
     RING_QUEUE_EMPTY,               /**< リングキューが空 */
 } ring_queue_result_t;
 
 /**
- * @brief ring_queue_tオブジェクトのメモリを確保し、初期化を行いリングキューを使用可能な状態にする
+ * @brief ring_queue_t構造体インスタンスのメモリを確保し、初期化を行いリングキューを使用可能な状態にする
  *
  * 使用例:
  * @code{.c}
@@ -75,7 +76,7 @@ typedef enum {
  * @param[in] max_element_count_ 要素を格納可能な最大個数
  * @param[in] element_size_ 格納する要素のサイズ
  * @param[in] element_align_ 格納する要素のアライメント要件(2のべき乗 かつ max_align_t以下でなければいけない)
- * @param[out] ring_queue_ 初期化対象オブジェクト
+ * @param[out] ring_queue_ 初期化対象構造体インスタンスへのダブルポインタ
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
  * - ring_queue_ == NULL
@@ -92,7 +93,9 @@ typedef enum {
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_);
 
 /**
- * @brief ring_queue_tオブジェクトが管理しているメモリと、ring_queue_t自身のメモリを破棄する
+ * @brief ring_queue_t構造体インスタンスが管理しているメモリと、ring_queue_t自身のメモリを破棄する
+ *
+ * @warning 内部データが破損している場合にはmemory_poolの破棄は行わない
  *
  * @note
  * ring_queue_destroyは2重デストロイを許可する
@@ -109,7 +112,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
  * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
  * @endcode
  *
- * @param ring_queue_ メモリ破棄対象オブジェクト
+ * @param ring_queue_ メモリ破棄対象構造体インスタンスへのダブルポインタ
  */
 void ring_queue_destroy(ring_queue_t** ring_queue_);
 
@@ -136,7 +139,7 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
  * @endcode
  *
- * @param ring_queue_ データをpushするリングキューオブジェクト
+ * @param ring_queue_ データをpushするリングキュー構造体インスタンスへのポインタ
  * @param data_ 格納データへのポインタ
  * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
@@ -172,7 +175,7 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
  * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
  * @endcode
  *
- * @param ring_queue_ データをpopするリングキューオブジェクト
+ * @param ring_queue_ データをpopするリングキュー構造体インスタンスへのポインタ
  * @param data_ popしたデータの格納先アドレス
  * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
