@@ -469,5 +469,36 @@ static void NO_COVERAGE test_linear_allocator_allocate(void) {
         alloc = NULL;
         pool = NULL;
     }
+    {
+        // UINTPTR_MAX - offset < head を成立させて INVALID_ARGUMENT を踏む
+        // head_ptr を UINTPTR_MAX 近傍にして、かつ req_align_ を 2の冪にする。
+        void* out_ptr = NULL;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(8);
+        assert(NULL != pool);
+        memset(pool, 0, 8);
+
+        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        // head を UINTPTR_MAX - 1 にする。align=8 なら head%8 != 0 になり offset>0 が作れる。
+        alloc->head_ptr = (void*)(UINTPTR_MAX - 1);
+
+        ret = linear_allocator_allocate(alloc, 1, 8, &out_ptr);
+        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(NULL == out_ptr);
+
+        // 後片付け（head_ptr は pool に戻しておくと無難）
+        alloc->head_ptr = alloc->memory_pool;
+
+        free(alloc);
+        free(pool);
+        alloc = NULL;
+        pool = NULL;
+    }
 }
 #endif
