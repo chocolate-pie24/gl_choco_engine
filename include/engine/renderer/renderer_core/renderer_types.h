@@ -21,6 +21,14 @@ extern "C" {
 #endif
 
 /**
+ * @brief GraphicsAPI種別リスト
+ *
+ */
+typedef enum {
+    GRAPHICS_API_GL33,  /**< OpenGL 3.3 */
+} target_graphics_api_t;
+
+/**
  * @brief レンダラーレイヤー実行結果コード定義
  *
  */

@@ -46,13 +46,7 @@
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_interface/shader.h"
-#include "engine/renderer/renderer_interface/vertex_array_object.h"
-#include "engine/renderer/renderer_interface/vertex_buffer_object.h"
-
-#include "engine/renderer/renderer_backend/gl33/gl33_vbo.h" // TODO: remove this!!
-#include "engine/renderer/renderer_backend/gl33/gl33_vao.h"  // TODO: remove this!!
-#include "engine/renderer/renderer_backend/gl33/gl33_shader.h"
+#include "engine/renderer/renderer_backend_context.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -83,14 +77,7 @@ typedef struct app_state {
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
     // begin temporary TODO: remove this!!
-    const renderer_shader_vtable_t* ui_shader_vtable;
-    renderer_backend_shader_t* ui_shader_backend_data;
-
-    const renderer_vao_vtable_t* ui_vao_vtable;
-    renderer_backend_vao_t* ui_vao_backend_data;
-
-    const renderer_vbo_vtable_t* ui_vbo_vtable;
-    renderer_backend_vbo_t* ui_vbo_backend_data;
+    renderer_backend_context_t* ui_renderer_context;
     // end temporary
 } app_state_t;
 
@@ -110,6 +97,7 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
+static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
 
 // begin temporary TODO: remove this!!
 static bool shader_create(const char* shader_source_, GLenum shader_type_, GLuint* shader_id_);
@@ -134,6 +122,7 @@ application_result_t application_create(void) {
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -160,7 +149,6 @@ application_result_t application_create(void) {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
@@ -254,17 +242,12 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    tmp->ui_shader_backend_data = NULL;
-    tmp->ui_shader_vtable = NULL;
-    tmp->ui_shader_vtable = gl33_shader_vtable_get();
-
-    tmp->ui_vao_backend_data = NULL;
-    tmp->ui_vao_vtable = NULL;
-    tmp->ui_vao_vtable = gl33_vao_vtable_get();
-
-    tmp->ui_vbo_backend_data = NULL;
-    tmp->ui_vbo_vtable = NULL;
-    tmp->ui_vbo_vtable = gl33_vbo_vtable_get();
+    ret_renderer = renderer_backend_initialize(tmp->linear_alloc, GRAPHICS_API_GL33, &tmp->ui_renderer_context);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.");
+        goto cleanup;
+    }
     // end temporary
 
     // commit
@@ -337,18 +320,7 @@ void application_destroy(void) {
         memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc = NULL;
     }
-    if(NULL != s_app_state->ui_shader_backend_data) {
-        s_app_state->ui_shader_vtable->renderer_shader_destroy(&s_app_state->ui_shader_backend_data);
-        s_app_state->ui_shader_backend_data = NULL;
-    }
-    if(NULL != s_app_state->ui_vao_backend_data) {
-        s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
-        s_app_state->ui_vao_backend_data = NULL;
-    }
-    if(NULL != s_app_state->ui_vbo_backend_data) {
-        s_app_state->ui_vbo_vtable->vertex_buffer_destroy(&s_app_state->ui_vbo_backend_data);
-        s_app_state->ui_vbo_backend_data = NULL;
-    }
+    renderer_backend_destroy(s_app_state->ui_renderer_context);
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
@@ -377,8 +349,7 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    s_app_state->ui_vao_vtable->vertex_array_create(&s_app_state->ui_vao_backend_data);
-    s_app_state->ui_vao_vtable->vertex_array_bind(s_app_state->ui_vao_backend_data);
+    renderer_backend_vertex_array_bind(s_app_state->ui_renderer_context);
 
     static const GLfloat vertex_buffer_data[] = {
     -1.0f, -1.0f, 0.0f,
@@ -386,14 +357,12 @@ application_result_t application_run(void) {
     0.0f,  1.0f, 0.0f,
     };
 
-    s_app_state->ui_vbo_vtable->vertex_buffer_create(&s_app_state->ui_vbo_backend_data);
-    s_app_state->ui_vbo_vtable->vertex_buffer_bind(s_app_state->ui_vbo_backend_data);
-    s_app_state->ui_vbo_vtable->vertex_buffer_vertex_load(sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
+    renderer_backend_vertex_buffer_bind(s_app_state->ui_renderer_context);
+    renderer_backend_vertex_buffer_vertex_load(s_app_state->ui_renderer_context, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
+    renderer_backend_vertex_array_attribute_set(s_app_state->ui_renderer_context, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
 
-    s_app_state->ui_vao_vtable->vertex_array_attribute_set(0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
-
-    s_app_state->ui_vbo_vtable->vertex_buffer_unbind();
-    s_app_state->ui_vao_vtable->vertex_array_unbind();
+    renderer_backend_vertex_buffer_unbind(s_app_state->ui_renderer_context);
+    renderer_backend_vertex_array_unbind(s_app_state->ui_renderer_context);
 
     // TODO: window NULLチェック
     // end temporary
@@ -416,15 +385,15 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        s_app_state->ui_shader_vtable->renderer_shader_use(s_app_state->ui_shader_backend_data);
+        renderer_backend_shader_use(s_app_state->ui_renderer_context);
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
-        s_app_state->ui_vao_vtable->vertex_array_bind(s_app_state->ui_vao_backend_data);
+        renderer_backend_vertex_array_bind(s_app_state->ui_renderer_context);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        s_app_state->ui_vao_vtable->vertex_array_unbind();
+        renderer_backend_vertex_array_unbind(s_app_state->ui_renderer_context);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
@@ -432,11 +401,6 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
-    // TODO: begin temporary
-    s_app_state->ui_vbo_vtable->vertex_buffer_destroy(&s_app_state->ui_vbo_backend_data);
-    s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
-    // end temporary
-
     return ret;
 }
 
@@ -949,6 +913,31 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     }
 }
 
+static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
+    switch(rslt_) {
+    case RENDERER_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDERER_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDERER_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDERER_SHADER_COMPILE_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_SHADER_LINK_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDERER_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDERER_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDERER_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
 static bool program_create(void) {
     bool ret = false;
     GLint result = GL_FALSE;
@@ -969,10 +958,9 @@ static bool program_create(void) {
     fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
     fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
 
-    s_app_state->ui_shader_vtable->renderer_shader_create(&s_app_state->ui_shader_backend_data);
-    s_app_state->ui_shader_vtable->renderer_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_shader_backend_data);
-    s_app_state->ui_shader_vtable->renderer_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_shader_backend_data);
-    s_app_state->ui_shader_vtable->renderer_shader_link(s_app_state->ui_shader_backend_data);
+    renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_renderer_context);
+    renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_renderer_context);
+    renderer_backend_shader_link(s_app_state->ui_renderer_context);
 
     choco_string_destroy(&vert_shader_source);
     choco_string_destroy(&frag_shader_source);
