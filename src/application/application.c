@@ -47,6 +47,8 @@
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/renderer/renderer_interface/shader.h"
+#include "engine/renderer/renderer_interface/vertex_array_object.h"
+#include "engine/renderer/renderer_interface/vertex_buffer_object.h"
 
 #include "engine/renderer/renderer_backend/gl33/gl33_vbo.h" // TODO: remove this!!
 #include "engine/renderer/renderer_backend/gl33/gl33_vao.h"  // TODO: remove this!!
@@ -86,6 +88,9 @@ typedef struct app_state {
 
     const renderer_vao_vtable_t* ui_vao_vtable;
     renderer_backend_vao_t* ui_vao_backend_data;
+
+    const renderer_vbo_vtable_t* ui_vbo_vtable;
+    renderer_backend_vbo_t* ui_vbo_backend_data;
     // end temporary
 } app_state_t;
 
@@ -256,6 +261,10 @@ application_result_t application_create(void) {
     tmp->ui_vao_backend_data = NULL;
     tmp->ui_vao_vtable = NULL;
     tmp->ui_vao_vtable = gl33_vao_vtable_get();
+
+    tmp->ui_vbo_backend_data = NULL;
+    tmp->ui_vbo_vtable = NULL;
+    tmp->ui_vbo_vtable = gl33_vbo_vtable_get();
     // end temporary
 
     // commit
@@ -336,6 +345,10 @@ void application_destroy(void) {
         s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
         s_app_state->ui_vao_backend_data = NULL;
     }
+    if(NULL != s_app_state->ui_vbo_backend_data) {
+        s_app_state->ui_vbo_vtable->vertex_buffer_destroy(&s_app_state->ui_vbo_backend_data);
+        s_app_state->ui_vbo_backend_data = NULL;
+    }
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
@@ -373,15 +386,13 @@ application_result_t application_run(void) {
     0.0f,  1.0f, 0.0f,
     };
 
-    gl33_vbo_t* vbo = NULL;
-    vertex_buffer_create(&vbo); // TODO: エラー処理
-    vertex_buffer_bind(vbo);
-
-    vertex_buffer_vertex_load(sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
+    s_app_state->ui_vbo_vtable->vertex_buffer_create(&s_app_state->ui_vbo_backend_data);
+    s_app_state->ui_vbo_vtable->vertex_buffer_bind(s_app_state->ui_vbo_backend_data);
+    s_app_state->ui_vbo_vtable->vertex_buffer_vertex_load(sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
 
     s_app_state->ui_vao_vtable->vertex_array_attribute_set(0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
 
-    vertex_buffer_unbind();
+    s_app_state->ui_vbo_vtable->vertex_buffer_unbind();
     s_app_state->ui_vao_vtable->vertex_array_unbind();
 
     // TODO: window NULLチェック
@@ -422,7 +433,7 @@ application_result_t application_run(void) {
     }
 cleanup:
     // TODO: begin temporary
-    vertex_buffer_destroy(&vbo);
+    s_app_state->ui_vbo_vtable->vertex_buffer_destroy(&s_app_state->ui_vbo_backend_data);
     s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
     // end temporary
 
