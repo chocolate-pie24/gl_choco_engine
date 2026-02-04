@@ -83,6 +83,9 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     const renderer_shader_vtable_t* ui_shader_vtable;
     renderer_backend_shader_t* ui_shader_backend_data;
+
+    const renderer_vao_vtable_t* ui_vao_vtable;
+    renderer_backend_vao_t* ui_vao_backend_data;
     // end temporary
 } app_state_t;
 
@@ -249,6 +252,10 @@ application_result_t application_create(void) {
     tmp->ui_shader_backend_data = NULL;
     tmp->ui_shader_vtable = NULL;
     tmp->ui_shader_vtable = gl33_shader_vtable_get();
+
+    tmp->ui_vao_backend_data = NULL;
+    tmp->ui_vao_vtable = NULL;
+    tmp->ui_vao_vtable = gl33_vao_vtable_get();
     // end temporary
 
     // commit
@@ -325,6 +332,10 @@ void application_destroy(void) {
         s_app_state->ui_shader_vtable->renderer_shader_destroy(&s_app_state->ui_shader_backend_data);
         s_app_state->ui_shader_backend_data = NULL;
     }
+    if(NULL != s_app_state->ui_vao_backend_data) {
+        s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
+        s_app_state->ui_vao_backend_data = NULL;
+    }
 
     memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
@@ -353,9 +364,8 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    gl33_vao_t* vao = NULL;
-    vertex_array_create(&vao);
-    vertex_array_bind(vao);
+    s_app_state->ui_vao_vtable->vertex_array_create(&s_app_state->ui_vao_backend_data);
+    s_app_state->ui_vao_vtable->vertex_array_bind(s_app_state->ui_vao_backend_data);
 
     static const GLfloat vertex_buffer_data[] = {
     -1.0f, -1.0f, 0.0f,
@@ -369,10 +379,10 @@ application_result_t application_run(void) {
 
     vertex_buffer_vertex_load(sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
 
-    vertex_array_attribute_set(0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
+    s_app_state->ui_vao_vtable->vertex_array_attribute_set(0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
 
     vertex_buffer_unbind();
-    vertex_array_unbind();
+    s_app_state->ui_vao_vtable->vertex_array_unbind();
 
     // TODO: window NULLチェック
     // end temporary
@@ -399,11 +409,11 @@ application_result_t application_run(void) {
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
-        vertex_array_bind(vao);
+        s_app_state->ui_vao_vtable->vertex_array_bind(s_app_state->ui_vao_backend_data);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        vertex_array_unbind();
+        s_app_state->ui_vao_vtable->vertex_array_unbind();
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
@@ -413,7 +423,7 @@ application_result_t application_run(void) {
 cleanup:
     // TODO: begin temporary
     vertex_buffer_destroy(&vbo);
-    vertex_array_destroy(&vao);
+    s_app_state->ui_vao_vtable->vertex_array_destroy(&s_app_state->ui_vao_backend_data);
     // end temporary
 
     return ret;
