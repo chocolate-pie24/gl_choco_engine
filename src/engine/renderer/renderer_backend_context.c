@@ -5,6 +5,7 @@
 #include "engine/renderer/renderer_backend_context.h"
 
 #include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/renderer/renderer_core/renderer_err_utils.h"
 
 #include "engine/renderer/renderer_backend_interface/shader.h"
 #include "engine/renderer/renderer_backend_interface/vertex_array_object.h"
@@ -31,24 +32,12 @@ struct renderer_backend_context {
     renderer_backend_vbo_t* vbo_backend_data;
 };
 
-static const char* s_rslt_str_success = "SUCCESS";
-static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* s_rslt_str_no_memory = "NO_MEMORY";
-static const char* s_rslt_str_shader_compile_error = "SHADER_COMPILE_ERROR";
-static const char* s_rslt_str_shader_link_error = "SHADER_LINK_ERROR";
-static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";
-
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
 static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
 static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
 
 static bool graphics_api_valid_check(target_graphics_api_t target_api_);
 static renderer_result_t rslt_convert_linear_alloc(linear_allocator_result_t result_);
-static const char* rslt_to_str(renderer_result_t rslt_);
 
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
@@ -68,7 +57,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for renderer backend context.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for renderer backend context.", renderer_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_context, 0, sizeof(renderer_backend_context_t));
@@ -77,20 +66,20 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     tmp_context->shader_vtable = shader_vtable_get(target_api_);
     if(NULL == tmp_context->shader_vtable) {
         ret = RENDERER_RUNTIME_ERROR;
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get shader vtable.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get shader vtable.", renderer_result_to_str(ret));
         goto cleanup;
     }
     tmp_context->shader_vtable->renderer_shader_preinit(&memory_req, &align_req);
     ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->shader_backend_data);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for shader backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for shader backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_context->shader_backend_data, 0, memory_req);
     ret = tmp_context->shader_vtable->renderer_shader_init(tmp_context->shader_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize shader backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize shader backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -98,20 +87,20 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     tmp_context->vao_vtable = vao_vtable_get(target_api_);
     if(NULL == tmp_context->vao_vtable) {
         ret = RENDERER_RUNTIME_ERROR;
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vao vtable.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vao vtable.", renderer_result_to_str(ret));
         goto cleanup;
     }
     tmp_context->vao_vtable->vertex_array_preinit(&memory_req, &align_req);
     ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->vao_backend_data);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vao backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vao backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_context->vao_backend_data, 0, memory_req);
     ret = tmp_context->vao_vtable->vertex_array_init(tmp_context->vao_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vao backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vao backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -119,20 +108,20 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     tmp_context->vbo_vtable = vbo_vtable_get(target_api_);
     if(NULL == tmp_context->vbo_vtable) {
         ret = RENDERER_RUNTIME_ERROR;
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vbo vtable.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vbo vtable.", renderer_result_to_str(ret));
         goto cleanup;
     }
     tmp_context->vbo_vtable->vertex_buffer_preinit(&memory_req, &align_req);
     ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->vbo_backend_data);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vbo backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vbo backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_context->vbo_backend_data, 0, memory_req);
     ret = tmp_context->vbo_vtable->vertex_buffer_init(tmp_context->vbo_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vbo backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vbo backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -173,7 +162,7 @@ renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, co
 
     ret = backend_context_->shader_vtable->renderer_shader_compile(shader_type_, shader_source_, backend_context_->shader_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_shader_compile(%s) - Failed to compile shader source.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_shader_compile(%s) - Failed to compile shader source.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -189,7 +178,7 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
 
     ret = backend_context_->shader_vtable->renderer_shader_link(backend_context_->shader_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_shader_link(%s) - Failed to link shader program.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_shader_link(%s) - Failed to link shader program.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -205,7 +194,7 @@ renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backen
 
     ret = backend_context_->shader_vtable->renderer_shader_use(backend_context_->shader_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_shader_use(%s) - Failed to use shader program.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_shader_use(%s) - Failed to use shader program.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -221,7 +210,7 @@ renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t*
 
     ret = backend_context_->vao_vtable->vertex_array_bind(backend_context_->vao_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to use bind vbo.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to use bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -237,7 +226,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
 
     ret = backend_context_->vao_vtable->vertex_array_unbind();
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to use bind vbo.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to use bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -253,7 +242,7 @@ renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_c
 
     ret = backend_context_->vao_vtable->vertex_array_attribute_set(layout_, size_, type_, normalized_, stride_, offset_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_attribute_set(%s) - Failed to set vao attribute.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_attribute_set(%s) - Failed to set vao attribute.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -269,7 +258,7 @@ renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t
 
     ret = backend_context_->vbo_vtable->vertex_buffer_bind(backend_context_->vbo_backend_data);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_bind(%s) - Failed to bind vbo.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_bind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -285,7 +274,7 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
 
     ret = backend_context_->vbo_vtable->vertex_buffer_unbind();
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to bind vbo.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -301,7 +290,7 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_co
 
     ret = backend_context_->vbo_vtable->vertex_buffer_vertex_load(load_size_, load_data_, usage_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to bind vbo.", rslt_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -357,32 +346,5 @@ static renderer_result_t rslt_convert_linear_alloc(linear_allocator_result_t res
         return RENDERER_INVALID_ARGUMENT;
     default:
         return RENDERER_UNDEFINED_ERROR;
-    }
-}
-
-static const char* rslt_to_str(renderer_result_t rslt_) {
-    switch(rslt_) {
-    case RENDERER_SUCCESS:
-        return s_rslt_str_success;
-    case RENDERER_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
-    case RENDERER_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
-    case RENDERER_NO_MEMORY:
-        return s_rslt_str_no_memory;
-    case RENDERER_SHADER_COMPILE_ERROR:
-        return s_rslt_str_shader_compile_error;
-    case RENDERER_SHADER_LINK_ERROR:
-        return s_rslt_str_shader_link_error;
-    case RENDERER_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
-    case RENDERER_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
-    case RENDERER_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
-    case RENDERER_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
-    default:
-        return s_rslt_str_undefined_error;
     }
 }
