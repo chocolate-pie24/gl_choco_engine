@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "engine/renderer/renderer_interface/shader.h"
+#include "engine/renderer/renderer_backend_interface/shader.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void);

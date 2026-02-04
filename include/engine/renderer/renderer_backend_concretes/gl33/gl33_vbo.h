@@ -24,7 +24,7 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/renderer/renderer_interface/vertex_buffer_object.h"
+#include "engine/renderer/renderer_backend_interface/vertex_buffer_object.h"
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void);
 
