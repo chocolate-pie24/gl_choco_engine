@@ -19,8 +19,8 @@
 
 #include <GL/glew.h>
 
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
-
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
@@ -104,9 +104,8 @@ struct renderer_backend_shader {
     GLuint fragment_shader_handle;  /**< コンパイルしたフラグメントシェーダープログラムへのハンドル */
 };
 
-static void gl33_shader_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static renderer_result_t gl33_shader_init(renderer_backend_shader_t* shader_handle_);
-static void gl33_shader_destroy(renderer_backend_shader_t* shader_handle_);
+static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_);
+static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_);
@@ -129,8 +128,7 @@ static void mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsize
 static void mock_glUseProgram(GLuint program_);
 
 static const renderer_shader_vtable_t s_gl33_shader_vtable = {
-    .renderer_shader_preinit = gl33_shader_preinit,
-    .renderer_shader_init = gl33_shader_init,
+    .renderer_shader_create = gl33_shader_create,
     .renderer_shader_destroy = gl33_shader_destroy,
     .renderer_shader_compile = gl33_shader_compile,
     .renderer_shader_link = gl33_shader_link,
@@ -141,44 +139,95 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
     return &s_gl33_shader_vtable;
 }
 
-static void gl33_shader_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
-    if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("gl33_shader_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
-        goto cleanup;
-    }
-    *memory_requirement_ = sizeof(renderer_backend_shader_t);
-    *alignment_requirement_ = alignof(renderer_backend_shader_t);
-    goto cleanup;
-cleanup:
-    return;
-}
-
+/**
+ * @brief OpenGL3.3用のシェーダーモジュールのメモリを確保し初期化する
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ * @endcode
+ *
+ * @param shader_handle_ 内部状態管理構造体へのダブルポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - *shader_handle_ != NULL
+ * - メモリシステム未初期化(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_SUCCESS メモリ確保および初期化に成功し、正常終了
+ */
 static renderer_result_t gl33_shader_init(renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_init", "shader_handle_")
+    renderer_backend_shader_t* tmp = NULL;
 
-    shader_handle_->program_id = 0;
-    shader_handle_->vertex_shader_handle = 0;
-    shader_handle_->fragment_shader_handle = 0;
+#ifdef TEST_BUILD
+    if(s_fail_injection.is_enabled) {
+        return s_fail_injection.result_code;
+    }
+#endif
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "shader_handle_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "*shader_handle_")
+
+    ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_result_to_str(ret));
+        goto cleanup;
+    }
+    tmp->program_id = 0;
+    tmp->vertex_shader_handle = 0;
+    tmp->fragment_shader_handle = 0;
+    *shader_handle_ = tmp;
     ret = RENDERER_SUCCESS;
 
 cleanup:
+#ifdef TEST_BUILD
+    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // ここはカバレッジ到達不可だけど許容する
+    if(RENDERER_SUCCESS != ret && NULL != tmp) {
+        assert(false);
+    }
+#endif
     return ret;
 }
 
-static void gl33_shader_destroy(renderer_backend_shader_t* shader_handle_) {
+/**
+ * @brief shader_handle_が保持するシェーダーハンドルを削除、シェーダープログラムを削除し、shader_handle_のメモリを解放する
+ *
+ * @note 本APIは2重デストロイを許可する
+ *
+ * @code{.c}
+ * renderer_backend_shader_t* shader_handle = NULL;
+ * renderer_result_t ret = gl33_shader_create(&shader_handle);
+ * // エラー処理
+ * gl33_shader_destroy(&shader_handle); // shader_handle == NULLになる
+ * gl33_shader_destroy(&shader_handle); // 2重デストロイ許可
+ * @endcode
+ *
+ * @param shader_handle_ 破棄対象シェーダーハンドル構造体インスタンスへのダブルポインタ
+ */
+static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     if(NULL == shader_handle_) {
         return;
     }
-    if(0 != shader_handle_->vertex_shader_handle) {
-        mock_glDeleteShader(shader_handle_->vertex_shader_handle);
+    if(NULL == *shader_handle_) {
+        return;
     }
-    if(0 != shader_handle_->fragment_shader_handle) {
-        mock_glDeleteShader(shader_handle_->fragment_shader_handle);
+    if(0 != (*shader_handle_)->vertex_shader_handle) {
+        mock_glDeleteShader((*shader_handle_)->vertex_shader_handle);
     }
-    if(0 != shader_handle_->program_id) {
-        mock_glDeleteProgram(shader_handle_->program_id);
+    if(0 != (*shader_handle_)->fragment_shader_handle) {
+        mock_glDeleteShader((*shader_handle_)->fragment_shader_handle);
     }
+    if(0 != (*shader_handle_)->program_id) {
+        mock_glDeleteProgram((*shader_handle_)->program_id);
+    }
+
+    render_mem_free(*shader_handle_, sizeof(renderer_backend_shader_t));
+    *shader_handle_ = NULL;
 }
 
 /**

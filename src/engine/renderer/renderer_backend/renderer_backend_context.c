@@ -26,10 +26,6 @@ struct renderer_backend_context {
     const renderer_shader_vtable_t* shader_vtable;
     const renderer_vao_vtable_t* vao_vtable;
     const renderer_vbo_vtable_t* vbo_vtable;
-
-    renderer_backend_shader_t* shader_backend_data;
-    renderer_backend_vao_t* vao_backend_data;
-    renderer_backend_vbo_t* vbo_backend_data;
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
@@ -69,19 +65,6 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
         ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get shader vtable.", renderer_result_to_str(ret));
         goto cleanup;
     }
-    tmp_context->shader_vtable->renderer_shader_preinit(&memory_req, &align_req);
-    ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->shader_backend_data);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for shader backend.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
-    memset(tmp_context->shader_backend_data, 0, memory_req);
-    ret = tmp_context->shader_vtable->renderer_shader_init(tmp_context->shader_backend_data);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize shader backend.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
 
     // vaoバックエンドメモリ確保+初期化
     tmp_context->vao_vtable = vao_vtable_get(target_api_);
@@ -90,38 +73,12 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
         ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vao vtable.", renderer_result_to_str(ret));
         goto cleanup;
     }
-    tmp_context->vao_vtable->vertex_array_preinit(&memory_req, &align_req);
-    ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->vao_backend_data);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vao backend.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
-    memset(tmp_context->vao_backend_data, 0, memory_req);
-    ret = tmp_context->vao_vtable->vertex_array_init(tmp_context->vao_backend_data);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vao backend.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
 
     // vboバックエンドメモリ確保+初期化
     tmp_context->vbo_vtable = vbo_vtable_get(target_api_);
     if(NULL == tmp_context->vbo_vtable) {
         ret = RENDERER_RUNTIME_ERROR;
         ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get vbo vtable.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
-    tmp_context->vbo_vtable->vertex_buffer_preinit(&memory_req, &align_req);
-    ret_linear_alloc = linear_allocator_allocate(allocator_, memory_req, align_req, (void**)&tmp_context->vbo_backend_data);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for vbo backend.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
-    memset(tmp_context->vbo_backend_data, 0, memory_req);
-    ret = tmp_context->vbo_vtable->vertex_buffer_init(tmp_context->vbo_backend_data);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to initialize vbo backend.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -140,27 +97,25 @@ void renderer_backend_destroy(renderer_backend_context_t* renderer_context_) {
     if(NULL == renderer_context_) {
         goto cleanup;
     }
-    if(NULL != renderer_context_->shader_vtable) {
-        renderer_context_->shader_vtable->renderer_shader_destroy(renderer_context_->shader_backend_data);
-    }
-    if(NULL != renderer_context_->vao_vtable) {
-        renderer_context_->vao_vtable->vertex_array_destroy(renderer_context_->vao_backend_data);
-    }
-    if(NULL != renderer_context_->vbo_vtable) {
-        renderer_context_->vbo_vtable->vertex_buffer_destroy(renderer_context_->vbo_backend_data);
-    }
+    // 現状では特に必要な処理はなし
 cleanup:
     return;
 }
 
-renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_) {
+renderer_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
+}
+
+void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
+}
+
+renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "backend_context_")
     CHECK_ARG_NULL_GOTO_CLEANUP(shader_source_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_source_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_backend_data, RENDERER_BAD_OPERATION, "renderer_backend_shader_compile", "backend_context_->shader_backend_data")
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_compile", "backend_context_->shader_vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_compile(shader_type_, shader_source_, backend_context_->shader_backend_data);
+    ret = backend_context_->shader_vtable->renderer_shader_compile(shader_type_, shader_source_, shader_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_compile(%s) - Failed to compile shader source.", renderer_result_to_str(ret));
         goto cleanup;
@@ -170,13 +125,13 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_) {
+renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_backend_data, RENDERER_BAD_OPERATION, "renderer_backend_shader_link", "backend_context_->shader_backend_data")
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_link", "backend_context_->shader_vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_link(backend_context_->shader_backend_data);
+    ret = backend_context_->shader_vtable->renderer_shader_link(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_link(%s) - Failed to link shader program.", renderer_result_to_str(ret));
         goto cleanup;
@@ -186,13 +141,13 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_) {
+renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_backend_data, RENDERER_BAD_OPERATION, "renderer_backend_shader_use", "backend_context_->shader_backend_data")
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_use", "backend_context_->shader_vtable")
+    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_use(backend_context_->shader_backend_data);
+    ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_use(%s) - Failed to use shader program.", renderer_result_to_str(ret));
         goto cleanup;

@@ -24,8 +24,8 @@
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/renderer/renderer_core/renderer_memory.h"
 
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
-
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
 
 #include "engine/base/choco_macros.h"
@@ -39,9 +39,8 @@ struct renderer_backend_vao {
     GLuint vao_handle;  /**< VAO */
 };
 
-static void gl33_vao_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static renderer_result_t gl33_vao_init(renderer_backend_vao_t* vertex_array_);
-static void gl33_vao_destroy(renderer_backend_vao_t* vertex_array_);
+static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_);
+static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_);
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_);
 static renderer_result_t gl33_vao_unbind(void);
 static renderer_result_t gl33_vao_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
@@ -67,8 +66,7 @@ static void test_gl33_vao_attribute_set(void);
 #endif
 
 static const renderer_vao_vtable_t s_gl33_vao_vtable = {
-    .vertex_array_preinit = gl33_vao_preinit,
-    .vertex_array_init = gl33_vao_init,
+    .vertex_array_create = gl33_vao_create,
     .vertex_array_destroy = gl33_vao_destroy,
     .vertex_array_bind = gl33_vao_bind,
     .vertex_array_unbind = gl33_vao_unbind,
@@ -79,27 +77,52 @@ const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
     return &s_gl33_vao_vtable;
 }
 
-static void gl33_vao_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
-    if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("gl33_vao_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
+/**
+ * @brief VAO構造体インスタンスのメモリを確保し初期化する
+ *
+ * @param vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+ *
+ * 使用例:
+ * @code{.c}
+ * renderer_backend_vao_t* vao = NULL;
+ * renderer_result_t ret = gl33_vao_create(&vao);
+ * // エラー処理
+ * @endcode
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_array_がNULL
+ * - *vertex_array_が非NULL
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
+static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_vao_t* tmp = NULL;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
+
+    ret = render_mem_allocate(sizeof(renderer_backend_vao_t), (void**)&tmp);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp'.", renderer_result_to_str(ret));
         goto cleanup;
     }
-    *memory_requirement_ = sizeof(renderer_backend_vao_t);
-    *alignment_requirement_ = alignof(renderer_backend_vao_t);
-    goto cleanup;
-cleanup:
-    return;
-}
 
-static renderer_result_t gl33_vao_init(renderer_backend_vao_t* vertex_array_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_init", "vertex_array_")
+    mock_glGenVertexArrays(1, &tmp->vao_handle);
 
-    mock_glGenVertexArrays(1, &vertex_array_->vao_handle);
-
+    *vertex_array_ = tmp;
     ret = RENDERER_SUCCESS;
 
 cleanup:
+#ifdef TEST_BUILD
+    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // ここはカバレッジ到達不可だけど許容する
+    if(RENDERER_SUCCESS != ret && NULL != tmp) {
+        assert(false);
+    }
+#endif
     return ret;
 }
 
@@ -116,8 +139,11 @@ cleanup:
  * gl33_vao_destroy(&vao);
  * @endcode
  */
-static void gl33_vao_destroy(renderer_backend_vao_t* vertex_array_) {
+static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
     if(NULL == vertex_array_) {
+        goto cleanup;
+    }
+    if(NULL == *vertex_array_) {
         goto cleanup;
     }
 
@@ -125,7 +151,9 @@ static void gl33_vao_destroy(renderer_backend_vao_t* vertex_array_) {
     if(RENDERER_SUCCESS != gl33_vao_unbind()) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
-    mock_glDeleteVertexArrays(1, &vertex_array_->vao_handle);
+    mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
+    render_mem_free(*vertex_array_, sizeof(renderer_backend_vao_t));
+    *vertex_array_ = NULL;
 cleanup:
     return;
 }

@@ -24,8 +24,8 @@
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/renderer/renderer_core/renderer_memory.h"
 
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_buffer_object.h"
-
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
 
 #include "engine/base/choco_macros.h"
@@ -39,9 +39,8 @@ struct renderer_backend_vbo {
     GLuint vbo_handle;  /**< VBO */
 };
 
-static void gl33_vbo_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static renderer_result_t gl33_vbo_init(renderer_backend_vbo_t* vertex_buffer_);
-static void gl33_vbo_destroy(renderer_backend_vbo_t* vertex_buffer_);
+static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_);
+static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_);
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_);
 static renderer_result_t gl33_vbo_unbind(void);
 static renderer_result_t gl33_vbo_vertex_load(size_t load_size_, void* load_data_, buffer_usage_t usage_);
@@ -65,8 +64,7 @@ static void test_gl33_vbo_vertex_load(void);
 #endif
 
 static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
-    .vertex_buffer_preinit = gl33_vbo_preinit,
-    .vertex_buffer_init = gl33_vbo_init,
+    .vertex_buffer_create = gl33_vbo_create,
     .vertex_buffer_destroy = gl33_vbo_destroy,
     .vertex_buffer_bind = gl33_vbo_bind,
     .vertex_buffer_unbind = gl33_vbo_unbind,
@@ -77,27 +75,52 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
     return &s_gl33_vbo_vtable;
 }
 
-static void gl33_vbo_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
-    if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("gl33_vbo_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
+/**
+ * @brief VBO構造体インスタンスのメモリを確保し初期化する
+ *
+ * @param vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
+ *
+ * 使用例:
+ * @code{.c}
+ * renderer_backend_vbo_t* vbo = NULL;
+ * renderer_result_t ret = gl33_vbo_create(&vbo);
+ * // エラー処理
+ * @endcode
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_buffer_がNULL
+ * - *vertex_buffer_が非NULL
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
+static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_vbo_t* tmp = NULL;
+
+    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_create", "vertex_buffer_")
+    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_create", "vertex_buffer_")
+
+    ret = render_mem_allocate(sizeof(renderer_backend_vbo_t), (void**)&tmp);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_vbo_create(%s) - Failed to allocate memory for 'tmp'.", renderer_result_to_str(ret));
         goto cleanup;
     }
-    *memory_requirement_ = sizeof(renderer_backend_vbo_t);
-    *alignment_requirement_ = alignof(renderer_backend_vbo_t);
-    goto cleanup;
-cleanup:
-    return;
-}
 
-static renderer_result_t gl33_vbo_init(renderer_backend_vbo_t* vertex_buffer_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "gl33_vao_init", "vertex_buffer_")
+    mock_glGenBuffers(1, &tmp->vbo_handle);
 
-    mock_glGenBuffers(1, &vertex_buffer_->vbo_handle);
-
+    *vertex_buffer_ = tmp;
     ret = RENDERER_SUCCESS;
 
 cleanup:
+#ifdef TEST_BUILD
+    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // ここはカバレッジ到達不可だけど許容する
+    if(RENDERER_SUCCESS != ret && NULL != tmp) {
+        assert(false);
+    }
+#endif
     return ret;
 }
 
@@ -114,8 +137,11 @@ cleanup:
  * gl33_vbo_destroy(&vbo);
  * @endcode
  */
-static void gl33_vbo_destroy(renderer_backend_vbo_t* vertex_buffer_) {
+static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
     if(NULL == vertex_buffer_) {
+        goto cleanup;
+    }
+    if(NULL == *vertex_buffer_) {
         goto cleanup;
     }
 
@@ -123,7 +149,9 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t* vertex_buffer_) {
     if(RENDERER_SUCCESS != gl33_vbo_unbind()) {
         WARN_MESSAGE("gl33_vbo_destroy(RUNTIME_ERROR) - Failed to unbind vertex buffer.");
     }
-    mock_glDeleteBuffers(1, &vertex_buffer_->vbo_handle);
+    mock_glDeleteBuffers(1, &(*vertex_buffer_)->vbo_handle);
+    render_mem_free(*vertex_buffer_, sizeof(renderer_backend_vbo_t));
+    *vertex_buffer_ = NULL;
 cleanup:
     return;
 }
