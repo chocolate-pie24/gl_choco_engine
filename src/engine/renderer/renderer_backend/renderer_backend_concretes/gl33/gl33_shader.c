@@ -19,9 +19,9 @@
 
 #include <GL/glew.h>
 
-#include "engine/renderer/renderer_backend_interface/shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
 
-#include "engine/renderer/renderer_backend_concretes/gl33/gl33_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"

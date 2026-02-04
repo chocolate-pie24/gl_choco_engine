@@ -1,5 +1,5 @@
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_INTERFACE_VERTEX_BUFFER_OBJECT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_INTERFACE_VERTEX_BUFFER_OBJECT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_VERTEX_BUFFER_OBJECT_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_VERTEX_BUFFER_OBJECT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,9 +7,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
-
-typedef struct renderer_backend_vbo renderer_backend_vbo_t;
 
 typedef void (*pfn_vertex_buffer_preinit)(size_t* memory_requirement_, size_t* alignment_requirement_);
 

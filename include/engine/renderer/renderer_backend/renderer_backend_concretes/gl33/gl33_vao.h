@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VAO_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_VAO_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_VAO_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_VAO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/renderer/renderer_backend_interface/vertex_array_object.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void);

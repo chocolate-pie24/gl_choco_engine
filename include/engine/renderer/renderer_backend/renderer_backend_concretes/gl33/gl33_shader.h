@@ -13,14 +13,14 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_SHADER_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_GL33_GL33_SHADER_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_SHADER_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_SHADER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/renderer/renderer_backend_interface/shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void);

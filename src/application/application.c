@@ -46,7 +46,7 @@
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
