@@ -957,6 +957,8 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;   // オーバーフローもRuntime errorに変換
     case RING_QUEUE_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
+    case RING_QUEUE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

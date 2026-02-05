@@ -57,6 +57,9 @@ renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_) {
     case MEMORY_SYSTEM_NO_MEMORY:
         ret = RENDERER_NO_MEMORY;
         break;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        ret = RENDERER_RUNTIME_ERROR;
+        break;
     default:
         ret = RENDERER_UNDEFINED_ERROR;
     }

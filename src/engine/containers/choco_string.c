@@ -453,6 +453,8 @@ static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         ret = CHOCO_STRING_LIMIT_EXCEEDED;
         goto cleanup;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        ret = CHOCO_STRING_RUNTIME_ERROR;
     case MEMORY_SYSTEM_SUCCESS:
         break;
     default:
