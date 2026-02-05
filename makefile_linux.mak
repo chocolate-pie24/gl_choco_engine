@@ -47,6 +47,7 @@ COMPILER_FLAGS += -MMD -MP
 COMPILER_FLAGS += -Wno-unsafe-buffer-usage
 COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
+COMPILER_FLAGS += -Wno-covered-switch-default
 # COMPILER_FLAGS += -Wno-pre-c11-compat
 
 # glfw3のワーニング抑制
