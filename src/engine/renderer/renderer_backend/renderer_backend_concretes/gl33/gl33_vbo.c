@@ -42,8 +42,8 @@ struct renderer_backend_vbo {
 static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_);
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_);
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_);
-static renderer_result_t gl33_vbo_unbind(void);
-static renderer_result_t gl33_vbo_vertex_load(size_t load_size_, void* load_data_, buffer_usage_t usage_);
+static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_);
+static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
 
 static void mock_glGenBuffers(GLsizei n_, GLuint* buffer_);
 static void mock_glBindBuffer(GLenum target_, GLuint buffer_);
@@ -146,7 +146,7 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
     }
 
     // NOTE: 現状ではgl33_vbo_unbindはエラーを返さないため、このif文内は到達不可でカバレッジは100にはならないが許容する
-    if(RENDERER_SUCCESS != gl33_vbo_unbind()) {
+    if(RENDERER_SUCCESS != gl33_vbo_unbind(*vertex_buffer_)) {
         WARN_MESSAGE("gl33_vbo_destroy(RUNTIME_ERROR) - Failed to unbind vertex buffer.");
     }
     mock_glDeleteBuffers(1, &(*vertex_buffer_)->vbo_handle);
@@ -197,9 +197,12 @@ cleanup:
  * gl33_vbo_unbind();
  * @endcode
  *
+ * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
+ *
  * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindBufferに対して個別にglGetErrorを行わないため、常に成功
  */
-static renderer_result_t gl33_vbo_unbind(void) {
+static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
+    (void)vertex_buffer_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -222,6 +225,7 @@ cleanup:
  * // エラー処理
  * @endcode
  *
+ * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
  * @param load_size_ 転送サイズ(byte)
  * @param load_data_ 転送データの先頭アドレス
  * @param usage_ バッファデータの取り扱い @ref buffer_usage_t
@@ -232,7 +236,7 @@ cleanup:
  * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
  * @retval RENDERER_SUCCESS データの転送に成功し、正常終了
  */
-static renderer_result_t gl33_vbo_vertex_load(size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     CHECK_ARG_NULL_GOTO_CLEANUP(load_data_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_vertex_load", "load_data_")
     CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != load_size_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_vertex_load", "load_size_")
