@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
@@ -14,7 +15,7 @@ typedef renderer_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** v
 
 typedef void (*pfn_vertex_buffer_destroy)(renderer_backend_vbo_t** vertex_buffer_);
 
-typedef renderer_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_);
+typedef renderer_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
 
 typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo_t* vertex_buffer_);
 

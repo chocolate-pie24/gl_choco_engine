@@ -35,6 +35,7 @@ struct renderer_backend_context {
     const renderer_vbo_vtable_t* vbo_vtable;
 
     uint32_t current_bound_vao;
+    uint32_t current_bound_vbo;
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
@@ -283,7 +284,7 @@ renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_bind", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_bind", "vertex_buffer_")
 
-    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_);
+    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_buffer_bind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
@@ -304,6 +305,7 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
         ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to unbind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
+    backend_context_->current_bound_vbo = 0;
 
 cleanup:
     return ret;

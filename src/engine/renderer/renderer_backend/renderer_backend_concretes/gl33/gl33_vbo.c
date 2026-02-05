@@ -15,6 +15,7 @@
  */
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <GL/glew.h>
 
@@ -39,7 +40,7 @@ struct renderer_backend_vbo {
 
 static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_);
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_);
-static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_);
+static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_);
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
 
@@ -158,7 +159,8 @@ cleanup:
  * @brief glBindBuffer APIのラッパーAPI
  * @note 当面はglGetErrorをAPI個別に実行するつもりはないので成功するが、将来的に個別にエラー処理を行う可能性を考慮し、返り値をエラーコードにする
  *
- * @param vertex_buffer_ Bind対象vbo
+ * @param[in] vertex_buffer_ bind対象vbo
+ * @param[in,out] out_vbo_id_ bindしたvbo id格納先
  *
  * 使用例:
  * @code{.c}
@@ -172,11 +174,15 @@ cleanup:
  * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_がNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_) {
+static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_bind", "vertex_buffer_")
 
-    mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
+    if(vertex_buffer_->vbo_handle != *out_vbo_id_) {
+        mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
+        *out_vbo_id_ = vertex_buffer_->vbo_handle;
+    }
+
     ret = RENDERER_SUCCESS;
 cleanup:
     return ret;
