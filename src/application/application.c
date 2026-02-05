@@ -247,25 +247,25 @@ application_result_t application_create(void) {
     ret_renderer = renderer_backend_initialize(tmp->linear_alloc, GRAPHICS_API_GL33, &tmp->ui_renderer_context);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.");
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = renderer_backend_shader_create(tmp->ui_renderer_context, &tmp->ui_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.");
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = renderer_backend_vertex_array_create(tmp->ui_renderer_context, &tmp->ui_vao);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.");
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = renderer_backend_vertex_buffer_create(tmp->ui_renderer_context, &tmp->ui_vbo);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.");
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", rslt_to_str(ret));
         goto cleanup;
     }
     // end temporary
