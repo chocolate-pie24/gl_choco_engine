@@ -18,9 +18,9 @@ typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_)
 
 typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_);
 
-typedef renderer_result_t (*pfn_vertex_array_unbind)(void);
+typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_t* vertex_array_);
 
-typedef renderer_result_t (*pfn_vertex_array_attribute_set)(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 typedef struct renderer_vao_vtable {
     pfn_vertex_array_create vertex_array_create;

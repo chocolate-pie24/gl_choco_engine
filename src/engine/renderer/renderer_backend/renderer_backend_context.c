@@ -217,7 +217,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_unbind", "backend_context_->vao_vtable")
     CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_unbind", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_unbind();
+    ret = backend_context_->vao_vtable->vertex_array_unbind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
@@ -233,7 +233,7 @@ renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_c
     CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_attribute_set", "backend_context_->vao_vtable")
     CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_attribute_set", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_attribute_set(layout_, size_, type_, normalized_, stride_, offset_);
+    ret = backend_context_->vao_vtable->vertex_array_attribute_set(vertex_array_, layout_, size_, type_, normalized_, stride_, offset_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_attribute_set(%s) - Failed to set vao attribute.", renderer_result_to_str(ret));
         goto cleanup;

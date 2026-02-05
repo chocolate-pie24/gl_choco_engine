@@ -42,8 +42,8 @@ struct renderer_backend_vao {
 static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_);
 static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_);
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_);
-static renderer_result_t gl33_vao_unbind(void);
-static renderer_result_t gl33_vao_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_);
+static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 static void mock_glGenVertexArrays(GLsizei n_, GLuint* array_);
 static void mock_glDeleteVertexArrays(GLsizei n_, GLuint* array_);
@@ -148,7 +148,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
     }
 
     // NOTE: 現状ではvertex_buffer_unbindはエラーを返さないため、このif文内は到達不可でカバレッジは100にはならないが許容する
-    if(RENDERER_SUCCESS != gl33_vao_unbind()) {
+    if(RENDERER_SUCCESS != gl33_vao_unbind(*vertex_array_)) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
@@ -201,9 +201,12 @@ cleanup:
  * gl33_vao_unbind();
  * @endcode
  *
+ * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
+ *
  * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindVertexArrayに対して個別にglGetErrorを行わないため、常に成功
  */
-static renderer_result_t gl33_vao_unbind(void) {
+static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_) {
+    (void)vertex_array_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     mock_glBindVertexArray(0);
@@ -216,6 +219,7 @@ cleanup:
 /**
  * @brief glVertexAttribPointerのラッパーAPIであり、layout設定の後に設定の有効化(glEnableVertexAttribArray)を行う
  *
+ * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
  * @param layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
  * @param size_ 頂点情報に含まれるデータの数([x, y, z]の3次元座標のみであれば3)
  * @param type_ バッファに格納されているデータの型 @ref renderer_type_t
@@ -244,7 +248,8 @@ cleanup:
  * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_vao_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+    (void)vertex_array_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     switch(type_) {
     case RENDERER_TYPE_FLOAT:
