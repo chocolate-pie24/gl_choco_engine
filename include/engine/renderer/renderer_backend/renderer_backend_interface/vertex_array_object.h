@@ -16,7 +16,7 @@ typedef renderer_result_t (*pfn_vertex_array_create)(renderer_backend_vao_t** ve
 
 typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_);
 
-typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_);
+typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_);
 
 typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_t* vertex_array_);
 

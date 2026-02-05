@@ -41,7 +41,7 @@ struct renderer_backend_vao {
 
 static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_);
 static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_);
-static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_);
+static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_);
 static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_);
 static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
@@ -162,7 +162,8 @@ cleanup:
  * @brief glBindVertexArray APIのラッパーAPI
  * @note 当面はglGetErrorをAPI個別に実行するつもりはないので成功するが、将来的に個別にエラー処理を行う可能性を考慮し、返り値をエラーコードにする
  *
- * @param vertex_array_ Bind対象vao
+ * @param[in] vertex_array_ bind対象vao
+ * @param[in,out] out_vao_id_ bindされたvao id格納先
  *
  * 使用例:
  * @code{.c}
@@ -176,12 +177,14 @@ cleanup:
  * @retval RENDERER_INVALID_ARGUMENT vertex_array_がNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_) {
+static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_bind", "vertex_array_")
-
-    mock_glBindVertexArray(vertex_array_->vao_handle);
+    if(*out_vao_id_ != vertex_array_->vao_handle) {
+        mock_glBindVertexArray(vertex_array_->vao_handle);
+        *out_vao_id_ = vertex_array_->vao_handle;
+    }
 
     ret = RENDERER_SUCCESS;
 cleanup:

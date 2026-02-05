@@ -33,6 +33,8 @@ struct renderer_backend_context {
     const renderer_shader_vtable_t* shader_vtable;
     const renderer_vao_vtable_t* vao_vtable;
     const renderer_vbo_vtable_t* vbo_vtable;
+
+    uint32_t current_bound_vao;
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
@@ -87,6 +89,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     }
 
     tmp_context->target_api = target_api_;
+    tmp_context->current_bound_vao = 0;
 
     // commit.
     *out_renderer_backend_context_ = tmp_context;
@@ -208,7 +211,7 @@ renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t*
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_bind", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_bind", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_);
+    ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_, &backend_context_->current_bound_vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to bind vao.", renderer_result_to_str(ret));
         goto cleanup;
@@ -229,6 +232,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
         ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to unbind vao.", renderer_result_to_str(ret));
         goto cleanup;
     }
+    backend_context_->current_bound_vao = 0;
 
 cleanup:
     return ret;
