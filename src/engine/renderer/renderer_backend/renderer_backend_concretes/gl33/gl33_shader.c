@@ -106,7 +106,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
-static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_);
+static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_resolve_target(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLenum* out_gl33_type_, GLuint** out_target_);
 static bool shader_is_compiled(shader_type_t shader_type_, renderer_backend_shader_t* shader_handle_);
@@ -462,7 +462,8 @@ cleanup:
  * // エラー処理
  * @endcode
  *
- * @param shader_handle_ リンク済みOpenGLシェーダープログラムを保持するシェーダーハンドル構造体インスタンスへのポインタ
+ * @param[in] shader_handle_ リンク済みOpenGLシェーダープログラムを保持するシェーダーハンドル構造体インスタンスへのポインタ
+ * @param[in,out] out_program_id_ プログラムID格納先
  *
  * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
  * @retval RENDERER_BAD_OPERATION OpenGLシェーダープログラムが未リンク
@@ -471,7 +472,7 @@ cleanup:
  * - シェーダープログラムがリンク済みであるにも関わらず、フラグメントシェーダーが未コンパイル
  * @retval RENDERER_SUCCESS OpenGLシェーダプログラムの使用開始に成功し、正常終了
  */
-static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_) {
+static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD
@@ -482,19 +483,24 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_use", "shader_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, RENDERER_BAD_OPERATION, "gl33_shader_use", "shader_handle_->program_id")
-    if(!shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_)) {
-        // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderが無効なのは異常
-        ret = RENDERER_DATA_CORRUPTED;
-        ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader is not compiled.", renderer_result_to_str(ret));
-        goto cleanup;
+
+    if(*out_program_id_ != shader_handle_->program_id) {
+        if(!shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_)) {
+            // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderが無効なのは異常
+            ret = RENDERER_DATA_CORRUPTED;
+            ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader is not compiled.", renderer_result_to_str(ret));
+            goto cleanup;
+        }
+        if(!shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_)) {
+            // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderが無効なのは異常
+            ret = RENDERER_DATA_CORRUPTED;
+            ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader is not compiled.", renderer_result_to_str(ret));
+            goto cleanup;
+        }
+        mock_glUseProgram(shader_handle_->program_id);
+        *out_program_id_ = shader_handle_->program_id;
     }
-    if(!shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_)) {
-        // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderが無効なのは異常
-        ret = RENDERER_DATA_CORRUPTED;
-        ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader is not compiled.", renderer_result_to_str(ret));
-        goto cleanup;
-    }
-    mock_glUseProgram(shader_handle_->program_id);
+
     ret = RENDERER_SUCCESS;
 cleanup:
     return ret;

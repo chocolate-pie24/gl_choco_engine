@@ -34,6 +34,7 @@ struct renderer_backend_context {
     const renderer_vao_vtable_t* vao_vtable;
     const renderer_vbo_vtable_t* vbo_vtable;
 
+    uint32_t current_program_id;
     uint32_t current_bound_vao;
     uint32_t current_bound_vbo;
 };
@@ -91,6 +92,8 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
 
     tmp_context->target_api = target_api_;
     tmp_context->current_bound_vao = 0;
+    tmp_context->current_bound_vbo = 0;
+    tmp_context->current_program_id = 0;
 
     // commit.
     *out_renderer_backend_context_ = tmp_context;
@@ -173,7 +176,7 @@ renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backen
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_use", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_);
+    ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_, &backend_context_->current_program_id);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_use(%s) - Failed to use shader program.", renderer_result_to_str(ret));
         goto cleanup;

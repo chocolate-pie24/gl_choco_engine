@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
@@ -18,7 +19,7 @@ typedef renderer_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_ty
 
 typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);
 
-typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* shader_handle_);
+typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 
 typedef struct renderer_shader_vtable {
     pfn_renderer_shader_create renderer_shader_create;
