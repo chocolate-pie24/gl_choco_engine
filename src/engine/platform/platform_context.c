@@ -75,7 +75,7 @@ static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**<
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームコンテキスト実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームコンテキスト実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
-const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
+static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
 
 static bool platform_type_valid_check(platform_type_t platform_type_);
 static platform_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
@@ -133,7 +133,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "out_platform_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "out_platform_context_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "*out_platform_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(platform_type_valid_check(platform_type_), PLATFORM_INVALID_ARGUMENT, "platform_initialize", "platform_type_")
 
     // Simulation.
@@ -267,7 +267,7 @@ cleanup:
  * @param[in] platform_type_ 仮想関数テーブルを取得するプラットフォーム種別
  * @return const platform_vtable_t* 仮想関数テーブル(引数で指定したプラットフォームが見つからない場合はNULL)
  */
-const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_) {
+static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_) {
 #ifdef TEST_BUILD
     if(s_test_param.enable_platform_vtable_get_return_null) {
         return NULL;

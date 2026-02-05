@@ -439,7 +439,7 @@ static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, CHOCO_STRING_INVALID_ARGUMENT, "string_malloc", "out_ptr_");
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, CHOCO_STRING_INVALID_ARGUMENT, "string_malloc", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, CHOCO_STRING_INVALID_ARGUMENT, "string_malloc", "*out_ptr_")
 
     ret_mem = memory_system_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
