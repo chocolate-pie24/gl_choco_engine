@@ -7,8 +7,12 @@
 #include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
+
+#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vbo_context.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
