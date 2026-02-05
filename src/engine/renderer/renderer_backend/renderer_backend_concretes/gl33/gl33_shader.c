@@ -169,8 +169,8 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "shader_handle_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "*shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "*shader_handle_")
 
     ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
@@ -278,8 +278,8 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_source_, RENDERER_INVALID_ARGUMENT, "gl33_shader_compile", "shader_source_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_compile", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, RENDERER_INVALID_ARGUMENT, "gl33_shader_compile", "shader_source_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_compile", "shader_handle_")
     if(shader_is_compiled(shader_type_, shader_handle_)) {
         ret = RENDERER_BAD_OPERATION;
         ERROR_MESSAGE("gl33_shader_compile(%s) - Shader is already compiled.", renderer_result_to_str(ret));
@@ -396,11 +396,11 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_link", "shader_handle_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 == shader_handle_->program_id, RENDERER_BAD_OPERATION, "gl33_shader_link", "shader_handle_->program_id")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_link", "shader_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, RENDERER_BAD_OPERATION, "gl33_shader_link", "shader_handle_->program_id")
     // バーテックスシェーダーとフラグメントシェーダーは必須なので、有効な状態でなければエラー
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_), RENDERER_BAD_OPERATION, "gl33_shader_link", "vertex_shader_handle")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_), RENDERER_BAD_OPERATION, "gl33_shader_link", "fragment_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_), RENDERER_BAD_OPERATION, "gl33_shader_link", "vertex_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_), RENDERER_BAD_OPERATION, "gl33_shader_link", "fragment_shader_handle")
 
     // プログラムをリンク
     tmp_program_id = mock_glCreateProgram();
@@ -482,8 +482,8 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_use", "shader_handle_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != shader_handle_->program_id, RENDERER_BAD_OPERATION, "gl33_shader_use", "shader_handle_->program_id")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_use", "shader_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, RENDERER_BAD_OPERATION, "gl33_shader_use", "shader_handle_->program_id")
     if(!shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderが無効なのは異常
         ret = RENDERER_DATA_CORRUPTED;
@@ -523,10 +523,10 @@ static renderer_result_t gl33_shader_resolve_target(renderer_backend_shader_t* s
     GLuint* tmp_handle;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "shader_handle_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "out_gl33_type_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_target_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "out_target_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_target_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "*out_target_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "out_gl33_type_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_target_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "out_target_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_target_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "*out_target_")
 
     switch(shader_type_) {
     case SHADER_TYPE_VERTEX:

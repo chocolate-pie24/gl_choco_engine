@@ -63,7 +63,7 @@ extern "C" {
  *
  * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
  */
-#define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
     if(NULL == ptr_) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
         ret = ret_; \
@@ -75,7 +75,7 @@ extern "C" {
  *
  * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
  */
-#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
     if(NULL != ptr_) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
         ret = ret_; \
@@ -87,7 +87,7 @@ extern "C" {
  *
  * @note エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する
  */
-#define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
     if(NULL == ptr_) { \
         ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
         ret = ret_; \
@@ -99,7 +99,7 @@ extern "C" {
  *
  * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
  */
-#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, ret_, function_name_, variable_name_) \
+#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, ret_, function_name_, variable_name_) \
     if(!(is_valid_)) { \
         ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
         ret = ret_; \

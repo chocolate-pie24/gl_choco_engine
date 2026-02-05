@@ -83,7 +83,7 @@ memory_system_result_t memory_system_create(void) {
 
     // Simulation.
     tmp = (memory_system_t*)test_malloc(sizeof(memory_system_t));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
     memset(tmp, 0, sizeof(memory_system_t));
 
     tmp->total_allocated = 0;
@@ -141,10 +141,10 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
     void* tmp = NULL;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "s_mem_sys_ptr")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "out_ptr_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "*out_ptr_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "mem_tag_")
+    IF_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "s_mem_sys_ptr")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "*out_ptr_")
+    IF_ARG_FALSE_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "mem_tag_")
     if(0 == size_) {
         WARN_MESSAGE("memory_system_allocate - No-op: size_ is 0.");
         ret = MEMORY_SYSTEM_SUCCESS;
@@ -163,7 +163,7 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
 
     // Simulation.
     tmp = test_malloc(size_);    // TODO: FreeList
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
     memset(tmp, 0, size_);
 
     // commit.

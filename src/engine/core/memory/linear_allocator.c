@@ -72,9 +72,9 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
 // 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
 linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_) {
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "allocator_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(memory_pool_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "memory_pool_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "capacity_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "memory_pool_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "capacity_")
 
     allocator_->capacity = capacity_;
     allocator_->head_ptr = memory_pool_;
@@ -115,15 +115,15 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
     uintptr_t cap = 0;
 
     // Preconditions
-    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "allocator_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "out_ptr_")
     if(0 == req_align_ || 0 == req_size_) {
         WARN_MESSAGE("linear_allocator_allocate - No-op: req_align_ or req_size_ is 0.");
         ret = LINEAR_ALLOC_SUCCESS;
         goto cleanup;
     }
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_")
 
     // Simulation
     head = (uintptr_t)allocator_->head_ptr;

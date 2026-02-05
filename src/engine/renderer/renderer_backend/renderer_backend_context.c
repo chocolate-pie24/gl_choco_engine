@@ -40,10 +40,10 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(allocator_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "allocator_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "out_renderer_backend_context_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "*out_renderer_backend_context_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(graphics_api_valid_check(target_api_), RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "target_api_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "out_renderer_backend_context_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "*out_renderer_backend_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_valid_check(target_api_), RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "target_api_")
 
     // Simulation.
     renderer_backend_context_t* tmp_context = NULL;
@@ -101,10 +101,10 @@ cleanup:
 
 renderer_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "renderer_backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_create", "renderer_backend_context_->shader_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "shader_handle_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "*shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_create", "renderer_backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "*shader_handle_")
 
     ret = renderer_backend_context_->shader_vtable->renderer_shader_create(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
@@ -125,10 +125,10 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
 
 renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_source_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_source_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_compile", "backend_context_->shader_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_source_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_compile", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_compile", "shader_handle_")
 
     ret = backend_context_->shader_vtable->renderer_shader_compile(shader_type_, shader_source_, shader_handle_);
     if(RENDERER_SUCCESS != ret) {
@@ -142,9 +142,9 @@ cleanup:
 
 renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_link", "backend_context_->shader_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_link", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_link", "shader_handle_")
 
     ret = backend_context_->shader_vtable->renderer_shader_link(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
@@ -158,9 +158,9 @@ cleanup:
 
 renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_use", "backend_context_->shader_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, RENDERER_BAD_OPERATION, "renderer_backend_shader_use", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_use", "shader_handle_")
 
     ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
@@ -174,10 +174,10 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_create", "backend_context_->vao_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "vertex_array_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "*vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_create", "backend_context_->vao_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "vertex_array_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "*vertex_array_")
 
     ret = backend_context_->vao_vtable->vertex_array_create(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
@@ -197,9 +197,9 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
 
 renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_bind", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_bind", "backend_context_->vao_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_bind", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_bind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_bind", "backend_context_->vao_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_bind", "vertex_array_")
 
     ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
@@ -213,9 +213,9 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_unbind", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_unbind", "backend_context_->vao_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_unbind", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_unbind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_unbind", "backend_context_->vao_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_unbind", "vertex_array_")
 
     ret = backend_context_->vao_vtable->vertex_array_unbind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
@@ -229,9 +229,9 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_attribute_set", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_attribute_set", "backend_context_->vao_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_attribute_set", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_attribute_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_array_attribute_set", "backend_context_->vao_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_attribute_set", "vertex_array_")
 
     ret = backend_context_->vao_vtable->vertex_array_attribute_set(vertex_array_, layout_, size_, type_, normalized_, stride_, offset_);
     if(RENDERER_SUCCESS != ret) {
@@ -245,10 +245,10 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vertex_buffer_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_create", "backend_context_->vbo_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "vertex_array_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "*vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_create", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "vertex_array_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "*vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_create(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {
@@ -268,9 +268,9 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
 
 renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_bind", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_bind", "backend_context_->vbo_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_bind", "vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_bind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_bind", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_bind", "vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {
@@ -284,9 +284,9 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_unbind", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_unbind", "backend_context_->vbo_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_unbind", "vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_unbind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_unbind", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_unbind", "vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_unbind(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {
@@ -300,9 +300,9 @@ cleanup:
 
 renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_vertex_load", "backend_context_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_vertex_load", "backend_context_->vbo_vtable")
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_vertex_load", "vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_vertex_load", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_vertex_load", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_vertex_load", "vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_vertex_load(vertex_buffer_, load_size_, load_data_, usage_);
     if(RENDERER_SUCCESS != ret) {
