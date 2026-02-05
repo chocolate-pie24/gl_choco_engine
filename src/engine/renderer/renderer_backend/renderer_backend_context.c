@@ -1,11 +1,14 @@
 #include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <stdalign.h>
 #include <string.h> // for memset
 
-#include "engine/renderer/renderer_backend/renderer_backend_context.h"
-
 #include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
+
+#include "engine/renderer/renderer_backend/renderer_backend_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"

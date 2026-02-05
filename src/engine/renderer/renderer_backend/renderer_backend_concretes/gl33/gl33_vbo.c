@@ -15,8 +15,6 @@
  */
 #include <stddef.h>
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdalign.h>
 
 #include <GL/glew.h>
 

@@ -22,6 +22,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "choco_message.h"
+
 #ifdef __clang__
   /**
    * @brief テスト関数をカバレッジ計測対象外とするためのマクロ定義(clang使用時のみ)

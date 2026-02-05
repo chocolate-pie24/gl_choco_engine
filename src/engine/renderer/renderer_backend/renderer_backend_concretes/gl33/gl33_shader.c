@@ -14,7 +14,6 @@
  *
  */
 #include <stdbool.h>
-#include <stdalign.h>
 #include <stddef.h>
 
 #include <GL/glew.h>
@@ -34,7 +33,6 @@
 
 #ifdef TEST_BUILD
 #include <assert.h>
-#include <stdio.h>
 #include <string.h> // for memset
 
 #include "engine/core/memory/choco_memory.h"
