@@ -20,12 +20,7 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-
-#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
-#include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void);
 
