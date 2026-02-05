@@ -222,7 +222,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
 
     ret = backend_context_->vao_vtable->vertex_array_unbind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to unbind vao.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -250,7 +250,7 @@ renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, "renderer_backend_vertex_buffer_create", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "vertex_buffer_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "*vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_create(vertex_buffer_);
@@ -293,7 +293,7 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
 
     ret = backend_context_->vbo_vtable->vertex_buffer_unbind(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to unbind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -309,7 +309,7 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_co
 
     ret = backend_context_->vbo_vtable->vertex_buffer_vertex_load(vertex_buffer_, load_size_, load_data_, usage_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to load vertex.", renderer_result_to_str(ret));
         goto cleanup;
     }
 

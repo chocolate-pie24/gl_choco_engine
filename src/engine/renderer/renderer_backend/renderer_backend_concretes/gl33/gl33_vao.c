@@ -198,7 +198,7 @@ cleanup:
  * // エラー処理
  * ret = gl33_vao_bind(vao);
  * // エラー処理
- * gl33_vao_unbind();
+ * gl33_vao_unbind(vao);
  * @endcode
  *
  * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)

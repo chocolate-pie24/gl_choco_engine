@@ -192,7 +192,7 @@ cleanup:
  * // エラー処理
  * ret = gl33_vbo_bind(vbo);
  * // エラー処理
- * gl33_vbo_unbind();
+ * gl33_vbo_unbind(vbo);
  * @endcode
  *
  * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
