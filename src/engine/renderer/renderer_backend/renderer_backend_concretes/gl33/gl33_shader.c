@@ -159,7 +159,7 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
  * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
  * @retval RENDERER_SUCCESS メモリ確保および初期化に成功し、正常終了
  */
-static renderer_result_t gl33_shader_init(renderer_backend_shader_t* shader_handle_) {
+static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     renderer_backend_shader_t* tmp = NULL;
 
