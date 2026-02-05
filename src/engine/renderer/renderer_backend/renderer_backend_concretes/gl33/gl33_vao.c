@@ -101,8 +101,8 @@ static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_)
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     renderer_backend_vao_t* tmp = NULL;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_create", "vertex_array_")
 
     ret = render_mem_allocate(sizeof(renderer_backend_vao_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
@@ -179,7 +179,7 @@ cleanup:
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_bind", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, "gl33_vao_bind", "vertex_array_")
 
     mock_glBindVertexArray(vertex_array_->vao_handle);
 
