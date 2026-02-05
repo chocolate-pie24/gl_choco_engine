@@ -218,8 +218,12 @@ cleanup:
  *
  * 使用例:
  * @code{.c}
+ * renderer_backend_vbo_t* vbo = NULL;
+ * renderer_result_t ret = gl33_vbo_create(&vbo);
+ * // エラー処理
+ * ret = gl33_vbo_bind(vbo);
  * float data[] = { 1.0f, 2.0f, 3.0f };
- * renderer_result_t ret = gl33_vbo_vertex_load(sizeof(float) * 3, data, BUFFER_USAGE_STATIC);
+ * renderer_result_t ret = gl33_vbo_vertex_load(vbo, sizeof(float) * 3, data, BUFFER_USAGE_STATIC);
  * // エラー処理
  * @endcode
  *
