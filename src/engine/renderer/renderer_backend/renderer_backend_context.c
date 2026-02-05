@@ -203,7 +203,7 @@ renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t*
 
     ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to use bind vbo.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to bind vao.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
@@ -219,7 +219,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
 
     ret = backend_context_->vao_vtable->vertex_array_unbind();
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to use bind vbo.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to bind vbo.", renderer_result_to_str(ret));
         goto cleanup;
     }
 
