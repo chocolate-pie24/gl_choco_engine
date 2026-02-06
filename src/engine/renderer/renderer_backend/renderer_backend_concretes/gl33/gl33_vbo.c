@@ -103,7 +103,7 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
 
     ret = render_mem_allocate(sizeof(renderer_backend_vbo_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("gl33_vbo_create(%s) - Failed to allocate memory for 'tmp'.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_vbo_create(%s) - Failed to allocate memory for 'tmp'.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -257,7 +257,7 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
         mock_glBufferData(GL_ARRAY_BUFFER, load_size_, load_data_, GL_DYNAMIC_DRAW);
         break;
     default:
-        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided usage_ is not valid.", renderer_result_to_str(RENDERER_RUNTIME_ERROR));
+        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided usage_ is not valid.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));
         ret = RENDERER_RUNTIME_ERROR;
         goto cleanup;
     }

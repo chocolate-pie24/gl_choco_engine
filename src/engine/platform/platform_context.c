@@ -30,6 +30,7 @@
 #include "engine/platform/platform_interface.h"
 #include "engine/platform/platform_concretes/platform_glfw.h"
 #include "engine/platform/platform_core/platform_types.h"
+#include "engine/platform/platform_core/platform_err_utils.h"
 
 // #define TEST_BUILD
 
@@ -64,22 +65,9 @@ struct platform_context {
     const platform_vtable_t* vtable;    /**< 各プラットフォーム仮想関数テーブル */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< プラットフォームコンテキスト実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< プラットフォームコンテキスト実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームコンテキスト実行結果コード(ランタイムエラー)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームコンテキスト実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< プラットフォームコンテキスト実行結果コード(メモリ破損,未初期化)に対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< プラットフォームコンテキスト実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< プラットフォームコンテキスト実行結果コード(計算過程オーバーフロー)に対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームコンテキスト実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームコンテキスト実行結果コード(未定義エラー)に対応する文字列 */
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームコンテキスト実行結果コード(ウィンドウクローズ)に対応する文字列 */
-
 static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
 
 static bool platform_type_valid_check(platform_type_t platform_type_);
-static platform_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
-static const char* rslt_to_str(platform_result_t rslt_);
 
 #ifdef TEST_BUILD
 
@@ -111,7 +99,6 @@ static void test_platform_swap_buffers(void);
 static void test_platform_vtable_get(void);
 static void test_platform_type_valid_check(void);
 static void test_rslt_convert_linear_alloc(void);
-static void test_rslt_to_str(void);
 
 static const platform_vtable_t s_test_vtable = {
     .platform_backend_preinit = test_vtable_preinit,
@@ -140,8 +127,8 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     platform_context_t* tmp_context = NULL;
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(platform_context_t), alignof(platform_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("platform_initialize(%s) - Failed to allocate memory for platform context.", rslt_to_str(ret));
+        ret = platform_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("platform_initialize(%s) - Failed to allocate memory for platform context.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_context, 0, sizeof(platform_context_t));
@@ -149,22 +136,22 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     tmp_context->vtable = platform_vtable_get(platform_type_);
     if(NULL == tmp_context->vtable) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_initialize(%s) - Failed to get platform vtable.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_initialize(%s) - Failed to get platform vtable.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp_context->vtable->platform_backend_preinit(&backend_memory_req, &backend_align_req);
     ret_linear_alloc = linear_allocator_allocate(allocator_, backend_memory_req, backend_align_req, &backend_ptr);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("platform_initialize(%s) - Failed to allocate memory for platform backend.", rslt_to_str(ret));
+        ret = platform_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("platform_initialize(%s) - Failed to allocate memory for platform backend.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     memset(backend_ptr, 0, backend_memory_req);
 
     ret = tmp_context->vtable->platform_backend_init((platform_backend_t*)backend_ptr);
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_initialize(%s) - Failed to initialize platform backend.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_initialize(%s) - Failed to initialize platform backend.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     tmp_context->backend = backend_ptr;
@@ -207,7 +194,7 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
 
     ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_, framebuffer_width_, framebuffer_height_);
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     ret = PLATFORM_SUCCESS;
@@ -232,7 +219,7 @@ platform_result_t platform_pump_messages(
     ret = platform_context_->vtable->platform_backend_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
     // PLATFORM_WINDOW_CLOSEはPLATFORM_SUCCESS以外でも正常なので無視
     if(PLATFORM_SUCCESS != ret && PLATFORM_WINDOW_CLOSE != ret) {
-        ERROR_MESSAGE("platform_pump_messages(%s) - Failed to pump messages.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_pump_messages(%s) - Failed to pump messages.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -248,7 +235,7 @@ platform_result_t platform_swap_buffers(platform_context_t* platform_context_) {
 
     ret = platform_context_->vtable->platform_backend_swap_buffers(platform_context_->backend);
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_swap_buffers(%s) - Failed to swap buffers.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_swap_buffers(%s) - Failed to swap buffers.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -290,46 +277,6 @@ static bool platform_type_valid_check(platform_type_t platform_type_) {
         return true;
     default:
         return false;
-    }
-}
-
-static platform_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
-        return PLATFORM_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
-        return PLATFORM_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
-        return PLATFORM_INVALID_ARGUMENT;
-    default:
-        return PLATFORM_UNDEFINED_ERROR;
-    }
-}
-
-static const char* rslt_to_str(platform_result_t rslt_) {
-    switch(rslt_) {
-    case PLATFORM_SUCCESS:
-        return s_rslt_str_success;
-    case PLATFORM_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
-    case PLATFORM_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
-    case PLATFORM_NO_MEMORY:
-        return s_rslt_str_no_memory;
-    case PLATFORM_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
-    case PLATFORM_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
-    case PLATFORM_OVERFLOW:
-        return s_rslt_str_overflow;
-    case PLATFORM_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
-    case PLATFORM_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
-    case PLATFORM_WINDOW_CLOSE:
-        return s_rslt_str_window_close;
-    default:
-        return s_rslt_str_undefined_error;
     }
 }
 
@@ -407,8 +354,6 @@ void NO_COVERAGE test_platform_context(void) {
 
     test_platform_vtable_get();
     test_platform_type_valid_check();
-    test_rslt_convert_linear_alloc();
-    test_rslt_to_str();
     test_platform_initialize();
     test_platform_destroy();
     test_platform_window_create();
@@ -1053,68 +998,6 @@ static void NO_COVERAGE test_platform_type_valid_check(void) {
 
     ret = platform_type_valid_check(20);
     assert(!ret);
-}
-
-static void NO_COVERAGE test_rslt_convert_linear_alloc(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    ret = rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
-    assert(PLATFORM_SUCCESS == ret);
-
-    ret = rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY);
-    assert(PLATFORM_NO_MEMORY == ret);
-
-    ret = rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT);
-    assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-    ret = rslt_convert_linear_alloc(100);
-    assert(PLATFORM_UNDEFINED_ERROR == ret);
-}
-
-static void NO_COVERAGE test_rslt_to_str(void) {
-    {
-        const char* test = rslt_to_str(PLATFORM_SUCCESS);
-        assert(0 == strcmp(s_rslt_str_success, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_DATA_CORRUPTED);
-        assert(0 == strcmp(s_rslt_str_data_corrupted, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_BAD_OPERATION);
-        assert(0 == strcmp(s_rslt_str_bad_operation, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_OVERFLOW);
-        assert(0 == strcmp(s_rslt_str_overflow, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_LIMIT_EXCEEDED);
-        assert(0 == strcmp(s_rslt_str_limit_exceeded, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_NO_MEMORY);
-        assert(0 == strcmp(s_rslt_str_no_memory, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_RUNTIME_ERROR);
-        assert(0 == strcmp(s_rslt_str_runtime_error, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_INVALID_ARGUMENT);
-        assert(0 == strcmp(s_rslt_str_invalid_argument, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_UNDEFINED_ERROR);
-        assert(0 == strcmp(s_rslt_str_undefined_error, test));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_WINDOW_CLOSE);
-        assert(0 == strcmp(s_rslt_str_window_close, test));
-    }
-    {
-        const char* test = rslt_to_str(100);
-        assert(0 == strcmp(s_rslt_str_undefined_error, test));
-    }
 }
 
 #endif

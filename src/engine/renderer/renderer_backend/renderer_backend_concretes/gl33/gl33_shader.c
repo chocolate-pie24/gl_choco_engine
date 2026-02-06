@@ -172,7 +172,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
 
     ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     tmp->program_id = 0;
@@ -280,24 +280,24 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_compile", "shader_handle_")
     if(shader_is_compiled(shader_type_, shader_handle_)) {
         ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader is already compiled.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader is already compiled.", renderer_rslt_to_str(ret));
         goto cleanup;
     } else if(0 != shader_handle_->program_id) {
         // 既にリンク済みなのにコンパイルしようとした
         ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader program is already linked.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader program is already linked.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     ret = gl33_shader_resolve_target(shader_handle_, shader_type_, &gl33_shader_type, &dst_handle);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp_handle = mock_glCreateShader(gl33_shader_type);
     if(0 == tmp_handle) {
         ret = RENDERER_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader handle.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader handle.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -311,13 +311,13 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     if(0 < info_log_length) {
         ret = render_mem_allocate((size_t)info_log_length, (void**)&err_mes);
         if(RENDERER_SUCCESS != ret) {
-            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to allocate memory for shader info log.", renderer_result_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to allocate memory for shader info log.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         mock_glGetShaderInfoLog(tmp_handle, info_log_length, NULL, err_mes);
         if(GL_TRUE != result) {
             ret = RENDERER_SHADER_COMPILE_ERROR;
-            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_result_to_str(ret), err_mes);
+            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_rslt_to_str(ret), err_mes);
             render_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
             goto cleanup;
@@ -328,7 +328,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     *dst_handle = tmp_handle;
@@ -404,7 +404,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
     tmp_program_id = mock_glCreateProgram();
     if(0 == tmp_program_id) {
         ret = RENDERER_SHADER_LINK_ERROR;
-        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to create shader program.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to create shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -418,13 +418,13 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
     if(0 < info_log_length) {
         ret = render_mem_allocate((size_t)info_log_length, (void**)&err_mes);
         if(RENDERER_SUCCESS != ret) {
-            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to allocate memory for program info log.", renderer_result_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to allocate memory for program info log.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         mock_glGetProgramInfoLog(tmp_program_id, info_log_length, NULL, err_mes);
         if(GL_TRUE != result) {
             ret = RENDERER_SHADER_LINK_ERROR;
-            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_result_to_str(ret), err_mes);
+            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_rslt_to_str(ret), err_mes);
             render_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
             goto cleanup;
@@ -435,7 +435,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_SHADER_LINK_ERROR;
-        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     // バリデーションがprogram_id != 0かつshader_handle == 0でDATA_CORRUPTEDにするため、シェーダーのデストロイは行わない
@@ -488,13 +488,13 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
         if(!shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_)) {
             // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderが無効なのは異常
             ret = RENDERER_DATA_CORRUPTED;
-            ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader is not compiled.", renderer_result_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader is not compiled.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         if(!shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_)) {
             // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderが無効なのは異常
             ret = RENDERER_DATA_CORRUPTED;
-            ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader is not compiled.", renderer_result_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader is not compiled.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         mock_glUseProgram(shader_handle_->program_id);

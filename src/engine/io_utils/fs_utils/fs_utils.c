@@ -82,7 +82,7 @@ static const char* s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実
 static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
 static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
 
-static const char* rslt_to_str(fs_utils_result_t result_);
+static const char* rslt_to_str(fs_utils_result_t rslt_);
 static bool fs_utils_valid_check(fs_utils_t* fs_utils_);
 static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_);
 static fs_utils_result_t choco_string_result_convert(choco_string_result_t result_);
@@ -307,8 +307,8 @@ cleanup:
     return ret;
 }
 
-static const char* rslt_to_str(fs_utils_result_t result_) {
-    switch(result_) {
+static const char* rslt_to_str(fs_utils_result_t rslt_) {
+    switch(rslt_) {
     case FS_UTILS_SUCCESS:
         return s_rslt_str_success;
     case FS_UTILS_INVALID_ARGUMENT:

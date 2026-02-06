@@ -38,6 +38,9 @@ struct linear_alloc {
 static const char* const s_rslt_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
+
+static const char* rslt_to_str(linear_allocator_result_t rslt_);
 
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -134,22 +137,22 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
     }
     if(UINTPTR_MAX - offset < head) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", rslt_to_str(ret));
         goto cleanup;
     }
     start_addr = head + offset;
     if(UINTPTR_MAX - size < start_addr) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", s_rslt_str_invalid_argument);
         ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", rslt_to_str(ret));
         goto cleanup;
     }
     pool = (uintptr_t)allocator_->memory_pool;
     cap = (uintptr_t)allocator_->capacity;
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", s_rslt_str_no_memory, req_size_, (size_t)free_space);
         ret = LINEAR_ALLOC_NO_MEMORY;
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", rslt_to_str(ret), req_size_, (size_t)free_space);
         goto cleanup;
     }
 
@@ -161,6 +164,19 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
 
 cleanup:
     return ret;
+}
+
+static const char* rslt_to_str(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
+    case LINEAR_ALLOC_SUCCESS:
+        return s_rslt_str_success;
+    case LINEAR_ALLOC_NO_MEMORY:
+        return s_rslt_str_no_memory;
+    case LINEAR_ALLOC_INVALID_ARGUMENT:
+        return s_rslt_str_invalid_argument;
+    default:
+        return s_rslt_str_undefined_error;
+    }
 }
 
 #ifdef TEST_BUILD

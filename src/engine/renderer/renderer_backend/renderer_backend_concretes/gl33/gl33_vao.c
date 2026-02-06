@@ -106,7 +106,7 @@ static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_)
 
     ret = render_mem_allocate(sizeof(renderer_backend_vao_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp'.", renderer_result_to_str(ret));
+        ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp'.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
