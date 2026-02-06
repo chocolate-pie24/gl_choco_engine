@@ -25,10 +25,10 @@ extern "C" {
 /**
  * @brief レンダラーレイヤー実行結果コードを文字列に変換する
  *
- * @param result_ 実行結果コード
+ * @param rslt_ 実行結果コード
  * @return const char* 文字列化されたコード
  */
-const char* renderer_rslt_to_str(renderer_result_t result_);
+const char* renderer_rslt_to_str(renderer_result_t rslt_);
 
 #ifdef __cplusplus
 }
