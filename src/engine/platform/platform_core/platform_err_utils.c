@@ -41,6 +41,8 @@ const char* platform_rslt_to_str(platform_result_t rslt_) {
         return s_rslt_str_undefined_error;
     case PLATFORM_WINDOW_CLOSE:
         return s_rslt_str_window_close;
+    default:
+        return s_rslt_str_undefined_error;
     }
 }
 
