@@ -35,7 +35,9 @@ void message_output(message_severity_t severity_, const char* format_, ...) {
         case MESSAGE_SEVERITY_WARNING:     fputs(head_war, out); break;
         case MESSAGE_SEVERITY_INFORMATION: fputs(head_inf, out); break;
         case MESSAGE_SEVERITY_DEBUG:       fputs(head_dbg, out); break;
-        default: return;
+        default:
+            funlockfile(out);
+            return;
     }
 
     // body
