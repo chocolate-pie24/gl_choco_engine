@@ -168,7 +168,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
 #endif
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "gl33_shader_create", "*shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
 
     ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
@@ -530,7 +530,7 @@ static renderer_result_t gl33_shader_resolve_target(renderer_backend_shader_t* s
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_resolve_target", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_gl33_type_")
     IF_ARG_NULL_GOTO_CLEANUP(out_target_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_target_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_target_, RENDERER_INVALID_ARGUMENT, "gl33_shader_resolve_target", "*out_target_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_target_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_resolve_target", "*out_target_")
 
     switch(shader_type_) {
     case SHADER_TYPE_VERTEX:

@@ -107,7 +107,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     IF_ARG_NULL_GOTO_CLEANUP(filepath_, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filepath_")
     IF_ARG_NULL_GOTO_CLEANUP(filename_, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filename_")
     IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "fs_utils_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_utils_, FS_UTILS_INVALID_ARGUMENT, "fs_utils_create", "*fs_utils_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_utils_, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "*fs_utils_")
     IF_ARG_FALSE_GOTO_CLEANUP(open_mode_ != FILESYSTEM_MODE_NONE, FS_UTILS_INVALID_ARGUMENT, "fs_utils_create", "open_mode_")
     // extensionはない場合があるのでNULLを許可
 

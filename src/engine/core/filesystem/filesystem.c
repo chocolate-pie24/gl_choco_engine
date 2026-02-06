@@ -123,7 +123,7 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
 #endif
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_create", "*filesystem_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
 
     const memory_system_result_t mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {

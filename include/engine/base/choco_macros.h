@@ -77,9 +77,9 @@ extern "C" {
  *
  * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
  */
-#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, rslt_str_, function_name_, variable_name_) \
     if(NULL != ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
+        ERROR_MESSAGE("%s(%s) - Argument %s requires a null pointer.", function_name_, rslt_str_, variable_name_); \
         ret = ret_; \
         goto cleanup;  \
     } \

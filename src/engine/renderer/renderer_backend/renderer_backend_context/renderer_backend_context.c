@@ -52,7 +52,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "out_renderer_backend_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "*out_renderer_backend_context_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "*out_renderer_backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_valid_check(target_api_), RENDERER_INVALID_ARGUMENT, "renderer_backend_initialize", "target_api_")
 
     // Simulation.
@@ -117,7 +117,7 @@ renderer_result_t renderer_backend_shader_create(renderer_backend_context_t* ren
     IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_create", "renderer_backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_->shader_vtable, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_create", "renderer_backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_create", "shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, "renderer_backend_shader_create", "*shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_create", "*shader_handle_")
 
     ret = renderer_backend_context_->shader_vtable->renderer_shader_create(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
@@ -190,7 +190,7 @@ renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_create", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "vertex_array_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_array_create", "*vertex_array_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_array_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "*vertex_array_")
 
     ret = backend_context_->vao_vtable->vertex_array_create(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
@@ -268,7 +268,7 @@ renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_create", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_create", "vertex_buffer_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "renderer_backend_vertex_buffer_create", "*vertex_buffer_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_create", "*vertex_buffer_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_create(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {

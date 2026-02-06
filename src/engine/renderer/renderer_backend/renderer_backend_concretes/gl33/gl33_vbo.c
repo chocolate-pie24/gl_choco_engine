@@ -99,7 +99,7 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
     renderer_backend_vbo_t* tmp = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_create", "vertex_buffer_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_create", "vertex_buffer_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_create", "vertex_buffer_")
 
     ret = render_mem_allocate(sizeof(renderer_backend_vbo_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
