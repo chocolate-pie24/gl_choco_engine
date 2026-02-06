@@ -215,7 +215,7 @@ static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_ar
     mock_glBindVertexArray(0);
 
     ret = RENDERER_SUCCESS;
-cleanup:
+
     return ret;
 }
 

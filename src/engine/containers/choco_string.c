@@ -455,7 +455,9 @@ static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
         goto cleanup;
     case MEMORY_SYSTEM_RUNTIME_ERROR:
         ret = CHOCO_STRING_RUNTIME_ERROR;
+        goto cleanup;
     case MEMORY_SYSTEM_SUCCESS:
+        ret = CHOCO_STRING_SUCCESS;
         break;
     default:
         ret = CHOCO_STRING_UNDEFINED_ERROR;

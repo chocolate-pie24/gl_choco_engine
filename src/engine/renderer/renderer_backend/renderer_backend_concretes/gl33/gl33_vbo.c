@@ -213,7 +213,6 @@ static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_bu
 
     ret = RENDERER_SUCCESS;
 
-cleanup:
     return ret;
 }
 
