@@ -104,7 +104,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "ring_queue_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_element_count_, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "max_element_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != element_size_, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(element_align_ > 0, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")

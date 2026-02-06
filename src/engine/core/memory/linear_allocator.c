@@ -120,7 +120,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
     // Preconditions
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
     if(0 == req_align_ || 0 == req_size_) {
         WARN_MESSAGE("linear_allocator_allocate - No-op: req_align_ or req_size_ is 0.");
         ret = LINEAR_ALLOC_SUCCESS;

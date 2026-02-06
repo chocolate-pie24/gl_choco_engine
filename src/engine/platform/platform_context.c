@@ -120,7 +120,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "out_platform_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "*out_platform_context_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "*out_platform_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(platform_type_valid_check(platform_type_), PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "platform_type_")
 
     // Simulation.
