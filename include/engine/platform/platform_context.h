@@ -215,8 +215,9 @@ platform_result_t platform_pump_messages(
  * @param platform_context_ プラットフォームstrategy context構造体インスタンスへのポインタ
  *
  * @retval PLATFORM_INVALID_ARGUMENT platform_context_ == NULL
- * @retval PLATFORM_BAD_OPERATION platform_context_->vtable == NULL
- * @retval PLATFORM_BAD_OPERATION platform_context_->backend == NULL
+ * @retval PLATFORM_BAD_OPERATION 以下のいずれか
+ * - platform_context_->vtable == NULL
+ * - platform_context_->backend == NULL
  * @retval その他 プラットフォーム実装依存
  */
 platform_result_t platform_swap_buffers(platform_context_t* platform_context_);
