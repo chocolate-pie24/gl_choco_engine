@@ -67,6 +67,7 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**<
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< メモリシステムAPI実行結果コード(システム使用上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< メモリシステムAPI実行結果コード(不明なエラー)に対応する文字列 */
 
+static const char* rslt_to_str(memory_system_result_t rslt_);
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
 // NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
