@@ -828,13 +828,14 @@ static void NO_COVERAGE test_ring_queue_push(void) {
 
 static void NO_COVERAGE test_ring_queue_pop(void) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
-    int a = 0;
     {
+        int a = 0;
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ret = ring_queue_pop(NULL, &a, sizeof(int), alignof(int));
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
     }
     {
+        int a = 0;
         // data_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -847,6 +848,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queue->memory_pool == NULL ->RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
@@ -859,6 +861,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         memory_system_free(ring_queue, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
     }
     {
+        int a = 0;
         // ring_queue_->element_size != element_size_ -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -871,6 +874,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -883,6 +887,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queueが空でRING_QUEUE_EMPTY
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
