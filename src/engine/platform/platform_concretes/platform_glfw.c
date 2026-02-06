@@ -33,6 +33,7 @@
 #include "engine/platform/platform_interface.h"
 #include "engine/platform/platform_concretes/platform_glfw.h"
 #include "engine/platform/platform_core/platform_types.h"
+#include "engine/platform/platform_core/platform_err_utils.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -82,19 +83,6 @@ static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< プラットフォームAPI実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームAPI実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームAPI実行結果コード(実行時エラー)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< プラットフォームAPI実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< プラットフォームAPI実行結果コード(メモリ破損)に対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< プラットフォームAPI実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< プラットフォームAPI実行結果コード(オーバーフロー)に対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
-
-static const char* rslt_to_str(platform_result_t rslt_);
-static platform_result_t rslt_convert_string(choco_string_result_t rslt_);
 // #define TEST_BUILD
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -107,7 +95,6 @@ typedef struct test_controller {
 
 static test_contoller_t s_test_controller;
 
-static void NO_COVERAGE test_rslt_to_str(void);
 static void NO_COVERAGE test_keycode_to_glfw_keycode(void);
 static void NO_COVERAGE test_rslt_convert_string(void);
 #endif
@@ -164,7 +151,7 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
 
     if(GL_FALSE == glfwInit()) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     glfwWindowHint(GLFW_SAMPLES, 4);                // 4x アンチエイリアス
@@ -280,26 +267,26 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
     if(!platform_backend_->initialized_glfw) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL != platform_backend_->window) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_string = choco_string_create_from_c_string(&platform_backend_->window_label, window_label_);
     if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = rslt_convert_string(ret_string);
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", rslt_to_str(ret));
+        ret = platform_rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
     platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), NULL, NULL);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if(NULL == platform_backend_->window) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -310,7 +297,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     glewExperimental = true;
     if(GLEW_OK != glewInit()) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", platform_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -479,7 +466,7 @@ static platform_result_t platform_glfw_pump_messages(
 
     ret = platform_snapshot_collect(platform_backend_);
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to collect snapshot.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to collect snapshot.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     ret = platform_snapshot_process(platform_backend_, window_event_callback, keyboard_event_callback, mouse_event_callback);
@@ -487,7 +474,7 @@ static platform_result_t platform_glfw_pump_messages(
         goto cleanup;
     }
     if(PLATFORM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     ret = PLATFORM_SUCCESS;
@@ -508,39 +495,6 @@ static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform
 
 cleanup:
     return ret;
-}
-
-/**
- * @brief 実行結果コードを文字列に変換する
- *
- * @param rslt_ 実行結果コード
- * @return const char* 実行結果コードを文字列に変換した値
- */
-static const char* rslt_to_str(platform_result_t rslt_) {
-    switch(rslt_) {
-    case PLATFORM_SUCCESS:
-        return s_rslt_str_success;
-    case PLATFORM_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
-    case PLATFORM_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
-    case PLATFORM_NO_MEMORY:
-        return s_rslt_str_no_memory;
-    case PLATFORM_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
-    case PLATFORM_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
-    case PLATFORM_OVERFLOW:
-        return s_rslt_str_overflow;
-    case PLATFORM_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
-    case PLATFORM_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
-    case PLATFORM_WINDOW_CLOSE:
-        return s_rslt_str_window_close;
-    default:
-        return s_rslt_str_undefined_error;
-    }
 }
 
 /**
@@ -664,95 +618,15 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     case KEY_F12:
         return GLFW_KEY_F12;
     default:
-        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", rslt_to_str(PLATFORM_INVALID_ARGUMENT));
+        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT));
         return GLFW_KEY_0;
-    }
-}
-
-/**
- * @brief エラー伝播のため、文字列コンテナモジュールの実行結果コードをプラットフォーム実行結果コードに変換する
- *
- * @param rslt_ 文字列コンテナモジュール実行結果コード
- * @return platform_result_t プラットフォーム実行結果コード
- */
-static platform_result_t rslt_convert_string(choco_string_result_t rslt_) {
-    switch(rslt_) {
-    case CHOCO_STRING_SUCCESS:
-        return PLATFORM_SUCCESS;
-    case CHOCO_STRING_NO_MEMORY:
-        return PLATFORM_NO_MEMORY;
-    case CHOCO_STRING_INVALID_ARGUMENT:
-        return PLATFORM_INVALID_ARGUMENT;
-    case CHOCO_STRING_UNDEFINED_ERROR:
-        return PLATFORM_UNDEFINED_ERROR;
-    case CHOCO_STRING_DATA_CORRUPTED:
-        return PLATFORM_DATA_CORRUPTED;
-    case CHOCO_STRING_BAD_OPERATION:
-        return PLATFORM_BAD_OPERATION;
-    case CHOCO_STRING_RUNTIME_ERROR:
-        return PLATFORM_RUNTIME_ERROR;
-    case CHOCO_STRING_OVERFLOW:
-        return PLATFORM_OVERFLOW;
-    case CHOCO_STRING_LIMIT_EXCEEDED:
-        return PLATFORM_LIMIT_EXCEEDED;
-    default:
-        return PLATFORM_UNDEFINED_ERROR;
     }
 }
 
 #ifdef TEST_BUILD
 
 void test_platform_glfw(void) {
-    test_rslt_to_str();
     test_keycode_to_glfw_keycode();
-    test_rslt_convert_string();
-}
-
-static void NO_COVERAGE test_rslt_to_str(void) {
-    {
-        const char* test = rslt_to_str(PLATFORM_SUCCESS);
-        assert(0 == strcmp(test, s_rslt_str_success));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_INVALID_ARGUMENT);
-        assert(0 == strcmp(test, s_rslt_str_invalid_argument));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_RUNTIME_ERROR);
-        assert(0 == strcmp(test, s_rslt_str_runtime_error));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_NO_MEMORY);
-        assert(0 == strcmp(test, s_rslt_str_no_memory));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_UNDEFINED_ERROR);
-        assert(0 == strcmp(test, s_rslt_str_undefined_error));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_WINDOW_CLOSE);
-        assert(0 == strcmp(test, s_rslt_str_window_close));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_DATA_CORRUPTED);
-        assert(0 == strcmp(test, s_rslt_str_data_corrupted));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_BAD_OPERATION);
-        assert(0 == strcmp(test, s_rslt_str_bad_operation));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_OVERFLOW);
-        assert(0 == strcmp(test, s_rslt_str_overflow));
-    }
-    {
-        const char* test = rslt_to_str(PLATFORM_LIMIT_EXCEEDED);
-        assert(0 == strcmp(test, s_rslt_str_limit_exceeded));
-    }
-    {
-        const char* test = rslt_to_str(100);
-        assert(0 == strcmp(test, s_rslt_str_undefined_error));
-    }
 }
 
 static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
@@ -929,39 +803,6 @@ static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
     // エラーメッセージ確認
     glfw_key = keycode_to_glfw_keycode(1000);
     assert(GLFW_KEY_0 == glfw_key);
-}
-
-static void NO_COVERAGE test_rslt_convert_string(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    ret = rslt_convert_string(CHOCO_STRING_SUCCESS);
-    assert(PLATFORM_SUCCESS == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_NO_MEMORY);
-    assert(PLATFORM_NO_MEMORY == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_INVALID_ARGUMENT);
-    assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_UNDEFINED_ERROR);
-    assert(PLATFORM_UNDEFINED_ERROR == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_DATA_CORRUPTED);
-    assert(PLATFORM_DATA_CORRUPTED == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_BAD_OPERATION);
-    assert(PLATFORM_BAD_OPERATION == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_RUNTIME_ERROR);
-    assert(PLATFORM_RUNTIME_ERROR == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_OVERFLOW);
-    assert(PLATFORM_OVERFLOW == ret);
-
-    ret = rslt_convert_string(CHOCO_STRING_LIMIT_EXCEEDED);
-    assert(PLATFORM_LIMIT_EXCEEDED == ret);
-
-    ret = rslt_convert_string(100);
-    assert(PLATFORM_UNDEFINED_ERROR == ret);
 }
 
 void platform_glfw_result_controller_set(platform_result_t ret_) {
