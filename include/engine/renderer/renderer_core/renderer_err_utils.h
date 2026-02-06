@@ -28,7 +28,7 @@ extern "C" {
  * @param result_ 実行結果コード
  * @return const char* 文字列化されたコード
  */
-const char* renderer_result_to_str(renderer_result_t result_);
+const char* renderer_rslt_to_str(renderer_result_t result_);
 
 #ifdef __cplusplus
 }
