@@ -22,7 +22,6 @@ extern "C" {
 #include <stdbool.h>
 
 #include "engine/platform/platform_interface.h"
-#include "engine/platform/platform_core/platform_types.h"
 
 /**
  * @brief GLFWプラットフォームを使用する際の仮想関数テーブルを取得する
@@ -32,6 +31,7 @@ extern "C" {
 const platform_vtable_t* platform_glfw_vtable_get(void);
 
 #ifdef TEST_BUILD
+#include "engine/platform/platform_core/platform_types.h"
 /**
  * @brief テスト専用API(外部から強制的に引数で指定したret_を返すようにする)
  *

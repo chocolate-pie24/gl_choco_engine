@@ -7,8 +7,6 @@ extern "C" {
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_types.h"
-
 #include "engine/core/memory/linear_allocator.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t;

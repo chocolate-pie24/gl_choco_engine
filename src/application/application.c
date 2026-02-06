@@ -33,11 +33,14 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/core/filesystem/filesystem.h"
+
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
 #include "engine/containers/ring_queue.h"
+#include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
@@ -46,6 +49,7 @@
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader_context.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao_context.h"

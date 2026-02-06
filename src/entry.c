@@ -19,7 +19,6 @@
 #include "engine/base/choco_message.h"
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
-#include "engine/core/memory/choco_memory.h"
 
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"

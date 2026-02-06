@@ -21,11 +21,12 @@ extern "C" {
 #endif
 
 #include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
-#include "engine/renderer/renderer_core/renderer_types.h"
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void);
 
 #ifdef TEST_BUILD
+#include "engine/renderer/renderer_core/renderer_types.h"
+
 // 引数で与えた実行結果コードを強制的に出力させる
 void gl33_shader_fail_enable(renderer_result_t result_code_);
 void gl33_shader_fail_disable(void);

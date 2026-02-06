@@ -5,6 +5,10 @@
 
 #include "engine/base/choco_macros.h"
 
+#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/containers/choco_string.h"
+
 #include "engine/platform/platform_core/platform_err_utils.h"
 #include "engine/platform/platform_core/platform_types.h"
 
