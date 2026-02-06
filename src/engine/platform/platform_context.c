@@ -118,10 +118,10 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     size_t backend_align_req = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "out_platform_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_initialize", "*out_platform_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_type_valid_check(platform_type_), PLATFORM_INVALID_ARGUMENT, "platform_initialize", "platform_type_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "out_platform_context_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "*out_platform_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(platform_type_valid_check(platform_type_), PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "platform_type_")
 
     // Simulation.
     platform_context_t* tmp_context = NULL;
@@ -183,14 +183,14 @@ cleanup:
 
 platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "platform_context_->backend")
-    IF_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_label_")
-    IF_ARG_NULL_GOTO_CLEANUP(framebuffer_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "framebuffer_width_")
-    IF_ARG_NULL_GOTO_CLEANUP(framebuffer_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "framebuffer_height_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_window_create", "window_height_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_->vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(window_label_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_label_")
+    IF_ARG_NULL_GOTO_CLEANUP(framebuffer_width_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "framebuffer_width_")
+    IF_ARG_NULL_GOTO_CLEANUP(framebuffer_height_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "framebuffer_height_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_height_")
 
     ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_, framebuffer_width_, framebuffer_height_);
     if(PLATFORM_SUCCESS != ret) {
@@ -209,12 +209,12 @@ platform_result_t platform_pump_messages(
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "platform_context_->backend")
-    IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "window_event_callback")
-    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "keyboard_event_callback")
-    IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, "platform_pump_messages", "mouse_event_callback")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "window_event_callback")
+    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "keyboard_event_callback")
+    IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "mouse_event_callback")
 
     ret = platform_context_->vtable->platform_backend_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
     // PLATFORM_WINDOW_CLOSEはPLATFORM_SUCCESS以外でも正常なので無視
@@ -229,9 +229,9 @@ cleanup:
 
 platform_result_t platform_swap_buffers(platform_context_t* platform_context_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, "platform_swap_buffers", "platform_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_BAD_OPERATION, "platform_swap_buffers", "platform_context_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_BAD_OPERATION, "platform_swap_buffers", "platform_context_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_swap_buffers", "platform_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "platform_swap_buffers", "platform_context_->vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "platform_swap_buffers", "platform_context_->backend")
 
     ret = platform_context_->vtable->platform_backend_swap_buffers(platform_context_->backend);
     if(PLATFORM_SUCCESS != ret) {
