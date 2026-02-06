@@ -53,7 +53,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "out_renderer_backend_context_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "*out_renderer_backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_valid_check(target_api_), RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "target_api_")
+    IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_valid_check(target_api_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "target_api_")
 
     // Simulation.
     renderer_backend_context_t* tmp_context = NULL;

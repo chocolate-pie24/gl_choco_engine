@@ -258,7 +258,7 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     IF_ARG_NULL_GOTO_CLEANUP(result_n_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "result_n_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_->file_handle, ret, FILESYSTEM_RUNTIME_ERROR, rslt_to_str(FILESYSTEM_RUNTIME_ERROR), "filesystem_byte_read", "filesystem_->file_handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < read_bytes_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "read_bytes_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "read_bytes_")
 
     if(open_mode_readable(filesystem_->mode)) {
         *result_n_ = mock_fread(buffer_, 1, read_bytes_, filesystem_->file_handle);

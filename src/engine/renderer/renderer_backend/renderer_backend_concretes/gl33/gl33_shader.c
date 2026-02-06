@@ -395,10 +395,10 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
 #endif
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_link", "shader_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
     // バーテックスシェーダーとフラグメントシェーダーは必須なので、有効な状態でなければエラー
-    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_), RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_), RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_), ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(shader_is_compiled(SHADER_TYPE_FRAGMENT, shader_handle_), ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
 
     // プログラムをリンク
     tmp_program_id = mock_glCreateProgram();
@@ -482,7 +482,7 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
 #endif
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_use", "shader_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
 
     if(*out_program_id_ != shader_handle_->program_id) {
         if(!shader_is_compiled(SHADER_TYPE_VERTEX, shader_handle_)) {

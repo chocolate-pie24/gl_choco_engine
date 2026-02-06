@@ -263,8 +263,8 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(window_label_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_label_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_height_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_height_")
     if(!platform_backend_->initialized_glfw) {
         ret = PLATFORM_RUNTIME_ERROR;
         ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", platform_rslt_to_str(ret));
@@ -337,7 +337,7 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_->window")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_->initialized_glfw")
+    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_->initialized_glfw")
 
     // window events.
     platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
@@ -377,7 +377,7 @@ static platform_result_t platform_snapshot_process(
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->window")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->initialized_glfw")
+    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->initialized_glfw")
     IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "window_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "keyboard_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "mouse_event_callback")
@@ -455,7 +455,7 @@ static platform_result_t platform_glfw_pump_messages(
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_->initialized_glfw")
+    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_->initialized_glfw")
     IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "window_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "keyboard_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "mouse_event_callback")

@@ -286,7 +286,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
     IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
-    IF_ARG_FALSE_GOTO_CLEANUP((const void*)dst_ != (const void*)string_, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_concat", "dst_, string_")
+    IF_ARG_FALSE_GOTO_CLEANUP((const void*)dst_ != (const void*)string_, ret, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_concat", "dst_, string_")
     if(!is_string_valid(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         ERROR_MESSAGE("choco_string_concat(%s) - Source string (string_) is corrupted.", rslt_to_str(ret));
@@ -480,9 +480,9 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
     }
 #endif
 
-    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "string_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == string_->capacity, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "buffer_reserve", "string_->capacity")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == string_->capacity, ret, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "buffer_reserve", "string_->capacity")
     if(!is_string_valid(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         goto cleanup;
@@ -526,7 +526,7 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "string_")
-    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "size_")
     if(!is_string_valid(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         goto cleanup;
