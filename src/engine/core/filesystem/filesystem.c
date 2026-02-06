@@ -122,7 +122,7 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
     }
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
 
     const memory_system_result_t mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
@@ -190,8 +190,8 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
     }
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
 
     if(NULL != filesystem_->file_handle) {
         ret = FILESYSTEM_RUNTIME_ERROR;
@@ -225,7 +225,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
     }
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_close", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_close", "filesystem_")
     if(NULL == filesystem_->file_handle) {
         ret = FILESYSTEM_RUNTIME_ERROR;
         ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", rslt_to_str(ret));
@@ -254,10 +254,10 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     }
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(result_n_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "result_n_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_->file_handle, FILESYSTEM_RUNTIME_ERROR, rslt_to_str(FILESYSTEM_RUNTIME_ERROR), "filesystem_byte_read", "filesystem_->file_handle")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(result_n_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "result_n_")
+    IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_->file_handle, ret, FILESYSTEM_RUNTIME_ERROR, rslt_to_str(FILESYSTEM_RUNTIME_ERROR), "filesystem_byte_read", "filesystem_->file_handle")
     IF_ARG_FALSE_GOTO_CLEANUP(0 < read_bytes_, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "read_bytes_")
 
     if(open_mode_readable(filesystem_->mode)) {
