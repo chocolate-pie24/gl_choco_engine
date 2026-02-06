@@ -22,6 +22,9 @@
 
 void message_output(message_severity_t severity_, const char* format_, ...) {
     FILE* const out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
+    if(NULL == format_) {
+        return;
+    }
 
     static const char head_err[] = "\033[1;31m[ERROR] ";
     static const char head_war[] = "\033[1;33m[WARNING] ";
