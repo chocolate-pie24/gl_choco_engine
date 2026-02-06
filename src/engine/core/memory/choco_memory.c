@@ -85,7 +85,7 @@ memory_system_result_t memory_system_create(void) {
 
     // Simulation.
     tmp = (memory_system_t*)test_malloc(sizeof(memory_system_t));
-    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
     memset(tmp, 0, sizeof(memory_system_t));
 
     tmp->total_allocated = 0;
@@ -165,7 +165,7 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
 
     // Simulation.
     tmp = test_malloc(size_);    // TODO: FreeList
-    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
     memset(tmp, 0, size_);
 
     // commit.

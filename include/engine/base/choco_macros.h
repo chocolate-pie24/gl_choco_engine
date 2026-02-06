@@ -124,11 +124,30 @@ extern "C" {
  * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
  *
  * @note エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する
+ *
+ * @param[in] ptr_ NULL判定対象変数
+ * @param[in] return_valiable_ この関数を呼び出す関数のリターン変数
+ * @param[in] rslt_code_ 実行結果コード
+ * @param[in] function_name_ このマクロを使用する関数名称
+ * @param[in] variable_name_ NULL判定対象変数名
+ *
+ * @code{.c}
+ * #define ERROR_CODE 1
+ * #define SUCCESS 0
+ * int func(void) {
+ *      int result = ERROR_CODE;
+ *      int* a = NULL;
+ *      IF_ALLOC_FAIL_GOTO_CLEANUP(a, result, ERROR_CODE, "func", "a")  // NULLなのでcleanupに飛ぶ
+ *      result = SUCCESS;
+ * cleanup:
+ *      return result;
+ * }
+ * @endcode
  */
-#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
+#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_valiable_, rslt_code_, function_name_, variable_name_) \
     if(NULL == ptr_) { \
         ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
-        ret = ret_; \
+        return_valiable_ = rslt_code_; \
         goto cleanup;  \
     } \
 
