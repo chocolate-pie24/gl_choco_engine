@@ -171,12 +171,16 @@ cleanup:
  * // エラー処理
  * @endcode
  *
- * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_がNULL
+ * @retval RENDERER_INVALID_ARGUMENT
+ * - vertex_buffer_ == NULL
+ * - out_vbo_id_ == NULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "out_vbo_id_")
 
     if(vertex_buffer_->vbo_handle != *out_vbo_id_) {
         mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
@@ -203,16 +207,19 @@ cleanup:
  *
  * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
  *
+ * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_ == NULL
  * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindBufferに対して個別にglGetErrorを行わないため、常に成功
  */
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
-    (void)vertex_buffer_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_unbind", "vertex_buffer_")
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     ret = RENDERER_SUCCESS;
 
+cleanup:
     return ret;
 }
 
@@ -232,12 +239,13 @@ static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_bu
  * // エラー処理
  * @endcode
  *
- * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
+ * @param vertex_buffer_ VBOハンドル
  * @param load_size_ 転送サイズ(byte)
  * @param load_data_ 転送データの先頭アドレス
  * @param usage_ バッファデータの取り扱い @ref buffer_usage_t
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_buffer_ == NULL
  * - load_data_ == NULL
  * - load_size_ == 0
  * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
@@ -245,6 +253,8 @@ static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_bu
  */
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
 
