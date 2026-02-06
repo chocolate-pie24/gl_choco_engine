@@ -21,6 +21,9 @@
 #include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 
+#include "engine/core/memory/linear_allocator.h"
+#include "engine/core/memory/choco_memory.h"
+
 static const char* s_rslt_str_success = "SUCCESS";                            /**< 実行結果コードRENDERER_SUCCESSの文字列 */
 static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";          /**< 実行結果コードRENDERER_INVALID_ARGUMENTの文字列 */
 static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";                /**< 実行結果コードRENDERER_RUNTIME_ERRORの文字列 */
@@ -56,6 +59,36 @@ const char* renderer_rslt_to_str(renderer_result_t rslt_) {
         return s_rslt_str_undefined_error;
     default:
         return s_rslt_str_undefined_error;
+    }
+}
+
+renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
+    case LINEAR_ALLOC_SUCCESS:
+        return RENDERER_SUCCESS;
+    case LINEAR_ALLOC_NO_MEMORY:
+        return RENDERER_NO_MEMORY;
+    case LINEAR_ALLOC_INVALID_ARGUMENT:
+        return RENDERER_INVALID_ARGUMENT;
+    default:
+        return RENDERER_UNDEFINED_ERROR;
+    }
+}
+
+renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return RENDERER_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return RENDERER_INVALID_ARGUMENT;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        return RENDERER_RUNTIME_ERROR;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return RENDERER_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return RENDERER_NO_MEMORY;
+    default:
+        return RENDERER_UNDEFINED_ERROR;
     }
 }
 

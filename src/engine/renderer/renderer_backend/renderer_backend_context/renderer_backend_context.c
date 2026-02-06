@@ -44,7 +44,6 @@ static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_
 static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
 
 static bool graphics_api_valid_check(target_graphics_api_t target_api_);
-static renderer_result_t rslt_convert_linear_alloc(linear_allocator_result_t result_);
 
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
@@ -60,7 +59,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     renderer_backend_context_t* tmp_context = NULL;
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
+        ret = renderer_rslt_convert_linear_alloc(ret_linear_alloc);
         ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to allocate memory for renderer backend context.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
@@ -380,17 +379,4 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
         break;
     }
     return ret;
-}
-
-static renderer_result_t rslt_convert_linear_alloc(linear_allocator_result_t result_) {
-    switch(result_) {
-    case LINEAR_ALLOC_SUCCESS:
-        return RENDERER_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
-        return RENDERER_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
-        return RENDERER_INVALID_ARGUMENT;
-    default:
-        return RENDERER_UNDEFINED_ERROR;
-    }
 }
