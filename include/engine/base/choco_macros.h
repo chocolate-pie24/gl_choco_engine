@@ -84,11 +84,13 @@ extern "C" {
  * @endcode
  */
 #define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, rslt_str_, variable_name_); \
-        return_variable_ = rslt_code_; \
-        goto cleanup;  \
-    } \
+    do { \
+        if(NULL == ptr_) { \
+            ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, rslt_str_, variable_name_); \
+            return_variable_ = rslt_code_; \
+            goto cleanup;  \
+        } \
+    } while(0); \
 
 /**
  * @brief 引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする
