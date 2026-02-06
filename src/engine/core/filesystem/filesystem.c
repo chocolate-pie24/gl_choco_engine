@@ -33,7 +33,7 @@ struct filesystem {
     filesystem_open_mode_t mode;    /**< ファイルオープンモード */
 };
 
-static const char* result_to_str(filesystem_result_t result_);
+static const char* rslt_to_str(filesystem_result_t rslt_);
 static bool open_mode_readable(filesystem_open_mode_t mode_);
 static FILE* mock_fopen(const char* fullpath_, const char* mode_);
 static int mock_fclose(FILE* stream_);
@@ -83,7 +83,7 @@ static void test_filesystem_destroy(void);
 static void test_filesystem_open(void);
 static void test_filesystem_close(void);
 static void test_filesystem_open_mode_c_str(void);
-static void test_result_to_str(void);
+static void test_rslt_to_str(void);
 static void test_filesystem_byte_read(void);
 static void test_open_mode_readable(void);
 
@@ -103,15 +103,15 @@ static const char* s_open_mode_write_plus_binary = "w+b";   /**< ファイルオ
 static const char* s_open_mode_append_plus_binary = "a+b";  /**< ファイルオープンモード文字列: APPEND+(Binary) */
 static const char* s_open_mode_undefined = "undefined";     /**< ファイルオープンモード文字列: 不明なモード */
 
-static const char* s_fs_result_success = "SUCCESS";                     /**< 実行結果コード文字列: 成功 */
-static const char* s_fs_result_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果コード文字列: 無効な引数 */
-static const char* s_fs_result_runtime_error = "RUNTIME_ERROR";         /**< 実行結果コード文字列: 実行時エラー */
-static const char* s_fs_result_no_memory = "NO_MEMORY";                 /**< 実行結果コード文字列: メモリ不足 */
-static const char* s_fs_result_file_open_error = "FILE_OPEN_ERROR";     /**< 実行結果コード文字列: ファイルオープン失敗 */
-static const char* s_fs_result_file_close_error = "FILE_CLOSE_ERROR";   /**< 実行結果コード文字列: ファイルクローズ失敗 */
-static const char* s_fs_result_limit_exceeded = "LIMIT_EXCEEDED";       /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
-static const char* s_fs_result_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果コード文字列: 未定義エラー */
-static const char* s_fs_result_eof = "EOF";                             /**< 実行結果コード文字列: ファイル読み込みEOF */
+static const char* s_rslt_str_success = "SUCCESS";                     /**< 実行結果コード文字列: 成功 */
+static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果コード文字列: 無効な引数 */
+static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";         /**< 実行結果コード文字列: 実行時エラー */
+static const char* s_rslt_str_no_memory = "NO_MEMORY";                 /**< 実行結果コード文字列: メモリ不足 */
+static const char* s_rslt_str_file_open_error = "FILE_OPEN_ERROR";     /**< 実行結果コード文字列: ファイルオープン失敗 */
+static const char* s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";   /**< 実行結果コード文字列: ファイルクローズ失敗 */
+static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";       /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
+static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果コード文字列: 未定義エラー */
+static const char* s_rslt_str_eof = "EOF";                             /**< 実行結果コード文字列: ファイル読み込みEOF */
 
 filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
@@ -122,25 +122,25 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_create", "filesystem_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_create", "*filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
 
     const memory_system_result_t mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT..", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT..", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_NO_MEMORY == mem_result) {
         ret = FILESYSTEM_NO_MEMORY;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned NO_MEMORY..", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned NO_MEMORY..", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_LIMIT_EXCEEDED == mem_result) {
         ret = FILESYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned LIMIT_EXCEEDED..", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned LIMIT_EXCEEDED..", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_SUCCESS != mem_result) {
         ret = FILESYSTEM_UNDEFINED_ERROR;
-        ERROR_MESSAGE("filesystem_create(%s) - Undefined error.", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - Undefined error.", rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -190,24 +190,24 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_open", "filesystem_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(fullpath_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_open", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
 
     if(NULL != filesystem_->file_handle) {
         ret = FILESYSTEM_RUNTIME_ERROR;
-        ERROR_MESSAGE("filesystem_open(%s) - File is already open; close it before opening another file.", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_open(%s) - File is already open; close it before opening another file.", rslt_to_str(ret));
         goto cleanup;
     }
     const char* open_mode_str = filesystem_open_mode_c_str(mode_);
     if(NULL == open_mode_str) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_open(%s) - Invalid open mode (mode=%d).", result_to_str(ret), mode_);
+        ERROR_MESSAGE("filesystem_open(%s) - Invalid open mode (mode=%d).", rslt_to_str(ret), mode_);
         goto cleanup;
     }
     filesystem_->file_handle = mock_fopen(fullpath_, open_mode_str);
     if(NULL == filesystem_->file_handle) {
         ret = FILESYSTEM_FILE_OPEN_ERROR;
-        ERROR_MESSAGE("filesystem_open(%s) - Failed to open file: '%s'.", result_to_str(ret), fullpath_);
+        ERROR_MESSAGE("filesystem_open(%s) - Failed to open file: '%s'.", rslt_to_str(ret), fullpath_);
         goto cleanup;
     }
     filesystem_->mode = mode_;
@@ -225,17 +225,17 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_close", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_close", "filesystem_")
     if(NULL == filesystem_->file_handle) {
         ret = FILESYSTEM_RUNTIME_ERROR;
-        ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", rslt_to_str(ret));
         goto cleanup;
     }
     if(EOF == mock_fclose(filesystem_->file_handle)) {
         ret = FILESYSTEM_FILE_CLOSE_ERROR;
         filesystem_->file_handle = NULL;    // closeに失敗してもハンドルは再使用不可になっているため、NULLに戻す
         filesystem_->mode = FILESYSTEM_MODE_NONE;
-        ERROR_MESSAGE("filesystem_close(%s) - Failed to close file.", result_to_str(ret));
+        ERROR_MESSAGE("filesystem_close(%s) - Failed to close file.", rslt_to_str(ret));
         goto cleanup;
     }
     filesystem_->file_handle = NULL;
@@ -254,11 +254,11 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     }
 #endif
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(filesystem_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_byte_read", "filesystem_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(result_n_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_byte_read", "result_n_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(buffer_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_byte_read", "buffer_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(filesystem_->file_handle, FILESYSTEM_RUNTIME_ERROR, "filesystem_byte_read", "filesystem_->file_handle")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 < read_bytes_, FILESYSTEM_INVALID_ARGUMENT, "filesystem_byte_read", "read_bytes_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(result_n_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "result_n_")
+    IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_->file_handle, ret, FILESYSTEM_RUNTIME_ERROR, rslt_to_str(FILESYSTEM_RUNTIME_ERROR), "filesystem_byte_read", "filesystem_->file_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "read_bytes_")
 
     if(open_mode_readable(filesystem_->mode)) {
         *result_n_ = mock_fread(buffer_, 1, read_bytes_, filesystem_->file_handle);
@@ -267,7 +267,7 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
         } else {
             if(mock_ferror(filesystem_->file_handle)) {
                 ret = FILESYSTEM_RUNTIME_ERROR;
-                ERROR_MESSAGE("filesystem_byte_read(%s) - Read failed.", result_to_str(ret));
+                ERROR_MESSAGE("filesystem_byte_read(%s) - Read failed.", rslt_to_str(ret));
                 goto cleanup;
             } else if(mock_feof(filesystem_->file_handle)) {
                 if(0 == *result_n_) {
@@ -277,13 +277,13 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
                 }
             } else {
                 ret = FILESYSTEM_UNDEFINED_ERROR;
-                ERROR_MESSAGE("filesystem_byte_read(%s) - Undefined error.", result_to_str(ret));
+                ERROR_MESSAGE("filesystem_byte_read(%s) - Undefined error.", rslt_to_str(ret));
                 goto cleanup;
             }
         }
     } else {
         ret = FILESYSTEM_RUNTIME_ERROR;
-        ERROR_MESSAGE("filesystem_byte_read(%s) - File is not opened in a readable mode (mode=%d).", result_to_str(ret), filesystem_->mode);
+        ERROR_MESSAGE("filesystem_byte_read(%s) - File is not opened in a readable mode (mode=%d).", rslt_to_str(ret), filesystem_->mode);
         goto cleanup;
     }
 
@@ -343,41 +343,29 @@ const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_) {
     return ret;
 }
 
-static const char* result_to_str(filesystem_result_t result_) {
-    const char* result_str;
-    switch(result_) {
+static const char* rslt_to_str(filesystem_result_t rslt_) {
+    switch(rslt_) {
     case FILESYSTEM_SUCCESS:
-        result_str = s_fs_result_success;
-        break;
+        return s_rslt_str_success;
     case FILESYSTEM_INVALID_ARGUMENT:
-        result_str = s_fs_result_invalid_argument;
-        break;
+        return s_rslt_str_invalid_argument;
     case FILESYSTEM_RUNTIME_ERROR:
-        result_str = s_fs_result_runtime_error;
-        break;
+        return s_rslt_str_runtime_error;
     case FILESYSTEM_NO_MEMORY:
-        result_str = s_fs_result_no_memory;
-        break;
+        return s_rslt_str_no_memory;
     case FILESYSTEM_FILE_OPEN_ERROR:
-        result_str = s_fs_result_file_open_error;
-        break;
+        return s_rslt_str_file_open_error;
     case FILESYSTEM_FILE_CLOSE_ERROR:
-        result_str = s_fs_result_file_close_error;
-        break;
+        return s_rslt_str_file_close_error;
     case FILESYSTEM_EOF:
-        result_str = s_fs_result_eof;
-        break;
+        return s_rslt_str_eof;
     case FILESYSTEM_LIMIT_EXCEEDED:
-        result_str = s_fs_result_limit_exceeded;
-        break;
+        return s_rslt_str_limit_exceeded;
     case FILESYSTEM_UNDEFINED_ERROR:
-        result_str = s_fs_result_undefined_error;
-        break;
+        return s_rslt_str_undefined_error;
     default:
-        result_str = s_fs_result_undefined_error;
-        break;
+        return s_rslt_str_undefined_error;
     }
-    return result_str;
 }
 
 static bool open_mode_readable(filesystem_open_mode_t mode_) {
@@ -553,7 +541,7 @@ void test_filesystem(void) {
     test_filesystem_close();
     test_filesystem_byte_read();
     test_filesystem_open_mode_c_str();
-    test_result_to_str();
+    test_rslt_to_str();
     test_open_mode_readable();
 
     memory_system_destroy();
@@ -1233,46 +1221,46 @@ static void NO_COVERAGE test_filesystem_open_mode_c_str(void) {
     }
 }
 
-static void NO_COVERAGE test_result_to_str(void) {
+static void NO_COVERAGE test_rslt_to_str(void) {
     {
-        const char* str = result_to_str(FILESYSTEM_SUCCESS);
-        assert(0 == strcmp(str, s_fs_result_success));
+        const char* str = rslt_to_str(FILESYSTEM_SUCCESS);
+        assert(0 == strcmp(str, s_rslt_str_success));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_INVALID_ARGUMENT);
-        assert(0 == strcmp(str, s_fs_result_invalid_argument));
+        const char* str = rslt_to_str(FILESYSTEM_INVALID_ARGUMENT);
+        assert(0 == strcmp(str, s_rslt_str_invalid_argument));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_RUNTIME_ERROR);
-        assert(0 == strcmp(str, s_fs_result_runtime_error));
+        const char* str = rslt_to_str(FILESYSTEM_RUNTIME_ERROR);
+        assert(0 == strcmp(str, s_rslt_str_runtime_error));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_NO_MEMORY);
-        assert(0 == strcmp(str, s_fs_result_no_memory));
+        const char* str = rslt_to_str(FILESYSTEM_NO_MEMORY);
+        assert(0 == strcmp(str, s_rslt_str_no_memory));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_FILE_OPEN_ERROR);
-        assert(0 == strcmp(str, s_fs_result_file_open_error));
+        const char* str = rslt_to_str(FILESYSTEM_FILE_OPEN_ERROR);
+        assert(0 == strcmp(str, s_rslt_str_file_open_error));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_FILE_CLOSE_ERROR);
-        assert(0 == strcmp(str, s_fs_result_file_close_error));
+        const char* str = rslt_to_str(FILESYSTEM_FILE_CLOSE_ERROR);
+        assert(0 == strcmp(str, s_rslt_str_file_close_error));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_LIMIT_EXCEEDED);
-        assert(0 == strcmp(str, s_fs_result_limit_exceeded));
+        const char* str = rslt_to_str(FILESYSTEM_LIMIT_EXCEEDED);
+        assert(0 == strcmp(str, s_rslt_str_limit_exceeded));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_UNDEFINED_ERROR);
-        assert(0 == strcmp(str, s_fs_result_undefined_error));
+        const char* str = rslt_to_str(FILESYSTEM_UNDEFINED_ERROR);
+        assert(0 == strcmp(str, s_rslt_str_undefined_error));
     }
     {
-        const char* str = result_to_str(FILESYSTEM_EOF);
-        assert(0 == strcmp(str, s_fs_result_eof));
+        const char* str = rslt_to_str(FILESYSTEM_EOF);
+        assert(0 == strcmp(str, s_rslt_str_eof));
     }
     {
-        const char* str = result_to_str(100);
-        assert(0 == strcmp(str, s_fs_result_undefined_error));
+        const char* str = rslt_to_str(100);
+        assert(0 == strcmp(str, s_rslt_str_undefined_error));
     }
 }
 #endif

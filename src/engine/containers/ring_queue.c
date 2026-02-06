@@ -103,13 +103,13 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     uintptr_t mem_pool_ptr = 0;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(ring_queue_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "ring_queue_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "*ring_queue_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != max_element_count_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "max_element_count_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(0 != element_size_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_size_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ > 0, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), RING_QUEUE_INVALID_ARGUMENT, "ring_queue_create", "element_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "ring_queue_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_element_count_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "max_element_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != element_size_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(element_align_ > 0, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
     if(SIZE_MAX / element_size_ < max_element_count_) {
         ret = RING_QUEUE_OVERFLOW;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", rslt_to_str(ret));
@@ -224,11 +224,11 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
     char* mem_ptr = NULL;
     char* target_ptr = NULL;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(ring_queue_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "ring_queue_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(data_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "data_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(ring_queue_->memory_pool, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "ring_queue_->memory_pool")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_size == element_size_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "element_size_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_align == element_align_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_push", "element_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_->memory_pool, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "ring_queue_->memory_pool")
+    IF_ARG_FALSE_GOTO_CLEANUP(ring_queue_->element_size == element_size_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "element_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(ring_queue_->element_align == element_align_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "element_align_")
     if(is_ring_queue_corrupted(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
         ERROR_MESSAGE("ring_queue_push(%s) - Provided ring queue is corrupted.", rslt_to_str(ret));
@@ -266,11 +266,11 @@ ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_
     char* mem_ptr = NULL;
     char* head_ptr = NULL;
 
-    CHECK_ARG_NULL_GOTO_CLEANUP(ring_queue_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "ring_queue_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(data_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "data_")
-    CHECK_ARG_NULL_GOTO_CLEANUP(ring_queue_->memory_pool, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "ring_queue_->memory_pool")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_size == element_size_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "element_size_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(ring_queue_->element_align == element_align_, RING_QUEUE_INVALID_ARGUMENT, "ring_queue_pop", "element_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_->memory_pool, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "ring_queue_->memory_pool")
+    IF_ARG_FALSE_GOTO_CLEANUP(ring_queue_->element_size == element_size_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "element_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(ring_queue_->element_align == element_align_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "element_align_")
     if(is_ring_queue_corrupted(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
         ERROR_MESSAGE("ring_queue_pop(%s) - Provided ring queue is corrupted.", rslt_to_str(ret));
@@ -828,13 +828,14 @@ static void NO_COVERAGE test_ring_queue_push(void) {
 
 static void NO_COVERAGE test_ring_queue_pop(void) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
-    int a = 0;
     {
+        int a = 0;
         // ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ret = ring_queue_pop(NULL, &a, sizeof(int), alignof(int));
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
     }
     {
+        int a = 0;
         // data_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -847,6 +848,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queue->memory_pool == NULL ->RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE, (void**)&ring_queue));
@@ -859,6 +861,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         memory_system_free(ring_queue, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
     }
     {
+        int a = 0;
         // ring_queue_->element_size != element_size_ -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -871,6 +874,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
@@ -883,6 +887,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_destroy(&ring_queue);
     }
     {
+        int a = 0;
         // ring_queueが空でRING_QUEUE_EMPTY
         ring_queue_t* ring_queue = NULL;
         ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);

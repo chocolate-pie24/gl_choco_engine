@@ -65,7 +65,9 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**<
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< メモリシステムAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< メモリシステムAPI実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< メモリシステムAPI実行結果コード(システム使用上限超過)に対応する文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< メモリシステムAPI実行結果コード(不明なエラー)に対応する文字列 */
 
+static const char* rslt_to_str(memory_system_result_t rslt_);
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
 // NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
@@ -76,14 +78,14 @@ memory_system_result_t memory_system_create(void) {
 
     // Preconditions.
     if(NULL != s_mem_sys_ptr) {
-        ERROR_MESSAGE("memory_system_create(%s) - Memory system is already initialized.", s_rslt_str_runtime_error);
         ret = MEMORY_SYSTEM_RUNTIME_ERROR;
+        ERROR_MESSAGE("memory_system_create(%s) - Memory system is already initialized.", rslt_to_str(ret));
         goto cleanup;
     }
 
     // Simulation.
     tmp = (memory_system_t*)test_malloc(sizeof(memory_system_t));
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
     memset(tmp, 0, sizeof(memory_system_t));
 
     tmp->total_allocated = 0;
@@ -141,10 +143,10 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
     void* tmp = NULL;
 
     // Preconditions.
-    CHECK_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "s_mem_sys_ptr")
-    CHECK_ARG_NULL_GOTO_CLEANUP(out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "out_ptr_")
-    CHECK_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "*out_ptr_")
-    CHECK_ARG_NOT_VALID_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, MEMORY_SYSTEM_INVALID_ARGUMENT, "memory_system_allocate", "mem_tag_")
+    IF_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "s_mem_sys_ptr")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "*out_ptr_")
+    IF_ARG_FALSE_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "mem_tag_")
     if(0 == size_) {
         WARN_MESSAGE("memory_system_allocate - No-op: size_ is 0.");
         ret = MEMORY_SYSTEM_SUCCESS;
@@ -152,18 +154,18 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
         ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_limit_exceeded, s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated > (SIZE_MAX - size_)) {
         ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", s_rslt_str_limit_exceeded, s_mem_sys_ptr->total_allocated, size_);
+        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->total_allocated, size_);
         goto cleanup;
     }
 
     // Simulation.
     tmp = test_malloc(size_);    // TODO: FreeList
-    CHECK_ALLOC_FAIL_GOTO_CLEANUP(tmp, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
     memset(tmp, 0, size_);
 
     // commit.
@@ -226,6 +228,23 @@ void memory_system_report(void) {
     fprintf(stdout, "\033[0m\n");
 cleanup:
     return;
+}
+
+static const char* rslt_to_str(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return s_rslt_str_success;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return s_rslt_str_invalid_argument;
+    case MEMORY_SYSTEM_RUNTIME_ERROR:
+        return s_rslt_str_runtime_error;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return s_rslt_str_no_memory;
+    default:
+        return s_rslt_str_undefined_error;
+    }
 }
 
 static void* test_malloc(size_t size_) {

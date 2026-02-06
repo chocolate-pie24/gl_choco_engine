@@ -21,14 +21,20 @@ extern "C" {
 #endif
 
 #include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/core/memory/linear_allocator.h"
+#include "engine/core/memory/choco_memory.h"
 
 /**
  * @brief レンダラーレイヤー実行結果コードを文字列に変換する
  *
- * @param result_ 実行結果コード
+ * @param rslt_ 実行結果コード
  * @return const char* 文字列化されたコード
  */
-const char* renderer_result_to_str(renderer_result_t result_);
+const char* renderer_rslt_to_str(renderer_result_t rslt_);
+
+renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+
+renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
-/** @ingroup platform_utils
+/** @ingroup platform_core
  *
- * @file platform_utils.h
+ * @file platform_types.h
  * @author chocolate-pie24
  * @brief プラットフォームシステムで共通に使用されるデータ型を提供する
  *
@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_CORE_PLATFORM_PLATFORM_UTILS_H
-#define GLCE_ENGINE_CORE_PLATFORM_PLATFORM_UTILS_H
+#ifndef GLCE_ENGINE_CORE_PLATFORM_PLATFORM_TYPES_H
+#define GLCE_ENGINE_CORE_PLATFORM_PLATFORM_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {

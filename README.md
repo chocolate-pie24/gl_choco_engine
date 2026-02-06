@@ -110,8 +110,8 @@ Forks are welcome for your own experiments and use.
 │           ├── renderer_backend
 │           │   └── gl33
 │           │       ├── gl33_shader.h
-│           │       ├── vertex_array_object.h
-│           │       └── vertex_buffer_object.h
+│           │       ├── gl33_vao.h
+│           │       └── gl33_vbo.h
 │           └── renderer_core
 │               ├── renderer_err_utils.h
 │               ├── renderer_memory.h
@@ -146,8 +146,8 @@ Forks are welcome for your own experiments and use.
 │   │       ├── renderer_backend
 │   │       │   └── gl33
 │   │       │       ├── gl33_shader.c
-│   │       │       ├── vertex_array_object.c
-│   │       │       └── vertex_buffer_object.c
+│   │       │       ├── gl33_vao.c
+│   │       │       └── gl33_vbo.c
 │   │       └── renderer_core
 │   │           ├── renderer_err_utils.c
 │   │           └── renderer_memory.c
@@ -158,8 +158,8 @@ Forks are welcome for your own experiments and use.
         │   ├── test_gl33_shader.h
         │   ├── test_renderer_err_utils.h
         │   ├── test_renderer_memory.h
-        │   ├── test_vertex_array_object.h
-        │   └── test_vertex_buffer_object.h
+        │   ├── test_gl33_vao.h
+        │   └── test_gl33_vbo.h
         ├── test_choco_string.h
         ├── test_filesystem.h
         ├── test_fs_utils.h
