@@ -825,6 +825,8 @@ static const char* keycode_str(keycode_t keycode_) {
         return s_key_f11;
     case KEY_F12:
         return s_key_f12;
+    case KEY_CODE_MAX:
+        return s_key_undefined;
     default:
         return s_key_undefined;
     }
@@ -1018,6 +1020,6 @@ static bool program_create(void) {
     fs_utils_destroy(&frag_fs_utils);
 
     ret = true;
-cleanup:
+
     return ret;
 }
