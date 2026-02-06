@@ -174,13 +174,16 @@ cleanup:
  * // エラー処理
  * @endcode
  *
- * @retval RENDERER_INVALID_ARGUMENT vertex_array_がNULL
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_array_ == NULL
+ * - out_vao_id_ == NULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "vertex_array_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vao_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "out_vao_id_")
     if(*out_vao_id_ != vertex_array_->vao_handle) {
         mock_glBindVertexArray(vertex_array_->vao_handle);
         *out_vao_id_ = vertex_array_->vao_handle;
@@ -206,16 +209,19 @@ cleanup:
  *
  * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
  *
+ * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
  * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindVertexArrayに対して個別にglGetErrorを行わないため、常に成功
  */
 static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_) {
-    (void)vertex_array_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_unbind", "vertex_array_")
 
     mock_glBindVertexArray(0);
 
     ret = RENDERER_SUCCESS;
 
+cleanup:
     return ret;
 }
 
@@ -248,12 +254,15 @@ static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_ar
  * );
  * @endcode
  *
+ * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
  * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
-    (void)vertex_array_;
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_attribute_set", "vertex_array_")
+
     switch(type_) {
     case RENDERER_TYPE_FLOAT:
         mock_glVertexAttribPointer(layout_, size_, GL_FLOAT, normalized_ ? GL_TRUE : GL_FALSE, stride_, (void*)offset_);
