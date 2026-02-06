@@ -163,8 +163,8 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
     platform_backend_->initialized_glfw = false;
 
     if(GL_FALSE == glfwInit()) {
-        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", rslt_to_str(ret));
         goto cleanup;
     }
     glfwWindowHint(GLFW_SAMPLES, 4);                // 4x アンチエイリアス
@@ -279,13 +279,13 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_width_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, PLATFORM_INVALID_ARGUMENT, "platform_glfw_window_create", "window_height_")
     if(!platform_backend_->initialized_glfw) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL != platform_backend_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -298,8 +298,8 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), NULL, NULL);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
     if(NULL == platform_backend_->window) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -309,8 +309,8 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
     glfwMakeContextCurrent(platform_backend_->window);
     glewExperimental = true;
     if(GLEW_OK != glewInit()) {
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", s_rslt_str_runtime_error);
         ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -664,7 +664,7 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
     case KEY_F12:
         return GLFW_KEY_F12;
     default:
-        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", s_rslt_str_invalid_argument);
+        ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", rslt_to_str(PLATFORM_INVALID_ARGUMENT));
         return GLFW_KEY_0;
     }
 }
