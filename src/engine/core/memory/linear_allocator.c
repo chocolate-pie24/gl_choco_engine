@@ -77,7 +77,7 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "memory_pool_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_init", "capacity_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "capacity_")
 
     allocator_->capacity = capacity_;
     allocator_->head_ptr = memory_pool_;
@@ -126,7 +126,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
         ret = LINEAR_ALLOC_SUCCESS;
         goto cleanup;
     }
-    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, "linear_allocator_allocate", "req_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_allocate", "req_align_")
 
     // Simulation
     head = (uintptr_t)allocator_->head_ptr;

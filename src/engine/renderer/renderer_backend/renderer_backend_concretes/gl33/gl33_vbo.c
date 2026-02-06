@@ -247,7 +247,7 @@ cleanup:
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, RENDERER_INVALID_ARGUMENT, "gl33_vbo_vertex_load", "load_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:
