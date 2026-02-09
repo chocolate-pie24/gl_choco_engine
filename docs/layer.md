@@ -157,32 +157,56 @@ graph TD
 
 ```mermaid
 graph TD
+  subgraph CORE[core]
+    direction TB
+    subgraph MEMORY[memory]
+      LINEAR_ALLOCATOR[linear_allocator]
+    end
+
+    subgraph EVENT[event]
+      KEYBOARD_EVENT[keyboard_event]
+      MOUSE_EVENT[mouse_event]
+      WINDOW_EVENT[window_event]
+    end
+
+  end
+
   subgraph CONTAINERS[containers]
     direction TB
     CHOCO_STRING[choco_string]
-    RING_QUEUE[ring_queue]
   end
 
-  subgraph PLATFORM[platform]
-    PLATFORM_CONTEXT[platform_context]
-    PLATFORM_INTERFACE[platform_interface]
+  subgraph PLATFORM_CORE[platform_core]
     direction TB
-    subgraph PLATFORM_CORE[platform_core]
-      direction TB
-      PLATFORM_TYPES[platform_types]
-    end
-    subgraph PLATFORM_CONCRETES[platform_concretes]
-      direction TB
-      PLATFORM_GLFW[platform_glfw]
-    end
+    PLATFORM_ERR_UTILS[platform_err_utils]
+    PLATFORM_TYPES[platform_types]
   end
-  PLATFORM_INTERFACE --> PLATFORM_TYPES
-  PLATFORM_GLFW --> PLATFORM_INTERFACE
-  PLATFORM_GLFW --> CHOCO_STRING
-  PLATFORM_GLFW --> PLATFORM_TYPES
-  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
+  PLATFORM_ERR_UTILS --> PLATFORM_TYPES
+
+  PLATFORM_INTERFACE[platform_interface]
+
+  subgraph PLATFORM_CONCRETES[platform_concretes]
+    direction TB
+    PLATFORM_GLFW[platform_glfw]
+  end
+
+  PLATFORM_CONTEXT[platform_context]
+
+  PLATFORM_CONTEXT --> LINEAR_ALLOCATOR
+  PLATFORM_CONTEXT --> PLATFORM_CORE
   PLATFORM_CONTEXT --> PLATFORM_GLFW
-  PLATFORM_CONTEXT --> PLATFORM_TYPES
+  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
+  PLATFORM_CONTEXT --> EVENT
+
+  PLATFORM_GLFW --> PLATFORM_CORE
+  PLATFORM_GLFW --> EVENT
+  PLATFORM_GLFW --> CHOCO_STRING
+
+  PLATFORM_INTERFACE --> PLATFORM_TYPES
+  PLATFORM_INTERFACE --> EVENT
+
+  PLATFORM_ERR_UTILS --> LINEAR_ALLOCATOR
+  PLATFORM_ERR_UTILS --> CHOCO_STRING
 ```
 
 ## Detailed view: Renderer
