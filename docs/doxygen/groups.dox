@@ -54,11 +54,6 @@
     @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
 */
 
-/** @defgroup platform_utils Platform Utils
-    @ingroup core
-    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
-*/
-
 /** @defgroup containers Containers
     @brief リソースの管理責務を有する各種データを格納可能なコンテナを提供する
 */
@@ -73,38 +68,67 @@
     @brief ジェネリック型のリングキューオブジェクト定義と関連APIを提供する
 */
 
-/** @defgroup interfaces Interfaces
-    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
+/** @defgroup io_utils
+    @ingroup engine
+    @brief ファイル入出力等のI/O関連ユーティリティを提供する
+*/
+
+/** @defgroup platform Platform
+    @ingroup engine
+    @brief プラットフォームサブシステムでプラットフォーム固有の実装を差し替え可能な仕組みを提供する
+*/
+
+/** @defgroup platform_core Platform Core
+    @ingroup platform
+    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
 */
 
 /** @defgroup platform_interface Platform Interface
-    @ingroup interfaces
-    @brief プラットフォームシステムのInterface構造体を提供する
+    @ingroup platform
+    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
 */
 
 /** @defgroup platform_concretes Platform Concretes
+    @ingroup platform
     @brief プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
-*/
-
-/** @defgroup platform_glfw Platform GLFW
-    @ingroup platform_concretes
-    @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
 */
 
 /** @defgroup platform_context Platform Context
     @brief プラットフォームシステムのStrategy Contextモジュールを提供する
 */
 
-/** @defgroup renderer RENDERER
-    @brief 描画関連APIを提供する
+/** @defgroup renderer Renderer
+    @ingroup engine
+    @brief レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する
 */
 
-/** @defgroup renderer_base RENDERER_BASE
+/** @defgroup renderer_backend Renderer Backend
     @ingroup renderer
-    @brief 描画関連APIの最下層で全モジュールから使用されるAPI, データ構造を提供する
+    @brief 使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する
+    @note GLCEは当面はOpenGL3.3をターゲットとしているが、将来的には別のバージョンのOpenGLや、Vulkanの使用も視野に入れている
 */
 
-/** @defgroup renderer_types RENDERER_TYPES
-    @ingroup renderer_base
-    @brief 描画関連APIレイヤーにおいて、全モジュールから使用されるデータ構造を提供する
+/** @defgroup renderer_backend_context Renderer Backend Context
+    @ingroup renderer_backend
+    @brief 上位層がレンダラーバックエンドが保有する機能を使用するための窓口
+*/
+
+/** @defgroup renderer_backend_concretes Renderer Backend Concretes
+    @ingroup renderer_backend
+    @brief 各グラフィックスAPI固有のバックエンド実装を格納する場所で、グラフ一クスAPIごとにグループを作成し、実装を格納する
+*/
+
+/** @defgroup gl33 OpenGL3.3
+    @ingroup renderer_backend_concretes
+    @brief OpenGL3.3用のバックエンド実装を格納する
+*/
+
+/** @defgroup renderer_backend_interface Renderer Backend Interface
+    @ingroup renderer_backend
+    @brief グラフィックスAPIごとのバックエンド実装の仮想関数テーブルを定義する
+*/
+
+/** @defgroup renderer_core Renderer Core
+    @ingroup renderer
+    @brief レンダラーサブシステム全体から使用されるモジュールを提供する
 */
