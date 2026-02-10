@@ -4,7 +4,6 @@ This document describes the high-level layering and module dependencies of GL CH
 
 - [GLCE Architecture (Layered Architecture)](#glce-architecture-layered-architecture)
   - [Dependency rules](#dependency-rules)
-  - [Engine foundation](#engine-foundation)
   - [Engine overview](#engine-overview)
   - [Detailed view: Platform](#detailed-view-platform)
   - [Detailed view: Renderer](#detailed-view-renderer)
@@ -19,72 +18,26 @@ This document describes the high-level layering and module dependencies of GL CH
 
 ## Dependency rules
 
-- Dependencies are allowed only from higher layers to lower layers.
+- Dependencies must not point upward (from lower layers to higher layers).
 - Circular dependencies are not allowed.
-
-## Engine foundation
-
-The foundation layer provides modules that are available across the entire engine.
-This section corresponds to engine/base and engine/core.
-
-```mermaid
-graph TD
-  subgraph BASE[base]
-    direction TB
-    CHOCO_MESSAGE[choco_message]
-    CHOCO_MACROS[choco_macros]
-  end
-  CHOCO_MACROS --> CHOCO_MESSAGE
-
-  subgraph CORE[core]
-    direction TB
-    subgraph EVENT[event]
-      direction TB
-      KEYBOARD_EVENT[keyboard_event]
-      MOUSE_EVENT[mouse_event]
-      WINDOW_EVENT[window_event]
-    end
-
-    subgraph MEMORY[memory]
-      direction TB
-      CHOCO_MEMORY[choco_memory]
-      LINEAR_ALLOCATOR[linear_allocator]
-    end
-
-    FILESYSTEM[filesystem]
-  end
-  FILESYSTEM --> CHOCO_MACROS
-  FILESYSTEM --> CHOCO_MESSAGE
-  FILESYSTEM --> CHOCO_MEMORY
-  CHOCO_MEMORY --> CHOCO_MACROS
-  CHOCO_MEMORY --> CHOCO_MESSAGE
-  LINEAR_ALLOCATOR --> CHOCO_MACROS
-  LINEAR_ALLOCATOR --> CHOCO_MESSAGE
-```
 
 ## Engine overview
 
 This diagram shows the module dependencies at the engine level.
 
-In this overview, dependencies on the base and core layers are omitted to keep the diagram readable,
-since all engine modules may depend on them.
-
-The renderer frontend has not been implemented yet, so the application currently uses some backend modules directly; this will be removed once the frontend is introduced.
-
 ```mermaid
 graph TD
   APPLICATION[application]
-  APPLICATION --> RING_QUEUE
-  APPLICATION --> FS_UTILS
-  APPLICATION --> PLATFORM_CONTEXT
-  APPLICATION --> RENDERER_TYPES
-  APPLICATION --> GL33_VBO
-  APPLICATION --> GL33_VAO
-  APPLICATION --> GL33_SHADER
-  APPLICATION --> PLATFORM_TYPES
 
   subgraph ENGINE[engine]
-    direction TB
+    subgraph SYSTEMS[systems]
+      PLATFORM[platform]
+      RENDERER[renderer]
+    end
+
+    subgraph IO_UTILS[io_utils]
+      FS_UTILS[fs_utils]
+    end
 
     subgraph CONTAINERS[containers]
       direction TB
@@ -92,65 +45,25 @@ graph TD
       RING_QUEUE[ring_queue]
     end
 
-    subgraph IO_UTILS[io_utils]
-      direction TB
-      FS_UTILS[fs_utils]
-    end
-    FS_UTILS --> CHOCO_STRING
-
-    subgraph PLATFORM[platform]
-      PLATFORM_CONTEXT[platform_context]
-      PLATFORM_INTERFACE[platform_interface]
-
-      direction TB
-      subgraph PLATFORM_CORE[platform_core]
-        direction TB
-        PLATFORM_TYPES[platform_types]
-      end
-      subgraph PLATFORM_CONCRETES[platform_concretes]
-        direction TB
-        PLATFORM_GLFW[platform_glfw]
-      end
-    end
-    PLATFORM_INTERFACE --> PLATFORM_TYPES
-    PLATFORM_GLFW --> PLATFORM_INTERFACE
-    PLATFORM_GLFW --> CHOCO_STRING
-    PLATFORM_GLFW --> PLATFORM_TYPES
-    PLATFORM_CONTEXT --> PLATFORM_INTERFACE
-    PLATFORM_CONTEXT --> PLATFORM_GLFW
-    PLATFORM_CONTEXT --> PLATFORM_TYPES
-
-    subgraph RENDERER[renderer]
-      direction TB
-      subgraph RENDERER_BACKEND[renderer_backend]
-        direction TB
-        subgraph GL33[gl33]
-          direction TB
-          GL33_SHADER[gl33_shader]
-          GL33_VAO[gl33_vao]
-          GL33_VBO[gl33_vbo]
-        end
-      end
-      subgraph RENDERER_CORE[renderer_core]
-        direction TB
-        RENDERER_ERR_UTILS[renderer_err_utils]
-        RENDERER_MEMORY[renderer_memory]
-        RENDERER_TYPES[renderer_types]
-      end
-    end
-    GL33_SHADER --> RENDERER_TYPES
-    GL33_SHADER --> RENDERER_MEMORY
-    GL33_SHADER --> RENDERER_ERR_UTILS
-
-    GL33_VAO --> RENDERER_TYPES
-    GL33_VAO --> RENDERER_ERR_UTILS
-    GL33_VAO --> RENDERER_MEMORY
-    GL33_VBO --> RENDERER_TYPES
-    GL33_VBO --> RENDERER_ERR_UTILS
-    GL33_VBO --> RENDERER_MEMORY
-    RENDERER_ERR_UTILS --> RENDERER_TYPES
-    RENDERER_MEMORY --> RENDERER_TYPES
+    CORE[core]
+    BASE[base]
   end
+
+  APPLICATION --> PLATFORM
+  APPLICATION --> RENDERER
+  APPLICATION --> IO_UTILS
+  APPLICATION --> CORE
+
+  PLATFORM --> CONTAINERS
+  PLATFORM --> CORE
+  RENDERER --> CORE
+
+  IO_UTILS --> CONTAINERS
+  IO_UTILS --> CORE
+
+  CONTAINERS --> CORE
+
+  CORE --> BASE
 ```
 
 ## Detailed view: Platform
@@ -159,16 +72,13 @@ graph TD
 graph TD
   subgraph CORE[core]
     direction TB
-    subgraph MEMORY[memory]
-      LINEAR_ALLOCATOR[linear_allocator]
-    end
-
     subgraph EVENT[event]
+      direction TB
       KEYBOARD_EVENT[keyboard_event]
       MOUSE_EVENT[mouse_event]
       WINDOW_EVENT[window_event]
     end
-
+    CHOCO_MEMORY[choco_memory]
   end
 
   subgraph CONTAINERS[containers]
@@ -176,47 +86,67 @@ graph TD
     CHOCO_STRING[choco_string]
   end
 
-  subgraph PLATFORM_CORE[platform_core]
+  subgraph PLATFORM[platform]
     direction TB
-    PLATFORM_ERR_UTILS[platform_err_utils]
-    PLATFORM_TYPES[platform_types]
+
+    PLATFORM_CONTEXT[platform_context]
+
+    subgraph PLATFORM_CORE[platform_core]
+      direction TB
+      PLATFORM_ERR_UTILS[platform_err_utils]
+      PLATFORM_TYPES[platform_types]
+    end
+
+    PLATFORM_INTERFACE[platform_interface]
+
+    subgraph PLATFORM_CONCRETES[platform_concretes]
+      direction TB
+      PLATFORM_GLFW[platform_glfw]
+    end
   end
-  PLATFORM_ERR_UTILS --> PLATFORM_TYPES
 
-  PLATFORM_INTERFACE[platform_interface]
-
-  subgraph PLATFORM_CONCRETES[platform_concretes]
-    direction TB
-    PLATFORM_GLFW[platform_glfw]
-  end
-
-  PLATFORM_CONTEXT[platform_context]
-
-  PLATFORM_CONTEXT --> LINEAR_ALLOCATOR
   PLATFORM_CONTEXT --> PLATFORM_CORE
   PLATFORM_CONTEXT --> PLATFORM_GLFW
   PLATFORM_CONTEXT --> PLATFORM_INTERFACE
   PLATFORM_CONTEXT --> EVENT
 
   PLATFORM_GLFW --> PLATFORM_CORE
-  PLATFORM_GLFW --> EVENT
   PLATFORM_GLFW --> CHOCO_STRING
+  PLATFORM_GLFW --> PLATFORM_INTERFACE
 
   PLATFORM_INTERFACE --> PLATFORM_TYPES
   PLATFORM_INTERFACE --> EVENT
 
-  PLATFORM_ERR_UTILS --> LINEAR_ALLOCATOR
-  PLATFORM_ERR_UTILS --> CHOCO_STRING
+  PLATFORM_ERR_UTILS -->|error_code type only| CHOCO_STRING
+
+  CHOCO_STRING --> CHOCO_MEMORY
 ```
 
 ## Detailed view: Renderer
 
+The renderer frontend has not been implemented yet, so the application currently uses some backend modules directly; this will be removed once the frontend is introduced.
+
 ```mermaid
 graph TD
-  subgraph RENDERER[renderer]
+  subgraph RENDERER_CORE[renderer_core]
     direction TB
-    subgraph RENDERER_BACKEND[renderer_backend]
+    RENDERER_ERR_UTILS[renderer_err_utils]
+    RENDERER_MEMORY[renderer_memory]
+    RENDERER_TYPES[renderer_types]
+  end
+
+  subgraph RENDERER_BACKEND[renderer_backend]
+    direction TB
+    RENDERER_BACKEND_CONTEXT[renderer_backend_context]
+
+    subgraph RENDERER_BACKEND_INTERFACE[renderer_backend_interface]
       direction TB
+      SHADER[shader]
+      VERTEX_ARRAY_OBJECT[vertex_array_object]
+      VERTEX_BUFFER_OBJECT[vertex_buffer_object]
+    end
+
+    subgraph RENDERER_BACKEND_CONCRETES[renderer_backend_concretes]
       subgraph GL33[gl33]
         direction TB
         GL33_SHADER[gl33_shader]
@@ -224,25 +154,18 @@ graph TD
         GL33_VBO[gl33_vbo]
       end
     end
-    subgraph RENDERER_CORE[renderer_core]
-      direction TB
-      RENDERER_ERR_UTILS[renderer_err_utils]
-      RENDERER_MEMORY[renderer_memory]
-      RENDERER_TYPES[renderer_types]
-    end
   end
-  GL33_SHADER --> RENDERER_TYPES
-  GL33_SHADER --> RENDERER_MEMORY
-  GL33_SHADER --> RENDERER_ERR_UTILS
 
-  GL33_VAO --> RENDERER_TYPES
-  GL33_VAO --> RENDERER_ERR_UTILS
-  GL33_VAO --> RENDERER_MEMORY
-  GL33_VBO --> RENDERER_TYPES
-  GL33_VBO --> RENDERER_ERR_UTILS
-  GL33_VBO --> RENDERER_MEMORY
-  RENDERER_ERR_UTILS --> RENDERER_TYPES
-  RENDERER_MEMORY --> RENDERER_TYPES
+  RENDERER_BACKEND_CONTEXT --> RENDERER_TYPES
+  RENDERER_BACKEND_CONTEXT --> RENDERER_ERR_UTILS
+  RENDERER_BACKEND_CONTEXT --> RENDERER_BACKEND_INTERFACE
+  RENDERER_BACKEND_CONTEXT --> GL33
+
+  GL33 --> RENDERER_BACKEND_INTERFACE
+  GL33 --> RENDERER_MEMORY
+
+  RENDERER_BACKEND_INTERFACE --> RENDERER_TYPES
+  GL33 --> RENDERER_ERR_UTILS
 ```
 
 ## Layer Reference
@@ -295,6 +218,7 @@ GLCE abstracts the platform subsystem using a Strategy-style interface (function
 - Characteristics: Requires explicit initialization. Once initialized, the platform subsystem remains active for the lifetime of the application (until shutdown).
 - Modules:
   - platform_core/platform_types: Common data types used across the platform subsystem.
+  - platform_core/platform_err_utils: Provides utilities to translate lower-layer error codes into platform subsystem error codes, and to convert platform subsystem error codes into human-readable strings.
   - platform_interface: Defines the platform interface as a function table (vtable-like) shared by all platform backends.
   - platform_concretes/platform_glfw: GLFW-based backend implementation that provides the concrete function table for the platform interface.
   - platform_context: Strategy context and public entry point for the platform subsystem, responsible for initialization, backend selection, lifecycle management, and dispatching API calls through the interface.
@@ -307,9 +231,14 @@ This will be removed once the frontend is introduced.
 - Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future (e.g., other OpenGL versions or Vulkan). The long-term design separates a frontend (API-agnostic layer) from backend implementations (graphics-API-specific layers).
 - Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).
 - Modules:
-  - renderer_backend/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
-  - renderer_backend/gl33/gl33_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
-  - renderer_backend/gl33/gl33_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
-  - renderer_core/renderer_err_utils: Utilities for converting renderer result/error codes to human-readable strings.
+  - renderer_backend/renderer_backend_context: The public entry point for higher layers to access renderer functionality (initialization, backend wiring, and dispatch).
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
+  - renderer_backend/renderer_backend_interface/shader: Defines the shader interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_interface/vertex_array_object: Defines the VAO interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_interface/vertex_buffer_object: Defines the VBO interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_types: Defines common data types shared across the entire renderer backend layer (shader, VAO, and VBO modules).
+  - renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.
   - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
   - renderer_core/renderer_types: Common data types shared across the renderer subsystem.
