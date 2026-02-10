@@ -53,6 +53,7 @@ graph TD
   APPLICATION --> RENDERER
   APPLICATION --> IO_UTILS
   APPLICATION --> CORE
+  APPLICATION --> CONTAINERS
 
   PLATFORM --> CONTAINERS
   PLATFORM --> CORE
@@ -78,7 +79,11 @@ graph TD
       MOUSE_EVENT[mouse_event]
       WINDOW_EVENT[window_event]
     end
-    CHOCO_MEMORY[choco_memory]
+    subgraph MEMORY[memory]
+      direction TB
+      CHOCO_MEMORY[choco_memory]
+      LINEAR_ALLOCATOR[linear_allocator]
+    end
   end
 
   subgraph CONTAINERS[containers]
@@ -109,15 +114,18 @@ graph TD
   PLATFORM_CONTEXT --> PLATFORM_GLFW
   PLATFORM_CONTEXT --> PLATFORM_INTERFACE
   PLATFORM_CONTEXT --> EVENT
+  PLATFORM_CONTEXT --> |init parameter| LINEAR_ALLOCATOR
 
   PLATFORM_GLFW --> PLATFORM_CORE
   PLATFORM_GLFW --> CHOCO_STRING
   PLATFORM_GLFW --> PLATFORM_INTERFACE
+  PLATFORM_GLFW --> EVENT
 
   PLATFORM_INTERFACE --> PLATFORM_TYPES
   PLATFORM_INTERFACE --> EVENT
 
   PLATFORM_ERR_UTILS -->|error_code type only| CHOCO_STRING
+  PLATFORM_ERR_UTILS -->|error code type only| LINEAR_ALLOCATOR
 
   CHOCO_STRING --> CHOCO_MEMORY
 ```
@@ -128,11 +136,18 @@ The renderer frontend has not been implemented yet, so the application currently
 
 ```mermaid
 graph TD
+  subgraph CORE[core]
+    direction TB
+    subgraph MEMORY[memory]
+      direction TB
+      LINEAR_ALLOCATOR[linear_allocator]
+      CHOCO_MEMORY[choco_memory]
+    end
+  end
   subgraph RENDERER_CORE[renderer_core]
     direction TB
     RENDERER_ERR_UTILS[renderer_err_utils]
     RENDERER_MEMORY[renderer_memory]
-    RENDERER_TYPES[renderer_types]
   end
 
   subgraph RENDERER_BACKEND[renderer_backend]
@@ -156,16 +171,20 @@ graph TD
     end
   end
 
-  RENDERER_BACKEND_CONTEXT --> RENDERER_TYPES
   RENDERER_BACKEND_CONTEXT --> RENDERER_ERR_UTILS
   RENDERER_BACKEND_CONTEXT --> RENDERER_BACKEND_INTERFACE
   RENDERER_BACKEND_CONTEXT --> GL33
+  RENDERER_BACKEND_CONTEXT --> |init parameter| LINEAR_ALLOCATOR
 
   GL33 --> RENDERER_BACKEND_INTERFACE
   GL33 --> RENDERER_MEMORY
 
-  RENDERER_BACKEND_INTERFACE --> RENDERER_TYPES
   GL33 --> RENDERER_ERR_UTILS
+
+  RENDERER_MEMORY --> CHOCO_MEMORY
+
+  RENDERER_ERR_UTILS -->|error_code type only| CHOCO_MEMORY
+  RENDERER_ERR_UTILS -->|error_code type only| LINEAR_ALLOCATOR
 ```
 
 ## Layer Reference
@@ -198,7 +217,7 @@ graph TD
 ### engine/containers
 
 - Purpose: Provides container modules that encapsulate resource ownership and management.
-- Characteristics: Initialization-free; usable immediately at startup.
+- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
 - Modules:
   - ring_queue: Generic ring queue (ring buffer) container module.
   - choco_string: String container module with basic string operations.
@@ -206,14 +225,13 @@ graph TD
 ### engine/io_utils
 
 - Purpose: Provides higher-level I/O utilities that go beyond the standard C library by building on other GLCE modules.
-- Characteristics: Initialization-free; usable immediately at startup.
+- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
 - Modules:
   - fs_utils: Higher-level file I/O utilities on top of **filesystem**, such as loading an entire text file.
 
 ### engine/platform
 
-- Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency.
-To keep room for future non-GLFW implementations,
+- Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency. To keep room for future non-GLFW implementations,
 GLCE abstracts the platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.
 - Characteristics: Requires explicit initialization. Once initialized, the platform subsystem remains active for the lifetime of the application (until shutdown).
 - Modules:
@@ -231,7 +249,10 @@ This will be removed once the frontend is introduced.
 - Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future (e.g., other OpenGL versions or Vulkan). The long-term design separates a frontend (API-agnostic layer) from backend implementations (graphics-API-specific layers).
 - Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).
 - Modules:
-  - renderer_backend/renderer_backend_context: The public entry point for higher layers to access renderer functionality (initialization, backend wiring, and dispatch).
+  - renderer_backend/renderer_backend_context/renderer_backend_context: The primary entry point and orchestration layer for the renderer backend. It wires the selected backend implementation and dispatches calls from higher layers through the backend interfaces, while exposing a small set of facade headers (shader/VAO/VBO contexts) as the public API surface.
+  - renderer_backend/renderer_backend_context/renderer_backend_shader_context: Provides a thin facade (public API surface) for shader-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
+  - renderer_backend/renderer_backend_context/renderer_backend_vao_context: Provides a thin facade (public API surface) for VAO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
+  - renderer_backend/renderer_backend_context/renderer_backend_vbo_context: Provides a thin facade (public API surface) for VBO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
   - renderer_backend/renderer_backend_concretes/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
   - renderer_backend/renderer_backend_concretes/gl33/gl33_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
   - renderer_backend/renderer_backend_concretes/gl33/gl33_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
