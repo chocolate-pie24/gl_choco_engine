@@ -2,10 +2,10 @@
  *
  * @file renderer_err_utils.h
  * @author chocolate-pie24
- * @brief レンダラーレイヤー全体で使用されるエラー処理関連APIを提供する
+ * @brief renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
  *
  * @version 0.1
- * @date 2025-12.19
+ * @date 2026-02-12
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
@@ -25,15 +25,27 @@ extern "C" {
 #include "engine/core/memory/choco_memory.h"
 
 /**
- * @brief レンダラーレイヤー実行結果コードを文字列に変換する
+ * @brief ログ出力用にレンダラーレイヤーの実行結果コードを文字列に変換する
  *
  * @param rslt_ 実行結果コード
- * @return const char* 文字列化されたコード
+ * @return const char* 文字列化された実行結果コード
  */
 const char* renderer_rslt_to_str(renderer_result_t rslt_);
 
+/**
+ * @brief 下位モジュールであるlinear_allocatorが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する
+ *
+ * @param rslt_ linear_allocatorモジュールが出力する実行結果コード
+ * @return renderer_result_t 変換されたレンダラーレイヤーの実行結果コード
+ */
 renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
+/**
+ * @brief 下位モジュールであるchoco_memoryが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する
+ *
+ * @param rslt_ choco_memoryモジュールが出力する実行結果コード
+ * @return renderer_result_t 変換されたレンダラーレイヤーの実行結果コード
+ */
 renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_);
 
 #ifdef __cplusplus

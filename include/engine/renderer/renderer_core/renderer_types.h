@@ -46,7 +46,7 @@ typedef enum {
 } renderer_result_t;
 
 /**
- * @brief OpenGL固有の型を上位層で使用しないで済むよう、GPUに転送する頂点情報のデータ種別(書き換え頻度)リスト
+ * @brief 上位層で頂点情報データ種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、頂点情報のデータ種別を定義
  *
  */
 typedef enum {
@@ -55,16 +55,20 @@ typedef enum {
 } buffer_usage_t;
 
 /**
- * @brief OpenGL固有の型を上位層で使用しないで済むよう、OpenGL固有型の上位型を定義
+ * @brief 上位層でグラフィックスAPI固有の変数型を使用しないで済むよう、グラフィックスAPI固有型を定義
  *
  */
 typedef enum {
     RENDERER_TYPE_FLOAT,    /**< データ型: GLfloat */
 } renderer_type_t;
 
+/**
+ * @brief 上位層でシェーダー種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、シェーダー種別リストを定義
+ *
+ */
 typedef enum {
-    SHADER_TYPE_VERTEX,
-    SHADER_TYPE_FRAGMENT,
+    SHADER_TYPE_VERTEX,     /**< バーテックスシェーダー */
+    SHADER_TYPE_FRAGMENT,   /**< フラグメントシェーダー */
 } shader_type_t;
 
 #ifdef __cplusplus

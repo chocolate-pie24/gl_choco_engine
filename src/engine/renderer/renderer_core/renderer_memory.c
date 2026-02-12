@@ -56,9 +56,9 @@ void render_mem_free(void* ptr_, size_t size_) {
 }
 
 #ifdef TEST_BUILD
-void render_mem_test_param_set(renderer_result_t err_code_) {
+void render_mem_test_param_set(renderer_result_t result_code_) {
     s_test_param.test_enable = true;
-    s_test_param.err_code = err_code_;
+    s_test_param.err_code = result_code_;
 }
 
 void render_mem_test_param_reset(void) {
