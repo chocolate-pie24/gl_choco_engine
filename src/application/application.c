@@ -461,7 +461,8 @@ cleanup:
 }
 
 /**
- * @brief ウィンドウ関連イベントコールバック
+ * @brief event_をウィンドウイベント用リングキューに格納する
+ * @note ウィンドウイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -488,7 +489,8 @@ cleanup:
 }
 
 /**
- * @brief キーボード関連イベントコールバック
+ * @brief event_をキーボードイベント用リングキューに格納する
+ * @note キーボードイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -515,7 +517,8 @@ cleanup:
 }
 
 /**
- * @brief マウス関連イベントコールバック
+ * @brief event_をマウスイベント用リングキューに格納する
+ * @note マウスイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -542,7 +545,7 @@ cleanup:
 }
 
 /**
- * @brief イベントキューに格納されているイベントに基づきアプリケーションの状態を更新する
+ * @brief イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する
  *
  */
 static void app_state_update(void) {
@@ -837,7 +840,7 @@ static const char* keycode_str(keycode_t keycode_) {
 }
 
 /**
- * @brief アプリケーション実行結果コードを文字列に変換し出力する
+ * @brief アプリケーション実行結果コードを文字列に変換する
  *
  * @param rslt_ アプリケーション実行結果コード
  * @return const char* 変換された文字列
@@ -868,7 +871,7 @@ static const char* rslt_to_str(application_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ メモリシステム実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -891,7 +894,7 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ リニアアロケータ実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -910,7 +913,7 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 }
 
 /**
- * @brief エラー伝播のため、プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ プラットフォームシステム実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -943,7 +946,7 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、リングキュー実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief リングキュー実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ リングキュー実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -973,6 +976,12 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     }
 }
 
+/**
+ * @brief レンダラーシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ レンダラーシステム実行結果コード
+ * @return application_result_t アプリケーション実行結果コード
+ */
 static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
     switch(rslt_) {
     case RENDERER_SUCCESS:
@@ -995,9 +1004,17 @@ static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
         return APPLICATION_DATA_CORRUPTED;
     case RENDERER_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
     }
 }
 
+/**
+ * @brief シェーダープログラムをロード、コンパイル、リンクし、プログラムを生成する
+ *
+ * @retval true プログラム生成成功
+ * @retval false プログラム生成失敗
+ */
 static bool program_create(void) {
     bool ret = false;
 
@@ -1011,11 +1028,15 @@ static bool program_create(void) {
     fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);   // TODO: エラー処理
     fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);     // TODO: エラー処理
 
+    // シェーダープログラムロード
     fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
     fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
 
+    // シェーダープログラムコンパイル
     renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->ui_renderer_context, s_app_state->ui_shader);
     renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->ui_renderer_context, s_app_state->ui_shader);
+
+    // シェーダープログラムリンク
     renderer_backend_shader_link(s_app_state->ui_renderer_context, s_app_state->ui_shader);
 
     choco_string_destroy(&vert_shader_source);

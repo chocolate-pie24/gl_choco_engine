@@ -343,6 +343,12 @@ const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_) {
     return ret;
 }
 
+/**
+ * @brief filesystemモジュール実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 実行結果コード
+ * @return const char* 変換された文字列の先頭アドレス
+ */
 static const char* rslt_to_str(filesystem_result_t rslt_) {
     switch(rslt_) {
     case FILESYSTEM_SUCCESS:
@@ -368,6 +374,13 @@ static const char* rslt_to_str(filesystem_result_t rslt_) {
     }
 }
 
+/**
+ * @brief mode_がREAD可能なファイルオープンモードかを判定する
+ *
+ * @param mode_ 判定対象モード
+ * @return true READ可能
+ * @return false READ不可
+ */
 static bool open_mode_readable(filesystem_open_mode_t mode_) {
     bool ret = false;
     switch(mode_) {
@@ -417,6 +430,17 @@ static bool open_mode_readable(filesystem_open_mode_t mode_) {
     return ret;
 }
 
+/**
+ * @brief fopenのモック関数で、fopenの実行結果をテスト設定に合わせて制御する
+ *
+ * @note
+ * - TEST_BUILDで、s_fs_test_param.fopen_mock_return_nullがtrueであればNULLを返す
+ * - TEST_BUILDで、s_fs_test_param.fopen_mock_return_nullがfalseまたは非TEST_BUILDでfopenを実行する
+ *
+ * @param fullpath_ オープン対象ファイルのフルパス
+ * @param mode_ ファイルオープンモード
+ * @return FILE* オープンされたファイルハンドル
+ */
 static FILE* NO_COVERAGE mock_fopen(const char* fullpath_, const char* mode_) {
 #ifdef TEST_BUILD
     if(s_fs_test_param.fopen_mock_return_null) {
@@ -429,6 +453,16 @@ static FILE* NO_COVERAGE mock_fopen(const char* fullpath_, const char* mode_) {
 #endif
 }
 
+/**
+ * @brief fcloseのモック関数で、fcloseの実行結果をテスト設定に合わせて制御する
+ *
+ * @note
+ * - TEST_BUILDで、s_fs_test_param.fclose_mock_return_eofがtrueであればEOFを返す
+ * - TEST_BUILDで、s_fs_test_param.fclose_mock_return_eofがfalseまたは非TEST_BUILDでfcloseを実行する
+ *
+ * @param stream_ クローズ対象ファイルハンドル
+ * @return int クローズ結果
+ */
 static int NO_COVERAGE mock_fclose(FILE* stream_) {
 #ifdef TEST_BUILD
     if(s_fs_test_param.fclose_mock_return_eof) {
@@ -441,6 +475,23 @@ static int NO_COVERAGE mock_fclose(FILE* stream_) {
 #endif
 }
 
+/**
+ * @brief freadのモック関数で、freadの実行結果をテスト設定に合わせて制御する
+ *
+ * @note TEST_BUILDかつ、s_fs_test_param.fread_test_enableがtrueの時にテスト設定が有効となり、下記の動作を行う
+ * - s_fs_test_param.fread_test_case == FREAD_EOF: EOFかつ、読み込みバイト数が指定バイト数未満とするため、nmemb_ - 1を返す
+ * - s_fs_test_param.fread_test_case == FREAD_EOF_0READ: EOFかつ、読み込みバイト数0とするため、0を返す
+ * - s_fs_test_param.fread_test_case == FREAD_ERROR: 読み込みエラーとするため、nmemb - 1を返す
+ * - s_fs_test_param.fread_test_case == FREAD_SUCCESS: 通常のfread処理を行う
+ * - s_fs_test_param.fread_test_case == FREAD_UNDEFINED: 未定義テストケースでnmemb - 1を返す
+ * - 上記以外は通常のfread処理を行う
+ *
+ * @param ptr_ 読み込んだ文字列の格納先バッファ
+ * @param size_ 読み込むデータ１つのバイト数
+ * @param nmemb_ 読み込むデータの個数
+ * @param stream_ 読み込み対象ファイルハンドル
+ * @return size_t 読み込んだデータの個数
+ */
 static size_t NO_COVERAGE mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_) {
 #ifdef TEST_BUILD
     if(s_fs_test_param.fread_test_enable) {
@@ -465,6 +516,21 @@ static size_t NO_COVERAGE mock_fread(void *ptr_, size_t size_, size_t nmemb_, FI
 #endif
 }
 
+/**
+ * @brief ferrorのモック関数で、ferrorの実行結果をテスト設定に合わせて制御する
+ *
+ * @note TEST_BUILDかつ、s_fs_test_param.fread_test_enableがtrueの時にテスト設定が有効となり、下記の動作を行う
+ * - s_fs_test_param.fread_test_case == FREAD_EOF: freadの結果がEOFかつ、読み込みバイト数0の状況を想定し、0(エラーなし)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_EOF_0READ: freadの結果がEOFかつ、読み込みバイト数0の状況を想定し、0(エラーなし)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_ERROR: freadでエラーが発生した状況を想定し、1(エラーあり)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_SUCCESS: 通常のferrorを実行する
+ * - s_fs_test_param.fread_test_case == FREAD_UNDEFINED: 無効なテストケースで0(エラーなし)を返す
+ * - 上記以外は通常のferrorを実行する
+ *
+ * @param stream_ ストリームのテスト対象となるファイルハンドル
+ * @retval 0 エラーなし
+ * @retval 0以外 エラーあり
+ */
 static int NO_COVERAGE mock_ferror(FILE *stream_) {
 #ifdef TEST_BUILD
     if(s_fs_test_param.fread_test_enable) {
@@ -489,6 +555,21 @@ static int NO_COVERAGE mock_ferror(FILE *stream_) {
 #endif
 }
 
+/**
+ * @brief feofのモック関数で、feofの実行結果をテスト設定に合わせて制御する
+ *
+ * @note TEST_BUILDかつ、s_fs_test_param.fread_test_enableがtrueの時にテスト設定が有効となり、下記の動作を行う
+ * - s_fs_test_param.fread_test_case == FREAD_EOF: freadの実行結果がEOFかつ、読み込みバイト数が指定バイト数未満の状況を想定し、1(EOF)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_EOF_0READ: freadの実行結果がEOFかつ、読み込みバイト数0の状況を想定し、1(EOF)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_ERROR: freadの実行結果がエラーの状況を想定し、0(EOF以外)を返す
+ * - s_fs_test_param.fread_test_case == FREAD_SUCCESS: 通常のfeofを実行する
+ * - s_fs_test_param.fread_test_case == FREAD_UNDEFINED: 無効なテストケースで0(EOF以外)を返す
+ * - 上記以外は通常のfeofを実行する
+ *
+ * @param stream_ EOF判定対象ファイルハンドル
+ * @retval 0 EOF以外
+ * @retval 0以外 EOF
+ */
 static int NO_COVERAGE mock_feof(FILE *stream_) {
 #ifdef TEST_BUILD
     if(s_fs_test_param.fread_test_enable) {
@@ -514,10 +595,10 @@ static int NO_COVERAGE mock_feof(FILE *stream_) {
 }
 
 #ifdef TEST_BUILD
-void filesystem_err_code_set(filesystem_result_t err_code_) {
+void filesystem_rslt_code_set(filesystem_result_t result_code_) {
     // SUCCESSの注入は禁止
-    assert(FILESYSTEM_SUCCESS != err_code_);
-    s_fs_test_param.code = err_code_;
+    assert(FILESYSTEM_SUCCESS != result_code_);
+    s_fs_test_param.code = result_code_;
     s_fs_test_param.enable_err_code = true;
 }
 
@@ -553,32 +634,32 @@ static void NO_COVERAGE test_filesystem_create(void) {
         // 強制エラー出力テスト
         filesystem_t* tmp = NULL;
 
-        filesystem_err_code_set(FILESYSTEM_INVALID_ARGUMENT);
+        filesystem_rslt_code_set(FILESYSTEM_INVALID_ARGUMENT);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         filesystem_test_param_reset();
 
-        filesystem_err_code_set(FILESYSTEM_RUNTIME_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_RUNTIME_ERROR);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         filesystem_test_param_reset();
 
-        filesystem_err_code_set(FILESYSTEM_NO_MEMORY);
+        filesystem_rslt_code_set(FILESYSTEM_NO_MEMORY);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_NO_MEMORY == ret);
         filesystem_test_param_reset();
 
-        filesystem_err_code_set(FILESYSTEM_FILE_OPEN_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_FILE_OPEN_ERROR);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_FILE_OPEN_ERROR == ret);
         filesystem_test_param_reset();
 
-        filesystem_err_code_set(FILESYSTEM_UNDEFINED_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_UNDEFINED_ERROR);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_UNDEFINED_ERROR == ret);
         filesystem_test_param_reset();
 
-        filesystem_err_code_set(FILESYSTEM_EOF);
+        filesystem_rslt_code_set(FILESYSTEM_EOF);
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_EOF == ret);
         filesystem_test_param_reset();
@@ -601,25 +682,25 @@ static void NO_COVERAGE test_filesystem_create(void) {
         // メモリーシステムallocateエラー
         filesystem_t* tmp = NULL;
 
-        memory_system_err_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
         ret = filesystem_create(&tmp);
         assert(NULL == tmp);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         memory_system_test_param_reset();
 
-        memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
         ret = filesystem_create(&tmp);
         assert(NULL == tmp);
         assert(FILESYSTEM_NO_MEMORY == ret);
         memory_system_test_param_reset();
 
-        memory_system_err_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
         ret = filesystem_create(&tmp);
         assert(NULL == tmp);
         assert(FILESYSTEM_UNDEFINED_ERROR == ret);
         memory_system_test_param_reset();
 
-        memory_system_err_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
         ret = filesystem_create(&tmp);
         assert(NULL == tmp);
         assert(FILESYSTEM_LIMIT_EXCEEDED == ret);
@@ -690,7 +771,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
     {
         // 強制エラー出力
-        filesystem_err_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
         ret = filesystem_open(NULL, NULL, FILESYSTEM_MODE_APPEND);
         assert(FILESYSTEM_FILE_CLOSE_ERROR == ret);
         filesystem_test_param_reset();
@@ -815,7 +896,7 @@ static void NO_COVERAGE test_filesystem_close(void) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
     {
         // 強制エラー出力
-        filesystem_err_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
         filesystem_t* tmp = NULL;
         ret = filesystem_close(tmp);
         assert(NULL == tmp);
@@ -895,7 +976,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
     {
         // 強制エラー出力
-        filesystem_err_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_FILE_CLOSE_ERROR);
         ret = filesystem_byte_read(NULL, 64, NULL, NULL);
         assert(FILESYSTEM_FILE_CLOSE_ERROR == ret);
         filesystem_test_param_reset();

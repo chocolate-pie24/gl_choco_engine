@@ -70,8 +70,6 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**<
 static const char* rslt_to_str(memory_system_result_t rslt_);
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
-// NULL != s_mem_sys_ptr                 -> MEMORY_SYSTEM_RUNTIME_ERROR
-// s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
 memory_system_result_t memory_system_create(void) {
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     memory_system_t* tmp = NULL;
@@ -113,8 +111,6 @@ cleanup:
     return ret;
 }
 
-// s_mem_sys_ptr == NULL -> no-op
-// s_mem_sys_ptr->total_allocated != 0 -> warning + 正常処理
 void memory_system_destroy(void) {
     if(NULL == s_mem_sys_ptr) {
         goto cleanup;
@@ -178,11 +174,6 @@ cleanup:
     return ret;
 }
 
-// NULL == s_mem_sys_ptrでワーニング / No-op
-// NULL == ptr_でワーニング / No-op
-// mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
-// mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-// total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
 void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
     if(NULL == s_mem_sys_ptr) {
         WARN_MESSAGE("memory_system_free - No-op: memory system is uninitialized.");
@@ -230,6 +221,12 @@ cleanup:
     return;
 }
 
+/**
+ * @brief 実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 文字列に変換する実行結果コード
+ * @return const char* 変換された文字列の先頭アドレス
+ */
 static const char* rslt_to_str(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
@@ -247,6 +244,14 @@ static const char* rslt_to_str(memory_system_result_t rslt_) {
     }
 }
 
+/**
+ * @brief mallocのラッパ関数で、size_のメモリを確保する
+ *
+ * @note s_malloc_test.enable_malloc_failの場合で、test_mallocが呼び出された回数がmalloc_fail_nに等しい場合にはNULLが返る
+ *
+ * @param size_ 確保するメモリ容量
+ * @return void* 確保されたメモリの先頭アドレス
+ */
 static void* test_malloc(size_t size_) {
     void* ret = NULL;
 #ifdef TEST_BUILD
@@ -272,9 +277,9 @@ void NO_COVERAGE memory_system_test_param_set(int32_t malloc_fail_n_) {
     s_malloc_test.malloc_fail_n = malloc_fail_n_;
 }
 
-void NO_COVERAGE memory_system_err_code_set(memory_system_result_t err_code_) {
+void NO_COVERAGE memory_system_rslt_code_set(memory_system_result_t rslt_code_) {
     s_malloc_test.enable_err_code = true;
-    s_malloc_test.code = err_code_;
+    s_malloc_test.code = rslt_code_;
 
 }
 

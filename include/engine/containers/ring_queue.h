@@ -5,17 +5,15 @@
  * @brief ジェネリック型のリングキューモジュールを提供する
  *
  * @note
- * ring_queue_tは、内部データを隠蔽している \n
- * このため、ring_queue_t型で変数を宣言することはできない \n
+ * ring_queue_t構造体は、内部データを隠蔽している。
+ * このため、ring_queue_t型で変数を宣言することはできない。
  * 使用の際は、ring_queue_t*型で宣言すること
  *
  * @note
- * ring_queue_tに格納できるデータには、下記の制約を設ける。
- * この制約を設けることにより、バッファが満杯になった時の処理を簡便化することができる。
- * また、内部でmemory_systemを使用したメモリアロケーションを行うが、
- * memory_systemのメモリアロケーションで取得するメモリは、全てmax_align_tでアライメントされている必要がある。
- * - データのアライメント要件は2のべき乗でなければいけない
- * - データのアライメント要件はmax_align_t以下でなければいけない
+ * ring_queue_tに格納できるデータには、下記の制約を設ける。この制約を設けることにより、バッファが満杯になった時の処理を簡便化することができる。
+ * - memory_systemのメモリアロケーションで取得するメモリは、全てmax_align_tでアライメントされていること
+ * - 格納するデータのアライメント要件は2のべき乗であること
+ * - 格納するデータのアライメント要件はmax_align_t以下であること
  *
  * @note
  * ring_queue_tはジェネリック型のデータを格納可能であるが、複数のデータ型を混在して格納することはできない
@@ -62,7 +60,9 @@ typedef enum {
 } ring_queue_result_t;
 
 /**
- * @brief ring_queue_t構造体インスタンスのメモリを確保し、初期化を行いリングキューを使用可能な状態にする
+ * @brief ring_queue_のメモリを確保し、容量max_element_count_で初期化する
+ *
+ * @note 初期化されたリングキューに格納するデータのサイズとアライメント要件はelement_size_,element_align_で固定化される
  *
  * 使用例:
  * @code{.c}
@@ -93,12 +93,14 @@ typedef enum {
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_);
 
 /**
- * @brief ring_queue_t構造体インスタンスが管理しているメモリと、ring_queue_t自身のメモリを破棄する
+ * @brief ring_queue_が管理しているメモリと自身のメモリを解放し、*ring_queue_=NULLにする
  *
- * @warning 内部データが破損している場合にはmemory_poolの破棄は行わない
+ * @warning 内部データが破損している場合にはmemory_poolの破棄は行わず、メモリリークとなる
  *
  * @note
- * ring_queue_destroyは2重デストロイを許可する
+ * - 2重デストロイ許可
+ * - ring_queue_ == NULLの場合はno-op
+ * - *ring_queue_ == NULLの場合はno-op
  *
  * 使用例:
  * @code{.c}
@@ -117,12 +119,11 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 void ring_queue_destroy(ring_queue_t** ring_queue_);
 
 /**
- * @brief ring_queue_tにデータをpushする
+ * @brief ring_queue_にdata_をpushする
  *
- * @note
- * - 本APIでは、キューが満杯だった際にpushすると、Ring queue is full; overwriting the oldest element.のメッセージを出力し、古いデータを捨てて新しいデータを格納する
- * - なお、上記メッセージはデバッグビルド時のみ出力される
- * - 満杯で古いデータを捨てた場合でも、返り値はRING_QUEUE_SUCCESSとなる
+ * @note キューが満杯だった場合は以下の動作となる、
+ * - ワーニングメッセージを出力する(DEBUG_BUILD,TEST_BUILD時のみ)
+ * - 最古のデータを捨てて新しいデータを格納する(返り値はRING_QUEUE_SUCCESS)
  *
  * 使用例:
  * @code{.c}
@@ -147,15 +148,15 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
  * - ring_queue_ == NULL
  * - data_ == NULL
- * - データ格納バッファが未初期化
+ * - データ格納キューが未初期化
  * - element_size_がring_queue_createを実行した時の値と異なる
  * - element_align_がring_queue_createを実行した時の値と異なる
- * @retval RING_QUEUE_SUCCESS          データの格納に成功し、正常終了(バッファが満杯で古いデータを捨てて新しいデータを格納した場合でも成功となる)
+ * @retval RING_QUEUE_SUCCESS          データの格納に成功し、正常終了(キューが満杯で古いデータを捨てて新しいデータを格納した場合でも成功となる)
  */
 ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_);
 
 /**
- * @brief ring_queue_tからデータをpopする
+ * @brief ring_queue_からdata_にデータをpopする
  *
  * 使用例:
  * @code{.c}
@@ -183,7 +184,7 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
  * - ring_queue_ == NULL
  * - data_ == NULL
- * - データ格納バッファが未初期化
+ * - データ格納キューが未初期化
  * - element_size_がring_queue_createを実行した時の値と異なる
  * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_EMPTY            ring_queueが空

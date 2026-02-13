@@ -7,8 +7,8 @@
  * @details 文字列比較や文字列連結等の文字列処理機能も提供する
  *
  * @note
- * choco_string_t構造体は、内部データを隠蔽している \n
- * このため、choco_string_t型で変数を宣言することはできない \n
+ * choco_string_t構造体は、内部データを隠蔽している。
+ * このため、choco_string_t型で変数を宣言することはできない。
  * 使用の際は、choco_string_t*型で宣言すること
  *
  * @version 0.1
@@ -50,7 +50,11 @@ typedef enum {
 } choco_string_result_t;
 
 /**
- * @brief string_のメモリを確保し,バッファ容量0,文字列長さ0で初期化する
+ * @brief 空の文字列コンテナを生成する
+ *
+ * @note
+ * - 文字列長さ0で初期化されたchoco_string_tインスタンスを生成する
+ * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
  * @code{.c}
  * choco_string_t* string = NULL;
@@ -70,9 +74,11 @@ typedef enum {
 choco_string_result_t choco_string_default_create(choco_string_t** string_);
 
 /**
- * @brief string_のメモリを確保し,src_文字列で初期化する
+ * @brief const char*型文字列src_で文字列コンテナを生成する
  *
- * @note string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される
+ * @note
+ * - string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される
+ * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
  * @code{.c}
  * choco_string_t* string = NULL;
@@ -96,7 +102,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
 choco_string_result_t choco_string_create_from_c_string(choco_string_t** string_, const char* src_);
 
 /**
- * @brief choco_string_tが管理しているメモリおよびchoco_string_t*のメモリを解放し,*string_=NULLにする
+ * @brief string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする
  *
  * @note
  * - 2重デストロイ許可
@@ -118,12 +124,12 @@ choco_string_result_t choco_string_create_from_c_string(choco_string_t** string_
 void choco_string_destroy(choco_string_t** string_);
 
 /**
- * @brief src_が管理する文字列をdst_が管理するバッファにコピーする
+ * @brief 文字列コンテナsrc_が管理する文字列をdst_にコピーする
  *
  * @note dst_のバッファサイズにより下記の動作をする
- * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも小さい -> dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
- * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい -> dst_のバッファサイズは変更せず,文字列をコピー
- * - dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい -> dst_のバッファサイズは変更せず,文字列をコピー
+ * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
+ * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
+ * - dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
  * @code{.c}
  * choco_string_t* dst = NULL;
@@ -156,12 +162,12 @@ void choco_string_destroy(choco_string_t** string_);
 choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
 
 /**
- * @brief char*による文字列によってdst_に文字列をコピーする
+ * @brief const char*型文字列src_をdst_にコピーする
  *
  * @note dst_のバッファサイズにより下記の動作をする
- * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも小さい -> dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
- * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい -> dst_のバッファサイズは変更せず,文字列をコピー
- * - dst_のバッファとsrc_のバッファサイズが等しい -> dst_のバッファサイズは変更せず,文字列をコピー
+ * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
+ * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
+ * - dst_のバッファとsrc_の文字列長さ+1(終端文字)に等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
  * @code{.c}
  * choco_string_t* dst = NULL;
@@ -188,7 +194,7 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
 choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, const char* src_);
 
 /**
- * @brief dst_の文字列の末尾にstring_の文字列を連結する
+ * @brief 文字列コンテナstring_が管理する文字列をdst_の末尾に連結する
  *
  * @note
  * - 自己連結(dst_にdst_を連結する)ことは禁止する(内部バッファ管理を簡便にするため)
@@ -226,7 +232,7 @@ choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, cons
 choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_string_t* dst_);
 
 /**
- * @brief dst_の文字列の末尾にstring_(const char*)の文字列を連結する
+ * @brief const char*型文字列string_をdst_の末尾に連結する
  *
  * @note
  * - string_が""の場合は何もしない
@@ -257,10 +263,11 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
 choco_string_result_t choco_string_concat_from_c_string(const char* string_, choco_string_t* dst_);
 
 /**
- * @brief string_が管理する文字列の長さを取得する(終端文字を含まない長さが返される)
+ * @brief 文字列コンテナstring_が管理する文字列の長さを取得する
  *
  * @note
  * - string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す
+ * - 終端文字を含まない長さが返される
  *
  * @code{.c}
  * choco_string_t* string = NULL;
@@ -279,10 +286,11 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
 size_t choco_string_length(const choco_string_t* string_);
 
 /**
- * @brief string_が管理する文字列の先頭アドレスを取得する
+ * @brief 文字列コンテナstring_が管理する文字列の先頭アドレスを取得する
  *
  * @note
  * - string_がNULLまたは内部管理バッファがNULLで空の文字列を返す
+ * - 取得したconst char*は @ref choco_string_destroy でstring_が破棄されるまで有効
  *
  * @code{.c}
  * choco_string_t* string = NULL;

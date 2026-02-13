@@ -367,7 +367,7 @@ static void NO_COVERAGE test_gl33_vao_create(void) {
     //     render_mem_free(tmp, sizeof(renderer_backend_vao_t));
     // }
     // {
-    //     memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+    //     memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
     //     renderer_backend_vao_t* tmp = NULL;
     //     ret = gl33_vao_create(&tmp);
     //     assert(RENDERER_NO_MEMORY == ret);

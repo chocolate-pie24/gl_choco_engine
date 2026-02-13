@@ -54,7 +54,7 @@ typedef enum {
 } linear_allocator_result_t;
 
 /**
- * @brief リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する
+ * @brief linear_alloc_t構造体インスタンスの生成に必要なメモリ使用量とメモリアライメント要件を取得する
  *
  * @note
  * - リニアアロケータのメモリ確保には、メモリシステムを使用する
@@ -78,7 +78,7 @@ typedef enum {
 void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_);
 
 /**
- * @brief リニアアロケータ構造体インスタンスを初期化する
+ * @brief linear_alloc_t構造体インスタンスをメモリ容量size_、メモリプール先頭アドレスmemory_pool_で初期化する
  *
  * @note
  * - リニアアロケータ構造体インスタンスは自身のメモリを破棄するAPIを持たない
@@ -188,14 +188,14 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
 
 #ifdef TEST_BUILD
 /**
- * @brief テスト専用API(メモリ確保に失敗させる)
+ * @brief テスト用に何回目の呼び出しでlinear_allocator_allocateを失敗させるかの回数を指定する
  *
  * @param malloc_fail_n_ 何回目のメモリ確保で失敗させるかを指定(1回目 = 0を指定)
  */
 void linear_allocator_malloc_fail_set(size_t malloc_fail_n_);
 
 /**
- * @brief テスト専用API(テスト設定値をリセットする)
+ * @brief テスト用のテスト設定値をリセットする
  *
  */
 void linear_allocator_malloc_fail_reset(void);

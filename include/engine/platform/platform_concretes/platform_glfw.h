@@ -26,6 +26,8 @@ extern "C" {
 /**
  * @brief GLFWプラットフォームを使用する際の仮想関数テーブルを取得する
  *
+ * @note vtableの詳細は @ref platform_vtable_t を参照
+ *
  * @return const platform_vtable_t* 仮想関数テーブル
  */
 const platform_vtable_t* platform_glfw_vtable_get(void);
@@ -33,14 +35,16 @@ const platform_vtable_t* platform_glfw_vtable_get(void);
 #ifdef TEST_BUILD
 #include "engine/platform/platform_core/platform_types.h"
 /**
- * @brief テスト専用API(外部から強制的に引数で指定したret_を返すようにする)
+ * @brief テスト用に、platform_glfwモジュールの実行結果コードを指定値に固定する
  *
- * @param ret_ 返り値設定値
+ * @note この関数を実行した後は、platform_glfw_result_controller_resetが呼ばれるまで効果が継続する
+ *
+ * @param result_code_ 出力実行結果コード
  */
 void platform_glfw_result_controller_set(platform_result_t ret_);
 
 /**
- * @brief テスト専用API(テスト設定値をリセットする)
+ * @brief platform_glfw_result_controller_setによる実行結果コードの固定を解除する
  *
  */
 void platform_glfw_result_controller_reset(void);

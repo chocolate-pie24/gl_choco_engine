@@ -1,5 +1,5 @@
-/** @ingroup platform_core
- *
+/**
+ * @ingroup platform_core
  * @file platform_types.h
  * @author chocolate-pie24
  * @brief プラットフォームシステムで共通に使用されるデータ型を提供する

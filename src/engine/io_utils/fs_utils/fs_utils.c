@@ -307,6 +307,12 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 文字列に変換する実行結果コード
+ * @return const char* 変換された文字列の先頭アドレス
+ */
 static const char* rslt_to_str(fs_utils_result_t rslt_) {
     switch(rslt_) {
     case FS_UTILS_SUCCESS:
@@ -334,6 +340,13 @@ static const char* rslt_to_str(fs_utils_result_t rslt_) {
     }
 }
 
+/**
+ * @brief fs_utils_が管理する内部データが破損していないかを判定する
+ *
+ * @param fs_utils_ 判定対象fs_utils_t構造体インスタンスへのポインタ
+ * @retval true 破損なしで正常
+ * @return false 破損あり
+ */
 static bool fs_utils_valid_check(fs_utils_t* fs_utils_) {
     // extensionはNULLを許可
     if(NULL == fs_utils_) {
@@ -351,6 +364,12 @@ static bool fs_utils_valid_check(fs_utils_t* fs_utils_) {
     }
 }
 
+/**
+ * @brief filesystemモジュールの実行結果コードをfs_utilsの実行結果コードに変換する
+ *
+ * @param result_ 変換するfilesystemモジュール実行結果コード
+ * @return fs_utils_result_t 変換されたfs_utils実行結果コード
+ */
 static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_) {
     switch(result_) {
     case FILESYSTEM_SUCCESS:
@@ -376,6 +395,12 @@ static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_) 
     }
 }
 
+/**
+ * @brief choco_stringモジュールの実行結果コードをfs_utils実行結果コードに変換する
+ *
+ * @param result_ 変換するchoco_stringモジュール実行結果コード
+ * @return fs_utils_result_t 変換されたfs_utilsモジュール実行結果コード
+ */
 static fs_utils_result_t choco_string_result_convert(choco_string_result_t result_) {
     switch(result_) {
     case CHOCO_STRING_SUCCESS:
@@ -401,6 +426,12 @@ static fs_utils_result_t choco_string_result_convert(choco_string_result_t resul
     }
 }
 
+/**
+ * @brief memory_system実行結果コードをfs_utils実行結果コードに変換する
+ *
+ * @param result_ 変換するmemory_system実行結果コード
+ * @return fs_utils_result_t 変換されたfs_utils実行結果コード
+ */
 static fs_utils_result_t memory_system_result_convert(memory_system_result_t result_) {
     switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
@@ -893,7 +924,7 @@ static void NO_COVERAGE test_fs_utils_text_file_read(void) {
         choco_string_t* out = NULL;
         assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
 
-        filesystem_err_code_set(FILESYSTEM_INVALID_ARGUMENT);
+        filesystem_rslt_code_set(FILESYSTEM_INVALID_ARGUMENT);
         ret = fs_utils_text_file_read(fs, out);
         assert(FS_UTILS_INVALID_ARGUMENT == ret);
         filesystem_test_param_reset(); // 注入解除
@@ -916,7 +947,7 @@ static void NO_COVERAGE test_fs_utils_text_file_read(void) {
         choco_string_t* out = NULL;
         assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
 
-        filesystem_err_code_set(FILESYSTEM_RUNTIME_ERROR);
+        filesystem_rslt_code_set(FILESYSTEM_RUNTIME_ERROR);
         ret = fs_utils_text_file_read(fs, out);
         assert(FS_UTILS_RUNTIME_ERROR == ret);
         filesystem_test_param_reset(); // 注入解除

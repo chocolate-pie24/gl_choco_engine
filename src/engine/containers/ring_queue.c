@@ -74,24 +74,6 @@ static void NO_COVERAGE test_is_ring_queue_corrupted(void);
 static void NO_COVERAGE test_ring_queue_empty(void);
 #endif
 
-// 格納可能な最大数の要素を格納した結果、memory_poolに空きがあると、
-// リングキューフルの状態でのpushの処理がややこしくなる。なので、下記の制約を設ける
-//
-// - element_alignは2の冪乗でなければいけない
-// - max_align_tを越えるelement_alignは不可
-// - memory_system_allocateで確保されるメモリはmax_align_tにアライメントされていることが前提
-//
-// ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// *ring_queue_ != NULL -> RING_QUEUE_INVALID_ARGUMENT
-// 0 == max_element_count_ -> RING_QUEUE_INVALID_ARGUMENT
-// 0 == element_size_ -> RING_QUEUE_INVALID_ARGUMENT
-// 0 == element_align_ -> RING_QUEUE_INVALID_ARGUMENT
-// element_align_が2の冪乗ではない -> RING_QUEUE_INVALID_ARGUMENT
-// element_align_がmax_align_tを超過 -> RING_QUEUE_INVALID_ARGUMENT
-// tmp_queueのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
-// tmp_queue->memory_poolのメモリ確保失敗 -> RING_QUEUE_NO_MEMORY
-// element_size_ * max_element_count_がSIZE_MAXを超過 -> RING_QUEUE_OVERFLOW
-// element_size_ + paddingがSIZE_MAXを超過 -> RING_QUEUE_OVERFLOW
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -211,14 +193,6 @@ cleanup:
     return;
 }
 
-// ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// data_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_->memory_pool == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_->element_size != element_size_   -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_がfullでワーニングメッセージ
-// 引数element_size_, element_align_は格納データの不整合のチェック用
-// 内部データ破損(is_ring_queue_corrupted == true) -> RING_QUEUE_DATA_CORRUPTED
 ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
@@ -254,13 +228,6 @@ cleanup:
     return ret;
 }
 
-// ring_queue_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// data_ == NULL -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue->memory_pool == NULL ->RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_->element_size != element_size_ -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queue_->element_align != element_align_ -> RING_QUEUE_INVALID_ARGUMENT
-// ring_queueが空でRING_QUEUE_EMPTY
-// 内部データ破損(is_ring_queue_corrupted == true) -> RING_QUEUE_DATA_CORRUPTED
 ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
@@ -299,7 +266,6 @@ cleanup:
     return ret;
 }
 
-// ring_queue == NULL or ring_queue->memory_pool == NULLはtrue(空)
 bool ring_queue_empty(const ring_queue_t* ring_queue_) {
     if(NULL == ring_queue_) {
         return true;
@@ -315,10 +281,10 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
 }
 
 /**
- * @brief エラー伝播のため、メモリシステム実行結果コードをリングキューAPI実行結果コードに変換する
+ * @brief メモリシステム実行結果コードをリングキュー実行結果コードに変換する
  *
  * @param rslt_ メモリシステム実行結果コード
- * @return application_result_t 変換されたリングキュー実行結果コード
+ * @return ring_queue_result_t 変換されたリングキュー実行結果コード
  */
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
     switch(rslt_) {
@@ -338,7 +304,7 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
 }
 
 /**
- * @brief リングキュー内部データ破損判定
+ * @brief リングキュー内部データが破損しているかを判定する
  *
  * @warning 本関数は内部データ破損判定が目的であるため下記のチェックは行わない
  * - 引数ring_queue_のNULLチェック
@@ -412,7 +378,7 @@ static bool is_ring_queue_corrupted(const ring_queue_t* ring_queue_) {
 }
 
 /**
- * @brief リングキュー実行結果コードを文字列に変換し出力する
+ * @brief リングキュー実行結果コードを文字列に変換する
  *
  * @param rslt_ リングキュー実行結果コード
  * @return const char* 変換された文字列

@@ -408,6 +408,12 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
+/**
+ * @brief 実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 文字列に変換する実行結果コード
+ * @return const char* 変換された文字列の先頭アドレス
+ */
 static const char* rslt_to_str(choco_string_result_t rslt_) {
     switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
@@ -433,7 +439,26 @@ static const char* rslt_to_str(choco_string_result_t rslt_) {
     }
 }
 
-// memory_system_allocateのラッパで,実行結果コードをメモリシステムから文字列モジュールのコードへ変換して出力する
+/**
+ * @brief memory_system_allocateのラッパ関数で、指定されたサイズのメモリを確保する
+ *
+ * @note
+ * - 実行結果コードをchoco_stringモジュールの実行結果コードに変換して出力する
+ * - メモリタグはMEMORY_TAG_STRING固定
+ *
+ * @param size_ 確保するメモリサイズ
+ * @param out_ptr_ 確保したメモリの先頭アドレス
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 下記のいずれか
+ * - out_ptr_ == NULL
+ * - *out_ptr_ != NULL
+ * - memory_system_allocateの実行結果がMEMORY_SYSTEM_INVALID_ARGUMENT
+ * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
+ * @retval CHOCO_STRING_LIMIT_EXCEEDED 以下のいずれか
+ * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
+ * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
+ * @retval CHOCO_STRING_RUNTIME_ERROR memory_system_allocateがMEMORY_SYSTEM_RUNTIME_ERRORを返した
+ * @retval CHOCO_STRING_SUCCESS メモリ確保に成功し、正常終了
+ */
 static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
     void* tmp_ptr = NULL;
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -1995,7 +2020,7 @@ static void NO_COVERAGE test_string_malloc(void) {
         // memory_system_allocate -> MEMORY_SYSTEM_INVALID_ARGUMENT
         // -> CHOCO_STRING_INVALID_ARGUMENT
         memory_system_test_param_reset();
-        memory_system_err_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
 
         void* p = NULL;
         choco_string_result_t ret = string_malloc(16, &p);
@@ -2008,7 +2033,7 @@ static void NO_COVERAGE test_string_malloc(void) {
         // memory_system_allocate -> MEMORY_SYSTEM_NO_MEMORY
         // -> CHOCO_STRING_NO_MEMORY
         memory_system_test_param_reset();
-        memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
         void* p = NULL;
         choco_string_result_t ret = string_malloc(16, &p);
@@ -2021,7 +2046,7 @@ static void NO_COVERAGE test_string_malloc(void) {
         // memory_system_allocate -> MEMORY_SYSTEM_LIMIT_EXCEEDED
         // -> CHOCO_STRING_LIMIT_EXCEEDED
         memory_system_test_param_reset();
-        memory_system_err_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
         void* p = NULL;
         choco_string_result_t ret = string_malloc(16, &p);
@@ -2034,7 +2059,7 @@ static void NO_COVERAGE test_string_malloc(void) {
         // memory_system_allocate -> (未定義の戻り値)
         // -> CHOCO_STRING_UNDEFINED_ERROR
         memory_system_test_param_reset();
-        memory_system_err_code_set((memory_system_result_t)0x7fffffff);
+        memory_system_rslt_code_set((memory_system_result_t)0x7fffffff);
 
         void* p = NULL;
         choco_string_result_t ret = string_malloc(16, &p);
@@ -2152,7 +2177,7 @@ static void NO_COVERAGE test_buffer_reserve(void) {
         memory_system_test_param_reset();
         test_param_reset();
 
-        memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
         choco_string_t string = {0};
         choco_string_result_t ret = buffer_reserve(8, &string);
@@ -2262,7 +2287,7 @@ static void NO_COVERAGE test_buffer_resize(void) {
         memory_system_test_param_reset();
         test_param_reset();
 
-        memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
         choco_string_t string = {0}; // valid
         choco_string_result_t ret = buffer_resize(8, &string);

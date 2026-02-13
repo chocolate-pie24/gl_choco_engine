@@ -48,11 +48,13 @@ typedef enum {
 } fs_utils_result_t;
 
 /**
- * @brief fs_utils_t構造体インスタンスのメモリを確保し初期化する(指定されたファイルのオープンも行う)
+ * @brief fs_utils_t構造体インスタンスを生成し初期化する
  *
  * @warning 引数の値は以下に注意する
  * - filepath_の末尾には必ず'/'をつける
  * - extensionは必ず'.'から始めること
+ *
+ * @note filepath/filename.extentionのファイルがopen_mode_でopenされる
  *
  * @code{.c}
  * fs_utils_t* fs_utils = NULL;
@@ -85,11 +87,13 @@ typedef enum {
 fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, filesystem_open_mode_t open_mode_, fs_utils_t** fs_utils_);
 
 /**
- * @brief fs_utils_のメモリを解放する
+ * @brief fs_utils_が管理するメモリと自身のメモリを解放し、*fs_utils_=NULLにする
  *
  * @note
- * - 2重デストロイを許可する
- * - filesystem_destroy内でファイルがクローズされる
+ * - 2重デストロイ許可
+ * - fs_utils_ == NULLの場合はno-op
+ * - *fs_utils_ == NULLの場合はno-op
+ * - 内部でfilesystem_destroyが呼び出され、オープン中のファイルがクローズされる
  *
  * @code{.c}
  * fs_utils_t* fs_utils = NULL;
@@ -105,7 +109,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
 void fs_utils_destroy(fs_utils_t** fs_utils_);
 
 /**
- * @ref fs_utils_create で指定したファイルについて、ファイルの中身を全て読み込む
+ * @brief @ref fs_utils_create で指定したファイルの中身を全て読み込む
  *
  * @warning 内部ではchoco_string_concat_from_c_stringを使用して文字列を連結する。各文字列処理には終端文字による判定処理が存在する。
  * ここで、バイナリファイルには終端文字(0)が普通に含まれるため、バイナリファイルの読み込みには使用してはいけない。
@@ -140,7 +144,7 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
 fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t* out_string_);
 
 /**
- * @brief ファイルパス,ファイル名,拡張子の文字列からフルパス文字列を生成する
+ * @brief fs_utils_が保持するファイルパス,ファイル名,拡張子の文字列からフルパス文字列を生成する
  *
  * @note 処理に失敗した場合,out_fullpath_の内部データは変更される可能性がある
  * @warning out_fullpath_は @ref choco_string_default_create @ref choco_string_create_from_c_string によって初期化されたインスタンスを渡すこと
@@ -177,8 +181,19 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_);
 
 #ifdef TEST_BUILD
-// 引数で与えた実行結果コードを強制的に出力させる
+/**
+ * @brief テスト用に、fs_utilsモジュールの実行結果コードを指定値に固定する
+ *
+ * @note この関数を実行した後は、fs_utils_fail_disableが呼ばれるまで効果が継続する
+ *
+ * @param result_code_ 出力実行結果コード
+ */
 void fs_utils_fail_enable(fs_utils_result_t result_code_);
+
+/**
+ * @brief fs_utils_fail_enableによる実行結果コードの固定を解除する
+ *
+ */
 void fs_utils_fail_disable(void);
 #endif
 

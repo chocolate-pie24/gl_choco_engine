@@ -108,7 +108,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_INVALID_ARGUMENTを出力させて結果をテスト
-        memory_system_err_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
 
         char* ptr = NULL;
         ret = render_mem_allocate(64, NULL);
@@ -119,7 +119,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_LIMIT_EXCEEDEDを出力させて結果をテスト
-        memory_system_err_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
         char* ptr = NULL;
         ret = render_mem_allocate(64, NULL);
@@ -130,7 +130,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_NO_MEMORYを出力させて結果をテスト
-        memory_system_err_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
         char* ptr = NULL;
         ret = render_mem_allocate(64, NULL);
@@ -141,7 +141,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // memory_system_allocateに強制的に既定値以外を出力させて結果をテスト
-        memory_system_err_code_set(100);
+        memory_system_rslt_code_set(100);
 
         char* ptr = NULL;
         ret = render_mem_allocate(64, NULL);

@@ -9,7 +9,7 @@
  * これらの処理には可変長文字列バッファのリソース管理が必要で、choco_stringモジュールを使用したい。
  * choco_stringモジュールを使用するとなると、containersレイヤーよりも上層にfilesystemを位置づける必要がある。
  * 一方で、ファイルI/Oについての基本的な処理はcoreレイヤーに置きたい。このため、高度な処理と基本的な処理を分け、基本的な処理はcore/filesystemに置くことにする。
- * なお、高度な処理は、io_utils/fs_util/fs_utilに格納する。
+ * なお、高度な処理は、io_utils/fs_utils/fs_utilsに格納する。
  *
  * @version 0.1
  * @date 2025-12-23
@@ -72,13 +72,13 @@ typedef enum {
 } filesystem_open_mode_t;
 
 /**
- * @brief ファイルシステム内部状態管理構造体メモリを確保し、初期化する
+ * @brief filesystem_t構造体インスタンスを生成し、初期化する
  *
  * @note filesystem_は下記の状態で初期化される
  * - ファイルオープンモード: FILESYSTEM_MODE_NONE
  * - ファイルハンドル(FILE*): NULL
  *
- * @note 処理に成功しない限り、引数filesystem_の状態は不変
+ * @note 生成したインスタンスは @ref filesystem_destroy を使用して破棄する
  *
  * @code{.c}
  * filesystem_t* filesystem = NULL;
@@ -93,20 +93,22 @@ typedef enum {
  * - *filesystem_が非NULL
  * - memory_system_allocateがMEMORY_SYSTEM_INVALID_ARGUMENTを返した(これより前の処理で弾かれるため、基本的には起こり得ない)
  * @retval FILESYSTEM_NO_MEMORY メモリ不足によりfilesystem_tのメモリ確保に失敗
- *  * @retval FILESYSTEM_LIMIT_EXCEEDED メモリシステムの管理変数がシステム使用可能範囲を超過
+ * @retval FILESYSTEM_LIMIT_EXCEEDED メモリシステムの管理変数がシステム使用可能範囲を超過
  * @retval FILESYSTEM_UNDEFINED_ERROR 未定義のエラーが発生
  * @retval FILESYSTEM_SUCCESS filesystem_のメモリ確保と初期化に成功し、正常終了
  */
 filesystem_result_t filesystem_create(filesystem_t** filesystem_);
 
 /**
- * @brief filesystem_のメモリを解放する
+ * @brief filesystem_が管理しているメモリと自身のメモリを解放し、*filesystem_=NULLにする
  *
  * @note
- * - 2重デストロイを許可する
+ * - 2重デストロイ許可
+ * - filesystem_ == NULLの場合はno-op
+ * - *filesystem_ == NULLの場合はno-op
  * - open済のファイルハンドルを持つ構造体インスタンスが渡された場合は、@ref filesystem_close によるクローズ処理を行ってからメモリを解放する。
  * なお、クローズ処理は、エラーが発生した場合でも正常終了した場合でも、共にファイルハンドルが再利用不可となる。
- * そのため、destroy APIでは、クローズ処理の成否に関わらず、再利用不可のリソースとなるため、メモリを解放する(ただしワーニングメッセージを出力する)。
+ * そのため、filesystem_destroyでは、クローズ処理の成否に関わらず、メモリを解放する(ただしワーニングメッセージを出力する)。
  *
  * @code{.c}
  * filesystem_t* filesystem = NULL;
@@ -122,7 +124,7 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_);
 void filesystem_destroy(filesystem_t** filesystem_);
 
 /**
- * @brief ファイルハンドルオープン処理
+ * @brief filesystem_が保持するファイルハンドルをオープンする
  *
  * @code{.c}
  * filesystem_t* filesystem = NULL;
@@ -144,18 +146,19 @@ void filesystem_destroy(filesystem_t** filesystem_);
  * @retval FILESYSTEM_RUNTIME_ERROR 既にオープン済のファイルハンドルが渡された
  * @retval FILESYSTEM_FILE_OPEN_ERROR ファイルオープン失敗
  * @retval FILESYSTEM_SUCCESS ファイルオープンに成功し、正常終了
+ *
+ * @todo 既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する
  */
 filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullpath_, filesystem_open_mode_t mode_);
 
 /**
- * @brief ファイルハンドルクローズ処理
+ * @brief filesystem_が保持するファイルハンドルをクローズする
  *
  * @note
  * - FILESYSTEM_FILE_CLOSE_ERRORまたはFILESYSTEM_SUCCESSとなった場合、file_handleはNULL, modeはFILESYSTEM_MODE_NONEにリセットされる。
- * その他の戻り値の場合には、内部状態は不変である。
  * - ファイルハンドルクローズには標準ライブラリのfcloseを使用する。
  * fcloseに失敗する事例として、NASとの接続断等によりファイルの変更内容のフラッシュに失敗した場合がある。
- * この場合、クローズ後のファイルハンドルは再利用不可となる。このため、本APIの処理に失敗した場合、引数filesystem_->file_handleは再利用不可のリソースとなる。
+ * この場合、クローズ後のファイルハンドルは再利用不可となりFILESYSTEM_FILE_CLOSE_ERRORを返す。
  *
  * @code{.c}
  * filesystem_t* filesystem = NULL;
@@ -175,6 +178,8 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
  * @retval FILESYSTEM_RUNTIME_ERROR 既にクローズ済のファイルハンドルが渡された
  * @retval FILESYSTEM_FILE_CLOSE_ERROR ファイルハンドルのクローズに失敗
  * @retval FILESYSTEM_SUCCESS ファイルハンドルのクローズに成功し、正常終了
+ *
+ * @todo 既にクローズ済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する
  */
 filesystem_result_t filesystem_close(filesystem_t* filesystem_);
 
@@ -243,7 +248,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
 filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_);
 
 /**
- * @brief ファイルオープンモード文字列を取得する
+ * @brief ファイルオープンモードを文字列に変換する
  *
  * @note 不明なモードが入力された場合は文字列"undefined"が返される
  *
@@ -253,8 +258,19 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
 const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_);
 
 #ifdef TEST_BUILD
-// 引数で与えたerr_code_を強制的に出力させる
-void filesystem_err_code_set(filesystem_result_t err_code_);
+/**
+ * @brief テスト用に、filesystemモジュールの実行結果コードを指定値に固定する
+ *
+ * @note この関数を実行した後は、filesystem_test_param_resetが呼ばれるまで効果が継続する
+ *
+ * @param result_code_ 出力実行結果コード
+ */
+void filesystem_rslt_code_set(filesystem_result_t result_code_);
+
+/**
+ * @brief filesystem_rslt_code_setによる実行結果コードの固定を解除する
+ *
+ */
 void filesystem_test_param_reset(void);
 #endif
 

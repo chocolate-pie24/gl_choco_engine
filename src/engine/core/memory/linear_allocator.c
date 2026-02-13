@@ -70,9 +70,6 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
     *align_requirement_ = alignof(linear_alloc_t);
 }
 
-// 引数allocator_   == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
-// 引数memory_pool_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
-// 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
 linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_) {
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "allocator_")
@@ -88,15 +85,6 @@ cleanup:
     return ret;
 }
 
-// LINEAR_ALLOC_INVALID_ARGUMENT allocator_ == NULL
-// LINEAR_ALLOC_INVALID_ARGUMENT out_ptr_ == NULL
-// LINEAR_ALLOC_INVALID_ARGUMENT *out_ptr_ != NULL
-// LINEAR_ALLOC_INVALID_ARGUMENT req_align_が2の冪乗ではない
-// LINEAR_ALLOC_INVALID_ARGUMENT メモリを割り当てた場合、割り当て先頭アドレスの値がUINTPTR_MAXを超過
-// LINEAR_ALLOC_INVALID_ARGUMENT メモリ割り当て先頭アドレス+割り当てサイズがUINTPTR_MAXを超過
-// LINEAR_ALLOC_NO_MEMORY        メモリを割り当てた場合、メモリプール内に収まらない
-// LINEAR_ALLOC_SUCCESS          req_align_ == 0 または req_size_ == 0でワーニング出力し何もしない
-// LINEAR_ALLOC_SUCCESS          メモリ割り当てに成功し正常終了
 linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
 #ifdef TEST_BUILD
     if(s_test_param.enable_malloc_fail) {
@@ -166,6 +154,12 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 実行結果コードを文字列に変換する
+ *
+ * @param rslt_ 文字列に変換する実行結果コード
+ * @return const char* 変換された文字列の先頭アドレス
+ */
 static const char* rslt_to_str(linear_allocator_result_t rslt_) {
     switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
