@@ -397,10 +397,10 @@ static platform_result_t platform_snapshot_process(
     if(platform_backend_->current.window_width != platform_backend_->prev.window_width || platform_backend_->current.window_height != platform_backend_->prev.window_height) {
         window_event_t window_event;
         window_event.event_code = WINDOW_EVENT_RESIZE;
-        window_event.window_height = platform_backend_->current.window_height;
-        window_event.window_width = platform_backend_->current.window_width;
-        window_event.framebuffer_height = platform_backend_->current.framebuffer_height;
-        window_event.framebuffer_width = platform_backend_->current.framebuffer_width;
+        window_event.event_args.window_height = platform_backend_->current.window_height;
+        window_event.event_args.window_width = platform_backend_->current.window_width;
+        window_event.event_args.framebuffer_height = platform_backend_->current.framebuffer_height;
+        window_event.event_args.framebuffer_width = platform_backend_->current.framebuffer_width;
 
         window_event_callback(&window_event);
     }
@@ -410,7 +410,7 @@ static platform_result_t platform_snapshot_process(
         if(platform_backend_->prev.keycode_state[i] != platform_backend_->current.keycode_state[i]) {
             keyboard_event_t key_event;
             key_event.key = (keycode_t)i;
-            key_event.pressed = platform_backend_->current.keycode_state[i];
+            key_event.event_args.pressed = platform_backend_->current.keycode_state[i];
             keyboard_event_callback(&key_event);
         }
     }
@@ -419,17 +419,17 @@ static platform_result_t platform_snapshot_process(
     if(platform_backend_->prev.left_button_pressed != platform_backend_->current.left_button_pressed) {
         mouse_event_t mouse_event;
         mouse_event.button = MOUSE_BUTTON_LEFT;
-        mouse_event.pressed = platform_backend_->current.left_button_pressed;
-        mouse_event.x = (int)platform_backend_->current.cursor_x;
-        mouse_event.y = (int)platform_backend_->current.cursor_y;
+        mouse_event.event_args.pressed = platform_backend_->current.left_button_pressed;
+        mouse_event.event_args.x = (int)platform_backend_->current.cursor_x;
+        mouse_event.event_args.y = (int)platform_backend_->current.cursor_y;
         mouse_event_callback(&mouse_event);
     }
     if(platform_backend_->prev.right_button_pressed != platform_backend_->current.right_button_pressed) {
         mouse_event_t mouse_event;
         mouse_event.button = MOUSE_BUTTON_RIGHT;
-        mouse_event.pressed = platform_backend_->current.right_button_pressed;
-        mouse_event.x = (int)platform_backend_->current.cursor_x;
-        mouse_event.y = (int)platform_backend_->current.cursor_y;
+        mouse_event.event_args.pressed = platform_backend_->current.right_button_pressed;
+        mouse_event.event_args.x = (int)platform_backend_->current.cursor_x;
+        mouse_event.event_args.y = (int)platform_backend_->current.cursor_y;
         mouse_event_callback(&mouse_event);
     }
 

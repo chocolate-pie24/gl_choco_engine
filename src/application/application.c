@@ -582,14 +582,14 @@ static void app_state_update(void) {
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
                 INFO_MESSAGE("Window resized: window([%dx%d] -> [%dx%d]), framebuffer([%dx%d] -> [%dx%d])",
-                    s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height,
-                    s_app_state->framebuffer_width, s_app_state->framebuffer_height, event.framebuffer_width, event.framebuffer_height);
+                    s_app_state->window_width, s_app_state->window_height, event.event_args.window_width, event.event_args.window_height,
+                    s_app_state->framebuffer_width, s_app_state->framebuffer_height, event.event_args.framebuffer_width, event.event_args.framebuffer_height);
 
                 s_app_state->window_resized = true;
-                s_app_state->window_height = event.window_height;
-                s_app_state->window_width = event.window_width;
-                s_app_state->framebuffer_height = event.framebuffer_height;
-                s_app_state->framebuffer_width = event.framebuffer_width;
+                s_app_state->window_height = event.event_args.window_height;
+                s_app_state->window_width = event.event_args.window_width;
+                s_app_state->framebuffer_height = event.event_args.framebuffer_height;
+                s_app_state->framebuffer_width = event.event_args.framebuffer_width;
             }
         }
     }
@@ -603,10 +603,10 @@ static void app_state_update(void) {
             WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
             goto cleanup;
         } else {
-            if(KEY_M == event.key && !event.pressed) {
+            if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
             } else {
-                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
             }
         }
     }
@@ -621,9 +621,9 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(MOUSE_BUTTON_LEFT == event.button) {
-                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
             } else if(MOUSE_BUTTON_RIGHT == event.button) {
-                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
             }
         }
     }
