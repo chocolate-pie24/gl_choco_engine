@@ -2,7 +2,7 @@
  *
  * @file keyboard_event.h
  * @author chocolate-pie24
- * @brief 全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義
+ * @brief 全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベント構造体定義
  *
  * @version 0.1
  * @date 2025-10-14
@@ -89,12 +89,20 @@ typedef enum {
 } keycode_t;
 
 /**
+ * @brief キーボードイベント付随情報
+ *
+ */
+typedef struct keyboard_event_args {
+    bool pressed;   /**< イベント付属情報(キー押下: true / キーを離した: false) */
+} keyboard_event_args_t;
+
+/**
  * @brief キーボードイベント構造体
  *
  */
 typedef struct keyboard_event {
-    keycode_t key;  /**< イベントが発生したキー */
-    bool pressed;   /**< イベント(キー押下: true / キーを離した: false) */
+    keycode_t key;                      /**< イベントが発生したキー */
+    keyboard_event_args_t event_args;   /**< イベント付随情報 */
 } keyboard_event_t;
 
 #ifdef __cplusplus

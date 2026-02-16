@@ -2,7 +2,7 @@
  *
  * @file window_event.h
  * @author chocolate-pie24
- * @brief 全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義
+ * @brief 全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義
  *
  * @version 0.1
  * @date 2025-10-14
@@ -29,15 +29,23 @@ typedef enum {
 } window_event_code_t;
 
 /**
- * @brief ウィンドウイベントオブジェクト
+ * @brief ウィンドウイベント付随情報
  *
  */
-typedef struct window_event {
-    window_event_code_t event_code; /**< ウィンドウイベント種別 */
+typedef struct window_event_args {
     int window_width;               /**< イベントが発生した際のウィンドウ幅 */
     int window_height;              /**< イベントが発生した際のウィンドウ高さ */
     int framebuffer_width;          /**< イベントが発生した際のフレームバッファサイズ(幅) */
     int framebuffer_height;         /**< イベントが発生した際のフレームバッファサイズ(高さ) */
+} window_event_args_t;
+
+/**
+ * @brief ウィンドウイベント構造体
+ *
+ */
+typedef struct window_event {
+    window_event_code_t event_code; /**< ウィンドウイベント種別 */
+    window_event_args_t event_args; /**< イベント付随情報 */
 } window_event_t;
 
 #ifdef __cplusplus
