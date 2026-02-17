@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file gl33_vao.c
+ * @file concrete_vao.c
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装
  *
@@ -25,8 +25,8 @@
 #include "engine/renderer/renderer_core/renderer_memory.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

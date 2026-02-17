@@ -50,10 +50,10 @@
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vbo_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
