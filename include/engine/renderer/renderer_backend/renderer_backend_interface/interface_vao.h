@@ -1,6 +1,6 @@
 /**
  * @ingroup renderer_backend_interface
- * @file vertex_array_object.h
+ * @file interface_vao.h
  * @author chocolate-pie24
  * @brief VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する
  *
@@ -15,8 +15,8 @@
  * @copyright Copyright (c) 2026
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_VERTEX_ARRAY_OBJECT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_VERTEX_ARRAY_OBJECT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_INTERFACE_VAO_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_INTERFACE_VAO_H
 
 #ifdef __cplusplus
 extern "C" {

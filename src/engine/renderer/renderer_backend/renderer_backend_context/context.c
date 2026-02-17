@@ -9,18 +9,18 @@
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_vbo_context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_array_object.h"
-#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_buffer_object.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
 
 #include "engine/core/memory/linear_allocator.h"
 

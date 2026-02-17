@@ -1,21 +1,5 @@
-/**
- * @ingroup renderer_backend_context
- *
- * @file renderer_backend_context.h
- * @author chocolate-pie24
- * @brief renderer_backend_context は、上位層がグラフィックスAPIを意識せずにバックエンド機能を利用できるよう、使用APIに応じたバックエンド選択と各種 vtable（shader/VAO/VBO）の配線を行う初期化/終了APIを提供する
- *
- * @version 0.1
- * @date 2026-01-03
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
- *
- */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {

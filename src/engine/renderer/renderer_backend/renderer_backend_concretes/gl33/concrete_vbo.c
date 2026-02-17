@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file gl33_vbo.c
+ * @file concrete_vbo.c
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装
  *
@@ -24,8 +24,8 @@
 #include "engine/renderer/renderer_core/renderer_memory.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_interface/vertex_buffer_object.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

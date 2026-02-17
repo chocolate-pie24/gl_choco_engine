@@ -1,6 +1,6 @@
 /** @ingroup gl33
  *
- * @file gl33_shader.c
+ * @file concrete_shader.c
  * @author chocolate-pie24
  * @brief OpenGL3.3用のシェーダープログラムのコンパイル、リンク、使用開始APIの実装
  *
@@ -20,8 +20,8 @@
 #include <GL/glew.h>
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_interface/shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_shader.h"
 
 #include "engine/renderer/renderer_core/renderer_memory.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
