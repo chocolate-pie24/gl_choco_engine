@@ -1,6 +1,7 @@
 # Renderer SystemへのConcreteモジュールの追加方法ガイドライン
 
 このページでは、エンジン開発者が安全に対応グラフィックスAPIを追加するためのガイドラインを提供する。
+なお、追加するグラフィックスAPIは当面はOpenGL3.3以外のバージョンを想定しており、Vulkanを使用する際にはある程度の設計変更が必要があることを前提としている。
 
 なお、`Renderer System`の全体像については、[Renderer System architecture](../../architecture/renderer_system/architecture_ja.md)を参照のこと。
 
@@ -9,7 +10,7 @@
 - `renderer_types.h`の`target_graphics_api_t`に追加グラフィックス名称を追加
 - `renderer_backend/renderer_backend_context/context.c`の`graphics_api_valid_check()`で追加したグラフィックスAPIを有効化する
 - `include/engine/renderer/renderer_backend/renderer_backend_concretes/`以下に追加グラフィックスAPI用ディレクトリを追加
-- 追加したディレクトリ以下に、`concrete_shader.h`, `concrete_vao.h`, `concrete_vbo.h`を追加(なお、GLCEでは複数のグラフィックスAPIの混在は想定していない。必ず3つセットで作成すること。)
+- 追加したディレクトリ以下に、`concrete_shader.h`, `concrete_vao.h`, `concrete_vbo.h`を追加(なお、GLCEでは複数のグラフィックスAPIの混在は想定していない。必ず3つセットで作成すること)
 
 `concrete_shader.h`, `concrete_vao.h`, `concrete_vbo.h`では以下のAPIを定義する(xxxはグラフィックスAPI識別名称)。
 
@@ -32,6 +33,11 @@
 
 shader concreteモジュール用実装ファイルには`Renderer Backend Interface`用仮想関数テーブル(`renderer_shader_vtable_t`)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。
 
+各関数の実装においては下記に留意する
+
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
+
 | カテゴリー       | 関数名称                 | 役割                                                                                                   |
 | -------------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
 | Lifecycle      | `xxx_shader_create()`  | `renderer_backend_shader_t`構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する                   |
@@ -50,6 +56,11 @@ shader concreteモジュール用実装ファイルには`Renderer Backend Inter
 
 VAO concreteモジュール用実装ファイルには`Renderer Backend Interface`用仮想関数テーブル(`renderer_vao_vtable_t`)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。
 
+各関数の実装においては下記に留意する
+
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
+
 | カテゴリー       | 関数名称                   | 役割                                                                              |
 | -------------- | ------------------------- | -------------------------------------------------------------------------------- |
 | Lifecycle      | `xxx_vao_create()`        | `renderer_backend_vao_t`構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する |
@@ -67,6 +78,11 @@ VAO concreteモジュール用実装ファイルには`Renderer Backend Interfac
 - 生成したVBOのハンドル
 
 VBO concreteモジュール用実装ファイルには`Renderer Backend Interface`用仮想関数テーブル(`renderer_vbo_vtable_t`)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。
+
+各関数の実装においては下記に留意する
+
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
 
 | カテゴリー       | 関数名称                 | 役割                                                                              |
 | -------------- | ----------------------- | -------------------------------------------------------------------------------- |
