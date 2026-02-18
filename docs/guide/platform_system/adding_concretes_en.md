@@ -2,7 +2,7 @@
 
 This page provides guidelines for engine developers to safely add support for new platforms.
 
-For an overview of the `Platform System`, see [Platform System architecture](../../architecture/platform_system/architecture_ja.md).
+For an overview of the `Platform System`, see [Platform System architecture](../../architecture/platform_system/architecture_en.md).
 
 ## Guidelines for Adding a Supported Platform
 
