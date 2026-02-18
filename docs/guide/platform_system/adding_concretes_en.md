@@ -21,6 +21,10 @@ For an overview of the `Platform System`, see [Platform System architecture](../
 
 In the concrete module implementation file, implement the following functions as the virtual function table (vtable) for the `Platform Interface`.
 
+When implementing each function, follow the notes below.
+
+- For converting result codes to strings and translating lower-layer result codes, use the APIs provided by `platform_core/platform_err_utils`.
+
 | Category       | Function Name                | Responsibility                                                                                           |
 | -------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Lifecycle      | `platform_preinit`           | Provide the upper layer with the size and alignment requirements of the internal state struct `platform_backend_t`. |
