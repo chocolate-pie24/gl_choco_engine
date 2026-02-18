@@ -147,4 +147,4 @@ No configuration options are available at this time.
 
 ## References
 
-When adding a supported platform, refer to the [Platform System Guide](../../guide/platform/adding_concretes_en.md).
+When adding a supported platform, refer to the [Platform System Guide](../../guide/platform_system/adding_concretes_en.md).
