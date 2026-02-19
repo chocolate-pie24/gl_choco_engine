@@ -1,0 +1,52 @@
+
+graph TD
+    subgraph APPLICATION[application]
+        direction TB
+        APPLICATION_STATE[s_app_state]
+
+        APPLICATION_UPDATE[app_state_update]
+        APPLICATION_DISPATCH[app_state_dispatch]
+
+        subgraph RING_QUEUE[ring_queue]
+            direction TB
+            MOUSE_RING_QUEUE[mouse_event_queue]
+            WINDOW_RING_QUEUE[window_event_queue]
+            KEYBOARD_RING_QUEUE[keyboard_event_queue]
+        end
+
+        subgraph EVENT_CALLBACK_FUNCTION[event_callback_function]
+            direction TB
+            ON_MOUSE[on_mouse]
+            ON_WINDOW[on_window]
+            ON_KEYBOARD[on_keyboard]
+        end
+    end
+
+    subgraph PLATFORM[platform]
+        direction TB
+        PLATFORM_PUMP_MESSAGES[platform_pump_messages]
+    end
+
+    subgraph SUBSYSTEMS[sub_systems]
+        direction TB
+        SYSTEM_A[system_a]
+        SYSTEM_B[system_b]
+    end
+
+    PLATFORM_PUMP_MESSAGES --> |mouse_event_t|ON_MOUSE
+    PLATFORM_PUMP_MESSAGES --> |window_event_t|ON_WINDOW
+    PLATFORM_PUMP_MESSAGES --> |keyboard_event_t|ON_KEYBOARD
+
+    ON_MOUSE-->MOUSE_RING_QUEUE
+    ON_WINDOW-->WINDOW_RING_QUEUE
+    ON_KEYBOARD-->KEYBOARD_RING_QUEUE
+
+    MOUSE_RING_QUEUE-->APPLICATION_UPDATE
+    WINDOW_RING_QUEUE-->APPLICATION_UPDATE
+    KEYBOARD_RING_QUEUE-->APPLICATION_UPDATE
+
+    APPLICATION_UPDATE-->APPLICATION_STATE
+    APPLICATION_STATE-->APPLICATION_DISPATCH
+
+    APPLICATION_DISPATCH-->SYSTEM_A
+    APPLICATION_DISPATCH-->SYSTEM_B

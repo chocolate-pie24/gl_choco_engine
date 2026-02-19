@@ -1,0 +1,26 @@
+classDiagram
+    Context : + context_method()
+
+    ShaderInterface : + strategy_method()
+    ShaderConcrete1 : + strategy_method()
+    ShaderConcrete2 : + strategy_method()
+
+    VAOInterface : + strategy_method()
+    VAOConcrete1 : + strategy_method()
+    VAOConcrete2 : + strategy_method()
+
+    VBOInterface : + strategy_method()
+    VBOConcrete1 : + strategy_method()
+    VBOConcrete2 : + strategy_method()
+
+    Context --> ShaderInterface
+    ShaderInterface <|-- ShaderConcrete1
+    ShaderInterface <|-- ShaderConcrete2
+
+    Context --> VAOInterface
+    VAOInterface <|-- VAOConcrete1
+    VAOInterface <|-- VAOConcrete2
+
+    Context --> VBOInterface
+    VBOInterface <|-- VBOConcrete1
+    VBOInterface <|-- VBOConcrete2

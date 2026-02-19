@@ -17,34 +17,7 @@ VAO, VBO, and Shader are assumed to use the same graphics API and are selected a
 
 Based on these assumptions, the Strategy pattern has the following structure.
 
-```mermaid
-classDiagram
-    Context : + context_method()
-
-    ShaderInterface : + strategy_method()
-    ShaderConcrete1 : + strategy_method()
-    ShaderConcrete2 : + strategy_method()
-
-    VAOInterface : + strategy_method()
-    VAOConcrete1 : + strategy_method()
-    VAOConcrete2 : + strategy_method()
-
-    VBOInterface : + strategy_method()
-    VBOConcrete1 : + strategy_method()
-    VBOConcrete2 : + strategy_method()
-
-    Context --> ShaderInterface
-    ShaderInterface <|-- ShaderConcrete1
-    ShaderInterface <|-- ShaderConcrete2
-
-    Context --> VAOInterface
-    VAOInterface <|-- VAOConcrete1
-    VAOInterface <|-- VAOConcrete2
-
-    Context --> VBOInterface
-    VBOInterface <|-- VBOConcrete1
-    VBOInterface <|-- VBOConcrete2
-```
+![strategy](./strategy.png)
 
 The correspondence between the Strategy objects and GLCE modules is as follows:
 
@@ -78,56 +51,7 @@ In addition, the `Renderer System` provides the following modules that support t
 The module dependencies within the `Renderer System`, as well as its dependencies on lower-layer modules, are shown below (the core and base layers are omitted because the diagram would otherwise become too complex).
 Note that the dependency of `renderer_backend_context` on `gl33` is used only to obtain the virtual function table, and does not depend on concrete API implementations.
 
-```mermaid
-graph TD
-  subgraph RENDERER_CORE[renderer_core]
-    direction TB
-    RENDERER_ERR_UTILS[renderer_err_utils]
-    RENDERER_MEMORY[renderer_memory]
-    RENDERER_TYPES[renderer_types]
-  end
-
-  subgraph RENDERER_BACKEND[renderer_backend]
-    direction TB
-    RENDERER_BACKEND_TYPES[renderer_backend_types]
-
-    subgraph RENDERER_BACKEND_INTERFACE[renderer_backend_interface]
-      direction TB
-      INTERFACE_SHADER[interface_shader]
-      INTERFACE_VAO[interface_vao]
-      INTERFACE_VBO[interface_vbo]
-    end
-
-    subgraph RENDERER_BACKEND_CONCRETES[renderer_backend_concretes]
-      direction TB
-      subgraph GL33
-        direction TB
-        CONCRETE_SHADER[concrete_shader]
-        CONCRETE_VAO[concrete_vao]
-        CONCRETE_VBO[concrete_vbo]
-      end
-    end
-
-    subgraph RENDERER_BACKEND_CONTEXT[renderer_backend_context]
-      direction TB
-      CONTEXT[context]
-    end
-  end
-
-  RENDERER_BACKEND_INTERFACE --> RENDERER_BACKEND_TYPES
-  %% RENDERER_BACKEND_INTERFACE --> RENDERER_TYPES
-
-  RENDERER_BACKEND_CONCRETES --> RENDERER_BACKEND_INTERFACE
-  RENDERER_BACKEND_CONCRETES --> RENDERER_BACKEND_TYPES
-  %% RENDERER_BACKEND_CONCRETES --> RENDERER_CORE
-
-  %% CONTEXT --> RENDERER_CORE
-  CONTEXT --> RENDERER_BACKEND_TYPES
-  CONTEXT --> GL33
-  CONTEXT --> RENDERER_BACKEND_INTERFACE
-
-  RENDERER_BACKEND --> RENDERER_CORE
-```
+![layer](./layer.png)
 
 ### Selecting Concretes (Shader, VAO, VBO) (Current)
 
