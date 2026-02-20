@@ -1,0 +1,15 @@
+classDiagram
+    Context
+    Interface
+    Concrete1
+    Concrete2
+
+    Context : + context_method()
+
+    Interface : + strategy_method()
+    Concrete1 : + strategy_method()
+    Concrete2 : + strategy_method()
+
+    Context --> Interface
+    Interface <|-- Concrete1
+    Interface <|-- Concrete2

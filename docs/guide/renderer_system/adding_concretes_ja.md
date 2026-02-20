@@ -1,3 +1,5 @@
+@page guide_renderer_system_ja Renderer System Guide(Japanese)
+
 # Renderer SystemへのConcreteモジュールの追加方法ガイドライン
 
 このページでは、エンジン開発者が安全に対応グラフィックスAPIを追加するためのガイドラインを提供する。

@@ -1,3 +1,5 @@
+@page guide_event_system_en Event System Guide(English)
+
 # Event System Guide
 
 This page provides the following to help engine developers operate the event system safely:

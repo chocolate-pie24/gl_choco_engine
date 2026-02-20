@@ -1,3 +1,5 @@
+@page arch_renderer_system_ja Renderer System Architecture(Japanese)
+
 # Renderer System architecture
 
 ## 目的と位置づけ

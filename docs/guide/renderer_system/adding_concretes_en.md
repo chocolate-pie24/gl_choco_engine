@@ -1,3 +1,5 @@
+@page guide_renderer_system_en Renderer System Guide(English)
+
 # Guidelines for Adding a Concrete Module to the Renderer System
 
 This page provides guidelines for engine developers to safely add support for additional graphics APIs.

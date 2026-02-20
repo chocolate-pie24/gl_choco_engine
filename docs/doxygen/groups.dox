@@ -20,7 +20,8 @@
     @brief プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する
 */
 
-/** @defgroup core_event Event
+/** @defgroup event Event
+    @details Guide: @ref guide_event_system_ja
     @ingroup core
     @brief キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する
 */
@@ -32,7 +33,8 @@
     - エンジン、アプリケーション内で使用されるメモリリソースの使用量をメモリ種別ごとに管理できるよう、メモリトラッキング機能を有するメモリアロケータを提供する(現状ではmallocで将来的にFreeListに移行する)
 */
 
-/** @defgroup filesystem File System @ingroup core
+/** @defgroup filesystem File System
+    @ingroup core
     @brief ファイルI/Oに関する基本的なAPIを提供するモジュールで、以下の機能を保有する
     - ファイルI/Oを使用した機能の開発者が、FILE*を直接使用したオープン/クローズを行わなくて済むよう、標準CのラップAPIを提供するモジュール
     - ファイルI/Oを使用した高度な機能を開発するために使用する、標準Cライブラリのみで構成されたバイト単位でのファイル読み込みAPIを提供するモジュール
@@ -49,6 +51,8 @@
 */
 
 /** @defgroup platform Platform
+    @details Architecture: @ref arch_platform_system_ja
+    @details Guide: @ref guide_platform_system_ja
     @ingroup engine
     @brief プラットフォームサブシステムでプラットフォーム固有の実装を差し替え可能な仕組みを提供する
 */
@@ -74,6 +78,8 @@
 */
 
 /** @defgroup renderer Renderer
+    @details Architecture: @ref arch_renderer_system_ja
+    @details Guide: @ref guide_renderer_system_ja
     @ingroup engine
     @brief レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する
 */

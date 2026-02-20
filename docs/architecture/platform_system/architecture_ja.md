@@ -1,3 +1,5 @@
+@page arch_platform_system_ja Platform System Architecture(Japanese)
+
 # Platform System architecture
 
 ## 目的と位置づけ

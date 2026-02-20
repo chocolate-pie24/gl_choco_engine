@@ -1,3 +1,5 @@
+@page arch_renderer_system_en Renderer System Architecture(English)
+
 # Renderer System architecture
 
 ## Purpose and positioning

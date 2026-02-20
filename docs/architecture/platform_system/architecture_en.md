@@ -1,3 +1,5 @@
+@page arch_platform_system_en Platform System Architecture(English)
+
 # Platform System Architecture
 
 ## Purpose and Scope

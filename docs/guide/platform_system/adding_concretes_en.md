@@ -1,3 +1,5 @@
+@page guide_platform_system_en Platform System Guide(English)
+
 # Guidelines for Adding a Concrete Module to the Platform System
 
 This page provides guidelines for engine developers to safely add support for new platforms.

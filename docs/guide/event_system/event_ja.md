@@ -1,3 +1,5 @@
+@page guide_event_system_ja Event System Guide(Japanese)
+
 # イベントシステム解説
 
 このページでは、エンジン開発者が安全にイベントシステムの運用を行っていくために下記を提供する。

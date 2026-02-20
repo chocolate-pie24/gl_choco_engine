@@ -1,3 +1,5 @@
+@page guide_platform_system_ja Platform System Guide(Japanese)
+
 # Platform SystemへのConcreteモジュールの追加方法ガイドライン
 
 このページでは、エンジン開発者が安全に対応プラットフォームを追加するためのガイドラインを提供する。
