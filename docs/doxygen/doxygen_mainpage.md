@@ -9,17 +9,12 @@ For higher-level architecture docs and developer guides, start from the links be
 
 - [Project overview (README)](../../README.md)
 - [Architecture overview (layering)](../../docs/layer.md)
-- [Platform System architecture (EN)](../../docs/architecture/platform_system/architecture_en.md)
-- [Platform System architecture (JA)](../../docs/architecture/platform_system/architecture_ja.md)
-- [Renderer System architecture (EN)](../../docs/architecture/renderer_system/architecture_en.md)
-- [Renderer System architecture (JA)](../../docs/architecture/renderer_system/architecture_ja.md)
+- @ref arch_platform_system_ja
+- @ref arch_renderer_system_ja
 - Guides:
-  - [Event System (EN)](../../docs/guide/event_system/event_en.md)
-  - [Event System (JA)](../../docs/guide/event_system/event_ja.md)
-  - [Platform System (EN)](../../docs/guide/platform_system/adding_concretes_en.md)
-  - [Platform System (JA)](../../docs/guide/platform_system/adding_concretes_ja.md)
-  - [Renderer System (EN)](../../docs/guide/renderer_system/adding_concretes_en.md)
-  - [Renderer System (JA)](../../docs/guide/renderer_system/adding_concretes_ja.md)
+  - @ref guide_event_system_ja
+  - @ref guide_platform_system_ja
+  - @ref guide_renderer_system_ja
 
 ## Supported environment
 
