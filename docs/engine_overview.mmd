@@ -1,0 +1,39 @@
+graph TD
+  APPLICATION[application]
+
+  subgraph ENGINE[engine]
+    subgraph SYSTEMS[systems]
+      PLATFORM[platform]
+      RENDERER[renderer]
+    end
+
+    subgraph IO_UTILS[io_utils]
+      FS_UTILS[fs_utils]
+    end
+
+    subgraph CONTAINERS[containers]
+      direction TB
+      CHOCO_STRING[choco_string]
+      RING_QUEUE[ring_queue]
+    end
+
+    CORE[core]
+    BASE[base]
+  end
+
+  APPLICATION --> PLATFORM
+  APPLICATION --> RENDERER
+  APPLICATION --> IO_UTILS
+  APPLICATION --> CORE
+  APPLICATION --> CONTAINERS
+
+  PLATFORM --> CONTAINERS
+  PLATFORM --> CORE
+  RENDERER --> CORE
+
+  IO_UTILS --> CONTAINERS
+  IO_UTILS --> CORE
+
+  CONTAINERS --> CORE
+
+  CORE --> BASE
