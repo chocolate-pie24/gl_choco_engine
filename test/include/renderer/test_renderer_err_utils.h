@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #ifdef TEST_BUILD
-const char* test_renderer_result_str(void);
+const char* test_renderer_err_utils(void);
 #endif
 
 #ifdef __cplusplus

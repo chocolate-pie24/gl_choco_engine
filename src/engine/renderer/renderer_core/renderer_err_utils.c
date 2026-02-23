@@ -13,9 +13,13 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+// #define TEST_BUILD
+
 #ifdef TEST_BUILD
 #include <string.h>
 #include <assert.h>
+
+#include "engine/base/choco_macros.h"
 #endif
 
 #include "engine/renderer/renderer_core/renderer_types.h"
@@ -34,6 +38,12 @@ static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";            /*
 static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";              /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
 static const char* s_rslt_str_bad_operation = "BAD_OPERATION";                /**< 実行結果コードRENDERER_BAD_OPERATIONの文字列 */
 static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";              /**< 実行結果コードRENDERER_DATA_CORRUPTEDの文字列 */
+
+#ifdef TEST_BUILD
+static void NO_COVERAGE test_renderer_result_str(void);
+static void NO_COVERAGE test_renderer_rslt_convert_linear_alloc(void);
+static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void);
+#endif
 
 const char* renderer_rslt_to_str(renderer_result_t rslt_) {
     switch(rslt_) {
@@ -93,7 +103,13 @@ renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt
 }
 
 #ifdef TEST_BUILD
-void test_renderer_result_str(void) {
+void test_renderer_err_utils(void) {
+    test_renderer_result_str();
+    test_renderer_rslt_convert_linear_alloc();
+    test_renderer_rslt_convert_choco_memory();
+}
+
+static void NO_COVERAGE test_renderer_result_str(void) {
     {
         const char* tmp = renderer_rslt_to_str(RENDERER_SUCCESS);
         assert(0 == strcmp(tmp, s_rslt_str_success));
@@ -137,6 +153,62 @@ void test_renderer_result_str(void) {
     {
         const char* tmp = renderer_rslt_to_str(1000);
         assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
+    }
+}
+
+static void NO_COVERAGE test_renderer_rslt_convert_linear_alloc(void) {
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+        assert(RENDERER_SUCCESS == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY);
+        assert(RENDERER_NO_MEMORY == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_linear_alloc(100);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+    }
+}
+
+static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void) {
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
+        assert(RENDERER_SUCCESS == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY);
+        assert(RENDERER_NO_MEMORY == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_memory(100);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
     }
 }
 #endif
