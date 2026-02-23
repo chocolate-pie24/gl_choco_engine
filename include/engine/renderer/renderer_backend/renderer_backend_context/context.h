@@ -1,3 +1,19 @@
+/**
+ * @ingroup renderer_backend_context
+ *
+ * @file context.h
+ * @author chocolate-pie24
+ * @brief renderer_backend内部情報管理構造体のリソース管理APIを提供する
+ *
+ * @version 0.1
+ * @date 2026-02-23
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
 #define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
 

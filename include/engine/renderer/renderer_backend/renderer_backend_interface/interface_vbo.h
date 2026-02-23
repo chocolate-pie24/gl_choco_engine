@@ -101,6 +101,10 @@ typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo
  */
 typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
 
+/**
+ * @brief VBO機能仮想関数テーブル
+ *
+ */
 typedef struct renderer_vbo_vtable {
     pfn_vertex_buffer_create vertex_buffer_create;              /**< 関数ポインタ @ref pfn_vertex_buffer_create 参照 */
     pfn_vertex_buffer_destroy vertex_buffer_destroy;            /**< 関数ポインタ @ref pfn_vertex_buffer_destroy 参照 */

@@ -192,24 +192,6 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief VBOアンバインド処理
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vbo_t* vbo = NULL;
- * renderer_result_t ret = gl33_vbo_create(&vbo);
- * // エラー処理
- * ret = gl33_vbo_bind(vbo);
- * // エラー処理
- * gl33_vbo_unbind(vbo);
- * @endcode
- *
- * @param vertex_buffer_ VBOハンドル(OpenGL3.3では使用しない)
- *
- * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_ == NULL
- * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindBufferに対して個別にglGetErrorを行わないため、常に成功
- */
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
@@ -223,34 +205,6 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief VBOで管理する頂点情報をGPUへ転送する(glBufferData APIのラッパーAPI)
- * @note 当面はglGetErrorをAPI個別に実行するつもりはないので成功するが、将来的に個別にエラー処理を行う可能性を考慮し、返り値をエラーコードにする
- * @note 現在バインド中のVBOに紐づくバッファへ転送されるため、事前に @ref gl33_vbo_bind によってバインドしておくこと
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vbo_t* vbo = NULL;
- * renderer_result_t ret = gl33_vbo_create(&vbo);
- * // エラー処理
- * ret = gl33_vbo_bind(vbo);
- * float data[] = { 1.0f, 2.0f, 3.0f };
- * renderer_result_t ret = gl33_vbo_vertex_load(vbo, sizeof(float) * 3, data, BUFFER_USAGE_STATIC);
- * // エラー処理
- * @endcode
- *
- * @param vertex_buffer_ VBOハンドル
- * @param load_size_ 転送サイズ(byte)
- * @param load_data_ 転送データの先頭アドレス
- * @param usage_ バッファデータの取り扱い @ref buffer_usage_t
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - vertex_buffer_ == NULL
- * - load_data_ == NULL
- * - load_size_ == 0
- * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
- * @retval RENDERER_SUCCESS データの転送に成功し、正常終了
- */
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 

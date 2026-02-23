@@ -35,8 +35,10 @@ extern "C" {
  * @param[in,out] vertex_array_ VAO構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
  * - vertex_array_ == NULL
  * - *vertex_array_ != NULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
@@ -104,6 +106,10 @@ typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_
  */
 typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
+/**
+ * @brief VAO機能仮想関数テーブル
+ *
+ */
 typedef struct renderer_vao_vtable {
     pfn_vertex_array_create vertex_array_create;                /**< 関数ポインタ @ref pfn_vertex_array_create 参照 */
     pfn_vertex_array_destroy vertex_array_destroy;              /**< 関数ポインタ @ref pfn_vertex_array_destroy 参照 */
