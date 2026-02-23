@@ -27,7 +27,7 @@ extern "C" {
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
 
-typedef struct renderer_backend_context renderer_backend_context_t;
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
 /**
  * @brief VBO内部状態管理構造体インスタンスのメモリを確保する

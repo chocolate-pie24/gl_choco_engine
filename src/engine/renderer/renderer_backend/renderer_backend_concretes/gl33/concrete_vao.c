@@ -225,39 +225,6 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief glVertexAttribPointerのラッパーAPIであり、layout設定の後に設定の有効化(glEnableVertexAttribArray)を行う
- *
- * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
- * @param layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
- * @param size_ 頂点情報に含まれるデータの数([x, y, z]の3次元座標のみであれば3)
- * @param type_ バッファに格納されているデータの型 @ref renderer_type_t
- * @param normalized_ 与えられた頂点データを正規化するかどうかを指定
- * @param stride_ 頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定)
- * @param offset_ 「この頂点属性の先頭が、現在GL_ARRAY_BUFFERにバインドされているバッファの先頭から何バイト目にあるか」を指定
- *
- * 使用例:
- * @code{.c}
- * static const GLfloat vertex_buffer_data[] = {
- * -1.0f, -1.0f, 0.0f,
- * 1.0f, -1.0f, 0.0f,
- * 0.0f,  1.0f, 0.0f,
- * };
- *
- * glVertexAttribPointer(
- * 0,
- * 3,
- * GL_FLOAT,
- * GL_FALSE,
- * sizeof(GLfloat) * 3,
- * (void*)0
- * );
- * @endcode
- *
- * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
- * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
 static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 

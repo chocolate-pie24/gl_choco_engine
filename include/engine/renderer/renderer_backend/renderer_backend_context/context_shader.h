@@ -78,7 +78,7 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
  *
  * @param[in] shader_type_ シェーダー種別 @ref shader_type_t
  * @param[in] shader_source_ シェーダーソース文字列
- * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ コンパイルしたシェーダープログラムへのハンドルを格納する
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -102,7 +102,7 @@ renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, co
  * - リンクして生成されるプログラムのGPU側リソースを確保する
  * - シェーダープログラムのリンク
  *
- * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ リンクしたプログラム識別子を格納する
  *
  * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
@@ -122,7 +122,7 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子がbackend_context_が保持するフィールドに記憶される
  *
- * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか

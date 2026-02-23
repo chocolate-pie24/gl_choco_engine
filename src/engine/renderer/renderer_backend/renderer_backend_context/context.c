@@ -27,16 +27,20 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief RendererBackend内部状態管理構造体
+ *
+ */
 struct renderer_backend_context {
-    target_graphics_api_t target_api;
+    target_graphics_api_t target_api;               /**< 使用グラフィックスAPI */
 
-    const renderer_shader_vtable_t* shader_vtable;
-    const renderer_vao_vtable_t* vao_vtable;
-    const renderer_vbo_vtable_t* vbo_vtable;
+    const renderer_shader_vtable_t* shader_vtable;  /**< シェーダー機能提供vtable */
+    const renderer_vao_vtable_t* vao_vtable;        /**< VAO機能提供vtable */
+    const renderer_vbo_vtable_t* vbo_vtable;        /**< VBO機能提供vtable */
 
-    uint32_t current_program_id;
-    uint32_t current_bound_vao;
-    uint32_t current_bound_vbo;
+    uint32_t current_program_id;                    /**< 現在使用中のリンクされたシェーダープログラムID */
+    uint32_t current_bound_vao;                     /**< 現在バインド中のVAO識別子 */
+    uint32_t current_bound_vbo;                     /**< 現在バインド中のVBO識別子 */
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);

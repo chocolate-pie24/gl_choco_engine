@@ -30,7 +30,7 @@ extern "C" {
 /**
  * @brief シェーダー構造体インスタンスのメモリを確保し、renderer_backend_shader_tインスタンスのフィールドを全て0で初期化する
  *
- * @note shader_handle_のリソース管理は本モジュールで行うため、確保されたメモリは使用者が @ref renderer_shader_vtable_t が保有する @ref renderer_shader_destroy を呼び出して解放する
+ * @note shader_handle_のリソース管理は本モジュールで行うため、確保されたメモリは使用者が @ref renderer_shader_vtable_t が保有するdestroy関数を呼び出して解放する
  *
  * @param[out] shader_handle_ renderer_backend_shader_t構造体インスタンスへのダブルポインタ
  *
@@ -135,11 +135,11 @@ typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* 
  *
  */
 typedef struct renderer_shader_vtable {
-    pfn_renderer_shader_create renderer_shader_create;      /**< 関数ポインタ @ref pfn_renderer_shader_create参照 */
-    pfn_renderer_shader_destroy renderer_shader_destroy;    /**< 関数ポインタ @ref pfn_renderer_shader_destroy参照 */
-    pfn_renderer_shader_compile renderer_shader_compile;    /**< 関数ポインタ @ref pfn_renderer_shader_compile参照 */
-    pfn_renderer_shader_link renderer_shader_link;          /**< 関数ポインタ @ref pfn_renderer_shader_link参照 */
-    pfn_renderer_shader_use renderer_shader_use;            /**< 関数ポインタ @ref pfn_renderer_shader_use参照 */
+    pfn_renderer_shader_create renderer_shader_create;      /**< 関数ポインタ @ref pfn_renderer_shader_create 参照 */
+    pfn_renderer_shader_destroy renderer_shader_destroy;    /**< 関数ポインタ @ref pfn_renderer_shader_destroy 参照 */
+    pfn_renderer_shader_compile renderer_shader_compile;    /**< 関数ポインタ @ref pfn_renderer_shader_compile 参照 */
+    pfn_renderer_shader_link renderer_shader_link;          /**< 関数ポインタ @ref pfn_renderer_shader_link 参照 */
+    pfn_renderer_shader_use renderer_shader_use;            /**< 関数ポインタ @ref pfn_renderer_shader_use 参照 */
 } renderer_shader_vtable_t;
 
 #ifdef __cplusplus
