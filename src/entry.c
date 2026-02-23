@@ -26,6 +26,7 @@
 #include "test_ring_queue.h"
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
+#include "platform/test_platform_err_utils.h"
 #include "renderer/test_renderer_memory.h"
 #include "renderer/test_renderer_err_utils.h"
 #include "renderer/test_gl33_vbo.h"
@@ -61,8 +62,11 @@ int main(int argc_, char** argv_) {
         test_memory_system();
         test_choco_string();
         test_ring_queue();
+
         test_platform_context();
         test_platform_glfw();
+        test_platform_err_utils();
+
         test_renderer_memory();
         test_renderer_err_utils();
         test_gl33_vbo();

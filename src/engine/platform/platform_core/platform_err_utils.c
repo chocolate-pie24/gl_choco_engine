@@ -23,6 +23,12 @@ static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**<
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
+#ifdef TEST_BUILD
+static void NO_COVERAGE test_platform_rslt_to_str(void);
+static void NO_COVERAGE test_platform_rslt_convert_choco_string(void);
+static void NO_COVERAGE test_platform_rslt_convert_linear_alloc(void);
+#endif
+
 const char* platform_rslt_to_str(platform_result_t rslt_) {
     switch(rslt_) {
     case PLATFORM_SUCCESS:
@@ -89,6 +95,12 @@ platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t r
 }
 
 #ifdef TEST_BUILD
+void test_platform_err_utils(void) {
+    test_platform_rslt_to_str();
+    test_platform_rslt_convert_choco_string();
+    test_platform_rslt_convert_linear_alloc();
+}
+
 static void NO_COVERAGE test_platform_rslt_to_str(void) {
     {
         const char* test = platform_rslt_to_str(PLATFORM_SUCCESS);
