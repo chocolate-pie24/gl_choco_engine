@@ -31,6 +31,8 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+// #define TEST_BUILD
+
 /**
  * @brief VAOモジュール内部状態管理構造体
  *
@@ -53,6 +55,7 @@ static void mock_glEnableVertexAttribArray(GLuint index_);
 
 #ifdef TEST_BUILD
 #include <assert.h>
+#include <stdlib.h>
 #include "engine/core/memory/choco_memory.h"
 
 static bool s_vertex_array_object_test = false;
@@ -320,91 +323,192 @@ void test_gl33_vao(void) {
 }
 
 static void NO_COVERAGE test_gl33_vao_create(void) {
-    // renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    // {
-    //     ret = gl33_vao_create(NULL);
-    //     assert(RENDERER_INVALID_ARGUMENT == ret);
-    // }
-    // {
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     assert(RENDERER_SUCCESS == render_mem_allocate(sizeof(renderer_backend_vao_t), (void**)&tmp));
-    //     assert(NULL != tmp);
-    //     ret = gl33_vao_create(&tmp);
-    //     assert(RENDERER_INVALID_ARGUMENT == ret);
-    //     render_mem_free(tmp, sizeof(renderer_backend_vao_t));
-    // }
-    // {
-    //     memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     ret = gl33_vao_create(&tmp);
-    //     assert(RENDERER_NO_MEMORY == ret);
-    //     assert(NULL == tmp);
-    //     memory_system_test_param_reset();
-    // }
-    // {
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     ret = gl33_vao_create(&tmp);
-    //     assert(RENDERER_SUCCESS == ret);
-    //     assert(NULL != tmp);
-    //     gl33_vao_destroy(&tmp);
-    //     assert(NULL == tmp);
-    // }
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
+    {
+        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        ret = gl33_vao_create(NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // *vertex_array != NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_backend_vao_t* vertex_array = NULL;
+        vertex_array = malloc(sizeof(renderer_backend_vao_t));
+        assert(NULL != vertex_array);
+
+        ret = gl33_vao_create(&vertex_array);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        free(vertex_array);
+        vertex_array = NULL;
+    }
+    {
+        // render_mem_allocateがRENDERER_LIMIT_EXCEEDEDでRENDERER_LIMIT_EXCEEDED, vertex_arrayはNULLのまま
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+
+        renderer_backend_vao_t* vertex_array = NULL;
+        ret = gl33_vao_create(&vertex_array);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+        assert(NULL == vertex_array);
+
+        memory_system_test_param_reset();
+    }
+    {
+        // 正常系
+        renderer_backend_vao_t* vertex_array = NULL;
+        ret = gl33_vao_create(&vertex_array);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vertex_array);
+
+        gl33_vao_destroy(&vertex_array);
+        assert(NULL == vertex_array);
+    }
+    s_vertex_array_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vao_destroy(void) {
-    // {
-    //     gl33_vao_destroy(NULL);
-    // }
-    // {
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     gl33_vao_destroy(&tmp);
-    // }
-    // {
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     renderer_result_t ret = gl33_vao_create(&tmp);
-    //     assert(RENDERER_SUCCESS == ret);
-    //     assert(NULL != tmp);
-    //     gl33_vao_destroy(&tmp);
-    //     assert(NULL == tmp);
-    // }
+    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
+    {
+        // vertex_array_ == NULL -> No-op
+        renderer_backend_vao_t* vao = NULL;
+        gl33_vao_destroy(&vao);
+    }
+    {
+        // vertex_array_ == NULL -> No-op
+        gl33_vao_destroy(NULL);
+    }
+    {
+        // 正常系
+        renderer_backend_vao_t* vao = NULL;
+        renderer_result_t ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    s_vertex_array_object_test = false;
 }
 
+
 static void NO_COVERAGE test_gl33_vao_bind(void) {
-    // renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    // {
-    //     ret = gl33_vao_bind(NULL);
-    //     assert(RENDERER_INVALID_ARGUMENT == ret);
-    // }
-    // {
-    //     renderer_backend_vao_t* tmp = NULL;
-    //     ret = gl33_vao_create(&tmp);
-    //     assert(RENDERER_SUCCESS == ret);
-    //     assert(NULL != tmp);
-    //     ret = gl33_vao_bind(tmp);
-    //     assert(RENDERER_SUCCESS == ret);
-    //     gl33_vao_destroy(&tmp);
-    //     assert(NULL == tmp);
-    // }
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
+    {
+        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        uint32_t id = 0;
+        ret = gl33_vao_bind(NULL, &id);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // out_vao_id_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        ret = gl33_vao_bind(vao, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    {
+        // *out_vao_id_ == vertex_array_->vao_handle -> RENDERER_SUCCESS
+        // NOTE: if文を通らないことを確認する
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        vao->vao_handle = 1;
+        uint32_t id = 1;
+
+        ret = gl33_vao_bind(vao, &id);
+        assert(RENDERER_SUCCESS == ret);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    {
+        // *out_vao_id_ != vertex_array_->vao_handle -> RENDERER_SUCCESS
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+        vao->vao_handle = 5;
+        uint32_t id = 1;
+        assert(vao->vao_handle != id);
+
+        ret = gl33_vao_bind(vao, &id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(vao->vao_handle == id);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    s_vertex_array_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vao_unbind(void) {
-    // renderer_result_t ret = gl33_vao_unbind();
-    // assert(RENDERER_SUCCESS == ret);
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    s_vertex_array_object_test = true;
+    {
+        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        ret = gl33_vao_unbind(NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // 正常系
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        ret = gl33_vao_unbind(vao);
+        assert(RENDERER_SUCCESS == ret);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    s_vertex_array_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vao_attribute_set(void) {
-    // renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    // {
-    //     ret = gl33_vao_attribute_set(0, 128, 100, false, 16, 0);
-    //     assert(RENDERER_RUNTIME_ERROR == ret);
-    // }
-    // {
-    //     ret = gl33_vao_attribute_set(0, 128, RENDERER_TYPE_FLOAT, false, 16, 0);
-    //     assert(RENDERER_SUCCESS == ret);
-    // }
-    // {
-    //     ret = gl33_vao_attribute_set(0, 128, RENDERER_TYPE_FLOAT, true, 16, 0);
-    //     assert(RENDERER_SUCCESS == ret);
-    // }
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    s_vertex_array_object_test = true;
+    {
+        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        ret = gl33_vao_attribute_set(NULL, 4, 8, RENDERER_TYPE_FLOAT, true, 8, 8);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // type_が既定値外 -> RENDERER_RUNTIME_ERROR
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        ret = gl33_vao_attribute_set(vao, 4, 8, 100, true, 8, 8);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+    {
+        // 正常系
+        renderer_backend_vao_t* vao = NULL;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        ret = gl33_vao_attribute_set(vao, 4, 8, RENDERER_TYPE_FLOAT, true, 8, 8);
+        assert(RENDERER_SUCCESS == ret);
+
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+    }
+
+    s_vertex_array_object_test = false;
 }
 #endif
