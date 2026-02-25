@@ -10,3 +10,4 @@
   - GitHub: [link file](http://github.com/xxxx)
   - doxygen: @ref linkfile
 - docs/doxygen/doxygen-outを作成し、Doxyfileの入力、出力を整理
+- uint16_t *variableのように、ポインタ記号が変数の前に来ている箇所を修正
