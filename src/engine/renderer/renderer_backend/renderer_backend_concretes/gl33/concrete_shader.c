@@ -89,9 +89,9 @@ static fail_injection_t s_fail_injection;   /**< 上位モジュールテスト�
 // テスト用private関数プロトタイプ宣言
 static void NO_COVERAGE test_gl33_shader_create(void);
 static void NO_COVERAGE test_gl33_shader_destroy(void);
-// static void NO_COVERAGE test_gl33_shader_compile(void);
-// static void test_gl33_shader_link(void);
-// static void test_gl33_shader_use(void);
+static void NO_COVERAGE test_gl33_shader_compile(void);
+static void test_gl33_shader_link(void);
+static void test_gl33_shader_use(void);
 static void test_gl33_shader_resolve_target(void);
 static void NO_COVERAGE test_shader_compile_status_get(void);
 static void NO_COVERAGE test_gl33_shader_handle_addr_get(void);
@@ -252,6 +252,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     // シェーダー種別をOpenGLで使用可能な値に変換
     ret = gl33_shader_resolve_target(shader_type_, &gl33_shader_type);
     if(RENDERER_SUCCESS != ret) {
+        // gl33_shader_handle_addr_getで既にエラー処理されているため、ここに来ることはないが将来的な変更のために残しておく
         ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_resolve_target).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
@@ -739,9 +740,9 @@ void test_gl33_shader(void) {
 
     test_gl33_shader_create();
     test_gl33_shader_destroy();
-    // test_gl33_shader_compile();
-    // test_gl33_shader_link();
-    // test_gl33_shader_use();
+    test_gl33_shader_compile();
+    test_gl33_shader_link();
+    test_gl33_shader_use();
     test_gl33_shader_resolve_target();
     test_shader_compile_status_get();
     test_gl33_shader_handle_addr_get();
@@ -853,6 +854,779 @@ static void NO_COVERAGE test_gl33_shader_destroy(void) {
 
         s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
         s_fail_injection.is_enabled_glDeleteShader_no_op = false;
+    }
+}
+
+static void NO_COVERAGE test_gl33_shader_compile(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    const char* shader_source = "dummy shader source";
+
+    {
+        // 強制エラー出力機能テスト
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled = true;
+        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // shader_source_ == NULL -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, NULL, shader);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 既にコンパイル済み -> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 1;     // compiled扱い
+        shader->fragment_shader_handle = 0;
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 既にリンク済み(program_id != 0) -> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 99;              // linked扱い
+        shader->vertex_shader_handle = 0;
+        shader->fragment_shader_handle = 0;
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // shader_type_ が既定値外 -> gl33_shader_handle_addr_getで失敗 -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        ret = gl33_shader_compile((shader_type_t)100, shader_source, shader);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // glCreateShader が 0 を返す -> RENDERER_SHADER_COMPILE_ERROR
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 0;
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
+        assert(0 == shader->vertex_shader_handle);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 正常系: info_log_length == 0 && result == GL_TRUE -> SUCCESS
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 123;
+
+        s_fail_injection.is_enabled_glShaderSource_no_op = true;
+        s_fail_injection.is_enabled_glCompileShader_no_op = true;
+
+        s_fail_injection.is_enabled_glGetShaderiv = true;
+        s_fail_injection.status_glGetShaderiv = GL_TRUE;
+        s_fail_injection.length_glGetShaderiv = 0;
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(123 == shader->vertex_shader_handle);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 正常系: info_log_length > 0 && result == GL_TRUE -> WARN経由でSUCCESS
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 124;
+
+        s_fail_injection.is_enabled_glShaderSource_no_op = true;
+        s_fail_injection.is_enabled_glCompileShader_no_op = true;
+
+        s_fail_injection.is_enabled_glGetShaderiv = true;
+        s_fail_injection.status_glGetShaderiv = GL_TRUE;
+        s_fail_injection.length_glGetShaderiv = 16;
+
+        s_fail_injection.is_enabled_glGetShaderInfoLog = true;
+        memset(s_fail_injection.log_str_glGetShaderInfoLog, 0, TEST_INFO_LOG_LENGTH);
+        strncpy(s_fail_injection.log_str_glGetShaderInfoLog, "compile warn", TEST_INFO_LOG_LENGTH - 1);
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(124 == shader->vertex_shader_handle);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length > 0 && result != GL_TRUE -> RENDERER_SHADER_COMPILE_ERROR（cleanupでDeleteShader）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 125;
+
+        s_fail_injection.is_enabled_glShaderSource_no_op = true;
+        s_fail_injection.is_enabled_glCompileShader_no_op = true;
+
+        s_fail_injection.is_enabled_glGetShaderiv = true;
+        s_fail_injection.status_glGetShaderiv = GL_FALSE;
+        s_fail_injection.length_glGetShaderiv = 16;
+
+        s_fail_injection.is_enabled_glGetShaderInfoLog = true;
+        memset(s_fail_injection.log_str_glGetShaderInfoLog, 0, TEST_INFO_LOG_LENGTH);
+        strncpy(s_fail_injection.log_str_glGetShaderInfoLog, "compile error", TEST_INFO_LOG_LENGTH - 1);
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
+        assert(0 == shader->vertex_shader_handle);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length == 0 && result != GL_TRUE -> RENDERER_SHADER_COMPILE_ERROR（cleanupでDeleteShader）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 126;
+
+        s_fail_injection.is_enabled_glShaderSource_no_op = true;
+        s_fail_injection.is_enabled_glCompileShader_no_op = true;
+
+        s_fail_injection.is_enabled_glGetShaderiv = true;
+        s_fail_injection.status_glGetShaderiv = GL_FALSE;
+        s_fail_injection.length_glGetShaderiv = 0;
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
+        assert(0 == shader->vertex_shader_handle);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length > 0 で render_mem_allocate 失敗 -> RENDERER_LIMIT_EXCEEDED（cleanupでDeleteShader）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+        assert(0 == shader->vertex_shader_handle);
+
+        s_fail_injection.is_enabled_glCreateShader = true;
+        s_fail_injection.result_glCreateShader = 127;
+
+        s_fail_injection.is_enabled_glShaderSource_no_op = true;
+        s_fail_injection.is_enabled_glCompileShader_no_op = true;
+
+        s_fail_injection.is_enabled_glGetShaderiv = true;
+        s_fail_injection.status_glGetShaderiv = GL_TRUE;
+        s_fail_injection.length_glGetShaderiv = 16;
+
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+
+        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+        assert(0 == shader->vertex_shader_handle);
+
+        memory_system_test_param_reset();
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+}
+
+static void NO_COVERAGE test_gl33_shader_link(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    {
+        // 強制エラー出力機能テスト
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled = true;
+        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
+
+        ret = gl33_shader_link(NULL);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+
+        ret = gl33_shader_link(NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // program_id != 0（既にリンク済み）-> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 99;
+        shader->vertex_shader_handle = 1;
+        shader->fragment_shader_handle = 1;
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // vertex 未コンパイル -> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 0;   // 未
+        shader->fragment_shader_handle = 1; // 済扱い
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // fragment 未コンパイル -> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 1;   // 済扱い
+        shader->fragment_shader_handle = 0; // 未
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // glCreateProgram が 0 -> RENDERER_SHADER_LINK_ERROR
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 10;
+        shader->fragment_shader_handle = 11;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 0;
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_SHADER_LINK_ERROR == ret);
+        assert(0 == shader->program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 正常系: info_log_length == 0 && LINK_STATUS == GL_TRUE -> SUCCESS
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glAttachShader_no_op = true;
+        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 20;
+        shader->fragment_shader_handle = 21;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 200;
+
+        s_fail_injection.is_enabled_glGetProgramiv = true;
+        s_fail_injection.status_glGetProgramiv = GL_TRUE;
+        s_fail_injection.length_glGetProgramiv = 0;
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(200 == shader->program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 正常系: info_log_length > 0 && LINK_STATUS == GL_TRUE -> WARN経由でSUCCESS
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glAttachShader_no_op = true;
+        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 30;
+        shader->fragment_shader_handle = 31;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 201;
+
+        s_fail_injection.is_enabled_glGetProgramiv = true;
+        s_fail_injection.status_glGetProgramiv = GL_TRUE;
+        s_fail_injection.length_glGetProgramiv = 16;
+
+        s_fail_injection.is_enabled_glGetProgramInfoLog = true;
+        memset(s_fail_injection.log_str_glGetProgramInfoLog, 0, TEST_INFO_LOG_LENGTH);
+        strncpy(s_fail_injection.log_str_glGetProgramInfoLog, "link warn", TEST_INFO_LOG_LENGTH - 1);
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(201 == shader->program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length > 0 && LINK_STATUS != GL_TRUE -> RENDERER_SHADER_LINK_ERROR（cleanupでDeleteProgram）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glAttachShader_no_op = true;
+        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 40;
+        shader->fragment_shader_handle = 41;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 202;
+
+        s_fail_injection.is_enabled_glGetProgramiv = true;
+        s_fail_injection.status_glGetProgramiv = GL_FALSE;
+        s_fail_injection.length_glGetProgramiv = 16;
+
+        s_fail_injection.is_enabled_glGetProgramInfoLog = true;
+        memset(s_fail_injection.log_str_glGetProgramInfoLog, 0, TEST_INFO_LOG_LENGTH);
+        strncpy(s_fail_injection.log_str_glGetProgramInfoLog, "link error", TEST_INFO_LOG_LENGTH - 1);
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_SHADER_LINK_ERROR == ret);
+        assert(0 == shader->program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length == 0 && LINK_STATUS != GL_TRUE -> RENDERER_SHADER_LINK_ERROR（cleanupでDeleteProgram）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glAttachShader_no_op = true;
+        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 50;
+        shader->fragment_shader_handle = 51;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 203;
+
+        s_fail_injection.is_enabled_glGetProgramiv = true;
+        s_fail_injection.status_glGetProgramiv = GL_FALSE;
+        s_fail_injection.length_glGetProgramiv = 0;
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_SHADER_LINK_ERROR == ret);
+        assert(0 == shader->program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 異常系: info_log_length > 0 で render_mem_allocate 失敗 -> RENDERER_LIMIT_EXCEEDED（cleanupでDeleteProgram）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glAttachShader_no_op = true;
+        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 60;
+        shader->fragment_shader_handle = 61;
+
+        s_fail_injection.is_enabled_glCreateProgram = true;
+        s_fail_injection.result_glCreateProgram = 204;
+
+        s_fail_injection.is_enabled_glGetProgramiv = true;
+        s_fail_injection.status_glGetProgramiv = GL_TRUE;
+        s_fail_injection.length_glGetProgramiv = 16;
+
+        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+
+        ret = gl33_shader_link(shader);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+        assert(0 == shader->program_id);
+
+        memory_system_test_param_reset();
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+}
+
+static void NO_COVERAGE test_gl33_shader_use(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    {
+        // 強制エラー出力機能テスト
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled = true;
+        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
+
+        ret = gl33_shader_use(NULL, NULL);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+
+        uint32_t out_program_id = 0;
+        ret = gl33_shader_use(NULL, &out_program_id);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // out_program_id_ == NULL -> RENDERER_INVALID_ARGUMENT
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        ret = gl33_shader_use(shader, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // program_id == 0 -> RENDERER_BAD_OPERATION
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 0;
+        shader->vertex_shader_handle = 1;
+        shader->fragment_shader_handle = 2;
+
+        uint32_t out_program_id = 0;
+        ret = gl33_shader_use(shader, &out_program_id);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // out_program_id_ が既に program_id と同一 -> SUCCESS（内部でcompiledチェック/UseProgramしない）
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glUseProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 10;
+        shader->vertex_shader_handle = 0;    // 未コンパイルでもOK（この分岐では見ない）
+        shader->fragment_shader_handle = 0;
+
+        uint32_t out_program_id = 10;
+        ret = gl33_shader_use(shader, &out_program_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(10 == out_program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // vertex 未コンパイル（program_id!=0 かつ out_program_id!=program_id）-> RENDERER_DATA_CORRUPTED
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glUseProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 11;
+        shader->vertex_shader_handle = 0;    // 未
+        shader->fragment_shader_handle = 1;  // 済扱い
+
+        uint32_t out_program_id = 0;
+        ret = gl33_shader_use(shader, &out_program_id);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(0 == out_program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // fragment 未コンパイル（program_id!=0 かつ out_program_id!=program_id）-> RENDERER_DATA_CORRUPTED
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glUseProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 12;
+        shader->vertex_shader_handle = 1;    // 済扱い
+        shader->fragment_shader_handle = 0;  // 未
+
+        uint32_t out_program_id = 0;
+        ret = gl33_shader_use(shader, &out_program_id);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(0 == out_program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
+    }
+    {
+        // 正常系: program_id!=0 / out_program_id!=program_id / vertex&fragment compiled -> SUCCESS & out_program_id 更新
+        gl33_shader_fail_disable();
+        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
+        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
+        s_fail_injection.is_enabled_glUseProgram_no_op = true;
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = gl33_shader_create(&shader);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != shader);
+
+        shader->program_id = 13;
+        shader->vertex_shader_handle = 2;
+        shader->fragment_shader_handle = 3;
+
+        uint32_t out_program_id = 0;
+        ret = gl33_shader_use(shader, &out_program_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(13 == out_program_id);
+
+        gl33_shader_destroy(&shader);
+        assert(NULL == shader);
+
+        gl33_shader_fail_disable();
     }
 }
 
@@ -1035,4 +1809,5 @@ static void NO_COVERAGE test_gl33_shader_handle_addr_get(void) {
     s_fail_injection.is_enabled_glDeleteShader_no_op = false;
     s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
 }
+
 #endif
