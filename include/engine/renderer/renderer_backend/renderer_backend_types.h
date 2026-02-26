@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef struct renderer_backend_shader renderer_backend_shader_t;   /**< シェーダーモジュール内部状態管理構造体前方宣言 */
+typedef struct renderer_backend_shader renderer_backend_shader_t;   /**< シェーダーハンドル構造体(シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体)の前方宣言 */
 
 typedef struct renderer_backend_vao renderer_backend_vao_t;         /**< VAOモジュール内部状態管理構造体前方宣言 */
 

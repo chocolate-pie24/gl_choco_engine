@@ -3,7 +3,11 @@
  *
  * @file interface_shader.h
  * @author chocolate-pie24
- * @brief shaderプログラム操作関数をまとめたvtableを定義する
+ * @brief シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する
+ *
+ * @note
+ * - シェーダープログラム: シェーダーオブジェクトをリンクしたプログラム
+ * - シェーダーオブジェクト: コンパイルされた各シェーダーステージごとのオブジェクト
  *
  * @version 0.1
  * @date 2026-02-23
@@ -28,7 +32,7 @@ extern "C" {
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 /**
- * @brief シェーダー構造体インスタンスのメモリを確保し、renderer_backend_shader_tインスタンスのフィールドを全て0で初期化する
+ * @brief シェーダーハンドル構造体インスタンスのメモリを確保し、renderer_backend_shader_tインスタンスのフィールドを全て0で初期化する
  *
  * @note shader_handle_のリソース管理は本モジュールで行うため、確保されたメモリは使用者が @ref renderer_shader_vtable_t が保有するdestroy関数を呼び出して解放する
  *
@@ -47,31 +51,31 @@ extern "C" {
 typedef renderer_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);
 
 /**
- * @brief シェーダー構造体インスタンスを破棄する
+ * @brief シェーダーハンドル構造体インスタンスを破棄する
  *
  * @note
  * - 本関数実行後はshader_handle_はNULLになり再利用不可となる
  * - 2重解放を許可する(shader_handle_ == NULLまたは*shader_handle_ == NULLの場合は何もしない)
  *
  * @details 以下の処理を行う
- * - シェーダープログラムのGPU側リソースの破棄
- * - シェーダー構造体インスタンスが保持するリソースの破棄
- * - シェーダー構造体インスタンス自身のリソースの破棄
+ * - シェーダープログラム/シェーダーオブジェクトのGPU側リソースの破棄
+ * - シェーダーハンドル構造体インスタンスが保持するリソースの破棄
+ * - シェーダーハンドル構造体インスタンス自身のリソースの破棄
  *
  * @param[in,out] shader_handle_ 破棄対象構造体インスタンスへのダブルポインタ
  */
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);
 
 /**
- * @brief シェーダープログラムをコンパイルする
+ * @brief シェーダーソースをコンパイルし、シェーダーオブジェクトを初期化する
  *
  * @note
  * - shader_source_のリソース解放は呼び出し側で行うこと
- * - シェーダープログラムのGPUリソース確保に成功後、コンパイルに失敗した場合はGPUリソースは破棄される
+ * - シェーダーオブジェクトのGPUリソース確保に成功後、コンパイルに失敗した場合はGPUリソースは破棄される
  *
  * @details 以下の処理を行う
- * - シェーダープログラムのGPU側リソース確保
- * - シェーダープログラムのコンパイル
+ * - シェーダーオブジェクトのGPU側リソース確保
+ * - シェーダーソースのコンパイル
  *
  * @param[in] shader_type_ シェーダー種別 @ref shader_type_t
  * @param[in] shader_source_ シェーダーソース文字列

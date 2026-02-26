@@ -32,8 +32,8 @@ In `concrete_shader.c`, define the `renderer_backend_shader_t` struct.
 Its fields are specific to the graphics API being added, but for example, the OpenGL 3.3 backend stores the following:
 
 - A handle to the linked OpenGL shader program
-- A handle to the compiled vertex shader program
-- A handle to the compiled fragment shader program
+- A handle to the compiled vertex shader object
+- A handle to the compiled fragment shader object
 
 In the shader concrete module implementation file, implement the following functionality as the `Renderer Backend Interface` virtual function table (`renderer_shader_vtable_t`) (`xxx` is the name of the graphics API).
 
@@ -46,8 +46,8 @@ When implementing each function, keep the following in mind:
 | ---------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
 | Lifecycle         | `xxx_shader_create()`    | Allocate memory for a `renderer_backend_shader_t` instance and zero-initialize its fields    |
 | Lifecycle         | `xxx_shader_destroy()`   | Notify the graphics API to stop the shader program and free the `renderer_backend_shader_t` instance |
-| Shader operations | `xxx_shader_compile()`   | Compile the shader program                                                                   |
-| Shader operations | `xxx_shader_link()`      | Link the shader program                                                                      |
+| Shader operations | `xxx_shader_compile()`   | Compile the shader object                                                                   |
+| Shader operations | `xxx_shader_link()`      | Link compiled shader objects into a shader program.                                         |
 | Shader operations | `xxx_shader_use()`       | Begin using the linked shader program                                                        |
 
 - Add the vtable for the new graphics API to `shader_vtable_get()` in `renderer_backend/renderer_backend_context/context.c`.

@@ -2,7 +2,7 @@
  *
  * @file concrete_shader.c
  * @author chocolate-pie24
- * @brief OpenGL3.3用のシェーダープログラムのコンパイル、リンク、使用開始APIの実装
+ * @brief OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装
  *
  * @version 0.1
  * @date 2026-01-03
@@ -98,17 +98,21 @@ static void NO_COVERAGE test_gl33_shader_handle_addr_get(void);
 #endif
 
 /**
- * @brief シェーダーハンドル構造体
+ * @brief シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体
+ *
+ * @details
+ * - リンクされたシェーダープログラムのハンドルを保持する
+ * - コンパイルされた各シェーダーステージのシェーダーオブジェクトハンドルを保持する
  *
  */
 struct renderer_backend_shader {
-    GLuint program_id;              /**< リンクしたOpenGlシェーダープログラムへのハンドル */
-    GLuint vertex_shader_handle;    /**< コンパイルしたバーテックスシェーダープログラムへのハンドル */
-    GLuint fragment_shader_handle;  /**< コンパイルしたフラグメントシェーダープログラムへのハンドル */
+    GLuint program_id;              /**< リンクしたOpenGLシェーダープログラムへのハンドル */
+    GLuint vertex_shader_handle;    /**< コンパイルしたバーテックスシェーダーオブジェクトへのハンドル */
+    GLuint fragment_shader_handle;  /**< コンパイルしたフラグメントシェーダーオブジェクトへのハンドル */
 };
 
 /**
- * @brief シェーダープログラムコンパイル状況列挙体
+ * @brief シェーダーオブジェクトコンパイル状況列挙体
  *
  */
 typedef enum shader_compile_status {
@@ -228,10 +232,10 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_compile", "shader_source_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_compile", "shader_handle_")
 
-    // シェーダープログラムのコンパイル状況チェック
+    // シェーダーオブジェクトのコンパイル状況チェック
     if(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(shader_type_, shader_handle_)) {
         ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader is already compiled.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader object is already compiled.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -260,15 +264,15 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     tmp_handle = mock_glCreateShader(gl33_shader_type);
     if(0 == tmp_handle) {
         ret = RENDERER_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader handle.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader object handle.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    // シェーダをコンパイル
+    // シェーダソースをコンパイル
     mock_glShaderSource(tmp_handle, 1, &shader_source_ , NULL);
     mock_glCompileShader(tmp_handle);
 
-    // シェーダをチェック
+    // コンパイル結果をチェック
     mock_glGetShaderiv(tmp_handle, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
     mock_glGetShaderiv(tmp_handle, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
     if(0 < info_log_length) {
@@ -291,7 +295,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     *handle_addr = tmp_handle;
@@ -361,7 +365,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
         ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    // バリデーションがprogram_id != 0かつshader_handle == 0でDATA_CORRUPTEDにするため、シェーダーのデストロイは行わない
+    // use関数呼び出し時に、バリデーション用にprogram_id != 0かつshader_object_handle == 0でDATA_CORRUPTEDにするため、シェーダーオブジェクトのデストロイは行わない(shader_destroy APIでまとめて破棄する)
     shader_handle_->program_id = tmp_program_id;
     ret = RENDERER_SUCCESS;
 cleanup:
@@ -388,13 +392,13 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
         if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_TYPE_VERTEX, shader_handle_)) {
             // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderがコンパイル済みではないのは異常
             ret = RENDERER_DATA_CORRUPTED;
-            ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader is not compiled.", renderer_rslt_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader object is not compiled.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_TYPE_FRAGMENT, shader_handle_)) {
             // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderがコンパイル済みではないのは異常
             ret = RENDERER_DATA_CORRUPTED;
-            ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader is not compiled.", renderer_rslt_to_str(ret));
+            ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader object is not compiled.", renderer_rslt_to_str(ret));
             goto cleanup;
         }
         mock_glUseProgram(shader_handle_->program_id);
@@ -485,14 +489,14 @@ cleanup:
 }
 
 /**
- * @brief シェーダープログラムのコンパイル状況を取得する
+ * @brief シェーダーオブジェクトのコンパイル状況を取得する
  *
  * @param[in] shader_type_ 判定対象シェーダ種別を指定する
  * @param[in] shader_handle_ シェーダーハンドル構造体インスタンスへのポインタ
  *
  * @retval SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE shader_handle_ == NULL
- * @retval SHADER_COMPILE_STATUS_NOT_COMPILED シェーダーは未コンパイル状態
- * @retval SHADER_COMPILE_STATUS_COMPILED シェーダーはコンパイル済み
+ * @retval SHADER_COMPILE_STATUS_NOT_COMPILED シェーダーオブジェクトは未コンパイル状態
+ * @retval SHADER_COMPILE_STATUS_COMPILED シェーダーオブジェクトはコンパイル済み
  * @retval SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE サポート対象外のシェーダー種別
  */
 static shader_compile_status_t shader_compile_status_get(shader_type_t shader_type_, const renderer_backend_shader_t* shader_handle_) {
