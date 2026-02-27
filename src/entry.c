@@ -27,6 +27,7 @@
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
 #include "platform/test_platform_err_utils.h"
+#include "renderer/test_renderer_backend_context.h"
 #include "renderer/test_renderer_memory.h"
 #include "renderer/test_renderer_err_utils.h"
 #include "renderer/test_gl33_vbo.h"
@@ -74,6 +75,7 @@ int main(int argc_, char** argv_) {
         test_filesystem();
         test_fs_utils();
         test_gl33_shader();
+        test_renderer_backend_context();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
