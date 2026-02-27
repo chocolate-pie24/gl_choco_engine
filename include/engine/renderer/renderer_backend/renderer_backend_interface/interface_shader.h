@@ -67,7 +67,7 @@ typedef renderer_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);
 
 /**
- * @brief シェーダーソースをコンパイルし、シェーダーオブジェクトを初期化する
+ * @brief シェーダーソースをコンパイルし、シェーダーオブジェクトハンドルを初期化する
  *
  * @note
  * - shader_source_のリソース解放は呼び出し側で行うこと
@@ -79,37 +79,39 @@ typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_h
  *
  * @param[in] shader_type_ シェーダー種別 @ref shader_type_t
  * @param[in] shader_source_ シェーダーソース文字列
- * @param[in,out] shader_handle_ コンパイルしたシェーダープログラムへのハンドルを格納する
+ * @param[in,out] shader_handle_ コンパイルされたシェーダーオブジェクトのハンドルを格納する
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - shader_source_ == NULL
  * - shader_handle_ == NULL
  * - shader_type_が無効
- * @retval RENDERER_BAD_OPERATION shader_handle_が保持するシェーダープログラムがコンパイル済み、またはリンク済み
- * @retval RENDERER_SHADER_COMPILE_ERROR シェーダープログラムのGPU側リソース確保に失敗、またはコンパイル失敗
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - shader_handle_が保持するシェーダーオブジェクトがコンパイル済み
+ * - shader_handle_が保持するシェーダープログラムがリンク済み
+ * @retval RENDERER_SHADER_COMPILE_ERROR シェーダーオブジェクトのGPU側リソース確保に失敗、またはコンパイル失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
- * @retval RENDERER_SUCCESS シェーダープログラムのコンパイルに成功し、正常終了
+ * @retval RENDERER_SUCCESS シェーダーオブジェクトのコンパイルに成功し、正常終了
  */
 typedef renderer_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 
 /**
- * @brief コンパイル済みのシェーダープログラムをリンクする
+ * @brief コンパイル済みのシェーダーオブジェクトをリンクし、シェーダープログラムハンドルを初期化する
  *
  * @note 現状ではバーテックスシェーダーとフラグメントシェーダーのみを対象にリンクする
  *
  * @details 以下の処理を行う
- * - リンクして生成されるプログラムのGPU側リソースを確保する
+ * - リンクして生成されるシェーダープログラムのGPU側リソースを確保する
  * - シェーダープログラムのリンク
  *
- * @param[in,out] shader_handle_ リンクしたプログラム識別子を格納する
+ * @param[in,out] shader_handle_ リンクしたシェーダープログラムハンドルを格納する
  *
  * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - プログラムが既にリンク済み
- * - バーテックスシェーダーが未コンパイル
- * - フラグメントシェーダーが未コンパイル
- * @retval RENDERER_SHADER_LINK_ERROR プログラムのGPU側リソース確保に失敗、またはシェーダーリンクエラー
+ * - バーテックスシェーダーオブジェクトが未コンパイル
+ * - フラグメントシェーダーオブジェクトが未コンパイル
+ * @retval RENDERER_SHADER_LINK_ERROR シェーダープログラムのGPU側リソース確保に失敗、またはシェーダーリンクエラー
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
  * @retval RENDERER_SUCCESS プログラムのリンクに成功し、正常終了
@@ -119,7 +121,7 @@ typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t*
 /**
  * @brief シェーダープログラムの使用開始をグラフィックスAPIに伝える
  *
- * @note 現在使用中のプログラム識別子(out_program_id_)がshader_handle_が保持するプログラム識別子と同一の場合は、既に使用中とし何もしない
+ * @note 現在使用中のプログラムハンドル(out_program_id_)がshader_handle_が保持するプログラムハンドルと同一の場合は、既に使用中とし何もしない
  *
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  * @param[in,out] out_program_id_ 現在使用中のプログラム識別子で、本関数実行後に更新される
@@ -129,8 +131,8 @@ typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t*
  * - out_program_id_ == NULL
  * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
  * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
- * - shader_handle_が保持するバーテックスシェーダープログラムが未コンパイル
- * - shader_handle_が保持するフラグメントシェーダープログラムが未コンパイル
+ * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
+ * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  */
 typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 

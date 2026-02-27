@@ -30,8 +30,8 @@
 `concrete_shader.c`で、`renderer_backend_shader_t`構造体を定義する。フィールドは追加するグラフィックスAPI固有であるが、例えばOpenGL3.3用バックエンドでは、以下を保持している
 
 - リンクしたOpenGLシェーダープログラムへのハンドル
-- コンパイルしたバーテックスシェーダープログラムへのハンドル
-- コンパイルしたフラグメントシェーダープログラムへのハンドル
+- コンパイルしたバーテックスシェーダーオブジェクトへのハンドル
+- コンパイルしたフラグメントシェーダーオブジェクトへのハンドル
 
 shader concreteモジュール用実装ファイルには`Renderer Backend Interface`用仮想関数テーブル(`renderer_shader_vtable_t`)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。
 
@@ -44,8 +44,8 @@ shader concreteモジュール用実装ファイルには`Renderer Backend Inter
 | -------------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
 | Lifecycle      | `xxx_shader_create()`  | `renderer_backend_shader_t`構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する                   |
 | Lifecycle      | `xxx_shader_destroy()` | シェーダープログラムの停止をグラフィックスAPIに伝え、`renderer_backend_shader_t`構造体インスタンスのメモリを開放する |
-| シェーダー操作   | `xxx_shader_compile()` | シェーダープログラムのコンパイルする                                                                         |
-| シェーダー操作   | `xxx_shader_link()`    | シェーダープログラムをリンクする                                                                            |
+| シェーダー操作   | `xxx_shader_compile()` | シェーダーオブジェクトをコンパイルする                                                                         |
+| シェーダー操作   | `xxx_shader_link()`    | コンパイルしたシェーダーオブジェクトをリンクする                                                                            |
 | シェーダー操作   | `xxx_shader_use()`     | リンク済のシェーダープログラムの使用を開始する                                                                |
 
 - `renderer_backend/renderer_backend_context/context.c`の`shader_vtable_get()`に追加したグラフィックスAPI用vtableを追加
