@@ -27,7 +27,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-// #define TEST_BUILD
+#define TEST_BUILD
 
 /**
  * @brief RendererBackend内部状態管理構造体
@@ -77,7 +77,6 @@ static fail_injection_t s_fail_injection;
 
 static void test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_);
 static void test_linear_allocator_destroy(linear_alloc_t** allocator_, void** memory_pool_);
-
 static void test_renderer_backend_initialize(void);
 static void test_renderer_backend_destroy(void);
 static void test_renderer_backend_shader_create(void);
@@ -208,7 +207,7 @@ void renderer_backend_destroy(renderer_backend_context_t* renderer_context_) {
     if(NULL == renderer_context_) {
         goto cleanup;
     }
-    // 現状では特に必要な処理はなし
+    // 現状では特に必要な処理はなし(リニアロケータによるメモリ確保のため、renderer_context_のリソース解放は不要)
 cleanup:
     return;
 }
@@ -618,6 +617,172 @@ static void NO_COVERAGE test_renderer_backend_initialize(void) {
 
         test_linear_allocator_destroy(&linear_alloc, &memory_pool);
 
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_destroy(void) {
+    {
+        // renderer_context_ == NULL
+        renderer_backend_context_t* context = NULL;
+        renderer_backend_destroy(context);
+    }
+    {
+        // renderer_context != NULL
+        renderer_backend_context_t* context = NULL;
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+
+        renderer_backend_destroy(context);
+
+        free(context);
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_shader_create(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    {
+        // renderer_backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_backend_shader_t* shader_handle = NULL;
+        ret = renderer_backend_shader_create(NULL, shader_handle);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(NULL == shader_handle);
+    }
+    {
+        // renderer_backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_backend_shader_t* shader_handle = NULL;
+        renderer_backend_context_t* context = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        context->shader_vtable = NULL;
+
+        renderer_backend_shader_create(context, shader_handle);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(NULL == shader_handle);
+
+        free(context);
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        linear_alloc_t* linear_alloc;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->shader_vtable);
+
+        ret = renderer_backend_shader_create(context, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+    }
+    {
+        // *shader_handle_ != NULL -> RENDERER_INVALID_ARGUMENT
+        linear_alloc_t* linear_alloc;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->shader_vtable);
+
+        double* dummy_addr = NULL;
+        double a = 0.0;
+        dummy_addr = &a;
+        ret = renderer_backend_shader_create(context, &dummy_addr);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+    }
+    {
+        // renderer_shader_create == RENDERER_RUNTIME_ERROR -> RENDERER_RUNTIME_ERROR
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_renderer_shader_create = RENDERER_RUNTIME_ERROR;
+
+        linear_alloc_t* linear_alloc;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->shader_vtable);
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = renderer_backend_shader_create(context, &shader);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.rslt_renderer_shader_create = RENDERER_SUCCESS;
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // 正常系
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_renderer_shader_create = RENDERER_SUCCESS;
+
+        linear_alloc_t* linear_alloc;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->shader_vtable);
+
+        renderer_backend_shader_t* shader = NULL;
+        ret = renderer_backend_shader_create(context, &shader);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_shader_destroy(void) {
+    {
+        // renderer_backend_context_ = NULL
+        renderer_backend_shader_t* shader_handle = NULL;
+        renderer_backend_shader_destroy(NULL, &shader_handle);
+    }
+    {
+        // renderer_backend_context_->shader_vtable
+        renderer_backend_context_t* context = NULL;
+        renderer_backend_shader_t* shader_handle = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        context->shader_vtable = NULL;
+
+        renderer_backend_shader_destroy(context, &shader_handle);
+    }
+    {
+        // 正常系
+        s_fail_injection.use_test_vtable = true;
+
+        renderer_backend_context_t* context = NULL;
+        renderer_backend_shader_t* shader_handle = NULL;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_result_t ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+
+        renderer_backend_shader_destroy(context, &shader_handle);
+
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
         s_fail_injection.use_test_vtable = false;
     }
 }
