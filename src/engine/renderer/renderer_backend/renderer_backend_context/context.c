@@ -514,6 +514,10 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_vertex_array_unbind();
     test_renderer_backend_vertex_array_attribute_set();
     test_renderer_backend_vertex_buffer_create();
+    test_renderer_backend_vertex_buffer_destroy();
+    test_renderer_backend_vertex_buffer_bind();
+    test_renderer_backend_vertex_buffer_unbind();
+    test_renderer_backend_vertex_buffer_vertex_load();
 }
 
 static void NO_COVERAGE test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_) {
@@ -1767,6 +1771,412 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_create(void) {
         renderer_backend_vbo_t* vbo = NULL;
 
         ret = renderer_backend_vertex_buffer_create(context, &vbo);
+        assert(RENDERER_SUCCESS == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_vertex_buffer_destroy(void) {
+    {
+        // backend_context_ == NULL -> return
+        renderer_backend_vbo_t* vbo = NULL;
+        renderer_backend_vertex_buffer_destroy(NULL, &vbo);
+    }
+    {
+        // backend_context_->vbo_vtable == NULL -> return
+        renderer_backend_context_t* context = NULL;
+        renderer_backend_vbo_t* vbo = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(renderer_backend_context_t));
+        context->vbo_vtable = NULL;
+
+        renderer_backend_vertex_buffer_destroy(context, &vbo);
+
+        free(context);
+        context = NULL;
+    }
+    {
+        // 正常系（テスト用vtable経由でdestroy呼び出し）
+        s_fail_injection.use_test_vtable = true;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        renderer_result_t ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        renderer_backend_vbo_t* vbo = NULL;
+        renderer_backend_vertex_buffer_destroy(context, &vbo);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_bind(NULL, vbo);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_backend_context_t* context = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(renderer_backend_context_t));
+        context->vbo_vtable = &s_test_vbo_vtable; // 非NULLならOK（未初期化扱いにしないため）
+
+        ret = renderer_backend_vertex_buffer_bind(context, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        free(context);
+        context = NULL;
+    }
+    {
+        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_backend_context_t* context = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(renderer_backend_context_t));
+        context->vbo_vtable = NULL;
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_bind(context, vbo);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        free(context);
+        context = NULL;
+    }
+    {
+        // vertex_buffer_bind() が失敗 -> そのまま返り、current_bound_vbo は更新されない
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+        assert(0 == context->current_bound_vbo);
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_bind(context, vbo);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(0 == context->current_bound_vbo);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // 正常系
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+        assert(0 == context->current_bound_vbo);
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_bind(context, vbo);
+        assert(RENDERER_SUCCESS == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_unbind(NULL, vbo);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_backend_context_t* context = NULL;
+
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(renderer_backend_context_t));
+        context->vbo_vtable = NULL;
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        free(context);
+        context = NULL;
+    }
+    {
+        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
+        s_fail_injection.use_test_vtable = true;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        ret = renderer_backend_vertex_buffer_unbind(context, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // vertex_buffer_unbind() が失敗 -> そのまま返り、current_bound_vbo は更新されない
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_RUNTIME_ERROR;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_SUCCESS;
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // 正常系 -> current_bound_vbo が 0 にクリアされる
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_SUCCESS;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        context->current_bound_vbo = 123;
+
+        uint8_t dummy_vbo_mem = 0;
+        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
+        assert(RENDERER_SUCCESS == ret);
+        assert(0 == context->current_bound_vbo);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+}
+
+static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    uint8_t dummy_vbo_mem = 0;
+    renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
+
+    uint8_t dummy_vertices[16] = {0};
+
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            NULL, vbo,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_backend_context_t* context = NULL;
+        context = malloc(sizeof(renderer_backend_context_t));
+        assert(NULL != context);
+        memset(context, 0, sizeof(renderer_backend_context_t));
+        context->vbo_vtable = NULL;
+
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            context, vbo,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+
+        free(context);
+        context = NULL;
+    }
+    {
+        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
+        s_fail_injection.use_test_vtable = true;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            context, NULL,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // vertex_buffer_bind() が失敗 -> そのまま返る（vertex_loadは呼ばれない想定）
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
+        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            context, vbo,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
+        assert(RENDERER_RUNTIME_ERROR == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // vertex_buffer_vertex_load() が失敗 -> そのまま返る
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_RUNTIME_ERROR;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            context, vbo,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
+        assert(RENDERER_RUNTIME_ERROR == ret);
+
+        renderer_backend_destroy(context);
+        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+
+        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+        s_fail_injection.use_test_vtable = false;
+    }
+    {
+        // 正常系
+        s_fail_injection.use_test_vtable = true;
+        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+
+        linear_alloc_t* linear_alloc = NULL;
+        void* memory_pool = NULL;
+        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+
+        renderer_backend_context_t* context = NULL;
+        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != context);
+        assert(NULL != context->vbo_vtable);
+
+        ret = renderer_backend_vertex_buffer_vertex_load(
+            context, vbo,
+            sizeof(dummy_vertices), dummy_vertices,
+            BUFFER_USAGE_STATIC
+        );
         assert(RENDERER_SUCCESS == ret);
 
         renderer_backend_destroy(context);
