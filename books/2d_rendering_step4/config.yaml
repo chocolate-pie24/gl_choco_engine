@@ -11,5 +11,6 @@ chapters:
   - step4_4_renderer_backend
   - step4_5_renderer_core
   - step4_6_renderer_backend_interface
+  - step4_7_renderer_backend_context
   - appendix_buffer_explanation
   - appendix_opengl_coordinates
