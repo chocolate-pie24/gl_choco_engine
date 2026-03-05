@@ -1,5 +1,5 @@
 ---
-title: "step4_3: renderer_coreの追加"
+title: "step4_5: renderer_coreの追加"
 free: true
 ---
 

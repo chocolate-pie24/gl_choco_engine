@@ -1,5 +1,5 @@
 ---
-title: "step3_0: レンダラーバックエンドの構築"
+title: "step4_0: レンダラーバックエンドの構築"
 free: true
 ---
 
@@ -38,7 +38,9 @@ Platformシステムに比べて大分規模の大きなものとなります。
 ため、アーキテクチャと実装の方針に絞った解説とします。実装内容については、リポジトリのタグv0.1.0-step4を参照してください。
 なお、コンピュータグラフィックス固有の話、OpenGL APIについての説明は、私のメモとしても残しておきたいため、Book4の付録として追加することにします。
 
-TODO: スクリーンショット
+Book4の実行結果スクリーンショット
+
+![最初の三角形](/images/first_triangle.png)
 
 ## Step4解説
 
@@ -58,5 +60,182 @@ TODO: スクリーンショット
 
 ### まとめ
 
-- レイヤー構成図
-- カバレッジ
+#### レイヤー構成図
+
+今回はこれまでに比べ、広範囲に渡る変更、機能追加を行いました。Book4の内容を実装した結果、エンジン構成は以下のようになりました。
+
+Engine Overview
+
+```mermaid
+graph TD
+  APPLICATION[application]
+
+  subgraph ENGINE[engine]
+    subgraph SYSTEMS[systems]
+      PLATFORM[platform]
+      RENDERER[renderer]
+    end
+
+    subgraph IO_UTILS[io_utils]
+      FS_UTILS[fs_utils]
+    end
+
+    subgraph CONTAINERS[containers]
+      direction TB
+      CHOCO_STRING[choco_string]
+      RING_QUEUE[ring_queue]
+    end
+
+    CORE[core]
+    BASE[base]
+  end
+
+  APPLICATION --> PLATFORM
+  APPLICATION --> RENDERER
+  APPLICATION --> IO_UTILS
+  APPLICATION --> CORE
+  APPLICATION --> CONTAINERS
+
+  PLATFORM --> CONTAINERS
+  PLATFORM --> CORE
+  RENDERER --> CORE
+
+  IO_UTILS --> CONTAINERS
+  IO_UTILS --> CORE
+
+  CONTAINERS --> CORE
+
+  CORE --> BASE
+```
+
+Platform
+
+```mermaid
+graph TD
+  subgraph CORE[core]
+    direction TB
+    subgraph EVENT[event]
+      direction TB
+      KEYBOARD_EVENT[keyboard_event]
+      MOUSE_EVENT[mouse_event]
+      WINDOW_EVENT[window_event]
+    end
+    subgraph MEMORY[memory]
+      direction TB
+      CHOCO_MEMORY[choco_memory]
+      LINEAR_ALLOCATOR[linear_allocator]
+    end
+  end
+
+  subgraph CONTAINERS[containers]
+    direction TB
+    CHOCO_STRING[choco_string]
+  end
+
+  subgraph PLATFORM[platform]
+    direction TB
+
+    PLATFORM_CONTEXT[platform_context]
+
+    subgraph PLATFORM_CORE[platform_core]
+      direction TB
+      PLATFORM_ERR_UTILS[platform_err_utils]
+      PLATFORM_TYPES[platform_types]
+    end
+
+    PLATFORM_INTERFACE[platform_interface]
+
+    subgraph PLATFORM_CONCRETES[platform_concretes]
+      direction TB
+      PLATFORM_GLFW[platform_glfw]
+    end
+  end
+
+  PLATFORM_CONTEXT --> PLATFORM_CORE
+  PLATFORM_CONTEXT --> PLATFORM_GLFW
+  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
+  PLATFORM_CONTEXT --> EVENT
+  PLATFORM_CONTEXT --> |init parameter| LINEAR_ALLOCATOR
+
+  PLATFORM_GLFW --> PLATFORM_CORE
+  PLATFORM_GLFW --> CHOCO_STRING
+  PLATFORM_GLFW --> PLATFORM_INTERFACE
+  PLATFORM_GLFW --> EVENT
+
+  PLATFORM_INTERFACE --> PLATFORM_TYPES
+  PLATFORM_INTERFACE --> EVENT
+
+  PLATFORM_ERR_UTILS -->|error_code type only| CHOCO_STRING
+  PLATFORM_ERR_UTILS -->|error code type only| LINEAR_ALLOCATOR
+
+  CHOCO_STRING --> CHOCO_MEMORY
+```
+
+Renderer
+
+```mermaid
+graph TD
+  subgraph RENDERER_CORE[renderer_core]
+    direction TB
+    RENDERER_ERR_UTILS[renderer_err_utils]
+    RENDERER_MEMORY[renderer_memory]
+    RENDERER_TYPES[renderer_types]
+  end
+
+  subgraph RENDERER_BACKEND[renderer_backend]
+    direction TB
+    RENDERER_BACKEND_TYPES[renderer_backend_types]
+
+    subgraph RENDERER_BACKEND_INTERFACE[renderer_backend_interface]
+      direction TB
+      INTERFACE_SHADER[interface_shader]
+      INTERFACE_VAO[interface_vao]
+      INTERFACE_VBO[interface_vbo]
+    end
+
+    subgraph RENDERER_BACKEND_CONCRETES[renderer_backend_concretes]
+      direction TB
+      subgraph GL33
+        direction TB
+        CONCRETE_SHADER[concrete_shader]
+        CONCRETE_VAO[concrete_vao]
+        CONCRETE_VBO[concrete_vbo]
+      end
+    end
+
+    subgraph RENDERER_BACKEND_CONTEXT[renderer_backend_context]
+      direction TB
+      CONTEXT[context]
+    end
+  end
+
+  RENDERER_BACKEND_INTERFACE --> RENDERER_BACKEND_TYPES
+  %% RENDERER_BACKEND_INTERFACE --> RENDERER_TYPES
+
+  RENDERER_BACKEND_CONCRETES --> RENDERER_BACKEND_INTERFACE
+  RENDERER_BACKEND_CONCRETES --> RENDERER_BACKEND_TYPES
+  %% RENDERER_BACKEND_CONCRETES --> RENDERER_CORE
+
+  %% CONTEXT --> RENDERER_CORE
+  CONTEXT --> RENDERER_BACKEND_TYPES
+  CONTEXT --> GL33
+  CONTEXT --> RENDERER_BACKEND_INTERFACE
+
+  RENDERER_BACKEND --> RENDERER_CORE
+```
+
+#### テストカバレッジ
+
+大分モジュールも増えてきたため、今回からテストカバレッジを載せておきます。
+
+GL CHOCO ENGINEの現状でのテスト方針ですが、カバレッジ重視で行っています。
+シナリオベースのテストも重視すべきですが、私自身のテストスキルがあまり高くないため、AIによる支援を受けつつカバレッジの値が高くなるテストを行っています。
+これでメモリリークがないことの確認や、入力に対して意図した処理を通過すること、返り値が意図と合っているかの確認はできるため、当面はこの方針で進めます。
+
+なお、一部カバレッジの数値が低いところがありますが、これらは仕様が固まった段階でテストを実施していく予定です。
+
+![テストカバレッジ](/images/coverage_book4.png)
+
+#### Book5の内容(予定)
+
+これでBook4の解説は完了です。次のステップでは、頂点情報構造体の作成と、それを使用したGeometry(形状データ)モジュールを作っていきます。

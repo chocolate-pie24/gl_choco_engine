@@ -5,8 +5,11 @@ published: true
 price: 0
 chapters:
   - step4_0_introduction
-  - step4_1_hello_triangle_overview
-  - step4_2_opengl_coordinates
-  - step4_3_buffer_explanation
-  - step4_4_shader_explanation
-  - step4_5_conclusion
+  - step4_1_platform_layer
+  - step4_2_first_triangle
+  - step4_3_filesystem
+  - step4_4_renderer_backend
+  - step4_5_renderer_core
+  - step4_6_renderer_backend_interface
+  - appendix_buffer_explanation
+  - appendix_opengl_coordinates
