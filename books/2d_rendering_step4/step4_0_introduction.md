@@ -44,13 +44,13 @@ Book4の実行結果スクリーンショット
 
 ## Step4解説
 
-- step4_1: [Platformレイヤーの構成変更と機能追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_1_platform_layer)
-- step4_2: [最小限のコードで三角形を出す](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_2_first_triangle)
-- step4_3: [filesystem / fs_utilsモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_3_filesystem)
-- step4_4: [API差し替え可能なRenderer Backendの枠組み](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_4_renderer_backend)
-- step4_5: [renderer_coreの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_5_renderer_core)
-- step4_6: [renderer_backend_interfaceの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_6_renderer_backend_interface)
-- step4_7: [renderer_backend_contextの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step3/viewer/step4_7_renderer_backend_context)
+- step4_1: [Platformレイヤーの構成変更と機能追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_1_platform_layer)
+- step4_2: [最小限のコードで三角形を出す](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_2_first_triangle)
+- step4_3: [filesystem / fs_utilsモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_3_filesystem)
+- step4_4: [API差し替え可能なRenderer Backendの枠組み](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_4_renderer_backend)
+- step4_5: [renderer_coreの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_5_renderer_core)
+- step4_6: [renderer_backend_interfaceの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_6_renderer_backend_interface)
+- step4_7: [renderer_backend_contextの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_7_renderer_backend_context)
 
 ## レイヤー構成図
 
@@ -222,7 +222,7 @@ graph TD
 
 GL CHOCO ENGINEの現状でのテスト方針ですが、カバレッジ重視で行っています。
 シナリオベースのテストも重視すべきですが、私自身のテストスキルがあまり高くないため、AIによる支援を受けつつカバレッジの値が高くなるテストを行っています。
-これでメモリリークがないことの確認や、入力に対して意図した処理を通過すること、返り値が意図と合っているかの確認はできるため、当面はこの方針で進めます。
+これで自前アロケータ経由でのメモリリークがないことの確認や、入力に対して意図した処理を通過すること、返り値が意図と合っているかの確認はできるため、当面はこの方針で進めます。
 
 なお、一部カバレッジの数値が低いところがありますが、これらは仕様が固まった段階でテストを実施していく予定です。
 
