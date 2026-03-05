@@ -248,7 +248,7 @@ application_result_t application_run(void) {
 
         glUseProgram(s_app_state->program_id);
 
-        glViewport(0, 0, s_app_state->window_width, s_app_state->window_height);
+        glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
         glBindVertexArray(vertex_array_id);
 
@@ -256,7 +256,7 @@ application_result_t application_run(void) {
 
         glBindVertexArray(0);
 
-        glfwSwapBuffers(window);
+        platform_swap_buffers(s_app_state->platform_context);
 
         nanosleep(&req, NULL);
     }
