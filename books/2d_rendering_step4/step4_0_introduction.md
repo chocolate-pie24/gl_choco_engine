@@ -1,181 +1,62 @@
 ---
-title: "step4_0: レンダラーの構築とシンプルな三角形の描画"
+title: "step3_0: レンダラーバックエンドの構築"
 free: true
 ---
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook4に対応しています。
 
-前回の[Book](https://zenn.dev/chocolate_pie24/books/2d_rendering_step2)では、イベントシステムを構築し、キーボード、マウス、ウィンドウに関するイベントを処理できるようになりました。
+今回からはいよいよ描画処理です。そのためのファーストステップとして三角形の描画を行います。
 
-今回は、描画処理に入っていきます。描画するのはシンプルな三角形です。三角形の描画は新しい言語を学ぶ際のHello World!!に相当し、最もシンプルなグラフィックスアプリケーションです。
+GL CHOCO ENGINEでは、当面はグラフィックスAPIとしてOpenGL 3.3を使用します。3.3を使用する理由は私が慣れた環境であるというのが理由です。
+ただ、OpenGL 3.3は一般的なPCを使用する場合には動かない環境はないと思われますが、組み込み用のコントローラではまだGPUやAPUがサポートしていないことも多いです。
+将来的には組み込み、車載コントローラといった環境でも動くエンジンにしていきたいため、3.3以外のバージョンも使用できるようにする必要があります。
+(Vulkanへの対応も興味はありますが、当面はOpenGLをターゲットとします)
 
-なお、今回追加していくレイヤー、モジュールの作成に伴い、これまでに作成してきたモジュールに対して多くの変更を行いました。
-モジュールの役割については変更していないのですが、戻り値の実行結果コードや、テスト関数に変更が入っています。
-これら変更点について解説していくと、Book4の本題がぼやけてしまうため、これら変更点の解説については省略させていただきます。
+描画処理はRendererレイヤーを新設することで実現します。Rendererレイヤーは、
 
-また、今までは各APIの内部実装についても解説していましたが、このように細部に変更があった際に整合性が取れなくなってしまうため、
-今後はこちらについても省略させていただこうと思います。ただ、C言語でのStrategyパターンの実装や、ジェネリック型のコンテナモジュールの実装等、
-実装方法の解説が重要になる部分もあると思いますので、そういったテーマについてはBookの付録や、別途記事にして出すことを考えています。
+- 上位レイヤーから呼び出される、描画コマンドの生成、描画コマンドの発行、描画後処理といったグラフィックスAPIの操作を意識させない処理を担当するRenderer Frontend
+- Renderer Frontendの処理を実現するため、グラフィックスAPIの各種操作を担当するRenderer Backend
 
-今後も進めながら方針を変えさせていただくことがあろうかと思いますが、よろしくお願いします。
+で構成されます。今回作成するRenderer Backendは、複数のOpenGLバージョンを差し替えて使用できる構造にする必要があります。
+このため、Renderer BackendはPlatformシステムと同様、オブジェクト指向のStrategyパターンを使用して作っていくことになります。
+ただ、前提条件として、GL CHOCO ENGINEでは複数のグラフィックスAPIが混在や、動的なグラフィックスAPI差し替えについては行いません。
+この前提を置くことで、Renderer Backendをかなりシンプルにすることができます。GL CHOCO ENGINEの立ち位置、コンセプト的にはこれで十分です。
 
-さて、本題の三角形描画についてですが、アプローチとして、レイヤー構成やモジュールの分割といったことは考えず、
-とりあえず最速で三角形を描画できるようにしていきます。その後、作成した各処理をモジュール化して外部に掃き出していく手法を取ります。
-このやり方を取る理由は、「なぜこのモジュールが必要なのか？」ということが分かりやすいのと、
-とりあえず早く結果が見えた方がモチベーションも上がりやすいためです。
+Strategyパターンを使用したRenderer Backendなのですが、描画処理はGPU側プログラムのための処理や、グラフィックスAPIの操作が多かったりと、
+Platformシステムに比べて大分規模の大きなものとなります。そのため、開発の手順については今までは異なる進め方を採ります。
 
-## Step4実装解説
+これまでは下位モジュールから上位モジュールに向かって積み上げていくスタイルを取っていました。
+この進め方だと、最終的な動作結果である三角形の描画が中々できず、動作確認をしながら確実に積み上げていくことができません。
+よって今回は、先ずアーキテクチャ設計を抜きにして、とりあえず最短で三角形を描画できるコードを記述します。
+その後、追加したコードをモジュール化し、外部に追い出していき、最終的に整ったアーキテクチャにしていきます。
 
-今回追加されるモジュールを示します。
-coreレイヤーへも追加されるモジュールがありますが、図が複雑になりすぎるため省いてあります。
+また、前回までは追加した各関数の詳細についても説明をしていましたが、
 
-また、applicationがダイレクトにレンダラーバックエンドに依存していますが、
-これはレンダラーフロントエンドの作成後、依存が解消されます。
+- 今回は追加したコードの量が非常に多い
+- リファクタリングとしての既存機能のAPI名称変更、エラー処理変更、実行結果コードの変更が非常に多い
 
-```mermaid
-graph TD
-  APPLICATION[application]
-  APPLICATION --> RING_QUEUE
-  APPLICATION --> FS_UTILS
-  APPLICATION --> PLATFORM_CONTEXT
-  APPLICATION --> RENDERER_TYPES
-  APPLICATION --> GL33_VBO
-  APPLICATION --> GL33_VAO
-  APPLICATION --> GL33_SHADER
+ため、アーキテクチャと実装の方針に絞った解説とします。実装内容については、リポジトリのタグv0.1.0-step4を参照してください。
+なお、コンピュータグラフィックス固有の話、OpenGL APIについての説明は、私のメモとしても残しておきたいため、Book4の付録として追加することにします。
 
-  subgraph ENGINE[engine]
-    direction TB
+TODO: スクリーンショット
 
-    subgraph CONTAINERS[containers]
-      direction TB
-      CHOCO_STRING[choco_string]
-      RING_QUEUE[ring_queue]
-    end
+## Step4解説
 
-    subgraph IO_UTILS[io_utils]
-      direction TB
-      FS_UTILS[fs_utils]
-    end
-    style FS_UTILS fill:#8BC34A
-    FS_UTILS --> CHOCO_STRING
+### Platformレイヤーの構成変更と機能追加
 
-    subgraph PLATFORM[platform]
-      PLATFORM_CONTEXT[platform_context]
-      direction TB
-      subgraph INTERFACES[interfaces]
-        direction TB
-        PLATFORM_INTERFACE[platform_interface]
-      end
-      subgraph PLATFORM_CONCRETES[platform_concretes]
-        direction TB
-        PLATFORM_GLFW[platform_glfw]
-      end
-    end
-    PLATFORM_GLFW --> PLATFORM_INTERFACE
-    PLATFORM_GLFW --> CHOCO_STRING
-    PLATFORM_CONTEXT --> PLATFORM_INTERFACE
-    PLATFORM_CONTEXT --> PLATFORM_GLFW
+### 最小限のコードで三角形を出す
 
-    subgraph RENDERER[renderer]
-      direction TB
-      subgraph RENDERER_BACKEND[renderer_backend]
-        direction TB
-        subgraph GL33[gl33]
-          direction TB
-          GL33_SHADER[gl33_shader]
-          GL33_VAO[gl33_vao]
-          GL33_VBO[gl33_vbo]
-        end
-        style GL33_SHADER fill:#8BC34A
-        style GL33_VAO fill:#8BC34A
-        style GL33_VBO fill:#8BC34A
-      end
-      subgraph RENDERER_BASE[renderer_base]
-        direction TB
-        RENDERER_TYPES[renderer_types]
-      end
-      style RENDERER_TYPES fill:#8BC34A
-      subgraph RENDERER_CORE[renderer_core]
-        direction TB
-        RENDERER_ERR_UTILS[renderer_err_utils]
-        RENDERER_MEMORY[renderer_memory]
-      end
-      style RENDERER_ERR_UTILS fill:#8BC34A
-      style RENDERER_MEMORY fill:#8BC34A
-    end
-    GL33_SHADER --> RENDERER_TYPES
-    GL33_SHADER --> RENDERER_MEMORY
-    GL33_SHADER --> RENDERER_ERR_UTILS
+### filesystem / fs_utilsモジュールの追加
 
-    GL33_VAO --> RENDERER_TYPES
-    GL33_VAO --> RENDERER_ERR_UTILS
-    GL33_VAO --> RENDERER_MEMORY
-    GL33_VBO --> RENDERER_TYPES
-    GL33_VBO --> RENDERER_ERR_UTILS
-    GL33_VBO --> RENDERER_MEMORY
-    RENDERER_ERR_UTILS --> RENDERER_TYPES
-    RENDERER_MEMORY --> RENDERER_TYPES
-  end
-```
+### API差し替え可能なRenderer Backendの枠組み
 
-### Step4-1: PlatformレイヤーへのAPI追加
+### renderer_coreの追加
 
-最速で三角形を描画するためには、application_runで描画するようにしてしまうのが最も速いです。
-描画するためにはOpenGLのウィンドウインスタンスが必要なのですが、現状ではplatform_glfwモジュールが保有しています。
-よって、準備として、Platformレイヤーからウィンドウインスタンスを取得するAPIを追加します。
+### renderer_backend_interfaceの追加
 
-[PlatformレイヤーへのAPI追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_1_window_instance)
+### renderer_backend_contextの追加
 
-### Step4-1: とりあえず三角形を出す
+### まとめ
 
-準備が整ったので、三角形を出す処理を追加します。
-今回は、[OpenGL Tutorial](https://www.opengl-tutorial.org/jp/beginners-tutorials/tutorial-2-the-first-triangle/)
-のコードを使用して三角形を表示します。
-
-[とりあえず三角形を出す](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_2_hello_triangle)
-
-なお、画面に描画するためにはOpenGLの座標系の知識が必要です。
-座標系の解説をメモとして[付録1: OpenGLで使われる座標系メモ](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix1_coordinates)
-に記しました。
-
-### Step4-2: レンダラーレイヤーの追加とVAO、VBOモジュールの追加
-
-追加した三角形描画処理から、VAO、VBOに関連する処理をモジュール化していきます。
-このため、新規にレンダラーレイヤーを追加し、モジュールを追加します。
-
-なお、VAO、VBOについても付録にメモを追加しました。
-[付録2: OpenGL VAO、VBO解説](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix2_vao_vbo)
-
-### Step4-3: filesystemモジュールの追加
-
-次はシェーダープログラムを外部のファイルに出していきます。よって、読み込み処理が必要となります。
-coreレイヤーにfilesystemモジュールを追加していきます。
-
-[filesystemモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_3_core_filesystem)
-
-### Step4-4: choco_stringモジュールへのAPI追加
-
-シェーダープログラムの読み込みの準備として、
-追加したfilesystemモジュールが提供するバイト単位での読み込みAPIを使用して取得した文字列を連結するAPIをchoco_stringに追加します。
-
-[choco_stringモジュールへのAPI追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_4_string_cat)
-
-### Step4-5: fs_utilモジュールの追加
-
-filesystemモジュール、choco_stringモジュールを使用して、シェーダープログラムを読み込む機能を提供するfs_utilモジュールを追加します。
-
-[fs_utilモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_5_fs_util)
-
-### Step4-6: シェーダーモジュールの追加
-
-以上でシェーダープログラムの読み込みが可能になったので、シェーダーモジュールを追加していきます。
-
-[シェーダーモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_5_shader)
-
-### 付録1: OpenGLで使われる座標系メモ
-
-[付録1: OpenGLで使われる座標系メモ](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix1_coordinates)
-
-### 付録2: VAO, VBO解説メモ
-
-[付録2: OpenGL VAO、VBO解説](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix2_vao_vbo)
+- レイヤー構成図
+- カバレッジ
