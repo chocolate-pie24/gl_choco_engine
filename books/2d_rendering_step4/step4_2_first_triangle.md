@@ -185,7 +185,6 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    // begin temporary
     if(!program_create()) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(RUNTIME_ERROR) - Failed to create shader program.");
@@ -212,7 +211,6 @@ application_result_t application_run(void) {
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
-    // 最初の属性バッファ：頂点
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 
     glVertexAttribPointer(
@@ -230,8 +228,6 @@ application_result_t application_run(void) {
     glBindVertexArray(0);
 
     GLFWwindow* window = (GLFWwindow*)platform_window_surface_get(s_app_state->platform_context);
-    // TODO: window NULLチェック
-    // end temporary
 
     struct timespec  req = {0, 1000000};
     while(!s_app_state->window_should_close) {
@@ -248,7 +244,6 @@ application_result_t application_run(void) {
         app_state_dispatch();
         app_state_clean();
 
-        // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(s_app_state->program_id);
@@ -262,7 +257,6 @@ application_result_t application_run(void) {
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
-        // end temporary
 
         nanosleep(&req, NULL);
     }
