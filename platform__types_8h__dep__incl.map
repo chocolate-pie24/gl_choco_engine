@@ -1,0 +1,10 @@
+<map id="include/engine/platform/platform_core/platform_types.h" name="include/engine/platform/platform_core/platform_types.h">
+<area shape="rect" id="node1" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="273,5,451,60"/>
+<area shape="rect" id="node2" href="$platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="115,108,292,148"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,211,209,236"/>
+<area shape="rect" id="node4" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="374,306,523,346"/>
+<area shape="rect" id="node5" href="$platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="360,196,537,251"/>
+<area shape="rect" id="node6" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="713,299,865,353"/>
+<area shape="rect" id="node7" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="557,108,735,148"/>
+<area shape="rect" id="node8" href="$platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="612,196,824,251"/>
+</map>

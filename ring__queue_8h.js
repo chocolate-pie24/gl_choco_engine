@@ -7,6 +7,9 @@ var ring__queue_8h =
       [ "RING_QUEUE_NO_MEMORY", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a2fda99050f773bee7de7173c206cdb31", null ],
       [ "RING_QUEUE_RUNTIME_ERROR", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a7b8043809e8a07cfe1bdd8463ba6c433", null ],
       [ "RING_QUEUE_UNDEFINED_ERROR", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a02574c95f81b9b8d1aea1c072fad4ad5", null ],
+      [ "RING_QUEUE_LIMIT_EXCEEDED", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a29d4dab50e3c113ce176b57d784ce036", null ],
+      [ "RING_QUEUE_DATA_CORRUPTED", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a6873f0ef43fe817a203ffb2ebdfbb312", null ],
+      [ "RING_QUEUE_OVERFLOW", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a9d7edd70fdeb513392edf30cf1f8bb32", null ],
       [ "RING_QUEUE_EMPTY", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417aa9bafe8734f1f1df977ed31e45e76d41", null ]
     ] ],
     [ "ring_queue_create", "ring__queue_8h.html#a56e3ab58551b751a19d98a51b7e6b16e", null ],

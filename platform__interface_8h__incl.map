@@ -1,9 +1,9 @@
-<map id="include/engine/interfaces/platform_interface.h" name="include/engine/interfaces/platform_interface.h">
-<area shape="rect" id="node1" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="296,5,483,45"/>
+<map id="include/engine/platform/platform_interface.h" name="include/engine/platform/platform_interface.h">
+<area shape="rect" id="node1" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="335,5,513,45"/>
 <area shape="rect" id="node2" title=" " alt="" coords="5,101,80,126"/>
-<area shape="rect" id="node3" href="$platform__utils_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="105,93,263,133"/>
-<area shape="rect" id="node4" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義" alt="" coords="288,93,491,133"/>
-<area shape="rect" id="node6" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="515,93,701,133"/>
-<area shape="rect" id="node7" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義" alt="" coords="726,93,919,133"/>
-<area shape="rect" id="node5" title=" " alt="" coords="457,181,540,207"/>
+<area shape="rect" id="node3" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベント構造体定義" alt="" coords="104,93,307,133"/>
+<area shape="rect" id="node5" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義" alt="" coords="331,93,517,133"/>
+<area shape="rect" id="node6" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義" alt="" coords="542,93,735,133"/>
+<area shape="rect" id="node7" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="760,93,947,133"/>
+<area shape="rect" id="node4" title=" " alt="" coords="273,181,356,207"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="renderer_vbo_vtable" name="renderer_vbo_vtable">
+<area shape="rect" id="node1" title="VBO機能仮想関数テーブル" alt="" coords="12,152,168,177"/>
+<area shape="rect" id="node2" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="5,5,175,31"/>
+</map>

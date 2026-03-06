@@ -1,0 +1,4 @@
+<map id="renderer_shader_vtable" name="renderer_shader_vtable">
+<area shape="rect" id="node1" title="シェーダー機能仮想関数テーブル" alt="" coords="12,152,188,177"/>
+<area shape="rect" id="node2" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
+</map>

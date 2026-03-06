@@ -91,39 +91,67 @@ $(document).ready(function(){initNavTree('globals_r.html',''); initResizable(); 
 </div>
 
 <div class="contents">
-<div class="textblock">Here is a list of all functions, variables, defines, enums, and typedefs with links to the files they belong to:</div>
+<div class="textblock">Here is a list of all documented functions, variables, defines, enums, and typedefs with links to the documentation:</div>
 
 <h3><a id="index_r" name="index_r"></a>- r -</h3><ul>
 <li>render_mem_allocate()&#160;:&#160;<a class="el" href="renderer__memory_8c.html#a6b9282f4c381f3c1d46d95ef7094b0c0">renderer_memory.c</a>, <a class="el" href="renderer__memory_8h.html#a6b9282f4c381f3c1d46d95ef7094b0c0">renderer_memory.h</a></li>
 <li>render_mem_free()&#160;:&#160;<a class="el" href="renderer__memory_8c.html#a5368d32dd8bda4af565ae039dbb0e0ae">renderer_memory.c</a>, <a class="el" href="renderer__memory_8h.html#a5368d32dd8bda4af565ae039dbb0e0ae">renderer_memory.h</a></li>
+<li>renderer_backend_context_t&#160;:&#160;<a class="el" href="context_8h.html#aabce7f662bbd82e374beb11c9414c1f8">context.h</a>, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">context_shader.h</a>, <a class="el" href="context__vao_8h.html#aabce7f662bbd82e374beb11c9414c1f8">context_vao.h</a>, <a class="el" href="context__vbo_8h.html#aabce7f662bbd82e374beb11c9414c1f8">context_vbo.h</a></li>
+<li>renderer_backend_destroy()&#160;:&#160;<a class="el" href="context_8h.html#ad0fae41c0167b500f941e257e0c56df5">context.h</a></li>
+<li>renderer_backend_initialize()&#160;:&#160;<a class="el" href="context_8h.html#a8cb4953ce74de55f80c5397ce1d38054">context.h</a></li>
+<li>renderer_backend_shader_compile()&#160;:&#160;<a class="el" href="context__shader_8h.html#a51a82e54bbbead2ece4881d6aa2a28a7">context_shader.h</a></li>
+<li>renderer_backend_shader_create()&#160;:&#160;<a class="el" href="context__shader_8h.html#a3d4f5ca86e208a4722b49b7eb4cea7be">context_shader.h</a></li>
+<li>renderer_backend_shader_destroy()&#160;:&#160;<a class="el" href="context__shader_8h.html#ac905ffe170390bd42850379026c52bfa">context_shader.h</a></li>
+<li>renderer_backend_shader_link()&#160;:&#160;<a class="el" href="context__shader_8h.html#a0c103cbf19d607272ca056b4dac83b5f">context_shader.h</a></li>
+<li>renderer_backend_shader_t&#160;:&#160;<a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_types.h</a></li>
+<li>renderer_backend_shader_use()&#160;:&#160;<a class="el" href="context__shader_8h.html#af86f3ded3758b5058da4369b21dbe27d">context_shader.h</a></li>
+<li>renderer_backend_vao_t&#160;:&#160;<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_types.h</a></li>
+<li>renderer_backend_vbo_t&#160;:&#160;<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_types.h</a></li>
+<li>renderer_backend_vertex_array_attribute_set()&#160;:&#160;<a class="el" href="context__vao_8h.html#aed2621dbff2039a9111c0e178abbe5bb">context_vao.h</a></li>
+<li>renderer_backend_vertex_array_bind()&#160;:&#160;<a class="el" href="context__vao_8h.html#ab928a18aa3976ae1cef6a500d53e3d04">context_vao.h</a></li>
+<li>renderer_backend_vertex_array_create()&#160;:&#160;<a class="el" href="context__vao_8h.html#a072cb436c9ead181bb4a4b7ad90ba9b2">context_vao.h</a></li>
+<li>renderer_backend_vertex_array_destroy()&#160;:&#160;<a class="el" href="context__vao_8h.html#aa0e5e705386cce083e612ee009926e1a">context_vao.h</a></li>
+<li>renderer_backend_vertex_array_unbind()&#160;:&#160;<a class="el" href="context__vao_8h.html#a2367538bb915a549e63fb4bfb5c21f52">context_vao.h</a></li>
+<li>renderer_backend_vertex_buffer_bind()&#160;:&#160;<a class="el" href="context__vbo_8h.html#a4a58d3fe4dd2bf028173101afcbcf861">context_vbo.h</a></li>
+<li>renderer_backend_vertex_buffer_create()&#160;:&#160;<a class="el" href="context__vbo_8h.html#a0dabfd622cab81878fba0dccffa0e184">context_vbo.h</a></li>
+<li>renderer_backend_vertex_buffer_destroy()&#160;:&#160;<a class="el" href="context__vbo_8h.html#afe23e5aa082c67feae5cdaaab936b66c">context_vbo.h</a></li>
+<li>renderer_backend_vertex_buffer_unbind()&#160;:&#160;<a class="el" href="context__vbo_8h.html#ae7998dee24b9d925b5f8ea53302882d7">context_vbo.h</a></li>
+<li>renderer_backend_vertex_buffer_vertex_load()&#160;:&#160;<a class="el" href="context__vbo_8h.html#a7fb631475f15b167d57c27a5ee59244b">context_vbo.h</a></li>
+<li>RENDERER_BAD_OPERATION&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a4b427ce7642fca60d6c952af1a150579">renderer_types.h</a></li>
+<li>RENDERER_DATA_CORRUPTED&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aa52ca6ed8ca8574c721e4e1bf8e671b1">renderer_types.h</a></li>
 <li>RENDERER_INVALID_ARGUMENT&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14">renderer_types.h</a></li>
+<li>RENDERER_LIMIT_EXCEEDED&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abe7db16cf925a8f0dbd0de0aa6c5e840">renderer_types.h</a></li>
 <li>RENDERER_NO_MEMORY&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e">renderer_types.h</a></li>
 <li>renderer_result_t&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_types.h</a></li>
-<li>renderer_result_to_str()&#160;:&#160;<a class="el" href="renderer__err__utils_8h.html#afa2dc157125ceb4f252290859d62e175">renderer_err_utils.h</a>, <a class="el" href="renderer__err__utils_8c.html#afa2dc157125ceb4f252290859d62e175">renderer_err_utils.c</a></li>
+<li>renderer_rslt_convert_choco_memory()&#160;:&#160;<a class="el" href="renderer__err__utils_8c.html#a249f496a87375fcc6efcf0423849c289">renderer_err_utils.c</a>, <a class="el" href="renderer__err__utils_8h.html#a249f496a87375fcc6efcf0423849c289">renderer_err_utils.h</a></li>
+<li>renderer_rslt_convert_linear_alloc()&#160;:&#160;<a class="el" href="renderer__err__utils_8h.html#a3dc0515859b12bc30f28914f32ba3dbb">renderer_err_utils.h</a>, <a class="el" href="renderer__err__utils_8c.html#a3dc0515859b12bc30f28914f32ba3dbb">renderer_err_utils.c</a></li>
+<li>renderer_rslt_to_str()&#160;:&#160;<a class="el" href="renderer__err__utils_8h.html#a5d97ca1e3c1511c3e6c99347a45ccacc">renderer_err_utils.h</a>, <a class="el" href="renderer__err__utils_8c.html#a5d97ca1e3c1511c3e6c99347a45ccacc">renderer_err_utils.c</a></li>
 <li>RENDERER_RUNTIME_ERROR&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508">renderer_types.h</a></li>
+<li>RENDERER_SHADER_COMPILE_ERROR&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a39ba115b2f91b73a731c052378323628">renderer_types.h</a></li>
+<li>RENDERER_SHADER_LINK_ERROR&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a985655b50de046365424064ad45aa2b6">renderer_types.h</a></li>
+<li>renderer_shader_vtable_t&#160;:&#160;<a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">interface_shader.h</a></li>
 <li>RENDERER_SUCCESS&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314">renderer_types.h</a></li>
 <li>RENDERER_TYPE_FLOAT&#160;:&#160;<a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930">renderer_types.h</a></li>
 <li>renderer_type_t&#160;:&#160;<a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_types.h</a></li>
 <li>RENDERER_UNDEFINED_ERROR&#160;:&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9">renderer_types.h</a></li>
+<li>renderer_vao_vtable_t&#160;:&#160;<a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">interface_vao.h</a></li>
+<li>renderer_vbo_vtable_t&#160;:&#160;<a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">interface_vbo.h</a></li>
 <li>ring_queue_create()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a56e3ab58551b751a19d98a51b7e6b16e">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a56e3ab58551b751a19d98a51b7e6b16e">ring_queue.c</a></li>
+<li>RING_QUEUE_DATA_CORRUPTED&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a6873f0ef43fe817a203ffb2ebdfbb312">ring_queue.h</a></li>
 <li>ring_queue_destroy()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a4acac0e1b7e004b8b40f3ece8d51180b">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a4acac0e1b7e004b8b40f3ece8d51180b">ring_queue.c</a></li>
-<li>ring_queue_empty()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a52ce710c8a44a8108d137f27dcc256e8">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a52ce710c8a44a8108d137f27dcc256e8">ring_queue.c</a></li>
 <li>RING_QUEUE_EMPTY&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417aa9bafe8734f1f1df977ed31e45e76d41">ring_queue.h</a></li>
+<li>ring_queue_empty()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a52ce710c8a44a8108d137f27dcc256e8">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a52ce710c8a44a8108d137f27dcc256e8">ring_queue.c</a></li>
 <li>RING_QUEUE_INVALID_ARGUMENT&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a654c22710f62a2a5de3674cea810982a">ring_queue.h</a></li>
+<li>RING_QUEUE_LIMIT_EXCEEDED&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a29d4dab50e3c113ce176b57d784ce036">ring_queue.h</a></li>
 <li>RING_QUEUE_NO_MEMORY&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a2fda99050f773bee7de7173c206cdb31">ring_queue.h</a></li>
-<li>ring_queue_pop()&#160;:&#160;<a class="el" href="ring__queue_8c.html#a291250b7476321e4a8c2f47a7eee5507">ring_queue.c</a>, <a class="el" href="ring__queue_8h.html#a291250b7476321e4a8c2f47a7eee5507">ring_queue.h</a></li>
+<li>RING_QUEUE_OVERFLOW&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a9d7edd70fdeb513392edf30cf1f8bb32">ring_queue.h</a></li>
+<li>ring_queue_pop()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a291250b7476321e4a8c2f47a7eee5507">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a291250b7476321e4a8c2f47a7eee5507">ring_queue.c</a></li>
 <li>ring_queue_push()&#160;:&#160;<a class="el" href="ring__queue_8h.html#a0b4d0c2278cf23eb082fabdee881f575">ring_queue.h</a>, <a class="el" href="ring__queue_8c.html#a0b4d0c2278cf23eb082fabdee881f575">ring_queue.c</a></li>
 <li>ring_queue_result_t&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue.h</a></li>
 <li>RING_QUEUE_RUNTIME_ERROR&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a7b8043809e8a07cfe1bdd8463ba6c433">ring_queue.h</a></li>
 <li>RING_QUEUE_SUCCESS&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417acb3c37cc40d19727260f754cabfa778a">ring_queue.h</a></li>
 <li>ring_queue_t&#160;:&#160;<a class="el" href="ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3">ring_queue.h</a></li>
 <li>RING_QUEUE_UNDEFINED_ERROR&#160;:&#160;<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a02574c95f81b9b8d1aea1c072fad4ad5">ring_queue.h</a></li>
-<li>rslt_convert_linear_alloc()&#160;:&#160;<a class="el" href="platform__context_8c.html#ad156d086288f57c2c9174ff3e90c05b1">platform_context.c</a>, <a class="el" href="application_8c.html#a52744fadf900b6ec41067b438ab03602">application.c</a></li>
-<li>rslt_convert_mem_sys()&#160;:&#160;<a class="el" href="application_8c.html#ab6b4254db17e5c4bbfe09eec73d9c50b">application.c</a>, <a class="el" href="ring__queue_8c.html#a92cec97d4f20953a5694faaeb39c2256">ring_queue.c</a></li>
-<li>rslt_convert_platform()&#160;:&#160;<a class="el" href="application_8c.html#aaba82e2284097f9f913987f0f34b3657">application.c</a></li>
-<li>rslt_convert_ring_queue()&#160;:&#160;<a class="el" href="application_8c.html#a859076ee05bdf90ad397ef167760fb3f">application.c</a></li>
-<li>rslt_convert_string()&#160;:&#160;<a class="el" href="platform__glfw_8c.html#a1f16ebc66602e6c8c2cd5d85213de754">platform_glfw.c</a></li>
-<li>rslt_to_str()&#160;:&#160;<a class="el" href="application_8c.html#a2c1313359993ebcf91d1925df9ef1c8d">application.c</a>, <a class="el" href="choco__string_8c.html#a7a47524ac3275851ca38ea65671f75ad">choco_string.c</a>, <a class="el" href="ring__queue_8c.html#a739e3e6459c543e9e4261114304a079e">ring_queue.c</a>, <a class="el" href="platform__glfw_8c.html#ab6e5d7177f909e4cddbb03cd202df36d">platform_glfw.c</a>, <a class="el" href="platform__context_8c.html#ab6e5d7177f909e4cddbb03cd202df36d">platform_context.c</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -1,0 +1,18 @@
+<map id="src/engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.c" name="src/engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.c">
+<area shape="rect" id="node1" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="509,5,710,75"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,343,88,368"/>
+<area shape="rect" id="node3" title=" " alt="" coords="189,343,259,368"/>
+<area shape="rect" id="node4" title=" " alt="" coords="441,343,516,368"/>
+<area shape="rect" id="node5" title=" " alt="" coords="125,137,211,163"/>
+<area shape="rect" id="node6" title=" " alt="" coords="236,137,321,163"/>
+<area shape="rect" id="node7" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="841,335,1025,375"/>
+<area shape="rect" id="node8" href="$renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="647,130,835,170"/>
+<area shape="rect" id="node11" href="$renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="853,233,1041,273"/>
+<area shape="rect" id="node12" href="$renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="589,328,792,383"/>
+<area shape="rect" id="node13" href="$interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="161,225,364,280"/>
+<area shape="rect" id="node14" href="$concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="345,123,572,177"/>
+<area shape="rect" id="node15" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="860,137,1071,163"/>
+<area shape="rect" id="node16" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1065,240,1204,265"/>
+<area shape="rect" id="node9" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="388,233,545,273"/>
+<area shape="rect" id="node10" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="569,233,727,273"/>
+</map>

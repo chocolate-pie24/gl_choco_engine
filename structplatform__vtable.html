@@ -108,7 +108,7 @@ Collaboration diagram for platform_vtable:</div>
 <map name="aplatform__vtable_coll__map" id="aplatform__vtable_coll__map">
 <area shape="rect" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="62,299,189,324"/>
 <area shape="rect" href="structplatform__backend.html" title="GLFWプラットフォーム内部状態管理構造体" alt="" coords="56,108,195,133"/>
-<area shape="rect" href="structchoco__string.html" title=" " alt="" coords="5,5,109,31"/>
+<area shape="rect" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,5,109,31"/>
 <area shape="rect" href="structinput__snapshot.html" title="入力状態格納構造体" alt="" coords="134,5,255,31"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
@@ -121,12 +121,12 @@ Data Fields</h2></td></tr>
 <tr class="separator:ac24546ccaae4812b2d0eefd694bcc00f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bfb6e674266be2665be9f5b753901f2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#a0a7356c8a423994c8152076fb705f346">pfn_platform_backend_destroy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#a2bfb6e674266be2665be9f5b753901f2">platform_backend_destroy</a></td></tr>
 <tr class="separator:a2bfb6e674266be2665be9f5b753901f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0add5132fbe0edfdbc2946d9d7b64a8b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#a26b8e93cbacc6bdc50b1adba844fd40b">pfn_platform_backend_window_create</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b">platform_backend_window_create</a></td></tr>
+<tr class="memitem:a0add5132fbe0edfdbc2946d9d7b64a8b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#a22d90e71a21b5b43fd74d589c439c975">pfn_platform_backend_window_create</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b">platform_backend_window_create</a></td></tr>
 <tr class="separator:a0add5132fbe0edfdbc2946d9d7b64a8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b8643c867e5a6c141c8127daf1cc0ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#a3c9fae21c839b68511ca6844b5566b9c">pfn_platform_backend_pump_messages</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#a6b8643c867e5a6c141c8127daf1cc0ad">platform_backend_pump_messages</a></td></tr>
 <tr class="separator:a6b8643c867e5a6c141c8127daf1cc0ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac75253294b8967647fe835c9a4863d60"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#a711f509de75571eac055a88dc0b4aa6b">pfn_platform_backend_window_surface_get</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#ac75253294b8967647fe835c9a4863d60">platform_backend_window_surface_get</a></td></tr>
-<tr class="separator:ac75253294b8967647fe835c9a4863d60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a4fd6f22bc8eb87228c0042c413e3a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__interface_8h.html#ae743a2b4c121272b43f512bd8f2346ae">pfn_platform_backend_swap_buffers</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structplatform__vtable.html#a7a4fd6f22bc8eb87228c0042c413e3a6">platform_backend_swap_buffers</a></td></tr>
+<tr class="separator:a7a4fd6f22bc8eb87228c0042c413e3a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納) </p>
@@ -191,6 +191,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a id="a7a4fd6f22bc8eb87228c0042c413e3a6" name="a7a4fd6f22bc8eb87228c0042c413e3a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a4fd6f22bc8eb87228c0042c413e3a6">&#9670;&#160;</a></span>platform_backend_swap_buffers</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="platform__interface_8h.html#ae743a2b4c121272b43f512bd8f2346ae">pfn_platform_backend_swap_buffers</a> platform_vtable::platform_backend_swap_buffers</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>関数ポインタ <a class="el" href="platform__interface_8h.html#ae743a2b4c121272b43f512bd8f2346ae">pfn_platform_backend_swap_buffers</a> 参照 </p>
+
+</div>
+</div>
 <a id="a0add5132fbe0edfdbc2946d9d7b64a8b" name="a0add5132fbe0edfdbc2946d9d7b64a8b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0add5132fbe0edfdbc2946d9d7b64a8b">&#9670;&#160;</a></span>platform_backend_window_create</h2>
 
@@ -198,30 +213,16 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="platform__interface_8h.html#a26b8e93cbacc6bdc50b1adba844fd40b">pfn_platform_backend_window_create</a> platform_vtable::platform_backend_window_create</td>
+          <td class="memname"><a class="el" href="platform__interface_8h.html#a22d90e71a21b5b43fd74d589c439c975">pfn_platform_backend_window_create</a> platform_vtable::platform_backend_window_create</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>関数ポインタ <a class="el" href="platform__interface_8h.html#a26b8e93cbacc6bdc50b1adba844fd40b">pfn_platform_backend_window_create</a> 参照 </p>
-
-</div>
-</div>
-<a id="ac75253294b8967647fe835c9a4863d60" name="ac75253294b8967647fe835c9a4863d60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac75253294b8967647fe835c9a4863d60">&#9670;&#160;</a></span>platform_backend_window_surface_get</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="platform__interface_8h.html#a711f509de75571eac055a88dc0b4aa6b">pfn_platform_backend_window_surface_get</a> platform_vtable::platform_backend_window_surface_get</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
+<p>関数ポインタ <a class="el" href="platform__interface_8h.html#a22d90e71a21b5b43fd74d589c439c975">pfn_platform_backend_window_create</a> 参照 </p>
 
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/engine/interfaces/<a class="el" href="platform__interface_8h_source.html">platform_interface.h</a></li>
+<li>include/engine/platform/<a class="el" href="platform__interface_8h_source.html">platform_interface.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -1,0 +1,12 @@
+<map id="src/engine/io_utils/fs_utils/fs_utils.c" name="src/engine/io_utils/fs_utils/fs_utils.c">
+<area shape="rect" id="node1" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="305,5,445,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,101,76,126"/>
+<area shape="rect" id="node3" title=" " alt="" coords="405,269,479,295"/>
+<area shape="rect" id="node4" title=" " alt="" coords="151,101,234,126"/>
+<area shape="rect" id="node5" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="309,93,442,133"/>
+<area shape="rect" id="node6" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="152,181,332,221"/>
+<area shape="rect" id="node7" href="$filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="357,181,527,221"/>
+<area shape="rect" id="node8" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="551,181,709,221"/>
+<area shape="rect" id="node9" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="605,101,815,126"/>
+<area shape="rect" id="node10" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="783,189,922,214"/>
+</map>

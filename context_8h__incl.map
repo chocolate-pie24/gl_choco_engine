@@ -1,0 +1,6 @@
+<map id="include/engine/renderer/renderer_backend/renderer_backend_context/context.h" name="include/engine/renderer/renderer_backend/renderer_backend_context/context.h">
+<area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="93,5,297,60"/>
+<area shape="rect" id="node2" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,108,189,148"/>
+<area shape="rect" id="node3" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="213,108,371,148"/>
+<area shape="rect" id="node4" title=" " alt="" coords="255,196,329,221"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="Platform Context" name="Platform Context">
+<area shape="rect" id="node1" href="$group__platform.html" title="プラットフォームサブシステムでプラットフォーム固有の実装を差し替え可能な仕組みを提供する" alt="" coords="5,5,84,31"/>
+<area shape="rect" id="node2" title="プラットフォームシステムの使用者が、システム保有機能を使用する際に、vtableや各プラットフォーム固有実装を意識せずとも使用できるよう、機能の窓口を提供する" alt="" coords="132,5,265,31"/>
+</map>

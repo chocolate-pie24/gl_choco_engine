@@ -1,0 +1,9 @@
+<map id="renderer_backend_context" name="renderer_backend_context">
+<area shape="rect" id="node1" title="RendererBackend内部状態管理構造体" alt="" coords="207,255,401,280"/>
+<area shape="rect" id="node2" href="$structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="19,167,195,192"/>
+<area shape="rect" id="node3" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
+<area shape="rect" id="node4" href="$structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="226,167,382,192"/>
+<area shape="rect" id="node5" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="219,5,389,31"/>
+<area shape="rect" id="node6" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="413,167,569,192"/>
+<area shape="rect" id="node7" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="413,5,582,31"/>
+</map>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/platform_concretes/platform_glfw.h Source File</title>
+<title>GL CHOCO ENGINE: include/engine/platform/platform_concretes/platform_glfw.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -103,33 +103,32 @@ $(document).ready(function(){initNavTree('platform__glfw_8h_source.html',''); in
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &quot;<a class="code" href="platform__interface_8h.html">engine/interfaces/platform_interface.h</a>&quot;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &quot;<a class="code" href="platform__interface_8h.html">engine/platform/platform_interface.h</a>&quot;</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &quot;<a class="code" href="platform__utils_8h.html">engine/core/platform/platform_utils.h</a>&quot;</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">const</span> <a class="code hl_struct" href="structplatform__vtable.html">platform_vtable_t</a>* <a class="code hl_function" href="platform__glfw_8h.html#a46c7631d531bf7f9b4dff673bb0a5878">platform_glfw_vtable_get</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#ifdef TEST_BUILD</span></div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keywordtype">void</span> platform_glfw_result_controller_set(<a class="code hl_enumeration" href="platform__utils_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a> ret_);</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keywordtype">void</span> platform_glfw_result_controller_reset(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>}</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aplatform__glfw_8h_html_a46c7631d531bf7f9b4dff673bb0a5878"><div class="ttname"><a href="platform__glfw_8h.html#a46c7631d531bf7f9b4dff673bb0a5878">platform_glfw_vtable_get</a></div><div class="ttdeci">const platform_vtable_t * platform_glfw_vtable_get(void)</div><div class="ttdoc">GLFWプラットフォームを使用する際の仮想関数テーブルを取得する</div><div class="ttdef"><b>Definition:</b> platform_glfw.c:123</div></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &quot;<a class="code" href="platform__types_8h.html">engine/platform/platform_core/platform_types.h</a>&quot;</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keywordtype">void</span> platform_glfw_result_controller_set(<a class="code hl_enumeration" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a> ret_);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keywordtype">void</span> platform_glfw_result_controller_reset(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>}</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="aplatform__glfw_8h_html_a46c7631d531bf7f9b4dff673bb0a5878"><div class="ttname"><a href="platform__glfw_8h.html#a46c7631d531bf7f9b4dff673bb0a5878">platform_glfw_vtable_get</a></div><div class="ttdeci">const platform_vtable_t * platform_glfw_vtable_get(void)</div><div class="ttdoc">GLFWプラットフォームを使用する際の仮想関数テーブルを取得する</div><div class="ttdef"><b>Definition:</b> platform_glfw.c:115</div></div>
 <div class="ttc" id="aplatform__interface_8h_html"><div class="ttname"><a href="platform__interface_8h.html">platform_interface.h</a></div><div class="ttdoc">プラットフォームシステムのInterface構造体を提供する</div></div>
-<div class="ttc" id="aplatform__utils_8h_html"><div class="ttname"><a href="platform__utils_8h.html">platform_utils.h</a></div><div class="ttdoc">プラットフォームシステムで共通に使用されるデータ型を提供する</div></div>
-<div class="ttc" id="aplatform__utils_8h_html_af8313b3164989f0ef2d24d2b299601b7"><div class="ttname"><a href="platform__utils_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a></div><div class="ttdeci">platform_result_t</div><div class="ttdoc">プラットフォームシステム実行結果コード定義</div><div class="ttdef"><b>Definition:</b> platform_utils.h:27</div></div>
-<div class="ttc" id="astructplatform__vtable_html"><div class="ttname"><a href="structplatform__vtable.html">platform_vtable</a></div><div class="ttdoc">プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)</div><div class="ttdef"><b>Definition:</b> platform_interface.h:132</div></div>
+<div class="ttc" id="aplatform__types_8h_html"><div class="ttname"><a href="platform__types_8h.html">platform_types.h</a></div><div class="ttdoc">プラットフォームシステムで共通に使用されるデータ型を提供する</div></div>
+<div class="ttc" id="aplatform__types_8h_html_af8313b3164989f0ef2d24d2b299601b7"><div class="ttname"><a href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a></div><div class="ttdeci">platform_result_t</div><div class="ttdoc">プラットフォームシステム実行結果コード定義</div><div class="ttdef"><b>Definition:</b> platform_types.h:27</div></div>
+<div class="ttc" id="astructplatform__vtable_html"><div class="ttname"><a href="structplatform__vtable.html">platform_vtable</a></div><div class="ttdoc">プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)</div><div class="ttdef"><b>Definition:</b> platform_interface.h:146</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_317493eb37dd8860eda101e50eac07c0.html">platform_concretes</a></li><li class="navelem"><a class="el" href="platform__glfw_8h.html">platform_glfw.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_d88c68aed8b2f2e260b0d9b81852d0e4.html">platform</a></li><li class="navelem"><a class="el" href="dir_d17c49c6b8cd4fc74caad5224cccc1e5.html">platform_concretes</a></li><li class="navelem"><a class="el" href="platform__glfw_8h.html">platform_glfw.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

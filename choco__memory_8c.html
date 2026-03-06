@@ -94,9 +94,8 @@ $(document).ready(function(){initNavTree('choco__memory_8c.html',''); initResiza
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">choco_memory.c File Reference<div class="ingroups"><a class="el" href="group__core.html">Core</a> &raquo; <a class="el" href="group__choco__memory.html">Choco Memory</a></div></div></div>
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle"><div class="title">choco_memory.c File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -118,14 +117,14 @@ Include dependency graph for choco_memory.c:</div>
 <map name="asrc_2engine_2core_2memory_2choco__memory_8c" id="asrc_2engine_2core_2memory_2choco__memory_8c">
 <area shape="rect" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="300,5,480,45"/>
 <area shape="rect" title=" " alt="" coords="5,101,92,126"/>
-<area shape="rect" title=" " alt="" coords="611,181,686,207"/>
+<area shape="rect" title=" " alt="" coords="586,181,661,207"/>
 <area shape="rect" title=" " alt="" coords="168,101,239,126"/>
 <area shape="rect" title=" " alt="" coords="263,101,330,126"/>
 <area shape="rect" title=" " alt="" coords="355,101,425,126"/>
 <area shape="rect" title=" " alt="" coords="449,101,520,126"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="543,101,754,126"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="778,101,999,126"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1023,93,1181,133"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="726,101,937,126"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="833,181,971,207"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="545,93,702,133"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -143,8 +142,6 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab6a9be4f1db3b040eb827962c91e7563"><td class="memItemLeft" align="right" valign="top">static void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#ab6a9be4f1db3b040eb827962c91e7563">test_malloc</a> (size_t size_)</td></tr>
-<tr class="separator:ab6a9be4f1db3b040eb827962c91e7563"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cea61704c0f9bfd202130c7ed569e52"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a2cea61704c0f9bfd202130c7ed569e52">memory_system_create</a> (void)</td></tr>
 <tr class="memdesc:a2cea61704c0f9bfd202130c7ed569e52"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムを起動する  <br /></td></tr>
 <tr class="separator:a2cea61704c0f9bfd202130c7ed569e52"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,27 +149,14 @@ Functions</h2></td></tr>
 <tr class="memdesc:ae1118adb36e9654346d1e67d540cd7e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムを停止する  <br /></td></tr>
 <tr class="separator:ae1118adb36e9654346d1e67d540cd7e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0874ee6816154203790c2c3630530557"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a> (size_t size_, <a class="el" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395c">memory_tag_t</a> mem_tag_, void **out_ptr_)</td></tr>
-<tr class="memdesc:a0874ee6816154203790c2c3630530557"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)  <br /></td></tr>
+<tr class="memdesc:a0874ee6816154203790c2c3630530557"><td class="mdescLeft">&#160;</td><td class="mdescRight">容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する  <br /></td></tr>
 <tr class="separator:a0874ee6816154203790c2c3630530557"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1809307ab820a30f8078e2f73bd9a8a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a> (void *ptr_, size_t size_, <a class="el" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395c">memory_tag_t</a> mem_tag_)</td></tr>
-<tr class="memdesc:ad1809307ab820a30f8078e2f73bd9a8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムを使用してメモリを解放する  <br /></td></tr>
+<tr class="memdesc:ad1809307ab820a30f8078e2f73bd9a8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する  <br /></td></tr>
 <tr class="separator:ad1809307ab820a30f8078e2f73bd9a8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3fee6b34093672dbcf70f443b46c348c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a3fee6b34093672dbcf70f443b46c348c">memory_system_report</a> (void)</td></tr>
-<tr class="memdesc:a3fee6b34093672dbcf70f443b46c348c"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムが管理しているメモリ確保状態を標準出力に出力する  <br /></td></tr>
+<tr class="memdesc:a3fee6b34093672dbcf70f443b46c348c"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステムが管理しているメモリ使用量状態を標準出力に出力する  <br /></td></tr>
 <tr class="separator:a3fee6b34093672dbcf70f443b46c348c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a536e6fba8bdd7f6e341d546addacafca"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="choco__memory_8c.html#a7b077a3425894bb63a45a105cc0d3c17">memory_system_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a536e6fba8bdd7f6e341d546addacafca">s_mem_sys_ptr</a> = NULL</td></tr>
-<tr class="separator:a536e6fba8bdd7f6e341d546addacafca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
-<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
-<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af80cea0f3487047ba34d8b89614ddbc1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#af80cea0f3487047ba34d8b89614ddbc1">s_rslt_str_runtime_error</a> = &quot;RUNTIME_ERROR&quot;</td></tr>
-<tr class="separator:af80cea0f3487047ba34d8b89614ddbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
-<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装 </p>
@@ -231,10 +215,11 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定) </p>
+<p>容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>割り当ての際にはmemory_tag_tを指定することで、各メモリタグごとの合計割り当てサイズと総メモリ割り当てサイズをトラッキングする</li>
 <li>本関数を使用する前に、memory_system_createでメモリシステムの初期化を行うこと</li>
+<li>max_align_tでアラインされたメモリが割り当てられる</li>
 </ul>
 </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -252,17 +237,20 @@ Variables</h2></td></tr>
 <div class="line"><span class="keywordtype">void</span>* ptr = NULL;</div>
 <div class="line">ret = <a class="code hl_function" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a>(128, <a class="code hl_enumvalue" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84">MEMORY_TAG_SYSTEM</a>, &amp;ptr); <span class="comment">// 128バイト割り当て</span></div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)</div><div class="ttdef"><b>Definition:</b> choco_memory.c:136</div></div>
-<div class="ttc" id="achoco__memory_8h_html_a2cea61704c0f9bfd202130c7ed569e52"><div class="ttname"><a href="choco__memory_8h.html#a2cea61704c0f9bfd202130c7ed569e52">memory_system_create</a></div><div class="ttdeci">memory_system_result_t memory_system_create(void)</div><div class="ttdoc">メモリシステムを起動する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:69</div></div>
-<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:55</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:132</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a2cea61704c0f9bfd202130c7ed569e52"><div class="ttname"><a href="choco__memory_8h.html#a2cea61704c0f9bfd202130c7ed569e52">memory_system_create</a></div><div class="ttdeci">memory_system_result_t memory_system_create(void)</div><div class="ttdoc">メモリシステムを起動する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:73</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:56</div></div>
 <div class="ttc" id="achoco__memory_8h_html_aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84"><div class="ttname"><a href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84">MEMORY_TAG_SYSTEM</a></div><div class="ttdeci">@ MEMORY_TAG_SYSTEM</div><div class="ttdef"><b>Definition:</b> choco_memory.h:44</div></div>
 </div><!-- fragment --><dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">MEMORY_SYSTEM_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>メモリシステム未初期化</li>
-<li>out_ptr == NULL</li>
-<li>*out_ptr != NULL</li>
-<li>mem_tag_ &gt;= MEMORY_TAG_MAX</li>
+<li>out_ptr_ == NULL</li>
+<li>*out_ptr_ != NULL</li>
+<li>mem_tag_ &gt;= MEMORY_TAG_MAX </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">MEMORY_SYSTEM_LIMIT_EXCEEDED</td><td>以下のいずれか<ul>
 <li>割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過</li>
 <li>割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過 </li>
 </ul>
@@ -336,7 +324,7 @@ Variables</h2></td></tr>
 <p>使用例: </p><div class="fragment"><div class="line"><a class="code hl_enumeration" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a> ret = <a class="code hl_function" href="choco__memory_8h.html#a2cea61704c0f9bfd202130c7ed569e52">memory_system_create</a>();</div>
 <div class="line"><a class="code hl_function" href="choco__memory_8h.html#ae1118adb36e9654346d1e67d540cd7e3">memory_system_destroy</a>();</div>
 <div class="line"><a class="code hl_function" href="choco__memory_8h.html#ae1118adb36e9654346d1e67d540cd7e3">memory_system_destroy</a>(); <span class="comment">// 2重destroyは許可</span></div>
-<div class="ttc" id="achoco__memory_8h_html_ae1118adb36e9654346d1e67d540cd7e3"><div class="ttname"><a href="choco__memory_8h.html#ae1118adb36e9654346d1e67d540cd7e3">memory_system_destroy</a></div><div class="ttdeci">void memory_system_destroy(void)</div><div class="ttdoc">メモリシステムを停止する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:110</div></div>
+<div class="ttc" id="achoco__memory_8h_html_ae1118adb36e9654346d1e67d540cd7e3"><div class="ttname"><a href="choco__memory_8h.html#ae1118adb36e9654346d1e67d540cd7e3">memory_system_destroy</a></div><div class="ttdeci">void memory_system_destroy(void)</div><div class="ttdoc">メモリシステムを停止する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:114</div></div>
 </div><!-- fragment --><dl class="section see"><dt>See also</dt><dd><a class="el" href="choco__memory_8h.html#a2cea61704c0f9bfd202130c7ed569e52" title="メモリシステムを起動する">memory_system_create</a> </dd></dl>
 
 </div>
@@ -373,8 +361,10 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>メモリシステムを使用してメモリを解放する </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
+<p>ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する </p>
+<dl class="section note"><dt>Note</dt><dd>引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。 この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。</dd>
+<dd>
+<ul>
 <li>メモリシステムが未初期化の場合はワーニングを出力し、何もしない</li>
 <li>NULL == ptr_でワーニングを出力し、何もしない</li>
 <li>mem_tag_ &gt;= MEMORY_TAG_MAXでワーニングを出力し、何もしない</li>
@@ -391,10 +381,11 @@ Variables</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><span class="comment">// メモリ解放</span></div>
 <div class="line"><a class="code hl_function" href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a>(ptr, 128, <a class="code hl_enumvalue" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84">MEMORY_TAG_SYSTEM</a>);</div>
-<div class="ttc" id="achoco__memory_8h_html_ad1809307ab820a30f8078e2f73bd9a8a"><div class="ttname"><a href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a></div><div class="ttdeci">void memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_)</div><div class="ttdoc">メモリシステムを使用してメモリを解放する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:181</div></div>
+<div class="line">ptr = NULL;</div>
+<div class="ttc" id="achoco__memory_8h_html_ad1809307ab820a30f8078e2f73bd9a8a"><div class="ttname"><a href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a></div><div class="ttdeci">void memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_)</div><div class="ttdoc">ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:177</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ptr_</td><td>解放メモリアドレス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr_</td><td>解放メモリアドレス </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>解放サイズ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">mem_tag_</td><td>メモリタグ</td></tr>
   </table>
@@ -420,7 +411,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>メモリシステムが管理しているメモリ確保状態を標準出力に出力する </p>
+<p>メモリシステムが管理しているメモリ使用量状態を標準出力に出力する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>メモリシステムが未初期化の場合はワーニングを出力し、何もしない</li>
 </ul>
@@ -433,150 +424,8 @@ Variables</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><span class="comment">// メモリ割り当て状態をレポート</span></div>
 <div class="line"><a class="code hl_function" href="choco__memory_8h.html#a3fee6b34093672dbcf70f443b46c348c">memory_system_report</a>();</div>
-<div class="ttc" id="achoco__memory_8h_html_a3fee6b34093672dbcf70f443b46c348c"><div class="ttname"><a href="choco__memory_8h.html#a3fee6b34093672dbcf70f443b46c348c">memory_system_report</a></div><div class="ttdeci">void memory_system_report(void)</div><div class="ttdoc">メモリシステムが管理しているメモリ確保状態を標準出力に出力する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:210</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a3fee6b34093672dbcf70f443b46c348c"><div class="ttname"><a href="choco__memory_8h.html#a3fee6b34093672dbcf70f443b46c348c">memory_system_report</a></div><div class="ttdeci">void memory_system_report(void)</div><div class="ttdoc">メモリシステムが管理しているメモリ使用量状態を標準出力に出力する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:206</div></div>
 </div><!-- fragment --> 
-</div>
-</div>
-<a id="ab6a9be4f1db3b040eb827962c91e7563" name="ab6a9be4f1db3b040eb827962c91e7563"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6a9be4f1db3b040eb827962c91e7563">&#9670;&#160;</a></span>test_malloc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void * test_malloc </td>
-          <td>(</td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size_</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a id="a536e6fba8bdd7f6e341d546addacafca" name="a536e6fba8bdd7f6e341d546addacafca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a536e6fba8bdd7f6e341d546addacafca">&#9670;&#160;</a></span>s_mem_sys_ptr</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="choco__memory_8c.html#a7b077a3425894bb63a45a105cc0d3c17">memory_system_t</a>* s_mem_sys_ptr = NULL</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>メモリシステム内部状態管理構造体インスタンス </p>
-
-</div>
-</div>
-<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>メモリシステムAPI実行結果コード(無効な引数)に対応する文字列 </p>
-
-</div>
-</div>
-<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>メモリシステムAPI実行結果コード(メモリ不足)に対応する文字列 </p>
-
-</div>
-</div>
-<a id="af80cea0f3487047ba34d8b89614ddbc1" name="af80cea0f3487047ba34d8b89614ddbc1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af80cea0f3487047ba34d8b89614ddbc1">&#9670;&#160;</a></span>s_rslt_str_runtime_error</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_runtime_error = &quot;RUNTIME_ERROR&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>メモリシステムAPI実行結果コード(実行時エラー)に対応する文字列 </p>
-
-</div>
-</div>
-<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>メモリシステムAPI実行結果コード(処理成功)に対応する文字列 </p>
-
 </div>
 </div>
 </div><!-- contents -->

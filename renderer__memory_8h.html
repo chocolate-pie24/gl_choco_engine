@@ -93,23 +93,22 @@ $(document).ready(function(){initNavTree('renderer__memory_8h.html',''); initRes
 <div class="header">
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">renderer_memory.h File Reference</div></div>
+  <div class="headertitle"><div class="title">renderer_memory.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a> &raquo; <a class="el" href="group__renderer__core.html">Renderer Core</a></div></div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &lt;stdint.h&gt;</code><br />
-<code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_base/renderer_types.h</a>&quot;</code><br />
+
+<p>renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する  
+<a href="#details">More...</a></p>
+<div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for renderer_memory.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="renderer__memory_8h__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h" alt=""/></div>
 <map name="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h" id="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h">
-<area shape="rect" title=" " alt="" coords="108,5,284,60"/>
-<area shape="rect" title=" " alt="" coords="5,115,88,141"/>
-<area shape="rect" title=" " alt="" coords="113,115,183,141"/>
-<area shape="rect" title=" " alt="" coords="208,115,283,141"/>
-<area shape="rect" href="renderer__types_8h.html" title=" " alt="" coords="307,108,491,148"/>
+<area shape="rect" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="31,5,207,60"/>
+<area shape="rect" title=" " alt="" coords="5,115,80,141"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,288,148"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -117,10 +116,11 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="renderer__memory_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep" id="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep">
-<area shape="rect" title=" " alt="" coords="203,5,379,60"/>
-<area shape="rect" href="vertex__array__object_8c.html" title=" " alt="" coords="5,108,180,163"/>
-<area shape="rect" href="vertex__buffer__object_8c.html" title=" " alt="" coords="204,108,379,163"/>
-<area shape="rect" href="renderer__memory_8c.html" title=" " alt="" coords="403,108,577,163"/>
+<area shape="rect" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="355,5,531,60"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,108,207,177"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,108,432,177"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,108,657,177"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="681,115,856,170"/>
 </map>
 </div>
 </div>
@@ -129,11 +129,20 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a6b9282f4c381f3c1d46d95ef7094b0c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html#a6b9282f4c381f3c1d46d95ef7094b0c0">render_mem_allocate</a> (size_t size_, void **out_ptr_)</td></tr>
+<tr class="memdesc:a6b9282f4c381f3c1d46d95ef7094b0c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_allocateのラッパーAPI  <br /></td></tr>
 <tr class="separator:a6b9282f4c381f3c1d46d95ef7094b0c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html#a5368d32dd8bda4af565ae039dbb0e0ae">render_mem_free</a> (void *ptr_, size_t size_)</td></tr>
+<tr class="memdesc:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_freeのラッパーAPI  <br /></td></tr>
 <tr class="separator:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する </p>
+<dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
+<dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2026-02-12</dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
+<dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a id="a6b9282f4c381f3c1d46d95ef7094b0c0" name="a6b9282f4c381f3c1d46d95ef7094b0c0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6b9282f4c381f3c1d46d95ef7094b0c0">&#9670;&#160;</a></span>render_mem_allocate()</h2>
 
@@ -159,6 +168,35 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>memory_system_allocateのラッパーAPI </p>
+<dl class="section note"><dt>Note</dt><dd>レンダラーレイヤー専用APIのため、メモリータグはMEMORY_TAG_RENDERER固定</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">size_</td><td>メモリ確保サイズ(byte) </td></tr>
+    <tr><td class="paramname">out_ptr_</td><td>確保したメモリの格納先 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>メモリシステム未初期化</li>
+<li>out_ptr_ == NULL</li>
+<li>*out_ptr_ != NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ割り当て失敗 </td></tr>
+    <tr><td class="paramname">RENDERER_UNDEFINED_ERROR</td><td>想定していない実行結果コードを処理過程で受け取った </td></tr>
+    <tr><td class="paramname">RENDERER_SUCCESS</td><td>以下のいずれか<ul>
+<li>size_ == 0(*out_ptr_はNULLのまま)</li>
+<li>割り当てに成功し正常終了 </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -187,6 +225,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>memory_system_freeのラッパーAPI </p>
+<dl class="section note"><dt>Note</dt><dd>レンダラーレイヤー専用APIのため、メモリータグはMEMORY_TAG_RENDERER固定</dd>
+<dd>
+引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。 この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptr_</td><td>解放対象メモリアドレス </td></tr>
+    <tr><td class="paramname">size_</td><td>解放サイズ </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

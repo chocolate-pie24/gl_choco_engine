@@ -1,0 +1,4 @@
+<map id="keyboard_event" name="keyboard_event">
+<area shape="rect" id="node1" title="キーボードイベント構造体" alt="" coords="23,93,149,119"/>
+<area shape="rect" id="node2" href="$structkeyboard__event__args.html" title="キーボードイベント付随情報" alt="" coords="5,5,167,31"/>
+</map>

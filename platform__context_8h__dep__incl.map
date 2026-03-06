@@ -1,5 +1,5 @@
-<map id="include/engine/platform_context/platform_context.h" name="include/engine/platform_context/platform_context.h">
-<area shape="rect" id="node1" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="119,5,325,45"/>
+<map id="include/engine/platform/platform_context.h" name="include/engine/platform/platform_context.h">
+<area shape="rect" id="node1" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="119,5,296,45"/>
 <area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
-<area shape="rect" id="node3" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="234,93,439,133"/>
+<area shape="rect" id="node3" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="234,93,383,133"/>
 </map>

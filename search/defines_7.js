@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['no_5fcoverage_0',['NO_COVERAGE',['../choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19',1,'choco_macros.h']]]
+  ['warn_5fmessage_0',['WARN_MESSAGE',['../choco__message_8h.html#aa9550cb10d06bed989f8b23a02a85bd5',1,'choco_message.h']]]
 ];

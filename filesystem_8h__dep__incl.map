@@ -1,0 +1,7 @@
+<map id="include/engine/core/filesystem/filesystem.h" name="include/engine/core/filesystem/filesystem.h">
+<area shape="rect" id="node1" title="ファイルシステムモジュールAPIの提供" alt="" coords="177,5,355,45"/>
+<area shape="rect" id="node2" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="122,93,290,133"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,189,209,214"/>
+<area shape="rect" id="node4" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="245,181,385,221"/>
+<area shape="rect" id="node5" href="$filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="365,93,559,133"/>
+</map>

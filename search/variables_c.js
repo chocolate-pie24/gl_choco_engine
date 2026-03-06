@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['vao_5fhandle_0',['vao_handle',['../structvertex__array__object.html#a0a2802b27c65d13c81f2552751d4d2eb',1,'vertex_array_object']]],
-  ['vbo_5fhandle_1',['vbo_handle',['../structvertex__buffer__object.html#a1733aeb88cafd2a2d34bcddbf36dc47d',1,'vertex_buffer_object']]],
-  ['vtable_2',['vtable',['../structplatform__context.html#a2f20108ccf2232f4ddf7d86710f7e8a7',1,'platform_context']]]
+  ['tail_0',['tail',['../structring__queue.html#a7cc28df4062e48e01554211151e0194f',1,'ring_queue']]],
+  ['target_5fapi_1',['target_api',['../structrenderer__backend__context.html#a8ab221fa50b96f30e5dfbf4f47bbc58e',1,'renderer_backend_context']]],
+  ['total_5fallocated_2',['total_allocated',['../structmemory__system.html#a5029a9e7fdefd7da6646c3a5f22d5b88',1,'memory_system']]],
+  ['type_3',['type',['../structplatform__context.html#adfc5f1d3ec40cbf6e101dd536098302e',1,'platform_context']]]
 ];

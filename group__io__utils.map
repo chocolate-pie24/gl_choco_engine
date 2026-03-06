@@ -1,0 +1,4 @@
+<map id="I/O Utils" name="I/O Utils">
+<area shape="rect" id="node1" href="$group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,5,72,31"/>
+<area shape="rect" id="node2" title="上位層が「よく使うI/O処理」を少ない手順で呼び出せるよう、coreやcontainersが保有するモジュールを組み合わせたユースケース単位のAPIを提供するユーティリティ群" alt="" coords="120,5,195,31"/>
+</map>

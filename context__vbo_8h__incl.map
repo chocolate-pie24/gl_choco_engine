@@ -1,0 +1,6 @@
+<map id="include/engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h" name="include/engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h">
+<area shape="rect" id="node1" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="79,5,313,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,123,80,148"/>
+<area shape="rect" id="node3" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,115,288,155"/>
+<area shape="rect" id="node4" href="$renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="312,108,515,163"/>
+</map>

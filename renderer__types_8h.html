@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_base/renderer_types.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/renderer/renderer_core/renderer_types.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -96,21 +96,33 @@ $(document).ready(function(){initNavTree('renderer__types_8h.html',''); initResi
   <div class="headertitle"><div class="title">renderer_types.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>レンダラーレイヤー全体で使用されるデータ型を提供する  
+<a href="#details">More...</a></p>
 <div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__base_2renderer__types_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__base_2renderer__types_8hdep" id="ainclude_2engine_2renderer_2renderer__base_2renderer__types_8hdep">
-<area shape="rect" title=" " alt="" coords="477,5,656,60"/>
-<area shape="rect" href="vertex__array__object_8h.html" title=" " alt="" coords="278,108,454,163"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="14,225,218,251"/>
-<area shape="rect" href="vertex__array__object_8c.html" title=" " alt="" coords="483,211,658,265"/>
-<area shape="rect" href="vertex__buffer__object_8h.html" title=" " alt="" coords="28,108,204,163"/>
-<area shape="rect" href="vertex__buffer__object_8c.html" title=" " alt="" coords="260,211,435,265"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title=" " alt="" coords="678,108,854,163"/>
-<area shape="rect" href="renderer__err__utils_8c.html" title=" " alt="" coords="902,211,1076,265"/>
-<area shape="rect" href="renderer__memory_8h.html" title=" " alt="" coords="478,108,654,163"/>
-<area shape="rect" href="renderer__memory_8c.html" title=" " alt="" coords="688,211,863,265"/>
+<div class="center"><img src="renderer__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep" id="ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep">
+<area shape="rect" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1332,5,1508,60"/>
+<area shape="rect" href="context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="37,115,241,170"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="263,247,467,273"/>
+<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="265,108,466,177"/>
+<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="491,115,725,170"/>
+<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="749,115,984,170"/>
+<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="1008,108,1219,177"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1070,343,1271,412"/>
+<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1293,115,1547,170"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1483,343,1685,412"/>
+<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1959,115,2212,170"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="1985,343,2186,412"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="1872,233,2048,287"/>
+<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="2310,350,2485,405"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="1747,350,1922,405"/>
+<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="1621,233,1797,287"/>
+<area shape="rect" href="concrete__shader_8h.html" title="gl33_shaderは、renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3...." alt="" coords="888,225,1133,295"/>
+<area shape="rect" href="concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="1208,233,1496,287"/>
+<area shape="rect" href="concrete__vbo_8h.html" title="gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3...." alt="" coords="2123,233,2411,287"/>
 </map>
 </div>
 </div>
@@ -118,25 +130,50 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
+<tr class="memitem:aa81b9a1ddd3cf70bab62b07854cbb241"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241">target_graphics_api_t</a> { <a class="el" href="renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241a07426cb4ddf94e08bac2b0ee291fb724">GRAPHICS_API_GL33</a>
+ }</td></tr>
+<tr class="memdesc:aa81b9a1ddd3cf70bab62b07854cbb241"><td class="mdescLeft">&#160;</td><td class="mdescRight">GraphicsAPI種別リスト  <a href="renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241">More...</a><br /></td></tr>
+<tr class="separator:aa81b9a1ddd3cf70bab62b07854cbb241"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad92ac5e342b05a1be13e789f38f6a1d9"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> { <br />
 &#160;&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314">RENDERER_SUCCESS</a> = 0
 , <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14">RENDERER_INVALID_ARGUMENT</a>
 , <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508">RENDERER_RUNTIME_ERROR</a>
 , <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e">RENDERER_NO_MEMORY</a>
 , <br />
-&#160;&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9">RENDERER_UNDEFINED_ERROR</a>
+&#160;&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a39ba115b2f91b73a731c052378323628">RENDERER_SHADER_COMPILE_ERROR</a>
+, <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a985655b50de046365424064ad45aa2b6">RENDERER_SHADER_LINK_ERROR</a>
+, <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abe7db16cf925a8f0dbd0de0aa6c5e840">RENDERER_LIMIT_EXCEEDED</a>
+, <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a4b427ce7642fca60d6c952af1a150579">RENDERER_BAD_OPERATION</a>
+, <br />
+&#160;&#160;<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aa52ca6ed8ca8574c721e4e1bf8e671b1">RENDERER_DATA_CORRUPTED</a>
+, <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9">RENDERER_UNDEFINED_ERROR</a>
 <br />
  }</td></tr>
+<tr class="memdesc:ad92ac5e342b05a1be13e789f38f6a1d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">レンダラーレイヤー実行結果コード定義  <a href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">More...</a><br /></td></tr>
 <tr class="separator:ad92ac5e342b05a1be13e789f38f6a1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc07856cc34b268911b09149cbad9f73"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> { <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add">BUFFER_USAGE_STATIC</a>
 , <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a">BUFFER_USAGE_DYNAMIC</a>
  }</td></tr>
+<tr class="memdesc:adc07856cc34b268911b09149cbad9f73"><td class="mdescLeft">&#160;</td><td class="mdescRight">上位層で頂点情報データ種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、頂点情報のデータ種別を定義  <a href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">More...</a><br /></td></tr>
 <tr class="separator:adc07856cc34b268911b09149cbad9f73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa882e2da16d8acaccf55892267d48440"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> { <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930">RENDERER_TYPE_FLOAT</a>
  }</td></tr>
+<tr class="memdesc:aa882e2da16d8acaccf55892267d48440"><td class="mdescLeft">&#160;</td><td class="mdescRight">上位層でグラフィックスAPI固有の変数型を使用しないで済むよう、グラフィックスAPI固有型を定義  <a href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">More...</a><br /></td></tr>
 <tr class="separator:aa882e2da16d8acaccf55892267d48440"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9510983791a7b7985e3acb3e9c7aa11c"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11c">shader_type_t</a> { <a class="el" href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da">SHADER_TYPE_VERTEX</a>
+, <a class="el" href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11ca35307647e599a564d6c75d76ce3b2c91">SHADER_TYPE_FRAGMENT</a>
+ }</td></tr>
+<tr class="memdesc:a9510983791a7b7985e3acb3e9c7aa11c"><td class="mdescLeft">&#160;</td><td class="mdescRight">上位層でシェーダー種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、シェーダー種別リストを定義  <a href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11c">More...</a><br /></td></tr>
+<tr class="separator:a9510983791a7b7985e3acb3e9c7aa11c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>レンダラーレイヤー全体で使用されるデータ型を提供する </p>
+<dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
+<dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2025-12.19</dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
+<dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
+</div><h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="adc07856cc34b268911b09149cbad9f73" name="adc07856cc34b268911b09149cbad9f73"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adc07856cc34b268911b09149cbad9f73">&#9670;&#160;</a></span>buffer_usage_t</h2>
 
@@ -148,9 +185,13 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>上位層で頂点情報データ種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、頂点情報のデータ種別を定義 </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add" name="adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add"></a>BUFFER_USAGE_STATIC&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a" name="adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a"></a>BUFFER_USAGE_DYNAMIC&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add" name="adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add"></a>BUFFER_USAGE_STATIC&#160;</td><td class="fielddoc"><p>データ種別: 頻繁に書き換わることのないデータ </p>
+</td></tr>
+<tr><td class="fieldname"><a id="adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a" name="adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a"></a>BUFFER_USAGE_DYNAMIC&#160;</td><td class="fielddoc"><p>データ種別: 頻繁に書き換わるデータ </p>
+</td></tr>
 </table>
 
 </div>
@@ -166,12 +207,29 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>レンダラーレイヤー実行結果コード定義 </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314" name="ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314"></a>RENDERER_SUCCESS&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14" name="ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14"></a>RENDERER_INVALID_ARGUMENT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508" name="ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508"></a>RENDERER_RUNTIME_ERROR&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e" name="ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e"></a>RENDERER_NO_MEMORY&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9" name="ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9"></a>RENDERER_UNDEFINED_ERROR&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314" name="ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314"></a>RENDERER_SUCCESS&#160;</td><td class="fielddoc"><p>処理成功 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14" name="ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14"></a>RENDERER_INVALID_ARGUMENT&#160;</td><td class="fielddoc"><p>無効な引数 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508" name="ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508"></a>RENDERER_RUNTIME_ERROR&#160;</td><td class="fielddoc"><p>実行時エラー </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e" name="ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e"></a>RENDERER_NO_MEMORY&#160;</td><td class="fielddoc"><p>メモリ確保失敗 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a39ba115b2f91b73a731c052378323628" name="ad92ac5e342b05a1be13e789f38f6a1d9a39ba115b2f91b73a731c052378323628"></a>RENDERER_SHADER_COMPILE_ERROR&#160;</td><td class="fielddoc"><p>シェーダーコンパイルエラー </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a985655b50de046365424064ad45aa2b6" name="ad92ac5e342b05a1be13e789f38f6a1d9a985655b50de046365424064ad45aa2b6"></a>RENDERER_SHADER_LINK_ERROR&#160;</td><td class="fielddoc"><p>シェーダーリンクエラー </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9abe7db16cf925a8f0dbd0de0aa6c5e840" name="ad92ac5e342b05a1be13e789f38f6a1d9abe7db16cf925a8f0dbd0de0aa6c5e840"></a>RENDERER_LIMIT_EXCEEDED&#160;</td><td class="fielddoc"><p>システム使用可能範囲上限超過 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a4b427ce7642fca60d6c952af1a150579" name="ad92ac5e342b05a1be13e789f38f6a1d9a4b427ce7642fca60d6c952af1a150579"></a>RENDERER_BAD_OPERATION&#160;</td><td class="fielddoc"><p>API誤用 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9aa52ca6ed8ca8574c721e4e1bf8e671b1" name="ad92ac5e342b05a1be13e789f38f6a1d9aa52ca6ed8ca8574c721e4e1bf8e671b1"></a>RENDERER_DATA_CORRUPTED&#160;</td><td class="fielddoc"><p>メモリ破損,未初期化 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9" name="ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9"></a>RENDERER_UNDEFINED_ERROR&#160;</td><td class="fielddoc"><p>不明なエラー </p>
+</td></tr>
 </table>
 
 </div>
@@ -187,8 +245,53 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>上位層でグラフィックスAPI固有の変数型を使用しないで済むよう、グラフィックスAPI固有型を定義 </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930" name="aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930"></a>RENDERER_TYPE_FLOAT&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930" name="aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930"></a>RENDERER_TYPE_FLOAT&#160;</td><td class="fielddoc"><p>データ型: GLfloat </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a9510983791a7b7985e3acb3e9c7aa11c" name="a9510983791a7b7985e3acb3e9c7aa11c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9510983791a7b7985e3acb3e9c7aa11c">&#9670;&#160;</a></span>shader_type_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11c">shader_type_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>上位層でシェーダー種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、シェーダー種別リストを定義 </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da" name="a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da"></a>SHADER_TYPE_VERTEX&#160;</td><td class="fielddoc"><p>バーテックスシェーダー </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a9510983791a7b7985e3acb3e9c7aa11ca35307647e599a564d6c75d76ce3b2c91" name="a9510983791a7b7985e3acb3e9c7aa11ca35307647e599a564d6c75d76ce3b2c91"></a>SHADER_TYPE_FRAGMENT&#160;</td><td class="fielddoc"><p>フラグメントシェーダー </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="aa81b9a1ddd3cf70bab62b07854cbb241" name="aa81b9a1ddd3cf70bab62b07854cbb241"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa81b9a1ddd3cf70bab62b07854cbb241">&#9670;&#160;</a></span>target_graphics_api_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241">target_graphics_api_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>GraphicsAPI種別リスト </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aa81b9a1ddd3cf70bab62b07854cbb241a07426cb4ddf94e08bac2b0ee291fb724" name="aa81b9a1ddd3cf70bab62b07854cbb241a07426cb4ddf94e08bac2b0ee291fb724"></a>GRAPHICS_API_GL33&#160;</td><td class="fielddoc"><p>OpenGL 3.3 </p>
+</td></tr>
 </table>
 
 </div>
@@ -198,7 +301,7 @@ Enumerations</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_a04e71e46036f9b0c5348a675b9c6a16.html">renderer_base</a></li><li class="navelem"><a class="el" href="renderer__types_8h.html">renderer_types.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_03ec05e64c8f6b0bd463207a3d29df77.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__types_8h.html">renderer_types.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

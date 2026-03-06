@@ -1,0 +1,5 @@
+<map id="include/engine/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h" name="include/engine/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h">
+<area shape="rect" id="node1" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="113,5,367,60"/>
+<area shape="rect" id="node2" href="$concrete__vbo_8h.html" title="gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3...." alt="" coords="5,108,293,163"/>
+<area shape="rect" id="node3" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="139,211,341,280"/>
+</map>

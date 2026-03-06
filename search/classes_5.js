@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['memory_5fsystem_0',['memory_system',['../structmemory__system.html',1,'']]],
-  ['mouse_5fevent_1',['mouse_event',['../structmouse__event.html',1,'']]]
+  ['linear_5falloc_0',['linear_alloc',['../structlinear__alloc.html',1,'']]]
 ];

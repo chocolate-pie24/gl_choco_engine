@@ -104,14 +104,21 @@ Collaboration diagram for app_state:</div>
 <div class="dyncontent">
 <div class="center"><img src="structapp__state__coll__graph.png" border="0" usemap="#aapp__state_coll__map" alt="Collaboration graph"/></div>
 <map name="aapp__state_coll__map" id="aapp__state_coll__map">
-<area shape="rect" title="アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する" alt="" coords="131,504,217,529"/>
-<area shape="rect" href="structlinear__alloc.html" title="linear_alloc_t内部データ構造" alt="" coords="5,387,103,412"/>
-<area shape="rect" href="structring__queue.html" title="ring_queue_t内部データ構造" alt="" coords="127,387,221,412"/>
-<area shape="rect" href="structplatform__context.html" title="プラットフォームコンテキスト構造体" alt="" coords="293,387,428,412"/>
-<area shape="rect" href="structplatform__backend.html" title="GLFWプラットフォーム内部状態管理構造体" alt="" coords="265,108,403,133"/>
-<area shape="rect" href="structplatform__vtable.html" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="396,299,523,324"/>
-<area shape="rect" href="structchoco__string.html" title=" " alt="" coords="214,5,318,31"/>
-<area shape="rect" href="structinput__snapshot.html" title="入力状態格納構造体" alt="" coords="343,5,464,31"/>
+<area shape="rect" title="アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する" alt="" coords="1424,190,1511,215"/>
+<area shape="rect" href="structlinear__alloc.html" title="linear_alloc_t内部データ構造" alt="" coords="1053,19,1150,45"/>
+<area shape="rect" href="structring__queue.html" title="ring_queue_t内部データ構造" alt="" coords="1054,90,1149,115"/>
+<area shape="rect" href="structplatform__context.html" title="プラットフォームコンテキスト構造体" alt="" coords="1034,139,1169,165"/>
+<area shape="rect" href="structplatform__backend.html" title="GLFWプラットフォーム内部状態管理構造体" alt="" coords="293,74,432,99"/>
+<area shape="rect" href="structplatform__vtable.html" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="707,139,834,165"/>
+<area shape="rect" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="14,45,118,70"/>
+<area shape="rect" href="structinput__snapshot.html" title="入力状態格納構造体" alt="" coords="5,105,127,130"/>
+<area shape="rect" href="structrenderer__backend__context.html" title="RendererBackend内部状態管理構造体" alt="" coords="1004,399,1199,425"/>
+<area shape="rect" href="structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="683,277,859,302"/>
+<area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="268,237,457,262"/>
+<area shape="rect" href="structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="693,430,849,455"/>
+<area shape="rect" href="structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="278,382,447,407"/>
+<area shape="rect" href="structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="693,503,849,529"/>
+<area shape="rect" href="structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="278,561,447,586"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -125,6 +132,10 @@ Data Fields</h2></td></tr>
 <tr class="separator:a095a4ae7a922e6b76a4155486f963861"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e2d53bb995c31a698da60be6cda7099"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#a0e2d53bb995c31a698da60be6cda7099">window_height</a></td></tr>
 <tr class="separator:a0e2d53bb995c31a698da60be6cda7099"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebd1f3fc21de6eea6cbdade076b56334"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#aebd1f3fc21de6eea6cbdade076b56334">framebuffer_width</a></td></tr>
+<tr class="separator:aebd1f3fc21de6eea6cbdade076b56334"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9de6a40fde3f1e7f4d2f9b9b9cb6879"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#ab9de6a40fde3f1e7f4d2f9b9b9cb6879">framebuffer_height</a></td></tr>
+<tr class="separator:ab9de6a40fde3f1e7f4d2f9b9b9cb6879"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2733b296f1da00cafae8439a2775c93"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#ab2733b296f1da00cafae8439a2775c93">linear_alloc_mem_req</a></td></tr>
 <tr class="separator:ab2733b296f1da00cafae8439a2775c93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a140599ce826f21daf42bbd5f39a56015"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#a140599ce826f21daf42bbd5f39a56015">linear_alloc_align_req</a></td></tr>
@@ -143,12 +154,52 @@ Data Fields</h2></td></tr>
 <tr class="separator:a99a550e9c9760aba27852014c2fd69c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6f60a331cabd2b5bc97307827c5564f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="platform__context_8h.html#a4720dd0138e53f1a7ff9398c9377cd53">platform_context_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#af6f60a331cabd2b5bc97307827c5564f">platform_context</a></td></tr>
 <tr class="separator:af6f60a331cabd2b5bc97307827c5564f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac19427c5c011ea1ff0573f577c34f8b2"><td class="memItemLeft" align="right" valign="top">GLuint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structapp__state.html#ac19427c5c011ea1ff0573f577c34f8b2">program_id</a></td></tr>
-<tr class="separator:ac19427c5c011ea1ff0573f577c34f8b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e5a6f5c970de2e41e5924a07cba2aab"><td class="memItemLeft" align="right" valign="top"><a id="a4e5a6f5c970de2e41e5924a07cba2aab" name="a4e5a6f5c970de2e41e5924a07cba2aab"></a>
+<a class="el" href="context_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>renderer_backend_context</b></td></tr>
+<tr class="separator:a4e5a6f5c970de2e41e5924a07cba2aab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada9f162813d3dc52ebd5d328223dbae5"><td class="memItemLeft" align="right" valign="top"><a id="ada9f162813d3dc52ebd5d328223dbae5" name="ada9f162813d3dc52ebd5d328223dbae5"></a>
+<a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader</b></td></tr>
+<tr class="separator:ada9f162813d3dc52ebd5d328223dbae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f02d27e93b2ad95a9038efa8c300240"><td class="memItemLeft" align="right" valign="top"><a id="a7f02d27e93b2ad95a9038efa8c300240" name="a7f02d27e93b2ad95a9038efa8c300240"></a>
+<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ui_vao</b></td></tr>
+<tr class="separator:a7f02d27e93b2ad95a9038efa8c300240"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf8554b57847ce22b5a4033ad1e92291"><td class="memItemLeft" align="right" valign="top"><a id="abf8554b57847ce22b5a4033ad1e92291" name="abf8554b57847ce22b5a4033ad1e92291"></a>
+<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ui_vbo</b></td></tr>
+<tr class="separator:abf8554b57847ce22b5a4033ad1e92291"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a id="ab9de6a40fde3f1e7f4d2f9b9b9cb6879" name="ab9de6a40fde3f1e7f4d2f9b9b9cb6879"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9de6a40fde3f1e7f4d2f9b9b9cb6879">&#9670;&#160;</a></span>framebuffer_height</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int app_state::framebuffer_height</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>フレームバッファサイズ(高さ) </p>
+
+</div>
+</div>
+<a id="aebd1f3fc21de6eea6cbdade076b56334" name="aebd1f3fc21de6eea6cbdade076b56334"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebd1f3fc21de6eea6cbdade076b56334">&#9670;&#160;</a></span>framebuffer_width</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int app_state::framebuffer_width</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>フレームバッファサイズ(幅) </p>
+
+</div>
+</div>
 <a id="a5e2509b88ff3d55ef5c2578fd27f6d91" name="a5e2509b88ff3d55ef5c2578fd27f6d91"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5e2509b88ff3d55ef5c2578fd27f6d91">&#9670;&#160;</a></span>keyboard_event_queue</h2>
 
@@ -266,20 +317,6 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス </p>
-
-</div>
-</div>
-<a id="ac19427c5c011ea1ff0573f577c34f8b2" name="ac19427c5c011ea1ff0573f577c34f8b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac19427c5c011ea1ff0573f577c34f8b2">&#9670;&#160;</a></span>program_id</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">GLuint app_state::program_id</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 
 </div>
 </div>

@@ -1,9 +1,0 @@
-<map id="include/engine/core/platform/platform_utils.h" name="include/engine/core/platform/platform_utils.h">
-<area shape="rect" id="node1" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="199,5,389,45"/>
-<area shape="rect" id="node2" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="135,93,322,133"/>
-<area shape="rect" id="node3" href="$platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="23,181,221,221"/>
-<area shape="rect" id="node4" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="46,269,198,324"/>
-<area shape="rect" id="node5" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="239,277,445,317"/>
-<area shape="rect" id="node6" href="$platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="397,93,604,133"/>
-<area shape="rect" id="node7" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="516,189,720,214"/>
-</map>

@@ -1,0 +1,16 @@
+<map id="include/engine/renderer/renderer_backend/renderer_backend_types.h" name="include/engine/renderer/renderer_backend/renderer_backend_types.h">
+<area shape="rect" id="node1" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="875,5,1076,60"/>
+<area shape="rect" id="node2" href="$context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="5,108,207,177"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="220,247,424,273"/>
+<area shape="rect" id="node4" href="$context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="282,115,517,170"/>
+<area shape="rect" id="node5" href="$context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="541,115,775,170"/>
+<area shape="rect" id="node6" href="$interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="799,108,1010,177"/>
+<area shape="rect" id="node8" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="887,343,1088,412"/>
+<area shape="rect" id="node9" href="$interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1093,115,1346,170"/>
+<area shape="rect" id="node11" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1300,343,1501,412"/>
+<area shape="rect" id="node12" href="$interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1506,115,1759,170"/>
+<area shape="rect" id="node14" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="1713,343,1915,412"/>
+<area shape="rect" id="node7" href="$concrete__shader_8h.html" title="gl33_shaderは、renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3...." alt="" coords="705,225,950,295"/>
+<area shape="rect" id="node10" href="$concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="1075,233,1363,287"/>
+<area shape="rect" id="node13" href="$concrete__vbo_8h.html" title="gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3...." alt="" coords="1489,233,1777,287"/>
+</map>

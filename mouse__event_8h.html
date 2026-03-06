@@ -95,11 +95,11 @@ $(document).ready(function(){initNavTree('mouse__event_8h.html',''); initResizab
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a>  </div>
-  <div class="headertitle"><div class="title">mouse_event.h File Reference<div class="ingroups"><a class="el" href="group__core.html">Core</a> &raquo; <a class="el" href="group__core__event.html">Event</a> &raquo; <a class="el" href="group__event__mouse.html">Mouse Event</a></div></div></div>
+  <div class="headertitle"><div class="title">mouse_event.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義  
+<p>全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -107,7 +107,7 @@ Include dependency graph for mouse_event.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="mouse__event_8h__incl.png" border="0" usemap="#ainclude_2engine_2core_2event_2mouse__event_8h" alt=""/></div>
 <map name="ainclude_2engine_2core_2event_2mouse__event_8h" id="ainclude_2engine_2core_2event_2mouse__event_8h">
-<area shape="rect" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="5,5,172,45"/>
+<area shape="rect" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義" alt="" coords="5,5,172,45"/>
 <area shape="rect" title=" " alt="" coords="47,93,130,119"/>
 </map>
 </div>
@@ -116,13 +116,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="mouse__event_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2core_2event_2mouse__event_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2core_2event_2mouse__event_8hdep" id="ainclude_2engine_2core_2event_2mouse__event_8hdep">
-<area shape="rect" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="321,5,487,45"/>
-<area shape="rect" href="platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="152,93,339,133"/>
-<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,269,157,324"/>
-<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="276,277,481,317"/>
-<area shape="rect" href="platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="442,93,649,133"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="585,189,789,214"/>
-<area shape="rect" href="platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="119,181,316,221"/>
+<area shape="rect" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義" alt="" coords="261,5,428,45"/>
+<area shape="rect" href="platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="129,93,307,133"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,196,209,221"/>
+<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="295,291,445,331"/>
+<area shape="rect" href="platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="416,93,593,133"/>
+<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="605,284,757,339"/>
+<area shape="rect" href="platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="432,181,644,236"/>
 </map>
 </div>
 </div>
@@ -130,14 +130,20 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmouse__event__args.html">mouse_event_args</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベント付随情報  <a href="structmouse__event__args.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmouse__event.html">mouse_event</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベントオブジェクト  <a href="structmouse__event.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベント構造体  <a href="structmouse__event.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:a585b6e1be266e7d6d146722e5c36bc26"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structmouse__event__args.html">mouse_event_args</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mouse__event_8h.html#a585b6e1be266e7d6d146722e5c36bc26">mouse_event_args_t</a></td></tr>
+<tr class="memdesc:a585b6e1be266e7d6d146722e5c36bc26"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベント付随情報  <br /></td></tr>
+<tr class="separator:a585b6e1be266e7d6d146722e5c36bc26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4988f53ab4626eb0a151313a86ec8123"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structmouse__event.html">mouse_event</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a></td></tr>
-<tr class="memdesc:a4988f53ab4626eb0a151313a86ec8123"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベントオブジェクト  <br /></td></tr>
+<tr class="memdesc:a4988f53ab4626eb0a151313a86ec8123"><td class="mdescLeft">&#160;</td><td class="mdescRight">マウスイベント構造体  <br /></td></tr>
 <tr class="separator:a4988f53ab4626eb0a151313a86ec8123"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -149,13 +155,29 @@ Enumerations</h2></td></tr>
 <tr class="separator:a73c6920f24309bb88d4cf8ec14d97aa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義 </p>
+<div class="textblock"><p>全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-10-14</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="a585b6e1be266e7d6d146722e5c36bc26" name="a585b6e1be266e7d6d146722e5c36bc26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a585b6e1be266e7d6d146722e5c36bc26">&#9670;&#160;</a></span>mouse_event_args_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structmouse__event__args.html">mouse_event_args</a> <a class="el" href="mouse__event_8h.html#a585b6e1be266e7d6d146722e5c36bc26">mouse_event_args_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>マウスイベント付随情報 </p>
+
+</div>
+</div>
 <a id="a4988f53ab4626eb0a151313a86ec8123" name="a4988f53ab4626eb0a151313a86ec8123"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4988f53ab4626eb0a151313a86ec8123">&#9670;&#160;</a></span>mouse_event_t</h2>
 
@@ -168,7 +190,7 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>マウスイベントオブジェクト </p>
+<p>マウスイベント構造体 </p>
 
 </div>
 </div>

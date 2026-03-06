@@ -8,5 +8,5 @@
 <area shape="rect" id="node7" title=" " alt="" coords="464,101,535,126"/>
 <area shape="rect" id="node8" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="559,93,717,133"/>
 <area shape="rect" id="node9" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="741,101,951,126"/>
-<area shape="rect" id="node10" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="975,101,1197,126"/>
+<area shape="rect" id="node10" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="847,181,986,207"/>
 </map>

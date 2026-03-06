@@ -1,0 +1,5 @@
+<map id="include/engine/renderer/renderer_backend/renderer_backend_interface/interface_vao.h" name="include/engine/renderer/renderer_backend/renderer_backend_interface/interface_vao.h">
+<area shape="rect" id="node1" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="113,5,367,60"/>
+<area shape="rect" id="node2" href="$concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="5,108,293,163"/>
+<area shape="rect" id="node3" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="139,211,341,280"/>
+</map>

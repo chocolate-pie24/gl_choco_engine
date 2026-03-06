@@ -1,4 +1,27 @@
 var searchData=
 [
-  ['ring_5fqueue_5ft_0',['ring_queue_t',['../ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3',1,'ring_queue.h']]]
+  ['pfn_5fplatform_5fbackend_5fdestroy_0',['pfn_platform_backend_destroy',['../platform__interface_8h.html#a0a7356c8a423994c8152076fb705f346',1,'platform_interface.h']]],
+  ['pfn_5fplatform_5fbackend_5finit_1',['pfn_platform_backend_init',['../platform__interface_8h.html#ade4ddb634a43049d8dc5c7ec3156c1d0',1,'platform_interface.h']]],
+  ['pfn_5fplatform_5fbackend_5fpreinit_2',['pfn_platform_backend_preinit',['../platform__interface_8h.html#af4ad5df408b7d791746c109412e26fbf',1,'platform_interface.h']]],
+  ['pfn_5fplatform_5fbackend_5fpump_5fmessages_3',['pfn_platform_backend_pump_messages',['../platform__interface_8h.html#a3c9fae21c839b68511ca6844b5566b9c',1,'platform_interface.h']]],
+  ['pfn_5fplatform_5fbackend_5fswap_5fbuffers_4',['pfn_platform_backend_swap_buffers',['../platform__interface_8h.html#ae743a2b4c121272b43f512bd8f2346ae',1,'platform_interface.h']]],
+  ['pfn_5fplatform_5fbackend_5fwindow_5fcreate_5',['pfn_platform_backend_window_create',['../platform__interface_8h.html#a22d90e71a21b5b43fd74d589c439c975',1,'platform_interface.h']]],
+  ['pfn_5frenderer_5fshader_5fcompile_6',['pfn_renderer_shader_compile',['../interface__shader_8h.html#a5619268012ea66cebf7f3c61e8b08c1a',1,'interface_shader.h']]],
+  ['pfn_5frenderer_5fshader_5fcreate_7',['pfn_renderer_shader_create',['../interface__shader_8h.html#a670e182b941e4e8179ab566286e77b8d',1,'interface_shader.h']]],
+  ['pfn_5frenderer_5fshader_5fdestroy_8',['pfn_renderer_shader_destroy',['../interface__shader_8h.html#a151aa7c6b3f244fd1f9a0fb90bbcb150',1,'interface_shader.h']]],
+  ['pfn_5frenderer_5fshader_5flink_9',['pfn_renderer_shader_link',['../interface__shader_8h.html#a847c0fad9072a189801d1fefb081e0e0',1,'interface_shader.h']]],
+  ['pfn_5frenderer_5fshader_5fuse_10',['pfn_renderer_shader_use',['../interface__shader_8h.html#aea61a2845241bb2c11f1f51dff36fb3d',1,'interface_shader.h']]],
+  ['pfn_5fvertex_5farray_5fattribute_5fset_11',['pfn_vertex_array_attribute_set',['../interface__vao_8h.html#ac75feab8b9e89b23d03e2ddfa8458910',1,'interface_vao.h']]],
+  ['pfn_5fvertex_5farray_5fbind_12',['pfn_vertex_array_bind',['../interface__vao_8h.html#a70b5348c1c80e39ff30198d793763b45',1,'interface_vao.h']]],
+  ['pfn_5fvertex_5farray_5fcreate_13',['pfn_vertex_array_create',['../interface__vao_8h.html#afc26989168e8aa7702920ebf213f1738',1,'interface_vao.h']]],
+  ['pfn_5fvertex_5farray_5fdestroy_14',['pfn_vertex_array_destroy',['../interface__vao_8h.html#af0f5b918ab42d8199b30a2d2ae7ea834',1,'interface_vao.h']]],
+  ['pfn_5fvertex_5farray_5funbind_15',['pfn_vertex_array_unbind',['../interface__vao_8h.html#ad7e5179bcdb3666d68dae997bae2262b',1,'interface_vao.h']]],
+  ['pfn_5fvertex_5fbuffer_5fbind_16',['pfn_vertex_buffer_bind',['../interface__vbo_8h.html#ae63d0575937d477fec2edafa269b0a44',1,'interface_vbo.h']]],
+  ['pfn_5fvertex_5fbuffer_5fcreate_17',['pfn_vertex_buffer_create',['../interface__vbo_8h.html#abda2caec97d674e89654e50479a8b375',1,'interface_vbo.h']]],
+  ['pfn_5fvertex_5fbuffer_5fdestroy_18',['pfn_vertex_buffer_destroy',['../interface__vbo_8h.html#af06b8d4cda8cf3aa8f7a94ad6477ef0e',1,'interface_vbo.h']]],
+  ['pfn_5fvertex_5fbuffer_5funbind_19',['pfn_vertex_buffer_unbind',['../interface__vbo_8h.html#a7bb15305e518a82c39b3ec5431e0d390',1,'interface_vbo.h']]],
+  ['pfn_5fvertex_5fbuffer_5fvertex_5fload_20',['pfn_vertex_buffer_vertex_load',['../interface__vbo_8h.html#a9a86716144c712f248c4cb2496c51318',1,'interface_vbo.h']]],
+  ['platform_5fbackend_5ft_21',['platform_backend_t',['../platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0',1,'platform_interface.h']]],
+  ['platform_5fcontext_5ft_22',['platform_context_t',['../platform__context_8h.html#a4720dd0138e53f1a7ff9398c9377cd53',1,'platform_context.h']]],
+  ['platform_5fvtable_5ft_23',['platform_vtable_t',['../platform__interface_8h.html#a451a85773847bb9686adfac95d35d532',1,'platform_interface.h']]]
 ];

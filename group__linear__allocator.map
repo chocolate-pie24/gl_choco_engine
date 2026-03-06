@@ -1,4 +1,0 @@
-<map id="Linear Allocator" name="Linear Allocator">
-<area shape="rect" id="node1" href="$group__core.html" title="プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)" alt="" coords="5,5,57,31"/>
-<area shape="rect" id="node2" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール" alt="" coords="105,5,229,31"/>
-</map>

@@ -1,10 +1,11 @@
 <map id="src/engine/containers/choco_string.c" name="src/engine/containers/choco_string.c">
-<area shape="rect" id="node1" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="303,5,464,45"/>
+<area shape="rect" id="node1" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="288,5,449,45"/>
 <area shape="rect" id="node2" title=" " alt="" coords="5,101,76,126"/>
-<area shape="rect" id="node3" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="100,93,280,133"/>
-<area shape="rect" id="node6" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="305,93,462,133"/>
-<area shape="rect" id="node7" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="486,101,697,126"/>
-<area shape="rect" id="node8" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="721,101,942,126"/>
-<area shape="rect" id="node4" title=" " alt="" coords="149,181,231,207"/>
-<area shape="rect" id="node5" title=" " alt="" coords="346,181,421,207"/>
+<area shape="rect" id="node3" title=" " alt="" coords="503,181,578,207"/>
+<area shape="rect" id="node4" title=" " alt="" coords="151,101,234,126"/>
+<area shape="rect" id="node5" title=" " alt="" coords="259,101,329,126"/>
+<area shape="rect" id="node6" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="353,93,533,133"/>
+<area shape="rect" id="node7" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="558,93,715,133"/>
+<area shape="rect" id="node8" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="739,101,950,126"/>
+<area shape="rect" id="node9" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="846,181,985,207"/>
 </map>

@@ -97,23 +97,45 @@ $(document).ready(function(){initNavTree('structwindow__event.html',''); initRes
 </div><!--header-->
 <div class="contents">
 
-<p>ウィンドウイベントオブジェクト  
+<p>ウィンドウイベント構造体  
  <a href="structwindow__event.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="window__event_8h_source.html">window_event.h</a>&gt;</code></p>
+<div class="dynheader">
+Collaboration diagram for window_event:</div>
+<div class="dyncontent">
+<div class="center"><img src="structwindow__event__coll__graph.png" border="0" usemap="#awindow__event_coll__map" alt="Collaboration graph"/></div>
+<map name="awindow__event_coll__map" id="awindow__event_coll__map">
+<area shape="rect" title="ウィンドウイベント構造体" alt="" coords="23,93,139,119"/>
+<area shape="rect" href="structwindow__event__args.html" title="ウィンドウイベント付随情報" alt="" coords="5,5,156,31"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:ab8f181d520f1852b9c9d7bde2ba98613"><td class="memItemLeft" align="right" valign="top"><a class="el" href="window__event_8h.html#acd09aeb6aa1fb9d992b2fddba3d38dce">window_event_code_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event.html#ab8f181d520f1852b9c9d7bde2ba98613">event_code</a></td></tr>
 <tr class="separator:ab8f181d520f1852b9c9d7bde2ba98613"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b1ad22f613ce1d3434fb957a0e59756"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event.html#a3b1ad22f613ce1d3434fb957a0e59756">window_width</a></td></tr>
-<tr class="separator:a3b1ad22f613ce1d3434fb957a0e59756"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85eef9f1851f7563c7ffbd8b204aff4f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event.html#a85eef9f1851f7563c7ffbd8b204aff4f">window_height</a></td></tr>
-<tr class="separator:a85eef9f1851f7563c7ffbd8b204aff4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89bf6d30cf3e6ad7ebdf15cb2331170c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="window__event_8h.html#aae2c5b40045358502a395f616e8f1f9a">window_event_args_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event.html#a89bf6d30cf3e6ad7ebdf15cb2331170c">event_args</a></td></tr>
+<tr class="separator:a89bf6d30cf3e6ad7ebdf15cb2331170c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>ウィンドウイベントオブジェクト </p>
+<div class="textblock"><p>ウィンドウイベント構造体 </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a id="a89bf6d30cf3e6ad7ebdf15cb2331170c" name="a89bf6d30cf3e6ad7ebdf15cb2331170c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89bf6d30cf3e6ad7ebdf15cb2331170c">&#9670;&#160;</a></span>event_args</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="window__event_8h.html#aae2c5b40045358502a395f616e8f1f9a">window_event_args_t</a> window_event::event_args</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>イベント付随情報 </p>
+
+</div>
+</div>
 <a id="ab8f181d520f1852b9c9d7bde2ba98613" name="ab8f181d520f1852b9c9d7bde2ba98613"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab8f181d520f1852b9c9d7bde2ba98613">&#9670;&#160;</a></span>event_code</h2>
 
@@ -126,36 +148,6 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>ウィンドウイベント種別 </p>
-
-</div>
-</div>
-<a id="a85eef9f1851f7563c7ffbd8b204aff4f" name="a85eef9f1851f7563c7ffbd8b204aff4f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a85eef9f1851f7563c7ffbd8b204aff4f">&#9670;&#160;</a></span>window_height</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int window_event::window_height</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>イベントが発生した際のウィンドウ高さ </p>
-
-</div>
-</div>
-<a id="a3b1ad22f613ce1d3434fb957a0e59756" name="a3b1ad22f613ce1d3434fb957a0e59756"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b1ad22f613ce1d3434fb957a0e59756">&#9670;&#160;</a></span>window_width</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int window_event::window_width</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>イベントが発生した際のウィンドウ幅 </p>
 
 </div>
 </div>

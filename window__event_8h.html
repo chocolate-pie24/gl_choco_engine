@@ -95,24 +95,24 @@ $(document).ready(function(){initNavTree('window__event_8h.html',''); initResiza
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a>  </div>
-  <div class="headertitle"><div class="title">window_event.h File Reference<div class="ingroups"><a class="el" href="group__core.html">Core</a> &raquo; <a class="el" href="group__core__event.html">Event</a> &raquo; <a class="el" href="group__event__window.html">Window Event</a></div></div></div>
+  <div class="headertitle"><div class="title">window_event.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義  
+<p>全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義  
 <a href="#details">More...</a></p>
 <div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="window__event_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2core_2event_2window__event_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2core_2event_2window__event_8hdep" id="ainclude_2engine_2core_2event_2window__event_8hdep">
-<area shape="rect" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義" alt="" coords="317,5,491,45"/>
-<area shape="rect" href="platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="152,93,339,133"/>
-<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,269,157,324"/>
-<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="276,277,481,317"/>
-<area shape="rect" href="platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="442,93,649,133"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="585,189,789,214"/>
-<area shape="rect" href="platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="119,181,316,221"/>
+<area shape="rect" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義" alt="" coords="258,5,431,45"/>
+<area shape="rect" href="platform__context_8h.html" title="プラットフォームシステムのStrategy Contextモジュールを提供する" alt="" coords="129,93,307,133"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,196,209,221"/>
+<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="295,291,445,331"/>
+<area shape="rect" href="platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="416,93,593,133"/>
+<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="605,284,757,339"/>
+<area shape="rect" href="platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="432,181,644,236"/>
 </map>
 </div>
 </div>
@@ -120,14 +120,20 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event__args.html">window_event_args</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベント付随情報  <a href="structwindow__event__args.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwindow__event.html">window_event</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベントオブジェクト  <a href="structwindow__event.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベント構造体  <a href="structwindow__event.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:aae2c5b40045358502a395f616e8f1f9a"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structwindow__event__args.html">window_event_args</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="window__event_8h.html#aae2c5b40045358502a395f616e8f1f9a">window_event_args_t</a></td></tr>
+<tr class="memdesc:aae2c5b40045358502a395f616e8f1f9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベント付随情報  <br /></td></tr>
+<tr class="separator:aae2c5b40045358502a395f616e8f1f9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98d9edd41cdf4e1474ffc40e14da63fd"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structwindow__event.html">window_event</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a></td></tr>
-<tr class="memdesc:a98d9edd41cdf4e1474ffc40e14da63fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベントオブジェクト  <br /></td></tr>
+<tr class="memdesc:a98d9edd41cdf4e1474ffc40e14da63fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">ウィンドウイベント構造体  <br /></td></tr>
 <tr class="separator:a98d9edd41cdf4e1474ffc40e14da63fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -138,13 +144,29 @@ Enumerations</h2></td></tr>
 <tr class="separator:acd09aeb6aa1fb9d992b2fddba3d38dce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義 </p>
+<div class="textblock"><p>全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-10-14</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="aae2c5b40045358502a395f616e8f1f9a" name="aae2c5b40045358502a395f616e8f1f9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae2c5b40045358502a395f616e8f1f9a">&#9670;&#160;</a></span>window_event_args_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structwindow__event__args.html">window_event_args</a> <a class="el" href="window__event_8h.html#aae2c5b40045358502a395f616e8f1f9a">window_event_args_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ウィンドウイベント付随情報 </p>
+
+</div>
+</div>
 <a id="a98d9edd41cdf4e1474ffc40e14da63fd" name="a98d9edd41cdf4e1474ffc40e14da63fd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a98d9edd41cdf4e1474ffc40e14da63fd">&#9670;&#160;</a></span>window_event_t</h2>
 
@@ -157,7 +179,7 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>ウィンドウイベントオブジェクト </p>
+<p>ウィンドウイベント構造体 </p>
 
 </div>
 </div>

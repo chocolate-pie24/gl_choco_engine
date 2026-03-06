@@ -1,10 +1,10 @@
-<map id="include/engine/platform_concretes/platform_glfw.h" name="include/engine/platform_concretes/platform_glfw.h">
-<area shape="rect" id="node1" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="14,5,211,45"/>
-<area shape="rect" id="node2" title=" " alt="" coords="375,269,458,295"/>
-<area shape="rect" id="node3" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="238,93,433,133"/>
-<area shape="rect" id="node5" href="$platform__utils_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="33,181,192,221"/>
-<area shape="rect" id="node4" title=" " alt="" coords="217,189,291,214"/>
-<area shape="rect" id="node6" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベントオブジェクト定義" alt="" coords="315,181,518,221"/>
-<area shape="rect" id="node7" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベントオブジェクト定義" alt="" coords="542,181,729,221"/>
-<area shape="rect" id="node8" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベントオブジェクト定義" alt="" coords="753,181,947,221"/>
+<map id="include/engine/platform/platform_concretes/platform_glfw.h" name="include/engine/platform/platform_concretes/platform_glfw.h">
+<area shape="rect" id="node1" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="7,5,219,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="190,284,273,309"/>
+<area shape="rect" id="node3" href="$platform__interface_8h.html" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="247,108,434,148"/>
+<area shape="rect" id="node4" title=" " alt="" coords="31,203,106,229"/>
+<area shape="rect" id="node5" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベント構造体定義" alt="" coords="130,196,333,236"/>
+<area shape="rect" id="node6" href="$mouse__event_8h.html" title="全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義" alt="" coords="357,196,543,236"/>
+<area shape="rect" id="node7" href="$window__event_8h.html" title="全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義" alt="" coords="568,196,761,236"/>
+<area shape="rect" id="node8" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="786,196,973,236"/>
 </map>

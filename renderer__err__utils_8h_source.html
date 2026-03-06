@@ -94,24 +94,37 @@ $(document).ready(function(){initNavTree('renderer__err__utils_8h_source.html','
   <div class="headertitle"><div class="title">renderer_err_utils.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="renderer__err__utils_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef GLCE_ENGINE_RENDERER_CORE_RENDERER_ERR_UTILS_H</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define GLCE_ENGINE_RENDERER_CORE_RENDERER_ERR_UTILS_H</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="renderer__types_8h.html">engine/renderer/renderer_base/renderer_types.h</a>&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_function" href="renderer__err__utils_8h.html#afa2dc157125ceb4f252290859d62e175">renderer_result_to_str</a>(<a class="code hl_enumeration" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> result_);</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>}</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="arenderer__err__utils_8h_html_afa2dc157125ceb4f252290859d62e175"><div class="ttname"><a href="renderer__err__utils_8h.html#afa2dc157125ceb4f252290859d62e175">renderer_result_to_str</a></div><div class="ttdeci">const char * renderer_result_to_str(renderer_result_t result_)</div><div class="ttdef"><b>Definition:</b> renderer_err_utils.c:18</div></div>
-<div class="ttc" id="arenderer__types_8h_html"><div class="ttname"><a href="renderer__types_8h.html">renderer_types.h</a></div></div>
-<div class="ttc" id="arenderer__types_8h_html_ad92ac5e342b05a1be13e789f38f6a1d9"><div class="ttname"><a href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a></div><div class="ttdeci">renderer_result_t</div><div class="ttdef"><b>Definition:</b> renderer_types.h:8</div></div>
+<a href="renderer__err__utils_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#ifndef GLCE_ENGINE_RENDERER_CORE_RENDERER_ERR_UTILS_H</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#define GLCE_ENGINE_RENDERER_CORE_RENDERER_ERR_UTILS_H</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &quot;<a class="code" href="renderer__types_8h.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &quot;<a class="code" href="linear__allocator_8h.html">engine/core/memory/linear_allocator.h</a>&quot;</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &quot;<a class="code" href="choco__memory_8h.html">engine/core/memory/choco_memory.h</a>&quot;</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_function" href="renderer__err__utils_8h.html#a5d97ca1e3c1511c3e6c99347a45ccacc">renderer_rslt_to_str</a>(<a class="code hl_enumeration" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> rslt_);</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><a class="code hl_enumeration" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> <a class="code hl_function" href="renderer__err__utils_8h.html#a3dc0515859b12bc30f28914f32ba3dbb">renderer_rslt_convert_linear_alloc</a>(<a class="code hl_enumeration" href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a> rslt_);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><a class="code hl_enumeration" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> <a class="code hl_function" href="renderer__err__utils_8h.html#a249f496a87375fcc6efcf0423849c289">renderer_rslt_convert_choco_memory</a>(<a class="code hl_enumeration" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a> rslt_);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>}</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="achoco__memory_8h_html"><div class="ttname"><a href="choco__memory_8h.html">choco_memory.h</a></div><div class="ttdoc">不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:56</div></div>
+<div class="ttc" id="alinear__allocator_8h_html"><div class="ttname"><a href="linear__allocator_8h.html">linear_allocator.h</a></div><div class="ttdoc">サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義</div></div>
+<div class="ttc" id="alinear__allocator_8h_html_a58cc84fc7972203307a7e4b2e7f3a9a6"><div class="ttname"><a href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a></div><div class="ttdeci">linear_allocator_result_t</div><div class="ttdoc">linear_allocator実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> linear_allocator.h:50</div></div>
+<div class="ttc" id="arenderer__err__utils_8h_html_a249f496a87375fcc6efcf0423849c289"><div class="ttname"><a href="renderer__err__utils_8h.html#a249f496a87375fcc6efcf0423849c289">renderer_rslt_convert_choco_memory</a></div><div class="ttdeci">renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_)</div><div class="ttdoc">下位モジュールであるchoco_memoryが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する</div><div class="ttdef"><b>Definition:</b> renderer_err_utils.c:88</div></div>
+<div class="ttc" id="arenderer__err__utils_8h_html_a3dc0515859b12bc30f28914f32ba3dbb"><div class="ttname"><a href="renderer__err__utils_8h.html#a3dc0515859b12bc30f28914f32ba3dbb">renderer_rslt_convert_linear_alloc</a></div><div class="ttdeci">renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t rslt_)</div><div class="ttdoc">下位モジュールであるlinear_allocatorが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する</div><div class="ttdef"><b>Definition:</b> renderer_err_utils.c:75</div></div>
+<div class="ttc" id="arenderer__err__utils_8h_html_a5d97ca1e3c1511c3e6c99347a45ccacc"><div class="ttname"><a href="renderer__err__utils_8h.html#a5d97ca1e3c1511c3e6c99347a45ccacc">renderer_rslt_to_str</a></div><div class="ttdeci">const char * renderer_rslt_to_str(renderer_result_t rslt_)</div><div class="ttdoc">ログ出力用にレンダラーレイヤーの実行結果コードを文字列に変換する</div><div class="ttdef"><b>Definition:</b> renderer_err_utils.c:48</div></div>
+<div class="ttc" id="arenderer__types_8h_html"><div class="ttname"><a href="renderer__types_8h.html">renderer_types.h</a></div><div class="ttdoc">レンダラーレイヤー全体で使用されるデータ型を提供する</div></div>
+<div class="ttc" id="arenderer__types_8h_html_ad92ac5e342b05a1be13e789f38f6a1d9"><div class="ttname"><a href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a></div><div class="ttdeci">renderer_result_t</div><div class="ttdoc">レンダラーレイヤー実行結果コード定義</div><div class="ttdef"><b>Definition:</b> renderer_types.h:35</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

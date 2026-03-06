@@ -1,4 +1,0 @@
-<map id="Platform GLFW" name="Platform GLFW">
-<area shape="rect" id="node1" href="$group__platform__concretes.html" title="プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する" alt="" coords="5,5,152,31"/>
-<area shape="rect" id="node2" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="200,5,320,31"/>
-</map>

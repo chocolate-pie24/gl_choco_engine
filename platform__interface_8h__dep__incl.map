@@ -1,6 +1,6 @@
-<map id="include/engine/interfaces/platform_interface.h" name="include/engine/interfaces/platform_interface.h">
-<area shape="rect" id="node1" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="107,5,293,45"/>
-<area shape="rect" id="node2" href="$platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="101,93,299,133"/>
-<area shape="rect" id="node3" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,181,157,236"/>
-<area shape="rect" id="node4" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="216,189,421,229"/>
+<map id="include/engine/platform/platform_interface.h" name="include/engine/platform/platform_interface.h">
+<area shape="rect" id="node1" title="プラットフォームシステムのInterface構造体を提供する" alt="" coords="107,5,285,45"/>
+<area shape="rect" id="node2" href="$platform__glfw_8h.html" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="90,93,302,148"/>
+<area shape="rect" id="node3" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,196,157,251"/>
+<area shape="rect" id="node4" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="236,203,385,243"/>
 </map>

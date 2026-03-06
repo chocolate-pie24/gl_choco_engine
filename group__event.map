@@ -1,0 +1,4 @@
+<map id="Event" name="Event">
+<area shape="rect" id="node1" href="$group__core.html" title="プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する" alt="" coords="5,5,57,31"/>
+<area shape="rect" id="node2" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="105,5,164,31"/>
+</map>

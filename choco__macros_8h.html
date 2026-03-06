@@ -93,20 +93,22 @@ $(document).ready(function(){initNavTree('choco__macros_8h.html',''); initResiza
 <div class="header">
   <div class="summary">
 <a href="#define-members">Macros</a>  </div>
-  <div class="headertitle"><div class="title">choco_macros.h File Reference<div class="ingroups"><a class="el" href="group__base.html">Base</a> &raquo; <a class="el" href="group__choco__macros.html">Choco Macros</a></div></div></div>
+  <div class="headertitle"><div class="title">choco_macros.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>全レイヤーで使用される共通マクロ定義  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="choco__message_8h_source.html">choco_message.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for choco_macros.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="choco__macros_8h__incl.png" border="0" usemap="#ainclude_2engine_2base_2choco__macros_8h" alt=""/></div>
 <map name="ainclude_2engine_2base_2choco__macros_8h" id="ainclude_2engine_2base_2choco__macros_8h">
-<area shape="rect" title="全レイヤーで使用される共通マクロ定義" alt="" coords="5,5,157,45"/>
-<area shape="rect" title=" " alt="" coords="44,93,119,119"/>
+<area shape="rect" title="全レイヤーで使用される共通マクロ定義" alt="" coords="32,5,184,45"/>
+<area shape="rect" title=" " alt="" coords="5,93,80,119"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="104,93,243,119"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -114,17 +116,19 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="choco__macros_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2base_2choco__macros_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2base_2choco__macros_8hdep" id="ainclude_2engine_2base_2choco__macros_8hdep">
-<area shape="rect" title="全レイヤーで使用される共通マクロ定義" alt="" coords="917,5,1069,45"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
-<area shape="rect" href="choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="233,101,395,141"/>
-<area shape="rect" href="ring__queue_8c.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="419,101,580,141"/>
-<area shape="rect" href="choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="604,101,784,141"/>
-<area shape="rect" href="linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="808,101,988,141"/>
-<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="1013,93,1165,148"/>
-<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="1189,101,1394,141"/>
-<area shape="rect" href="vertex__array__object_8c.html" title=" " alt="" coords="1419,93,1593,148"/>
-<area shape="rect" href="vertex__buffer__object_8c.html" title=" " alt="" coords="1617,93,1792,148"/>
-<area shape="rect" href="renderer__memory_8c.html" title=" " alt="" coords="1816,93,1991,148"/>
+<area shape="rect" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1131,5,1283,45"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,115,209,141"/>
+<area shape="rect" href="choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="233,108,395,148"/>
+<area shape="rect" href="ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="419,108,580,148"/>
+<area shape="rect" href="filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="604,108,797,148"/>
+<area shape="rect" href="choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="821,108,1001,148"/>
+<area shape="rect" href="linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="1025,108,1205,148"/>
+<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1229,108,1369,148"/>
+<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="1394,101,1546,155"/>
+<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="1570,108,1719,148"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1744,93,1945,163"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1969,93,2171,163"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="2195,93,2396,163"/>
 </map>
 </div>
 </div>
@@ -132,7 +136,8 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a></td></tr>
+<tr class="memitem:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memItemLeft" align="right" valign="top"><a id="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19" name="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NO_COVERAGE</b></td></tr>
 <tr class="separator:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2a4eeaf35bdc29b9d8427912da0fcc2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2">KIB</a>&#160;&#160;&#160;((size_t)(1ULL &lt;&lt; 10))</td></tr>
 <tr class="memdesc:ab2a4eeaf35bdc29b9d8427912da0fcc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">KiB定義(=1024)  <br /></td></tr>
@@ -146,18 +151,18 @@ Macros</h2></td></tr>
 <tr class="memitem:af770043678408217b3232efd66a65f7c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#af770043678408217b3232efd66a65f7c">IS_POWER_OF_TWO</a>(val_)&#160;&#160;&#160;( ((size_t)(val_) != 0u) &amp;&amp; ( (((size_t)(val_) &amp; ((size_t)(val_) - 1u)) == 0u)))</td></tr>
 <tr class="memdesc:af770043678408217b3232efd66a65f7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">2の冪乗かをチェックする  <br /></td></tr>
 <tr class="separator:af770043678408217b3232efd66a65f7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ae95902578522d6c7db17ca8119525e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a2ae95902578522d6c7db17ca8119525e">CHECK_ARG_NULL_GOTO_CLEANUP</a>(ptr_,  ret_,  function_name_,  variable_name_)</td></tr>
-<tr class="memdesc:a2ae95902578522d6c7db17ca8119525e"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
-<tr class="separator:a2ae95902578522d6c7db17ca8119525e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a913c9a1281c313f9bd382908a0ac34b7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a913c9a1281c313f9bd382908a0ac34b7">CHECK_ARG_NOT_NULL_GOTO_CLEANUP</a>(ptr_,  ret_,  function_name_,  variable_name_)</td></tr>
-<tr class="memdesc:a913c9a1281c313f9bd382908a0ac34b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
-<tr class="separator:a913c9a1281c313f9bd382908a0ac34b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a570f4f2c02d090637c511866630db957"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a570f4f2c02d090637c511866630db957">CHECK_ALLOC_FAIL_GOTO_CLEANUP</a>(ptr_,  ret_,  function_name_,  variable_name_)</td></tr>
-<tr class="memdesc:a570f4f2c02d090637c511866630db957"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
-<tr class="separator:a570f4f2c02d090637c511866630db957"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a010885eb6eb17d681cbc01e1a5d057bb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a010885eb6eb17d681cbc01e1a5d057bb">CHECK_ARG_NOT_VALID_GOTO_CLEANUP</a>(is_valid_,  ret_,  function_name_,  variable_name_)</td></tr>
-<tr class="memdesc:a010885eb6eb17d681cbc01e1a5d057bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
-<tr class="separator:a010885eb6eb17d681cbc01e1a5d057bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2791b30f0168c594d1a1705976e21a1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a>(ptr_,  return_variable_,  rslt_code_,  rslt_str_,  function_name_,  variable_name_)</td></tr>
+<tr class="memdesc:af2791b30f0168c594d1a1705976e21a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
+<tr class="separator:af2791b30f0168c594d1a1705976e21a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45e7996ebfd5d58b3ec5927d7e6f2507"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a>(ptr_,  return_variable_,  rslt_code_,  rslt_str_,  function_name_,  variable_name_)</td></tr>
+<tr class="memdesc:a45e7996ebfd5d58b3ec5927d7e6f2507"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
+<tr class="separator:a45e7996ebfd5d58b3ec5927d7e6f2507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad6602f43637c19696a46538bb834dbf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#aad6602f43637c19696a46538bb834dbf">IF_ALLOC_FAIL_GOTO_CLEANUP</a>(ptr_,  return_variable_,  rslt_code_,  function_name_,  variable_name_)</td></tr>
+<tr class="memdesc:aad6602f43637c19696a46538bb834dbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
+<tr class="separator:aad6602f43637c19696a46538bb834dbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f40ebda94dfc62a1ca624e41fd4d8a3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a>(is_valid_,  return_variable_,  rslt_code_,  rslt_str_,  function_name_,  variable_name_)</td></tr>
+<tr class="memdesc:a5f40ebda94dfc62a1ca624e41fd4d8a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする  <br /></td></tr>
+<tr class="separator:a5f40ebda94dfc62a1ca624e41fd4d8a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>全レイヤーで使用される共通マクロ定義 </p>
@@ -167,198 +172,6 @@ Macros</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a570f4f2c02d090637c511866630db957" name="a570f4f2c02d090637c511866630db957"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a570f4f2c02d090637c511866630db957">&#9670;&#160;</a></span>CHECK_ALLOC_FAIL_GOTO_CLEANUP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define CHECK_ALLOC_FAIL_GOTO_CLEANUP</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ptr_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ret_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">function_name_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">variable_name_&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span>(NULL == ptr_) { \</div>
-<div class="line">        ERROR_MESSAGE(<span class="stringliteral">&quot;%s(NO_MEMORY) - Failed to allocate %s memory.&quot;</span>, function_name_, variable_name_); \</div>
-<div class="line">        ret = ret_; \</div>
-<div class="line">        <span class="keywordflow">goto</span> cleanup;  \</div>
-<div class="line">    } \</div>
-</div><!-- fragment -->
-<p>引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする </p>
-<dl class="section note"><dt>Note</dt><dd>エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する </dd></dl>
-
-</div>
-</div>
-<a id="a913c9a1281c313f9bd382908a0ac34b7" name="a913c9a1281c313f9bd382908a0ac34b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a913c9a1281c313f9bd382908a0ac34b7">&#9670;&#160;</a></span>CHECK_ARG_NOT_NULL_GOTO_CLEANUP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ptr_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ret_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">function_name_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">variable_name_&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span>(NULL != ptr_) { \</div>
-<div class="line">        ERROR_MESSAGE(<span class="stringliteral">&quot;%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.&quot;</span>, function_name_, variable_name_); \</div>
-<div class="line">        ret = ret_; \</div>
-<div class="line">        <span class="keywordflow">goto</span> cleanup;  \</div>
-<div class="line">    } \</div>
-</div><!-- fragment -->
-<p>引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする </p>
-<dl class="section note"><dt>Note</dt><dd>エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する </dd></dl>
-
-</div>
-</div>
-<a id="a010885eb6eb17d681cbc01e1a5d057bb" name="a010885eb6eb17d681cbc01e1a5d057bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a010885eb6eb17d681cbc01e1a5d057bb">&#9670;&#160;</a></span>CHECK_ARG_NOT_VALID_GOTO_CLEANUP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">is_valid_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ret_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">function_name_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">variable_name_&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span>(!(is_valid_)) { \</div>
-<div class="line">        ERROR_MESSAGE(<span class="stringliteral">&quot;%s(INVALID_ARGUMENT) - Argument %s is not valid.&quot;</span>, function_name_, variable_name_); \</div>
-<div class="line">        ret = ret_; \</div>
-<div class="line">        <span class="keywordflow">goto</span> cleanup;  \</div>
-<div class="line">    } \</div>
-</div><!-- fragment -->
-<p>引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする </p>
-<dl class="section note"><dt>Note</dt><dd>エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する </dd></dl>
-
-</div>
-</div>
-<a id="a2ae95902578522d6c7db17ca8119525e" name="a2ae95902578522d6c7db17ca8119525e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2ae95902578522d6c7db17ca8119525e">&#9670;&#160;</a></span>CHECK_ARG_NULL_GOTO_CLEANUP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define CHECK_ARG_NULL_GOTO_CLEANUP</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ptr_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ret_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">function_name_, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">variable_name_&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span>(NULL == ptr_) { \</div>
-<div class="line">        ERROR_MESSAGE(<span class="stringliteral">&quot;%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.&quot;</span>, function_name_, variable_name_); \</div>
-<div class="line">        ret = ret_; \</div>
-<div class="line">        <span class="keywordflow">goto</span> cleanup;  \</div>
-<div class="line">    } \</div>
-</div><!-- fragment -->
-<p>引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする </p>
-<dl class="section note"><dt>Note</dt><dd>エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する </dd></dl>
-
-</div>
-</div>
 <a id="a9b7169d9d253c796b17594a26d0c956a" name="a9b7169d9d253c796b17594a26d0c956a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9b7169d9d253c796b17594a26d0c956a">&#9670;&#160;</a></span>GIB</h2>
 
@@ -373,6 +186,332 @@ Macros</h2></td></tr>
 
 <p>GiB定義(=1024 * 1024 * 1024) </p>
 
+</div>
+</div>
+<a id="aad6602f43637c19696a46538bb834dbf" name="aad6602f43637c19696a46538bb834dbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad6602f43637c19696a46538bb834dbf">&#9670;&#160;</a></span>IF_ALLOC_FAIL_GOTO_CLEANUP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IF_ALLOC_FAIL_GOTO_CLEANUP</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">ptr_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">return_variable_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_code_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">function_name_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">variable_name_&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">do</span> { \</div>
+<div class="line">        if(NULL == ptr_) { \</div>
+<div class="line">            ERROR_MESSAGE(<span class="stringliteral">&quot;%s(NO_MEMORY) - Failed to allocate %s memory.&quot;</span>, function_name_, variable_name_); \</div>
+<div class="line">            return_variable_ = rslt_code_; \</div>
+<div class="line">            <span class="keywordflow">goto</span> cleanup;  \</div>
+<div class="line">        } \</div>
+<div class="line">    } <span class="keywordflow">while</span>(0); \</div>
+</div><!-- fragment -->
+<p>引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする </p>
+<dl class="section note"><dt>Note</dt><dd>エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr_</td><td>NULL判定対象変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">return_variable_</td><td>この関数を呼び出す関数のリターン変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_code_</td><td>実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">function_name_</td><td>このマクロを使用する関数名称 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">variable_name_</td><td>NULL判定対象変数名</td></tr>
+  </table>
+  </dd>
+</dl>
+<div class="fragment"><div class="line"><span class="preprocessor">#define ERROR_CODE 1</span></div>
+<div class="line"><span class="preprocessor">#define SUCCESS 0</span></div>
+<div class="line"><span class="keywordtype">int</span> func(<span class="keywordtype">void</span>) {</div>
+<div class="line">     <span class="keywordtype">int</span> result = ERROR_CODE;</div>
+<div class="line">     <span class="keywordtype">int</span>* a = NULL;</div>
+<div class="line">     <a class="code hl_define" href="choco__macros_8h.html#aad6602f43637c19696a46538bb834dbf">IF_ALLOC_FAIL_GOTO_CLEANUP</a>(a, result, ERROR_CODE, <span class="stringliteral">&quot;func&quot;</span>, <span class="stringliteral">&quot;a&quot;</span>)  <span class="comment">// NULLなのでcleanupに飛ぶ</span></div>
+<div class="line">     result = SUCCESS;</div>
+<div class="line">cleanup:</div>
+<div class="line">     return result;</div>
+<div class="line">}</div>
+<div class="ttc" id="achoco__macros_8h_html_aad6602f43637c19696a46538bb834dbf"><div class="ttname"><a href="choco__macros_8h.html#aad6602f43637c19696a46538bb834dbf">IF_ALLOC_FAIL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:151</div></div>
+</div><!-- fragment --> 
+</div>
+</div>
+<a id="a5f40ebda94dfc62a1ca624e41fd4d8a3" name="a5f40ebda94dfc62a1ca624e41fd4d8a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f40ebda94dfc62a1ca624e41fd4d8a3">&#9670;&#160;</a></span>IF_ARG_FALSE_GOTO_CLEANUP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IF_ARG_FALSE_GOTO_CLEANUP</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">is_valid_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">return_variable_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_code_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_str_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">function_name_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">variable_name_&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">do</span> { \</div>
+<div class="line">        if(!(is_valid_)) { \</div>
+<div class="line">            ERROR_MESSAGE(<span class="stringliteral">&quot;%s(%s) - Argument %s is not valid.&quot;</span>, function_name_, rslt_str_, variable_name_); \</div>
+<div class="line">            return_variable_ = rslt_code_; \</div>
+<div class="line">            <span class="keywordflow">goto</span> cleanup;  \</div>
+<div class="line">        } \</div>
+<div class="line">    } <span class="keywordflow">while</span>(0); \</div>
+</div><!-- fragment -->
+<p>引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">is_valid_</td><td>true/false判定変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">return_variable_</td><td>この関数を呼び出す関数のリターン変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_code_</td><td>実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_str_</td><td>実行結果コードの文字列 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">function_name_</td><td>このマクロを使用する関数名称 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">variable_name_</td><td>true/false判定対象変数名</td></tr>
+  </table>
+  </dd>
+</dl>
+<div class="fragment"><div class="line"><span class="preprocessor">#define ERROR_CODE 1</span></div>
+<div class="line"><span class="preprocessor">#define SUCCESS 0</span></div>
+<div class="line"><span class="keywordtype">int</span> func(<span class="keywordtype">void</span>) {</div>
+<div class="line">     <span class="keywordtype">int</span> result = ERROR_CODE;</div>
+<div class="line">     <span class="keywordtype">bool</span> a = <span class="keyword">false</span>;</div>
+<div class="line">     <a class="code hl_define" href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a>(a, result, ERROR_CODE, <span class="stringliteral">&quot;error_code&quot;</span>, <span class="stringliteral">&quot;func&quot;</span>, <span class="stringliteral">&quot;a&quot;</span>)  <span class="comment">// falseなのでcleanupに飛ぶ</span></div>
+<div class="line">     result = SUCCESS;</div>
+<div class="line">cleanup:</div>
+<div class="line">     return result;</div>
+<div class="line">}</div>
+<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:183</div></div>
+</div><!-- fragment --> 
+</div>
+</div>
+<a id="a45e7996ebfd5d58b3ec5927d7e6f2507" name="a45e7996ebfd5d58b3ec5927d7e6f2507"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45e7996ebfd5d58b3ec5927d7e6f2507">&#9670;&#160;</a></span>IF_ARG_NOT_NULL_GOTO_CLEANUP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IF_ARG_NOT_NULL_GOTO_CLEANUP</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">ptr_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">return_variable_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_code_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_str_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">function_name_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">variable_name_&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">do</span> { \</div>
+<div class="line">        if(NULL != ptr_) { \</div>
+<div class="line">            ERROR_MESSAGE(<span class="stringliteral">&quot;%s(%s) - Argument %s requires a null pointer.&quot;</span>, function_name_, rslt_str_, variable_name_); \</div>
+<div class="line">            return_variable_ = rslt_code_; \</div>
+<div class="line">            <span class="keywordflow">goto</span> cleanup;  \</div>
+<div class="line">        } \</div>
+<div class="line">    } <span class="keywordflow">while</span>(0); \</div>
+</div><!-- fragment -->
+<p>引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr_</td><td>NULL判定対象変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">return_variable_</td><td>この関数を呼び出す関数のリターン変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_code_</td><td>実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_str_</td><td>実行結果コードの文字列 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">function_name_</td><td>このマクロを使用する関数名称 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">variable_name_</td><td>NULL判定対象変数名</td></tr>
+  </table>
+  </dd>
+</dl>
+<div class="fragment"><div class="line"><span class="preprocessor">#define ERROR_CODE 1</span></div>
+<div class="line"><span class="preprocessor">#define SUCCESS 0</span></div>
+<div class="line"><span class="keywordtype">int</span> func(<span class="keywordtype">void</span>) {</div>
+<div class="line">     <span class="keywordtype">int</span> result = ERROR_CODE;</div>
+<div class="line">     <span class="keywordtype">int</span> a = 0;</div>
+<div class="line">     <a class="code hl_define" href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a>(&amp;a, result, ERROR_CODE, <span class="stringliteral">&quot;error_code&quot;</span>, <span class="stringliteral">&quot;func&quot;</span>, <span class="stringliteral">&quot;a&quot;</span>)  <span class="comment">// 非NULLなのでcleanupに飛ぶ</span></div>
+<div class="line">     result = SUCCESS;</div>
+<div class="line">cleanup:</div>
+<div class="line">     return result;</div>
+<div class="line">}</div>
+<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:118</div></div>
+</div><!-- fragment --> 
+</div>
+</div>
+<a id="af2791b30f0168c594d1a1705976e21a1" name="af2791b30f0168c594d1a1705976e21a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2791b30f0168c594d1a1705976e21a1">&#9670;&#160;</a></span>IF_ARG_NULL_GOTO_CLEANUP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IF_ARG_NULL_GOTO_CLEANUP</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">ptr_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">return_variable_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_code_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">rslt_str_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">function_name_, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">variable_name_&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">do</span> { \</div>
+<div class="line">        if(NULL == ptr_) { \</div>
+<div class="line">            ERROR_MESSAGE(<span class="stringliteral">&quot;%s(%s) - Argument %s requires a valid pointer.&quot;</span>, function_name_, rslt_str_, variable_name_); \</div>
+<div class="line">            return_variable_ = rslt_code_; \</div>
+<div class="line">            <span class="keywordflow">goto</span> cleanup;  \</div>
+<div class="line">        } \</div>
+<div class="line">    } <span class="keywordflow">while</span>(0); \</div>
+</div><!-- fragment -->
+<p>引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr_</td><td>NULL判定対象変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">return_variable_</td><td>この関数を呼び出す関数のリターン変数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_code_</td><td>実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_str_</td><td>実行結果コードの文字列 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">function_name_</td><td>このマクロを使用する関数名称 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">variable_name_</td><td>NULL判定対象変数名</td></tr>
+  </table>
+  </dd>
+</dl>
+<div class="fragment"><div class="line"><span class="preprocessor">#define ERROR_CODE 1</span></div>
+<div class="line"><span class="preprocessor">#define SUCCESS 0</span></div>
+<div class="line"><span class="keywordtype">int</span> func(<span class="keywordtype">void</span>) {</div>
+<div class="line">     <span class="keywordtype">int</span> result = ERROR_CODE;</div>
+<div class="line">     <span class="keywordtype">int</span>* a = NULL;</div>
+<div class="line">     <a class="code hl_define" href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a>(a, result, ERROR_CODE, <span class="stringliteral">&quot;error_code&quot;</span>, <span class="stringliteral">&quot;func&quot;</span>, <span class="stringliteral">&quot;a&quot;</span>)  <span class="comment">// NULLなのでcleanupに飛ぶ</span></div>
+<div class="line">     result = SUCCESS;</div>
+<div class="line">cleanup:</div>
+<div class="line">     return result;</div>
+<div class="line">}</div>
+<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:86</div></div>
+</div><!-- fragment --> 
 </div>
 </div>
 <a id="af770043678408217b3232efd66a65f7c" name="af770043678408217b3232efd66a65f7c"></a>
@@ -431,20 +570,6 @@ Macros</h2></td></tr>
 </div><div class="memdoc">
 
 <p>MiB定義(=1024 * 1024) </p>
-
-</div>
-</div>
-<a id="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19" name="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">&#9670;&#160;</a></span>NO_COVERAGE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define NO_COVERAGE</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 
 </div>
 </div>

@@ -1,5 +1,10 @@
 <map id="include/engine/containers/choco_string.h" name="include/engine/containers/choco_string.h">
-<area shape="rect" id="node1" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="82,5,271,45"/>
-<area shape="rect" id="node2" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="5,101,167,141"/>
-<area shape="rect" id="node3" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="191,93,343,148"/>
+<area shape="rect" id="node1" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="281,5,470,45"/>
+<area shape="rect" id="node2" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="145,101,313,141"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,211,209,236"/>
+<area shape="rect" id="node4" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="233,203,373,243"/>
+<area shape="rect" id="node5" href="$platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="439,93,616,148"/>
+<area shape="rect" id="node6" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="398,196,550,251"/>
+<area shape="rect" id="node8" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="640,101,801,141"/>
+<area shape="rect" id="node7" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="574,203,723,243"/>
 </map>

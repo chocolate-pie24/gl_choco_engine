@@ -1,4 +1,0 @@
-<map id="Choco Memory" name="Choco Memory">
-<area shape="rect" id="node1" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する" alt="" coords="105,5,225,31"/>
-<area shape="rect" id="node2" href="$group__core.html" title="プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)" alt="" coords="5,5,57,31"/>
-</map>

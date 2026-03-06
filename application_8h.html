@@ -121,6 +121,11 @@ Enumerations</h2></td></tr>
 , <a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa8b4c4769f70a96dd00b33473cf8a051d">APPLICATION_RUNTIME_ERROR</a>
 , <a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa32ce2d6a06070159a5d758050a3018b1">APPLICATION_INVALID_ARGUMENT</a>
 , <br />
+&#160;&#160;<a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa9aaeb80f19ce6ab8664dfb92c34e13b8">APPLICATION_DATA_CORRUPTED</a>
+, <a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa8e207df1e355909215ef9f1163fcf7a8">APPLICATION_BAD_OPERATION</a>
+, <a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aabd291f0e90e86606895e9f53689dec58">APPLICATION_OVERFLOW</a>
+, <a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa41f392599e948261ad87aff7673e4bf4">APPLICATION_LIMIT_EXCEEDED</a>
+, <br />
 &#160;&#160;<a class="el" href="application_8h.html#a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3">APPLICATION_UNDEFINED_ERROR</a>
 <br />
  }</td></tr>
@@ -175,6 +180,14 @@ Functions</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aa32ce2d6a06070159a5d758050a3018b1" name="a0d87614822b854251c7d55d1accaf44aa32ce2d6a06070159a5d758050a3018b1"></a>APPLICATION_INVALID_ARGUMENT&#160;</td><td class="fielddoc"><p>引数異常 </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aa9aaeb80f19ce6ab8664dfb92c34e13b8" name="a0d87614822b854251c7d55d1accaf44aa9aaeb80f19ce6ab8664dfb92c34e13b8"></a>APPLICATION_DATA_CORRUPTED&#160;</td><td class="fielddoc"><p>メモリ破壊, 未初期化 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aa8e207df1e355909215ef9f1163fcf7a8" name="a0d87614822b854251c7d55d1accaf44aa8e207df1e355909215ef9f1163fcf7a8"></a>APPLICATION_BAD_OPERATION&#160;</td><td class="fielddoc"><p>API誤用 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aabd291f0e90e86606895e9f53689dec58" name="a0d87614822b854251c7d55d1accaf44aabd291f0e90e86606895e9f53689dec58"></a>APPLICATION_OVERFLOW&#160;</td><td class="fielddoc"><p>計算過程でオーバーフロー発生 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aa41f392599e948261ad87aff7673e4bf4" name="a0d87614822b854251c7d55d1accaf44aa41f392599e948261ad87aff7673e4bf4"></a>APPLICATION_LIMIT_EXCEEDED&#160;</td><td class="fielddoc"><p>システム使用可能範囲上限超過 </p>
+</td></tr>
 <tr><td class="fieldname"><a id="a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3" name="a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3"></a>APPLICATION_UNDEFINED_ERROR&#160;</td><td class="fielddoc"><p>未定義エラー </p>
 </td></tr>
 </table>
@@ -205,6 +218,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">APPLICATION_NO_MEMORY</td><td>メモリ確保に失敗 </td></tr>
     <tr><td class="paramname">APPLICATION_UNDEFINED_ERROR</td><td>未定義のエラーが発生 </td></tr>
     <tr><td class="paramname">APPLICATION_INVALID_ARGUMENT</td><td>サブシステム初期化に無効な引数を指定した </td></tr>
+    <tr><td class="paramname">APPLICATION_LIMIT_EXCEEDED</td><td>メモリシステムの使用量管理変数がシステム使用可能範囲上限を超過 </td></tr>
     <tr><td class="paramname">APPLICATION_SUCCESS</td><td>エンジンおよびアプリケーションの初期化に成功し、正常終了 </td></tr>
   </table>
   </dd>
@@ -252,11 +266,11 @@ Functions</h2></td></tr>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">APPLICATION_RUNTIME_ERROR</td><td>アプリケーション内部状態管理構造体インスタンスが未初期化 </td></tr>
-    <tr><td class="paramname">APPLICATION_SUCCESS</td><td>正常終了 </td></tr>
-    <tr><td class="paramname">上記以外</td><td>プラットフォーム固有エラー(各プラットフォーム実装依存) </td></tr>
+    <tr><td class="paramname">APPLICATION_SUCCESS</td><td>正常終了</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section note"><dt>Note</dt><dd>上記以外の実行結果コードはプラットフォーム固有エラー(各プラットフォーム実装依存) </dd></dl>
 
 </div>
 </div>

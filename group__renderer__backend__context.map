@@ -1,0 +1,4 @@
+<map id="Renderer Backend Context" name="Renderer Backend Context">
+<area shape="rect" id="node1" href="$group__renderer__backend.html" title="使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する" alt="" coords="5,5,145,31"/>
+<area shape="rect" id="node2" title="上位層がレンダラーバックエンドが保有する機能を使用するための窓口" alt="" coords="193,5,388,31"/>
+</map>

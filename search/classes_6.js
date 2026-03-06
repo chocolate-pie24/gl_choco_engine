@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['platform_5fbackend_0',['platform_backend',['../structplatform__backend.html',1,'']]],
-  ['platform_5fcontext_1',['platform_context',['../structplatform__context.html',1,'']]],
-  ['platform_5fvtable_2',['platform_vtable',['../structplatform__vtable.html',1,'']]]
+  ['memory_5fsystem_0',['memory_system',['../structmemory__system.html',1,'']]],
+  ['mouse_5fevent_1',['mouse_event',['../structmouse__event.html',1,'']]],
+  ['mouse_5fevent_5fargs_2',['mouse_event_args',['../structmouse__event__args.html',1,'']]]
 ];

@@ -1,5 +1,0 @@
-<map id="RENDERER_BASE" name="RENDERER_BASE">
-<area shape="rect" id="node1" href="$group__renderer.html" title="描画関連APIを提供する" alt="" coords="5,5,99,31"/>
-<area shape="rect" id="node2" title="描画関連APIの最下層で全モジュールから使用されるAPI, データ構造を提供する" alt="" coords="147,5,281,31"/>
-<area shape="rect" id="node3" href="$group__renderer__types.html" title="描画関連APIレイヤーにおいて、全モジュールから使用されるデータ構造を提供する" alt="" coords="329,5,469,31"/>
-</map>

@@ -1,14 +1,9 @@
 var searchData=
 [
-  ['padding_0',['padding',['../structring__queue.html#a200bf551e0a05a2d3755abd15c83f432',1,'ring_queue']]],
-  ['platform_5fbackend_5fdestroy_1',['platform_backend_destroy',['../structplatform__vtable.html#a2bfb6e674266be2665be9f5b753901f2',1,'platform_vtable']]],
-  ['platform_5fbackend_5finit_2',['platform_backend_init',['../structplatform__vtable.html#ac24546ccaae4812b2d0eefd694bcc00f',1,'platform_vtable']]],
-  ['platform_5fbackend_5fpreinit_3',['platform_backend_preinit',['../structplatform__vtable.html#ab0174315cf40677841b186065d6bd0ce',1,'platform_vtable']]],
-  ['platform_5fbackend_5fpump_5fmessages_4',['platform_backend_pump_messages',['../structplatform__vtable.html#a6b8643c867e5a6c141c8127daf1cc0ad',1,'platform_vtable']]],
-  ['platform_5fbackend_5fwindow_5fcreate_5',['platform_backend_window_create',['../structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b',1,'platform_vtable']]],
-  ['platform_5fbackend_5fwindow_5fsurface_5fget_6',['platform_backend_window_surface_get',['../structplatform__vtable.html#ac75253294b8967647fe835c9a4863d60',1,'platform_vtable']]],
-  ['platform_5fcontext_7',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
-  ['pressed_8',['pressed',['../structkeyboard__event.html#a292a6be1e1a61456463e40ff0c4bb967',1,'keyboard_event::pressed()'],['../structmouse__event.html#a36bf6e45d6799fdf8bc431d87c0fe30f',1,'mouse_event::pressed()']]],
-  ['prev_9',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]],
-  ['program_5fid_10',['program_id',['../structapp__state.html#ac19427c5c011ea1ff0573f577c34f8b2',1,'app_state']]]
+  ['max_5felement_5fcount_0',['max_element_count',['../structring__queue.html#a69df60dc66efe7262c6537c5d16cc83c',1,'ring_queue']]],
+  ['mem_5ftag_5fallocated_1',['mem_tag_allocated',['../structmemory__system.html#a5648a12a6daae709d9caff4cf11e367b',1,'memory_system']]],
+  ['mem_5ftag_5fstr_2',['mem_tag_str',['../structmemory__system.html#a4842bfb0dbefc2628b50b2357a27d52a',1,'memory_system']]],
+  ['memory_5fpool_3',['memory_pool',['../structring__queue.html#adacee6cd010ddf98f59d3a950d9b17c1',1,'ring_queue::memory_pool()'],['../structlinear__alloc.html#a032629fd46fe38a88f3b389c5d931bb6',1,'linear_alloc::memory_pool()']]],
+  ['mode_4',['mode',['../structfilesystem.html#afdde9f1519c91b6c155f8997e610bfea',1,'filesystem::mode()'],['../structfs__utils.html#a41bc794bf02f202db1b4adada8c313bd',1,'fs_utils::mode()']]],
+  ['mouse_5fevent_5fqueue_5',['mouse_event_queue',['../structapp__state.html#a99a550e9c9760aba27852014c2fd69c1',1,'app_state']]]
 ];

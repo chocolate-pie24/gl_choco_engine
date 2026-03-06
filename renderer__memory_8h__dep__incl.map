@@ -1,6 +1,7 @@
 <map id="include/engine/renderer/renderer_core/renderer_memory.h" name="include/engine/renderer/renderer_core/renderer_memory.h">
-<area shape="rect" id="node1" title=" " alt="" coords="203,5,379,60"/>
-<area shape="rect" id="node2" href="$vertex__array__object_8c.html" title=" " alt="" coords="5,108,180,163"/>
-<area shape="rect" id="node3" href="$vertex__buffer__object_8c.html" title=" " alt="" coords="204,108,379,163"/>
-<area shape="rect" id="node4" href="$renderer__memory_8c.html" title=" " alt="" coords="403,108,577,163"/>
+<area shape="rect" id="node1" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="355,5,531,60"/>
+<area shape="rect" id="node2" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,108,207,177"/>
+<area shape="rect" id="node3" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,108,432,177"/>
+<area shape="rect" id="node4" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,108,657,177"/>
+<area shape="rect" id="node5" href="$renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="681,115,856,170"/>
 </map>

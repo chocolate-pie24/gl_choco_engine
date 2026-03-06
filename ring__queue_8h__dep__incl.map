@@ -1,5 +1,5 @@
 <map id="include/engine/containers/ring_queue.h" name="include/engine/containers/ring_queue.h">
-<area shape="rect" id="node1" title="ジェネリック型のリングキューオブジェクト定義と関連APIを提供する" alt="" coords="115,5,305,45"/>
+<area shape="rect" id="node1" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="115,5,305,45"/>
 <area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
-<area shape="rect" id="node3" href="$ring__queue_8c.html" title="ジェネリック型のリングキューオブジェクト定義と関連APIの実装" alt="" coords="233,93,395,133"/>
+<area shape="rect" id="node3" href="$ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="233,93,395,133"/>
 </map>

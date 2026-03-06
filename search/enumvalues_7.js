@@ -1,15 +1,20 @@
 var searchData=
 [
-  ['renderer_5finvalid_5fargument_0',['RENDERER_INVALID_ARGUMENT',['../renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abc5c18cbf06460557c2d7084924c7a14',1,'renderer_types.h']]],
-  ['renderer_5fno_5fmemory_1',['RENDERER_NO_MEMORY',['../renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aef0a05d33e961d3aa6a6962a8fe2145e',1,'renderer_types.h']]],
-  ['renderer_5fruntime_5ferror_2',['RENDERER_RUNTIME_ERROR',['../renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a66fe08172897601e25298de62034f508',1,'renderer_types.h']]],
-  ['renderer_5fsuccess_3',['RENDERER_SUCCESS',['../renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9ab6586125dfc40e7353afcc21182c0314',1,'renderer_types.h']]],
-  ['renderer_5ftype_5ffloat_4',['RENDERER_TYPE_FLOAT',['../renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930',1,'renderer_types.h']]],
-  ['renderer_5fundefined_5ferror_5',['RENDERER_UNDEFINED_ERROR',['../renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9',1,'renderer_types.h']]],
-  ['ring_5fqueue_5fempty_6',['RING_QUEUE_EMPTY',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417aa9bafe8734f1f1df977ed31e45e76d41',1,'ring_queue.h']]],
-  ['ring_5fqueue_5finvalid_5fargument_7',['RING_QUEUE_INVALID_ARGUMENT',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a654c22710f62a2a5de3674cea810982a',1,'ring_queue.h']]],
-  ['ring_5fqueue_5fno_5fmemory_8',['RING_QUEUE_NO_MEMORY',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a2fda99050f773bee7de7173c206cdb31',1,'ring_queue.h']]],
-  ['ring_5fqueue_5fruntime_5ferror_9',['RING_QUEUE_RUNTIME_ERROR',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a7b8043809e8a07cfe1bdd8463ba6c433',1,'ring_queue.h']]],
-  ['ring_5fqueue_5fsuccess_10',['RING_QUEUE_SUCCESS',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417acb3c37cc40d19727260f754cabfa778a',1,'ring_queue.h']]],
-  ['ring_5fqueue_5fundefined_5ferror_11',['RING_QUEUE_UNDEFINED_ERROR',['../ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a02574c95f81b9b8d1aea1c072fad4ad5',1,'ring_queue.h']]]
+  ['memory_5fsystem_5finvalid_5fargument_0',['MEMORY_SYSTEM_INVALID_ARGUMENT',['../choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d',1,'choco_memory.h']]],
+  ['memory_5fsystem_5flimit_5fexceeded_1',['MEMORY_SYSTEM_LIMIT_EXCEEDED',['../choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a4fffc142c79184ee32ff17af56d245ad',1,'choco_memory.h']]],
+  ['memory_5fsystem_5fno_5fmemory_2',['MEMORY_SYSTEM_NO_MEMORY',['../choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a690ac59d895a75e87396c63f5bd6622f',1,'choco_memory.h']]],
+  ['memory_5fsystem_5fruntime_5ferror_3',['MEMORY_SYSTEM_RUNTIME_ERROR',['../choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1afb75b996f28338c5c4998891417c4758',1,'choco_memory.h']]],
+  ['memory_5fsystem_5fsuccess_4',['MEMORY_SYSTEM_SUCCESS',['../choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1ad474825374cae417c05c0ba97ab0389b',1,'choco_memory.h']]],
+  ['memory_5ftag_5ffile_5fio_5',['MEMORY_TAG_FILE_IO',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca56e14f1fce1bbf4af8c046a231ae9d5c',1,'choco_memory.h']]],
+  ['memory_5ftag_5fmax_6',['MEMORY_TAG_MAX',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cacaebd46852e13ef746fd312e0f1ef8bd',1,'choco_memory.h']]],
+  ['memory_5ftag_5frenderer_7',['MEMORY_TAG_RENDERER',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca7b4c1e90432c602af81107af1c9cf1b8',1,'choco_memory.h']]],
+  ['memory_5ftag_5fring_5fqueue_8',['MEMORY_TAG_RING_QUEUE',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca6aed8fe38d265080aaf69095c2a5c497',1,'choco_memory.h']]],
+  ['memory_5ftag_5fstring_9',['MEMORY_TAG_STRING',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395caae1f07552c5ef0e2c37261ef3d37c7e9',1,'choco_memory.h']]],
+  ['memory_5ftag_5fsystem_10',['MEMORY_TAG_SYSTEM',['../choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84',1,'choco_memory.h']]],
+  ['message_5fseverity_5fdebug_11',['MESSAGE_SEVERITY_DEBUG',['../choco__message_8h.html#a8f514ee7a1096a399f6d2994e1889b48a526d661abd650668750b45d973095da6',1,'choco_message.h']]],
+  ['message_5fseverity_5ferror_12',['MESSAGE_SEVERITY_ERROR',['../choco__message_8h.html#a8f514ee7a1096a399f6d2994e1889b48a10786deae7593f84d95ecb32064adde3',1,'choco_message.h']]],
+  ['message_5fseverity_5finformation_13',['MESSAGE_SEVERITY_INFORMATION',['../choco__message_8h.html#a8f514ee7a1096a399f6d2994e1889b48a65f2e2256eeb8d64f31eef2cea967b6b',1,'choco_message.h']]],
+  ['message_5fseverity_5fwarning_14',['MESSAGE_SEVERITY_WARNING',['../choco__message_8h.html#a8f514ee7a1096a399f6d2994e1889b48ac548308b4b08756ecc04752a1770cf4f',1,'choco_message.h']]],
+  ['mouse_5fbutton_5fleft_15',['MOUSE_BUTTON_LEFT',['../mouse__event_8h.html#a73c6920f24309bb88d4cf8ec14d97aa5a3c2e62b97b30d850c5539d0f3a6d0958',1,'mouse_event.h']]],
+  ['mouse_5fbutton_5fright_16',['MOUSE_BUTTON_RIGHT',['../mouse__event_8h.html#a73c6920f24309bb88d4cf8ec14d97aa5a5b61e63e73f15ed6af97d5cd3124bc6f',1,'mouse_event.h']]]
 ];

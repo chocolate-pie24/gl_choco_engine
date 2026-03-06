@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['linear_20allocator_0',['Linear Allocator',['../group__linear__allocator.html',1,'']]]
+  ['memory_0',['Memory',['../group__memory.html',1,'']]]
 ];

@@ -2,6 +2,6 @@
 <area shape="rect" id="node1" title="プラットフォームコンテキスト構造体" alt="" coords="58,387,193,412"/>
 <area shape="rect" id="node2" href="$structplatform__backend.html" title="GLFWプラットフォーム内部状態管理構造体" alt="" coords="56,108,195,133"/>
 <area shape="rect" id="node5" href="$structplatform__vtable.html" title="プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform/以下のソースファイルに格納)" alt="" coords="187,299,314,324"/>
-<area shape="rect" id="node3" href="$structchoco__string.html" title=" " alt="" coords="5,5,109,31"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,5,109,31"/>
 <area shape="rect" id="node4" href="$structinput__snapshot.html" title="入力状態格納構造体" alt="" coords="134,5,255,31"/>
 </map>

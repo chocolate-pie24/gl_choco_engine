@@ -1,0 +1,4 @@
+<map id="Renderer Backend Interface" name="Renderer Backend Interface">
+<area shape="rect" id="node1" href="$group__renderer__backend.html" title="使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する" alt="" coords="5,5,145,31"/>
+<area shape="rect" id="node2" title="グラフィックスAPIごとのバックエンド実装の仮想関数テーブルを定義する" alt="" coords="193,5,396,31"/>
+</map>

@@ -1,4 +1,5 @@
 var group__renderer =
 [
-    [ "RENDERER_BASE", "group__renderer__base.html", "group__renderer__base" ]
+    [ "Renderer Backend", "group__renderer__backend.html", "group__renderer__backend" ],
+    [ "Renderer Core", "group__renderer__core.html", "group__renderer__core" ]
 ];

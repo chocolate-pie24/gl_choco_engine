@@ -96,22 +96,27 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <div class="contents">
 <div class="textblock"><dl class="reflist">
 <dt>File <a class="el" href="application_8c.html">application.c</a>  </dt>
-<dd><a class="anchor" id="_todo000003"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
-<dt>File <a class="el" href="choco__string_8c.html">choco_string.c</a>  </dt>
-<dd><a class="anchor" id="_todo000004"></a>src_len + 1のオーバーフローチェックをしていない + テストケース追加 </dd>
-<dt>File <a class="el" href="choco__string_8h.html">choco_string.h</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000001"></a>choco_string_move </p>
-<p class="interdd"></p>
-<p class="interdd">choco_string_create_from_string </p>
-<p class="interdd"></p>
-<p class="enddd">choco_string_clone(deep copy - copyとの違いをきちんとドキュメントに書く)  </p>
-</dd>
+<dd><a class="anchor" id="_todo000008"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
+<dt>Global <a class="el" href="filesystem_8c.html#a3654261af5768226774c43027f04a439">filesystem_close</a>  (filesystem_t *filesystem_)</dt>
+<dd><a class="anchor" id="_todo000002"></a>既にクローズ済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する  </dd>
+<dt>Global <a class="el" href="filesystem_8c.html#ad5d47279498bce65ae2118126d62d3fb">filesystem_open</a>  (filesystem_t *filesystem_, const char *fullpath_, filesystem_open_mode_t mode_)</dt>
+<dd><a class="anchor" id="_todo000001"></a>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する  </dd>
+<dt>File <a class="el" href="fs__utils_8c.html">fs_utils.c</a>  </dt>
+<dd><a class="anchor" id="_todo000010"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
 <dt>Class <a class="el" href="structlinear__alloc.html">linear_alloc</a>  </dt>
-<dd><a class="anchor" id="_todo000005"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
+<dd><a class="anchor" id="_todo000009"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
 <dt>File <a class="el" href="linear__allocator_8h.html">linear_allocator.h</a>  </dt>
-<dd><a class="anchor" id="_todo000002"></a>linear_allocator_reset追加 </dd>
+<dd><a class="anchor" id="_todo000003"></a>linear_allocator_reset追加 </dd>
+<dt>Global <a class="el" href="interface__vao_8h.html#a70b5348c1c80e39ff30198d793763b45">pfn_vertex_array_bind</a>  )(const renderer_backend_vao_t *vertex_array_, uint32_t *out_vao_id_)</dt>
+<dd><a class="anchor" id="_todo000004"></a>renderer_frontend作成後、外部非公開とする </dd>
+<dt>Global <a class="el" href="interface__vao_8h.html#ad7e5179bcdb3666d68dae997bae2262b">pfn_vertex_array_unbind</a>  )(const renderer_backend_vao_t *vertex_array_)</dt>
+<dd><a class="anchor" id="_todo000005"></a>renderer_frontend作成後、外部非公開とする </dd>
+<dt>Global <a class="el" href="interface__vbo_8h.html#ae63d0575937d477fec2edafa269b0a44">pfn_vertex_buffer_bind</a>  )(const renderer_backend_vbo_t *vertex_buffer_, uint32_t *out_vbo_id_)</dt>
+<dd><a class="anchor" id="_todo000006"></a>renderer_frontend作成後、外部非公開とする </dd>
+<dt>Global <a class="el" href="interface__vbo_8h.html#a7bb15305e518a82c39b3ec5431e0d390">pfn_vertex_buffer_unbind</a>  )(const renderer_backend_vbo_t *vertex_buffer_)</dt>
+<dd><a class="anchor" id="_todo000007"></a>renderer_frontend作成後、外部非公開とする </dd>
 <dt>File <a class="el" href="platform__glfw_8c.html">platform_glfw.c</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>glfwSetErrorCallback </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000011"></a>glfwSetErrorCallback </p>
 <p class="interdd"></p>
 <p class="enddd">glfwSwapInterval</p>
 </dd>

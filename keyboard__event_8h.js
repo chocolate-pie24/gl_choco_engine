@@ -1,6 +1,8 @@
 var keyboard__event_8h =
 [
+    [ "keyboard_event_args", "structkeyboard__event__args.html", "structkeyboard__event__args" ],
     [ "keyboard_event", "structkeyboard__event.html", "structkeyboard__event" ],
+    [ "keyboard_event_args_t", "keyboard__event_8h.html#a7a18b543fe981f04d51449a966f4c2c4", null ],
     [ "keyboard_event_t", "keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94", null ],
     [ "keycode_t", "keyboard__event_8h.html#a6e68664bf6d0e0a4dac76a07ae630c52", [
       [ "KEY_1", "keyboard__event_8h.html#a6e68664bf6d0e0a4dac76a07ae630c52a35bcc2bc85513df4f3897a9d64a9c51c", null ],

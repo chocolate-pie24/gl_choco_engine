@@ -93,9 +93,8 @@ $(document).ready(function(){initNavTree('linear__allocator_8c.html',''); initRe
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">linear_allocator.c File Reference<div class="ingroups"><a class="el" href="group__core.html">Core</a> &raquo; <a class="el" href="group__linear__allocator.html">Linear Allocator</a></div></div></div>
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle"><div class="title">linear_allocator.c File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -124,7 +123,7 @@ Include dependency graph for linear_allocator.c:</div>
 <area shape="rect" title=" " alt="" coords="464,101,535,126"/>
 <area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="559,93,717,133"/>
 <area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="741,101,951,126"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="975,101,1197,126"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="847,181,986,207"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -137,23 +136,14 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a1311c38151210f58772647a858fd6937"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#a1311c38151210f58772647a858fd6937">linear_allocator_preinit</a> (size_t *memory_requirement_, size_t *align_requirement_)</td></tr>
-<tr class="memdesc:a1311c38151210f58772647a858fd6937"><td class="mdescLeft">&#160;</td><td class="mdescRight">リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する  <br /></td></tr>
+<tr class="memdesc:a1311c38151210f58772647a858fd6937"><td class="mdescLeft">&#160;</td><td class="mdescRight">linear_alloc_t構造体インスタンスの生成に必要なメモリ使用量とメモリアライメント要件を取得する  <br /></td></tr>
 <tr class="separator:a1311c38151210f58772647a858fd6937"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a649d70d63d4cc247442901df0f4d836b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#a649d70d63d4cc247442901df0f4d836b">linear_allocator_init</a> (<a class="el" href="linear__allocator_8h.html#afa4e1278ebfe77080fc395b27f1b38ec">linear_alloc_t</a> *allocator_, size_t capacity_, void *memory_pool_)</td></tr>
-<tr class="memdesc:a649d70d63d4cc247442901df0f4d836b"><td class="mdescLeft">&#160;</td><td class="mdescRight">リニアアロケータ構造体インスタンスを初期化する  <br /></td></tr>
+<tr class="memdesc:a649d70d63d4cc247442901df0f4d836b"><td class="mdescLeft">&#160;</td><td class="mdescRight">linear_alloc_t構造体インスタンスをメモリ容量size_、メモリプール先頭アドレスmemory_pool_で初期化する  <br /></td></tr>
 <tr class="separator:a649d70d63d4cc247442901df0f4d836b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf00fe44f8d0e799d5704236be18478f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#abf00fe44f8d0e799d5704236be18478f">linear_allocator_allocate</a> (<a class="el" href="linear__allocator_8h.html#afa4e1278ebfe77080fc395b27f1b38ec">linear_alloc_t</a> *allocator_, size_t req_size_, size_t req_align_, void **out_ptr_)</td></tr>
 <tr class="memdesc:abf00fe44f8d0e799d5704236be18478f"><td class="mdescLeft">&#160;</td><td class="mdescRight">linear_allocatorを使用してメモリを割り当てる  <br /></td></tr>
 <tr class="separator:abf00fe44f8d0e799d5704236be18478f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
-<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
-<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
-<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装 </p>
@@ -233,16 +223,16 @@ Variables</h2></td></tr>
 <div class="line"><span class="comment">// メモリ割り当て</span></div>
 <div class="line"><span class="keywordtype">void</span>* ptr = NULL;</div>
 <div class="line">ret_linear = <a class="code hl_function" href="linear__allocator_8h.html#abf00fe44f8d0e799d5704236be18478f">linear_allocator_allocate</a>(<a class="code hl_struct" href="structlinear__alloc.html">linear_alloc</a>, 128, 8, &amp;ptr);  <span class="comment">// ptrにアライメント8バイト, 容量128バイトでメモリ割り当て</span></div>
-<div class="ttc" id="achoco__macros_8h_html_ab2a4eeaf35bdc29b9d8427912da0fcc2"><div class="ttname"><a href="choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2">KIB</a></div><div class="ttdeci">#define KIB</div><div class="ttdoc">KiB定義(=1024)</div><div class="ttdef"><b>Definition:</b> choco_macros.h:39</div></div>
-<div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)</div><div class="ttdef"><b>Definition:</b> choco_memory.c:136</div></div>
-<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:55</div></div>
-<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d">MEMORY_SYSTEM_INVALID_ARGUMENT</a></div><div class="ttdeci">@ MEMORY_SYSTEM_INVALID_ARGUMENT</div><div class="ttdef"><b>Definition:</b> choco_memory.h:57</div></div>
+<div class="ttc" id="achoco__macros_8h_html_ab2a4eeaf35bdc29b9d8427912da0fcc2"><div class="ttname"><a href="choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2">KIB</a></div><div class="ttdeci">#define KIB</div><div class="ttdoc">KiB定義(=1024)</div><div class="ttdef"><b>Definition:</b> choco_macros.h:41</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:132</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:56</div></div>
+<div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d">MEMORY_SYSTEM_INVALID_ARGUMENT</a></div><div class="ttdeci">@ MEMORY_SYSTEM_INVALID_ARGUMENT</div><div class="ttdef"><b>Definition:</b> choco_memory.h:58</div></div>
 <div class="ttc" id="achoco__memory_8h_html_aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84"><div class="ttname"><a href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84">MEMORY_TAG_SYSTEM</a></div><div class="ttdeci">@ MEMORY_TAG_SYSTEM</div><div class="ttdef"><b>Definition:</b> choco_memory.h:44</div></div>
-<div class="ttc" id="alinear__allocator_8h_html_a1311c38151210f58772647a858fd6937"><div class="ttname"><a href="linear__allocator_8h.html#a1311c38151210f58772647a858fd6937">linear_allocator_preinit</a></div><div class="ttdeci">void linear_allocator_preinit(size_t *memory_requirement_, size_t *align_requirement_)</div><div class="ttdoc">リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:62</div></div>
+<div class="ttc" id="alinear__allocator_8h_html_a1311c38151210f58772647a858fd6937"><div class="ttname"><a href="linear__allocator_8h.html#a1311c38151210f58772647a858fd6937">linear_allocator_preinit</a></div><div class="ttdeci">void linear_allocator_preinit(size_t *memory_requirement_, size_t *align_requirement_)</div><div class="ttdoc">linear_alloc_t構造体インスタンスの生成に必要なメモリ使用量とメモリアライメント要件を取得する</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:65</div></div>
 <div class="ttc" id="alinear__allocator_8h_html_a58cc84fc7972203307a7e4b2e7f3a9a6"><div class="ttname"><a href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a></div><div class="ttdeci">linear_allocator_result_t</div><div class="ttdoc">linear_allocator実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> linear_allocator.h:50</div></div>
 <div class="ttc" id="alinear__allocator_8h_html_a58cc84fc7972203307a7e4b2e7f3a9a6a6f8a61f09b65418364464cbd651b90a2"><div class="ttname"><a href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6a6f8a61f09b65418364464cbd651b90a2">LINEAR_ALLOC_INVALID_ARGUMENT</a></div><div class="ttdeci">@ LINEAR_ALLOC_INVALID_ARGUMENT</div><div class="ttdef"><b>Definition:</b> linear_allocator.h:53</div></div>
-<div class="ttc" id="alinear__allocator_8h_html_a649d70d63d4cc247442901df0f4d836b"><div class="ttname"><a href="linear__allocator_8h.html#a649d70d63d4cc247442901df0f4d836b">linear_allocator_init</a></div><div class="ttdeci">linear_allocator_result_t linear_allocator_init(linear_alloc_t *allocator_, size_t capacity_, void *memory_pool_)</div><div class="ttdoc">リニアアロケータ構造体インスタンスを初期化する</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:73</div></div>
-<div class="ttc" id="alinear__allocator_8h_html_abf00fe44f8d0e799d5704236be18478f"><div class="ttname"><a href="linear__allocator_8h.html#abf00fe44f8d0e799d5704236be18478f">linear_allocator_allocate</a></div><div class="ttdeci">linear_allocator_result_t linear_allocator_allocate(linear_alloc_t *allocator_, size_t req_size_, size_t req_align_, void **out_ptr_)</div><div class="ttdoc">linear_allocatorを使用してメモリを割り当てる</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:97</div></div>
+<div class="ttc" id="alinear__allocator_8h_html_a649d70d63d4cc247442901df0f4d836b"><div class="ttname"><a href="linear__allocator_8h.html#a649d70d63d4cc247442901df0f4d836b">linear_allocator_init</a></div><div class="ttdeci">linear_allocator_result_t linear_allocator_init(linear_alloc_t *allocator_, size_t capacity_, void *memory_pool_)</div><div class="ttdoc">linear_alloc_t構造体インスタンスをメモリ容量size_、メモリプール先頭アドレスmemory_pool_で初期化する</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:73</div></div>
+<div class="ttc" id="alinear__allocator_8h_html_abf00fe44f8d0e799d5704236be18478f"><div class="ttname"><a href="linear__allocator_8h.html#abf00fe44f8d0e799d5704236be18478f">linear_allocator_allocate</a></div><div class="ttdeci">linear_allocator_result_t linear_allocator_allocate(linear_alloc_t *allocator_, size_t req_size_, size_t req_align_, void **out_ptr_)</div><div class="ttdoc">linear_allocatorを使用してメモリを割り当てる</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:88</div></div>
 <div class="ttc" id="astructlinear__alloc_html"><div class="ttname"><a href="structlinear__alloc.html">linear_alloc</a></div><div class="ttdoc">linear_alloc_t内部データ構造</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:32</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -308,7 +298,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>リニアアロケータ構造体インスタンスを初期化する </p>
+<p>linear_alloc_t構造体インスタンスをメモリ容量size_、メモリプール先頭アドレスmemory_pool_で初期化する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>リニアアロケータ構造体インスタンスは自身のメモリを破棄するAPIを持たない</li>
 <li>リニアアロケータ構造体インスタンス自体の破棄は上位層で行う</li>
@@ -339,7 +329,7 @@ Variables</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><span class="comment">// リニアアロケータメモリ破棄</span></div>
 <div class="line"><a class="code hl_function" href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a>(<a class="code hl_struct" href="structlinear__alloc.html">linear_alloc</a>, linear_alloc_mem_req, <a class="code hl_enumvalue" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cabf1e693de39b90cc51fda9fefa9cbf84">MEMORY_TAG_SYSTEM</a>);</div>
-<div class="ttc" id="achoco__memory_8h_html_ad1809307ab820a30f8078e2f73bd9a8a"><div class="ttname"><a href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a></div><div class="ttdeci">void memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_)</div><div class="ttdoc">メモリシステムを使用してメモリを解放する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:181</div></div>
+<div class="ttc" id="achoco__memory_8h_html_ad1809307ab820a30f8078e2f73bd9a8a"><div class="ttname"><a href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a">memory_system_free</a></div><div class="ttdeci">void memory_system_free(void *ptr_, size_t size_, memory_tag_t mem_tag_)</div><div class="ttdoc">ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:177</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">allocator_</td><td>リニアアロケータ構造体インスタンスアドレス </td></tr>
@@ -360,11 +350,11 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="linear__allocator_8h.html#a1311c38151210f58772647a858fd6937" title="リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する">linear_allocator_preinit</a> </dd>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="linear__allocator_8h.html#a1311c38151210f58772647a858fd6937" title="linear_alloc_t構造体インスタンスの生成に必要なメモリ使用量とメモリアライメント要件を取得する">linear_allocator_preinit</a> </dd>
 <dd>
-<a class="el" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557" title="メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)">memory_system_allocate</a> </dd>
+<a class="el" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557" title="容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する">memory_system_allocate</a> </dd>
 <dd>
-<a class="el" href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a" title="メモリシステムを使用してメモリを解放する">memory_system_free</a> </dd></dl>
+<a class="el" href="choco__memory_8h.html#ad1809307ab820a30f8078e2f73bd9a8a" title="ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する">memory_system_free</a> </dd></dl>
 
 </div>
 </div>
@@ -394,7 +384,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>リニアアロケータ構造体インスタンスのメモリ確保のため、メモリアライメント要件とメモリ容量を取得する </p>
+<p>linear_alloc_t構造体インスタンスの生成に必要なメモリ使用量とメモリアライメント要件を取得する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>リニアアロケータのメモリ確保には、メモリシステムを使用する</li>
 <li>リニアアロケータモジュールがメモリシステムに依存しないよう、上位層にてリニアアロケータのメモリを確保するため本APIを使用する</li>
@@ -412,79 +402,9 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557" title="メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)">memory_system_allocate</a> </dd>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557" title="容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する">memory_system_allocate</a> </dd>
 <dd>
-<a class="el" href="linear__allocator_8h.html#a649d70d63d4cc247442901df0f4d836b" title="リニアアロケータ構造体インスタンスを初期化する">linear_allocator_init</a> </dd></dl>
-
-</div>
-</div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>実行結果種別文字列(無効な引数) </p>
-
-</div>
-</div>
-<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>実行結果種別文字列(メモリ確保失敗) </p>
-
-</div>
-</div>
-<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>実行結果種別文字列(処理成功) </p>
+<a class="el" href="linear__allocator_8h.html#a649d70d63d4cc247442901df0f4d836b" title="linear_alloc_t構造体インスタンスをメモリ容量size_、メモリプール先頭アドレスmemory_pool_で初期化する">linear_allocator_init</a> </dd></dl>
 
 </div>
 </div>

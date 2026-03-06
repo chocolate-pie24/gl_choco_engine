@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['renderer_0',['RENDERER',['../group__renderer.html',1,'']]],
-  ['renderer_5fbase_1',['RENDERER_BASE',['../group__renderer__base.html',1,'']]],
-  ['renderer_5ftypes_2',['RENDERER_TYPES',['../group__renderer__types.html',1,'']]],
-  ['ring_20queue_3',['Ring Queue',['../group__ring__queue.html',1,'']]]
+  ['renderer_0',['Renderer',['../group__renderer.html',1,'']]],
+  ['renderer_20backend_1',['Renderer Backend',['../group__renderer__backend.html',1,'']]],
+  ['renderer_20backend_20concretes_2',['Renderer Backend Concretes',['../group__renderer__backend__concretes.html',1,'']]],
+  ['renderer_20backend_20context_3',['Renderer Backend Context',['../group__renderer__backend__context.html',1,'']]],
+  ['renderer_20backend_20interface_4',['Renderer Backend Interface',['../group__renderer__backend__interface.html',1,'']]],
+  ['renderer_20core_5',['Renderer Core',['../group__renderer__core.html',1,'']]]
 ];

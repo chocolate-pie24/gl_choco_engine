@@ -1,11 +1,9 @@
 <map id="src/engine/renderer/renderer_core/renderer_memory.c" name="src/engine/renderer/renderer_core/renderer_memory.c">
-<area shape="rect" id="node1" title=" " alt="" coords="310,5,485,60"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,203,88,229"/>
-<area shape="rect" id="node3" title=" " alt="" coords="133,203,203,229"/>
-<area shape="rect" id="node4" title=" " alt="" coords="360,203,435,229"/>
-<area shape="rect" id="node5" href="$renderer__memory_8h.html" title=" " alt="" coords="114,108,302,148"/>
-<area shape="rect" id="node6" href="$renderer__types_8h.html" title=" " alt="" coords="615,196,799,236"/>
-<area shape="rect" id="node7" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="377,108,535,148"/>
-<area shape="rect" id="node8" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="559,115,769,141"/>
-<area shape="rect" id="node9" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="844,115,1065,141"/>
+<area shape="rect" id="node1" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="164,5,338,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="172,284,247,309"/>
+<area shape="rect" id="node3" href="$renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="25,108,213,148"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="86,196,270,236"/>
+<area shape="rect" id="node5" href="$renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="289,108,477,148"/>
+<area shape="rect" id="node7" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="475,196,632,236"/>
+<area shape="rect" id="node6" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="294,196,451,236"/>
 </map>

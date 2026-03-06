@@ -1,0 +1,4 @@
+<map id="Memory" name="Memory">
+<area shape="rect" id="node1" href="$group__core.html" title="プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する" alt="" coords="5,5,57,31"/>
+<area shape="rect" id="node2" title="アプリケーション、エンジン全体で使用されるメモリアロケータモジュールで、以下の機能を保有する" alt="" coords="105,5,181,31"/>
+</map>

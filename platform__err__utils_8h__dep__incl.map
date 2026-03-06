@@ -1,0 +1,5 @@
+<map id="include/engine/platform/platform_core/platform_err_utils.h" name="include/engine/platform/platform_core/platform_err_utils.h">
+<area shape="rect" id="node1" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="79,5,257,60"/>
+<area shape="rect" id="node2" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,108,157,163"/>
+<area shape="rect" id="node3" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="181,115,331,155"/>
+</map>

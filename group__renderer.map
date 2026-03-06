@@ -1,4 +1,6 @@
-<map id="RENDERER" name="RENDERER">
-<area shape="rect" id="node1" title="描画関連APIを提供する" alt="" coords="5,5,99,31"/>
-<area shape="rect" id="node2" href="$group__renderer__base.html" title="描画関連APIの最下層で全モジュールから使用されるAPI, データ構造を提供する" alt="" coords="147,5,281,31"/>
+<map id="Renderer" name="Renderer">
+<area shape="rect" id="node1" href="$group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,31,72,56"/>
+<area shape="rect" id="node2" title="レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する" alt="" coords="120,31,201,56"/>
+<area shape="rect" id="node3" href="$group__renderer__backend.html" title="使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する" alt="" coords="249,5,389,31"/>
+<area shape="rect" id="node4" href="$group__renderer__core.html" title="レンダラーサブシステム全体から使用されるモジュールを提供する" alt="" coords="262,55,377,80"/>
 </map>

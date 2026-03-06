@@ -1,0 +1,4 @@
+<map id="mouse_event" name="mouse_event">
+<area shape="rect" id="node1" title="マウスイベント構造体" alt="" coords="23,93,133,119"/>
+<area shape="rect" id="node2" href="$structmouse__event__args.html" title="マウスイベント付随情報" alt="" coords="5,5,151,31"/>
+</map>

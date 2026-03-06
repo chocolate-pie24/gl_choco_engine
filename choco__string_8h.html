@@ -95,22 +95,20 @@ $(document).ready(function(){initNavTree('choco__string_8h.html',''); initResiza
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">choco_string.h File Reference<div class="ingroups"><a class="el" href="group__containers.html">Containers</a> &raquo; <a class="el" href="group__choco__string.html">Choco String</a></div></div></div>
+  <div class="headertitle"><div class="title">choco_string.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>文字列を格納するコンテナモジュールAPIの定義  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &lt;stddef.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for choco_string.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="choco__string_8h__incl.png" border="0" usemap="#ainclude_2engine_2containers_2choco__string_8h" alt=""/></div>
 <map name="ainclude_2engine_2containers_2choco__string_8h" id="ainclude_2engine_2containers_2choco__string_8h">
 <area shape="rect" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="5,5,195,45"/>
-<area shape="rect" title=" " alt="" coords="8,93,91,119"/>
-<area shape="rect" title=" " alt="" coords="115,93,189,119"/>
+<area shape="rect" title=" " alt="" coords="63,93,137,119"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -118,9 +116,14 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="choco__string_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2containers_2choco__string_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2containers_2choco__string_8hdep" id="ainclude_2engine_2containers_2choco__string_8hdep">
-<area shape="rect" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="82,5,271,45"/>
-<area shape="rect" href="choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="5,101,167,141"/>
-<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="191,93,343,148"/>
+<area shape="rect" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="281,5,470,45"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="145,101,313,141"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,211,209,236"/>
+<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="233,203,373,243"/>
+<area shape="rect" href="platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="439,93,616,148"/>
+<area shape="rect" href="platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="398,196,550,251"/>
+<area shape="rect" href="choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="640,101,801,141"/>
+<area shape="rect" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="574,203,723,243"/>
 </map>
 </div>
 </div>
@@ -134,10 +137,19 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a6db4c5eb14de032dfed5c2d3834e19f7"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> { <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a5336618e2c595ef1f941aed54f2205b9">CHOCO_STRING_SUCCESS</a> = 0
+<tr class="memitem:a6db4c5eb14de032dfed5c2d3834e19f7"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> { <br />
+&#160;&#160;<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a5336618e2c595ef1f941aed54f2205b9">CHOCO_STRING_SUCCESS</a> = 0
+, <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a0e8004d7ae84d637d5e6030c954c3cdd">CHOCO_STRING_DATA_CORRUPTED</a>
+, <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a25bb0913a870d52820fff8fe1fcce23e">CHOCO_STRING_BAD_OPERATION</a>
 , <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7ae1f3df6be2adec98f6160e10b8d38287">CHOCO_STRING_NO_MEMORY</a>
-, <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7ac76baa5fcc3b97da3e4a9fcf2b259cb0">CHOCO_STRING_INVALID_ARGUMENT</a>
+, <br />
+&#160;&#160;<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7ac76baa5fcc3b97da3e4a9fcf2b259cb0">CHOCO_STRING_INVALID_ARGUMENT</a>
+, <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a34b1b82638d802626808f8c5e808c866">CHOCO_STRING_RUNTIME_ERROR</a>
 , <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7adfa53936b3d2910c540a38a1c2cd2a7a">CHOCO_STRING_UNDEFINED_ERROR</a>
+, <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7a1a25e3cc6793cdef2bea3c7e86aa3644">CHOCO_STRING_OVERFLOW</a>
+, <br />
+&#160;&#160;<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7ad4e500bd89b09a98648150c1c663d7dc">CHOCO_STRING_LIMIT_EXCEEDED</a>
+<br />
  }</td></tr>
 <tr class="memdesc:a6db4c5eb14de032dfed5c2d3834e19f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列API実行結果コードリスト  <a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">More...</a><br /></td></tr>
 <tr class="separator:a6db4c5eb14de032dfed5c2d3834e19f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,42 +157,42 @@ Enumerations</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af01ca795324a4347a1ce80057f71de42"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **string_)</td></tr>
-<tr class="memdesc:af01ca795324a4347a1ce80057f71de42"><td class="mdescLeft">&#160;</td><td class="mdescRight">choco_string_tデフォルトコンストラクタ  <br /></td></tr>
+<tr class="memdesc:af01ca795324a4347a1ce80057f71de42"><td class="mdescLeft">&#160;</td><td class="mdescRight">空の文字列コンテナを生成する  <br /></td></tr>
 <tr class="separator:af01ca795324a4347a1ce80057f71de42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab90068f1506377a73d00c92c728e0ecd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **string_, const char *src_)</td></tr>
-<tr class="memdesc:ab90068f1506377a73d00c92c728e0ecd"><td class="mdescLeft">&#160;</td><td class="mdescRight">引数で与えた文字列src_でchoco_string_t構造体インスタンスを初期化し、生成する  <br /></td></tr>
-<tr class="separator:ab90068f1506377a73d00c92c728e0ecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad24bb90ce4b5feff03eddad38d0e8a7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **string_, const char *src_)</td></tr>
+<tr class="memdesc:ad24bb90ce4b5feff03eddad38d0e8a7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">const char*型文字列src_で文字列コンテナを生成する  <br /></td></tr>
+<tr class="separator:ad24bb90ce4b5feff03eddad38d0e8a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f9f6a2fd6ca5edc802c67016bdc4ea0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **string_)</td></tr>
-<tr class="memdesc:a8f9f6a2fd6ca5edc802c67016bdc4ea0"><td class="mdescLeft">&#160;</td><td class="mdescRight">choco_string_tが管理しているメモリおよびchoco_string_t*のメモリを解放する  <br /></td></tr>
+<tr class="memdesc:a8f9f6a2fd6ca5edc802c67016bdc4ea0"><td class="mdescLeft">&#160;</td><td class="mdescRight">string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする  <br /></td></tr>
 <tr class="separator:a8f9f6a2fd6ca5edc802c67016bdc4ea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac245508167b7cfd9ffc5b29552be9a46"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#ac245508167b7cfd9ffc5b29552be9a46">choco_string_copy</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *dst_, const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *src_)</td></tr>
-<tr class="memdesc:ac245508167b7cfd9ffc5b29552be9a46"><td class="mdescLeft">&#160;</td><td class="mdescRight">src_が管理する文字列をdst_にコピーする  <br /></td></tr>
+<tr class="memdesc:ac245508167b7cfd9ffc5b29552be9a46"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列コンテナsrc_が管理する文字列をdst_にコピーする  <br /></td></tr>
 <tr class="separator:ac245508167b7cfd9ffc5b29552be9a46"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab63c53de63ba5549c75f94513ab8955a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#ab63c53de63ba5549c75f94513ab8955a">choco_string_copy_from_char</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *dst_, const char *src_)</td></tr>
-<tr class="memdesc:ab63c53de63ba5549c75f94513ab8955a"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列src_をdst_にコピーする  <br /></td></tr>
-<tr class="separator:ab63c53de63ba5549c75f94513ab8955a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8db6ebcd493a2ba710e31385e9d77049"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a8db6ebcd493a2ba710e31385e9d77049">choco_string_copy_from_c_string</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *dst_, const char *src_)</td></tr>
+<tr class="memdesc:a8db6ebcd493a2ba710e31385e9d77049"><td class="mdescLeft">&#160;</td><td class="mdescRight">const char*型文字列src_をdst_にコピーする  <br /></td></tr>
+<tr class="separator:a8db6ebcd493a2ba710e31385e9d77049"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9738b80efb4bd1df2febd11b446d8ecd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a9738b80efb4bd1df2febd11b446d8ecd">choco_string_concat</a> (const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *dst_)</td></tr>
+<tr class="memdesc:a9738b80efb4bd1df2febd11b446d8ecd"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列コンテナstring_が管理する文字列をdst_の末尾に連結する  <br /></td></tr>
+<tr class="separator:a9738b80efb4bd1df2febd11b446d8ecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08d05c666586db95a9fe3c16d0336c88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a08d05c666586db95a9fe3c16d0336c88">choco_string_concat_from_c_string</a> (const char *string_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *dst_)</td></tr>
+<tr class="memdesc:a08d05c666586db95a9fe3c16d0336c88"><td class="mdescLeft">&#160;</td><td class="mdescRight">const char*型文字列string_をdst_の末尾に連結する  <br /></td></tr>
+<tr class="separator:a08d05c666586db95a9fe3c16d0336c88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e48eed3cd7ec393b2d877d39e1c47d6"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a7e48eed3cd7ec393b2d877d39e1c47d6">choco_string_length</a> (const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_)</td></tr>
-<tr class="memdesc:a7e48eed3cd7ec393b2d877d39e1c47d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">string_が管理する文字列の長さを取得する(終端文字を含まない長さが返される)  <br /></td></tr>
+<tr class="memdesc:a7e48eed3cd7ec393b2d877d39e1c47d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列コンテナstring_が管理する文字列の長さを取得する  <br /></td></tr>
 <tr class="separator:a7e48eed3cd7ec393b2d877d39e1c47d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7541d5a20c33163216c6d022b192a77e"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8h.html#a7541d5a20c33163216c6d022b192a77e">choco_string_c_str</a> (const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_)</td></tr>
-<tr class="memdesc:a7541d5a20c33163216c6d022b192a77e"><td class="mdescLeft">&#160;</td><td class="mdescRight">string_が管理する文字列の先頭アドレスを取得する  <br /></td></tr>
+<tr class="memdesc:a7541d5a20c33163216c6d022b192a77e"><td class="mdescLeft">&#160;</td><td class="mdescRight">文字列コンテナstring_が管理する文字列の先頭アドレスを取得する  <br /></td></tr>
 <tr class="separator:a7541d5a20c33163216c6d022b192a77e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>文字列を格納するコンテナモジュールAPIの定義 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <p>文字列比較や文字列連結等の文字列処理機能も提供する</p>
-<dl class="section note"><dt>Note</dt><dd>choco_string_t構造体は、内部データを隠蔽している <br  />
-このため、choco_string_t型で変数を宣言することはできない <br  />
-使用の際は、choco_string_t*型で宣言すること</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>choco_string_t構造体は、内部データを隠蔽している。 このため、choco_string_t型で変数を宣言することはできない。 使用の際は、choco_string_t*型で宣言すること</dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-09-26</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
-<dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text.</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd><p class="startdd">choco_string_move </p>
-<p class="interdd">choco_string_create_from_string </p>
-<p class="enddd">choco_string_clone(deep copy - copyとの違いをきちんとドキュメントに書く) </p>
-</dd></dl>
+<dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
 <a id="a05855b943edde72b8e7948755c60735c" name="a05855b943edde72b8e7948755c60735c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a05855b943edde72b8e7948755c60735c">&#9670;&#160;</a></span>choco_string_t</h2>
@@ -215,11 +227,21 @@ Functions</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7a5336618e2c595ef1f941aed54f2205b9" name="a6db4c5eb14de032dfed5c2d3834e19f7a5336618e2c595ef1f941aed54f2205b9"></a>CHOCO_STRING_SUCCESS&#160;</td><td class="fielddoc"><p>処理成功 </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7a0e8004d7ae84d637d5e6030c954c3cdd" name="a6db4c5eb14de032dfed5c2d3834e19f7a0e8004d7ae84d637d5e6030c954c3cdd"></a>CHOCO_STRING_DATA_CORRUPTED&#160;</td><td class="fielddoc"><p>内部データ整合異常 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7a25bb0913a870d52820fff8fe1fcce23e" name="a6db4c5eb14de032dfed5c2d3834e19f7a25bb0913a870d52820fff8fe1fcce23e"></a>CHOCO_STRING_BAD_OPERATION&#160;</td><td class="fielddoc"><p>API誤用 </p>
+</td></tr>
 <tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7ae1f3df6be2adec98f6160e10b8d38287" name="a6db4c5eb14de032dfed5c2d3834e19f7ae1f3df6be2adec98f6160e10b8d38287"></a>CHOCO_STRING_NO_MEMORY&#160;</td><td class="fielddoc"><p>メモリ確保に失敗 </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7ac76baa5fcc3b97da3e4a9fcf2b259cb0" name="a6db4c5eb14de032dfed5c2d3834e19f7ac76baa5fcc3b97da3e4a9fcf2b259cb0"></a>CHOCO_STRING_INVALID_ARGUMENT&#160;</td><td class="fielddoc"><p>無効な引数 </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7a34b1b82638d802626808f8c5e808c866" name="a6db4c5eb14de032dfed5c2d3834e19f7a34b1b82638d802626808f8c5e808c866"></a>CHOCO_STRING_RUNTIME_ERROR&#160;</td><td class="fielddoc"><p>実行時エラー </p>
+</td></tr>
 <tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7adfa53936b3d2910c540a38a1c2cd2a7a" name="a6db4c5eb14de032dfed5c2d3834e19f7adfa53936b3d2910c540a38a1c2cd2a7a"></a>CHOCO_STRING_UNDEFINED_ERROR&#160;</td><td class="fielddoc"><p>未定義エラー </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7a1a25e3cc6793cdef2bea3c7e86aa3644" name="a6db4c5eb14de032dfed5c2d3834e19f7a1a25e3cc6793cdef2bea3c7e86aa3644"></a>CHOCO_STRING_OVERFLOW&#160;</td><td class="fielddoc"><p>計算過程でオーバーフロー発生 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6db4c5eb14de032dfed5c2d3834e19f7ad4e500bd89b09a98648150c1c663d7dc" name="a6db4c5eb14de032dfed5c2d3834e19f7ad4e500bd89b09a98648150c1c663d7dc"></a>CHOCO_STRING_LIMIT_EXCEEDED&#160;</td><td class="fielddoc"><p>システム使用可能範囲上限超過 </p>
 </td></tr>
 </table>
 
@@ -242,13 +264,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>string_が管理する文字列の先頭アドレスを取得する </p>
+<p>文字列コンテナstring_が管理する文字列の先頭アドレスを取得する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>string_がNULLまたは内部管理バッファがNULLで空の文字列を返す</li>
+<li>取得したconst char*は <a class="el" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a> でstring_が破棄されるまで有効</li>
 </ul>
 </dd></dl>
 <div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaaaa&quot;</span>);</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaaaa&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
@@ -256,11 +279,11 @@ Functions</h2></td></tr>
 <div class="line">fprintf(stdout, <span class="stringliteral">&quot;%s\n&quot;</span>, c_ptr);  <span class="comment">// 標準出力にaaaaaが出力される</span></div>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;<span class="keywordtype">string</span>);</div>
-<div class="ttc" id="achoco__string_8h_html_a6db4c5eb14de032dfed5c2d3834e19f7"><div class="ttname"><a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a></div><div class="ttdeci">choco_string_result_t</div><div class="ttdoc">文字列API実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_string.h:45</div></div>
-<div class="ttc" id="achoco__string_8h_html_a7541d5a20c33163216c6d022b192a77e"><div class="ttname"><a href="choco__string_8h.html#a7541d5a20c33163216c6d022b192a77e">choco_string_c_str</a></div><div class="ttdeci">const char * choco_string_c_str(const choco_string_t *string_)</div><div class="ttdoc">string_が管理する文字列の先頭アドレスを取得する</div><div class="ttdef"><b>Definition:</b> choco_string.c:282</div></div>
-<div class="ttc" id="achoco__string_8h_html_a8f9f6a2fd6ca5edc802c67016bdc4ea0"><div class="ttname"><a href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a></div><div class="ttdeci">void choco_string_destroy(choco_string_t **string_)</div><div class="ttdoc">choco_string_tが管理しているメモリおよびchoco_string_t*のメモリを解放する</div><div class="ttdef"><b>Definition:</b> choco_string.c:140</div></div>
-<div class="ttc" id="achoco__string_8h_html_ab90068f1506377a73d00c92c728e0ecd"><div class="ttname"><a href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a></div><div class="ttdeci">choco_string_result_t choco_string_create_from_char(choco_string_t **string_, const char *src_)</div><div class="ttdoc">引数で与えた文字列src_でchoco_string_t構造体インスタンスを初期化し、生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:91</div></div>
-<div class="ttc" id="astructchoco__string_html"><div class="ttname"><a href="structchoco__string.html">choco_string</a></div><div class="ttdef"><b>Definition:</b> choco_string.c:38</div></div>
+<div class="ttc" id="achoco__string_8h_html_a6db4c5eb14de032dfed5c2d3834e19f7"><div class="ttname"><a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a></div><div class="ttdeci">choco_string_result_t</div><div class="ttdoc">文字列API実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_string.h:40</div></div>
+<div class="ttc" id="achoco__string_8h_html_a7541d5a20c33163216c6d022b192a77e"><div class="ttname"><a href="choco__string_8h.html#a7541d5a20c33163216c6d022b192a77e">choco_string_c_str</a></div><div class="ttdeci">const char * choco_string_c_str(const choco_string_t *string_)</div><div class="ttdoc">文字列コンテナstring_が管理する文字列の先頭アドレスを取得する</div><div class="ttdef"><b>Definition:</b> choco_string.c:399</div></div>
+<div class="ttc" id="achoco__string_8h_html_a8f9f6a2fd6ca5edc802c67016bdc4ea0"><div class="ttname"><a href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a></div><div class="ttdeci">void choco_string_destroy(choco_string_t **string_)</div><div class="ttdoc">string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする</div><div class="ttdef"><b>Definition:</b> choco_string.c:167</div></div>
+<div class="ttc" id="achoco__string_8h_html_ad24bb90ce4b5feff03eddad38d0e8a7d"><div class="ttname"><a href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a></div><div class="ttdeci">choco_string_result_t choco_string_create_from_c_string(choco_string_t **string_, const char *src_)</div><div class="ttdoc">const char*型文字列src_で文字列コンテナを生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:122</div></div>
+<div class="ttc" id="astructchoco__string_html"><div class="ttname"><a href="structchoco__string.html">choco_string</a></div><div class="ttdoc">文字列コンテナ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> choco_string.c:68</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">string_</td><td>文字列先頭アドレス取得元構造体インスタンス </td></tr>
@@ -268,6 +291,144 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>const char* 文字列先頭アドレス </dd></dl>
+
+</div>
+</div>
+<a id="a9738b80efb4bd1df2febd11b446d8ecd" name="a9738b80efb4bd1df2febd11b446d8ecd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9738b80efb4bd1df2febd11b446d8ecd">&#9670;&#160;</a></span>choco_string_concat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_concat </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>string_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>dst_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>文字列コンテナstring_が管理する文字列をdst_の末尾に連結する </p>
+<dl class="section note"><dt>Note</dt><dd><ul>
+<li>自己連結(dst_にdst_を連結する)ことは禁止する(内部バッファ管理を簡便にするため)</li>
+<li>string_が管理する文字列が""の場合は何もしない</li>
+<li>dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す</li>
+</ul>
+</dd></dl>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaa&quot;</span>);</div>
+<div class="line"><span class="comment">// エラー処理</span></div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* dst = NULL;</div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;dst, <span class="stringliteral">&quot;bbb&quot;</span>);</div>
+<div class="line"><span class="comment">// エラー処理</span></div>
+<div class="line"> </div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#a9738b80efb4bd1df2febd11b446d8ecd">choco_string_concat</a>(<span class="keywordtype">string</span>, dst);   <span class="comment">// dstの文字列はbbbaaaとなる</span></div>
+<div class="line"><span class="comment">// エラー処理</span></div>
+<div class="ttc" id="achoco__string_8h_html_a9738b80efb4bd1df2febd11b446d8ecd"><div class="ttname"><a href="choco__string_8h.html#a9738b80efb4bd1df2febd11b446d8ecd">choco_string_concat</a></div><div class="ttdeci">choco_string_result_t choco_string_concat(const choco_string_t *string_, choco_string_t *dst_)</div><div class="ttdoc">文字列コンテナstring_が管理する文字列をdst_の末尾に連結する</div><div class="ttdef"><b>Definition:</b> choco_string.c:281</div></div>
+</div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">string_</td><td>連結元文字列 </td></tr>
+    <tr><td class="paramname">dst_</td><td>連結先文字列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>dst_ == NULL</li>
+<li>string_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_BAD_OPERATION</td><td>連結先文字列と連結元文字列の先頭アドレスが等しい(自己連結は禁止する) </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>以下のいずれか<ul>
+<li>string_の内部データが破損(アドレスへの不正アクセス等により発生)</li>
+<li>dst_の内部データが破損(アドレスへの不正アクセス等により発生) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_OVERFLOW</td><td>連結後の文字列長さがsize_tの上限を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>文字列の連結に成功し,正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a08d05c666586db95a9fe3c16d0336c88" name="a08d05c666586db95a9fe3c16d0336c88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08d05c666586db95a9fe3c16d0336c88">&#9670;&#160;</a></span>choco_string_concat_from_c_string()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_concat_from_c_string </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>string_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>dst_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>const char*型文字列string_をdst_の末尾に連結する </p>
+<dl class="section note"><dt>Note</dt><dd><ul>
+<li>string_が""の場合は何もしない</li>
+<li>dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す</li>
+</ul>
+</dd></dl>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* dst = NULL;</div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;dst, <span class="stringliteral">&quot;bbb&quot;</span>);</div>
+<div class="line"><span class="comment">// エラー処理</span></div>
+<div class="line"> </div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#a08d05c666586db95a9fe3c16d0336c88">choco_string_concat_from_c_string</a>(<span class="stringliteral">&quot;aaa&quot;</span>, dst);   <span class="comment">// dstの文字列はbbbaaaとなる</span></div>
+<div class="line"><span class="comment">// エラー処理</span></div>
+<div class="ttc" id="achoco__string_8h_html_a08d05c666586db95a9fe3c16d0336c88"><div class="ttname"><a href="choco__string_8h.html#a08d05c666586db95a9fe3c16d0336c88">choco_string_concat_from_c_string</a></div><div class="ttdeci">choco_string_result_t choco_string_concat_from_c_string(const char *string_, choco_string_t *dst_)</div><div class="ttdoc">const char*型文字列string_をdst_の末尾に連結する</div><div class="ttdef"><b>Definition:</b> choco_string.c:338</div></div>
+</div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">string_</td><td>連結元文字列 </td></tr>
+    <tr><td class="paramname">dst_</td><td>連結先文字列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>dst_ == NULL</li>
+<li>string_ == NULL</li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>dst_の内部データが破損(アドレスへの不正アクセス等により発生) </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_OVERFLOW</td><td>連結後の文字列長さがsize_tの上限を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>文字列の連結に成功し,正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -297,35 +458,29 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>src_が管理する文字列をdst_にコピーする </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
-<li>dst_のバッファサイズがsrc_以上の場合は、dst_のバッファサイズは変更されない</li>
-<li>dst_のバッファサイズがsrc_よりも小さい場合は、dst_のバッファは破棄され、新規にメモリが確保される</li>
-<li>src_が管理する文字列が空文字列だった場合は、dst_が管理する文字列を空文字列とし、バッファサイズは変更されない</li>
-<li>src_が管理する文字列が空文字列かつ、dst_が管理する文字列が空文字列の場合は何もしない</li>
+<p>文字列コンテナsrc_が管理する文字列をdst_にコピーする </p>
+<dl class="section note"><dt>Note</dt><dd>dst_のバッファサイズにより下記の動作をする<ul>
+<li>dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張</li>
+<li>dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー</li>
+<li>dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい: dst_のバッファサイズは変更せず,文字列をコピー</li>
 </ul>
 </dd></dl>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* src = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;src, <span class="stringliteral">&quot;aaaaa&quot;</span>);</div>
-<div class="line"> </div>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* dst = NULL;</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a>(&amp;dst);</div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* dst = NULL;</div>
-<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;dst, <span class="stringliteral">&quot;bbb&quot;</span>);</div>
-<div class="line"> </div>
+<div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* src = NULL;</div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;src, <span class="stringliteral">&quot;aaa&quot;</span>);</div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
-<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ac245508167b7cfd9ffc5b29552be9a46">choco_string_copy</a>(dst, src);   <span class="comment">// dstの文字列バッファがaaaaaになる(バッファサイズは拡張される)</span></div>
-<div class="line"> </div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ac245508167b7cfd9ffc5b29552be9a46">choco_string_copy</a>(dst, src);   <span class="comment">// dstのバッファにaaa+&#39;\0&#39;がコピーされる</span></div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;dst);</div>
-<div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;src);</div>
-<div class="ttc" id="achoco__string_8h_html_ac245508167b7cfd9ffc5b29552be9a46"><div class="ttname"><a href="choco__string_8h.html#ac245508167b7cfd9ffc5b29552be9a46">choco_string_copy</a></div><div class="ttdeci">choco_string_result_t choco_string_copy(choco_string_t *dst_, const choco_string_t *src_)</div><div class="ttdoc">src_が管理する文字列をdst_にコピーする</div><div class="ttdef"><b>Definition:</b> choco_string.c:164</div></div>
+<div class="ttc" id="achoco__string_8h_html_ac245508167b7cfd9ffc5b29552be9a46"><div class="ttname"><a href="choco__string_8h.html#ac245508167b7cfd9ffc5b29552be9a46">choco_string_copy</a></div><div class="ttdeci">choco_string_result_t choco_string_copy(choco_string_t *dst_, const choco_string_t *src_)</div><div class="ttdoc">文字列コンテナsrc_が管理する文字列をdst_にコピーする</div><div class="ttdef"><b>Definition:</b> choco_string.c:184</div></div>
+<div class="ttc" id="achoco__string_8h_html_af01ca795324a4347a1ce80057f71de42"><div class="ttname"><a href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a></div><div class="ttdeci">choco_string_result_t choco_string_default_create(choco_string_t **string_)</div><div class="ttdoc">空の文字列コンテナを生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:92</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">dst_</td><td>コピー先構造体インスタンス </td></tr>
-    <tr><td class="paramname">src_</td><td>コピー元構造体インスタンス</td></tr>
+    <tr><td class="paramname">dst_</td><td>コピー先文字列コンテナ </td></tr>
+    <tr><td class="paramname">src_</td><td>コピー元文字列コンテナ</td></tr>
   </table>
   </dd>
 </dl>
@@ -336,22 +491,30 @@ Functions</h2></td></tr>
 <li>src_ == NULL </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>以下のいずれか<ul>
+<li>dst_内部データが破損(アドレスへの不正アクセス等により発生)</li>
+<li>src_内部データが破損(アドレスへの不正アクセス等により発生) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_OVERFLOW</td><td>src_の文字列長さ+1(終端文字)がsize_tの最大値を超過 </td></tr>
     <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>文字列のコピーに成功し、正常終了 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>コピーに成功し,正常終了 </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section warning"><dt>Warning</dt><dd>上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ </dd></dl>
 
 </div>
 </div>
-<a id="ab63c53de63ba5549c75f94513ab8955a" name="ab63c53de63ba5549c75f94513ab8955a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab63c53de63ba5549c75f94513ab8955a">&#9670;&#160;</a></span>choco_string_copy_from_char()</h2>
+<a id="a8db6ebcd493a2ba710e31385e9d77049" name="a8db6ebcd493a2ba710e31385e9d77049"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8db6ebcd493a2ba710e31385e9d77049">&#9670;&#160;</a></span>choco_string_copy_from_c_string()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_copy_from_char </td>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_copy_from_c_string </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
           <td class="paramname"><em>dst_</em>, </td>
@@ -370,29 +533,23 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>文字列src_をdst_にコピーする </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
-<li>dst_のバッファサイズがsrc_以上の場合は、dst_のバッファサイズは変更されない</li>
-<li>dst_のバッファサイズがsrc_よりも小さい場合は、dst_のバッファは破棄され、新規にメモリが確保される</li>
-<li>src_が管理する文字列が空文字列だった場合は、dst_が管理する文字列を空文字列とし、バッファサイズは変更されない</li>
-<li>src_が管理する文字列が空文字列かつ、dst_が管理する文字列が空文字列の場合は何もしない</li>
+<p>const char*型文字列src_をdst_にコピーする </p>
+<dl class="section note"><dt>Note</dt><dd>dst_のバッファサイズにより下記の動作をする<ul>
+<li>dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張</li>
+<li>dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー</li>
+<li>dst_のバッファとsrc_の文字列長さ+1(終端文字)に等しい: dst_のバッファサイズは変更せず,文字列をコピー</li>
 </ul>
 </dd></dl>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* src = NULL;</div>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* dst = NULL;</div>
 <div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a>(&amp;dst);</div>
-<div class="line"> </div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
-<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#ab63c53de63ba5549c75f94513ab8955a">choco_string_copy_from_char</a>(dst, <span class="stringliteral">&quot;aaaaa&quot;</span>);   <span class="comment">// dstの文字列バッファがaaaaaになる(バッファサイズは拡張される)</span></div>
-<div class="line"> </div>
+<div class="line">ret = <a class="code hl_function" href="choco__string_8h.html#a8db6ebcd493a2ba710e31385e9d77049">choco_string_copy_from_c_string</a>(dst, <span class="stringliteral">&quot;aaa&quot;</span>);   <span class="comment">// dstのバッファにaaa+&#39;\0&#39;がコピーされる</span></div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;dst);</div>
-<div class="ttc" id="achoco__string_8h_html_ab63c53de63ba5549c75f94513ab8955a"><div class="ttname"><a href="choco__string_8h.html#ab63c53de63ba5549c75f94513ab8955a">choco_string_copy_from_char</a></div><div class="ttdeci">choco_string_result_t choco_string_copy_from_char(choco_string_t *dst_, const char *src_)</div><div class="ttdoc">文字列src_をdst_にコピーする</div><div class="ttdef"><b>Definition:</b> choco_string.c:223</div></div>
-<div class="ttc" id="achoco__string_8h_html_af01ca795324a4347a1ce80057f71de42"><div class="ttname"><a href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a></div><div class="ttdeci">choco_string_result_t choco_string_default_create(choco_string_t **string_)</div><div class="ttdoc">choco_string_tデフォルトコンストラクタ</div><div class="ttdef"><b>Definition:</b> choco_string.c:55</div></div>
+<div class="ttc" id="achoco__string_8h_html_a8db6ebcd493a2ba710e31385e9d77049"><div class="ttname"><a href="choco__string_8h.html#a8db6ebcd493a2ba710e31385e9d77049">choco_string_copy_from_c_string</a></div><div class="ttdeci">choco_string_result_t choco_string_copy_from_c_string(choco_string_t *dst_, const char *src_)</div><div class="ttdoc">const char*型文字列src_をdst_にコピーする</div><div class="ttdef"><b>Definition:</b> choco_string.c:234</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">dst_</td><td>コピー先構造体インスタンス </td></tr>
+    <tr><td class="paramname">dst_</td><td>コピー先文字列コンテナ </td></tr>
     <tr><td class="paramname">src_</td><td>コピー元文字列</td></tr>
   </table>
   </dd>
@@ -400,26 +557,30 @@ Functions</h2></td></tr>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>dst_ == NULL</li>
-<li>src_ == NULL </li>
+<li>dst_がNULL</li>
+<li>src_がNULL </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>dst_の内部データが破損(アドレスへの不正アクセス等により発生) </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_OVERFLOW</td><td>src_の文字列長さ+1(終端文字)がsize_tの上限を超過 </td></tr>
     <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>文字列のコピーに成功し、正常終了 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>コピーに成功し,正常終了 </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section warning"><dt>Warning</dt><dd>上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ </dd></dl>
 
 </div>
 </div>
-<a id="ab90068f1506377a73d00c92c728e0ecd" name="ab90068f1506377a73d00c92c728e0ecd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab90068f1506377a73d00c92c728e0ecd">&#9670;&#160;</a></span>choco_string_create_from_char()</h2>
+<a id="ad24bb90ce4b5feff03eddad38d0e8a7d" name="ad24bb90ce4b5feff03eddad38d0e8a7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad24bb90ce4b5feff03eddad38d0e8a7d">&#9670;&#160;</a></span>choco_string_create_from_c_string()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_create_from_char </td>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_create_from_c_string </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **&#160;</td>
           <td class="paramname"><em>string_</em>, </td>
@@ -438,20 +599,18 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>引数で与えた文字列src_でchoco_string_t構造体インスタンスを初期化し、生成する </p>
+<p>const char*型文字列src_で文字列コンテナを生成する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
-<li>空文字列""が渡された場合は、文字列バッファがNULLで初期化されるため、choco_string_default_createと等価になる</li>
+<li>string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される</li>
+<li>生成したインスタンスは <a class="el" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a> で破棄すること</li>
 </ul>
 </dd></dl>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;   <span class="comment">// 必ずNULLで初期化しておく</span></div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;abc&quot;</span>);</div>
-<div class="line"> </div>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaa&quot;</span>);</div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;<span class="keywordtype">string</span>);</div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">string_</td><td>生成対象構造体インスタンス </td></tr>
+    <tr><td class="paramname">string_</td><td>初期化対象文字列コンテナ </td></tr>
     <tr><td class="paramname">src_</td><td>初期化文字列</td></tr>
   </table>
   </dd>
@@ -464,12 +623,14 @@ Functions</h2></td></tr>
 <li>src_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保に失敗 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>choco_string_tの生成に成功し正常終了</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_OVERFLOW</td><td>src_の文字列長さ+1(終端文字)がsize_tの最大値を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>初期化に成功し,正常終了 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42" title="choco_string_tデフォルトコンストラクタ">choco_string_default_create</a> </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ </dd></dl>
 
 </div>
 </div>
@@ -489,17 +650,18 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>choco_string_tデフォルトコンストラクタ </p>
-<dl class="section note"><dt>Note</dt><dd>文字列格納用内部バッファサイズを0で初期化したchoco_string_t構造体インスタンスを生成する</dd></dl>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;   <span class="comment">// 必ずNULLで初期化しておく</span></div>
+<p>空の文字列コンテナを生成する </p>
+<dl class="section note"><dt>Note</dt><dd><ul>
+<li>文字列長さ0で初期化されたchoco_string_tインスタンスを生成する</li>
+<li>生成したインスタンスは <a class="el" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a> で破棄すること</li>
+</ul>
+</dd></dl>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
 <div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a>(&amp;<span class="keywordtype">string</span>);</div>
-<div class="line"> </div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;<span class="keywordtype">string</span>);</div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">string_</td><td>生成対象構造体インスタンス</td></tr>
+    <tr><td class="paramname">string_</td><td>初期化対象文字列コンテナ</td></tr>
   </table>
   </dd>
 </dl>
@@ -510,12 +672,12 @@ Functions</h2></td></tr>
 <li>*string_ != NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保に失敗 </td></tr>
-    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>choco_string_tの生成に成功し正常終了</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリ管理システムの管理変数が使用可能範囲を超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>初期化に成功し,正常終了 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd" title="引数で与えた文字列src_でchoco_string_t構造体インスタンスを初期化し、生成する">choco_string_create_from_char</a> </dd></dl>
 
 </div>
 </div>
@@ -535,15 +697,15 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>choco_string_tが管理しているメモリおよびchoco_string_t*のメモリを解放する </p>
+<p>string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>2重デストロイ許可</li>
-<li>string == NULLの場合はno-op</li>
-<li>*string == NULLの場合はno-op</li>
+<li>string_ == NULLの場合はno-op</li>
+<li>*string_ == NULLの場合はno-op</li>
 </ul>
 </dd></dl>
 <div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;   <span class="comment">// 必ずNULLで初期化しておく</span></div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;abc&quot;</span>);</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;abc&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
@@ -574,20 +736,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>string_が管理する文字列の長さを取得する(終端文字を含まない長さが返される) </p>
+<p>文字列コンテナstring_が管理する文字列の長さを取得する </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す</li>
+<li>終端文字を含まない長さが返される</li>
 </ul>
 </dd></dl>
 <div class="fragment"><div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ab90068f1506377a73d00c92c728e0ecd">choco_string_create_from_char</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaaaa&quot;</span>);</div>
+<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret = <a class="code hl_function" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a>(&amp;<span class="keywordtype">string</span>, <span class="stringliteral">&quot;aaaaa&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">const</span> <span class="keywordtype">size_t</span> len = <a class="code hl_function" href="choco__string_8h.html#a7e48eed3cd7ec393b2d877d39e1c47d6">choco_string_length</a>(<span class="keywordtype">string</span>);  <span class="comment">// len == 5</span></div>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="choco__string_8h.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0">choco_string_destroy</a>(&amp;<span class="keywordtype">string</span>);</div>
-<div class="ttc" id="achoco__string_8h_html_a7e48eed3cd7ec393b2d877d39e1c47d6"><div class="ttname"><a href="choco__string_8h.html#a7e48eed3cd7ec393b2d877d39e1c47d6">choco_string_length</a></div><div class="ttdeci">size_t choco_string_length(const choco_string_t *string_)</div><div class="ttdoc">string_が管理する文字列の長さを取得する(終端文字を含まない長さが返される)</div><div class="ttdef"><b>Definition:</b> choco_string.c:274</div></div>
+<div class="ttc" id="achoco__string_8h_html_a7e48eed3cd7ec393b2d877d39e1c47d6"><div class="ttname"><a href="choco__string_8h.html#a7e48eed3cd7ec393b2d877d39e1c47d6">choco_string_length</a></div><div class="ttdeci">size_t choco_string_length(const choco_string_t *string_)</div><div class="ttdoc">文字列コンテナstring_が管理する文字列の長さを取得する</div><div class="ttdef"><b>Definition:</b> choco_string.c:391</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">string_</td><td>文字列長さ取得元構造体インスタンス </td></tr>

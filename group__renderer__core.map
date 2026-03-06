@@ -1,0 +1,4 @@
+<map id="Renderer Core" name="Renderer Core">
+<area shape="rect" id="node1" href="$group__renderer.html" title="レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する" alt="" coords="5,5,87,31"/>
+<area shape="rect" id="node2" title="レンダラーサブシステム全体から使用されるモジュールを提供する" alt="" coords="135,5,249,31"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="Engine" name="Engine">
+<area shape="rect" id="node1" href="$group__base.html" title="最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供" alt="" coords="139,5,193,31"/>
+<area shape="rect" id="node2" href="$group__containers.html" title="文字列やリングキューといったデータ構造を使用する開発者が、リソース管理責務を担わないで良くするために、ジェネリック型でリソース管理機能を有するコンテナモジュール群" alt="" coords="120,55,212,80"/>
+<area shape="rect" id="node3" href="$group__core.html" title="プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する" alt="" coords="140,104,192,129"/>
+<area shape="rect" id="node4" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,129,72,155"/>
+<area shape="rect" id="node5" href="$group__io__utils.html" title="上位層が「よく使うI/O処理」を少ない手順で呼び出せるよう、coreやcontainersが保有するモジュールを組み合わせたユースケース単位のAPIを提供するユーティリティ群" alt="" coords="129,153,203,179"/>
+<area shape="rect" id="node6" href="$group__platform.html" title="プラットフォームサブシステムでプラットフォーム固有の実装を差し替え可能な仕組みを提供する" alt="" coords="127,203,205,228"/>
+<area shape="rect" id="node7" href="$group__renderer.html" title="レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する" alt="" coords="125,252,207,277"/>
+</map>

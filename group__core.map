@@ -1,7 +1,7 @@
 <map id="Core" name="Core">
-<area shape="rect" id="node1" href="$group__choco__memory.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する" alt="" coords="107,5,227,31"/>
-<area shape="rect" id="node2" title="プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)" alt="" coords="5,80,57,105"/>
-<area shape="rect" id="node3" href="$group__core__event.html" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="138,55,197,80"/>
-<area shape="rect" id="node4" href="$group__linear__allocator.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール" alt="" coords="105,104,229,129"/>
-<area shape="rect" id="node5" href="$group__platform__utils.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="111,153,223,179"/>
+<area shape="rect" id="node1" title="プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する" alt="" coords="120,55,172,80"/>
+<area shape="rect" id="node3" href="$group__event.html" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="240,5,299,31"/>
+<area shape="rect" id="node4" href="$group__filesystem.html" title="ファイルI/Oに関する基本的なAPIを提供するモジュールで、以下の機能を保有する" alt="" coords="220,55,319,80"/>
+<area shape="rect" id="node5" href="$group__memory.html" title="アプリケーション、エンジン全体で使用されるメモリアロケータモジュールで、以下の機能を保有する" alt="" coords="231,104,307,129"/>
+<area shape="rect" id="node2" href="$group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,55,72,80"/>
 </map>

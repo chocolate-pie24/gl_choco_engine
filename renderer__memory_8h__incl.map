@@ -1,7 +1,5 @@
 <map id="include/engine/renderer/renderer_core/renderer_memory.h" name="include/engine/renderer/renderer_core/renderer_memory.h">
-<area shape="rect" id="node1" title=" " alt="" coords="108,5,284,60"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,115,88,141"/>
-<area shape="rect" id="node3" title=" " alt="" coords="113,115,183,141"/>
-<area shape="rect" id="node4" title=" " alt="" coords="208,115,283,141"/>
-<area shape="rect" id="node5" href="$renderer__types_8h.html" title=" " alt="" coords="307,108,491,148"/>
+<area shape="rect" id="node1" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="31,5,207,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,115,80,141"/>
+<area shape="rect" id="node3" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,288,148"/>
 </map>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['keyboard_5fevent_5ft_0',['keyboard_event_t',['../keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94',1,'keyboard_event.h']]]
+  ['input_5fsnapshot_5ft_0',['input_snapshot_t',['../platform__glfw_8c.html#a8c625983541ce84ded4e8dd859320fb5',1,'platform_glfw.c']]]
 ];
