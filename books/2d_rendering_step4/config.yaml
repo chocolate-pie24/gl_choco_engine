@@ -1,5 +1,5 @@
 title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step4)"
-summary: "本Bookでは、シンプルな三角形の描画とOpenGLの基礎について説明します。"
+summary: "本Bookでは、シンプルな三角形の描画とRenderer Backendについて説明します。"
 topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
 published: true
 price: 0
