@@ -29,6 +29,8 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/math/math_types.h"
+#include "engine/base/math/choco_math.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
@@ -408,11 +410,10 @@ application_result_t application_run(void) {
 
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
-    static const GLfloat vertex_buffer_data[] = {
-    -1.0f, -1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    0.0f,  1.0f, 0.0f,
-    };
+    static vec3f_t vertex_buffer_data[3] = { 0 };
+    vec3f_initialize(-1.0f, -1.0f, 0.0f, &vertex_buffer_data[0]);
+    vec3f_initialize(1.0f, -1.0f, 0.0f, &vertex_buffer_data[1]);
+    vec3f_initialize(0.0f, 1.0f, 0.0f, &vertex_buffer_data[2]);
 
     renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
