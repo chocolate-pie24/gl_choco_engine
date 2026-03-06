@@ -5,9 +5,11 @@ free: true
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook4に対応しています。
 
+実装コードについては、リポジトリのタグv0.1.0-step4を参照してください。
+
 # renderer_backend_interfaceの追加
 
-このステップでは、Rendererの構成のうち、renderer_backend_interfaceを作っていきます。Rendererレイヤーの構成をもう一度貼ります。
+このステップでは、Rendererの構成のうち、renderer_backend_interfaceを作ります。Rendererレイヤーの構成をもう一度貼ります。
 
 ```mermaid
 graph TD
@@ -60,8 +62,7 @@ graph TD
   RENDERER_BACKEND --> RENDERER_CORE
 ```
 
-renderer_backend_interfaceは、グラフィックスAPIの差し替えを可能にするための仮想関数テーブルの提供が責務です。
-仮想関数テーブルは以下の3つを用意します。
+renderer_backend_interfaceは、グラフィックスAPIの差し替えを可能にするための仮想関数テーブルの提供が責務です。仮想関数テーブルは以下の3つを用意します。
 
 | 仮想関数テーブル用途 | テーブル名称               |
 | ---------------- | ------------------------ |
@@ -69,8 +70,7 @@ renderer_backend_interfaceは、グラフィックスAPIの差し替えを可能
 | VAO操作用         | renderer_vao_vtable_t    |
 | VBO操作用         | renderer_vbo_vtable_t    |
 
-shader / VAO / VBOは常にセットで使用します。
-このため、この3つだけであれば一つの仮想関数テーブルでも良いのですが、将来的に追加となるEBOについては描画対象の性質によって使ったり使わなかったりするため、全て分けることにしました。
+shader / VAO / VBOは常にセットで使用します。この3つだけであれば一つの仮想関数テーブルでも良いのですが、将来的に追加となるEBOについては描画対象の性質によって使ったり使わなかったりするため、全て分けることにしました。
 
 それぞれの仮想関数テーブルが保有する機能は以下の表のとおりです。
 
@@ -92,8 +92,7 @@ shader / VAO / VBOは常にセットで使用します。
 |                          | vertex_buffer_unbind       | VBOのunbindを行う                                                                                           |
 |                          | vertex_buffer_vertex_load  | VBOが管理する頂点バッファに頂点情報を転送する(転送の前にVBOのbind処理を行う)                                         |
 
-これらの仮想関数テーブルが保有する関数の実体についてなのですが、VAOとVBOは役割に対応するOpenGL APIのほぼラップ関数です。
-shaderについても現在 ***application.c*** で記述している ***program_create*** / ***shader_create*** とほぼ同じ内容であるため詳細は省略します。
+これらの仮想関数テーブルが保有する関数の実体についてなのですが、VAOとVBOは役割に対応するOpenGL APIのほぼラップ関数です。shaderについても現在 ***application.c*** で記述している ***program_create*** / ***shader_create*** とほぼ同じ内容であるため詳細は省略します。
 
 関数の実体で使用するデータ構造については下記のようにしました。
 
@@ -115,8 +114,7 @@ struct renderer_backend_shader {
 };
 ```
 
-シェーダーオブジェクトのハンドルについては、プログラムのリンク後は保持する必要はないのですが、
-データ破損チェック(*)のために残しておくことにしました。
+シェーダーオブジェクトのハンドルについては、プログラムのリンク後は保持する必要はないのですが、データ破損チェック(*)のために残しておくことにしました。
 
 *: リンク済なのにshader_handleが0であればデータ破損と判定
 
@@ -147,5 +145,3 @@ struct renderer_backend_vbo {
     GLuint vbo_handle;  /**< VBO */
 };
 ```
-
-なお、これら追加した機能がどう使われるかについては次のステップにて説明することにします。

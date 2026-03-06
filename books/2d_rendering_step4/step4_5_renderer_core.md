@@ -5,9 +5,11 @@ free: true
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook4に対応しています。
 
+実装コードについては、リポジトリのタグv0.1.0-step4を参照してください。
+
 # renderer_coreの追加
 
-このステップでは、Rendererの構成のうち、renderer_coreを作っていきます。Rendererレイヤーの構成をもう一度貼ります。
+このステップでは、Rendererの構成のうち、renderer_coreを作ります。Rendererレイヤーの構成をもう一度貼ります。
 
 ```mermaid
 graph TD
@@ -60,8 +62,7 @@ graph TD
   RENDERER_BACKEND --> RENDERER_CORE
 ```
 
-renderer_coreの役割ですが、Renderer Frontend / Renderer Backend全体から使用されるモジュールを配置します。
-配置するモジュールと役割は下表の通りです。
+renderer_coreの役割ですが、Renderer Frontend / Renderer Backend全体から使用されるモジュールを配置します。配置するモジュールと役割は下表の通りです。
 
 | モジュール           | 役割                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------ |
