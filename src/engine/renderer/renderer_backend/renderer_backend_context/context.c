@@ -681,7 +681,7 @@ static void NO_COVERAGE test_renderer_backend_shader_create(void) {
     }
     {
         // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc;
+        linear_alloc_t* linear_alloc = NULL;
         void* memory_pool = NULL;
         test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
 
@@ -698,7 +698,7 @@ static void NO_COVERAGE test_renderer_backend_shader_create(void) {
     }
     {
         // *shader_handle_ != NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc;
+        linear_alloc_t* linear_alloc = NULL;
         void* memory_pool = NULL;
         test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
 
