@@ -1,0 +1,58 @@
+graph TD
+  subgraph CORE[core]
+    direction TB
+    subgraph EVENT[event]
+      direction TB
+      KEYBOARD_EVENT[keyboard_event]
+      MOUSE_EVENT[mouse_event]
+      WINDOW_EVENT[window_event]
+    end
+    subgraph MEMORY[memory]
+      direction TB
+      CHOCO_MEMORY[choco_memory]
+      LINEAR_ALLOCATOR[linear_allocator]
+    end
+  end
+
+  subgraph CONTAINERS[containers]
+    direction TB
+    CHOCO_STRING[choco_string]
+  end
+
+  subgraph PLATFORM[platform]
+    direction TB
+
+    PLATFORM_CONTEXT[platform_context]
+
+    subgraph PLATFORM_CORE[platform_core]
+      direction TB
+      PLATFORM_ERR_UTILS[platform_err_utils]
+      PLATFORM_TYPES[platform_types]
+    end
+
+    PLATFORM_INTERFACE[platform_interface]
+
+    subgraph PLATFORM_CONCRETES[platform_concretes]
+      direction TB
+      PLATFORM_GLFW[platform_glfw]
+    end
+  end
+
+  PLATFORM_CONTEXT --> PLATFORM_CORE
+  PLATFORM_CONTEXT --> PLATFORM_GLFW
+  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
+  PLATFORM_CONTEXT --> EVENT
+  PLATFORM_CONTEXT --> |init parameter| LINEAR_ALLOCATOR
+
+  PLATFORM_GLFW --> PLATFORM_CORE
+  PLATFORM_GLFW --> CHOCO_STRING
+  PLATFORM_GLFW --> PLATFORM_INTERFACE
+  PLATFORM_GLFW --> EVENT
+
+  PLATFORM_INTERFACE --> PLATFORM_TYPES
+  PLATFORM_INTERFACE --> EVENT
+
+  PLATFORM_ERR_UTILS -->|error_code type only| CHOCO_STRING
+  PLATFORM_ERR_UTILS -->|error code type only| LINEAR_ALLOCATOR
+
+  CHOCO_STRING --> CHOCO_MEMORY

@@ -19,14 +19,23 @@
 #include "engine/base/choco_message.h"
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
-#include "engine/core/memory/choco_memory.h"
 
 #include "test_linear_allocator.h"
 #include "test_memory_system.h"
 #include "test_choco_string.h"
 #include "test_ring_queue.h"
-#include "test_platform_context.h"
-#include "test_platform_glfw.h"
+#include "platform/test_platform_context.h"
+#include "platform/test_platform_glfw.h"
+#include "platform/test_platform_err_utils.h"
+#include "renderer/test_renderer_backend_context.h"
+#include "renderer/test_renderer_memory.h"
+#include "renderer/test_renderer_err_utils.h"
+#include "renderer/test_gl33_vbo.h"
+#include "renderer/test_gl33_vao.h"
+#include "renderer/test_gl33_shader.h"
+#include "test_filesystem.h"
+#include "test_fs_utils.h"
+
 #endif
 
 /**
@@ -48,19 +57,25 @@ int main(int argc_, char** argv_) {
 #ifdef TEST_BUILD
     INFO_MESSAGE("Build mode: TEST.");
     for(uint8_t i = 0; i != 200; ++i) {
+        message_output(100, NULL);
+
         test_linear_allocator();
         test_memory_system();
         test_choco_string();
-
-        memory_system_create();
         test_ring_queue();
-        memory_system_destroy();
 
-        memory_system_create();
         test_platform_context();
-        memory_system_destroy();
-
         test_platform_glfw();
+        test_platform_err_utils();
+
+        test_renderer_memory();
+        test_renderer_err_utils();
+        test_gl33_vbo();
+        test_gl33_vao();
+        test_filesystem();
+        test_fs_utils();
+        test_gl33_shader();
+        test_renderer_backend_context();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

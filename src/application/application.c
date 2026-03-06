@@ -22,6 +22,9 @@
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
+#include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
+#include <GLFW/glfw3.h> // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
+
 #include "application/application.h"
 
 #include "engine/base/choco_macros.h"
@@ -30,15 +33,27 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/core/filesystem/filesystem.h"
+
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/core/platform/platform_utils.h"
-
 #include "engine/containers/ring_queue.h"
+#include "engine/containers/choco_string.h"
 
-#include "engine/platform_context/platform_context.h"
+#include "engine/io_utils/fs_utils/fs_utils.h"
+
+#include "engine/platform/platform_core/platform_types.h"
+#include "engine/platform/platform_context.h"
+
+#include "engine/renderer/renderer_core/renderer_types.h"
+
+#include "engine/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -50,6 +65,8 @@ typedef struct app_state {
     bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
     int window_width;           /**< ウィンドウ幅 */
     int window_height;          /**< ウィンドウ高さ */
+    int framebuffer_width;      /**< フレームバッファサイズ(幅) */
+    int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
     // core/memory/linear_allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
@@ -65,6 +82,14 @@ typedef struct app_state {
 
     // platform/platform_context
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
+
+    // begin temporary TODO: remove this!!
+    renderer_backend_context_t* renderer_backend_context;
+
+    renderer_backend_shader_t* ui_shader;
+    renderer_backend_vao_t* ui_vao;
+    renderer_backend_vbo_t* ui_vbo;
+    // end temporary
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -83,11 +108,20 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
 static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
+static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
+
+// begin temporary TODO: remove this!!
+static bool program_create(void);
+// end temporary
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 application_result_t application_create(void) {
@@ -98,6 +132,7 @@ application_result_t application_create(void) {
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -124,7 +159,6 @@ application_result_t application_create(void) {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
@@ -211,10 +245,35 @@ application_result_t application_create(void) {
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
     tmp->window_width = 1024;
     tmp->window_height = 768;
-    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768);
+    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768, &tmp->framebuffer_width, &tmp->framebuffer_height);
     if(PLATFORM_SUCCESS != ret_platform) {
         ret = rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = renderer_backend_initialize(tmp->linear_alloc, GRAPHICS_API_GL33, &tmp->renderer_backend_context);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = renderer_backend_shader_create(tmp->renderer_backend_context, &tmp->ui_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = renderer_backend_vertex_array_create(tmp->renderer_backend_context, &tmp->ui_vao);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = renderer_backend_vertex_buffer_create(tmp->renderer_backend_context, &tmp->ui_vbo);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", rslt_to_str(ret));
         goto cleanup;
     }
     // end temporary
@@ -228,6 +287,21 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->renderer_backend_context) {
+                if(NULL != tmp->ui_vbo) {
+                    renderer_backend_vertex_buffer_destroy(tmp->renderer_backend_context, &tmp->ui_vbo);
+                    tmp->ui_vbo = NULL;
+                }
+                if(NULL != tmp->ui_vao) {
+                    renderer_backend_vertex_array_destroy(tmp->renderer_backend_context, &tmp->ui_vao);
+                    tmp->ui_vao = NULL;
+                }
+                if(NULL != tmp->ui_shader) {
+                    renderer_backend_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
+                    tmp->ui_shader = NULL;
+                }
+            }
+
             if(NULL != tmp->mouse_event_queue) {
                 ring_queue_destroy(&tmp->mouse_event_queue);
                 tmp->mouse_event_queue = NULL;
@@ -266,6 +340,21 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->renderer_backend_context) {
+        if(NULL != s_app_state->ui_vbo) {
+            renderer_backend_vertex_buffer_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vbo);
+            s_app_state->ui_vbo = NULL;
+        }
+        if(NULL != s_app_state->ui_vao) {
+            renderer_backend_vertex_array_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vao);
+            s_app_state->ui_vao = NULL;
+        }
+        if(NULL != s_app_state->ui_shader) {
+            renderer_backend_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
+            s_app_state->ui_shader = NULL;
+        }
+    }
+    renderer_backend_destroy(s_app_state->renderer_backend_context);
     if(NULL != s_app_state->mouse_event_queue) {
         ring_queue_destroy(&s_app_state->mouse_event_queue);
         s_app_state->mouse_event_queue = NULL;
@@ -309,6 +398,32 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
         goto cleanup;
     }
+
+    // begin temporary
+    if(!program_create()) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(RUNTIME_ERROR) - Failed to create shader program.");
+        goto cleanup;
+    }
+
+    renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+
+    static const GLfloat vertex_buffer_data[] = {
+    -1.0f, -1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    0.0f,  1.0f, 0.0f,
+    };
+
+    renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
+    renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
+    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
+
+    renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
+    renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+
+    // TODO: window NULLチェック
+    // end temporary
+
     struct timespec  req = {0, 1000000};
     while(!s_app_state->window_should_close) {
         platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
@@ -323,6 +438,23 @@ application_result_t application_run(void) {
         app_state_update();
         app_state_dispatch();
         app_state_clean();
+
+        // begin temporary TODO: remove this!!
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        renderer_backend_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+
+        glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
+
+        renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+
+        platform_swap_buffers(s_app_state->platform_context);
+        // end temporary
+
         nanosleep(&req, NULL);
     }
 cleanup:
@@ -330,7 +462,8 @@ cleanup:
 }
 
 /**
- * @brief ウィンドウ関連イベントコールバック
+ * @brief event_をウィンドウイベント用リングキューに格納する
+ * @note ウィンドウイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -357,7 +490,8 @@ cleanup:
 }
 
 /**
- * @brief キーボード関連イベントコールバック
+ * @brief event_をキーボードイベント用リングキューに格納する
+ * @note キーボードイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -384,7 +518,8 @@ cleanup:
 }
 
 /**
- * @brief マウス関連イベントコールバック
+ * @brief event_をマウスイベント用リングキューに格納する
+ * @note マウスイベントコールバック
  *
  * @param event_ イベントキューに格納するイベントオブジェクト
  */
@@ -411,7 +546,7 @@ cleanup:
 }
 
 /**
- * @brief イベントキューに格納されているイベントに基づきアプリケーションの状態を更新する
+ * @brief イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する
  *
  */
 static void app_state_update(void) {
@@ -447,10 +582,15 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
-                INFO_MESSAGE("Window resized: [%dx%d] -> [%dx%d]", s_app_state->window_width, s_app_state->window_height, event.window_width, event.window_height);
+                INFO_MESSAGE("Window resized: window([%dx%d] -> [%dx%d]), framebuffer([%dx%d] -> [%dx%d])",
+                    s_app_state->window_width, s_app_state->window_height, event.event_args.window_width, event.event_args.window_height,
+                    s_app_state->framebuffer_width, s_app_state->framebuffer_height, event.event_args.framebuffer_width, event.event_args.framebuffer_height);
+
                 s_app_state->window_resized = true;
-                s_app_state->window_height = event.window_height;
-                s_app_state->window_width = event.window_width;
+                s_app_state->window_height = event.event_args.window_height;
+                s_app_state->window_width = event.event_args.window_width;
+                s_app_state->framebuffer_height = event.event_args.framebuffer_height;
+                s_app_state->framebuffer_width = event.event_args.framebuffer_width;
             }
         }
     }
@@ -464,10 +604,10 @@ static void app_state_update(void) {
             WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
             goto cleanup;
         } else {
-            if(KEY_M == event.key && !event.pressed) {
+            if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
             } else {
-                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.pressed) ? "pressed" : "released");
+                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
             }
         }
     }
@@ -482,9 +622,9 @@ static void app_state_update(void) {
             goto cleanup;
         } else {
             if(MOUSE_BUTTON_LEFT == event.button) {
-                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
             } else if(MOUSE_BUTTON_RIGHT == event.button) {
-                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.pressed) ? "pressed" : "released", event.x, event.y);
+                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
             }
         }
     }
@@ -693,13 +833,15 @@ static const char* keycode_str(keycode_t keycode_) {
         return s_key_f11;
     case KEY_F12:
         return s_key_f12;
+    case KEY_CODE_MAX:
+        return s_key_undefined;
     default:
         return s_key_undefined;
     }
 }
 
 /**
- * @brief アプリケーション実行結果コードを文字列に変換し出力する
+ * @brief アプリケーション実行結果コードを文字列に変換する
  *
  * @param rslt_ アプリケーション実行結果コード
  * @return const char* 変換された文字列
@@ -714,6 +856,14 @@ static const char* rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case APPLICATION_INVALID_ARGUMENT:
         return s_rslt_str_invalid_argument;
+    case APPLICATION_DATA_CORRUPTED:
+        return s_rslt_str_data_corrupted;
+    case APPLICATION_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
+    case APPLICATION_OVERFLOW:
+        return s_rslt_str_overflow;
+    case APPLICATION_LIMIT_EXCEEDED:
+        return s_rslt_str_limit_exceeded;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -722,7 +872,7 @@ static const char* rslt_to_str(application_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ メモリシステム実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -737,13 +887,15 @@ static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;
     case MEMORY_SYSTEM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
 
 /**
- * @brief エラー伝播のため、リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ リニアアロケータ実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -762,7 +914,7 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 }
 
 /**
- * @brief エラー伝播のため、プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ プラットフォームシステム実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -777,8 +929,16 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;
     case PLATFORM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
+    case PLATFORM_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case PLATFORM_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
     case PLATFORM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
+    case PLATFORM_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case PLATFORM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     case PLATFORM_WINDOW_CLOSE:
         return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
     default:
@@ -787,7 +947,7 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_) {
 }
 
 /**
- * @brief エラー伝播のため、リングキュー実行結果コードをアプリケーション実行結果コードに変換する
+ * @brief リングキュー実行結果コードをアプリケーション実行結果コードに変換する
  *
  * @param rslt_ リングキュー実行結果コード
  * @return application_result_t 変換されたアプリケーション実行結果コード
@@ -806,7 +966,83 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
         return APPLICATION_UNDEFINED_ERROR;
     case RING_QUEUE_EMPTY:
         return APPLICATION_RUNTIME_ERROR;   // リングキュー空はRuntime errorに変換
+    case RING_QUEUE_OVERFLOW:
+        return APPLICATION_RUNTIME_ERROR;   // オーバーフローもRuntime errorに変換
+    case RING_QUEUE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RING_QUEUE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
+}
+
+/**
+ * @brief レンダラーシステム実行結果コードをアプリケーション実行結果コードに変換する
+ *
+ * @param rslt_ レンダラーシステム実行結果コード
+ * @return application_result_t アプリケーション実行結果コード
+ */
+static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
+    switch(rslt_) {
+    case RENDERER_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDERER_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDERER_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDERER_SHADER_COMPILE_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_SHADER_LINK_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDERER_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDERER_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDERER_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+/**
+ * @brief シェーダープログラムをロード、コンパイル、リンクし、プログラムを生成する
+ *
+ * @retval true プログラム生成成功
+ * @retval false プログラム生成失敗
+ */
+static bool program_create(void) {
+    bool ret = false;
+
+    fs_utils_t* frag_fs_utils = NULL;
+    fs_utils_t* vert_fs_utils = NULL;
+    choco_string_t* vert_shader_source = NULL;
+    choco_string_t* frag_shader_source = NULL;
+
+    choco_string_default_create(&vert_shader_source);   // TODO: エラー処理
+    choco_string_default_create(&frag_shader_source);   // TODO: エラー処理
+    fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);   // TODO: エラー処理
+    fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);     // TODO: エラー処理
+
+    // シェーダープログラムロード
+    fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
+    fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
+
+    renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    renderer_backend_shader_link(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+
+    choco_string_destroy(&vert_shader_source);
+    choco_string_destroy(&frag_shader_source);
+    fs_utils_destroy(&vert_fs_utils);
+    fs_utils_destroy(&frag_fs_utils);
+
+    ret = true;
+
+    return ret;
 }

@@ -22,6 +22,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "choco_message.h"
+
 #ifdef __clang__
   /**
    * @brief テスト関数をカバレッジ計測対象外とするためのマクロ定義(clang使用時のみ)
@@ -61,50 +63,131 @@ extern "C" {
 /**
  * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
  *
- * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ * @param[in] ptr_ NULL判定対象変数
+ * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
+ * @param[in] rslt_code_ 実行結果コード
+ * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] function_name_ このマクロを使用する関数名称
+ * @param[in] variable_name_ NULL判定対象変数名
+ *
+ * @code{.c}
+ * #define ERROR_CODE 1
+ * #define SUCCESS 0
+ * int func(void) {
+ *      int result = ERROR_CODE;
+ *      int* a = NULL;
+ *      IF_ARG_NULL_GOTO_CLEANUP(a, result, ERROR_CODE, "error_code", "func", "a")  // NULLなのでcleanupに飛ぶ
+ *      result = SUCCESS;
+ * cleanup:
+ *      return result;
+ * }
+ * @endcode
  */
-#define CHECK_ARG_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a valid pointer.", function_name_, variable_name_); \
-        ret = ret_; \
-        goto cleanup;  \
-    } \
+#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+    do { \
+        if(NULL == ptr_) { \
+            ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, rslt_str_, variable_name_); \
+            return_variable_ = rslt_code_; \
+            goto cleanup;  \
+        } \
+    } while(0); \
 
 /**
  * @brief 引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする
  *
- * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ * @param[in] ptr_ NULL判定対象変数
+ * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
+ * @param[in] rslt_code_ 実行結果コード
+ * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] function_name_ このマクロを使用する関数名称
+ * @param[in] variable_name_ NULL判定対象変数名
+ *
+ * @code{.c}
+ * #define ERROR_CODE 1
+ * #define SUCCESS 0
+ * int func(void) {
+ *      int result = ERROR_CODE;
+ *      int a = 0;
+ *      IF_ARG_NOT_NULL_GOTO_CLEANUP(&a, result, ERROR_CODE, "error_code", "func", "a")  // 非NULLなのでcleanupに飛ぶ
+ *      result = SUCCESS;
+ * cleanup:
+ *      return result;
+ * }
+ * @endcode
  */
-#define CHECK_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
-    if(NULL != ptr_) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s requires a null pointer.", function_name_, variable_name_); \
-        ret = ret_; \
-        goto cleanup;  \
-    } \
+#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+    do { \
+        if(NULL != ptr_) { \
+            ERROR_MESSAGE("%s(%s) - Argument %s requires a null pointer.", function_name_, rslt_str_, variable_name_); \
+            return_variable_ = rslt_code_; \
+            goto cleanup;  \
+        } \
+    } while(0); \
 
 /**
  * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
  *
  * @note エラーメッセージはNO_MEMORYで、function_name_とvariable_name_をエラーメッセージに出力する
+ *
+ * @param[in] ptr_ NULL判定対象変数
+ * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
+ * @param[in] rslt_code_ 実行結果コード
+ * @param[in] function_name_ このマクロを使用する関数名称
+ * @param[in] variable_name_ NULL判定対象変数名
+ *
+ * @code{.c}
+ * #define ERROR_CODE 1
+ * #define SUCCESS 0
+ * int func(void) {
+ *      int result = ERROR_CODE;
+ *      int* a = NULL;
+ *      IF_ALLOC_FAIL_GOTO_CLEANUP(a, result, ERROR_CODE, "func", "a")  // NULLなのでcleanupに飛ぶ
+ *      result = SUCCESS;
+ * cleanup:
+ *      return result;
+ * }
+ * @endcode
  */
-#define CHECK_ALLOC_FAIL_GOTO_CLEANUP(ptr_, ret_, function_name_, variable_name_) \
-    if(NULL == ptr_) { \
-        ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
-        ret = ret_; \
-        goto cleanup;  \
-    } \
+#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, function_name_, variable_name_) \
+    do { \
+        if(NULL == ptr_) { \
+            ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
+            return_variable_ = rslt_code_; \
+            goto cleanup;  \
+        } \
+    } while(0); \
 
 /**
  * @brief 引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする
  *
- * @note エラーメッセージはINVALID_ARGUMENTで、function_name_とvariable_name_をエラーメッセージに出力する
+ * @param[in] is_valid_ true/false判定変数
+ * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
+ * @param[in] rslt_code_ 実行結果コード
+ * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] function_name_ このマクロを使用する関数名称
+ * @param[in] variable_name_ true/false判定対象変数名
+ *
+ * @code{.c}
+ * #define ERROR_CODE 1
+ * #define SUCCESS 0
+ * int func(void) {
+ *      int result = ERROR_CODE;
+ *      bool a = false;
+ *      IF_ARG_FALSE_GOTO_CLEANUP(a, result, ERROR_CODE, "error_code", "func", "a")  // falseなのでcleanupに飛ぶ
+ *      result = SUCCESS;
+ * cleanup:
+ *      return result;
+ * }
+ * @endcode
  */
-#define CHECK_ARG_NOT_VALID_GOTO_CLEANUP(is_valid_, ret_, function_name_, variable_name_) \
-    if(!(is_valid_)) { \
-        ERROR_MESSAGE("%s(INVALID_ARGUMENT) - Argument %s is not valid.", function_name_, variable_name_); \
-        ret = ret_; \
-        goto cleanup;  \
-    } \
+#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+    do { \
+        if(!(is_valid_)) { \
+            ERROR_MESSAGE("%s(%s) - Argument %s is not valid.", function_name_, rslt_str_, variable_name_); \
+            return_variable_ = rslt_code_; \
+            goto cleanup;  \
+        } \
+    } while(0); \
 
 #ifdef __cplusplus
 }

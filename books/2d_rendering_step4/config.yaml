@@ -1,0 +1,16 @@
+title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step4)"
+summary: "本Bookでは、シンプルな三角形の描画とRenderer Backendについて説明します。"
+topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
+published: true
+price: 0
+chapters:
+  - step4_0_introduction
+  - step4_1_platform_layer
+  - step4_2_first_triangle
+  - step4_3_filesystem
+  - step4_4_renderer_backend
+  - step4_5_renderer_core
+  - step4_6_renderer_backend_interface
+  - step4_7_renderer_backend_context
+  - appendix_buffer_explanation
+  - appendix_opengl_coordinates

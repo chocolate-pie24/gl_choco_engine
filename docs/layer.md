@@ -1,196 +1,113 @@
-# gl_choco_engineレイヤーツリー
+# GLCE Architecture (Layered Architecture)
 
-- [gl\_choco\_engineレイヤーツリー](#gl_choco_engineレイヤーツリー)
-  - [Public(API) Dependencies](#publicapi-dependencies)
-  - [Implementation(Private) Dependencies](#implementationprivate-dependencies)
-  - [各レイヤー詳細](#各レイヤー詳細)
+This document describes the high-level layering and module dependencies of GL CHOCO ENGINE (GLCE).
+
+- [GLCE Architecture (Layered Architecture)](#glce-architecture-layered-architecture)
+  - [Dependency rules](#dependency-rules)
+  - [Engine overview](#engine-overview)
+  - [Detailed view: Platform](#detailed-view-platform)
+  - [Detailed view: Renderer](#detailed-view-renderer)
+  - [Layer Reference](#layer-reference)
     - [application](#application)
-    - [base](#base)
-    - [core](#core)
-    - [containers](#containers)
-    - [interfaces](#interfaces)
-    - [platform\_concretes](#platform_concretes)
-    - [platform\_context](#platform_context)
+    - [engine/base](#enginebase)
+    - [engine/core](#enginecore)
+    - [engine/containers](#enginecontainers)
+    - [engine/io\_utils](#engineio_utils)
+    - [engine/platform](#engineplatform)
+    - [engine/renderer](#enginerenderer)
 
-## Public(API) Dependencies
+## Dependency rules
 
-凡例: A->BはAがBに依存を表す
+- Dependencies must not point upward (from lower layers to higher layers).
+- Circular dependencies are not allowed.
 
-```mermaid
-graph TD
-  subgraph CORE[core]
-    direction TB
+## Engine overview
 
-    subgraph MEMORY[memory]
-      direction TB
-      LINEAR_ALLOCATOR[linear_allocator]
-    end
+This diagram shows the module dependencies at the engine level.
 
-    subgraph PLATFORM[platform]
-      direction TB
-      PLATFORM_UTILS[platform_utils]
-    end
+![Engine Overview](./engine_overview.png)
 
-    subgraph EVENT[event]
-      direction TB
-      KEYBOARD_EVENT[keyboard_event]
-      MOUSE_EVENT[mouse_event]
-      WINDOW_EVENT[window_event]
-    end
-  end
+## Detailed view: Platform
 
-  subgraph INTERFACES[interfaces]
-    direction TB
-    PLATFORM_INTERFACE[platform_interface]
-  end
+[Platform System Architecture](./architecture/platform_system/architecture_en.md)
 
-  subgraph PLATFORM_CONCRETES[platform_concretes]
-    direction TB
-    PLATFORM_GLFW[platform_glfw]
-  end
+## Detailed view: Renderer
 
-  PLATFORM_CONTEXT[platform_context]
+[Renderer System Architecture](./architecture/renderer_system/architecture_en.md)
 
-  PLATFORM_INTERFACE --> PLATFORM_UTILS
-  PLATFORM_INTERFACE --> KEYBOARD_EVENT
-  PLATFORM_INTERFACE --> MOUSE_EVENT
-  PLATFORM_INTERFACE --> WINDOW_EVENT
-
-  PLATFORM_GLFW --> PLATFORM_UTILS
-  PLATFORM_GLFW --> PLATFORM_INTERFACE
-
-  PLATFORM_CONTEXT --> PLATFORM_UTILS
-  PLATFORM_CONTEXT --> LINEAR_ALLOCATOR
-  PLATFORM_CONTEXT --> KEYBOARD_EVENT
-  PLATFORM_CONTEXT --> MOUSE_EVENT
-  PLATFORM_CONTEXT --> WINDOW_EVENT
-```
-
-## Implementation(Private) Dependencies
-
-凡例: A->BはAがBに依存を表す
-
-baseレイヤーについては複雑になりすぎるため省略(全域で使用されるため図からは省略)
-
-```mermaid
-graph TD
-  APPLICATION[application]
-  PLATFORM_CONTEXT[platform_context]
-
-  subgraph CONTAINERS[containers]
-    direction TB
-    CHOCO_STRING[choco_string]
-    RING_QUEUE[ring_queue]
-  end
-
-  subgraph CORE[core]
-    direction TB
-    subgraph MEMORY[memory]
-      direction TB
-      CHOCO_MEMORY[choco_memory]
-      LINEAR_ALLOCATOR[linear_allocator]
-    end
-
-    subgraph PLATFORM[platform]
-      direction TB
-      PLATFORM_UTILS[platform_utils]
-    end
-
-    subgraph EVENT[event]
-      direction TB
-      KEYBOARD_EVENT[keyboard_event]
-      MOUSE_EVENT[mouse_event]
-      WINDOW_EVENT[window_event]
-    end
-  end
-
-  subgraph INTERFACES[interfaces]
-    direction TB
-    PLATFORM_INTERFACE[platform_interface]
-  end
-
-  subgraph PLATFORM_CONCRETES[platform_concretes]
-    direction TB
-    PLATFORM_GLFW[platform_glfw]
-  end
-
-  APPLICATION --> CHOCO_MEMORY
-  APPLICATION --> LINEAR_ALLOCATOR
-  APPLICATION --> PLATFORM_UTILS
-  APPLICATION --> KEYBOARD_EVENT
-  APPLICATION --> MOUSE_EVENT
-  APPLICATION --> WINDOW_EVENT
-  APPLICATION --> PLATFORM_CONTEXT
-  APPLICATION --> RING_QUEUE
-
-  PLATFORM_INTERFACE --> PLATFORM_UTILS
-  PLATFORM_INTERFACE --> WINDOW_EVENT
-  PLATFORM_INTERFACE --> MOUSE_EVENT
-  PLATFORM_INTERFACE --> KEYBOARD_EVENT
-
-  PLATFORM_GLFW --> PLATFORM_INTERFACE
-  PLATFORM_GLFW --> PLATFORM_UTILS
-  PLATFORM_GLFW --> WINDOW_EVENT
-  PLATFORM_GLFW --> MOUSE_EVENT
-  PLATFORM_GLFW --> KEYBOARD_EVENT
-  PLATFORM_GLFW --> CHOCO_STRING
-
-  PLATFORM_CONTEXT --> LINEAR_ALLOCATOR
-  PLATFORM_CONTEXT --> PLATFORM_UTILS
-  PLATFORM_CONTEXT --> KEYBOARD_EVENT
-  PLATFORM_CONTEXT --> MOUSE_EVENT
-  PLATFORM_CONTEXT --> WINDOW_EVENT
-  PLATFORM_CONTEXT --> PLATFORM_GLFW
-  PLATFORM_CONTEXT --> PLATFORM_INTERFACE
-```
-
-## 各レイヤー詳細
+## Layer Reference
 
 ### application
 
-- 目的: プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行う。以下の機能を提供する
-  - 全サブシステムの起動、終了処理
-  - アプリケーションメインループ
-- 性質: システムの起動時から終了時まで常駐
+- Purpose: The top-level layer of the project, responsible for orchestrating all subsystems. It provides:
+  - Initialization and shutdown of all subsystems
+  - The application main loop
+- Characteristics: Runs for the full lifetime of the application (startup to shutdown).
 
-### base
+### engine/base
 
-- 目的: 最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供
-- 性質: 外部ライブラリ/OS依存なし(標準Cのみ)。初期化不要でシステム起動直後から使用可能
-- 保有機能:
-  - ***choco_message***: stdout, stderrへの色付きメッセージ出力
-  - ***choco_macros***: 共通マクロ定義
+- Purpose: Engine-wide, project-agnostic utilities reusable beyond GLCE.
+- Characteristics: Initialization-free; usable immediately at startup.
+- Modules:
+  - choco_macros: Common macro definitions.
+  - choco_message: Colored logging/output helpers for stdout/stderr.
 
-### core
+### engine/core
 
-- 目的: プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
-- 保有機能:
-  - ***choco_memory***: 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する
-  - ***linear_allocator***: サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
-  - ***platform/platform_utils***: プラットフォームシステムで共通に使用されるデータ型を提供する
-  - ***event/keyboard_event***: キーボードイベントに使用されるデータ型を提供する
-  - ***event/mouse_event***: マウスイベントに使用されるデータ型を提供する
-  - ***event/window_event***: ウィンドウイベントに使用されるデータ型を提供する
+- Purpose: GLCE-specific engine foundations used across the whole engine.
+- Characteristics: Some modules require explicit initialization.
+- Modules:
+  - keyboard_event / mouse_event / window_event: Event-related data types.
+  - choco_memory: Allocation/free with memory tracking.
+  - linear_allocator: Linear allocator for fixed-lifecycle allocations.
+  - filesystem: Basic file I/O (open/close, byte reads).
 
-### containers
+### engine/containers
 
-- 目的: リソースの管理責務を有する各種データを格納可能なコンテナを提供する
-- 保有機能:
-  - ***choco_string***: 文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する
-  - ***ring_queue***: ジェネリック型のリングキューモジュールで、push, pop, empty, create, destroyを提供する
+- Purpose: Provides container modules that encapsulate resource ownership and management.
+- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
+- Modules:
+  - ring_queue: Generic ring queue (ring buffer) container module.
+  - choco_string: String container module with basic string operations.
 
-### interfaces
+### engine/io_utils
 
-- 目的: StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
-- 保有機能:
-  - ***platform_interface***: プラットフォームシステムのInterface構造体を提供する
+- Purpose: Provides higher-level I/O utilities that go beyond the standard C library by building on other GLCE modules.
+- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
+- Modules:
+  - fs_utils: Higher-level file I/O utilities on top of **filesystem**, such as loading an entire text file.
 
-### platform_concretes
+### engine/platform
 
-- 目的: プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
-- 保有機能:
-  - ***platform_glfw***: GLFW APIで実装されたプラットフォームシステムAPIを提供する
+- Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency. To keep room for future non-GLFW implementations,
+GLCE abstracts the platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.
+- Characteristics: Requires explicit initialization. Once initialized, the platform subsystem remains active for the lifetime of the application (until shutdown).
+- Modules:
+  - platform_core/platform_types: Common data types used across the platform subsystem.
+  - platform_core/platform_err_utils: Provides utilities to translate lower-layer error codes into platform subsystem error codes, and to convert platform subsystem error codes into human-readable strings.
+  - platform_interface: Defines the platform interface as a function table (vtable-like) shared by all platform backends.
+  - platform_concretes/platform_glfw: GLFW-based backend implementation that provides the concrete function table for the platform interface.
+  - platform_context: Strategy context and public entry point for the platform subsystem, responsible for initialization, backend selection, lifecycle management, and dispatching API calls through the interface.
 
-### platform_context
+### engine/renderer
 
-- 目的: プラットフォームシステムのStrategy Contextモジュールを提供する
+*Note*: A renderer frontend has not been implemented yet, so the application currently uses some backend modules directly.
+This will be removed once the frontend is introduced.
+
+- Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future (e.g., other OpenGL versions or Vulkan). The long-term design separates a frontend (API-agnostic layer) from backend implementations (graphics-API-specific layers).
+- Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).
+- Modules:
+  - renderer_backend/renderer_backend_context/renderer_backend_context: The primary entry point and orchestration layer for the renderer backend. It wires the selected backend implementation and dispatches calls from higher layers through the backend interfaces, while exposing a small set of facade headers (shader/VAO/VBO contexts) as the public API surface.
+  - renderer_backend/renderer_backend_context/renderer_backend_shader_context: Provides a thin facade (public API surface) for shader-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
+  - renderer_backend/renderer_backend_context/renderer_backend_vao_context: Provides a thin facade (public API surface) for VAO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
+  - renderer_backend/renderer_backend_context/renderer_backend_vbo_context: Provides a thin facade (public API surface) for VBO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).
+  - renderer_backend/renderer_backend_concretes/gl33/gl33_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).
+  - renderer_backend/renderer_backend_interface/shader: Defines the shader interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_interface/vertex_array_object: Defines the VAO interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_interface/vertex_buffer_object: Defines the VBO interface as a function table (vtable-like) shared by all renderer backends.
+  - renderer_backend/renderer_backend_types: Defines common data types shared across the entire renderer backend layer (shader, VAO, and VBO modules).
+  - renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.
+  - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
+  - renderer_core/renderer_types: Common data types shared across the renderer subsystem.

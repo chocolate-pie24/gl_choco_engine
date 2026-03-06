@@ -4,6 +4,13 @@ SRC_DIR = src
 BUILD_DIR = bin
 OBJ_DIR = obj
 
+# サニタイザメモリ周りバグ検出用(sanitizer.sh経由で与える)
+SAN_CFLAGS ?=
+SAN_LDFLAGS ?=
+
+# カバレッジ計測用変数(coverage.sh経由で与える、カバレッジ計測時以外は何もなし)
+COV_FLAGS ?=
+
 SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
 OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
@@ -40,6 +47,7 @@ COMPILER_FLAGS += -MMD -MP
 COMPILER_FLAGS += -Wno-unsafe-buffer-usage
 COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
+COMPILER_FLAGS += -Wno-covered-switch-default
 # COMPILER_FLAGS += -Wno-pre-c11-compat
 
 # glfw3のワーニング抑制
@@ -57,11 +65,15 @@ else
 	endif
 	ifeq ($(BUILD_MODE), TEST_BUILD)
 		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_LINUX
-		COMPILER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
-		LINKER_FLAGS += -fprofile-instr-generate -fcoverage-mapping
+		COMPILER_FLAGS += $(COV_FLAGS)
+		LINKER_FLAGS += $(COV_FLAGS)
 	endif
 endif
-LINKER_FLAGS = -L/usr/lib/x86_64-linux-gnu/
+
+COMPILER_FLAGS += $(SAN_CFLAGS)
+LINKER_FLAGS   += $(SAN_LDFLAGS)
+
+LINKER_FLAGS += -L/usr/lib/x86_64-linux-gnu/
 LINKER_FLAGS += -lm
 LINKER_FLAGS += -lGL
 LINKER_FLAGS += -lglfw

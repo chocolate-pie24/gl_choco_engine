@@ -5,92 +5,112 @@
     @details システムの起動時から終了時まで常駐
 */
 
+/** @defgroup engine Engine
+    @brief グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群
+*/
+
 /** @defgroup base Base
+    @ingroup engine
     @brief 最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供
     @details 外部ライブラリ/OS依存なし(標準Cのみ)。初期化不要でシステム起動直後から使用可能
 */
 
-/** @defgroup choco_message Choco Message
-    @ingroup base
-    @brief stdout, stderrへの色付きメッセージ出力機能を提供
-*/
-
-/** @defgroup choco_macros Choco Macros
-    @ingroup base
-    @brief 全レイヤーで使用される共通マクロ定義
-*/
-
 /** @defgroup core Core
-    @brief プロジェクト全体から使用される機能/APIを提供する(メモリアロケータ/数学ライブラリ等)
+    @ingroup engine
+    @brief プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する
 */
 
-/** @defgroup core_event Event
+/** @defgroup event Event
+    @details Guide: @ref guide_event_system_ja
     @ingroup core
     @brief キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する
 */
 
-/** @defgroup event_keyboard Keyboard Event
-    @ingroup core_event
-    @brief キーボードイベントの型を提供する
-*/
-
-/** @defgroup event_mouse Mouse Event
-    @ingroup core_event
-    @brief マウスイベントの型を提供する
-*/
-
-/** @defgroup event_window Window Event
-    @ingroup core_event
-    @brief ウィンドウイベントの型を提供する
-*/
-
-/** @defgroup choco_memory Choco Memory
+/** @defgroup memory Memory
     @ingroup core
-    @brief 不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールで、メモリトラッキング機能も有する
+    @brief アプリケーション、エンジン全体で使用されるメモリアロケータモジュールで、以下の機能を保有する
+    - メモリライフサイクルが長い(起動時から終了時)システム系のメモリ確保に使用するため、個別のリソース解放を行わない高速なアロケータモジュールであるリニアアロケータを提供する
+    - エンジン、アプリケーション内で使用されるメモリリソースの使用量をメモリ種別ごとに管理できるよう、メモリトラッキング機能を有するメモリアロケータを提供する(現状ではmallocで将来的にFreeListに移行する)
 */
 
-/** @defgroup linear_allocator Linear Allocator
+/** @defgroup filesystem File System
     @ingroup core
-    @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュール
-*/
-
-/** @defgroup platform_utils Platform Utils
-    @ingroup core
-    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
+    @brief ファイルI/Oに関する基本的なAPIを提供するモジュールで、以下の機能を保有する
+    - ファイルI/Oを使用した機能の開発者が、FILE*を直接使用したオープン/クローズを行わなくて済むよう、標準CのラップAPIを提供するモジュール
+    - ファイルI/Oを使用した高度な機能を開発するために使用する、標準Cライブラリのみで構成されたバイト単位でのファイル読み込みAPIを提供するモジュール
 */
 
 /** @defgroup containers Containers
-    @brief リソースの管理責務を有する各種データを格納可能なコンテナを提供する
+    @ingroup engine
+    @brief 文字列やリングキューといったデータ構造を使用する開発者が、リソース管理責務を担わないで良くするために、ジェネリック型でリソース管理機能を有するコンテナモジュール群
 */
 
-/** @defgroup choco_string Choco String
-    @ingroup containers
-    @brief 文字列を格納するコンテナモジュールで、文字列比較や文字列連結等の文字列処理機能も提供する
+/** @defgroup io_utils I/O Utils
+    @ingroup engine
+    @brief 上位層が「よく使うI/O処理」を少ない手順で呼び出せるよう、coreやcontainersが保有するモジュールを組み合わせたユースケース単位のAPIを提供するユーティリティ群
 */
 
-/** @defgroup ring_queue Ring Queue
-    @ingroup containers
-    @brief ジェネリック型のリングキューオブジェクト定義と関連APIを提供する
+/** @defgroup platform Platform
+    @details Architecture: @ref arch_platform_system_ja
+    @details Guide: @ref guide_platform_system_ja
+    @ingroup engine
+    @brief プラットフォームサブシステムでプラットフォーム固有の実装を差し替え可能な仕組みを提供する
 */
 
-/** @defgroup interfaces Interfaces
-    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
+/** @defgroup platform_core Platform Core
+    @ingroup platform
+    @brief プラットフォームシステムで共通に使用されるデータ型を提供する
 */
 
 /** @defgroup platform_interface Platform Interface
-    @ingroup interfaces
-    @brief プラットフォームシステムのInterface構造体を提供する
+    @ingroup platform
+    @brief StrategyパターンのInterfaceオブジェクトに相当するモジュールを格納する
 */
 
 /** @defgroup platform_concretes Platform Concretes
+    @ingroup platform
     @brief プラットフォームシステムStrategyパターンのConcreteオブジェクトに相当するモジュールを格納する
 */
 
-/** @defgroup platform_glfw Platform GLFW
-    @ingroup platform_concretes
-    @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
+/** @defgroup platform_context Platform Context
+    @ingroup platform
+    @brief プラットフォームシステムの使用者が、システム保有機能を使用する際に、vtableや各プラットフォーム固有実装を意識せずとも使用できるよう、機能の窓口を提供する
 */
 
-/** @defgroup platform_context Platform Context
-    @brief プラットフォームシステムのStrategy Contextモジュールを提供する
+/** @defgroup renderer Renderer
+    @details Architecture: @ref arch_renderer_system_ja
+    @details Guide: @ref guide_renderer_system_ja
+    @ingroup engine
+    @brief レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する
+*/
+
+/** @defgroup renderer_backend Renderer Backend
+    @ingroup renderer
+    @brief 使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する
+    @note GLCEは当面はOpenGL3.3をターゲットとしているが、将来的には別のバージョンのOpenGLや、Vulkanの使用も視野に入れている
+*/
+
+/** @defgroup renderer_backend_context Renderer Backend Context
+    @ingroup renderer_backend
+    @brief 上位層がレンダラーバックエンドが保有する機能を使用するための窓口
+*/
+
+/** @defgroup renderer_backend_concretes Renderer Backend Concretes
+    @ingroup renderer_backend
+    @brief 各グラフィックスAPI固有のバックエンド実装を格納する場所で、グラフ一クスAPIごとにグループを作成し、実装を格納する
+*/
+
+/** @defgroup gl33 OpenGL3.3
+    @ingroup renderer_backend_concretes
+    @brief OpenGL3.3用のバックエンド実装を格納する
+*/
+
+/** @defgroup renderer_backend_interface Renderer Backend Interface
+    @ingroup renderer_backend
+    @brief グラフィックスAPIごとのバックエンド実装の仮想関数テーブルを定義する
+*/
+
+/** @defgroup renderer_core Renderer Core
+    @ingroup renderer
+    @brief レンダラーサブシステム全体から使用されるモジュールを提供する
 */

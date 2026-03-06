@@ -44,6 +44,8 @@ typedef enum {
     MEMORY_TAG_SYSTEM,      /**< メモリタグ: システム系 */
     MEMORY_TAG_STRING,      /**< メモリタグ: 文字列系 */
     MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
+    MEMORY_TAG_RENDERER,    /**< メモリタグ: レンダラー */
+    MEMORY_TAG_FILE_IO,     /**< メモリタグ: ファイルI/O */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
@@ -55,6 +57,7 @@ typedef enum {
     MEMORY_SYSTEM_SUCCESS = 0,      /**< メモリシステム成功 */
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
     MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
+    MEMORY_SYSTEM_LIMIT_EXCEEDED,   /**< メモリ使用量管理システムの使用量が使用範囲上限を超過 */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
 } memory_system_result_t;
 
@@ -103,11 +106,12 @@ memory_system_result_t memory_system_create(void);
 void memory_system_destroy(void);
 
 /**
- * @brief メモリシステムを使用してメモリを割り当てる(アライメントはmax_align_t固定)
+ * @brief 容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する
  *
  * @note
  * - 割り当ての際にはmemory_tag_tを指定することで、各メモリタグごとの合計割り当てサイズと総メモリ割り当てサイズをトラッキングする
  * - 本関数を使用する前に、memory_system_createでメモリシステムの初期化を行うこと
+ * - max_align_tでアラインされたメモリが割り当てられる
  *
  * @param[in] size_ 割り当てサイズ
  * @param[in] mem_tag_ メモリタグ
@@ -126,9 +130,10 @@ void memory_system_destroy(void);
  *
  * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - メモリシステム未初期化
- * - out_ptr == NULL
- * - *out_ptr != NULL
+ * - out_ptr_ == NULL
+ * - *out_ptr_ != NULL
  * - mem_tag_ >= MEMORY_TAG_MAX
+ * @retval MEMORY_SYSTEM_LIMIT_EXCEEDED 以下のいずれか
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
  * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
  * @retval MEMORY_SYSTEM_NO_MEMORY        メモリ割り当て失敗
@@ -140,7 +145,10 @@ void memory_system_destroy(void);
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
 /**
- * @brief メモリシステムを使用してメモリを解放する
+ * @brief ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する
+ *
+ * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
+ * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。
  *
  * @note
  * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
@@ -161,9 +169,10 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
  *
  * // メモリ解放
  * memory_system_free(ptr, 128, MEMORY_TAG_SYSTEM);
+ * ptr = NULL;
  * @endcode
  *
- * @param[in,out] ptr_ 解放メモリアドレス
+ * @param[in] ptr_ 解放メモリアドレス
  * @param[in] size_ 解放サイズ
  * @param[in] mem_tag_ メモリタグ
  *
@@ -172,7 +181,7 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
 void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
 
 /**
- * @brief メモリシステムが管理しているメモリ確保状態を標準出力に出力する
+ * @brief メモリシステムが管理しているメモリ使用量状態を標準出力に出力する
  *
  * @note
  * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
@@ -193,16 +202,30 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
 void memory_system_report(void);
 
 #ifdef TEST_BUILD
-// メモリシステムのmallocテスト構造体の値をセットする
-// - malloc_fail_nをmalloc_fail_n_
-// - fail_enableをtrue
-// - malloc_counterの値はそのまま
+/**
+ * @brief テスト用に何回目の呼び出しでtest_mallocを失敗させるかの回数を指定する
+ *
+ * @note
+ * - 失敗した場合はtest_mallocはNULLを返す
+ * - 1回目で失敗させる場合はmalloc_fail_n_ = 0とする
+ *
+ * @param malloc_fail_n_ 何回目のtest_mallocで失敗させるかを指定する
+ */
 void memory_system_test_param_set(int32_t malloc_fail_n_);
 
-// メモリシステムのmallocテスト構造体の値をリセットする
-// - malloc_fail_nを0
-// - faile_enableをfalse
-// - malloc_counterを0
+/**
+ * @brief テスト用に、メモリーシステムの実行結果コードを指定値に固定する
+ *
+ * @note この関数を実行した後は、memory_system_test_param_resetが呼ばれるまで効果が継続する
+ *
+ * @param result_code_ 出力実行結果コード
+ */
+void memory_system_rslt_code_set(memory_system_result_t result_code_);
+
+/**
+ * @brief メモリシステムのテスト時専用構造体のフィールドを初期化する
+ *
+ */
 void memory_system_test_param_reset(void);
 #endif
 

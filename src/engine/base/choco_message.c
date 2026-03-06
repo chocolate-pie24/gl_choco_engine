@@ -12,9 +12,6 @@
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
  *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
- *
  */
 #include <stdarg.h>
 #include <stddef.h>
@@ -25,6 +22,9 @@
 
 void message_output(message_severity_t severity_, const char* format_, ...) {
     FILE* const out = (severity_ == MESSAGE_SEVERITY_ERROR) ? stderr : stdout;
+    if(NULL == format_) {
+        return;
+    }
 
     static const char head_err[] = "\033[1;31m[ERROR] ";
     static const char head_war[] = "\033[1;33m[WARNING] ";
@@ -38,7 +38,9 @@ void message_output(message_severity_t severity_, const char* format_, ...) {
         case MESSAGE_SEVERITY_WARNING:     fputs(head_war, out); break;
         case MESSAGE_SEVERITY_INFORMATION: fputs(head_inf, out); break;
         case MESSAGE_SEVERITY_DEBUG:       fputs(head_dbg, out); break;
-        // -Wswitch-enumで足りないものは警告してくれるのでdefaultは削除
+        default:
+            funlockfile(out);
+            return;
     }
 
     // body
