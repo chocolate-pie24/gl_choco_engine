@@ -57,6 +57,8 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
+#include "engine/camera/camera.h"
+
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
@@ -91,6 +93,8 @@ typedef struct app_state {
     renderer_backend_shader_t* ui_shader;
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
+
+    camera_t* world_camera;
     // end temporary
 } app_state_t;
 
@@ -111,6 +115,7 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
+static application_result_t rslt_convert_camera(camera_result_t rslt_);
 
 // begin temporary TODO: remove this!!
 static bool program_create(void);
@@ -135,6 +140,7 @@ application_result_t application_create(void) {
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -278,6 +284,15 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", rslt_to_str(ret));
         goto cleanup;
     }
+
+    // camera create.
+    ret_camera = camera_create("world camera", &tmp->world_camera);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = rslt_convert_camera(ret_camera);
+        ERROR_MESSAGE("application_create(%s) - Failed to create camera.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
     // end temporary
 
     // commit
@@ -289,6 +304,9 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->world_camera) {
+                camera_destroy(&tmp->world_camera);
+            }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->ui_vbo) {
                     renderer_backend_vertex_buffer_destroy(tmp->renderer_backend_context, &tmp->ui_vbo);
@@ -342,6 +360,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->world_camera) {
+        camera_destroy(&s_app_state->world_camera);
+    }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->ui_vbo) {
             renderer_backend_vertex_buffer_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vbo);
@@ -423,6 +444,8 @@ application_result_t application_run(void) {
     renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
     // TODO: window NULLチェック
+
+    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->world_camera));
     // end temporary
 
     struct timespec  req = {0, 1000000};
@@ -1005,6 +1028,29 @@ static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
     case RENDERER_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
     case RENDERER_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+static application_result_t rslt_convert_camera(camera_result_t rslt_) {
+    switch(rslt_) {
+    case CAMERA_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case CAMERA_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case CAMERA_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case CAMERA_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case CAMERA_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case CAMERA_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case CAMREA_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case CAMERA_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

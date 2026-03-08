@@ -95,6 +95,7 @@ memory_system_result_t memory_system_create(void) {
     tmp->mem_tag_str[MEMORY_TAG_RING_QUEUE] = "ring_queue";
     tmp->mem_tag_str[MEMORY_TAG_RENDERER] = "renderer";
     tmp->mem_tag_str[MEMORY_TAG_FILE_IO] = "file_io";
+    tmp->mem_tag_str[MEMORY_TAG_CAMERA] = "camera";
 
     // commit
     s_mem_sys_ptr = tmp;
@@ -343,6 +344,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         assert(0 == strcmp("ring_queue", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RING_QUEUE]));
         assert(0 == strcmp("renderer", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RENDERER]));
         assert(0 == strcmp("file_io", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_FILE_IO]));
+        assert(0 == strcmp("camera", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_CAMERA]));
         for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
             assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
         }
