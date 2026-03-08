@@ -35,7 +35,7 @@
 #include "renderer/test_gl33_shader.h"
 #include "test_filesystem.h"
 #include "test_fs_utils.h"
-
+#include "test_choco_math.h"
 #endif
 
 /**
@@ -76,6 +76,8 @@ int main(int argc_, char** argv_) {
         test_fs_utils();
         test_gl33_shader();
         test_renderer_backend_context();
+
+        test_choco_math();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

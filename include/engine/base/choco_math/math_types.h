@@ -21,7 +21,6 @@ extern "C" {
 #endif
 
 #define CHOCO_PI 3.14159265358979f                                          /**< 円周率定義 */
-#define CHOCO_FLOAT_EQUAL_EPS 1.0e-6f                                       /**< 浮動小数点イコール判定用閾値 */
 #define CHOCO_DEG_TO_RAD(deg_) (((deg_) / 360.0f) * 2.0f * CHOCO_PI)        /**< degree -> radian */
 #define CHOCO_RAD_TO_DEG(rad_) (((rad_) / 2.0f / CHOCO_PI) * 360.0f)        /**< radian -> degree */
 

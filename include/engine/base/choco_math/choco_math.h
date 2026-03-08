@@ -25,6 +25,16 @@ extern "C" {
 #include "engine/base/choco_math/math_types.h"
 
 /**
+ * @brief 2つのfloat値が等しいかを判定する
+ *
+ * @param a_ 判定値1
+ * @param b_ 判定値2
+ * @retval true 等しい
+ * @retval false 等しくない
+ */
+bool is_equal_float(float a_, float b_);
+
+/**
  * @brief 3次元ベクトルxyzを初期化する
  *
  * @note out_vec3f_ == NULLの場合はエラーメッセージを出力し、何もしない
