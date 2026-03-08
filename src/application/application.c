@@ -1048,7 +1048,7 @@ static application_result_t rslt_convert_camera(camera_result_t rslt_) {
         return APPLICATION_NO_MEMORY;
     case CAMERA_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case CAMREA_DATA_CORRUPTED:
+    case CAMERA_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
     case CAMERA_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;

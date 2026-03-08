@@ -96,7 +96,7 @@ const char* camera_name_get(const camera_t* camera_) {
         return NULL;
     }
     if(NULL == camera_->name) {
-        ERROR_MESSAGE("camera_name_get(%s) - Provided camera_ is corrupted.", rslt_to_str(CAMREA_DATA_CORRUPTED));
+        ERROR_MESSAGE("camera_name_get(%s) - Provided camera_ is corrupted.", rslt_to_str(CAMERA_DATA_CORRUPTED));
         return NULL;
     }
     return choco_string_c_str(camera_->name);
@@ -124,7 +124,7 @@ static const char* rslt_to_str(camera_result_t rslt_) {
         return s_rslt_str_limit_exceeded;
     case CAMERA_BAD_OPERATION:
         return s_rslt_str_bad_operation;
-    case CAMREA_DATA_CORRUPTED:
+    case CAMERA_DATA_CORRUPTED:
         return s_rslt_str_data_corrupted;
     default:
         return s_rslt_str_undefined_error;
@@ -163,7 +163,7 @@ static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_) {
     case CHOCO_STRING_BAD_OPERATION:
         return CAMERA_BAD_OPERATION;
     case CHOCO_STRING_DATA_CORRUPTED:
-        return CAMREA_DATA_CORRUPTED;
+        return CAMERA_DATA_CORRUPTED;
     case CHOCO_STRING_RUNTIME_ERROR:
         return CAMERA_RUNTIME_ERROR;
     case CHOCO_STRING_UNDEFINED_ERROR:
