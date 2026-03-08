@@ -51,6 +51,7 @@ This diagram shows the module dependencies at the engine level.
 - Modules:
   - choco_macros: Common macro definitions.
   - choco_message: Colored logging/output helpers for stdout/stderr.
+  - choco_math: General-purpose math utilities, including vector and matrix operations.
 
 ### engine/core
 
