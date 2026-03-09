@@ -1,3 +1,17 @@
+/**
+ * @file camera.c
+ * @author chocolate-pie24
+ * @brief カメラモジュール実装
+ *
+ * @version 0.1
+ * @date 2026-03-09
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdbool.h>
 
 #include "engine/camera/camera.h"
@@ -11,12 +25,38 @@
 
 #include "engine/containers/choco_string.h"
 
+/**
+ * @brief 視錐台データホルダ
+ *
+ */
+typedef struct viewing_frustum {
+    float aspect;       /**< 画面縦横比 */
+    float fovy;         /**< 画角(degree) */
+    float near_clip;    /**< 描画範囲(near) */
+    float far_clip;     /**< 描画範囲(far) */
+} viewing_frustum_t;
+
+/**
+ * @brief カメラ内部状態管理構造体
+ *
+ * @note カメラ姿勢に関しては以下を念頭に置くこと
+ * - Roll: Z軸回りの回転
+ * - Pitch: X軸回りの回転
+ * - Yaw: Y軸回りの回転
+ * - カメラ前方方向: Z軸マイナス方向
+ *
+ * @todo 不要な行列計算を省くため、以下を検討する
+ * - view_dirtyとview_matrixキャッシュを内部で持ち、view_dirty == falseで計算を行わない
+ * - projection_dirtyとperspective_matrixキャッシュを内部で持ち、projection_dirty == falseで計算を行わない
+ */
 struct camera {
-    float speed;
-    vec3f_t euler;
-    vec3f_t position;
-    bool dirty;
-    choco_string_t* name;
+    float speed;                /**< カメラスピード */
+    vec3f_t euler;              /**< カメラ姿勢オイラー角(degree) */
+    vec3f_t position;           /**< カメラ位置 */
+
+    viewing_frustum_t frustum;  /**< 視錐台パラメータ */
+
+    choco_string_t* name;       /**< カメラ名称文字列 */
 };
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
@@ -31,6 +71,7 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**<
 static const char* rslt_to_str(camera_result_t rslt_);
 static camera_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
 static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_);
+static bool is_valid_frustum(const viewing_frustum_t* frustum_);
 
 camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
@@ -57,13 +98,18 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
         goto cleanup;
     }
 
-    tmp_camera->dirty = false;
     tmp_camera->speed = 0.0f;
+    tmp_camera->frustum.aspect = 0.0f;
+    tmp_camera->frustum.far_clip = 0.0f;
+    tmp_camera->frustum.near_clip = 0.0f;
+    tmp_camera->frustum.fovy = 0.0f;
+
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->euler);
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
 
     *out_camera_ = tmp_camera;
     ret = CAMERA_SUCCESS;
+
 cleanup:
     if(CAMERA_SUCCESS != ret) {
         if(NULL != tmp_camera) {
@@ -102,6 +148,80 @@ const char* camera_name_get(const camera_t* camera_) {
     return choco_string_c_str(camera_->name);
 }
 
+camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_viewing_frustum_update", "camera_")
+
+    viewing_frustum_t frustum = { 0 };
+    frustum.aspect = aspect_;
+    frustum.far_clip = far_clip_;
+    frustum.fovy = fovy_;
+    frustum.near_clip = near_clip_;
+    if(!is_valid_frustum(&frustum)) {
+        ret = CAMERA_INVALID_ARGUMENT;
+        ERROR_MESSAGE("camera_viewing_frustum_update(%s) - Invalid frustum parameter.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    camera_->frustum = frustum;
+
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+camera_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "out_mat_")
+    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, CAMERA_BAD_OPERATION, rslt_to_str(CAMERA_BAD_OPERATION), "camera_perspective_matrix_get", "camera_->frustum")
+
+    const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
+
+    mat4f_identity(out_mat_);
+    out_mat_->elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(camera_->frustum.fovy) * 0.5f);
+    out_mat_->elem[0] = out_mat_->elem[5] / camera_->frustum.aspect;
+    out_mat_->elem[10] = -1.0f * (camera_->frustum.far_clip + camera_->frustum.near_clip) / dz;
+    out_mat_->elem[11] = -2.0f * camera_->frustum.far_clip * camera_->frustum.near_clip / dz;
+    out_mat_->elem[14] = -1.0f;
+    out_mat_->elem[15] = 0.0f;
+
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+camera_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_view_matrix_get", "out_mat_")
+
+    mat4x4f_t rot = { 0 };
+    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
+
+    mat4x4f_t trans = { 0 };
+    mat4f_translation(&camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
+
+    mat4x4f_t view = { 0 };
+    // 後に変換するものを左から掛ける
+    mat4f_mul(&trans, &rot, &view); // カメラ座標系のある座標をワールド座標系へ変換する行列
+    if(!mat4f_inverse(&view)) {     // ワールド座標系のある座標をカメラ座標系へ変換する行列
+        ERROR_MESSAGE("camera_view_matrix_get(%s) - Matrix(view) inversion failed because the determinant is zero or near zero.", rslt_to_str(CAMERA_RUNTIME_ERROR));
+        ret = CAMERA_RUNTIME_ERROR;
+        goto cleanup;
+    }
+    mat4f_copy(&view, out_mat_);
+
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 /**
  * @brief 実行結果コードを文字列に変換する
  *
@@ -131,6 +251,13 @@ static const char* rslt_to_str(camera_result_t rslt_) {
     }
 }
 
+/**
+ * @brief メモリシステム実行結果コードをカメラ実行結果コードに変換する
+ *
+ * @param[in] rslt_ メモリシステムが出力する実行結果コード
+ *
+ * @return camera_result_t 変換されたカメラシステム実行結果コード
+ */
 static camera_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
@@ -148,6 +275,13 @@ static camera_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
     }
 }
 
+/**
+ * @brief 文字列コンテナモジュール実行結果コードをカメラ実行結果コードに変換する
+ *
+ * @param[in] rslt_ 文字列コンテナモジュール実行結果コード
+ *
+ * @return camera_result_t 変換されたカメラシステム実行結果コード
+ */
 static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_) {
     switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
@@ -171,4 +305,31 @@ static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_) {
     default:
         return CAMERA_UNDEFINED_ERROR;
     }
+}
+
+/**
+ * @brief 視錐台パラメータ有効 / 無効判定を行う
+ *
+ * @param[in] frustum_ 判定対象視錐台構造体インスタンスへのポインタ
+ *
+ * @retval true 視錐台パラメータ正常
+ * @retval false 視錐台パラメータ異常
+ */
+static bool is_valid_frustum(const viewing_frustum_t* frustum_) {
+    if(NULL == frustum_) {
+        return false;
+    } else if(frustum_->near_clip >= frustum_->far_clip) {
+        return false;
+    } else if(frustum_->aspect <= 0.0f) {
+        return false;
+    } else if(frustum_->fovy <= 0.0f) {
+        return false;
+    } else if(frustum_->fovy >= 180.0f) {
+        return false;
+    } else if(frustum_->near_clip <= 0.0f) {
+        return false;
+    } else if(frustum_->far_clip <= 0.0f) {
+        return false;
+    }
+    return true;
 }

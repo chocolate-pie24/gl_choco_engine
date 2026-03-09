@@ -25,6 +25,16 @@ extern "C" {
 #include "engine/base/choco_math/math_types.h"
 
 /**
+ * @brief radian_のtangentを計算する
+ *
+ * @note <math.h>のtanfラッパー
+ *
+ * @param radian_ tangentを計算するradian値
+ * @return float 計算結果
+ */
+float choco_tanf(float radian_);
+
+/**
  * @brief 2つのfloat値が等しいかを判定する
  *
  * @param a_ 判定値1
@@ -171,6 +181,62 @@ bool mat4f_inverse(mat4x4f_t* mat_);
  * @param[out] out_vec_ 計算結果格納先
  */
 void mat4f_vec4f_mul(const mat4x4f_t* mat_, const vec4f_t* vec_, vec4f_t* out_vec_);
+
+/**
+ * @brief 平行移動行列を取得する
+ *
+ * @note 以下の場合は何もしない
+ * - position_ == NULL
+ * - mat_ == NULL
+ *
+ * @param[in] position_ 平行移動量
+ * @param[out] mat_ 平行移動行列格納先
+ */
+void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_);
+
+/**
+ * @brief X軸周りにradian_回転させる回転行列を取得する
+ *
+ * @note mat_ == NULLの場合は何もしない
+ *
+ * @param[in] radian_ X軸周りの回転角度(radian)
+ * @param[out] mat_ 回転行列格納先
+ */
+void mat4f_rot_x(float radian_, mat4x4f_t* mat_);
+
+/**
+ * @brief Y軸周りにradian_回転させる回転行列を取得する
+ *
+ * @note mat_ == NULLの場合は何もしない
+ *
+ * @param[in] radian_ Y軸周りの回転角度(radian)
+ * @param[out] mat_ 回転行列格納先
+ */
+void mat4f_rot_y(float radian_, mat4x4f_t* mat_);
+
+/**
+ * @brief Z軸周りにradian_回転させる回転行列を取得する
+ *
+ * @note mat_ == NULLの場合は何もしない
+ *
+ * @param[in] radian_ Z軸周りの回転角度(radian)
+ * @param[out] mat_ 回転行列格納先
+ */
+void mat4f_rot_z(float radian_, mat4x4f_t* mat_);
+
+/**
+ * @brief XYZ軸それぞれを回転させる回転行列を取得する
+ *
+ * @note mat_ == NULLの場合は何もしない
+ *
+ * @note X, Y, Zの順で回転する
+ *
+ * @param[in] x_radian_ X軸周りの回転角度(radian)
+ * @param[in] y_radian_ Y軸周りの回転角度(radian)
+ * @param[in] z_radian_ Z軸周りの回転角度(radian)
+ * @param[out] mat_ 回転行列格納先
+ */
+void mat4f_rot_xyz(float x_radian_, float y_radian_, float z_radian_, mat4x4f_t* mat_);
 
 #ifdef __cplusplus
 }
