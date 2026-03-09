@@ -36,6 +36,7 @@
 #include "test_filesystem.h"
 #include "test_fs_utils.h"
 #include "test_choco_math.h"
+#include "test_camera.h"
 #endif
 
 /**
@@ -78,6 +79,7 @@ int main(int argc_, char** argv_) {
         test_renderer_backend_context();
 
         test_choco_math();
+        test_camera();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
