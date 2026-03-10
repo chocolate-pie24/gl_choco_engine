@@ -285,6 +285,37 @@ cleanup:
     return ret;
 }
 
+renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "out_location_")
+
+    ret = backend_context_->shader_vtable->renderer_shader_uniform_location_get(shader_handle_, name_, out_location_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_shader_uniform_location_get(%s) - Failed to get uniform location. name: %s", renderer_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+cleanup:
+    return ret;
+}
+
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "data_")
+
+    ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(shader_handle_, location_, should_tranpose_, data_, &backend_context_->current_program_id);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_shader_mat4f_uniform_set(%s) - Failed to set mat4f uniform.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+cleanup:
+    return ret;
+}
+
 renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "backend_context_")

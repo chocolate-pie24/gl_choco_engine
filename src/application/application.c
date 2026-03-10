@@ -430,9 +430,9 @@ application_result_t application_run(void) {
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
     static vec3f_t vertex_buffer_data[3] = { 0 };
-    vec3f_initialize(-1.0f, -1.0f, 0.0f, &vertex_buffer_data[0]);
-    vec3f_initialize(1.0f, -1.0f, 0.0f, &vertex_buffer_data[1]);
-    vec3f_initialize(0.0f, 1.0f, 0.0f, &vertex_buffer_data[2]);
+    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
+    vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
+    vec3f_initialize(0.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
 
     renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
@@ -441,6 +441,17 @@ application_result_t application_run(void) {
     renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
+    mat4f_identity(&s_app_state->model_matrix);
+    mat4f_identity(&s_app_state->projection_matrix);
+    mat4f_identity(&s_app_state->view_matrix);
+
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera);
+    camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
+    camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+
+    ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->world_camera));

@@ -136,16 +136,22 @@ typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t*
  */
 typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 
+typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+
+typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_, uint32_t* out_program_id_);
+
 /**
  * @brief シェーダー機能仮想関数テーブル
  *
  */
 typedef struct renderer_shader_vtable {
-    pfn_renderer_shader_create renderer_shader_create;      /**< 関数ポインタ @ref pfn_renderer_shader_create 参照 */
-    pfn_renderer_shader_destroy renderer_shader_destroy;    /**< 関数ポインタ @ref pfn_renderer_shader_destroy 参照 */
-    pfn_renderer_shader_compile renderer_shader_compile;    /**< 関数ポインタ @ref pfn_renderer_shader_compile 参照 */
-    pfn_renderer_shader_link renderer_shader_link;          /**< 関数ポインタ @ref pfn_renderer_shader_link 参照 */
-    pfn_renderer_shader_use renderer_shader_use;            /**< 関数ポインタ @ref pfn_renderer_shader_use 参照 */
+    pfn_renderer_shader_create renderer_shader_create;                              /**< 関数ポインタ @ref pfn_renderer_shader_create 参照 */
+    pfn_renderer_shader_destroy renderer_shader_destroy;                            /**< 関数ポインタ @ref pfn_renderer_shader_destroy 参照 */
+    pfn_renderer_shader_compile renderer_shader_compile;                            /**< 関数ポインタ @ref pfn_renderer_shader_compile 参照 */
+    pfn_renderer_shader_link renderer_shader_link;                                  /**< 関数ポインタ @ref pfn_renderer_shader_link 参照 */
+    pfn_renderer_shader_use renderer_shader_use;                                    /**< 関数ポインタ @ref pfn_renderer_shader_use 参照 */
+    pfn_renderer_shader_uniform_location_get renderer_shader_uniform_location_get;  /**< 関数ポインタ @ref pfn_renderer_shader_uniform_location_get 参照 */
+    pfn_renderer_shader_mat4f_uniform_set renderer_shader_mat4f_uniform_set;        /**< 関数ポインタ @ref pfn_renderer_shader_mat4f_uniform_set 参照 */
 } renderer_shader_vtable_t;
 
 #ifdef __cplusplus

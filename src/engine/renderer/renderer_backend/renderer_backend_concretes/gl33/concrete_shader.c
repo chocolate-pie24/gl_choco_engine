@@ -82,6 +82,11 @@ typedef struct fail_injection {
     char log_str_glGetProgramInfoLog[TEST_INFO_LOG_LENGTH];     /**< is_enabled_glGetProgramInfoLogがtrueの時に、glGetProgramInfoLogの第四引数にコピーする文字列 */
 
     bool is_enabled_glUseProgram_no_op;                         /**< glUseProgramのモック関数で強制的にNo-opにするフラグ */
+
+    bool is_enabled_glUniformMatrix4fv_no_op;                   /**< glUniformMatrix4fvのモック関数で強制的にNo-opにするフラグ */
+
+    bool is_enabled_glGetUniformLocation;                       /**< trueでglGetUniformLocationの返り値を強制的にlocation_glGetUniformLocationにする */
+    GLint location_glGetUniformLocation;                        /**< is_enabled_glGetUniformLocationがtrueの時にglGetUniformLocationは強制的にこの値を返す */
 } fail_injection_t;
 
 static fail_injection_t s_fail_injection;   /**< 上位モジュールテスト用構造体インスタンス */
@@ -127,6 +132,8 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
@@ -145,6 +152,8 @@ static void mock_glLinkProgram(GLuint program_);
 static void mock_glGetProgramiv(GLuint program_, GLenum pname_, GLint *params_);
 static void mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_);
 static void mock_glUseProgram(GLuint program_);
+static void mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_);
+static GLint mock_glGetUniformLocation(GLuint program_, const GLchar *name_);
 
 static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_create = gl33_shader_create,
@@ -152,6 +161,8 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_compile = gl33_shader_compile,
     .renderer_shader_link = gl33_shader_link,
     .renderer_shader_use = gl33_shader_use,
+    .renderer_shader_uniform_location_get = gl33_uniform_location_get,
+    .renderer_shader_mat4f_uniform_set = gl33_mat4f_uniform_set,
 };
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
@@ -406,6 +417,53 @@ static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handl
     }
 
     ret = RENDERER_SUCCESS;
+cleanup:
+    return ret;
+}
+
+static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+#ifdef TEST_BUILD
+    if(s_fail_injection.is_enabled) {
+        return s_fail_injection.result_code;
+    }
+#endif
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "out_location_")
+
+    *out_location_ = mock_glGetUniformLocation(shader_handle_->program_id, name_);
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_, uint32_t* out_program_id_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+#ifdef TEST_BUILD
+    if(s_fail_injection.is_enabled) {
+        return s_fail_injection.result_code;
+    }
+#endif
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_program_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "out_program_id_")
+
+    ret = gl33_shader_use(shader_handle_, out_program_id_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_mat4f_uniform_set(%s) - Failed to switch shader program.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    mock_glUniformMatrix4fv(location_, 1, should_tranpose_, data_);
+    ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
@@ -689,6 +747,30 @@ static void NO_COVERAGE mock_glUseProgram(GLuint program_) {
     }
 #else
     glUseProgram(program_);
+#endif
+}
+
+static void NO_COVERAGE mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_) {
+#ifdef TEST_BUILD
+    if(s_fail_injection.is_enabled_glUniformMatrix4fv_no_op) {
+        return;
+    } else {
+        glUniformMatrix4fv(location_, count_, transpose_, value_);
+    }
+#else
+    glUniformMatrix4fv(location_, count_, transpose_, value_);
+#endif
+}
+
+static GLint NO_COVERAGE mock_glGetUniformLocation(GLuint program_, const GLchar *name_) {
+#ifdef TEST_BUILD
+    if(s_fail_injection.is_enabled_glGetUniformLocation) {
+        return s_fail_injection.location_glGetUniformLocation;
+    } else {
+        return glGetUniformLocation(program_, name_);
+    }
+#else
+    return glGetUniformLocation(program_, name_);
 #endif
 }
 

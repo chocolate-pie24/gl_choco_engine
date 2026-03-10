@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
@@ -137,6 +140,10 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  */
 renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
+
+renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_);
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,13 @@
 #version 330 core
-layout(location = 0) in vec3 vertexPosition_modelspace;
+
+layout(location = 0) in vec3 in_position;
+
+uniform mat4 g_model_matrix;
+uniform mat4 g_view_matrix;
+uniform mat4 g_projection_matrix;
+
+out vec3 texCoords;
 
 void main() {
-    gl_Position.xyz = vertexPosition_modelspace;
-    gl_Position.w = 1.0;
+	gl_Position = g_projection_matrix * g_view_matrix * g_model_matrix * vec4(in_position, 1.0);
 }

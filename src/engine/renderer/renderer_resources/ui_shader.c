@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "engine/renderer/renderer_resources/ui_shader.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_context/context.h"
@@ -18,6 +20,9 @@
 #include "engine/base/choco_message.h"
 
 struct ui_shader {
+    int32_t model_matrix_location;
+    int32_t view_matrix_location;
+    int32_t projection_matrix_location;
     renderer_backend_shader_t* shader;
 };
 
@@ -90,6 +95,9 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
         goto cleanup;
     }
     tmp_ui_shader->shader = NULL;
+    tmp_ui_shader->model_matrix_location = 0;
+    tmp_ui_shader->view_matrix_location = 0;
+    tmp_ui_shader->projection_matrix_location = 0;
 
     // シェーダーモジュール生成
     ret = renderer_backend_shader_create(backend_context_, &tmp_ui_shader->shader);
@@ -114,6 +122,25 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
     ret = renderer_backend_shader_link(backend_context_, tmp_ui_shader->shader);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_create(%s) - Failed to link shader program.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // uniform location
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_shader->shader, "g_model_matrix", &tmp_ui_shader->model_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_create(%s) - Failed to get model matrix location.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_shader->shader, "g_view_matrix", &tmp_ui_shader->view_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_create(%s) - Failed to get view matrix location.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_shader->shader, "g_projection_matrix", &tmp_ui_shader->projection_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_create(%s) - Failed to get projection matrix location.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -171,6 +198,54 @@ renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, ui
     ret = renderer_backend_shader_use(backend_context_, ui_shader_->shader);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_use(%s) - Failed to switch program for ui_shader.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_model_matrix_set", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_model_matrix_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_model_matrix_set", "ui_shader_")
+
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, ui_shader_->shader, ui_shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_model_matrix_set(%s) - Failed to set model matrix.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_view_matrix_set", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_view_matrix_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_view_matrix_set", "ui_shader_")
+
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, ui_shader_->shader, ui_shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_view_matrix_set(%s) - Failed to set view matrix.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "ui_shader_")
+
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, ui_shader_->shader, ui_shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_projection_matrix_set(%s) - Failed to set projection matrix.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
