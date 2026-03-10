@@ -49,6 +49,8 @@
 #include "engine/platform/platform_core/platform_types.h"
 #include "engine/platform/platform_context.h"
 
+#include "engine/renderer/renderer_resources/ui_shader.h"
+
 #include "engine/renderer/renderer_core/renderer_types.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
@@ -90,11 +92,15 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
 
-    renderer_backend_shader_t* ui_shader;
+    ui_shader_t* ui_shader;
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
     camera_t* world_camera;
+
+    mat4x4f_t projection_matrix;
+    mat4x4f_t view_matrix;
+    mat4x4f_t model_matrix;
     // end temporary
 } app_state_t;
 
@@ -266,7 +272,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = renderer_backend_shader_create(tmp->renderer_backend_context, &tmp->ui_shader);
+    ret_renderer = ui_shader_create("assets/shaders/test_shader/", "fragment_shader", ".frag", tmp->renderer_backend_context, &tmp->ui_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
@@ -317,8 +323,7 @@ cleanup:
                     tmp->ui_vao = NULL;
                 }
                 if(NULL != tmp->ui_shader) {
-                    renderer_backend_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
-                    tmp->ui_shader = NULL;
+                    ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
                 }
             }
 
@@ -373,8 +378,7 @@ void application_destroy(void) {
             s_app_state->ui_vao = NULL;
         }
         if(NULL != s_app_state->ui_shader) {
-            renderer_backend_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
-            s_app_state->ui_shader = NULL;
+            ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
         }
     }
     renderer_backend_destroy(s_app_state->renderer_backend_context);
@@ -423,12 +427,6 @@ application_result_t application_run(void) {
     }
 
     // begin temporary
-    if(!program_create()) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(RUNTIME_ERROR) - Failed to create shader program.");
-        goto cleanup;
-    }
-
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
     static vec3f_t vertex_buffer_data[3] = { 0 };
@@ -466,7 +464,7 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer_backend_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
@@ -1055,41 +1053,4 @@ static application_result_t rslt_convert_camera(camera_result_t rslt_) {
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
-}
-
-/**
- * @brief シェーダープログラムをロード、コンパイル、リンクし、プログラムを生成する
- *
- * @retval true プログラム生成成功
- * @retval false プログラム生成失敗
- */
-static bool program_create(void) {
-    bool ret = false;
-
-    fs_utils_t* frag_fs_utils = NULL;
-    fs_utils_t* vert_fs_utils = NULL;
-    choco_string_t* vert_shader_source = NULL;
-    choco_string_t* frag_shader_source = NULL;
-
-    choco_string_default_create(&vert_shader_source);   // TODO: エラー処理
-    choco_string_default_create(&frag_shader_source);   // TODO: エラー処理
-    fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);   // TODO: エラー処理
-    fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);     // TODO: エラー処理
-
-    // シェーダープログラムロード
-    fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
-    fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
-
-    renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    renderer_backend_shader_link(s_app_state->renderer_backend_context, s_app_state->ui_shader);
-
-    choco_string_destroy(&vert_shader_source);
-    choco_string_destroy(&frag_shader_source);
-    fs_utils_destroy(&vert_fs_utils);
-    fs_utils_destroy(&frag_fs_utils);
-
-    ret = true;
-
-    return ret;
 }
