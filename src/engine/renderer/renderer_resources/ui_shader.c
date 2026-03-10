@@ -21,7 +21,7 @@ struct ui_shader {
     renderer_backend_shader_t* shader;
 };
 
-renderer_result_t ui_shader_create(const char* file_path_, const char* name_, const char* extension_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {
+renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
@@ -36,24 +36,9 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, co
 
     IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "file_path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "extension_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "out_ui_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_create", "*out_ui_shader_")
-
-    // ui shader構造体インスタンス生成
-    ret = render_mem_allocate(sizeof(ui_shader_t), (void**)&tmp_ui_shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_shader_create(%s) - Failed to allocate memory for tmp_ui_shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダーモジュール生成
-    ret = renderer_backend_shader_create(backend_context_, &tmp_ui_shader->shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_shader_create(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // シェーダーソース格納用choco_string生成
     ret_string = choco_string_default_create(&vert_shader_source);
@@ -70,14 +55,14 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, co
     }
 
     // シェーダーソース読み込み用fs_utils生成
-    ret_fs_utils = fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);
+    ret_fs_utils = fs_utils_create(file_path_, name_, ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("ui_shader_create(%s) - Failed to create fs_utils for fragment_shader.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_utils = fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);
+    ret_fs_utils = fs_utils_create(file_path_, name_, ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("ui_shader_create(%s) - Failed to create fs_utils for vertex_shader.", renderer_rslt_to_str(ret));
@@ -95,6 +80,21 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, co
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("ui_shader_create(%s) - Failed to read shader source(vertex_shader).", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // ui shader構造体インスタンス生成
+    ret = render_mem_allocate(sizeof(ui_shader_t), (void**)&tmp_ui_shader);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_create(%s) - Failed to allocate memory for tmp_ui_shader.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    tmp_ui_shader->shader = NULL;
+
+    // シェーダーモジュール生成
+    ret = renderer_backend_shader_create(backend_context_, &tmp_ui_shader->shader);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_create(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 

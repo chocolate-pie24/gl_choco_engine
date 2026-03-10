@@ -11,7 +11,7 @@ extern "C" {
 
 typedef struct ui_shader ui_shader_t;
 
-renderer_result_t ui_shader_create(const char* file_path_, const char* name_, const char* extension_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_);
+renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_);
 
 void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t** ui_shader_);
 

@@ -272,7 +272,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = ui_shader_create("assets/shaders/test_shader/", "fragment_shader", ".frag", tmp->renderer_backend_context, &tmp->ui_shader);
+    ret_renderer = ui_shader_create("assets/shaders/test_shader/", "ui_shader", tmp->renderer_backend_context, &tmp->ui_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
