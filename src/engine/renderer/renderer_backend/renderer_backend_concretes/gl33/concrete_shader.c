@@ -434,8 +434,13 @@ static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* sh
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "out_location_")
 
-    *out_location_ = mock_glGetUniformLocation(shader_handle_->program_id, name_);
-
+    int32_t tmp_location = mock_glGetUniformLocation(shader_handle_->program_id, name_);
+    if(-1 == tmp_location) {
+        ret = RENDERER_RUNTIME_ERROR;
+        ERROR_MESSAGE("gl33_uniform_location_get(%s) - Failed to get uniform location. name: %s", renderer_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+    *out_location_ = tmp_location;
     ret = RENDERER_SUCCESS;
 
 cleanup:
