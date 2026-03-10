@@ -123,10 +123,6 @@ static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
 static application_result_t rslt_convert_camera(camera_result_t rslt_);
 
-// begin temporary TODO: remove this!!
-static bool program_create(void);
-// end temporary
-
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
@@ -671,10 +667,23 @@ cleanup:
  *
  */
 static void app_state_dispatch(void) {
-    camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-    if(CAMERA_SUCCESS != ret_camera) {
-        ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+    if(s_app_state->window_resized) {
+        camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+        if(CAMERA_SUCCESS != ret_camera) {
+            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+        }
+
+        ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix);
+        if(CAMERA_SUCCESS != ret_camera) {
+            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
+        }
+
+        renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        if(RENDERER_SUCCESS != ret_renderer) {
+            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", rslt_to_str(rslt_convert_renderer(ret_renderer)));
+        }
     }
+
 }
 
 /**
