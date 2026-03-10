@@ -445,7 +445,7 @@ application_result_t application_run(void) {
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
 
-    camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera);
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
     camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
@@ -671,7 +671,10 @@ cleanup:
  *
  */
 static void app_state_dispatch(void) {
-    // 各サブシステムへイベントを通知 まだ処理はなし
+    camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+    if(CAMERA_SUCCESS != ret_camera) {
+        ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+    }
 }
 
 /**
