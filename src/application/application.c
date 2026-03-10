@@ -441,7 +441,7 @@ application_result_t application_run(void) {
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
 
-    camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
     camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
@@ -665,29 +665,39 @@ cleanup:
 /**
  * @brief 更新されたアプリケーション状態によって、各サブシステムにイベントを通知する
  *
+ * @todo ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする
  */
 static void app_state_dispatch(void) {
     if(s_app_state->window_resized) {
-        camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->window_width / (float)s_app_state->window_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-        if(CAMERA_SUCCESS != ret_camera) {
-            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
-        }
+        if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
+            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+                goto cleanup;
+            }
 
-        ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix);
-        if(CAMERA_SUCCESS != ret_camera) {
-            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
-        }
+            mat4x4f_t tmp_projection = { 0 };
+            ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &tmp_projection);
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
+                goto cleanup;
+            }
 
-        renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
-        if(RENDERER_SUCCESS != ret_renderer) {
-            ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", rslt_to_str(rslt_convert_renderer(ret_renderer)));
+            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+            if(RENDERER_SUCCESS != ret_renderer) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", rslt_to_str(rslt_convert_renderer(ret_renderer)));
+                goto cleanup;
+            }
+            mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-
+cleanup:
+    return;
 }
 
 /**
  * @brief アプリケーション状態変化フラグの値を元に戻す
+ *
  *
  */
 static void app_state_clean(void) {
