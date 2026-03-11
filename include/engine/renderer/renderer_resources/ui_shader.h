@@ -57,7 +57,7 @@ typedef struct ui_shader ui_shader_t;   /**< UIシェーダーリソース構造
  * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
  * - 計算過程でオーバーフロー発生(文字列長さ異常)
  * - ユニフォーム変数のLocation取得に失敗
- * @retval FS_UTILS_DATA_CORRUPTED 内部データ破損が発生
+ * @retval RENDERER_DATA_CORRUPTED 内部データ破損が発生
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - レンダラーバックエンドが未初期化
  * - シェーダーソースが既にコンパイル済み
@@ -104,12 +104,12 @@ void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t
 renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
 /**
- * @brief GPUにモデル行列を転送する
+ * @brief GPUにモデル行列を送信する
  *
  * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
  *
- * @param[in] model_matrix_ 転送するモデル行列のポインタ
- * @param[in] should_transpose_ true: 転送時に行列を転送する, false: 転送時の行列を転送しない
+ * @param[in] model_matrix_ 送信するモデル行列のポインタ
+ * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
  * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
  *
@@ -127,12 +127,12 @@ renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, ui
 renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
 /**
- * @brief GPUにビュー行列を転送する
+ * @brief GPUにビュー行列を送信する
  *
  * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
  *
- * @param[in] view_matrix_ 転送するビュー行列のポインタ
- * @param[in] should_transpose_ true: 転送時に行列を転送する, false: 転送時の行列を転送しない
+ * @param[in] view_matrix_ 送信するビュー行列のポインタ
+ * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
  * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
  *
@@ -150,12 +150,12 @@ renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, boo
 renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
 /**
- * @brief GPUにプロジェクション行列を転送する
+ * @brief GPUにプロジェクション行列を送信する
  *
  * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
  *
- * @param[in] projection_matrix_ 転送するプロジェクション行列のポインタ
- * @param[in] should_transpose_ true: 転送時に行列を転送する, false: 転送時の行列を転送しない
+ * @param[in] projection_matrix_ 送信するプロジェクション行列のポインタ
+ * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
  * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
  *

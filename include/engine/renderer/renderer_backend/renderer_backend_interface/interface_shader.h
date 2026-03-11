@@ -139,17 +139,15 @@ typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* 
 /**
  * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
  *
- * @param[in] shader_handle_ シェーダープログラムハンドル構造体インスタンスへのポインタ
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] name_ ユニフォーム変数名称
  * @param[out] out_location_ Location格納先
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
  * - shader_handle_ == NULL
  * - name_ == NULL
  * - out_location_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でbackend_context_->shader_vtableがNULL
- * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数のLocation取得に失敗
+ * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数の取得に失敗(変数名称誤り?)
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
