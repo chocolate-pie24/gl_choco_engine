@@ -131,9 +131,9 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
-static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
-static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
-static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
@@ -386,7 +386,7 @@ cleanup:
     return ret;
 }
 
-static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
+static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD
@@ -437,7 +437,7 @@ cleanup:
  * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数の取得に失敗(変数名称誤り?)
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD
@@ -466,9 +466,7 @@ cleanup:
 /**
  * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
  *
- * @note
- * - OpenGL 3.3実装
- * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ * @note OpenGL 3.3実装
  *
  * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
@@ -484,7 +482,7 @@ cleanup:
  * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
+static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD

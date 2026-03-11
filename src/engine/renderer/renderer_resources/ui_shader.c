@@ -209,7 +209,7 @@ void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t
     *ui_shader_ = NULL;
 }
 
-renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_use", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_use", "ui_shader_")
@@ -224,7 +224,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_model_matrix_set", "model_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_model_matrix_set", "backend_context_")
@@ -240,7 +240,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_view_matrix_set", "view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_view_matrix_set", "backend_context_")

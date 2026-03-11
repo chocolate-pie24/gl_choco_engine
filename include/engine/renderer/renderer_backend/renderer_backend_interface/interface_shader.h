@@ -134,7 +134,7 @@ typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t*
  * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  */
-typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 
 /**
  * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
@@ -150,12 +150,10 @@ typedef renderer_result_t (*pfn_renderer_shader_use)(renderer_backend_shader_t* 
  * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数の取得に失敗(変数名称誤り?)
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 
 /**
  * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
- *
- * @note 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
  *
  * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
@@ -171,7 +169,7 @@ typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(renderer_b
  * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
 
 /**
  * @brief シェーダー機能仮想関数テーブル

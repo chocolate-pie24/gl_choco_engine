@@ -131,7 +131,7 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子がbackend_context_が保持するフィールドに記憶される
  *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -143,7 +143,7 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
+renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
@@ -162,7 +162,7 @@ renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backen
  * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数のLocation取得に失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 
 /**
  * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
@@ -187,7 +187,7 @@ renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_
  * - backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
 
 #ifdef __cplusplus
 }
