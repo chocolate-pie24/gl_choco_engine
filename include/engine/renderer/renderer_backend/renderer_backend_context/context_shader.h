@@ -86,6 +86,7 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
  * @param[in,out] shader_handle_ コンパイルしたシェーダーオブジェクトへのハンドルを格納する
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
  * - shader_source_ == NULL
  * - shader_handle_ == NULL
  * - shader_type_が無効
@@ -111,7 +112,9 @@ renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, co
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ リンクしたプログラム識別子を格納する
  *
- * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
+ * @retval RENDERER_INVALID_ARGUMENT
+ * - shader_handle_ == NULL
+ * - backend_context_ == NULL
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - プログラムが既にリンク済み
  * - バーテックスシェーダーオブジェクトが未コンパイル
@@ -131,7 +134,9 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  *
- * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - backend_context_ == NULL
  * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
  * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
  * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
