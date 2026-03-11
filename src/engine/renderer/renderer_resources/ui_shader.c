@@ -1,3 +1,18 @@
+/** @ingroup renderer_resources
+ *
+ * @file ui_shader.c
+ * @author chocolate-pie24
+ * @brief レンダラーリソースのうち、UIシェーダーリソース操作APIの実装
+ *
+ * @version 0.1
+ * @date 2026-03-11
+ *
+ * @copyright Copyright (c) 2025 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 
 #include "engine/renderer/renderer_resources/ui_shader.h"
@@ -19,11 +34,15 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief UIシェーダーリソース構造体
+ *
+ */
 struct ui_shader {
-    int32_t model_matrix_location;
-    int32_t view_matrix_location;
-    int32_t projection_matrix_location;
-    renderer_backend_shader_t* shader;
+    int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
+    int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
+    int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
+    renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 };
 
 renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {

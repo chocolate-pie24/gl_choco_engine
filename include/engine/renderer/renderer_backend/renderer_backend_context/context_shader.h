@@ -141,8 +141,48 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  */
 renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
 
+/**
+ * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
+ *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] shader_handle_ シェーダープログラムハンドル構造体インスタンスへのポインタ
+ * @param[in] name_ ユニフォーム変数名称
+ * @param[out] out_location_ Location格納先
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - shader_handle_ == NULL
+ * - name_ == NULL
+ * - out_location_ == NULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でbackend_context_->shader_vtableがNULL
+ * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数のLocation取得に失敗
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 
+/**
+ * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
+ *
+ * @note
+ * - OpenGL 3.3実装
+ * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] should_tranpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
+ * @param[in] data_ 送信データへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - shader_handle_ == NULL
+ * - data_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク状態
+ * - backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_);
 
 #ifdef __cplusplus

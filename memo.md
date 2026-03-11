@@ -22,3 +22,6 @@
 
 - renderer_rslt_convert_choco_stringテスト
 - renderer_rslt_convert_fs_utilsテスト
+- ui_shaderが保有する全APIのconst化検討
+- Layer.mdにrenderer_resources, groups.dox
+- todo.mdを整理し、全部処理できた場合は削除
