@@ -174,7 +174,7 @@ renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_
  * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
- * @param[in] should_tranpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
+ * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
  * @param[in] data_ 送信データへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -187,7 +187,7 @@ renderer_result_t renderer_backend_shader_uniform_location_get(renderer_backend_
  * - backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_);
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
 
 #ifdef __cplusplus
 }

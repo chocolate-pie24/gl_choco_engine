@@ -302,14 +302,14 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_) {
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_mat4f_uniform_set", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "data_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(shader_handle_, location_, should_tranpose_, data_, &backend_context_->current_program_id);
+    ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(shader_handle_, location_, should_transpose_, data_, &backend_context_->current_program_id);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_mat4f_uniform_set(%s) - Failed to set mat4f uniform.", renderer_rslt_to_str(ret));
         goto cleanup;

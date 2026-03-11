@@ -133,7 +133,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
 static renderer_result_t gl33_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 static renderer_result_t gl33_uniform_location_get(renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
-static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_, uint32_t* out_program_id_);
+static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
@@ -472,7 +472,7 @@ cleanup:
  *
  * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
- * @param[in] should_tranpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
+ * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
  * @param[in] data_ 送信データへのポインタ
  * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
  *
@@ -484,7 +484,7 @@ cleanup:
  * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_tranpose_, const float* data_, uint32_t* out_program_id_) {
+static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
 #ifdef TEST_BUILD
@@ -503,7 +503,7 @@ static renderer_result_t gl33_mat4f_uniform_set(renderer_backend_shader_t* shade
         goto cleanup;
     }
 
-    mock_glUniformMatrix4fv(location_, 1, should_tranpose_, data_);
+    mock_glUniformMatrix4fv(location_, 1, should_transpose_, data_);
     ret = RENDERER_SUCCESS;
 
 cleanup:

@@ -2,7 +2,7 @@
  *
  * @file ui_shader.h
  * @author chocolate-pie24
- * @brief レンダラーリソースのうち、UIシェーダーリソース操作APIを提供する
+ * @brief UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する
  *
  * @version 0.1
  * @date 2026-03-11
