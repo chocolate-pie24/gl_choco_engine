@@ -27,7 +27,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#define TEST_BUILD
+// #define TEST_BUILD
 
 /**
  * @brief RendererBackend内部状態管理構造体
