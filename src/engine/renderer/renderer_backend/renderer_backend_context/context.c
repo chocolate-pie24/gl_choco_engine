@@ -27,7 +27,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-// #define TEST_BUILD
+#define TEST_BUILD
 
 /**
  * @brief RendererBackend内部状態管理構造体
@@ -56,21 +56,23 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_);
 #include <stdlib.h>
 
 typedef struct fail_injection {
-    bool use_test_vtable;                               /**< テスト用vtable使用フラグ */
-    renderer_result_t rslt_renderer_shader_create;      /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_create()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_compile;     /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_compile()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_link;        /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_link()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_use;         /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_use()に強制的出力させる実行結果コード */
+    bool use_test_vtable;                                           /**< テスト用vtable使用フラグ */
+    renderer_result_t rslt_renderer_shader_create;                  /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_create()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_renderer_shader_compile;                 /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_compile()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_renderer_shader_link;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_link()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_renderer_shader_use;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_use()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_renderer_shader_uniform_location_get;    /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_uniform_location_get()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_renderer_shader_mat4f_uniform_set;       /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_mat4f_uniform_set()に強制的に出力させる実行結果コード */
 
-    renderer_result_t rslt_vertex_array_create;         /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_create()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_bind;           /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_bind()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_unbind;         /**< TEST_BUILDかつ、use_test_vtable == trueで、rslt_vertex_array_unbind()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_attribute_set;  /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_attribute_set()に強制的出力させる実行結果コード */
+    renderer_result_t rslt_vertex_array_create;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_create()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_array_bind;                       /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_bind()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_array_unbind;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、rslt_vertex_array_unbind()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_array_attribute_set;              /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_attribute_set()に強制的に出力させる実行結果コード */
 
-    renderer_result_t rslt_vertex_buffer_create;        /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_create()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_bind;          /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_bind()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_unbind;        /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_unbind()に強制的出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_vertex_load;   /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_vertex_load()に強制的出力させる実行結果コード */
+    renderer_result_t rslt_vertex_buffer_create;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_create()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_buffer_bind;                      /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_bind()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_buffer_unbind;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_unbind()に強制的に出力させる実行結果コード */
+    renderer_result_t rslt_vertex_buffer_vertex_load;               /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_vertex_load()に強制的に出力させる実行結果コード */
 } fail_injection_t;
 
 static fail_injection_t s_fail_injection;
@@ -94,7 +96,6 @@ static void test_renderer_backend_vertex_buffer_destroy(void);
 static void test_renderer_backend_vertex_buffer_bind(void);
 static void test_renderer_backend_vertex_buffer_unbind(void);
 static void test_renderer_backend_vertex_buffer_vertex_load(void);
-static void test_graphics_api_valid_check(void);
 
 // shader vtable関数
 static renderer_result_t test_renderer_shader_create(renderer_backend_shader_t** shader_handle_);
@@ -102,6 +103,8 @@ static void test_renderer_shader_destroy(renderer_backend_shader_t** shader_hand
 static renderer_result_t test_renderer_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t test_renderer_shader_link(renderer_backend_shader_t* shader_handle_);
 static renderer_result_t test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+static renderer_result_t test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+static renderer_result_t test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
 
 // vao vtable関数
 static renderer_result_t test_vertex_array_create(renderer_backend_vao_t** vertex_array_);
@@ -123,6 +126,8 @@ static const renderer_shader_vtable_t s_test_shader_vtable = {
     .renderer_shader_compile = test_renderer_shader_compile,
     .renderer_shader_link = test_renderer_shader_link,
     .renderer_shader_use = test_renderer_shader_use,
+    .renderer_shader_mat4f_uniform_set = test_renderer_shader_mat4f_uniform_set,
+    .renderer_shader_uniform_location_get = test_renderer_shader_uniform_location_get,
 };
 
 static const renderer_vao_vtable_t s_test_vao_vtable = {
@@ -2237,6 +2242,14 @@ static renderer_result_t NO_COVERAGE test_renderer_shader_link(renderer_backend_
 
 static renderer_result_t NO_COVERAGE test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
     return s_fail_injection.rslt_renderer_shader_use;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+    return s_fail_injection.rslt_renderer_shader_uniform_location_get;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
+    return s_fail_injection.rslt_renderer_shader_mat4f_uniform_set;
 }
 
 static renderer_result_t NO_COVERAGE test_vertex_array_create(renderer_backend_vao_t** vertex_array_) {
