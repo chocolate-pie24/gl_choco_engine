@@ -41,7 +41,7 @@ The correspondence between the Strategy objects and GLCE modules is as follows:
 
 ### Selecting Concretes (Shader, VAO, VBO) (Current)
 
-Currently, the graphics API to be used is selected by specifying it when creating an instance of the `Renderer Backend modules` .
+Currently, the graphics API to use is selected when creating the Renderer Backend context.
 
 ### Selecting Concretes (Shader, VAO, VBO) (Future)
 

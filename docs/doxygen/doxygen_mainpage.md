@@ -14,7 +14,7 @@ For higher-level architecture docs and developer guides, start from the links be
 - Guides:
   - @ref guide_event_system_ja
   - @ref guide_platform_system_ja
-  - @ref guide_renderer_system_ja
+  - @ref guide_renderer_backend_ja
 
 ## Supported environment
 

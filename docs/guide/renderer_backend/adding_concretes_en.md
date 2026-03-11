@@ -1,4 +1,4 @@
-@page guide_renderer_system_en Renderer System Guide(English)
+@page guide_renderer_backend_en Renderer System Guide(English)
 
 # Guidelines for Adding a Concrete Module to the Renderer Backend
 

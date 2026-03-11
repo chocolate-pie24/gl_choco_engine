@@ -1,4 +1,4 @@
-@page guide_renderer_system_ja Renderer System Guide(Japanese)
+@page guide_renderer_backend_ja Renderer System Guide(Japanese)
 
 # Renderer BackendへのConcreteモジュールの追加方法ガイドライン
 

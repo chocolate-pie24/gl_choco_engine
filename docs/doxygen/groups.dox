@@ -79,7 +79,7 @@
 
 /** @defgroup renderer Renderer
     @details Architecture: @ref arch_renderer_backend_ja
-    @details Guide: @ref guide_renderer_system_ja
+    @details Guide: @ref guide_renderer_backend_ja
     @ingroup engine
     @brief レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する
 */
