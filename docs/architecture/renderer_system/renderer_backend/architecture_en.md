@@ -1,16 +1,14 @@
-@page arch_renderer_system_en Renderer System Architecture(English)
+@page arch_renderer_system_en Renderer Backend Architecture(English)
 
-# Renderer System architecture
+# Renderer Backend architecture
 
 ## Purpose and positioning
 
-`Renderer System` is a subsystem that provides a swappable, graphics-API-agnostic interface so that application developers can build graphics applications without being aware of the underlying graphics API.
+`Renderer Backend` is a subsystem that provides a swappable, graphics-API-agnostic interface so that application developers can build graphics applications without being aware of the underlying graphics API.
 
-`Renderer System` consists of `Renderer Frontend` and `Renderer Backend`. However, since `Renderer Frontend` is not implemented in GLCE at this time, this document focuses only on the architecture of `Renderer Backend`.
+## Renderer Backend concept
 
-## Renderer System concept
-
-To achieve its goal, `Renderer System` applies the object-oriented design pattern *Strategy*.
+To achieve its goal, `Renderer Backend` applies the object-oriented design pattern *Strategy*.
 
 The functionality provided by `Renderer Backend` is broadly categorized into three groups: VAO, VBO, and Shader. For each group, an Interface is defined to absorb differences between graphics APIs.
 On the other hand, the entry point for upper layers (e.g., the application layer) to use `Renderer Backend` is kept simple, so only one Context is used.
@@ -43,7 +41,7 @@ The correspondence between the Strategy objects and GLCE modules is as follows:
 
 ### Selecting Concretes (Shader, VAO, VBO) (Current)
 
-Currently, the graphics API to be used is selected by specifying it when creating an instance of the `Renderer System`.
+Currently, the graphics API to be used is selected by specifying it when creating an instance of the `Renderer Backend modules` .
 
 ### Selecting Concretes (Shader, VAO, VBO) (Future)
 
