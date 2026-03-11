@@ -9,6 +9,9 @@
   - [Inspired by](#inspired-by)
   - [Documentation](#documentation)
     - [Architecture / Layering](#architecture--layering)
+      - [Renderer System](#renderer-system)
+      - [Renderer Backend](#renderer-backend)
+      - [Platform System](#platform-system)
     - [Guide](#guide)
     - [API Reference](#api-reference)
   - [Contributing](#contributing)
@@ -75,8 +78,19 @@ GL CHOCO ENGINE is an independent codebase with its own architecture and design 
 ### Architecture / Layering
 
 - [Overview](docs/layer.md)
+
+#### Renderer System
+
+- [Renderer System(English)](docs/architecture/renderer_system/renderer_system_en.md)
+- [Renderer System(Japanese)](docs/architecture/renderer_system/renderer_system_ja.md)
+
+#### Renderer Backend
+
 - [Renderer Backend(English)](docs/architecture/renderer_system/renderer_backend/architecture_en.md)
 - [Renderer Backend(Japanese)](docs/architecture/renderer_system/renderer_backend/architecture_ja.md)
+
+#### Platform System
+
 - [Platform System(English)](docs/architecture/platform_system/architecture_en.md)
 - [Platform System(Japanese)](docs/architecture/platform_system/architecture_ja.md)
 
@@ -94,8 +108,8 @@ Provides guidelines for engine developers to safely add support for new platform
 
 Provides guidelines for engine developers to safely add support for new renderer backends.
 
-- [Renderer System Guide(English)](docs/guide/renderer_system/adding_concretes_en.md)
-- [Renderer System Guide(Japanese)](docs/guide/renderer_system/adding_concretes_ja.md)
+- [Renderer Backend Guide(English)](docs/guide/renderer_backend/adding_concretes_en.md)
+- [Renderer Backend Guide(Japanese)](docs/guide/renderer_backend/adding_concretes_ja.md)
 
 ### API Reference
 
