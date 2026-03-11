@@ -20,11 +20,12 @@
 
 ## TODO
 
-- renderer_rslt_convert_choco_stringテスト
-- renderer_rslt_convert_fs_utilsテスト
+- [x] renderer_rslt_convert_choco_stringテスト
+- [x] renderer_rslt_convert_fs_utilsテスト
 - [x] ui_shaderが保有する全APIのconst化検討
 - [x] Layer.mdにrenderer_resources, groups.dox
 - [x] engine_overview
 - [x] 既存docs/renderer_system内の資料はrenderer_backendの資料にする(それに合わせて資料内の不整合、構成図を修正)
-- [] rendererシステムの概要説明資料
+- [x] rendererシステムの概要説明資料
+- [ ] ui_shaderテスト
 - todo.mdを整理し、全部処理できた場合は削除
