@@ -96,7 +96,7 @@ GL CHOCO ENGINE is an independent codebase with its own architecture and design 
 
 ### Guide
 
-To help engine developers operate the event system safely.
+Provides guidelines for engine developers to safely use the event system.
 
 - [Event System Guide(English)](docs/guide/event_system/event_en.md)
 - [Event System Guide(Japanese)](docs/guide/event_system/event_ja.md)
