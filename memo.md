@@ -27,5 +27,7 @@
 - [x] engine_overview
 - [x] 既存docs/renderer_system内の資料はrenderer_backendの資料にする(それに合わせて資料内の不整合、構成図を修正)
 - [x] rendererシステムの概要説明資料
+- [ ] concrete_shader.cに追加したAPIのテスト追加
+- [ ] context.cに追加したAPIのテスト追加
 - [ ] ui_shaderテスト
 - todo.mdを整理し、全部処理できた場合は削除
