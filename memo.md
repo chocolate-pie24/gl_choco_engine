@@ -22,6 +22,9 @@
 
 - renderer_rslt_convert_choco_stringテスト
 - renderer_rslt_convert_fs_utilsテスト
-- ui_shaderが保有する全APIのconst化検討
-- Layer.mdにrenderer_resources, groups.dox
+- [x] ui_shaderが保有する全APIのconst化検討
+- [x] Layer.mdにrenderer_resources, groups.dox
+- [x] engine_overview
+- [x] 既存docs/renderer_system内の資料はrenderer_backendの資料にする(それに合わせて資料内の不整合、構成図を修正)
+- [] rendererシステムの概要説明資料
 - todo.mdを整理し、全部処理できた場合は削除

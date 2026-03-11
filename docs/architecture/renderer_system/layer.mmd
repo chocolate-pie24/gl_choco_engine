@@ -1,4 +1,9 @@
 graph TD
+  subgraph RENDERER_RESOURCES[renderer_resources]
+    direction TB
+    UI_SHADER[ui_shader]
+  end
+
   subgraph RENDERER_CORE[renderer_core]
     direction TB
     RENDERER_ERR_UTILS[renderer_err_utils]
@@ -32,6 +37,11 @@ graph TD
       CONTEXT[context]
     end
   end
+
+  RENDERER_RESOURCES --> CONTEXT
+  RENDERER_RESOURCES --> RENDERER_BACKEND_TYPES
+  RENDERER_RESOURCES --> RENDERER_ERR_UTILS
+  RENDERER_RESOURCES --> RENDERER_MEMORY
 
   RENDERER_BACKEND_INTERFACE --> RENDERER_BACKEND_TYPES
   %% RENDERER_BACKEND_INTERFACE --> RENDERER_TYPES

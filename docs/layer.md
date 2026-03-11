@@ -15,6 +15,7 @@ This document describes the high-level layering and module dependencies of GL CH
     - [engine/io\_utils](#engineio_utils)
     - [engine/platform](#engineplatform)
     - [engine/renderer](#enginerenderer)
+    - [engine/camera](#enginecamera)
 
 ## Dependency rules
 
@@ -33,7 +34,7 @@ This diagram shows the module dependencies at the engine level.
 
 ## Detailed view: Renderer
 
-[Renderer System Architecture](./architecture/renderer_system/architecture_en.md)
+[Renderer Backend Architecture](./architecture/renderer_system/renderer_backend/architecture_en.md)
 
 ## Layer Reference
 
@@ -112,3 +113,10 @@ This will be removed once the frontend is introduced.
   - renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.
   - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
   - renderer_core/renderer_types: Common data types shared across the renderer subsystem.
+  - renderer_resources: Provides renderer-level resource modules used by higher layers. Currently, this layer contains ui_shader, which encapsulates a shader program together with cached uniform locations and shader-specific operations.
+
+### engine/camera
+
+- Purpose: Manages the camera's position and orientation, and also provides functionality for generating projection and view matrices.
+- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
+- Note: The camera module is currently placed as a standalone layer only temporarily. This is not considered the final layering structure, and it is expected to be moved under a more appropriate layer as the engine architecture evolves.

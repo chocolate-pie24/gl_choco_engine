@@ -1,11 +1,11 @@
 @page guide_renderer_system_ja Renderer System Guide(Japanese)
 
-# Renderer SystemへのConcreteモジュールの追加方法ガイドライン
+# Renderer BackendへのConcreteモジュールの追加方法ガイドライン
 
 このページでは、エンジン開発者が安全に対応グラフィックスAPIを追加するためのガイドラインを提供する。
 なお、追加するグラフィックスAPIは当面はOpenGL3.3以外のバージョンを想定しており、Vulkanを使用する際にはある程度の設計変更が必要があることを前提としている。
 
-なお、`Renderer System`の全体像については、[Renderer System architecture](../../architecture/renderer_system/architecture_ja.md)を参照のこと。
+なお、`Renderer Backend`の全体像については、[Renderer Backend architecture](../../architecture/renderer_system/renderer_backend/architecture_ja.md)を参照のこと。
 
 ## 対応グラフィックスAPI追加ガイドライン
 

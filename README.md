@@ -75,8 +75,8 @@ GL CHOCO ENGINE is an independent codebase with its own architecture and design 
 ### Architecture / Layering
 
 - [Overview](docs/layer.md)
-- [Renderer System(English)](docs/architecture/renderer_system/architecture_en.md)
-- [Renderer System(Japanese)](docs/architecture/renderer_system/architecture_ja.md)
+- [Renderer Backend(English)](docs/architecture/renderer_system/renderer_backend/architecture_en.md)
+- [Renderer Backend(Japanese)](docs/architecture/renderer_system/renderer_backend/architecture_ja.md)
 - [Platform System(English)](docs/architecture/platform_system/architecture_en.md)
 - [Platform System(Japanese)](docs/architecture/platform_system/architecture_ja.md)
 
