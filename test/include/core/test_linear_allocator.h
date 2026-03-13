@@ -32,7 +32,7 @@ typedef struct test_config_linear_allocator {
 } test_config_linear_allocator_t;
 
 /**
- * @brief 上位側で作成したテスト設定値をメモリーシステムに適用する
+ * @brief 上位側で作成したテスト設定値をLinear Allocatorモジュールに適用する
  *
  * @note API呼び出し回数についてはコピーされず、Linear Allocatorモジュール内で管理している値が保持される
  *
