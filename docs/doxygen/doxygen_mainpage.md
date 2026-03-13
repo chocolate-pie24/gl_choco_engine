@@ -10,11 +10,11 @@ For higher-level architecture docs and developer guides, start from the links be
 - [Project overview (README)](../../README.md)
 - [Architecture overview (layering)](../../docs/layer.md)
 - @ref arch_platform_system_ja
-- @ref arch_renderer_system_ja
+- @ref arch_renderer_backend_ja
 - Guides:
   - @ref guide_event_system_ja
   - @ref guide_platform_system_ja
-  - @ref guide_renderer_system_ja
+  - @ref guide_renderer_backend_ja
 
 ## Supported environment
 

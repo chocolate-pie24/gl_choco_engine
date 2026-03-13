@@ -1,11 +1,11 @@
-@page guide_renderer_system_en Renderer System Guide(English)
+@page guide_renderer_backend_en Renderer System Guide(English)
 
-# Guidelines for Adding a Concrete Module to the Renderer System
+# Guidelines for Adding a Concrete Module to the Renderer Backend
 
 This page provides guidelines for engine developers to safely add support for additional graphics APIs.
 For now, the graphics APIs to be added are assumed to be versions other than OpenGL 3.3. Note that using Vulkan will likely require some design changes.
 
-For an overview of the `Renderer System`, refer to [Renderer System architecture](../../architecture/renderer_system/architecture_en.md).
+For an overview of the `Renderer Backend`, refer to [Renderer Backend architecture](../../architecture/renderer_system/renderer_backend/architecture_en.md).
 
 ## Guidelines for Adding Support for a New Graphics API
 

@@ -78,8 +78,8 @@
 */
 
 /** @defgroup renderer Renderer
-    @details Architecture: @ref arch_renderer_system_ja
-    @details Guide: @ref guide_renderer_system_ja
+    @details Architecture: @ref arch_renderer_backend_ja
+    @details Guide: @ref guide_renderer_backend_ja
     @ingroup engine
     @brief レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する
 */
@@ -97,7 +97,7 @@
 
 /** @defgroup renderer_backend_concretes Renderer Backend Concretes
     @ingroup renderer_backend
-    @brief 各グラフィックスAPI固有のバックエンド実装を格納する場所で、グラフ一クスAPIごとにグループを作成し、実装を格納する
+    @brief 各グラフィックスAPI固有のバックエンド実装を格納する場所で、グラフィックスAPIごとにグループを作成し、実装を格納する
 */
 
 /** @defgroup gl33 OpenGL3.3
@@ -113,4 +113,9 @@
 /** @defgroup renderer_core Renderer Core
     @ingroup renderer
     @brief レンダラーサブシステム全体から使用されるモジュールを提供する
+*/
+
+/** @defgroup renderer_resources Renderer Resources
+    @ingroup renderer
+    @brief 上位レイヤーが使用するための、レンダラー層の描画リソースモジュールを提供する(現状ではUIシェーダーモジュールを提供)
 */

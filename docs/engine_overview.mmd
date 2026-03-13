@@ -7,6 +7,8 @@ graph TD
       RENDERER[renderer]
     end
 
+    CAMERA[camera]
+
     subgraph IO_UTILS[io_utils]
       FS_UTILS[fs_utils]
     end
@@ -21,15 +23,20 @@ graph TD
     BASE[base]
   end
 
-  APPLICATION --> PLATFORM
   APPLICATION --> RENDERER
-  APPLICATION --> IO_UTILS
+  APPLICATION --> PLATFORM
   APPLICATION --> CORE
   APPLICATION --> CONTAINERS
+  APPLICATION --> CAMERA
 
   PLATFORM --> CONTAINERS
   PLATFORM --> CORE
   RENDERER --> CORE
+  RENDERER --> IO_UTILS
+  RENDERER --> CONTAINERS
+
+  CAMERA --> CORE
+  CAMERA --> CONTAINERS
 
   IO_UTILS --> CONTAINERS
   IO_UTILS --> CORE

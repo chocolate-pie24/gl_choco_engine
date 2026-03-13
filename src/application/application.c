@@ -35,8 +35,6 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/core/filesystem/filesystem.h"
-
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
@@ -44,10 +42,10 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
-
 #include "engine/platform/platform_core/platform_types.h"
 #include "engine/platform/platform_context.h"
+
+#include "engine/renderer/renderer_resources/ui_shader.h"
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
@@ -90,11 +88,15 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
 
-    renderer_backend_shader_t* ui_shader;
+    ui_shader_t* ui_shader;
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
     camera_t* world_camera;
+
+    mat4x4f_t projection_matrix;
+    mat4x4f_t view_matrix;
+    mat4x4f_t model_matrix;
     // end temporary
 } app_state_t;
 
@@ -116,10 +118,6 @@ static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
 static application_result_t rslt_convert_camera(camera_result_t rslt_);
-
-// begin temporary TODO: remove this!!
-static bool program_create(void);
-// end temporary
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -266,7 +264,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = renderer_backend_shader_create(tmp->renderer_backend_context, &tmp->ui_shader);
+    ret_renderer = ui_shader_create("assets/shaders/test_shader/", "ui_shader", tmp->renderer_backend_context, &tmp->ui_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
@@ -317,8 +315,7 @@ cleanup:
                     tmp->ui_vao = NULL;
                 }
                 if(NULL != tmp->ui_shader) {
-                    renderer_backend_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
-                    tmp->ui_shader = NULL;
+                    ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
                 }
             }
 
@@ -373,8 +370,7 @@ void application_destroy(void) {
             s_app_state->ui_vao = NULL;
         }
         if(NULL != s_app_state->ui_shader) {
-            renderer_backend_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
-            s_app_state->ui_shader = NULL;
+            ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
         }
     }
     renderer_backend_destroy(s_app_state->renderer_backend_context);
@@ -423,18 +419,12 @@ application_result_t application_run(void) {
     }
 
     // begin temporary
-    if(!program_create()) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(RUNTIME_ERROR) - Failed to create shader program.");
-        goto cleanup;
-    }
-
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
     static vec3f_t vertex_buffer_data[3] = { 0 };
-    vec3f_initialize(-1.0f, -1.0f, 0.0f, &vertex_buffer_data[0]);
-    vec3f_initialize(1.0f, -1.0f, 0.0f, &vertex_buffer_data[1]);
-    vec3f_initialize(0.0f, 1.0f, 0.0f, &vertex_buffer_data[2]);
+    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
+    vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
+    vec3f_initialize(0.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
 
     renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
@@ -443,6 +433,17 @@ application_result_t application_run(void) {
     renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
+    mat4f_identity(&s_app_state->model_matrix);
+    mat4f_identity(&s_app_state->projection_matrix);
+    mat4f_identity(&s_app_state->view_matrix);
+
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+    camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
+    camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+
+    ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->world_camera));
@@ -466,7 +467,7 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer_backend_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
@@ -660,13 +661,39 @@ cleanup:
 /**
  * @brief 更新されたアプリケーション状態によって、各サブシステムにイベントを通知する
  *
+ * @todo ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする
  */
 static void app_state_dispatch(void) {
-    // 各サブシステムへイベントを通知 まだ処理はなし
+    if(s_app_state->window_resized) {
+        if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
+            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+                goto cleanup;
+            }
+
+            mat4x4f_t tmp_projection = { 0 };
+            ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &tmp_projection);
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
+                goto cleanup;
+            }
+
+            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+            if(RENDERER_SUCCESS != ret_renderer) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", rslt_to_str(rslt_convert_renderer(ret_renderer)));
+                goto cleanup;
+            }
+            mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
+        }
+    }
+cleanup:
+    return;
 }
 
 /**
  * @brief アプリケーション状態変化フラグの値を元に戻す
+ *
  *
  */
 static void app_state_clean(void) {
@@ -1055,41 +1082,4 @@ static application_result_t rslt_convert_camera(camera_result_t rslt_) {
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
-}
-
-/**
- * @brief シェーダープログラムをロード、コンパイル、リンクし、プログラムを生成する
- *
- * @retval true プログラム生成成功
- * @retval false プログラム生成失敗
- */
-static bool program_create(void) {
-    bool ret = false;
-
-    fs_utils_t* frag_fs_utils = NULL;
-    fs_utils_t* vert_fs_utils = NULL;
-    choco_string_t* vert_shader_source = NULL;
-    choco_string_t* frag_shader_source = NULL;
-
-    choco_string_default_create(&vert_shader_source);   // TODO: エラー処理
-    choco_string_default_create(&frag_shader_source);   // TODO: エラー処理
-    fs_utils_create("assets/shaders/test_shader/", "fragment_shader", ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);   // TODO: エラー処理
-    fs_utils_create("assets/shaders/test_shader/", "vertex_shader", ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);     // TODO: エラー処理
-
-    // シェーダープログラムロード
-    fs_utils_text_file_read(frag_fs_utils, frag_shader_source);  // TODO: エラー処理
-    fs_utils_text_file_read(vert_fs_utils, vert_shader_source);  // TODO: エラー処理
-
-    renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    renderer_backend_shader_link(s_app_state->renderer_backend_context, s_app_state->ui_shader);
-
-    choco_string_destroy(&vert_shader_source);
-    choco_string_destroy(&frag_shader_source);
-    fs_utils_destroy(&vert_fs_utils);
-    fs_utils_destroy(&frag_fs_utils);
-
-    ret = true;
-
-    return ret;
 }

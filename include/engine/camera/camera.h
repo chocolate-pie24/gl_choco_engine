@@ -26,6 +26,10 @@ extern "C" {
 
 typedef struct camera camera_t; /**< カメラ内部状態管理構造体前方宣言 */
 
+/**
+ * @brief カメラモジュール実行結果コード定義
+ *
+ */
 typedef enum {
     CAMERA_SUCCESS = 0,         /**< カメラ実行結果コード: 成功 */
     CAMERA_INVALID_ARGUMENT,    /**< カメラ実行結果コード: 無効な引数 */

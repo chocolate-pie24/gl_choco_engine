@@ -43,6 +43,8 @@ static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";              /*
 static void NO_COVERAGE test_renderer_result_str(void);
 static void NO_COVERAGE test_renderer_rslt_convert_linear_alloc(void);
 static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void);
+static void NO_COVERAGE test_renderer_rslt_convert_choco_string(void);
+static void NO_COVERAGE test_renderer_rslt_convert_fs_utils(void);
 #endif
 
 const char* renderer_rslt_to_str(renderer_result_t rslt_) {
@@ -102,11 +104,65 @@ renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt
     }
 }
 
+renderer_result_t renderer_rslt_convert_choco_string(choco_string_result_t rslt_) {
+    switch(rslt_) {
+    case CHOCO_STRING_SUCCESS:
+        return RENDERER_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return RENDERER_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return RENDERER_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return RENDERER_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return RENDERER_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return RENDERER_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return RENDERER_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW: // 文字列長さオーバーフローはRUNTIME_ERRORに変換
+        return RENDERER_RUNTIME_ERROR;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return RENDERER_LIMIT_EXCEEDED;
+    default:
+        return RENDERER_UNDEFINED_ERROR;
+    }
+}
+
+renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
+    switch(rslt_) {
+    case FS_UTILS_SUCCESS:
+        return RENDERER_SUCCESS;
+    case FS_UTILS_INVALID_ARGUMENT:
+        return RENDERER_INVALID_ARGUMENT;
+    case FS_UTILS_BAD_OPERATION:
+        return RENDERER_BAD_OPERATION;
+    case FS_UTILS_DATA_CORRUPTED:
+        return RENDERER_DATA_CORRUPTED;
+    case FS_UTILS_NO_MEMORY:
+        return RENDERER_NO_MEMORY;
+    case FS_UTILS_LIMIT_EXCEEDED:
+        return RENDERER_LIMIT_EXCEEDED;
+    case FS_UTILS_OVERFLOW: // オーバーフローはRUNTIME_ERRORに変換
+        return RENDERER_RUNTIME_ERROR;
+    case FS_UTILS_FILE_OPEN_ERROR:
+        return RENDERER_RUNTIME_ERROR;
+    case FS_UTILS_RUNTIME_ERROR:
+        return RENDERER_RUNTIME_ERROR;
+    case FS_UTILS_UNDEFINED_ERROR:
+        return RENDERER_UNDEFINED_ERROR;
+    default:
+        return RENDERER_UNDEFINED_ERROR;
+    }
+}
+
 #ifdef TEST_BUILD
 void test_renderer_err_utils(void) {
     test_renderer_result_str();
     test_renderer_rslt_convert_linear_alloc();
     test_renderer_rslt_convert_choco_memory();
+    test_renderer_rslt_convert_choco_string();
+    test_renderer_rslt_convert_fs_utils();
 }
 
 static void NO_COVERAGE test_renderer_result_str(void) {
@@ -208,6 +264,117 @@ static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void) {
     {
         renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
         ret = renderer_rslt_convert_choco_memory(100);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+    }
+}
+
+static void NO_COVERAGE test_renderer_rslt_convert_choco_string(void) {
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
+        assert(RENDERER_SUCCESS == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_DATA_CORRUPTED);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_BAD_OPERATION);
+        assert(RENDERER_BAD_OPERATION == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_NO_MEMORY);
+        assert(RENDERER_NO_MEMORY == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_INVALID_ARGUMENT);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_RUNTIME_ERROR);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_UNDEFINED_ERROR);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_OVERFLOW);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_LIMIT_EXCEEDED);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_choco_string(100);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+    }
+}
+
+static void NO_COVERAGE test_renderer_rslt_convert_fs_utils(void) {
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
+        assert(RENDERER_SUCCESS == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_INVALID_ARGUMENT);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_BAD_OPERATION);
+        assert(RENDERER_BAD_OPERATION == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_DATA_CORRUPTED);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_NO_MEMORY);
+        assert(RENDERER_NO_MEMORY == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_LIMIT_EXCEEDED);
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_OVERFLOW);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_FILE_OPEN_ERROR);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_RUNTIME_ERROR);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(FS_UTILS_UNDEFINED_ERROR);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+    }
+    {
+        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+        ret = renderer_rslt_convert_fs_utils(100);
         assert(RENDERER_UNDEFINED_ERROR == ret);
     }
 }

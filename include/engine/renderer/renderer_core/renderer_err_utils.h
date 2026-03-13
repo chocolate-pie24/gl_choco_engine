@@ -21,6 +21,11 @@ extern "C" {
 #endif
 
 #include "engine/renderer/renderer_core/renderer_types.h"
+
+#include "engine/io_utils/fs_utils/fs_utils.h"
+
+#include "engine/containers/choco_string.h"
+
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
 
@@ -47,6 +52,24 @@ renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t r
  * @return renderer_result_t 変換されたレンダラーレイヤーの実行結果コード
  */
 renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_);
+
+/**
+ * @brief 下位モジュールであるchoco_stringが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する
+ *
+ * @param rslt_ choco_stringモジュールが出力する実行結果コード
+ * @return renderer_result_t 変換されたレンダラーレイヤーの実行結果コード
+ */
+renderer_result_t renderer_rslt_convert_choco_string(choco_string_result_t rslt_);
+
+/**
+ * @brief 下位モジュールであるfs_utilsが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する
+ *
+ * @param rslt_ fs_utilsモジュールが出力する実行結果コード
+ * @return renderer_result_t 変換されたレンダラーレイヤーの実行結果コード
+ *
+ * @todo FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する
+ */
+renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_);
 
 #ifdef __cplusplus
 }
