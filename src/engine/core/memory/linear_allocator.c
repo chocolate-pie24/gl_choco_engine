@@ -25,6 +25,21 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+#include <assert.h>
+#include "test_controller.h"
+#include "core/test_linear_allocator.h"
+
+static test_config_linear_allocator_t s_test_config;    /**< Linear Allocatorモジュールの外部公開APIテスト設定値 */
+
+static void test_linear_allocator_preinit(void);
+static void test_linear_allocator_init(void);
+static void test_linear_allocator_allocate(void);
+static void test_rslt_to_str(void);
+#endif
+
 /**
  * @brief linear_alloc_t内部データ構造
  * @todo 必要であればメモリトラッキング追加(現状では入れる予定はなし)
@@ -42,26 +57,6 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";     /**
 
 static const char* rslt_to_str(linear_allocator_result_t rslt_);
 
-#ifdef TEST_BUILD
-#include <assert.h>
-
-/**
- * @brief 外部からの返り値制御用構造体
- *
- */
-typedef struct test_param {
-    size_t malloc_counter;
-    size_t malloc_fail_n;
-    bool enable_malloc_fail;        /**< malloc失敗 */
-} test_param_t;
-
-static test_param_t s_test_param;
-
-static void test_linear_allocator_preinit(void);
-static void test_linear_allocator_init(void);
-static void test_linear_allocator_allocate(void);
-#endif
-
 void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_) {
     if(NULL == memory_requirement_ || NULL == align_requirement_) {
         return;
@@ -71,6 +66,15 @@ void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_require
 }
 
 linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size_t capacity_, void* memory_pool_) {
+#ifdef TEST_BUILD
+    s_test_config.test_linear_allocator_init.call_count++;
+    if(s_test_config.test_linear_allocator_init.fail_on_call != 0) {
+        if(s_test_config.test_linear_allocator_init.call_count == s_test_config.test_linear_allocator_init.fail_on_call) {
+            return (linear_allocator_result_t)s_test_config.test_linear_allocator_init.forced_result;
+        }
+    }
+#endif
+
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "memory_pool_")
@@ -87,12 +91,11 @@ cleanup:
 
 linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
 #ifdef TEST_BUILD
-    if(s_test_param.enable_malloc_fail) {
-        if(s_test_param.malloc_counter == s_test_param.malloc_fail_n) {
-            s_test_param.malloc_counter++;
-            return LINEAR_ALLOC_NO_MEMORY;
+    s_test_config.test_linear_allocator_allocate.call_count++;
+    if(s_test_config.test_linear_allocator_allocate.fail_on_call != 0) {
+        if(s_test_config.test_linear_allocator_allocate.call_count == s_test_config.test_linear_allocator_allocate.fail_on_call) {
+            return (linear_allocator_result_t)s_test_config.test_linear_allocator_allocate.forced_result;
         }
-        s_test_param.malloc_counter++;
     }
 #endif
 
@@ -174,65 +177,113 @@ static const char* rslt_to_str(linear_allocator_result_t rslt_) {
 }
 
 #ifdef TEST_BUILD
-void linear_allocator_malloc_fail_set(size_t malloc_fail_n_) {
-    s_test_param.enable_malloc_fail = true;
-    s_test_param.malloc_counter = 0;
-    s_test_param.malloc_fail_n = malloc_fail_n_;
+void test_linear_allocator_config_set(const test_config_linear_allocator_t* config_) {
+    test_call_control_set(config_->test_linear_allocator_init.fail_on_call, config_->test_linear_allocator_init.forced_result, &s_test_config.test_linear_allocator_init);
+    test_call_control_set(config_->test_linear_allocator_allocate.fail_on_call, config_->test_linear_allocator_allocate.forced_result, &s_test_config.test_linear_allocator_allocate);
 }
 
-void linear_allocator_malloc_fail_reset(void) {
-    s_test_param.enable_malloc_fail = false;
-    s_test_param.malloc_counter = 0;
-    s_test_param.malloc_fail_n = 0;
+void test_linear_allocator_config_reset(void) {
+    test_call_control_reset(&s_test_config.test_linear_allocator_init);
+    test_call_control_reset(&s_test_config.test_linear_allocator_allocate);
 }
 
 void NO_COVERAGE test_linear_allocator(void) {
-    linear_allocator_malloc_fail_reset();
+    test_linear_allocator_config_reset();
 
-    INFO_MESSAGE("test_linear_allocator_preinit begin");
     test_linear_allocator_preinit();
-    INFO_MESSAGE("test_linear_allocator_preinit done successfully.");
-
-    INFO_MESSAGE("test_linear_allocator_init begin");
     test_linear_allocator_init();
-    INFO_MESSAGE("test_linear_allocator_init done successfully.");
-
-    INFO_MESSAGE("test_linear_allocator_allocate begin");
     test_linear_allocator_allocate();
-    INFO_MESSAGE("test_linear_allocator_allocate done successfully.");
+    test_rslt_to_str();
+
+    test_linear_allocator_config_reset();
 }
 
 static void NO_COVERAGE test_linear_allocator_preinit(void) {
+    // Generated by ChatGPT 5.4 Thinking
     {
-        // 最初のif文のreturnを通ることをステップ実行で確認
-        size_t mem = 0;
+        // align_requirement_ == NULL の場合は何もしない
+        size_t mem = 1234U;
         linear_allocator_preinit(&mem, NULL);
-
-        // 最初のif文のreturnを通ることをステップ実行で確認
-        size_t align = 0;
+        assert(1234U == mem);
+    }
+    {
+        // memory_requirement_ == NULL の場合は何もしない
+        size_t align = 5678U;
         linear_allocator_preinit(NULL, &align);
-
-        // 最初のif文のreturnを通ることをステップ実行で確認
+        assert(5678U == align);
+    }
+    {
+        // 両方 NULL の場合は何もしない
         linear_allocator_preinit(NULL, NULL);
     }
     {
-        size_t mem = 0;
-        size_t align = 0;
+        // 正常系
+        size_t mem = 0U;
+        size_t align = 0U;
+
         linear_allocator_preinit(&mem, &align);
+
         assert(sizeof(linear_alloc_t) == mem);
         assert(alignof(linear_alloc_t) == align);
+    }
+    {
+        // 複数回呼んでも同じ値が返る
+        size_t mem1 = 0U;
+        size_t align1 = 0U;
+        size_t mem2 = 9999U;
+        size_t align2 = 9999U;
+
+        linear_allocator_preinit(&mem1, &align1);
+        linear_allocator_preinit(&mem2, &align2);
+
+        assert(mem1 == mem2);
+        assert(align1 == align2);
+        assert(sizeof(linear_alloc_t) == mem2);
+        assert(alignof(linear_alloc_t) == align2);
     }
 }
 
 static void NO_COVERAGE test_linear_allocator_init(void) {
+    // Generated by ChatGPT 5.4 Thinking
     {
-        // 引数allocator_   == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
+        // テスト基盤による強制失敗
         linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
-        size_t cap = 128;
+        test_config_linear_allocator_t config = {0};
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
         void* pool = malloc(128);
         assert(NULL != pool);
+        memset(pool, 0, 128);
 
-        ret = linear_allocator_init(NULL, cap, pool);
+        config.test_linear_allocator_init.fail_on_call = 1;
+        config.test_linear_allocator_init.forced_result = LINEAR_ALLOC_NO_MEMORY;
+        test_linear_allocator_config_set(&config);
+
+        ret = linear_allocator_init(alloc, 128, pool);
+        assert(LINEAR_ALLOC_NO_MEMORY == ret);
+        assert(0U == alloc->capacity);
+        assert(NULL == alloc->head_ptr);
+        assert(NULL == alloc->memory_pool);
+
+        test_linear_allocator_config_reset();
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // 引数allocator_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        void* pool = malloc(128);
+        assert(NULL != pool);
+        memset(pool, 0, 128);
+
+        ret = linear_allocator_init(NULL, 128, pool);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
 
         free(pool);
@@ -241,22 +292,22 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
     {
         // 引数memory_pool_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
-        size_t cap = 128;
+
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
-        ret = linear_allocator_init(alloc, cap, NULL);
+        ret = linear_allocator_init(alloc, 128, NULL);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
-        assert(0 == alloc->capacity);
-        assert(0 == alloc->head_ptr);
-        assert(0 == alloc->memory_pool);
+        assert(0U == alloc->capacity);
+        assert(NULL == alloc->head_ptr);
+        assert(NULL == alloc->memory_pool);
 
         free(alloc);
         alloc = NULL;
     }
     {
-        // 引数capacity_    == 0    -> LINEAR_ALLOC_INVALID_ARGUMENT
+        // 引数capacity_ == 0 -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
@@ -269,9 +320,9 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
 
         ret = linear_allocator_init(alloc, 0, pool);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
-        assert(0 == alloc->capacity);
-        assert(0 == alloc->head_ptr);
-        assert(0 == alloc->memory_pool);
+        assert(0U == alloc->capacity);
+        assert(NULL == alloc->head_ptr);
+        assert(NULL == alloc->memory_pool);
 
         free(alloc);
         alloc = NULL;
@@ -282,20 +333,21 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
     {
         // 正常系
         linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
-        size_t cap = 128;
+        const size_t cap = 128U;
 
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
-        void* pool = malloc(128);
+        void* pool = malloc(cap);
         assert(NULL != pool);
-        memset(pool, 0, 128);
+        memset(pool, 0, cap);
 
         ret = linear_allocator_init(alloc, cap, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
         assert(cap == alloc->capacity);
-        assert(alloc->memory_pool == alloc->head_ptr);
+        assert(pool == alloc->head_ptr);
+        assert(pool == alloc->memory_pool);
 
         free(alloc);
         alloc = NULL;
@@ -306,209 +358,387 @@ static void NO_COVERAGE test_linear_allocator_init(void) {
 }
 
 static void NO_COVERAGE test_linear_allocator_allocate(void) {
+    // Generated by ChatGPT 5.4 Thinking
+    test_linear_allocator_config_reset();
+
     {
+        // テスト基盤による強制失敗（前提条件チェックより前に失敗させる）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        test_config_linear_allocator_t config = {0};
+
+        void* out_ptr = NULL;
+
+        config.test_linear_allocator_allocate.fail_on_call = 1;
+        config.test_linear_allocator_allocate.forced_result = LINEAR_ALLOC_NO_MEMORY;
+        test_linear_allocator_config_set(&config);
+
+        ret = linear_allocator_allocate(NULL, 128U, 8U, &out_ptr);
+        assert(LINEAR_ALLOC_NO_MEMORY == ret);
+        assert(NULL == out_ptr);
+
+        test_linear_allocator_config_reset();
+    }
+    {
+        // 引数allocator_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+        void* out_ptr = NULL;
+
+        ret = linear_allocator_allocate(NULL, 128U, 8U, &out_ptr);
+        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(NULL == out_ptr);
+    }
+    {
+        // 引数out_ptr_ == NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
         linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
-        // 引数allocator_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-        void* out_ptr = NULL;
-        ret = linear_allocator_allocate(NULL, 128, 128, &out_ptr);
-        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
-
-        // 引数out_ptr_ == NULLでLINEAR_ALLOC_INVALID_ARGUMENT
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(128);
 
-        ret = linear_allocator_init(alloc, 128, pool);
+        void* pool = malloc(128U);
+        assert(NULL != pool);
+        memset(pool, 0, 128U);
+
+        ret = linear_allocator_init(alloc, 128U, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(128 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
 
-        ret = linear_allocator_allocate(alloc, 128, 128, NULL);
+        ret = linear_allocator_allocate(alloc, 16U, 8U, NULL);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(pool == alloc->head_ptr);
+        assert(pool == alloc->memory_pool);
+        assert(128U == alloc->capacity);
 
-        // 引数*out_ptr != NULLでLINEAR_ALLOC_INVALID_ARGUMENT
-        out_ptr = malloc(128);
-        ret = linear_allocator_allocate(alloc, 128, 128, &out_ptr);
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // 引数*out_ptr_ != NULL -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(128U);
+        assert(NULL != pool);
+        memset(pool, 0, 128U);
+
+        void* out_ptr = malloc(16U);
+        assert(NULL != out_ptr);
+
+        ret = linear_allocator_init(alloc, 128U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        ret = linear_allocator_allocate(alloc, 16U, 8U, &out_ptr);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(NULL != out_ptr);
+        assert(pool == alloc->head_ptr);
+
         free(out_ptr);
         out_ptr = NULL;
 
-        // 引数req_size_が0でワーニングメッセージ、結果はLINEAR_ALLOC_SUCCESSでメモリ確保はなし
-        ret = linear_allocator_allocate(alloc, 0, 128, &out_ptr);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(NULL == out_ptr);
-
-        // 引数req_align_が0でワーニングメッセージ、結果はLINEAR_ALLOC_SUCCESSでメモリ確保はなし
-        ret = linear_allocator_allocate(alloc, 128, 0, &out_ptr);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(NULL == out_ptr);
-
         free(alloc);
-        free(pool);
         alloc = NULL;
+
+        free(pool);
         pool = NULL;
     }
     {
-        void* out_ptr = NULL;
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        // 正常系
-        ret = linear_allocator_allocate(alloc, 1, 1, &out_ptr);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert((uintptr_t)(alloc->head_ptr) == ((uintptr_t)alloc->memory_pool + (uintptr_t)1));
-
-        // キャパシティオーバー
-        void* out_ptr2 = NULL;
-        ret = linear_allocator_allocate(alloc, 8, 8, &out_ptr2);    // simulationでno_memory
-        assert(LINEAR_ALLOC_NO_MEMORY == ret);
-        assert(NULL == out_ptr2);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        void* out_ptr = NULL;
-        ret = linear_allocator_allocate(alloc, 8, 1, &out_ptr); // ギリギリサイズ
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        void* out_ptr = NULL;
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        ret = linear_allocator_allocate(alloc, 10, 1, &out_ptr); // サイズオーバー
-        assert(LINEAR_ALLOC_NO_MEMORY == ret);
-        assert(NULL == out_ptr);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        void* out_ptr = NULL;
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        ret = linear_allocator_allocate(alloc, SIZE_MAX, 2, &out_ptr); // 要求サイズが過大
-        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        void* out_ptr = NULL;
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        ret = linear_allocator_allocate(alloc, 6, 7, &out_ptr); // アライメントが2の冪乗じゃないのでLINEAR_ALLOC_INVALID_ARGUMENT
-        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        void* out_ptr = NULL;
-        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
-        assert(NULL != alloc);
-        memset(alloc, 0, sizeof(linear_alloc_t));
-        void* pool = malloc(8);
-
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-        assert(8 == alloc->capacity);
-        assert(alloc->head_ptr == alloc->memory_pool);
-
-        ret = linear_allocator_allocate(alloc, 6, 2, &out_ptr); // 正常
-        assert(LINEAR_ALLOC_SUCCESS == ret);
-
-        free(alloc);
-        free(pool);
-        alloc = NULL;
-        pool = NULL;
-    }
-    {
-        // UINTPTR_MAX - offset < head を成立させて INVALID_ARGUMENT を踏む
-        // head_ptr を UINTPTR_MAX 近傍にして、かつ req_align_ を 2の冪にする。
-        void* out_ptr = NULL;
+        // req_size_ == 0 -> SUCCESS（no-op）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
 
         linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
         assert(NULL != alloc);
         memset(alloc, 0, sizeof(linear_alloc_t));
 
-        void* pool = malloc(8);
+        void* pool = malloc(128U);
         assert(NULL != pool);
-        memset(pool, 0, 8);
+        memset(pool, 0, 128U);
 
-        linear_allocator_result_t ret = linear_allocator_init(alloc, 8, pool);
+        void* out_ptr = NULL;
+        void* head_before = NULL;
+
+        ret = linear_allocator_init(alloc, 128U, pool);
         assert(LINEAR_ALLOC_SUCCESS == ret);
 
-        // head を UINTPTR_MAX - 1 にする。align=8 なら head%8 != 0 になり offset>0 が作れる。
-        alloc->head_ptr = (void*)(UINTPTR_MAX - 1);
+        head_before = alloc->head_ptr;
+        ret = linear_allocator_allocate(alloc, 0U, 8U, &out_ptr);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+        assert(NULL == out_ptr);
+        assert(head_before == alloc->head_ptr);
 
-        ret = linear_allocator_allocate(alloc, 1, 8, &out_ptr);
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // req_align_ == 0 -> SUCCESS（no-op）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(128U);
+        assert(NULL != pool);
+        memset(pool, 0, 128U);
+
+        void* out_ptr = NULL;
+        void* head_before = NULL;
+
+        ret = linear_allocator_init(alloc, 128U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        head_before = alloc->head_ptr;
+        ret = linear_allocator_allocate(alloc, 16U, 0U, &out_ptr);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+        assert(NULL == out_ptr);
+        assert(head_before == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // req_align_ が 2 の冪乗ではない -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(128U);
+        assert(NULL != pool);
+        memset(pool, 0, 128U);
+
+        void* out_ptr = NULL;
+        void* head_before = NULL;
+
+        ret = linear_allocator_init(alloc, 128U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        head_before = alloc->head_ptr;
+        ret = linear_allocator_allocate(alloc, 16U, 7U, &out_ptr);
+        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(NULL == out_ptr);
+        assert(head_before == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // 正常系（offset == 0）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(16U);
+        assert(NULL != pool);
+        memset(pool, 0, 16U);
+
+        void* out_ptr = NULL;
+
+        ret = linear_allocator_init(alloc, 16U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        ret = linear_allocator_allocate(alloc, 8U, 1U, &out_ptr);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+        assert(pool == out_ptr);
+        assert((void*)((uintptr_t)pool + 8U) == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // 正常系（offset != 0）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(16U);
+        assert(NULL != pool);
+        memset(pool, 0, 16U);
+
+        void* out_ptr = NULL;
+        uintptr_t expected_start = 0U;
+
+        ret = linear_allocator_init(alloc, 16U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        alloc->head_ptr = (void*)((uintptr_t)pool + 1U);
+        expected_start = (uintptr_t)pool + 4U;
+
+        ret = linear_allocator_allocate(alloc, 4U, 4U, &out_ptr);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+        assert((void*)expected_start == out_ptr);
+        assert((void*)((uintptr_t)expected_start + 4U) == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // 正常系（ちょうど使い切る）
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(8U);
+        assert(NULL != pool);
+        memset(pool, 0, 8U);
+
+        void* out_ptr = NULL;
+
+        ret = linear_allocator_init(alloc, 8U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        ret = linear_allocator_allocate(alloc, 8U, 1U, &out_ptr);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+        assert(pool == out_ptr);
+        assert((void*)((uintptr_t)pool + 8U) == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // メモリ不足 -> LINEAR_ALLOC_NO_MEMORY
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(8U);
+        assert(NULL != pool);
+        memset(pool, 0, 8U);
+
+        void* out_ptr = NULL;
+        void* head_before = NULL;
+
+        ret = linear_allocator_init(alloc, 8U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        head_before = alloc->head_ptr;
+        ret = linear_allocator_allocate(alloc, 9U, 1U, &out_ptr);
+        assert(LINEAR_ALLOC_NO_MEMORY == ret);
+        assert(NULL == out_ptr);
+        assert(head_before == alloc->head_ptr);
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+    {
+        // UINTPTR_MAX - size < start_addr を成立させる -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(8U);
+        assert(NULL != pool);
+        memset(pool, 0, 8U);
+
+        void* out_ptr = NULL;
+
+        ret = linear_allocator_init(alloc, 8U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        alloc->head_ptr = (void*)(UINTPTR_MAX - 3U);
+
+        ret = linear_allocator_allocate(alloc, 8U, 1U, &out_ptr);
         assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
         assert(NULL == out_ptr);
 
-        // 後片付け（head_ptr は pool に戻しておくと無難）
         alloc->head_ptr = alloc->memory_pool;
 
         free(alloc);
-        free(pool);
         alloc = NULL;
+
+        free(pool);
         pool = NULL;
+    }
+    {
+        // UINTPTR_MAX - offset < head を成立させる -> LINEAR_ALLOC_INVALID_ARGUMENT
+        linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+        linear_alloc_t* alloc = (linear_alloc_t*)malloc(sizeof(linear_alloc_t));
+        assert(NULL != alloc);
+        memset(alloc, 0, sizeof(linear_alloc_t));
+
+        void* pool = malloc(8U);
+        assert(NULL != pool);
+        memset(pool, 0, 8U);
+
+        void* out_ptr = NULL;
+
+        ret = linear_allocator_init(alloc, 8U, pool);
+        assert(LINEAR_ALLOC_SUCCESS == ret);
+
+        alloc->head_ptr = (void*)(UINTPTR_MAX - 1U);
+
+        ret = linear_allocator_allocate(alloc, 1U, 8U, &out_ptr);
+        assert(LINEAR_ALLOC_INVALID_ARGUMENT == ret);
+        assert(NULL == out_ptr);
+
+        alloc->head_ptr = alloc->memory_pool;
+
+        free(alloc);
+        alloc = NULL;
+
+        free(pool);
+        pool = NULL;
+    }
+}
+
+static void NO_COVERAGE test_rslt_to_str(void) {
+    // Generated by ChatGPT 5.4 Thinking
+    {
+        const char* str = rslt_to_str(LINEAR_ALLOC_SUCCESS);
+        assert(NULL != str);
+        assert(0 == strcmp("SUCCESS", str));
+    }
+    {
+        const char* str = rslt_to_str(LINEAR_ALLOC_NO_MEMORY);
+        assert(NULL != str);
+        assert(0 == strcmp("NO_MEMORY", str));
+    }
+    {
+        const char* str = rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT);
+        assert(NULL != str);
+        assert(0 == strcmp("INVALID_ARGUMENT", str));
+    }
+    {
+        const char* str = rslt_to_str((linear_allocator_result_t)999);
+        assert(NULL != str);
+        assert(0 == strcmp("UNDEFINED_ERROR", str));
     }
 }
 #endif

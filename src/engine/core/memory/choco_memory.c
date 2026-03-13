@@ -293,6 +293,8 @@ void test_memory_system_config_reset(void) {
 }
 
 void test_choco_memory(void) {
+    test_memory_system_config_reset();
+
     test_rslt_to_str();
     test_test_malloc();
     test_memory_system_create();
@@ -300,6 +302,8 @@ void test_choco_memory(void) {
     test_memory_system_allocate();
     test_memory_system_free();
     test_memory_system_report();
+
+    test_memory_system_config_reset();
 }
 
 static void NO_COVERAGE test_memory_system_create(void) {
