@@ -20,23 +20,30 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-#include "test_linear_allocator.h"
-#include "test_memory_system.h"
-#include "test_choco_string.h"
-#include "test_ring_queue.h"
+#include "base/test_choco_math.h"
+
+#include "core/test_linear_allocator.h"
+#include "core/test_memory_system.h"
+#include "core/test_filesystem.h"
+
+#include "containers/test_choco_string.h"
+#include "containers/test_ring_queue.h"
+
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
 #include "platform/test_platform_err_utils.h"
+
 #include "renderer/test_renderer_backend_context.h"
 #include "renderer/test_renderer_memory.h"
 #include "renderer/test_renderer_err_utils.h"
 #include "renderer/test_gl33_vbo.h"
 #include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
-#include "test_filesystem.h"
-#include "test_fs_utils.h"
-#include "test_choco_math.h"
-#include "test_camera.h"
+
+#include "io_utils/test_fs_utils.h"
+
+#include "camera/test_camera.h"
+
 #endif
 
 /**

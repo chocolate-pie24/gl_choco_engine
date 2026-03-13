@@ -1,6 +1,7 @@
 TARGET = gl_choco_engine
 
 SRC_DIR = src
+TEST_SRC_DIR = test/src
 BUILD_DIR = bin
 OBJ_DIR = obj
 
@@ -13,7 +14,6 @@ COV_FLAGS ?=
 
 SRC_FILES = $(shell find src -name '*.c')
 DIRECTORIES = $(shell find $(SRC_DIR) -type d)
-OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 GLEW_PREFIX := $(shell brew --prefix glew)
 GLFW_PREFIX := $(shell brew --prefix glfw)
@@ -65,11 +65,16 @@ else
 		COMPILER_FLAGS += -g -O0 -DDEBUG_BUILD -DPLATFORM_MACOS
 	endif
 	ifeq ($(BUILD_MODE), TEST_BUILD)
+		INCLUDE_FLAGS += -Itest/include
+		SRC_FILES += $(shell find $(TEST_SRC_DIR) -name '*.c')
+		DIRECTORIES += $(shell find $(TEST_SRC_DIR) -type d)
 		COMPILER_FLAGS += -g -O0 -DTEST_BUILD -DPLATFORM_MACOS
 		COMPILER_FLAGS += $(COV_FLAGS)
 		LINKER_FLAGS += $(COV_FLAGS)
 	endif
 endif
+
+OBJ_FILES = $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 
 COMPILER_FLAGS += $(SAN_CFLAGS)
 LINKER_FLAGS += $(SAN_LDFLAGS)
