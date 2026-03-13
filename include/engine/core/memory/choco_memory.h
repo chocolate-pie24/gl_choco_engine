@@ -202,34 +202,6 @@ void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
  */
 void memory_system_report(void);
 
-#ifdef TEST_BUILD
-/**
- * @brief テスト用に何回目の呼び出しでtest_mallocを失敗させるかの回数を指定する
- *
- * @note
- * - 失敗した場合はtest_mallocはNULLを返す
- * - 1回目で失敗させる場合はmalloc_fail_n_ = 0とする
- *
- * @param malloc_fail_n_ 何回目のtest_mallocで失敗させるかを指定する
- */
-void memory_system_test_param_set(int32_t malloc_fail_n_);
-
-/**
- * @brief テスト用に、メモリーシステムの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、memory_system_test_param_resetが呼ばれるまで効果が継続する
- *
- * @param result_code_ 出力実行結果コード
- */
-void memory_system_rslt_code_set(memory_system_result_t result_code_);
-
-/**
- * @brief メモリシステムのテスト時専用構造体のフィールドを初期化する
- *
- */
-void memory_system_test_param_reset(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif

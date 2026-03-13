@@ -23,7 +23,7 @@
 #include "base/test_choco_math.h"
 
 #include "core/test_linear_allocator.h"
-#include "core/test_memory_system.h"
+#include "core/test_choco_memory.h"
 #include "core/test_filesystem.h"
 
 #include "containers/test_choco_string.h"
@@ -68,7 +68,7 @@ int main(int argc_, char** argv_) {
         message_output(100, NULL);
 
         test_linear_allocator();
-        test_memory_system();
+        test_choco_memory();
         test_choco_string();
         test_ring_queue();
 

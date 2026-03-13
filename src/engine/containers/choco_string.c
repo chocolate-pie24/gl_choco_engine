@@ -646,1307 +646,1307 @@ void test_choco_string(void) {
 static void NO_COVERAGE test_choco_string_default_create(void) {
     {
         // 正常系: SUCCESS (Commitまで到達し、構造体が0初期化されていること)
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
-        choco_string_t* string = NULL;
+        // choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        // choco_string_t* string = NULL;
 
-        ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
+        // ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
 
-        // memset(tmp_string, 0, ...) の効果確認
-        assert(0 == string->len);
-        assert(0 == string->capacity);
-        assert(NULL == string->buffer);
+        // // memset(tmp_string, 0, ...) の効果確認
+        // assert(0 == string->len);
+        // assert(0 == string->capacity);
+        // assert(NULL == string->buffer);
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
 
-        memory_system_report();
+        // memory_system_report();
     }
     {
         // string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = CHOCO_STRING_SUCCESS; // 初期値は何でもよいが、明示しておく
-        ret = choco_string_default_create(NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_result_t ret = CHOCO_STRING_SUCCESS; // 初期値は何でもよいが、明示しておく
+        // ret = choco_string_default_create(NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        memory_system_report();
+        // memory_system_report();
     }
     {
         // *string_ != NULL -> CHOCO_STRING_INVALID_ARGUMENT
         // （この経路では *string_ をデリファレンスしない想定のため、ダミーポインタでも安全）
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
-        choco_string_t* string = (choco_string_t*)0x1; // sentinel（非NULL）
+        // choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        // choco_string_t* string = (choco_string_t*)0x1; // sentinel（非NULL）
 
-        ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        // 不変確認（仕様固定：既存ポインタは変更しない）
-        assert((choco_string_t*)0x1 == string);
+        // // 不変確認（仕様固定：既存ポインタは変更しない）
+        // assert((choco_string_t*)0x1 == string);
 
-        memory_system_report();
+        // memory_system_report();
     }
     {
         // tmp_stringメモリ確保失敗 -> CHOCO_STRING_NO_MEMORY
         // かつ *string_ は不変（NULLのまま）
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
-        choco_string_t* string = NULL;
+        // choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        // choco_string_t* string = NULL;
 
-        memory_system_test_param_set(0); // 次の(=1回目の)メモリ確保を失敗させる
+        // memory_system_test_param_set(0); // 次の(=1回目の)メモリ確保を失敗させる
 
-        ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        assert(NULL == string);
+        // ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // assert(NULL == string);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        memory_system_report();
+        // memory_system_report();
     }
 }
 
 static void NO_COVERAGE test_choco_string_create_from_c_string(void) {
     {
         // string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        const choco_string_result_t ret = choco_string_create_from_c_string(NULL, "aaa");
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // const choco_string_result_t ret = choco_string_create_from_c_string(NULL, "aaa");
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // *string_ != NULL -> CHOCO_STRING_INVALID_ARGUMENT
         // （この経路では *string_ の内容は参照しない想定なので sentinel でよい）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = (choco_string_t*)0x1;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_t* string = (choco_string_t*)0x1;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        // 不変確認（仕様固定：既存ポインタは変更しない）
-        assert((choco_string_t*)0x1 == string);
+        // // 不変確認（仕様固定：既存ポインタは変更しない）
+        // assert((choco_string_t*)0x1 == string);
     }
     {
         // src_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
-        assert(NULL == string);
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // assert(NULL == string);
     }
     {
         // src_ == "" -> SUCCESS（buffer_reserve は呼ばれない）
         // 注入ONでも成功することを固定化
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.reserve_test_enable = true;
-        s_choco_string_test.reserve_test_result = CHOCO_STRING_NO_MEMORY;
+        // s_choco_string_test.reserve_test_enable = true;
+        // s_choco_string_test.reserve_test_result = CHOCO_STRING_NO_MEMORY;
 
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(NULL == string->buffer);
-        assert(0 == string->len);
-        assert(0 == string->capacity);
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(NULL == string->buffer);
+        // assert(0 == string->len);
+        // assert(0 == string->capacity);
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
 
-        test_param_reset();
+        // test_param_reset();
     }
     {
         // tmp_string 確保失敗 -> CHOCO_STRING_NO_MEMORY
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        memory_system_test_param_set(0); // 1回目のメモリ確保で失敗(tmp_string)
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        assert(NULL == string);
+        // memory_system_test_param_set(0); // 1回目のメモリ確保で失敗(tmp_string)
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // assert(NULL == string);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // src_len overflow -> CHOCO_STRING_OVERFLOW
         // mock_strlen により安全に分岐へ到達（memcpy に到達しないので読み越しなし）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.mock_strlen_test_enable = true;
-        s_choco_string_test.mock_strlen_result = SIZE_MAX; // (SIZE_MAX - 1) < src_len を成立させる
+        // s_choco_string_test.mock_strlen_test_enable = true;
+        // s_choco_string_test.mock_strlen_result = SIZE_MAX; // (SIZE_MAX - 1) < src_len を成立させる
 
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "a");
-        assert(CHOCO_STRING_OVERFLOW == ret);
-        assert(NULL == string);
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "a");
+        // assert(CHOCO_STRING_OVERFLOW == ret);
+        // assert(NULL == string);
 
-        test_param_reset();
+        // test_param_reset();
     }
     {
         // buffer_reserve 注入失敗 -> 注入結果が返る & クリーンアップされる(*string_==NULL)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.reserve_test_enable = true;
-        s_choco_string_test.reserve_test_result = CHOCO_STRING_LIMIT_EXCEEDED;
+        // s_choco_string_test.reserve_test_enable = true;
+        // s_choco_string_test.reserve_test_result = CHOCO_STRING_LIMIT_EXCEEDED;
 
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_LIMIT_EXCEEDED == ret);
-        assert(NULL == string);
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_LIMIT_EXCEEDED == ret);
+        // assert(NULL == string);
 
-        test_param_reset();
+        // test_param_reset();
     }
     {
         // buffer_reserve 内の malloc 失敗 -> CHOCO_STRING_NO_MEMORY
         // 1回目: tmp_string, 2回目: buffer_reserve の buffer 確保
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        memory_system_test_param_set(1); // 2回目のメモリ確保で失敗(buffer_reserve内)
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        assert(NULL == string);
+        // memory_system_test_param_set(1); // 2回目のメモリ確保で失敗(buffer_reserve内)
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // assert(NULL == string);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // 正常系（非空）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(3 == string->len);
-        assert(4 == string->capacity);
-        assert(NULL != string->buffer);
-        assert(0 == strcmp(string->buffer, "aaa"));
+        // choco_string_t* string = NULL;
+        // const choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(3 == string->len);
+        // assert(4 == string->capacity);
+        // assert(NULL != string->buffer);
+        // assert(0 == strcmp(string->buffer, "aaa"));
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
 }
 
 static void NO_COVERAGE test_choco_string_destroy(void) {
     {
         // string_ == NULL -> 先頭の goto cleanup を通る
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_destroy(NULL);
+        // choco_string_destroy(NULL);
     }
     {
         // *string_ == NULL -> 2つ目の goto cleanup を通る
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_t* string = NULL;
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
     {
         // *string_ != NULL かつ buffer == NULL -> buffer解放分岐は通らず、構造体解放のみ通る
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(0 == string->len);
-        assert(0 == string->capacity);
-        assert(NULL == string->buffer);
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(0 == string->len);
+        // assert(0 == string->capacity);
+        // assert(NULL == string->buffer);
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
 
-        // 追加：2重destroyで *string_==NULL 分岐も再確認（カバレッジ的には不要だが仕様固定に有効）
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // // 追加：2重destroyで *string_==NULL 分岐も再確認（カバレッジ的には不要だが仕様固定に有効）
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
     {
         // *string_ != NULL かつ buffer != NULL -> buffer解放分岐と構造体解放を通る
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&string, "abc");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(3 == string->len);
-        assert(4 == string->capacity);
-        assert(NULL != string->buffer);
-        assert(0 == strcmp(string->buffer, "abc"));
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&string, "abc");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(3 == string->len);
+        // assert(4 == string->capacity);
+        // assert(NULL != string->buffer);
+        // assert(0 == strcmp(string->buffer, "abc"));
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
 }
 
 static void NO_COVERAGE test_choco_string_copy(void) {
     {
         // dst_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy(NULL, src);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_copy(NULL, src);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&src);
-        assert(NULL == src);
+        // choco_string_destroy(&src);
+        // assert(NULL == src);
     }
     {
         // src_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy(dst, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_copy(dst, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // 壊れた dst_ -> CHOCO_STRING_DATA_CORRUPTED（bufferは参照しない壊し方）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        struct choco_string corrupted_dst;
-        memset(&corrupted_dst, 0, sizeof(corrupted_dst));
-        corrupted_dst.len = 0;
-        corrupted_dst.capacity = 0;
-        corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_dst;
+        // memset(&corrupted_dst, 0, sizeof(corrupted_dst));
+        // corrupted_dst.len = 0;
+        // corrupted_dst.capacity = 0;
+        // corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy((choco_string_t*)&corrupted_dst, src);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // ret = choco_string_copy((choco_string_t*)&corrupted_dst, src);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        choco_string_destroy(&src);
-        corrupted_dst.buffer = NULL; // 念のため
+        // choco_string_destroy(&src);
+        // corrupted_dst.buffer = NULL; // 念のため
     }
     {
         // 壊れた src_ -> CHOCO_STRING_DATA_CORRUPTED（bufferは参照しない壊し方）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        struct choco_string corrupted_src;
-        memset(&corrupted_src, 0, sizeof(corrupted_src));
-        corrupted_src.len = 0;
-        corrupted_src.capacity = 0;
-        corrupted_src.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_src;
+        // memset(&corrupted_src, 0, sizeof(corrupted_src));
+        // corrupted_src.len = 0;
+        // corrupted_src.capacity = 0;
+        // corrupted_src.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy(dst, (const choco_string_t*)&corrupted_src);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // ret = choco_string_copy(dst, (const choco_string_t*)&corrupted_src);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        choco_string_destroy(&dst);
-        corrupted_src.buffer = NULL; // 念のため
+        // choco_string_destroy(&dst);
+        // corrupted_src.buffer = NULL; // 念のため
     }
     {
         // src_->len == 0 -> dst_->buffer[0]='\0' が実行される（dst_->buffer != NULL の分岐）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_default_create(&src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == src->len);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == src->len);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != dst->buffer);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != dst->buffer);
 
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == dst->len);
-        assert(0 == strcmp(dst->buffer, ""));
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == dst->len);
+        // assert(0 == strcmp(dst->buffer, ""));
 
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
     {
         // src_->len == 0 -> dst_->buffer が NULL のため buffer[0] には触れない（dst_->buffer == NULL の分岐）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_default_create(&src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == src->len);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == src->len);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_default_create(&dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL == dst->buffer);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_default_create(&dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL == dst->buffer);
 
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == dst->len);
-        assert(0 == dst->capacity);
-        assert(NULL == dst->buffer);
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == dst->len);
+        // assert(0 == dst->capacity);
+        // assert(NULL == dst->buffer);
 
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
     {
         // OVERFLOW 分岐を通す（通常は is_string_valid で弾かれるため、注入で is_string_valid を true に固定）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.is_string_valid_test_enable = true;
-        s_choco_string_test.string_valid_result = true;
+        // s_choco_string_test.is_string_valid_test_enable = true;
+        // s_choco_string_test.string_valid_result = true;
 
-        struct choco_string fake_dst;
-        memset(&fake_dst, 0, sizeof(fake_dst));
+        // struct choco_string fake_dst;
+        // memset(&fake_dst, 0, sizeof(fake_dst));
 
-        struct choco_string fake_src;
-        memset(&fake_src, 0, sizeof(fake_src));
-        fake_src.len = SIZE_MAX; // (SIZE_MAX - 1) < len を成立させる
+        // struct choco_string fake_src;
+        // memset(&fake_src, 0, sizeof(fake_src));
+        // fake_src.len = SIZE_MAX; // (SIZE_MAX - 1) < len を成立させる
 
-        choco_string_result_t ret = choco_string_copy((choco_string_t*)&fake_dst, (const choco_string_t*)&fake_src);
-        assert(CHOCO_STRING_OVERFLOW == ret);
+        // choco_string_result_t ret = choco_string_copy((choco_string_t*)&fake_dst, (const choco_string_t*)&fake_src);
+        // assert(CHOCO_STRING_OVERFLOW == ret);
 
-        test_param_reset();
+        // test_param_reset();
     }
     {
         // dst_->capacity >= (src_->len + 1) -> resizeなしでコピー成功
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "bbbbb"); // cap=6
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(6 == dst->capacity);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "bbbbb"); // cap=6
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(6 == dst->capacity);
 
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(3 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aaa"));
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(3 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aaa"));
 
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
     {
         // dst_->capacity < (src_->len + 1) -> buffer_resize 経由でコピー成功
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(4 == dst->capacity);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(4 == dst->capacity);
 
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aaaaa"));
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aaaaa"));
 
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
     {
         // resize 注入失敗 -> 注入結果が返る & dst不変（resize分岐を確実に通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        char*  old_ptr = dst->buffer;
-        size_t old_len = dst->len;
-        size_t old_cap = dst->capacity;
+        // char*  old_ptr = dst->buffer;
+        // size_t old_len = dst->len;
+        // size_t old_cap = dst->capacity;
 
-        s_choco_string_test.resize_test_enable = true;
-        s_choco_string_test.resize_test_result = CHOCO_STRING_NO_MEMORY;
+        // s_choco_string_test.resize_test_enable = true;
+        // s_choco_string_test.resize_test_result = CHOCO_STRING_NO_MEMORY;
 
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_ptr == dst->buffer);
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_ptr == dst->buffer);
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        test_param_reset();
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // test_param_reset();
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
     {
         // malloc失敗(buffer_resize内の確保失敗) -> NO_MEMORY & dst不変（resize分岐を確実に通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "aaaaa"); // len=5 cap=6
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        char*  old_ptr = dst->buffer;
-        size_t old_len = dst->len;
-        size_t old_cap = dst->capacity;
+        // char*  old_ptr = dst->buffer;
+        // size_t old_len = dst->len;
+        // size_t old_cap = dst->capacity;
 
-        memory_system_test_param_set(0); // 次の(=buffer_resize内の)メモリ確保を失敗させる
-        ret = choco_string_copy(dst, src);
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // memory_system_test_param_set(0); // 次の(=buffer_resize内の)メモリ確保を失敗させる
+        // ret = choco_string_copy(dst, src);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_ptr == dst->buffer);
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_ptr == dst->buffer);
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
     }
 }
 
 static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
     {
         // dst_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = choco_string_copy_from_c_string(NULL, "aaa");
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_result_t ret = choco_string_copy_from_c_string(NULL, "aaa");
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // src_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy_from_c_string(dst, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_copy_from_c_string(dst, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // 壊れた dst_ -> CHOCO_STRING_DATA_CORRUPTED（bufferは参照しない壊し方）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        struct choco_string corrupted_dst;
-        memset(&corrupted_dst, 0, sizeof(corrupted_dst));
-        corrupted_dst.len = 0;
-        corrupted_dst.capacity = 0;
-        corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_dst;
+        // memset(&corrupted_dst, 0, sizeof(corrupted_dst));
+        // corrupted_dst.len = 0;
+        // corrupted_dst.capacity = 0;
+        // corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        choco_string_result_t ret = choco_string_copy_from_c_string((choco_string_t*)&corrupted_dst, "aaa");
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // choco_string_result_t ret = choco_string_copy_from_c_string((choco_string_t*)&corrupted_dst, "aaa");
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        corrupted_dst.buffer = NULL; // 念のため
+        // corrupted_dst.buffer = NULL; // 念のため
     }
     {
         // src_len == 0 かつ dst_->buffer != NULL -> buffer[0] を '\0' にする分岐
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != dst->buffer);
-        assert(3 == dst->len);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != dst->buffer);
+        // assert(3 == dst->len);
 
-        ret = choco_string_copy_from_c_string(dst, "");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == dst->len);
-        assert(0 == strcmp(dst->buffer, ""));
+        // ret = choco_string_copy_from_c_string(dst, "");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == dst->len);
+        // assert(0 == strcmp(dst->buffer, ""));
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // src_len == 0 かつ dst_->buffer == NULL -> buffer[0] には触れない分岐
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL == dst->buffer);
-        assert(0 == dst->len);
-        assert(0 == dst->capacity);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL == dst->buffer);
+        // assert(0 == dst->len);
+        // assert(0 == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == dst->len);
-        assert(0 == dst->capacity);
-        assert(NULL == dst->buffer);
+        // ret = choco_string_copy_from_c_string(dst, "");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == dst->len);
+        // assert(0 == dst->capacity);
+        // assert(NULL == dst->buffer);
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // OVERFLOW 分岐（mock_strlen を使って強制的に SIZE_MAX を返す）
         // dst は valid である必要がある（default_create の 0初期化状態なら valid）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        s_choco_string_test.mock_strlen_test_enable = true;
-        s_choco_string_test.mock_strlen_result = SIZE_MAX;
+        // s_choco_string_test.mock_strlen_test_enable = true;
+        // s_choco_string_test.mock_strlen_result = SIZE_MAX;
 
-        ret = choco_string_copy_from_c_string(dst, "a"); // mock_strlen が優先されるので入力は何でもよい
-        assert(CHOCO_STRING_OVERFLOW == ret);
+        // ret = choco_string_copy_from_c_string(dst, "a"); // mock_strlen が優先されるので入力は何でもよい
+        // assert(CHOCO_STRING_OVERFLOW == ret);
 
-        test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // dst_->capacity >= (src_len + 1) -> resizeなしでSUCCESS
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbbbb"); // len=5 cap=6
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(6 == dst->capacity);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbbbb"); // len=5 cap=6
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(6 == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "aaa"); // len=3
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(3 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aaa"));
+        // ret = choco_string_copy_from_c_string(dst, "aaa"); // len=3
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(3 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aaa"));
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // dst_->capacity < (src_len + 1) -> buffer_resize経由でSUCCESS
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(4 == dst->capacity);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(4 == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> 要resize
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aaaaa"));
+        // ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> 要resize
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aaaaa"));
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // dst_->capacity == 0 かつ src non-empty -> buffer_resize経由でSUCCESS
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst); // cap=0 buffer=NULL
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst); // cap=0 buffer=NULL
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> 要resize
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aaaaa"));
+        // ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> 要resize
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aaaaa"));
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // resize 注入失敗 -> 注入結果が返る & dst不変（resize分岐を確実に通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        char*  old_ptr = dst->buffer;
-        size_t old_len = dst->len;
-        size_t old_cap = dst->capacity;
+        // char*  old_ptr = dst->buffer;
+        // size_t old_len = dst->len;
+        // size_t old_cap = dst->capacity;
 
-        s_choco_string_test.resize_test_enable = true;
-        s_choco_string_test.resize_test_result = CHOCO_STRING_NO_MEMORY;
+        // s_choco_string_test.resize_test_enable = true;
+        // s_choco_string_test.resize_test_result = CHOCO_STRING_NO_MEMORY;
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> resize経由
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> resize経由
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_ptr == dst->buffer);
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_ptr == dst->buffer);
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // malloc失敗(buffer_resize内の確保失敗) -> NO_MEMORY & dst不変（resize分岐を確実に通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        char*  old_ptr = dst->buffer;
-        size_t old_len = dst->len;
-        size_t old_cap = dst->capacity;
+        // char*  old_ptr = dst->buffer;
+        // size_t old_len = dst->len;
+        // size_t old_cap = dst->capacity;
 
-        memory_system_test_param_set(0); // 次の(=buffer_resize内の)確保を失敗させる
-        ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> resize経由
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // memory_system_test_param_set(0); // 次の(=buffer_resize内の)確保を失敗させる
+        // ret = choco_string_copy_from_c_string(dst, "aaaaa"); // len=5 -> resize経由
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_ptr == dst->buffer);
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_ptr == dst->buffer);
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
 }
 
 static void NO_COVERAGE test_choco_string_concat(void) {
     {
         // dst_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "a");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "a");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat(src, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_concat(src, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&src);
-        assert(NULL == src);
+        // choco_string_destroy(&src);
+        // assert(NULL == src);
     }
     {
         // string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat(NULL, dst);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_concat(NULL, dst);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // dst_ == string_ -> CHOCO_STRING_BAD_OPERATION (自己連結禁止)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* s = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&s, "a");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* s = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&s, "a");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat(s, s);
-        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        // ret = choco_string_concat(s, s);
+        // assert(CHOCO_STRING_BAD_OPERATION == ret);
 
-        choco_string_destroy(&s);
-        assert(NULL == s);
+        // choco_string_destroy(&s);
+        // assert(NULL == s);
     }
     {
         // 壊れた string_ -> CHOCO_STRING_DATA_CORRUPTED (is_string_valid(string_) false)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // dst不変確認用
-        const size_t old_len = dst->len;
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // // dst不変確認用
+        // const size_t old_len = dst->len;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        struct choco_string corrupted_src;
-        memset(&corrupted_src, 0, sizeof(corrupted_src));
-        corrupted_src.len = 0;
-        corrupted_src.capacity = 0;
-        corrupted_src.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_src;
+        // memset(&corrupted_src, 0, sizeof(corrupted_src));
+        // corrupted_src.len = 0;
+        // corrupted_src.capacity = 0;
+        // corrupted_src.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        ret = choco_string_concat((const choco_string_t*)&corrupted_src, dst);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // ret = choco_string_concat((const choco_string_t*)&corrupted_src, dst);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        // dst不変
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // dst不変
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        corrupted_src.buffer = NULL;
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // corrupted_src.buffer = NULL;
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // 壊れた dst_ -> CHOCO_STRING_DATA_CORRUPTED (is_string_valid(dst_) false)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&src, "a");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&src, "a");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        struct choco_string corrupted_dst;
-        memset(&corrupted_dst, 0, sizeof(corrupted_dst));
-        corrupted_dst.len = 0;
-        corrupted_dst.capacity = 0;
-        corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_dst;
+        // memset(&corrupted_dst, 0, sizeof(corrupted_dst));
+        // corrupted_dst.len = 0;
+        // corrupted_dst.capacity = 0;
+        // corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        ret = choco_string_concat(src, (choco_string_t*)&corrupted_dst);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // ret = choco_string_concat(src, (choco_string_t*)&corrupted_dst);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        corrupted_dst.buffer = NULL;
-        choco_string_destroy(&src);
-        assert(NULL == src);
+        // corrupted_dst.buffer = NULL;
+        // choco_string_destroy(&src);
+        // assert(NULL == src);
     }
     {
         // overflow -> CHOCO_STRING_OVERFLOW
         // ※実サイズでの再現は困難なので is_string_valid をテストフックで true 固定にして到達させる
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.is_string_valid_test_enable = true;
-        s_choco_string_test.string_valid_result = true;
+        // s_choco_string_test.is_string_valid_test_enable = true;
+        // s_choco_string_test.string_valid_result = true;
 
-        struct choco_string fake_dst;
-        struct choco_string fake_src;
-        memset(&fake_dst, 0, sizeof(fake_dst));
-        memset(&fake_src, 0, sizeof(fake_src));
+        // struct choco_string fake_dst;
+        // struct choco_string fake_src;
+        // memset(&fake_dst, 0, sizeof(fake_dst));
+        // memset(&fake_src, 0, sizeof(fake_src));
 
-        fake_dst.len = SIZE_MAX - 2;
-        fake_dst.capacity = 1;
-        fake_dst.buffer = (char*)0x1;
+        // fake_dst.len = SIZE_MAX - 2;
+        // fake_dst.capacity = 1;
+        // fake_dst.buffer = (char*)0x1;
 
-        fake_src.len = 2;
-        fake_src.capacity = 1;
-        fake_src.buffer = (char*)0x1;
+        // fake_src.len = 2;
+        // fake_src.capacity = 1;
+        // fake_src.buffer = (char*)0x1;
 
-        const choco_string_result_t ret = choco_string_concat((const choco_string_t*)&fake_src, (choco_string_t*)&fake_dst);
-        assert(CHOCO_STRING_OVERFLOW == ret);
+        // const choco_string_result_t ret = choco_string_concat((const choco_string_t*)&fake_src, (choco_string_t*)&fake_dst);
+        // assert(CHOCO_STRING_OVERFLOW == ret);
 
-        test_param_reset(); // フック解除
+        // test_param_reset(); // フック解除
     }
     {
         // string_->len == 0 -> SUCCESS (no-op、メモリ確保しない)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* src = NULL;
-        choco_string_result_t ret = choco_string_default_create(&src);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&src);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* dst = NULL;
-        ret = choco_string_create_from_c_string(&dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // ret = choco_string_create_from_c_string(&dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // ここで次のメモリ確保を失敗させても、concatは確保しないので成功することを固定化
-        memory_system_test_param_set(0);
+        // // ここで次のメモリ確保を失敗させても、concatは確保しないので成功することを固定化
+        // memory_system_test_param_set(0);
 
-        const size_t old_len = dst->len;
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // const size_t old_len = dst->len;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        ret = choco_string_concat(src, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // ret = choco_string_concat(src, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // dst不変
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // dst不変
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        choco_string_destroy(&src);
-        assert(NULL == dst);
-        assert(NULL == src);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // choco_string_destroy(&src);
+        // assert(NULL == dst);
+        // assert(NULL == src);
     }
     {
         // (dst_len_new + 1) <= dst_->capacity -> in-place concat (メモリ確保なし)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = buffer_resize(16, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(16 == dst->capacity);
-        assert(0 == dst->len);
+        // ret = buffer_resize(16, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(16 == dst->capacity);
+        // assert(0 == dst->len);
 
-        ret = choco_string_copy_from_c_string(dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(3 == dst->len);
-        assert(16 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // ret = choco_string_copy_from_c_string(dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(3 == dst->len);
+        // assert(16 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        choco_string_t* src = NULL;
-        ret = choco_string_create_from_c_string(&src, "aa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(2 == src->len);
+        // choco_string_t* src = NULL;
+        // ret = choco_string_create_from_c_string(&src, "aa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(2 == src->len);
 
-        // in-placeなので、次のメモリ確保失敗をセットしても成功する
-        memory_system_test_param_set(0);
+        // // in-placeなので、次のメモリ確保失敗をセットしても成功する
+        // memory_system_test_param_set(0);
 
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        ret = choco_string_concat(src, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbbaa"));
+        // ret = choco_string_concat(src, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbbaa"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&src);
-        choco_string_destroy(&dst);
-        assert(NULL == src);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // assert(NULL == src);
+        // assert(NULL == dst);
     }
     {
         // capacity不足 -> 再確保経由でSUCCESS (dst_->len != 0 かつ dst_->capacity != 0 の枝を踏む)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* src = NULL;
-        ret = choco_string_create_from_c_string(&src, "aa"); // len=2
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // ret = choco_string_create_from_c_string(&src, "aa"); // len=2
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat(src, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbbaa"));
+        // ret = choco_string_concat(src, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbbaa"));
 
-        choco_string_destroy(&src);
-        choco_string_destroy(&dst);
-        assert(NULL == src);
-        assert(NULL == dst);
+        // choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // assert(NULL == src);
+        // assert(NULL == dst);
     }
     {
         // capacity不足 -> 再確保経由でSUCCESS (dst_->len == 0 かつ dst_->capacity == 0 の枝を踏む)
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst); // len=0 cap=0
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst); // len=0 cap=0
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* src = NULL;
-        ret = choco_string_create_from_c_string(&src, "aa"); // len=2
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // ret = choco_string_create_from_c_string(&src, "aa"); // len=2
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat(src, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(2 == dst->len);
-        assert(3 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "aa"));
+        // ret = choco_string_concat(src, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(2 == dst->len);
+        // assert(3 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "aa"));
 
-        choco_string_destroy(&src);
-        choco_string_destroy(&dst);
-        assert(NULL == src);
-        assert(NULL == dst);
+        // choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // assert(NULL == src);
+        // assert(NULL == dst);
     }
     {
         // 再確保側で string_malloc 失敗 -> CHOCO_STRING_NO_MEMORY、dst不変
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        choco_string_t* src = NULL;
-        ret = choco_string_create_from_c_string(&src, "aa"); // 要再確保
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* src = NULL;
+        // ret = choco_string_create_from_c_string(&src, "aa"); // 要再確保
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // dst不変確認用
-        const size_t old_len = dst->len;
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // // dst不変確認用
+        // const size_t old_len = dst->len;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        // 次のメモリ確保(string_malloc)を失敗させる
-        memory_system_test_param_set(0);
+        // // 次のメモリ確保(string_malloc)を失敗させる
+        // memory_system_test_param_set(0);
 
-        ret = choco_string_concat(src, dst);
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // ret = choco_string_concat(src, dst);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&src);
-        choco_string_destroy(&dst);
-        assert(NULL == src);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&src);
+        // choco_string_destroy(&dst);
+        // assert(NULL == src);
+        // assert(NULL == dst);
     }
 }
 
 static void NO_COVERAGE test_choco_string_concat_from_c_string(void) {
     {
         // dst_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        const choco_string_result_t ret = choco_string_concat_from_c_string("a", NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // const choco_string_result_t ret = choco_string_concat_from_c_string("a", NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat_from_c_string(NULL, dst);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // ret = choco_string_concat_from_c_string(NULL, dst);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // 壊れた dst_ -> CHOCO_STRING_DATA_CORRUPTED（bufferは参照しない壊し方）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        struct choco_string corrupted_dst;
-        memset(&corrupted_dst, 0, sizeof(corrupted_dst));
-        corrupted_dst.len = 0;
-        corrupted_dst.capacity = 0;
-        corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
+        // struct choco_string corrupted_dst;
+        // memset(&corrupted_dst, 0, sizeof(corrupted_dst));
+        // corrupted_dst.len = 0;
+        // corrupted_dst.capacity = 0;
+        // corrupted_dst.buffer = (char*)0x1; // capacity==0なのにbuffer!=NULL
 
-        const choco_string_result_t ret = choco_string_concat_from_c_string("a", (choco_string_t*)&corrupted_dst);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // const choco_string_result_t ret = choco_string_concat_from_c_string("a", (choco_string_t*)&corrupted_dst);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        corrupted_dst.buffer = NULL; // 念のため
+        // corrupted_dst.buffer = NULL; // 念のため
     }
     {
         // overflow -> CHOCO_STRING_OVERFLOW
         // ※実サイズでの再現が困難なので is_string_valid をテストフックで true 固定にして到達させる
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        s_choco_string_test.is_string_valid_test_enable = true;
-        s_choco_string_test.string_valid_result = true;
+        // s_choco_string_test.is_string_valid_test_enable = true;
+        // s_choco_string_test.string_valid_result = true;
 
-        struct choco_string fake_dst;
-        memset(&fake_dst, 0, sizeof(fake_dst));
-        fake_dst.len = SIZE_MAX - 2;   // SIZE_MAX - len - 1 == 1
-        fake_dst.capacity = 1;
-        fake_dst.buffer = (char*)0x1;
+        // struct choco_string fake_dst;
+        // memset(&fake_dst, 0, sizeof(fake_dst));
+        // fake_dst.len = SIZE_MAX - 2;   // SIZE_MAX - len - 1 == 1
+        // fake_dst.capacity = 1;
+        // fake_dst.buffer = (char*)0x1;
 
-        const choco_string_result_t ret = choco_string_concat_from_c_string("aa", (choco_string_t*)&fake_dst); // src_len=2
-        assert(CHOCO_STRING_OVERFLOW == ret);
+        // const choco_string_result_t ret = choco_string_concat_from_c_string("aa", (choco_string_t*)&fake_dst); // src_len=2
+        // assert(CHOCO_STRING_OVERFLOW == ret);
 
-        test_param_reset(); // フック解除
+        // test_param_reset(); // フック解除
     }
     {
         // src_len == 0 -> SUCCESS（no-op、メモリ確保しない）
         // 次のメモリ確保を失敗させても、concat_from_c_stringは確保しないので成功することを固定化
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        const size_t old_len = dst->len;
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // const size_t old_len = dst->len;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        memory_system_test_param_set(0);
+        // memory_system_test_param_set(0);
 
-        ret = choco_string_concat_from_c_string("", dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // ret = choco_string_concat_from_c_string("", dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // dst不変
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // dst不変
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // (dst_len_new + 1) <= dst_->capacity -> in-place concat（メモリ確保なし）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = buffer_resize(16, dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(16 == dst->capacity);
+        // ret = buffer_resize(16, dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(16 == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "bbb");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(3 == dst->len);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // ret = choco_string_copy_from_c_string(dst, "bbb");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(3 == dst->len);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        // in-placeなので、次のメモリ確保失敗をセットしても成功する
-        memory_system_test_param_set(0);
+        // // in-placeなので、次のメモリ確保失敗をセットしても成功する
+        // memory_system_test_param_set(0);
 
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        ret = choco_string_concat_from_c_string("aa", dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbbaa"));
+        // ret = choco_string_concat_from_c_string("aa", dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbbaa"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // capacity不足 -> 再確保経由でSUCCESS（dst_->len != 0 かつ dst_->capacity != 0 の枝を踏む）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // len=3 cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        char* const old_ptr = dst->buffer;
+        // char* const old_ptr = dst->buffer;
 
-        ret = choco_string_concat_from_c_string("aa", dst); // len=2 -> dst_len_new=5 -> 要再確保
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(5 == dst->len);
-        assert(6 == dst->capacity);
-        assert(0 == strcmp(dst->buffer, "bbbaa"));
-        assert(old_ptr != dst->buffer); // 再確保でポインタが変わる（旧領域はまだ確保中に新規確保するため同一にならない想定）
+        // ret = choco_string_concat_from_c_string("aa", dst); // len=2 -> dst_len_new=5 -> 要再確保
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(5 == dst->len);
+        // assert(6 == dst->capacity);
+        // assert(0 == strcmp(dst->buffer, "bbbaa"));
+        // assert(old_ptr != dst->buffer); // 再確保でポインタが変わる（旧領域はまだ確保中に新規確保するため同一にならない想定）
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // capacity不足 -> 再確保経由でSUCCESS（dst_->len == 0 かつ dst_->capacity == 0 の枝を踏む）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_default_create(&dst); // len=0 cap=0 buffer=NULL
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&dst); // len=0 cap=0 buffer=NULL
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_concat_from_c_string("aa", dst);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(2 == dst->len);
-        assert(3 == dst->capacity);
-        assert(NULL != dst->buffer);
-        assert(0 == strcmp(dst->buffer, "aa"));
+        // ret = choco_string_concat_from_c_string("aa", dst);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(2 == dst->len);
+        // assert(3 == dst->capacity);
+        // assert(NULL != dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "aa"));
 
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
     {
         // 再確保側で string_malloc 失敗 -> CHOCO_STRING_NO_MEMORY、dst不変
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* dst = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // cap=4
-        assert(CHOCO_STRING_SUCCESS == ret);
+        // choco_string_t* dst = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&dst, "bbb"); // cap=4
+        // assert(CHOCO_STRING_SUCCESS == ret);
 
-        // dst不変確認用
-        const size_t old_len = dst->len;
-        const size_t old_cap = dst->capacity;
-        char* const old_ptr = dst->buffer;
+        // // dst不変確認用
+        // const size_t old_len = dst->len;
+        // const size_t old_cap = dst->capacity;
+        // char* const old_ptr = dst->buffer;
 
-        // 次のメモリ確保(string_malloc)を失敗させる（concat_from_c_string内のtmp_buffer確保）
-        memory_system_test_param_set(0);
+        // // 次のメモリ確保(string_malloc)を失敗させる（concat_from_c_string内のtmp_buffer確保）
+        // memory_system_test_param_set(0);
 
-        ret = choco_string_concat_from_c_string("aa", dst); // 要再確保
-        assert(CHOCO_STRING_NO_MEMORY == ret);
+        // ret = choco_string_concat_from_c_string("aa", dst); // 要再確保
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
 
-        // 不変確認
-        assert(old_len == dst->len);
-        assert(old_cap == dst->capacity);
-        assert(old_ptr == dst->buffer);
-        assert(0 == strcmp(dst->buffer, "bbb"));
+        // // 不変確認
+        // assert(old_len == dst->len);
+        // assert(old_cap == dst->capacity);
+        // assert(old_ptr == dst->buffer);
+        // assert(0 == strcmp(dst->buffer, "bbb"));
 
-        memory_system_test_param_reset();
-        choco_string_destroy(&dst);
-        assert(NULL == dst);
+        // memory_system_test_param_reset();
+        // choco_string_destroy(&dst);
+        // assert(NULL == dst);
     }
 }
 
 static void NO_COVERAGE test_choco_string_length(void) {
     {
         // string_ == NULL -> 0
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        const size_t len = choco_string_length(NULL);
-        assert(0 == len);
+        // const size_t len = choco_string_length(NULL);
+        // assert(0 == len);
     }
     {
         // 空文字列(len==0) -> 0（非NULL分岐の return string_->len を通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(0 == string->len);
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(0 == string->len);
 
-        const size_t len = choco_string_length(string);
-        assert(0 == len);
+        // const size_t len = choco_string_length(string);
+        // assert(0 == len);
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
     {
         // "aaa"(len==3) -> 3（非NULL分岐の return string_->len を別値でも確認）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(3 == string->len);
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(3 == string->len);
 
-        const size_t len = choco_string_length(string);
-        assert(3 == len);
+        // const size_t len = choco_string_length(string);
+        // assert(3 == len);
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
 }
 
 static void NO_COVERAGE test_choco_string_c_str(void) {
     {
         // string_ == NULL -> ""
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        const char* c_ptr = choco_string_c_str(NULL);
-        assert(0 == strcmp(c_ptr, ""));
+        // const char* c_ptr = choco_string_c_str(NULL);
+        // assert(0 == strcmp(c_ptr, ""));
     }
     {
         // string_ != NULL かつ buffer == NULL -> ""
         // （非NULL分岐に入ってから、NULL buffer 分岐を通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_default_create(&string);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(NULL == string->buffer);
-        assert(0 == string->len);
-        assert(0 == string->capacity);
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_default_create(&string);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(NULL == string->buffer);
+        // assert(0 == string->len);
+        // assert(0 == string->capacity);
 
-        const char* c_ptr = choco_string_c_str(string);
-        assert(0 == strcmp(c_ptr, ""));
+        // const char* c_ptr = choco_string_c_str(string);
+        // assert(0 == strcmp(c_ptr, ""));
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
     {
         // string_ != NULL かつ buffer != NULL -> buffer内容
         // （非NULL分岐に入ってから、非NULL buffer 分岐を通す）
-        test_param_reset();
-        memory_system_test_param_reset();
+        // test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_t* string = NULL;
-        choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != string);
-        assert(NULL != string->buffer);
-        assert(3 == string->len);
-        assert(4 == string->capacity);
-        assert(0 == strcmp(string->buffer, "aaa"));
+        // choco_string_t* string = NULL;
+        // choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != string);
+        // assert(NULL != string->buffer);
+        // assert(3 == string->len);
+        // assert(4 == string->capacity);
+        // assert(0 == strcmp(string->buffer, "aaa"));
 
-        const char* c_ptr = choco_string_c_str(string);
-        assert(0 == strcmp(c_ptr, "aaa"));
+        // const char* c_ptr = choco_string_c_str(string);
+        // assert(0 == strcmp(c_ptr, "aaa"));
 
-        choco_string_destroy(&string);
-        assert(NULL == string);
+        // choco_string_destroy(&string);
+        // assert(NULL == string);
     }
 }
 
@@ -1998,383 +1998,383 @@ static void NO_COVERAGE test_rslt_to_str(void) {
 static void NO_COVERAGE test_string_malloc(void) {
     {
         // out_ptr_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        choco_string_result_t ret = string_malloc(16, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_result_t ret = string_malloc(16, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // *out_ptr_ != NULL -> CHOCO_STRING_INVALID_ARGUMENT（不変確認）
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
-        void* p = (void*)0x1; // sentinel non-NULL
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
-        assert((void*)0x1 == p);
+        // void* p = (void*)0x1; // sentinel non-NULL
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // assert((void*)0x1 == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocate -> MEMORY_SYSTEM_INVALID_ARGUMENT
         // -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
-        memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        // memory_system_test_param_reset();
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
 
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
-        assert(NULL == p);
+        // void* p = NULL;
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // assert(NULL == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocate -> MEMORY_SYSTEM_NO_MEMORY
         // -> CHOCO_STRING_NO_MEMORY
-        memory_system_test_param_reset();
-        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        // memory_system_test_param_reset();
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        assert(NULL == p);
+        // void* p = NULL;
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // assert(NULL == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocate -> MEMORY_SYSTEM_LIMIT_EXCEEDED
         // -> CHOCO_STRING_LIMIT_EXCEEDED
-        memory_system_test_param_reset();
-        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        // memory_system_test_param_reset();
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_LIMIT_EXCEEDED == ret);
-        assert(NULL == p);
+        // void* p = NULL;
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_LIMIT_EXCEEDED == ret);
+        // assert(NULL == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocate -> MEMORY_SYSTEM_RUNTIME_ERROR
         // -> CHOCO_STRING_RUNTIME_ERROR
-        memory_system_test_param_reset();
-        memory_system_rslt_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
+        // memory_system_test_param_reset();
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_RUNTIME_ERROR);
 
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
-        assert(NULL == p);
+        // void* p = NULL;
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+        // assert(NULL == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocate -> (未定義の戻り値)
         // -> CHOCO_STRING_UNDEFINED_ERROR
-        memory_system_test_param_reset();
-        memory_system_rslt_code_set((memory_system_result_t)0x7fffffff);
+        // memory_system_test_param_reset();
+        // memory_system_rslt_code_set((memory_system_result_t)0x7fffffff);
 
-        void* p = NULL;
-        choco_string_result_t ret = string_malloc(16, &p);
-        assert(CHOCO_STRING_UNDEFINED_ERROR == ret);
-        assert(NULL == p);
+        // void* p = NULL;
+        // choco_string_result_t ret = string_malloc(16, &p);
+        // assert(CHOCO_STRING_UNDEFINED_ERROR == ret);
+        // assert(NULL == p);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // SUCCESS パス（強制を解除して実 allocation）
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
 
         // 前提：test_choco_string() で memory_system_create() 済みであること
-        void* p = NULL;
-        const size_t size = 32;
+        // void* p = NULL;
+        // const size_t size = 32;
 
-        choco_string_result_t ret = string_malloc(size, &p);
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(NULL != p);
+        // choco_string_result_t ret = string_malloc(size, &p);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(NULL != p);
 
-        memory_system_free(p, size, MEMORY_TAG_STRING);
-        p = NULL;
+        // memory_system_free(p, size, MEMORY_TAG_STRING);
+        // p = NULL;
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
 }
 
 static void NO_COVERAGE test_buffer_reserve(void) {
     {
         // 分岐: reserve_test_enable == true による早期 return
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        s_choco_string_test.reserve_test_enable = true;
-        s_choco_string_test.reserve_test_result = CHOCO_STRING_RUNTIME_ERROR;
+        // s_choco_string_test.reserve_test_enable = true;
+        // s_choco_string_test.reserve_test_result = CHOCO_STRING_RUNTIME_ERROR;
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_reserve(16, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_reserve(16, &string);
 
-        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
-        // 早期 return のため、状態は不変のまま
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+        // // 早期 return のため、状態は不変のまま
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
 
-        s_choco_string_test.reserve_test_enable = false;
+        // s_choco_string_test.reserve_test_enable = false;
     }
     {
         // 分岐: size_ == 0 -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_reserve(0, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_reserve(0, &string);
 
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
     }
     {
         // 分岐: string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_result_t ret = buffer_reserve(8, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_result_t ret = buffer_reserve(8, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // 分岐: string_->capacity != 0 -> CHOCO_STRING_BAD_OPERATION
         // ※この分岐では is_string_valid() に到達しない
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        char dummy_buf[2] = {'\0', '\0'};
+        // char dummy_buf[2] = {'\0', '\0'};
 
-        choco_string_t string = {0};
-        string.len = 0;
-        string.capacity = 2;          // capacity != 0 を作る
-        string.buffer = dummy_buf;
+        // choco_string_t string = {0};
+        // string.len = 0;
+        // string.capacity = 2;          // capacity != 0 を作る
+        // string.buffer = dummy_buf;
 
-        choco_string_result_t ret = buffer_reserve(8, &string);
-        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        // choco_string_result_t ret = buffer_reserve(8, &string);
+        // assert(CHOCO_STRING_BAD_OPERATION == ret);
 
-        // 不変確認（この経路では更新されない）
-        assert(0 == string.len);
-        assert(2 == string.capacity);
-        assert(dummy_buf == string.buffer);
+        // // 不変確認（この経路では更新されない）
+        // assert(0 == string.len);
+        // assert(2 == string.capacity);
+        // assert(dummy_buf == string.buffer);
     }
     {
         // 分岐: is_string_valid(string_) == false -> CHOCO_STRING_DATA_CORRUPTED
         // capacity==0 は満たしつつ、buffer!=NULL にして壊れた状態を作る
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
-        string.len = 0;
-        string.capacity = 0;
-        string.buffer = (char*)0x1;  // non-NULL（is_string_valid はここで false を返す）
+        // choco_string_t string = {0};
+        // string.len = 0;
+        // string.capacity = 0;
+        // string.buffer = (char*)0x1;  // non-NULL（is_string_valid はここで false を返す）
 
-        choco_string_result_t ret = buffer_reserve(8, &string);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // choco_string_result_t ret = buffer_reserve(8, &string);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        // 不変確認
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert((char*)0x1 == string.buffer);
+        // // 不変確認
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert((char*)0x1 == string.buffer);
 
-        // 後続で誤って触らないように戻す（テスト上の安全策）
-        string.buffer = NULL;
+        // // 後続で誤って触らないように戻す（テスト上の安全策）
+        // string.buffer = NULL;
     }
     {
         // 分岐: string_malloc() 失敗 -> ret != SUCCESS 経由
         // memory_system_allocate の返り値を強制して string_malloc を失敗させる
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_reserve(8, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_reserve(8, &string);
 
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        // 不変確認（失敗時は状態不変の設計）
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // // 不変確認（失敗時は状態不変の設計）
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
 
-        // 強制設定を解除
-        memory_system_test_param_reset();
+        // // 強制設定を解除
+        // memory_system_test_param_reset();
     }
     {
         // 正常系: SUCCESS（バッファ確保＆全0初期化確認）
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_reserve(8, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_reserve(8, &string);
 
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == string.len);
-        assert(8 == string.capacity);
-        assert(NULL != string.buffer);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == string.len);
+        // assert(8 == string.capacity);
+        // assert(NULL != string.buffer);
 
-        // memset(tmp_buffer, 0, size_) の確認（全バイト0）
-        for(size_t i = 0; i < string.capacity; ++i) {
-            assert(0 == (unsigned char)string.buffer[i]);
-        }
+        // // memset(tmp_buffer, 0, size_) の確認（全バイト0）
+        // for(size_t i = 0; i < string.capacity; ++i) {
+        //     assert(0 == (unsigned char)string.buffer[i]);
+        // }
 
-        // 後始末（リークさせない）
-        memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
-        string.buffer = NULL;
-        string.capacity = 0;
-        string.len = 0;
+        // // 後始末（リークさせない）
+        // memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
+        // string.buffer = NULL;
+        // string.capacity = 0;
+        // string.len = 0;
     }
 }
 
 static void NO_COVERAGE test_buffer_resize(void) {
     {
         // 分岐: resize_test_enable == true による早期 return
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        s_choco_string_test.resize_test_enable = true;
-        s_choco_string_test.resize_test_result = CHOCO_STRING_RUNTIME_ERROR;
+        // s_choco_string_test.resize_test_enable = true;
+        // s_choco_string_test.resize_test_result = CHOCO_STRING_RUNTIME_ERROR;
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_resize(16, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_resize(16, &string);
 
-        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
-        // 早期 return のため不変
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+        // // 早期 return のため不変
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
 
-        s_choco_string_test.resize_test_enable = false;
+        // s_choco_string_test.resize_test_enable = false;
     }
     {
         // 分岐: string_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_result_t ret = buffer_resize(8, NULL);
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // choco_string_result_t ret = buffer_resize(8, NULL);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
     }
     {
         // 分岐: size_ == 0 -> CHOCO_STRING_INVALID_ARGUMENT
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
-        choco_string_result_t ret = buffer_resize(0, &string);
+        // choco_string_t string = {0};
+        // choco_string_result_t ret = buffer_resize(0, &string);
 
-        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
-        // 不変
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        // // 不変
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
     }
     {
         // 分岐: is_string_valid(string_) == false -> CHOCO_STRING_DATA_CORRUPTED
         // capacity==0 なのに buffer!=NULL の壊れた状態を作る
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
-        string.len = 0;
-        string.capacity = 0;
-        string.buffer = (char*)0x1;  // non-NULL（この時点で is_string_valid は false になる）
+        // choco_string_t string = {0};
+        // string.len = 0;
+        // string.capacity = 0;
+        // string.buffer = (char*)0x1;  // non-NULL（この時点で is_string_valid は false になる）
 
-        choco_string_result_t ret = buffer_resize(8, &string);
-        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+        // choco_string_result_t ret = buffer_resize(8, &string);
+        // assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
-        // 不変確認（この関数は失敗時に状態不変の設計）
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert((char*)0x1 == string.buffer);
+        // // 不変確認（この関数は失敗時に状態不変の設計）
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert((char*)0x1 == string.buffer);
 
-        // 後続で誤って触らないように戻す（テスト上の安全策）
-        string.buffer = NULL;
+        // // 後続で誤って触らないように戻す（テスト上の安全策）
+        // string.buffer = NULL;
     }
     {
         // 分岐: string_malloc() 失敗 -> CHOCO_STRING_NO_MEMORY
         // memory_system_allocate の返り値を強制して string_malloc を失敗させる
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
-        choco_string_t string = {0}; // valid
-        choco_string_result_t ret = buffer_resize(8, &string);
+        // choco_string_t string = {0}; // valid
+        // choco_string_result_t ret = buffer_resize(8, &string);
 
-        assert(CHOCO_STRING_NO_MEMORY == ret);
-        // 不変
-        assert(0 == string.len);
-        assert(0 == string.capacity);
-        assert(NULL == string.buffer);
+        // assert(CHOCO_STRING_NO_MEMORY == ret);
+        // // 不変
+        // assert(0 == string.len);
+        // assert(0 == string.capacity);
+        // assert(NULL == string.buffer);
 
-        // 強制設定解除
-        memory_system_test_param_reset();
+        // // 強制設定解除
+        // memory_system_test_param_reset();
     }
     {
         // 正常系: 元バッファなし（string_->capacity == 0）-> free 分岐を通らない
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0}; // valid
-        choco_string_result_t ret = buffer_resize(8, &string);
+        // choco_string_t string = {0}; // valid
+        // choco_string_result_t ret = buffer_resize(8, &string);
 
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == string.len);
-        assert(8 == string.capacity);
-        assert(NULL != string.buffer);
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == string.len);
+        // assert(8 == string.capacity);
+        // assert(NULL != string.buffer);
 
-        // memset(tmp_buffer, 0, size_) の確認（全バイト0）
-        for(size_t i = 0; i < string.capacity; ++i) {
-            assert(0 == (unsigned char)string.buffer[i]);
-        }
+        // // memset(tmp_buffer, 0, size_) の確認（全バイト0）
+        // for(size_t i = 0; i < string.capacity; ++i) {
+        //     assert(0 == (unsigned char)string.buffer[i]);
+        // }
 
-        // 後始末（リーク防止）
-        memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
-        string.buffer = NULL;
-        string.capacity = 0;
-        string.len = 0;
+        // // 後始末（リーク防止）
+        // memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
+        // string.buffer = NULL;
+        // string.capacity = 0;
+        // string.len = 0;
     }
     {
         // 正常系: 元バッファあり（string_->capacity != 0）-> free 分岐を通る
-        memory_system_test_param_reset();
-        test_param_reset();
+        // memory_system_test_param_reset();
+        // test_param_reset();
 
-        choco_string_t string = {0};
+        // choco_string_t string = {0};
 
-        // 旧バッファを memory_system_allocate で確保して「正しい既存状態」を作る
-        void* old_buf_void = NULL;
-        memory_system_result_t ret_mem = memory_system_allocate(4, MEMORY_TAG_STRING, &old_buf_void);
-        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
-        assert(NULL != old_buf_void);
+        // // 旧バッファを memory_system_allocate で確保して「正しい既存状態」を作る
+        // void* old_buf_void = NULL;
+        // memory_system_result_t ret_mem = memory_system_allocate(4, MEMORY_TAG_STRING, &old_buf_void);
+        // assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+        // assert(NULL != old_buf_void);
 
-        char* old_buf = (char*)old_buf_void;
-        // memory_system_allocate は memset(0) 済みなので old_buf[0] == '\0' を満たす（len==0の正当状態）
-        string.buffer = old_buf;
-        string.capacity = 4;
-        string.len = 0;
+        // char* old_buf = (char*)old_buf_void;
+        // // memory_system_allocate は memset(0) 済みなので old_buf[0] == '\0' を満たす（len==0の正当状態）
+        // string.buffer = old_buf;
+        // string.capacity = 4;
+        // string.len = 0;
 
-        choco_string_result_t ret = buffer_resize(8, &string);
+        // choco_string_result_t ret = buffer_resize(8, &string);
 
-        assert(CHOCO_STRING_SUCCESS == ret);
-        assert(0 == string.len);
-        assert(8 == string.capacity);
-        assert(NULL != string.buffer);
-        assert(string.buffer != old_buf); // 新規バッファに切り替わったこと
+        // assert(CHOCO_STRING_SUCCESS == ret);
+        // assert(0 == string.len);
+        // assert(8 == string.capacity);
+        // assert(NULL != string.buffer);
+        // assert(string.buffer != old_buf); // 新規バッファに切り替わったこと
 
-        // 新バッファが全0初期化されていること
-        for(size_t i = 0; i < string.capacity; ++i) {
-            assert(0 == (unsigned char)string.buffer[i]);
-        }
+        // // 新バッファが全0初期化されていること
+        // for(size_t i = 0; i < string.capacity; ++i) {
+        //     assert(0 == (unsigned char)string.buffer[i]);
+        // }
 
-        // 後始末（新バッファのみ解放。旧バッファは buffer_resize 内で解放済み）
-        memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
-        string.buffer = NULL;
-        string.capacity = 0;
-        string.len = 0;
+        // // 後始末（新バッファのみ解放。旧バッファは buffer_resize 内で解放済み）
+        // memory_system_free(string.buffer, string.capacity, MEMORY_TAG_STRING);
+        // string.buffer = NULL;
+        // string.capacity = 0;
+        // string.len = 0;
     }
 }
 

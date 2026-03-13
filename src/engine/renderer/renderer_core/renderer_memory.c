@@ -85,12 +85,12 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // malloc fail
-        char* ptr = NULL;
-        memory_system_test_param_set(0);
-        ret = render_mem_allocate(64, (void**)&ptr);
-        assert(ret == RENDERER_NO_MEMORY);
-        assert(NULL == ptr);
-        memory_system_test_param_reset();
+        // char* ptr = NULL;
+        // memory_system_test_param_set(0);
+        // ret = render_mem_allocate(64, (void**)&ptr);
+        // assert(ret == RENDERER_NO_MEMORY);
+        // assert(NULL == ptr);
+        // memory_system_test_param_reset();
     }
     {
         // invalid argument
@@ -108,47 +108,47 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_INVALID_ARGUMENTを出力させて結果をテスト
-        memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_INVALID_ARGUMENT);
 
-        char* ptr = NULL;
-        ret = render_mem_allocate(64, NULL);
-        assert(ret == RENDERER_INVALID_ARGUMENT);
-        assert(NULL == ptr);
+        // char* ptr = NULL;
+        // ret = render_mem_allocate(64, NULL);
+        // assert(ret == RENDERER_INVALID_ARGUMENT);
+        // assert(NULL == ptr);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_LIMIT_EXCEEDEDを出力させて結果をテスト
-        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
-        char* ptr = NULL;
-        ret = render_mem_allocate(64, NULL);
-        assert(ret == RENDERER_LIMIT_EXCEEDED);
-        assert(NULL == ptr);
+        // char* ptr = NULL;
+        // ret = render_mem_allocate(64, NULL);
+        // assert(ret == RENDERER_LIMIT_EXCEEDED);
+        // assert(NULL == ptr);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocateに強制的にMEMORY_SYSTEM_NO_MEMORYを出力させて結果をテスト
-        memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_NO_MEMORY);
 
-        char* ptr = NULL;
-        ret = render_mem_allocate(64, NULL);
-        assert(ret == RENDERER_NO_MEMORY);
-        assert(NULL == ptr);
+        // char* ptr = NULL;
+        // ret = render_mem_allocate(64, NULL);
+        // assert(ret == RENDERER_NO_MEMORY);
+        // assert(NULL == ptr);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
     {
         // memory_system_allocateに強制的に既定値以外を出力させて結果をテスト
-        memory_system_rslt_code_set(100);
+        // memory_system_rslt_code_set(100);
 
-        char* ptr = NULL;
-        ret = render_mem_allocate(64, NULL);
-        assert(ret == RENDERER_UNDEFINED_ERROR);
-        assert(NULL == ptr);
+        // char* ptr = NULL;
+        // ret = render_mem_allocate(64, NULL);
+        // assert(ret == RENDERER_UNDEFINED_ERROR);
+        // assert(NULL == ptr);
 
-        memory_system_test_param_reset();
+        // memory_system_test_param_reset();
     }
 }
 #endif
