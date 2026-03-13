@@ -294,6 +294,9 @@ void test_memory_system_config_reset(void) {
 
 void test_choco_memory(void) {
     test_memory_system_config_reset();
+    s_malloc_test_control.call_count = 0;
+    s_malloc_test_control.fail_on_call = 0;
+    s_malloc_test_control.forced_result = 0;
 
     test_rslt_to_str();
     test_test_malloc();
@@ -303,6 +306,9 @@ void test_choco_memory(void) {
     test_memory_system_free();
     test_memory_system_report();
 
+    s_malloc_test_control.call_count = 0;
+    s_malloc_test_control.fail_on_call = 0;
+    s_malloc_test_control.forced_result = 0;
     test_memory_system_config_reset();
 }
 
