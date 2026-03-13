@@ -12,17 +12,26 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#ifdef TEST_BUILD
 #include <stdint.h>
+#include <stddef.h>
 
 #include "test_controller.h"
 
 void test_call_control_reset(test_call_control_t* control_) {
+    if(NULL == control_) {
+        return;
+    }
     control_->call_count = 0;
     control_->fail_on_call = 0;
     control_->forced_result = 0;
 }
 
 void test_call_control_set(uint32_t fail_on_call_, int forced_result_, test_call_control_t* out_control_) {
+    if(NULL == out_control_) {
+        return;
+    }
     out_control_->fail_on_call = fail_on_call_;
     out_control_->forced_result = forced_result_;
 }
+#endif
