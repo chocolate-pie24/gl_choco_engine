@@ -257,23 +257,6 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
  */
 const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_);
 
-#ifdef TEST_BUILD
-/**
- * @brief テスト用に、filesystemモジュールの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、filesystem_test_param_resetが呼ばれるまで効果が継続する
- *
- * @param result_code_ 出力実行結果コード
- */
-void filesystem_rslt_code_set(filesystem_result_t result_code_);
-
-/**
- * @brief filesystem_rslt_code_setによる実行結果コードの固定を解除する
- *
- */
-void filesystem_test_param_reset(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
