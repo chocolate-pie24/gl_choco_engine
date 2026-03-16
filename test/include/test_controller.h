@@ -44,16 +44,6 @@ typedef struct test_call_control {
  */
 void test_call_control_reset(test_call_control_t* control_);
 
-/**
- * @brief 失敗注入構造体に値を設定する
- *
- * @note call_countの値は現状の値が保持される
- *
- * @param[in] fail_on_call_ 構造体フィールドのfail_on_call設定値
- * @param[in] forced_result_ 構造体フィールドのforced_result設定値
- * @param[out] out_control_ 設定対象構造体へのポインタ
- */
-void test_call_control_set(uint32_t fail_on_call_, int forced_result_, test_call_control_t* out_control_);
 #endif
 
 #ifdef __cplusplus
