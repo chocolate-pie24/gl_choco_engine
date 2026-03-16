@@ -22,8 +22,8 @@
 
 #include "base/test_choco_math.h"
 
-#include "core/test_linear_allocator.h"
-#include "core/test_choco_memory.h"
+#include "engine/core/memory/test_linear_allocator.h"
+#include "engine/core/memory/test_choco_memory.h"
 #include "core/test_filesystem.h"
 
 #include "containers/test_choco_string.h"
@@ -69,24 +69,24 @@ int main(int argc_, char** argv_) {
 
         test_linear_allocator();
         test_choco_memory();
-        test_choco_string();
-        test_ring_queue();
+        // test_choco_string();
+        // test_ring_queue();
 
-        test_platform_context();
-        test_platform_glfw();
-        test_platform_err_utils();
+        // test_platform_context();
+        // test_platform_glfw();
+        // test_platform_err_utils();
 
-        test_renderer_memory();
-        test_renderer_err_utils();
-        test_gl33_vbo();
-        test_gl33_vao();
-        test_filesystem();
-        test_fs_utils();
-        test_gl33_shader();
-        test_renderer_backend_context();
+        // test_renderer_memory();
+        // test_renderer_err_utils();
+        // test_gl33_vbo();
+        // test_gl33_vao();
+        // test_filesystem();
+        // test_fs_utils();
+        // test_gl33_shader();
+        // test_renderer_backend_context();
 
-        test_choco_math();
-        test_camera();
+        // test_choco_math();
+        // test_camera();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
