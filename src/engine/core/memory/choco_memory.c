@@ -27,6 +27,7 @@
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,6 +41,7 @@ static test_call_control_t s_test_config_memory_system_allocate;     /**< memory
 // プライベート関数テスト設定
 static test_call_control_t s_test_config_test_malloc;                /**< test_malloc()テスト設定値 */
 
+// 全テスト関数プロトタイプ宣言
 static void test_memory_system_create(void);
 static void test_memory_system_destroy(void);
 static void test_memory_system_allocate(void);
