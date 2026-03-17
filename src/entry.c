@@ -27,7 +27,7 @@
 #include "engine/core/filesystem/test_filesystem.h"
 
 #include "engine/containers/test_choco_string.h"
-#include "containers/test_ring_queue.h"
+#include "engine/containers/test_ring_queue.h"
 
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
@@ -74,7 +74,7 @@ int main(int argc_, char** argv_) {
 
         // containers
         test_choco_string();
-        // test_ring_queue();
+        test_ring_queue();
 
         // test_platform_context();
         // test_platform_glfw();
