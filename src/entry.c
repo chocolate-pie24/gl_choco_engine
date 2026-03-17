@@ -26,7 +26,7 @@
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
 
-#include "containers/test_choco_string.h"
+#include "engine/containers/test_choco_string.h"
 #include "containers/test_ring_queue.h"
 
 #include "platform/test_platform_context.h"
@@ -67,14 +67,13 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
-        // core/memory
+        // core
         test_linear_allocator();
         test_choco_memory();
-
-        // core/filesystem
         test_filesystem();
 
-        // test_choco_string();
+        // containers
+        test_choco_string();
         // test_ring_queue();
 
         // test_platform_context();

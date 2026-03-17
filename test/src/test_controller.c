@@ -27,4 +27,22 @@ void test_call_control_reset(test_call_control_t* control_) {
     control_->forced_result = 0;
 }
 
+void test_call_control_size_t_reset(test_call_control_size_t_t* control_) {
+    if(NULL == control_) {
+        return;
+    }
+    control_->call_count = 0;
+    control_->fail_on_call = 0;
+    control_->forced_result = 0;
+}
+
+void test_call_control_bool_reset(test_call_control_bool_t* control_) {
+    if(NULL == control_) {
+        return;
+    }
+    control_->call_count = 0;
+    control_->fail_on_call = 0;
+    control_->forced_result = false;
+}
+
 #endif
