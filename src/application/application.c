@@ -55,7 +55,8 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
-#include "engine/camera/camera.h"
+#include "engine/view/view_core/view_types.h"
+#include "engine/view/camera/camera.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -117,7 +118,7 @@ static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t 
 static application_result_t rslt_convert_platform(platform_result_t rslt_);
 static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
 static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
-static application_result_t rslt_convert_camera(camera_result_t rslt_);
+static application_result_t rslt_convert_view(view_result_t rslt_);
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -138,7 +139,7 @@ application_result_t application_create(void) {
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+    view_result_t ret_view = VIEW_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -284,9 +285,9 @@ application_result_t application_create(void) {
     }
 
     // camera create.
-    ret_camera = camera_create("world camera", &tmp->world_camera);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = rslt_convert_camera(ret_camera);
+    ret_view = camera_create("world camera", &tmp->world_camera);
+    if(VIEW_SUCCESS != ret_view) {
+        ret = rslt_convert_view(ret_view);
         ERROR_MESSAGE("application_create(%s) - Failed to create camera.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -666,16 +667,16 @@ cleanup:
 static void app_state_dispatch(void) {
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-            if(CAMERA_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+            view_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+            if(VIEW_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_view(ret_camera)));
                 goto cleanup;
             }
 
             mat4x4f_t tmp_projection = { 0 };
             ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &tmp_projection);
-            if(CAMERA_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
+            if(VIEW_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_view(ret_camera)));
                 goto cleanup;
             }
 
@@ -1061,23 +1062,23 @@ static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
     }
 }
 
-static application_result_t rslt_convert_camera(camera_result_t rslt_) {
+static application_result_t rslt_convert_view(view_result_t rslt_) {
     switch(rslt_) {
-    case CAMERA_SUCCESS:
+    case VIEW_SUCCESS:
         return APPLICATION_SUCCESS;
-    case CAMERA_INVALID_ARGUMENT:
+    case VIEW_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
-    case CAMERA_RUNTIME_ERROR:
+    case VIEW_RUNTIME_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case CAMERA_BAD_OPERATION:
+    case VIEW_BAD_OPERATION:
         return APPLICATION_BAD_OPERATION;
-    case CAMERA_NO_MEMORY:
+    case VIEW_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case CAMERA_LIMIT_EXCEEDED:
+    case VIEW_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case CAMERA_DATA_CORRUPTED:
+    case VIEW_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
-    case CAMERA_UNDEFINED_ERROR:
+    case VIEW_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

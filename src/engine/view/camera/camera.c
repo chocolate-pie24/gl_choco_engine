@@ -1,4 +1,5 @@
 /**
+ * @ingroup view
  * @file camera.c
  * @author chocolate-pie24
  * @brief カメラモジュール実装
@@ -14,16 +15,20 @@
  */
 #include <stdbool.h>
 
-#include "engine/camera/camera.h"
+#include "engine/view/camera/camera.h"
+
+#include "engine/view/view_core/view_err_utils.h"
+#include "engine/view/view_core/view_memory.h"
+#include "engine/view/view_core/view_types.h"
 
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
-
 #include "engine/containers/choco_string.h"
+
+// #define TEST_BUILD
 
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -66,7 +71,6 @@ typedef struct viewing_frustum {
  * - projection_dirtyとperspective_matrixキャッシュを内部で持ち、projection_dirty == falseで計算を行わない
  */
 struct camera {
-    float speed;                /**< カメラスピード */
     vec3f_t euler;              /**< カメラ姿勢オイラー角(degree) */
     vec3f_t position;           /**< カメラ位置 */
 
@@ -75,46 +79,31 @@ struct camera {
     choco_string_t* name;       /**< カメラ名称文字列 */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ破損) */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
-
-static const char* rslt_to_str(camera_result_t rslt_);
-static camera_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
-static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_);
 static bool is_valid_frustum(const viewing_frustum_t* frustum_);
 
-camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
-    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+view_result_t camera_create(const char* name_, camera_t** out_camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
     camera_t* tmp_camera = NULL;
-    memory_system_result_t mem_ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t string_ret = CHOCO_STRING_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "out_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "*out_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_create", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_create", "out_camera_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_create", "*out_camera_")
 
-    mem_ret = memory_system_allocate(sizeof(camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_camera);
-    if(MEMORY_SYSTEM_SUCCESS != mem_ret) {
-        ret = rslt_convert_choco_memory(mem_ret);
-        ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", rslt_to_str(ret));
+    ret = view_mem_allocate(sizeof(camera_t), (void**)&tmp_camera);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", view_rslt_to_str(ret));
         goto cleanup;
     }
     tmp_camera->name = NULL;
 
     string_ret = choco_string_create_from_c_string(&tmp_camera->name, name_);
     if(CHOCO_STRING_SUCCESS != string_ret) {
-        ret = rslt_convert_choco_string(string_ret);
-        ERROR_MESSAGE("camera_create(%s) - Failed to create string for camera name.", rslt_to_str(ret));
+        ret = view_rslt_convert_choco_string(string_ret);
+        ERROR_MESSAGE("camera_create(%s) - Failed to create string for camera name.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_camera->speed = 0.0f;
     tmp_camera->frustum.aspect = 0.0f;
     tmp_camera->frustum.far_clip = 0.0f;
     tmp_camera->frustum.near_clip = 0.0f;
@@ -124,10 +113,10 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
 
     *out_camera_ = tmp_camera;
-    ret = CAMERA_SUCCESS;
+    ret = VIEW_SUCCESS;
 
 cleanup:
-    if(CAMERA_SUCCESS != ret) {
+    if(VIEW_SUCCESS != ret) {
         if(NULL != tmp_camera) {
             if(NULL != tmp_camera->name) {
                 // ここは現状では通ることがないためカバレッジは100にならないが許容
@@ -149,25 +138,25 @@ void camera_destroy(camera_t** camera_) {
     if(NULL != (*camera_)->name) {
         choco_string_destroy(&(*camera_)->name);
     }
-    memory_system_free(*camera_, sizeof(camera_t), MEMORY_TAG_CAMERA);
+    view_mem_free(*camera_, sizeof(camera_t));
     *camera_ = NULL;
 }
 
 const char* camera_name_get(const camera_t* camera_) {
     if(NULL == camera_) {
-        ERROR_MESSAGE("camera_name_get(%s) - Argument camera_ requires a valid pointer.", rslt_to_str(CAMERA_INVALID_ARGUMENT));
+        ERROR_MESSAGE("camera_name_get(%s) - Argument camera_ requires a valid pointer.", view_rslt_to_str(VIEW_INVALID_ARGUMENT));
         return NULL;
     }
     if(NULL == camera_->name) {
-        ERROR_MESSAGE("camera_name_get(%s) - Provided camera_ is corrupted.", rslt_to_str(CAMERA_DATA_CORRUPTED));
+        ERROR_MESSAGE("camera_name_get(%s) - Provided camera_ is corrupted.", view_rslt_to_str(VIEW_DATA_CORRUPTED));
         return NULL;
     }
     return choco_string_c_str(camera_->name);
 }
 
-camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
-    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_viewing_frustum_update", "camera_")
+view_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_viewing_frustum_update", "camera_")
 
     viewing_frustum_t frustum = { 0 };
     frustum.aspect = aspect_;
@@ -175,25 +164,64 @@ camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float 
     frustum.fovy = fovy_;
     frustum.near_clip = near_clip_;
     if(!is_valid_frustum(&frustum)) {
-        ret = CAMERA_INVALID_ARGUMENT;
-        ERROR_MESSAGE("camera_viewing_frustum_update(%s) - Invalid frustum parameter.", rslt_to_str(ret));
+        ret = VIEW_INVALID_ARGUMENT;
+        ERROR_MESSAGE("camera_viewing_frustum_update(%s) - Invalid frustum parameter.", view_rslt_to_str(ret));
         goto cleanup;
     }
-
     camera_->frustum = frustum;
 
-    ret = CAMERA_SUCCESS;
+    ret = VIEW_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-camera_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
-    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+view_result_t camera_posture_update(const vec3f_t* euler_, const vec3f_t* position_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "euler_")
+    IF_ARG_NULL_GOTO_CLEANUP(position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "position_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "camera_")
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "out_mat_")
-    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, CAMERA_BAD_OPERATION, rslt_to_str(CAMERA_BAD_OPERATION), "camera_perspective_matrix_get", "camera_->frustum")
+    camera_->euler.elem[0] = euler_->elem[0];
+    camera_->euler.elem[1] = euler_->elem[1];
+    camera_->euler.elem[2] = euler_->elem[2];
+
+    camera_->position.elem[0] = position_->elem[0];
+    camera_->position.elem[1] = position_->elem[1];
+    camera_->position.elem[2] = position_->elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_posture_get(const camera_t* camera_, vec3f_t* out_euler_, vec3f_t* out_position_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "out_euler_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "out_position_")
+
+    out_euler_->elem[0] = camera_->euler.elem[0];
+    out_euler_->elem[1] = camera_->euler.elem[1];
+    out_euler_->elem[2] = camera_->euler.elem[2];
+
+    out_position_->elem[0] = camera_->position.elem[0];
+    out_position_->elem[1] = camera_->position.elem[1];
+    out_position_->elem[2] = camera_->position.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_perspective_matrix_get", "out_mat_")
+    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, VIEW_BAD_OPERATION, view_rslt_to_str(VIEW_BAD_OPERATION), "camera_perspective_matrix_get", "camera_->frustum")
 
     const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
 
@@ -205,17 +233,17 @@ camera_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t
     out_mat_->elem[14] = -1.0f;
     out_mat_->elem[15] = 0.0f;
 
-    ret = CAMERA_SUCCESS;
+    ret = VIEW_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-camera_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
-    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+view_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_view_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "out_mat_")
 
     mat4x4f_t rot = { 0 };
     mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
@@ -227,101 +255,16 @@ camera_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_m
     // 後に変換するものを左から掛ける
     mat4f_mul(&trans, &rot, &view); // カメラ座標系のある座標をワールド座標系へ変換する行列
     if(!mat4f_inverse(&view)) {     // ワールド座標系のある座標をカメラ座標系へ変換する行列
-        ERROR_MESSAGE("camera_view_matrix_get(%s) - Matrix(view) inversion failed because the determinant is zero or near zero.", rslt_to_str(CAMERA_RUNTIME_ERROR));
-        ret = CAMERA_RUNTIME_ERROR;
+        ERROR_MESSAGE("camera_view_matrix_get(%s) - Matrix(view) inversion failed because the determinant is zero or near zero.", view_rslt_to_str(VIEW_RUNTIME_ERROR));
+        ret = VIEW_RUNTIME_ERROR;
         goto cleanup;
     }
     mat4f_copy(&view, out_mat_);
 
-    ret = CAMERA_SUCCESS;
+    ret = VIEW_SUCCESS;
 
 cleanup:
     return ret;
-}
-
-/**
- * @brief 実行結果コードを文字列に変換する
- *
- * @param rslt_ 文字列に変換する実行結果コード
- * @return const char* 変換された文字列の先頭アドレス
- */
-static const char* rslt_to_str(camera_result_t rslt_) {
-    switch(rslt_) {
-    case CAMERA_SUCCESS:
-        return s_rslt_str_success;
-    case CAMERA_NO_MEMORY:
-        return s_rslt_str_no_memory;
-    case CAMERA_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
-    case CAMERA_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
-    case CAMERA_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
-    case CAMERA_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
-    case CAMERA_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
-    case CAMERA_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
-    default:
-        return s_rslt_str_undefined_error;
-    }
-}
-
-/**
- * @brief メモリシステム実行結果コードをカメラ実行結果コードに変換する
- *
- * @param[in] rslt_ メモリシステムが出力する実行結果コード
- *
- * @return camera_result_t 変換されたカメラシステム実行結果コード
- */
-static camera_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
-    switch(rslt_) {
-    case MEMORY_SYSTEM_SUCCESS:
-        return CAMERA_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return CAMERA_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return CAMERA_RUNTIME_ERROR;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return CAMERA_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return CAMERA_NO_MEMORY;
-    default:
-        return CAMERA_UNDEFINED_ERROR;
-    }
-}
-
-/**
- * @brief 文字列コンテナモジュール実行結果コードをカメラ実行結果コードに変換する
- *
- * @param[in] rslt_ 文字列コンテナモジュール実行結果コード
- *
- * @return camera_result_t 変換されたカメラシステム実行結果コード
- */
-static camera_result_t rslt_convert_choco_string(choco_string_result_t rslt_) {
-    switch(rslt_) {
-    case CHOCO_STRING_SUCCESS:
-        return CAMERA_SUCCESS;
-    case CHOCO_STRING_INVALID_ARGUMENT:
-        return CAMERA_INVALID_ARGUMENT;
-    case CHOCO_STRING_NO_MEMORY:
-        return CAMERA_NO_MEMORY;
-    case CHOCO_STRING_LIMIT_EXCEEDED:
-        return CAMERA_LIMIT_EXCEEDED;
-    case CHOCO_STRING_OVERFLOW:
-        return CAMERA_BAD_OPERATION;    // 長すぎる文字列指定はAPIの誤用とする
-    case CHOCO_STRING_BAD_OPERATION:
-        return CAMERA_BAD_OPERATION;
-    case CHOCO_STRING_DATA_CORRUPTED:
-        return CAMERA_DATA_CORRUPTED;
-    case CHOCO_STRING_RUNTIME_ERROR:
-        return CAMERA_RUNTIME_ERROR;
-    case CHOCO_STRING_UNDEFINED_ERROR:
-        return CAMERA_UNDEFINED_ERROR;
-    default:
-        return CAMERA_UNDEFINED_ERROR;
-    }
 }
 
 /**
@@ -359,9 +302,6 @@ void test_camera(void) {
     test_camera_viewing_frustum_update();
     test_camera_perspective_matrix_get();
     test_camera_view_matrix_get();
-    test_rslt_to_str();
-    test_rslt_convert_choco_memory();
-    test_rslt_convert_choco_string();
     test_is_valid_frustum();
 }
 
@@ -370,24 +310,24 @@ static void NO_COVERAGE test_camera_create(void) {
     {
         // name_ == NULL
         camera_t* camera = NULL;
-        const camera_result_t ret = camera_create(NULL, &camera);
+        const view_result_t ret = camera_create(NULL, &camera);
 
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(VIEW_INVALID_ARGUMENT == ret);
         assert(NULL == camera);
     }
     {
         // out_camera_ == NULL
-        const camera_result_t ret = camera_create("main_camera", NULL);
+        const view_result_t ret = camera_create("main_camera", NULL);
 
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(VIEW_INVALID_ARGUMENT == ret);
     }
     {
         // *out_camera_ != NULL
         int dummy = 0;
         camera_t* camera = (camera_t*)&dummy;
-        const camera_result_t ret = camera_create("main_camera", &camera);
+        const view_result_t ret = camera_create("main_camera", &camera);
 
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(VIEW_INVALID_ARGUMENT == ret);
         assert((camera_t*)&dummy == camera);
     }
     {
@@ -400,8 +340,8 @@ static void NO_COVERAGE test_camera_create(void) {
         // memory_system_test_param_set(0);
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_NO_MEMORY == ret);
         //     assert(NULL == camera);
         // }
 
@@ -418,8 +358,8 @@ static void NO_COVERAGE test_camera_create(void) {
         // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_LIMIT_EXCEEDED == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_LIMIT_EXCEEDED == ret);
         //     assert(NULL == camera);
         // }
 
@@ -438,8 +378,8 @@ static void NO_COVERAGE test_camera_create(void) {
         // memory_system_test_param_set(1);
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_NO_MEMORY == ret);
         //     assert(NULL == camera);
         // }
 
@@ -459,8 +399,8 @@ static void NO_COVERAGE test_camera_create(void) {
         // memory_system_test_param_set(2);
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_NO_MEMORY == ret);
         //     assert(NULL == camera);
         // }
 
@@ -477,8 +417,8 @@ static void NO_COVERAGE test_camera_create(void) {
         // memory_system_test_param_reset();
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_SUCCESS == ret);
         //     assert(NULL != camera);
 
         //     name = camera_name_get(camera);
@@ -515,8 +455,8 @@ static void NO_COVERAGE test_camera_destroy(void) {
         // memory_system_test_param_reset();
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_SUCCESS == ret);
         //     assert(NULL != camera);
         // }
 
@@ -535,8 +475,8 @@ static void NO_COVERAGE test_camera_destroy(void) {
         // memory_system_test_param_reset();
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_SUCCESS == ret);
         //     assert(NULL != camera);
         // }
 
@@ -568,8 +508,8 @@ static void NO_COVERAGE test_camera_name_get(void) {
         // memory_system_test_param_reset();
 
         // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_create("main_camera", &camera);
+        //     assert(VIEW_SUCCESS == ret);
         //     assert(NULL != camera);
         // }
 
@@ -594,8 +534,8 @@ static void NO_COVERAGE test_camera_name_get(void) {
         // memory_system_test_param_reset();
 
         // {
-        //     const camera_result_t ret = camera_create("sub_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_create("sub_camera", &camera);
+        //     assert(VIEW_SUCCESS == ret);
         //     assert(NULL != camera);
         // }
 
@@ -627,8 +567,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
     // Generated by ChatGPT 5.4 Thinking
     {
         // camera_ == NULL
-        const camera_result_t ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        const view_result_t ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
+        assert(VIEW_INVALID_ARGUMENT == ret);
     }
     {
         // fovy_ <= 0.0f
@@ -638,8 +578,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -655,8 +595,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(180.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(180.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -672,8 +612,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 0.0f, 0.1f, 100.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 0.0f, 0.1f, 100.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -689,8 +629,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.0f, 100.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.0f, 100.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -706,8 +646,8 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 0.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 0.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -723,9 +663,9 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 10.0f, camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 100.0f, 10.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 10.0f, camera));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 100.0f, 10.0f, camera));
 
         // camera_destroy(&camera);
         // assert(NULL == camera);
@@ -752,9 +692,9 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
+        // assert(VIEW_SUCCESS == camera_perspective_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], expected_0));
         // assert(is_equal_float(mat.elem[1], 0.0f));
@@ -792,12 +732,12 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(60.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &before));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_viewing_frustum_update(60.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
+        // assert(VIEW_SUCCESS == camera_perspective_matrix_get(camera, &before));
 
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &after));
+        // assert(VIEW_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
+        // assert(VIEW_SUCCESS == camera_perspective_matrix_get(camera, &after));
 
         // assert(is_equal_float(before.elem[0], after.elem[0]));
         // assert(is_equal_float(before.elem[1], after.elem[1]));
@@ -832,9 +772,9 @@ static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
     {
         // camera_ == NULL
         mat4x4f_t mat = { 0 };
-        const camera_result_t ret = camera_perspective_matrix_get(NULL, &mat);
+        const view_result_t ret = camera_perspective_matrix_get(NULL, &mat);
 
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(VIEW_INVALID_ARGUMENT == ret);
     }
     {
         // // out_mat_ == NULL
@@ -844,11 +784,11 @@ static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, NULL);
-        //     assert(CAMERA_INVALID_ARGUMENT == ret);
+        //     const view_result_t ret = camera_perspective_matrix_get(camera, NULL);
+        //     assert(VIEW_INVALID_ARGUMENT == ret);
         // }
 
         // camera_destroy(&camera);
@@ -866,11 +806,11 @@ static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, &mat);
-        //     assert(CAMERA_BAD_OPERATION == ret);
+        //     const view_result_t ret = camera_perspective_matrix_get(camera, &mat);
+        //     assert(VIEW_BAD_OPERATION == ret);
         // }
 
         // camera_destroy(&camera);
@@ -898,12 +838,12 @@ static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
 
         // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, &mat);
-        //     assert(CAMERA_SUCCESS == ret);
+        //     const view_result_t ret = camera_perspective_matrix_get(camera, &mat);
+        //     assert(VIEW_SUCCESS == ret);
         // }
 
         // assert(is_equal_float(mat.elem[0], expected_0));
@@ -942,11 +882,11 @@ static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(45.0f, 4.0f / 3.0f, 0.5f, 500.0f, camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_viewing_frustum_update(45.0f, 4.0f / 3.0f, 0.5f, 500.0f, camera));
 
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat1));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat2));
+        // assert(VIEW_SUCCESS == camera_perspective_matrix_get(camera, &mat1));
+        // assert(VIEW_SUCCESS == camera_perspective_matrix_get(camera, &mat2));
 
         // assert(is_equal_float(mat1.elem[0], mat2.elem[0]));
         // assert(is_equal_float(mat1.elem[1], mat2.elem[1]));
@@ -981,9 +921,9 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
     {
         // camera_ == NULL
         mat4x4f_t mat = { 0 };
-        const camera_result_t ret = camera_view_matrix_get(NULL, &mat);
+        const view_result_t ret = camera_view_matrix_get(NULL, &mat);
 
-        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(VIEW_INVALID_ARGUMENT == ret);
     }
     {
         // out_mat_ == NULL
@@ -993,11 +933,11 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // {
-        //     const camera_result_t ret = camera_view_matrix_get(camera, NULL);
-        //     assert(CAMERA_INVALID_ARGUMENT == ret);
+        //     const view_result_t ret = camera_view_matrix_get(camera, NULL);
+        //     assert(VIEW_INVALID_ARGUMENT == ret);
         // }
 
         // camera_destroy(&camera);
@@ -1015,8 +955,8 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_view_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], 1.0f));
         // assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1053,12 +993,12 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // vec3f_initialize(1.5f, -2.0f, 3.25f, &camera->position);
         // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->euler);
 
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_view_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], 1.0f));
         // assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1095,12 +1035,12 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
         // vec3f_initialize(90.0f, 0.0f, 0.0f, &camera->euler);
 
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_view_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], 1.0f));
         // assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1137,12 +1077,12 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
         // vec3f_initialize(0.0f, 90.0f, 0.0f, &camera->euler);
 
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_view_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], 0.0f));
         // assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1179,12 +1119,12 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
         // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
         // memory_system_test_param_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        // assert(VIEW_SUCCESS == camera_create("main_camera", &camera));
 
         // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
         // vec3f_initialize(0.0f, 0.0f, 90.0f, &camera->euler);
 
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        // assert(VIEW_SUCCESS == camera_view_matrix_get(camera, &mat));
 
         // assert(is_equal_float(mat.elem[0], 0.0f));
         // assert(is_equal_float(mat.elem[1], 1.0f));
@@ -1211,96 +1151,6 @@ static void NO_COVERAGE test_camera_view_matrix_get(void) {
 
         // memory_system_test_param_reset();
         // memory_system_destroy();
-    }
-}
-
-static void NO_COVERAGE test_rslt_to_str(void) {
-    // Generated by ChatGPT 5.4 Thinking
-    {
-        assert(0 == strcmp("SUCCESS", rslt_to_str(CAMERA_SUCCESS)));
-    }
-    {
-        assert(0 == strcmp("INVALID_ARGUMENT", rslt_to_str(CAMERA_INVALID_ARGUMENT)));
-    }
-    {
-        assert(0 == strcmp("RUNTIME_ERROR", rslt_to_str(CAMERA_RUNTIME_ERROR)));
-    }
-    {
-        assert(0 == strcmp("BAD_OPERATION", rslt_to_str(CAMERA_BAD_OPERATION)));
-    }
-    {
-        assert(0 == strcmp("NO_MEMORY", rslt_to_str(CAMERA_NO_MEMORY)));
-    }
-    {
-        assert(0 == strcmp("LIMIT_EXCEEDED", rslt_to_str(CAMERA_LIMIT_EXCEEDED)));
-    }
-    {
-        assert(0 == strcmp("DATA_CORRUPTED", rslt_to_str(CAMERA_DATA_CORRUPTED)));
-    }
-    {
-        assert(0 == strcmp("UNDEFINED_ERROR", rslt_to_str(CAMERA_UNDEFINED_ERROR)));
-    }
-    {
-        // default節
-        assert(0 == strcmp("UNDEFINED_ERROR", rslt_to_str((camera_result_t)999)));
-    }
-}
-
-static void NO_COVERAGE test_rslt_convert_choco_memory(void) {
-    // Generated by ChatGPT 5.4 Thinking
-    {
-        assert(CAMERA_SUCCESS == rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS));
-    }
-    {
-        assert(CAMERA_INVALID_ARGUMENT == rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT));
-    }
-    {
-        assert(CAMERA_RUNTIME_ERROR == rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR));
-    }
-    {
-        assert(CAMERA_LIMIT_EXCEEDED == rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED));
-    }
-    {
-        assert(CAMERA_NO_MEMORY == rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY));
-    }
-    {
-        // default節
-        assert(CAMERA_UNDEFINED_ERROR == rslt_convert_choco_memory((memory_system_result_t)999));
-    }
-}
-
-static void NO_COVERAGE test_rslt_convert_choco_string(void) {
-    // Generated by ChatGPT 5.4 Thinking
-    {
-        assert(CAMERA_SUCCESS == rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
-    }
-    {
-        assert(CAMERA_INVALID_ARGUMENT == rslt_convert_choco_string(CHOCO_STRING_INVALID_ARGUMENT));
-    }
-    {
-        assert(CAMERA_NO_MEMORY == rslt_convert_choco_string(CHOCO_STRING_NO_MEMORY));
-    }
-    {
-        assert(CAMERA_LIMIT_EXCEEDED == rslt_convert_choco_string(CHOCO_STRING_LIMIT_EXCEEDED));
-    }
-    {
-        assert(CAMERA_BAD_OPERATION == rslt_convert_choco_string(CHOCO_STRING_OVERFLOW));
-    }
-    {
-        assert(CAMERA_BAD_OPERATION == rslt_convert_choco_string(CHOCO_STRING_BAD_OPERATION));
-    }
-    {
-        assert(CAMERA_DATA_CORRUPTED == rslt_convert_choco_string(CHOCO_STRING_DATA_CORRUPTED));
-    }
-    {
-        assert(CAMERA_RUNTIME_ERROR == rslt_convert_choco_string(CHOCO_STRING_RUNTIME_ERROR));
-    }
-    {
-        assert(CAMERA_UNDEFINED_ERROR == rslt_convert_choco_string(CHOCO_STRING_UNDEFINED_ERROR));
-    }
-    {
-        // default節
-        assert(CAMERA_UNDEFINED_ERROR == rslt_convert_choco_string((choco_string_result_t)999));
     }
 }
 

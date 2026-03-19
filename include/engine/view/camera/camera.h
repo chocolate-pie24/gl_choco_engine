@@ -1,4 +1,5 @@
 /**
+ * @ingroup view
  * @file camera.h
  * @author chocolate-pie24
  * @brief カメラモジュールで、以下を提供する
@@ -22,24 +23,11 @@
 extern "C" {
 #endif
 
+#include "engine/view/view_core/view_types.h"
+
 #include "engine/base/choco_math/math_types.h"
 
 typedef struct camera camera_t; /**< カメラ内部状態管理構造体前方宣言 */
-
-/**
- * @brief カメラモジュール実行結果コード定義
- *
- */
-typedef enum {
-    CAMERA_SUCCESS = 0,         /**< カメラ実行結果コード: 成功 */
-    CAMERA_INVALID_ARGUMENT,    /**< カメラ実行結果コード: 無効な引数 */
-    CAMERA_RUNTIME_ERROR,       /**< カメラ実行結果コード: 実行時エラー */
-    CAMERA_BAD_OPERATION,       /**< カメラ実行結果コード: API誤用 */
-    CAMERA_NO_MEMORY,           /**< カメラ実行結果コード: メモリ不足 */
-    CAMERA_LIMIT_EXCEEDED,      /**< カメラ実行結果コード: メモリシステム使用可能範囲超過 */
-    CAMERA_DATA_CORRUPTED,      /**< カメラ実行結果コード: 内部データ破損 */
-    CAMERA_UNDEFINED_ERROR,     /**< カメラ実行結果コード: 不明なエラー */
-} camera_result_t;
 
 /**
  * @brief カメラ構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する
@@ -47,15 +35,15 @@ typedef enum {
  * @param[in] name_ カメラ名称文字列
  * @param[out] out_camera_ カメラ構造体インスタンスへのダブルポインタ
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
  * - name_ == NULL
  * - out_camera_ == NULL
  * - *out_camera_ != NULL
- * @retval CAMERA_LIMIT_EXCEEDED メモリシステム使用範囲上限超過
- * @retval CAMERA_NO_MEMORY メモリ割り当て失敗
- * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ * @retval VIEW_LIMIT_EXCEEDED メモリシステム使用範囲上限超過
+ * @retval VIEW_NO_MEMORY メモリ割り当て失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_create(const char* name_, camera_t** out_camera_);
+view_result_t camera_create(const char* name_, camera_t** out_camera_);
 
 /**
  * @brief カメラ構造体インスタンスが管理するリソースを破棄し、自身のメモリも破棄する
@@ -90,12 +78,42 @@ const char* camera_name_get(const camera_t* camera_);
  * @param[in] far_clip_ 描画範囲(far)
  * @param[in,out] camera_ カメラ構造体インスタンスへのポインタ
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
  * - 引数で与えた視錐台パラメータが不正
- * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
+view_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
+
+/**
+ * @brief カメラ姿勢(位置、姿勢)を更新する
+ *
+ * @param[in] euler_ カメラオイラー角[deg]
+ * @param[in] position_ カメラ位置
+ * @param[out] camera_ 更新対象カメラ
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - euler_ == NULL
+ * - position_ == NULL
+ * - camera_ == NULL
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_posture_update(const vec3f_t* euler_, const vec3f_t* position_, camera_t* camera_);
+
+/**
+ * @brief カメラ姿勢(位置、姿勢)を取得する
+ *
+ * @param[in] camera_ 姿勢取得対象カメラ
+ * @param[out] out_euler_ カメラオイラー角格納先
+ * @param[out] out_position_ カメラ位置格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_euler_ == NULL
+ * - out_position_ == NULL
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_posture_get(const camera_t* camera_, vec3f_t* out_euler_, vec3f_t* out_position_);
 
 /**
  * @brief プロジェクション行列として、透視投影変換を行う行列を計算して取得する
@@ -108,13 +126,13 @@ camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float 
  * @param[in] camera_ カメラ構造体インスタンスへのポインタ
  * @param[out] out_mat_ プロジェクション行列格納先
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
  * - out_mat == NULL
- * @retval CAMERA_BAD_OPERATION camera_が保持する視錐台パラメータが異常
- * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ * @retval VIEW_BAD_OPERATION camera_が保持する視錐台パラメータが異常
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
+view_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
 
 /**
  * @brief ビュー行列を計算して取得する
@@ -122,17 +140,17 @@ camera_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t
  * @param[in] camera_ カメラ構造体インスタンスへのポインタ
  * @param[out] out_mat_ ビュー行列格納先
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
  * - out_mat_ == NULL
- * @retval CAMERA_RUNTIME_ERROR 逆行列が求まらない
- * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ * @retval VIEW_RUNTIME_ERROR 逆行列が求まらない
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
  *
  * @todo 逆行列計算をなくすため、以下を行う
  * - 回転行列の逆行列 = 転置行列の性質を利用する
  * - 平行移動行列の逆行列は平行移動量 x (-1)の性質を利用する
  */
-camera_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
+view_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
 
 #ifdef __cplusplus
 }

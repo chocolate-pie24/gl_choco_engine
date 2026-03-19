@@ -86,6 +86,34 @@ void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_) 
     out_vec3f_->elem[2] = vec1_->elem[2] + vec2_->elem[2];
 }
 
+float vec3f_length_squared(const vec3f_t* vec_) {
+    if(NULL == vec_) {
+        ERROR_MESSAGE("vec3f_length_squared(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        return 0.0f;
+    }
+
+    return (vec_->elem[0] * vec_->elem[0]) + (vec_->elem[1] * vec_->elem[1]) + (vec_->elem[2] * vec_->elem[2]);
+}
+
+float vec3f_length(const vec3f_t* vec_) {
+    if(NULL == vec_) {
+        ERROR_MESSAGE("vec3f_length(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        return 0.0f;
+    }
+    return sqrtf(vec3f_length_squared(vec_));
+}
+
+void vec3f_normalize(vec3f_t* vec_) {
+    if(NULL == vec_) {
+        ERROR_MESSAGE("vec3f_normalize(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        return;
+    }
+    const float length = vec3f_length(vec_);
+    vec_->elem[0] /= length;
+    vec_->elem[1] /= length;
+    vec_->elem[2] /= length;
+}
+
 void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f_) {
     if(NULL == out_vec4f_) {
         ERROR_MESSAGE("vec4f_initialize(INVALID_ARGUMENT) - Argument out_vec4f_ requires a valid pointer.");
