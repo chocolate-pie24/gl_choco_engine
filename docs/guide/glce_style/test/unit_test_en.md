@@ -1,59 +1,108 @@
 # GLCE Unit Test Code Implementation Guide
 
-This document describes how to implement unit tests for the public APIs and private functions owned by a module.
+This document describes how to implement unit tests for a module’s public APIs and private functions.
 
 ## Failure Injection Mechanism for Testing
 
-During testing, it is necessary to provide a mechanism that forces functions used inside the function under test to return a specified result code.
-GLCE provides a dedicated failure injection mechanism so that this functionality can be used consistently across all modules.
+During testing, it is necessary to have a mechanism that forces the function under test to return a specified value.
 
-This mechanism is declared in `test/include/test_controller.h` and implemented in `test/src/test_controller.c`.
+In GLCE, this mechanism is provided only in test builds so that all modules can use failure injection in a consistent manner.
 
-`test_controller.h` exposes the following to external modules.
+This mechanism is defined in test/include/test_controller.h and implemented in test/src/test_controller.c.
+
+test_controller.h exposes the following to external modules. Failure injection control structures are provided according to the return type of the target function.
+
+However, if the return type is module-specific and cannot be represented by the common failure injection control structures, defining such a structure would introduce a dependency on that module. In that case, this failure injection mechanism must not be used, and the module must handle it individually.
 
 ```c
 /**
- * @brief Failure injection structure for testing various APIs
+ * @brief Failure injection control structure for APIs whose return type is a result code or int
  *
  */
 typedef struct test_call_control {
     uint32_t call_count;    /**< Number of API calls */
-    uint32_t fail_on_call;  /**< Specifies on which call the API should fail (0: disabled and normal behavior, 1 or greater: force forced_result to be returned) */
-    int forced_result;      /**< Return value to be forced when making the API fail (used by casting various result codes to int) */
+    uint32_t fail_on_call;  /**< Specifies on which call the API should fail (0 = disabled, normal execution; 1 or greater = return forced_result) */
+    int forced_result;      /**< Return value to force when injecting failure (use by casting each result code to int) */
 } test_call_control_t;
 
 /**
- * @brief Resets the fields of the failure injection structure so that failure injection is disabled
+ * @brief Failure injection control structure for APIs whose return type is size_t
  *
- * @details After reset, the fields of the structure will have the following values:
+ */
+typedef struct test_call_control_size_t {
+    uint32_t call_count;    /**< Number of API calls */
+    uint32_t fail_on_call;  /**< Specifies on which call the API should fail (0 = disabled, normal execution; 1 or greater = return forced_result) */
+    size_t forced_result;   /**< Return value to force when injecting failure */
+} test_call_control_size_t_t;
+
+/**
+ * @brief Failure injection control structure for APIs whose return type is bool
+ *
+ */
+typedef struct test_call_control_bool {
+    uint32_t call_count;    /**< Number of API calls */
+    uint32_t fail_on_call;  /**< Specifies on which call the API should fail (0 = disabled, normal execution; 1 or greater = return forced_result) */
+    bool forced_result;     /**< Return value to force when injecting failure */
+} test_call_control_bool_t;
+
+/**
+ * @brief Resets the fields of the failure injection control structure so that failure injection is disabled
+ *
+ * @details After reset, the structure fields have the following values:
  * - call_count = 0
  * - fail_on_call = 0
- * - forced_result = 0 (SUCCESS in many cases)
+ * - forced_result = 0 (in many cases SUCCESS)
  *
- * @param[out] control_ Pointer to the structure to reset
+ * @param[out] control_ Pointer to the control structure to reset
  */
 void test_call_control_reset(test_call_control_t* control_);
+
+/**
+ * @brief Resets the fields of the failure injection control structure so that failure injection is disabled
+ *
+ * @details After reset, the structure fields have the following values:
+ * - call_count = 0
+ * - fail_on_call = 0
+ * - forced_result = 0
+ *
+ * @param[out] control_ Pointer to the control structure to reset
+ */
+void test_call_control_size_t_reset(test_call_control_size_t_t* control_);
+
+/**
+ * @brief Resets the fields of the failure injection control structure so that failure injection is disabled
+ *
+ * @details After reset, the structure fields have the following values:
+ * - call_count = 0
+ * - fail_on_call = 0
+ * - forced_result = false
+ *
+ * @param[out] control_ Pointer to the control structure to reset
+ */
+void test_call_control_bool_reset(test_call_control_bool_t* control_);
 ```
 
 ## Procedure for Creating Unit Test Code
 
 ### Creating a Test Header File
 
-Create a test header file for the target module according to the following rules.
+Create the test header file for the target module according to the following rules.
 
-- The directory that stores the test header file should correspond to the hierarchy of the target module.
-- The test header filename shall be `test_module_name.h`.
+- The directory for the header file must mirror the hierarchy of the target module.
+- The test header file name must be test_module_name.h.
 
-For example, if the target is `include/engine/core/memory/choco_memory.h`, then the test header file should be `test/include/engine/core/memory/test_choco_memory.h`.
+For example, if the target is include/engine/core/memory/choco_memory.h, then the test header file should be test/include/engine/core/memory/test_choco_memory.h.
 
-The header file should contain the following items.
+The test header file must contain the following.
 
 #### Failure Injection APIs
 
-For all public APIs in the module that return result codes, define individual failure injection APIs.
-The naming rule for these APIs is `test_foo_config_set`, where `foo` represents the name of the public API.
+For each public API in the module that can use failure injection with the types provided by test_controller.h, define a dedicated failure injection API.
+
+The naming convention for a failure injection API is test_foo_config_set, where foo represents the public API name.
 
 This API is used as follows.
+Note that the call_count field is managed inside the module, so the side injecting failure must not set it.
 
 ```c
 test_call_control_t config = { 0 };
@@ -61,24 +110,38 @@ test_call_control_reset(&config);
 
 config.fail_on_call = 1;                // Fail on the first call
 config.forced_result = (int)xxx_result; // Force API foo to return xxx module's result code
-// For the call_count field, do not set it if you want to preserve the value managed internally by the module.
-// It may be set if you do not need to preserve it.
 
-test_foo_config_set(&config);   // Apply failure injection to API foo
+test_foo_config_set(&config);           // Inject failure into API foo
+```
+
+test_foo_config_set is implemented as follows.
+
+```c
+void test_foo_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_foo.fail_on_call = config_->fail_on_call;
+    s_test_config_foo.forced_result = config_->forced_result;
+}
 ```
 
 #### Module Test API
 
-Define an API that runs tests for all public APIs and private functions owned by the module.
-The naming rule for this API is `test_xxx`, where `xxx` represents the module name.
+Define an API that tests all public APIs and private functions owned by the module.
+
+The naming convention is test_xxx, where xxx represents the module name.
 
 #### Resetting Failure Injection Settings
 
 Define an API that resets all failure injection settings owned by the module.
-The naming rule for the reset API is `test_xxx_config_reset`, where `xxx` represents the module name.
-In addition to failure injection settings, `test_xxx_config_reset` also resets all other test-related settings such as mock function test settings and test scenario settings.
 
-A test header containing the above items will look like the following.
+The naming convention is test_module_name_config_reset.
+
+Note that test_module_name_config_reset resets not only failure injection settings, but also all other test-related settings such as mock function test settings and test scenario settings.
+
+A test header containing the above should look like this.
 
 ```c
 #ifndef GLCE_TEST_PATH_MODULE_NAME_H
@@ -92,18 +155,16 @@ extern "C" {
 #include "test_controller.h"    // Include the test infrastructure header
 
 // Failure injection APIs for public APIs
-// (prepare one for each public API that returns a result code)
-void test_foo_config_set(const test_call_control_t* config_);   // Failure injection configuration API for API foo
-void test_bar_config_set(const test_call_control_t* config_);   // Failure injection configuration API for API bar
+// (provide one for each public API that can be handled by the failure injection types defined in test_controller.h)
+void test_foo_config_set(const test_call_control_t* config_);   // Failure injection setting API for API foo
+void test_bar_config_set(const test_call_control_t* config_);   // Failure injection setting API for API bar
 
-// Reset all test configuration values inside the module
-// (disables test behavior and also resets all settings other than failure injection,
-// such as mock function test settings and test scenario settings)
-void test_xxx_config_reset(void);
+// Reset all test-related settings inside the module
+// (disables all test-only behavior, including failure injection as well as mock function test settings and test scenario settings)
+void test_module_name_config_reset(void);
 
-// Run tests for all functions owned by the module
-// (public APIs and private functions)
-void test_xxx(void);
+// Test routine for all functions owned by the module (public APIs and private functions)
+void test_module_name(void);
 #endif
 
 #ifdef __cplusplus
@@ -114,29 +175,32 @@ void test_xxx(void);
 
 ### Adding Test Implementations
 
-Each test-related implementation should be written directly in the implementation file of the target module.
-This allows the test code to directly access fields of the structures used by the module, keeping the test code simple.
+All test-related processing is written in the implementation file of the module under test.
 
-#### Test Data Definitions and Prototype Declarations
+This allows direct access to fields of the various structures used by the module, keeping the test code simple.
 
-Prepare a `TEST_BUILD` code block immediately after the include section of the module implementation file, and place the following items there.
-To maintain consistency across all test functions, the order of these items must be unified across all modules.
+#### Test Data Structure Definitions and Function Prototype Section
 
-- Includes used only during testing
-- Declarations of failure injection structure instances for public APIs that return result codes (instance name: `s_test_config_xxx`, where `xxx` is the public API name)
-- (If necessary) declarations of failure injection structure instances for private functions inside the module that return result codes (instance name: `s_test_config_xxx`, where `xxx` is the private function name)
-- Prototypes for all test functions (test function name: `test_xxx`, where `xxx` is the target function name)
-- The order of the prototypes must match the implementation order of the target functions
+Below the include directives in the module implementation file, prepare a TEST_BUILD code block and write the following.
 
-Each test function should be added after the implementations of the public APIs and private functions owned by the module.
-The implementation order of the test functions is as follows.
+To keep all test functions consistent, the order must be unified across all modules.
 
-- The test function that runs all test functions (the function declared in the test header)
-- Individual unit test functions for each target function (implemented in the same order as the prototype declarations)
+- Include directives for headers used only during testing
+- Declarations of failure injection control structure instances for public APIs that use failure injection(instance name: s_test_config_xxx, where xxx is the public API name)
+- If needed, declarations of failure injection control structure instances for private functions that use failure injection(instance name: s_test_config_xxx, where xxx is the private function name)
+- Prototypes for all test functions(test function name: test_xxx, where xxx represents the target function name)
+- The order of the prototypes must match the implementation order of the test functions
+
+Each test function is added after the implementation of the module’s public APIs and private functions.
+
+The implementation order of test functions is as follows.
+
+- The test function that executes all test functions(the function declared in the test header)
+- Individual unit test functions for each function(implemented in the same order as the prototypes)
 
 ```c
 #ifdef TEST_BUILD
-// Includes used only during testing
+// Include directives used only during testing
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -147,20 +211,22 @@ The implementation order of the test functions is as follows.
 static test_call_control_t s_test_config_foo;    /**< Test setting for API foo */
 static test_call_control_t s_test_config_bar;    /**< Test setting for API bar */
 
-// Private function test settings
-// (add declarations only if necessary)
+// Private function test settings (add declaration if needed)
 static test_call_control_t s_test_config_baz;    /**< Test setting for private function baz */
 
 // Prototypes for all test functions
-static void test_xxx(void);
+// (these are called from the module test function; the module test function is named test_module_name)
+static void test_xxx(void); /**< Test function for each target function; xxx is replaced with the function name */
 #endif
 ```
 
-### Failure Injection Handling in Public API Implementations
+### Failure Injection Processing in Public API Implementations
 
-To make it possible to control result codes returned to upper layers, all public APIs that return result codes shall provide functionality to force a specified result code to be returned.
-Since forced return values must work regardless of any error-handling path, this logic shall be placed at the beginning of the function.
-For example, it should be implemented as follows (example: `memory_system_allocate`).
+To make return values controllable from upper-layer calls, all public APIs that are handled by the common failure injection mechanism or a module-specific failure injection mechanism must provide functionality to force a specified return value.
+
+Because forced return behavior must take effect regardless of normal error handling, it must be placed at the beginning of the function.
+
+For example:
 
 ```c
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
