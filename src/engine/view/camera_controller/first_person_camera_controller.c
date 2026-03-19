@@ -1,5 +1,5 @@
 /**
- * @file first_person_camera.c
+ * @file first_person_camera_controller.c
  * @author chocolate-pie24
  * @brief 一人称視点のカメラ制御機能の実装
  *
@@ -12,7 +12,7 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "engine/view/camera_control/first_person_camera.h"
+#include "engine/view/camera_controller/first_person_camera_controller.h"
 
 #include "engine/view/camera/camera.h"
 
@@ -25,19 +25,19 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-view_result_t camera_control_move_forward(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_control_move_forward", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_forward", "camera_")
 
     mat4x4f_t view_mat = { 0 };
     ret = camera_view_matrix_get(camera_, &view_mat);   // ワールド座標系からカメラ座標系への変換行列
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("camera_control_move_forward(%s) - Failed to get view matrix.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to get view matrix.", view_rslt_to_str(ret));
         goto cleanup;
     }
     if(!mat4f_inverse(&view_mat)) { // カメラ座標系からワールド座標系への変換行列
         ret = VIEW_RUNTIME_ERROR;
-        ERROR_MESSAGE("camera_control_move_forward(%s) - Failed to get mat4f inverse.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to get mat4f inverse.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -58,7 +58,7 @@ view_result_t camera_control_move_forward(float speed_, float delta_time_, camer
     vec3f_t position = { 0 };
     if(VIEW_SUCCESS != camera_posture_get(camera_, &euler, &position)) {
         ret = VIEW_RUNTIME_ERROR;
-        ERROR_MESSAGE("camera_control_move_forward(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
         goto cleanup;
     }
     vec3f_t new_pos = { 0 };
@@ -67,7 +67,7 @@ view_result_t camera_control_move_forward(float speed_, float delta_time_, camer
     // カメラ座標更新
     if(VIEW_SUCCESS != camera_posture_update(&euler, &new_pos, camera_)) {
         ret = VIEW_RUNTIME_ERROR;
-        ERROR_MESSAGE("camera_control_move_forward(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -77,27 +77,27 @@ cleanup:
     return ret;
 }
 
-view_result_t camera_control_move_backward(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
 
-view_result_t camera_control_move_right(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
 
-view_result_t camera_control_move_left(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
 
-view_result_t camera_control_pitch(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
 
-view_result_t camera_control_yaw(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t first_person_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
