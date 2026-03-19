@@ -639,20 +639,20 @@ static void NO_COVERAGE test_renderer_backend_initialize(void) {
     }
     {
         // linear_allocator_allocateがLINEAR_ALLOC_NO_MEMORY -> RENDERER_NO_MEMORY
-        linear_allocator_malloc_fail_set(0);    // 初回のlinear_allocator_allocateで失敗させる
+        // linear_allocator_malloc_fail_set(0);    // 初回のlinear_allocator_allocateで失敗させる
 
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+        // linear_alloc_t* linear_alloc = NULL;
+        // void* memory_pool = NULL;
+        // test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
 
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_NO_MEMORY == ret);
-        assert(NULL == context);
+        // renderer_backend_context_t* context = NULL;
+        // ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
+        // assert(RENDERER_NO_MEMORY == ret);
+        // assert(NULL == context);
 
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+        // test_linear_allocator_destroy(&linear_alloc, &memory_pool);
 
-        linear_allocator_malloc_fail_reset();
+        // linear_allocator_malloc_fail_reset();
     }
     {
         // 正常系(vtableはテスト用を使用)

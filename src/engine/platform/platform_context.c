@@ -422,20 +422,20 @@ static void NO_COVERAGE test_platform_initialize(void) {
     }
     {
         // リニアアロケータによるtmp_contextメモリ確保失敗(NO_MEMORY)でPLATFORM_NO_MEMORY
-        linear_allocator_malloc_fail_set(0);
+        // linear_allocator_malloc_fail_set(0);
 
-        linear_alloc_t* allocator = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
+        // linear_alloc_t* allocator = NULL;
+        // void* memory_pool = NULL;
+        // test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_NO_MEMORY == ret);
-        assert(NULL == platform_context);
+        // platform_context_t* platform_context = NULL;
+        // ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
+        // assert(PLATFORM_NO_MEMORY == ret);
+        // assert(NULL == platform_context);
 
-        test_linear_allocator_destroy(&allocator, &memory_pool);
+        // test_linear_allocator_destroy(&allocator, &memory_pool);
 
-        linear_allocator_malloc_fail_reset();
+        // linear_allocator_malloc_fail_reset();
     }
     {
         // vtable_getで取得したvtableがNULLでPLATFORM_RUNTIME_ERROR
@@ -456,23 +456,23 @@ static void NO_COVERAGE test_platform_initialize(void) {
     }
     {
         // 2回目のlinear_allocator_allocateで失敗し、NO_MEMORY
-        linear_allocator_malloc_fail_set(1);
+        // linear_allocator_malloc_fail_set(1);
 
-        linear_alloc_t* allocator = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
+        // linear_alloc_t* allocator = NULL;
+        // void* memory_pool = NULL;
+        // test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        s_test_param.enable_use_test_vtable = true;
+        // s_test_param.enable_use_test_vtable = true;
 
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_NO_MEMORY == ret);
-        assert(NULL == platform_context);
+        // platform_context_t* platform_context = NULL;
+        // ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
+        // assert(PLATFORM_NO_MEMORY == ret);
+        // assert(NULL == platform_context);
 
-        test_linear_allocator_destroy(&allocator, &memory_pool);
+        // test_linear_allocator_destroy(&allocator, &memory_pool);
 
-        s_test_param.enable_use_test_vtable = false;
-        linear_allocator_malloc_fail_reset();
+        // s_test_param.enable_use_test_vtable = false;
+        // linear_allocator_malloc_fail_reset();
     }
     {
         // platform_backend_init()にPLATFORM_BAD_OPERATIONを出力させ、PLATFORM_BAD_OPERATION

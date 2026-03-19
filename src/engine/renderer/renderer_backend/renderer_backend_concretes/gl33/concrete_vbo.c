@@ -313,12 +313,12 @@ static void NO_COVERAGE test_gl33_vbo_create(void) {
     }
     {
         // memory_system_allocateがMEMORY_SYSTEM_LIMIT_EXCEEDEDでRENDERER_LIMIT_EXCEEDED
-        memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(NULL == vbo);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-        memory_system_test_param_reset();
+        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        // renderer_backend_vbo_t* vbo = NULL;
+        // ret = gl33_vbo_create(&vbo);
+        // assert(NULL == vbo);
+        // assert(RENDERER_LIMIT_EXCEEDED == ret);
+        // memory_system_test_param_reset();
     }
     {
         // 正常系

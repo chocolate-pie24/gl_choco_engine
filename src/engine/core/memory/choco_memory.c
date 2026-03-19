@@ -18,34 +18,37 @@
 #include <stdint.h>
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc TODO: remove this!!
-#include <string.h> // for memset strcmp(test only)
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
 
+// #define TEST_BUILD
+
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-typedef struct malloc_test {    // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
-    bool enable_malloc_fail;               /**< 強制的にmallocを擬似的に失敗させる機能の有効フラグ */
-    bool enable_err_code;           /**< 強制的に指定した実行結果コードを返す機能の有効フラグ */
-    int32_t malloc_counter;         /**< malloc実行回数(0...) */
-    int32_t malloc_fail_n;          /**< 何回目のmallocで失敗させるかを指定(初回なら0を指定する)(malloc_failがfalseなら機能しない) */
+#include <string.h> // for memset strcmp
+#include "engine/core/memory/test_choco_memory.h"
 
-    memory_system_result_t code;    /**< enable_err_codeがtrueのときにはこのcodeの値が強制的に出力される */
-} malloc_test_t;
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_memory_system_create;       /**< memory_system_create()テスト設定 */
+static test_call_control_t s_test_config_memory_system_allocate;     /**< memory_system_allocate()テスト設定 */
 
-static malloc_test_t s_malloc_test;
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_test_malloc;                /**< test_malloc()テスト設定値 */
 
-static void test_test_malloc(void); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
+// 全テスト関数プロトタイプ宣言
 static void test_memory_system_create(void);
 static void test_memory_system_destroy(void);
 static void test_memory_system_allocate(void);
 static void test_memory_system_free(void);
 static void test_memory_system_report(void);
+static void test_rslt_to_str(void);
+static void test_test_malloc(void);
 #endif
 
 /**
@@ -71,6 +74,14 @@ static const char* rslt_to_str(memory_system_result_t rslt_);
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
 memory_system_result_t memory_system_create(void) {
+#ifdef TEST_BUILD
+    s_test_config_memory_system_create.call_count++;
+    if(s_test_config_memory_system_create.fail_on_call != 0) {
+        if(s_test_config_memory_system_create.call_count == s_test_config_memory_system_create.fail_on_call) {
+            return (memory_system_result_t)s_test_config_memory_system_create.forced_result;
+        }
+    }
+#endif
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     memory_system_t* tmp = NULL;
 
@@ -132,8 +143,11 @@ cleanup:
 
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
 #ifdef TEST_BUILD
-    if(s_malloc_test.enable_err_code) {
-        return s_malloc_test.code;
+    s_test_config_memory_system_allocate.call_count++;
+    if(s_test_config_memory_system_allocate.fail_on_call != 0) {
+        if(s_test_config_memory_system_allocate.call_count == s_test_config_memory_system_allocate.fail_on_call) {
+            return (memory_system_result_t)s_test_config_memory_system_allocate.forced_result;
+        }
     }
 #endif
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -248,7 +262,8 @@ static const char* rslt_to_str(memory_system_result_t rslt_) {
 /**
  * @brief mallocのラッパ関数で、size_のメモリを確保する
  *
- * @note s_malloc_test.enable_malloc_failの場合で、test_mallocが呼び出された回数がmalloc_fail_nに等しい場合にはNULLが返る
+ * @note choco_memory保有APIの単体テストのため、test_config_test_mallocの設定により、強制的にNULLを返させる、以下の条件でNULLになる
+ * - s_test_config_test_malloc.fail_on_call > 0 && s_test_config_test_malloc.call_count == s_test_config_test_malloc.fail_on_call
  *
  * @param size_ 確保するメモリ容量
  * @return void* 確保されたメモリの先頭アドレス
@@ -256,15 +271,15 @@ static const char* rslt_to_str(memory_system_result_t rslt_) {
 static void* test_malloc(size_t size_) {
     void* ret = NULL;
 #ifdef TEST_BUILD
-    if(s_malloc_test.enable_malloc_fail) {
-        if(s_malloc_test.malloc_counter == s_malloc_test.malloc_fail_n) {
+    s_test_config_test_malloc.call_count++;
+    if(0 == s_test_config_test_malloc.fail_on_call) {
+        ret = malloc(size_);
+    } else {
+        if(s_test_config_test_malloc.call_count == s_test_config_test_malloc.fail_on_call) {
             ret = NULL;
         } else {
             ret = malloc(size_);
         }
-        s_malloc_test.malloc_counter++;
-    } else {
-        ret = malloc(size_);
     }
 #else
     ret = malloc(size_);
@@ -273,353 +288,589 @@ static void* test_malloc(size_t size_) {
 }
 
 #ifdef TEST_BUILD
-void NO_COVERAGE memory_system_test_param_set(int32_t malloc_fail_n_) {
-    s_malloc_test.enable_malloc_fail = true;
-    s_malloc_test.malloc_fail_n = malloc_fail_n_;
+void test_memory_system_create_config_set(const test_call_control_t* config_) {
+    s_test_config_memory_system_create.fail_on_call = config_->fail_on_call;
+    s_test_config_memory_system_create.forced_result = config_->forced_result;
 }
 
-void NO_COVERAGE memory_system_rslt_code_set(memory_system_result_t rslt_code_) {
-    s_malloc_test.enable_err_code = true;
-    s_malloc_test.code = rslt_code_;
-
+void test_memory_system_allocate_config_set(const test_call_control_t* config_) {
+    s_test_config_memory_system_allocate.fail_on_call = config_->fail_on_call;
+    s_test_config_memory_system_allocate.forced_result = config_->forced_result;
 }
 
-void NO_COVERAGE memory_system_test_param_reset(void) {
-    s_malloc_test.enable_malloc_fail = false;
-    s_malloc_test.malloc_counter = 0;
-    s_malloc_test.malloc_fail_n = 0;
-
-    s_malloc_test.enable_err_code = false;
+void test_choco_memory_config_reset(void) {
+    test_call_control_reset(&s_test_config_memory_system_create);
+    test_call_control_reset(&s_test_config_memory_system_allocate);
+    test_call_control_reset(&s_test_config_test_malloc);
 }
 
-void test_memory_system(void) {
+void test_choco_memory(void) {
+    test_choco_memory_config_reset();
+
+    test_rslt_to_str();
     test_test_malloc();
     test_memory_system_create();
     test_memory_system_destroy();
     test_memory_system_allocate();
     test_memory_system_free();
     test_memory_system_report();
+
+    test_choco_memory_config_reset();
 }
 
+// Generated by ChatGPT 5.4 Thinking
 static void NO_COVERAGE test_memory_system_create(void) {
+    {
+        // memory_system_create() 冒頭で強制的に MEMORY_SYSTEM_NO_MEMORY を返させる
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        test_call_control_t config = {0};
+
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_create_config_set(&config);
+
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_NO_MEMORY == ret);
+        assert(NULL == s_mem_sys_ptr);
+
+        test_choco_memory_config_reset();
+    }
     {
         // NULL != s_mem_sys_ptr -> MEMORY_SYSTEM_RUNTIME_ERROR
         memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
+        test_choco_memory_config_reset();
         assert(NULL == s_mem_sys_ptr);
+
         s_mem_sys_ptr = (memory_system_t*)malloc(sizeof(memory_system_t));
         assert(NULL != s_mem_sys_ptr);
 
         ret = memory_system_create();
-        assert(NULL != s_mem_sys_ptr);
         assert(MEMORY_SYSTEM_RUNTIME_ERROR == ret);
+        assert(NULL != s_mem_sys_ptr);
 
         free(s_mem_sys_ptr);
         s_mem_sys_ptr = NULL;
     }
     {
-        // s_mem_sys_ptr malloc(1回目のmalloc)失敗 -> MEMORY_SYSTEM_NO_MEMORY
+        // 内部 test_malloc() の1回目を失敗させる -> MEMORY_SYSTEM_NO_MEMORY
         memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-        memory_system_test_param_reset();
-        memory_system_test_param_set(0);
-
+        test_choco_memory_config_reset();
         assert(NULL == s_mem_sys_ptr);
+
+        s_test_config_test_malloc.fail_on_call = 1U;
+
         ret = memory_system_create();
         assert(MEMORY_SYSTEM_NO_MEMORY == ret);
         assert(NULL == s_mem_sys_ptr);
+        assert(1U == s_test_config_test_malloc.call_count);
 
-        memory_system_test_param_reset();
+        test_choco_memory_config_reset();
     }
     {
         // 正常系
         memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
+        test_choco_memory_config_reset();
         assert(NULL == s_mem_sys_ptr);
+
         ret = memory_system_create();
         assert(MEMORY_SYSTEM_SUCCESS == ret);
-        assert(0 == s_mem_sys_ptr->total_allocated);
+        assert(NULL != s_mem_sys_ptr);
+
+        assert(0U == s_mem_sys_ptr->total_allocated);
+        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+        }
+
         assert(0 == strcmp("system", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_SYSTEM]));
         assert(0 == strcmp("string", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING]));
         assert(0 == strcmp("ring_queue", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RING_QUEUE]));
         assert(0 == strcmp("renderer", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RENDERER]));
         assert(0 == strcmp("file_io", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_FILE_IO]));
         assert(0 == strcmp("camera", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_CAMERA]));
-        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-            assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
-        }
+
         memory_system_destroy();
         assert(NULL == s_mem_sys_ptr);
     }
 }
 
-void NO_COVERAGE test_memory_system_destroy(void) {
-    // s_mem_sys_ptr == NULL -> no-op
-    memory_system_destroy();
+// Generated by ChatGPT 5.4 Thinking
+static void NO_COVERAGE test_memory_system_destroy(void) {
+    {
+        // s_mem_sys_ptr == NULL -> no-op
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    // 正常処理
-    memory_system_result_t ret = memory_system_create();
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(NULL != s_mem_sys_ptr);
-    memory_system_destroy();
-    assert(NULL == s_mem_sys_ptr);
-    memory_system_destroy();
+        memory_system_destroy();
 
-    // s_mem_sys_ptr->total_allocated != 0 -> warning + 正常処理
-    ret = memory_system_create();
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(NULL != s_mem_sys_ptr);
-    s_mem_sys_ptr->total_allocated = 128;
-    s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 32;
-    s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM] = 96;
-    memory_system_destroy();
-    assert(NULL == s_mem_sys_ptr);
+        assert(NULL == s_mem_sys_ptr);
+    }
+    {
+        // 正常系
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
+
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != s_mem_sys_ptr);
+
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+
+        // 連続 destroy でも no-op
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+    }
+    {
+        // total_allocated != 0 -> warning を出しつつ正常破棄
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
+
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != s_mem_sys_ptr);
+
+        s_mem_sys_ptr->total_allocated = 128U;
+        s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 32U;
+        s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM] = 96U;
+
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+    }
 }
 
+// Generated by ChatGPT 5.4 Thinking
 static void NO_COVERAGE test_memory_system_allocate(void) {
-    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    void* ptr = NULL;
+    {
+        // s_mem_sys_ptr == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        void* ptr = NULL;
 
-    // s_mem_sys_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
-    assert(NULL == ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(NULL == s_mem_sys_ptr);
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    ret = memory_system_create();
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(NULL != s_mem_sys_ptr);
-
-    // out_ptr == NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, NULL);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
+        ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr);
+        assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+        assert(NULL == ptr);
+        assert(NULL == s_mem_sys_ptr);
     }
+    {
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    // *out_ptr != NULLでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ptr = malloc(8);
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
+
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != s_mem_sys_ptr);
+        assert(0U == s_mem_sys_ptr->total_allocated);
+        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+        }
+
+        {
+            // out_ptr_ == NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+            ret = memory_system_allocate(128U, MEMORY_TAG_STRING, NULL);
+            assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+                assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+            }
+        }
+        {
+            // *out_ptr_ != NULL -> MEMORY_SYSTEM_INVALID_ARGUMENT
+            void* ptr = malloc(8U);
+            assert(NULL != ptr);
+
+            ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+            assert(NULL != ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+                assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+            }
+
+            free(ptr);
+            ptr = NULL;
+        }
+        {
+            // mem_tag_ >= MEMORY_TAG_MAX -> MEMORY_SYSTEM_INVALID_ARGUMENT
+            void* ptr = NULL;
+
+            ret = memory_system_allocate(128U, MEMORY_TAG_MAX, &ptr);
+            assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
+            assert(NULL == ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+                assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+            }
+        }
+        {
+            // size_ == 0 -> warning + MEMORY_SYSTEM_SUCCESS
+            void* ptr = NULL;
+
+            ret = memory_system_allocate(0U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_SUCCESS == ret);
+            assert(NULL == ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+                assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+            }
+        }
+        {
+            // mem_tag_allocated[mem_tag_] の加算で SIZE_MAX を超える -> MEMORY_SYSTEM_LIMIT_EXCEEDED
+            void* ptr = NULL;
+
+            s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = SIZE_MAX - 100U;
+
+            ret = memory_system_allocate(101U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
+            assert(NULL == ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+            assert((SIZE_MAX - 100U) == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+
+            s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 0U;
+        }
+        {
+            // total_allocated の加算で SIZE_MAX を超える -> MEMORY_SYSTEM_LIMIT_EXCEEDED
+            void* ptr = NULL;
+
+            s_mem_sys_ptr->total_allocated = SIZE_MAX - 100U;
+
+            ret = memory_system_allocate(101U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
+            assert(NULL == ptr);
+            assert((SIZE_MAX - 100U) == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+
+            s_mem_sys_ptr->total_allocated = 0U;
+        }
+        {
+            // memory_system_allocate() 冒頭で強制的に MEMORY_SYSTEM_NO_MEMORY を返させる
+            memory_system_result_t ret_local = MEMORY_SYSTEM_INVALID_ARGUMENT;
+            test_call_control_t config = {0};
+            void* ptr = NULL;
+
+            test_choco_memory_config_reset();
+
+            config.fail_on_call = 1U;
+            config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+            test_memory_system_allocate_config_set(&config);
+
+            ret_local = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_NO_MEMORY == ret_local);
+            assert(NULL == ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+
+            // 冒頭で return しているので、内部 test_malloc() には到達しない
+            assert(0U == s_test_config_test_malloc.call_count);
+
+            test_choco_memory_config_reset();
+        }
+        {
+            // 内部 test_malloc() の1回目を失敗させる -> MEMORY_SYSTEM_NO_MEMORY
+            void* ptr = NULL;
+
+            test_choco_memory_config_reset();
+            s_test_config_test_malloc.fail_on_call = 1U;
+
+            ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_NO_MEMORY == ret);
+            assert(NULL == ptr);
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+            assert(1U == s_test_config_test_malloc.call_count);
+
+            test_choco_memory_config_reset();
+        }
+        {
+            // 正常系
+            void* ptr = NULL;
+
+            test_choco_memory_config_reset();
+
+            ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr);
+            assert(MEMORY_SYSTEM_SUCCESS == ret);
+            assert(NULL != ptr);
+            assert(128U == s_mem_sys_ptr->total_allocated);
+            assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+
+            memory_system_free(ptr, 128U, MEMORY_TAG_STRING);
+            ptr = NULL;
+
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
+
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
     }
-    free(ptr);
-    ptr = NULL;
-
-    // mem_tag_ >= MEMORY_TAG_MAXでMEMORY_SYSTEM_INVALID_ARGUMENT
-    ret = memory_system_allocate(128, MEMORY_TAG_MAX, &ptr);
-    assert(MEMORY_SYSTEM_INVALID_ARGUMENT == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
-    }
-    assert(NULL == ptr);
-
-    // size_ == 0でwarningメッセージを出し、MEMORY_SYSTEM_SUCCESS
-    ret = memory_system_allocate(0, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
-        assert(0 == s_mem_sys_ptr->mem_tag_allocated[i]);
-    }
-    assert(NULL == ptr);
-
-    // mem_tag_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_LIMIT_EXCEEDED
-    s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = SIZE_MAX - 100;
-    ret = memory_system_allocate(101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert((SIZE_MAX - 100) == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(NULL == ptr);
-    s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
-
-    // total_allocatedがSIZE_MAX超過でMEMORY_SYSTEM_LIMIT_EXCEEDED
-    s_mem_sys_ptr->total_allocated = SIZE_MAX - 100;
-    ret = memory_system_allocate(101, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_LIMIT_EXCEEDED == ret);
-    assert((SIZE_MAX - 100) == s_mem_sys_ptr->total_allocated);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(NULL == ptr);
-    s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING] = 0;
-    assert(NULL == ptr);
-    s_mem_sys_ptr->total_allocated = 0;
-
-    // // 1回目のmallocで失敗させる
-    memory_system_test_param_reset();
-    memory_system_test_param_set(0);
-
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_NO_MEMORY == ret);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    assert(NULL == ptr);
-
-    memory_system_test_param_reset();
-
-    // 正常系
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    free(ptr);
-    ptr = NULL;
-
-    memory_system_destroy();
 }
 
+// Generated by ChatGPT 5.4 Thinking
 static void NO_COVERAGE test_memory_system_free(void) {
-    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    {
+        // s_mem_sys_ptr == NULL -> no-op
+        void* ptr = malloc(8U);
+        assert(NULL != ptr);
 
-    void* ptr = malloc(8);
-    assert(NULL != ptr);
-    // s_mem_sys_ptr == NULLでno-op
-    memory_system_free(ptr, 8, MEMORY_TAG_STRING);
-    free(ptr);
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    ret = memory_system_create();
-    assert(NULL != s_mem_sys_ptr);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
+        memory_system_free(ptr, 8U, MEMORY_TAG_STRING);
 
-    void* ptr_string = NULL;
-    void* ptr_system = NULL;
+        free(ptr);
+        ptr = NULL;
+    }
+    {
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        void* ptr_string = NULL;
+        void* ptr_system = NULL;
 
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr_string);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    ret = memory_system_allocate(256, MEMORY_TAG_SYSTEM, &ptr_system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert((128 + 256) == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != s_mem_sys_ptr);
 
-    // NULL == ptr_でワーニング // No-op
-    memory_system_free(NULL, 128, MEMORY_TAG_STRING);
-    assert((128 + 256) == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr_string);
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != ptr_string);
+        assert(128U == s_mem_sys_ptr->total_allocated);
+        assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+        assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // mem_tag_ >= MEMORY_TAG_MAXでワーニング / No-op
-    memory_system_free(ptr_string, 128, MEMORY_TAG_MAX);
-    assert((128 + 256) == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        ret = memory_system_allocate(256U, MEMORY_TAG_SYSTEM, &ptr_system);
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != ptr_system);
+        assert((128U + 256U) == s_mem_sys_ptr->total_allocated);
+        assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+        assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-    memory_system_free(ptr_string, 1024, MEMORY_TAG_STRING);
-    assert((128 + 256) == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        {
+            // ptr_ == NULL -> no-op
+            memory_system_free(NULL, 128U, MEMORY_TAG_STRING);
+            assert((128U + 256U) == s_mem_sys_ptr->total_allocated);
+            assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
+        {
+            // mem_tag_ >= MEMORY_TAG_MAX -> no-op
+            memory_system_free(ptr_string, 128U, MEMORY_TAG_MAX);
+            assert((128U + 256U) == s_mem_sys_ptr->total_allocated);
+            assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
+        {
+            // mem_tag_allocated[mem_tag_] < size_ -> no-op
+            memory_system_free(ptr_string, 1024U, MEMORY_TAG_STRING);
+            assert((128U + 256U) == s_mem_sys_ptr->total_allocated);
+            assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
+        {
+            // total_allocated < size_ -> no-op
+            s_mem_sys_ptr->total_allocated = 64U;
 
-    // total_allocatedがマイナスとなる量をfreeしようとするとワーニング / No-op
-    s_mem_sys_ptr->total_allocated = 64;   // temporary
-    memory_system_free(ptr_string, 128, MEMORY_TAG_STRING);
-    assert(64 == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
-    s_mem_sys_ptr->total_allocated = 128 + 256;
+            memory_system_free(ptr_string, 128U, MEMORY_TAG_STRING);
+            assert(64U == s_mem_sys_ptr->total_allocated);
+            assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    // 正常系
-    memory_system_free(ptr_string, 128, MEMORY_TAG_STRING);
-    assert(256 == s_mem_sys_ptr->total_allocated);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+            s_mem_sys_ptr->total_allocated = 128U + 256U;
+        }
+        {
+            // 正常系: string を free
+            memory_system_free(ptr_string, 128U, MEMORY_TAG_STRING);
+            ptr_string = NULL;
 
-    memory_system_free(ptr_system, 256, MEMORY_TAG_SYSTEM);
-    assert(0 == s_mem_sys_ptr->total_allocated);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+            assert(256U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
+        {
+            // 正常系: system を free
+            memory_system_free(ptr_system, 256U, MEMORY_TAG_SYSTEM);
+            ptr_system = NULL;
 
-    ptr_string = NULL;
-    ptr_system = NULL;
+            assert(0U == s_mem_sys_ptr->total_allocated);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        }
 
-    memory_system_destroy();
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+    }
 }
 
+// Generated by ChatGPT 5.4 Thinking
 static void NO_COVERAGE test_memory_system_report(void) {
-    memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    {
+        // s_mem_sys_ptr == NULL -> no-op
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    void* ptr_string = NULL;
-    void* ptr_system = NULL;
+        memory_system_report();
 
-    // s_mem_sys_ptr == NULLでワーニング No-op
-    memory_system_report();
+        assert(NULL == s_mem_sys_ptr);
+    }
+    {
+        memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        void* ptr_string = NULL;
+        void* ptr_system = NULL;
 
-    ret = memory_system_create();
-    assert(NULL != s_mem_sys_ptr);
+        test_choco_memory_config_reset();
+        assert(NULL == s_mem_sys_ptr);
 
-    // all 0.
-    memory_system_report();
+        ret = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != s_mem_sys_ptr);
 
-    ret = memory_system_allocate(128, MEMORY_TAG_STRING, &ptr_string);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert(128 == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(0 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        // all 0 の状態で呼べる
+        memory_system_report();
+        assert(0U == s_mem_sys_ptr->total_allocated);
+        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+        }
 
-    // total = 128
-    // string 128
-    // system 0
-    memory_system_report();
+        // string だけ確保した状態で呼べる
+        ret = memory_system_allocate(128U, MEMORY_TAG_STRING, &ptr_string);
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != ptr_string);
+        assert(128U == s_mem_sys_ptr->total_allocated);
+        assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+        assert(0U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    ret = memory_system_allocate(256, MEMORY_TAG_SYSTEM, &ptr_system);
-    assert(MEMORY_SYSTEM_SUCCESS == ret);
-    assert((128 + 256) == s_mem_sys_ptr->total_allocated);
-    assert(128 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
-    assert(256 == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
+        memory_system_report();
 
-    // total = 384
-    // string 128
-    // system 256
-    memory_system_report();
+        // string + system の両方を確保した状態で呼べる
+        ret = memory_system_allocate(256U, MEMORY_TAG_SYSTEM, &ptr_system);
+        assert(MEMORY_SYSTEM_SUCCESS == ret);
+        assert(NULL != ptr_system);
+        assert((128U + 256U) == s_mem_sys_ptr->total_allocated);
+        assert(128U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_STRING]);
+        assert(256U == s_mem_sys_ptr->mem_tag_allocated[MEMORY_TAG_SYSTEM]);
 
-    s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING] = NULL;
+        memory_system_report();
 
-    memory_system_free(ptr_system, 256, MEMORY_TAG_SYSTEM);
-    memory_system_free(ptr_string, 128, MEMORY_TAG_STRING);
+        // タグ文字列が NULL でも report が通る
+        s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_STRING] = NULL;
+        memory_system_report();
 
-    memory_system_report();
+        memory_system_free(ptr_system, 256U, MEMORY_TAG_SYSTEM);
+        ptr_system = NULL;
+        memory_system_free(ptr_string, 128U, MEMORY_TAG_STRING);
+        ptr_string = NULL;
 
-    memory_system_destroy();
+        assert(0U == s_mem_sys_ptr->total_allocated);
+        for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {
+            assert(0U == s_mem_sys_ptr->mem_tag_allocated[i]);
+        }
+
+        memory_system_destroy();
+        assert(NULL == s_mem_sys_ptr);
+    }
 }
 
-// TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
+// Generated by ChatGPT 5.4 Thinking
+static void NO_COVERAGE test_rslt_to_str(void) {
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_SUCCESS);
+        assert(NULL != str);
+        assert(0 == strcmp("SUCCESS", str));
+    }
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT);
+        assert(NULL != str);
+        assert(0 == strcmp("INVALID_ARGUMENT", str));
+    }
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_RUNTIME_ERROR);
+        assert(NULL != str);
+        assert(0 == strcmp("RUNTIME_ERROR", str));
+    }
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        assert(NULL != str);
+        assert(0 == strcmp("LIMIT_EXCEEDED", str));
+    }
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_NO_MEMORY);
+        assert(NULL != str);
+        assert(0 == strcmp("NO_MEMORY", str));
+    }
+    {
+        const char* str = rslt_to_str((memory_system_result_t)100);
+        assert(NULL != str);
+        assert(0 == strcmp("UNDEFINED_ERROR", str));
+    }
+}
+
+// Generated by ChatGPT 5.4 Thinking
 static void NO_COVERAGE test_test_malloc(void) {
     {
-        DEBUG_MESSAGE("test_test_malloc test_case1");
-
-        memory_system_test_param_reset();
+        // fail_on_call == 0 -> 常に通常の malloc 動作
         void* tmp = NULL;
-        tmp = test_malloc(128);
+
+        test_choco_memory_config_reset();
+        assert(0U == s_test_config_test_malloc.call_count);
+        assert(0U == s_test_config_test_malloc.fail_on_call);
+        assert(0 == s_test_config_test_malloc.forced_result);
+
+        tmp = test_malloc(128U);
         assert(NULL != tmp);
+        assert(1U == s_test_config_test_malloc.call_count);
+
         free(tmp);
         tmp = NULL;
     }
     {
-        DEBUG_MESSAGE("test_test_malloc test_case2");
-
-        memory_system_test_param_set(1);
-
+        // 2回目で失敗
         void* tmp = NULL;
-        tmp = test_malloc(128); // 1回目は成功
+
+        test_choco_memory_config_reset();
+        s_test_config_test_malloc.fail_on_call = 2U;
+
+        tmp = test_malloc(128U);
         assert(NULL != tmp);
+        assert(1U == s_test_config_test_malloc.call_count);
+
         free(tmp);
         tmp = NULL;
 
-        tmp = test_malloc(128); // 2回目で失敗
+        tmp = test_malloc(128U);
         assert(NULL == tmp);
-        free(tmp);
-        tmp = NULL;
+        assert(2U == s_test_config_test_malloc.call_count);
     }
-    memory_system_test_param_reset();
+    {
+        // 1回目で失敗
+        void* tmp = NULL;
+
+        test_choco_memory_config_reset();
+        s_test_config_test_malloc.fail_on_call = 1U;
+
+        tmp = test_malloc(128U);
+        assert(NULL == tmp);
+        assert(1U == s_test_config_test_malloc.call_count);
+    }
+
+    test_choco_memory_config_reset();
 }
 #endif

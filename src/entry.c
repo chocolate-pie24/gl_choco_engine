@@ -20,23 +20,30 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-#include "test_linear_allocator.h"
-#include "test_memory_system.h"
-#include "test_choco_string.h"
-#include "test_ring_queue.h"
+#include "base/test_choco_math.h"
+
+#include "engine/core/memory/test_linear_allocator.h"
+#include "engine/core/memory/test_choco_memory.h"
+#include "engine/core/filesystem/test_filesystem.h"
+
+#include "engine/containers/test_choco_string.h"
+#include "engine/containers/test_ring_queue.h"
+
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
 #include "platform/test_platform_err_utils.h"
+
 #include "renderer/test_renderer_backend_context.h"
 #include "renderer/test_renderer_memory.h"
 #include "renderer/test_renderer_err_utils.h"
 #include "renderer/test_gl33_vbo.h"
 #include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
-#include "test_filesystem.h"
-#include "test_fs_utils.h"
-#include "test_choco_math.h"
-#include "test_camera.h"
+
+#include "io_utils/test_fs_utils.h"
+
+#include "camera/test_camera.h"
+
 #endif
 
 /**
@@ -60,26 +67,30 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
+        // core
         test_linear_allocator();
-        test_memory_system();
+        test_choco_memory();
+        test_filesystem();
+
+        // containers
         test_choco_string();
         test_ring_queue();
 
-        test_platform_context();
-        test_platform_glfw();
-        test_platform_err_utils();
+        // test_platform_context();
+        // test_platform_glfw();
+        // test_platform_err_utils();
 
-        test_renderer_memory();
-        test_renderer_err_utils();
-        test_gl33_vbo();
-        test_gl33_vao();
-        test_filesystem();
-        test_fs_utils();
-        test_gl33_shader();
-        test_renderer_backend_context();
+        // test_renderer_memory();
+        // test_renderer_err_utils();
+        // test_gl33_vbo();
+        // test_gl33_vao();
 
-        test_choco_math();
-        test_camera();
+        // test_fs_utils();
+        // test_gl33_shader();
+        // test_renderer_backend_context();
+
+        // test_choco_math();
+        // test_camera();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

@@ -111,6 +111,11 @@ Provides guidelines for engine developers to safely add support for new renderer
 - [Renderer Backend Guide(English)](docs/guide/renderer_backend/adding_concretes_en.md)
 - [Renderer Backend Guide(Japanese)](docs/guide/renderer_backend/adding_concretes_ja.md)
 
+Provides internal development standards for implementing and maintaining GLCE modules.
+
+- [Unit Test Implementation Guide(English)](docs/guide/glce_style/test/unit_test_en.md)
+- [Unit Test Implementation Guide(Japanese)](docs/guide/glce_style/test/unit_test_ja.md)
+
 ### API Reference
 
 - [API reference (generated from Japanese Doxygen comments)](https://chocolate-pie24.github.io/gl_choco_engine/)

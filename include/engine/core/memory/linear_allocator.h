@@ -186,21 +186,6 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
  */
 linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_);
 
-#ifdef TEST_BUILD
-/**
- * @brief テスト用に何回目の呼び出しでlinear_allocator_allocateを失敗させるかの回数を指定する
- *
- * @param malloc_fail_n_ 何回目のメモリ確保で失敗させるかを指定(1回目 = 0を指定)
- */
-void linear_allocator_malloc_fail_set(size_t malloc_fail_n_);
-
-/**
- * @brief テスト用のテスト設定値をリセットする
- *
- */
-void linear_allocator_malloc_fail_reset(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
