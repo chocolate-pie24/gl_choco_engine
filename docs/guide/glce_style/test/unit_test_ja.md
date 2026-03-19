@@ -118,6 +118,7 @@ test_foo_config_set(&config);   // API fooに対して失敗注入
 void test_foo_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
+        return;
     }
     s_test_config_foo.fail_on_call = config_->fail_on_call;
     s_test_config_foo.forced_result = config_->forced_result;
