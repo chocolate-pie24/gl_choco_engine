@@ -45,6 +45,10 @@ view_result_t first_person_camera_controller_move_right(float speed_, float delt
 
 view_result_t first_person_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_);
 
+view_result_t first_person_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_);
+
+view_result_t first_person_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_);
+
 view_result_t first_person_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_);
 
 view_result_t first_person_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_);
