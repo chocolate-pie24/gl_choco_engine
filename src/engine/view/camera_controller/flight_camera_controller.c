@@ -208,14 +208,104 @@ cleanup:
     return ret;
 }
 
-view_result_t flight_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_) {
-    // 後で実装
-    return VIEW_SUCCESS;
+view_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delta_time_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_rot_pitch_plus", "camera_")
+
+    vec3f_t euler = { 0 };
+    ret = camera_euler_get(camera_, &euler);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_pitch_plus(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    euler.elem[0] += (speed_ * delta_time_);
+
+    ret = camera_euler_update(&euler, camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_pitch_plus(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
-view_result_t flight_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_) {
-    // 後で実装
-    return VIEW_SUCCESS;
+view_result_t flight_camera_controller_rot_pitch_minus(float speed_, float delta_time_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_rot_pitch_minus", "camera_")
+
+    vec3f_t euler = { 0 };
+    ret = camera_euler_get(camera_, &euler);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_pitch_minus(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    euler.elem[0] -= (speed_ * delta_time_);
+
+    ret = camera_euler_update(&euler, camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_pitch_minus(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_time_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_rot_yaw_plus", "camera_")
+
+    vec3f_t euler = { 0 };
+    ret = camera_euler_get(camera_, &euler);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_yaw_plus(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    euler.elem[1] += (speed_ * delta_time_);
+
+    ret = camera_euler_update(&euler, camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_yaw_plus(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta_time_, camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_rot_yaw_minus", "camera_")
+
+    vec3f_t euler = { 0 };
+    ret = camera_euler_get(camera_, &euler);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_yaw_minus(%s) - Failed to get camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    euler.elem[1] -= (speed_ * delta_time_);
+
+    ret = camera_euler_update(&euler, camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("flight_camera_controller_rot_yaw_minus(%s) - Failed to update camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 /**

@@ -94,14 +94,23 @@ typedef struct app_state {
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
+    // TODO: アプリケーション各種状態管理構造体追加(選択中のカメラとか)app_runtime_state_t?
+    // begin TODO: 別モジュール化
+    // - イベント -> コマンド変換モジュール(コマンド構造体)
+    // - コマンド実行モジュール(コマンド構造体をもらってコマンド実行)
     camera_t* flight_camera;
     bool view_dirty;
-    bool camera_move_forward;   /**< KEY_Wが押下され前進イベント発生 */
-    bool camera_move_backward;  /**< KEY_Sが押下され後進イベント発生 */
-    bool camera_move_right;     /**< KEY_Dが押下され右移動イベント発生 */
-    bool camera_move_left;      /**< KEY_Aが押下され左移動イベント発生 */
-    bool camera_move_up;        /**< KEY_Eが押下され上方向移動イベント発生 */
-    bool camera_move_down;      /**< KEY_Qが押下され下方向移動イベント発生 */
+    bool camera_move_forward;       /**< KEY_Wが押下され前進イベント発生 */
+    bool camera_move_backward;      /**< KEY_Sが押下され後進イベント発生 */
+    bool camera_move_right;         /**< KEY_Dが押下され右移動イベント発生 */
+    bool camera_move_left;          /**< KEY_Aが押下され左移動イベント発生 */
+    bool camera_move_up;            /**< KEY_Eが押下され上方向移動イベント発生 */
+    bool camera_move_down;          /**< KEY_Qが押下され下方向移動イベント発生 */
+    bool camera_rot_pitch_plus;     /**< KEY_UPが押下されピッチ方向(+)回転イベント発生 */
+    bool camera_rot_pitch_minus;    /**< KEY_DOWNが押下されピッチ方向(-)回転イベント発生 */
+    bool camera_rot_yaw_plus;       /**< KEY_LEFTが押下されヨー方向(+)回転イベント発生 */
+    bool camera_rot_yaw_minus;      /**< KEY_RIGHTが押下されヨー方向(-)回転イベント発生 */
+    // end
 
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
@@ -658,6 +667,18 @@ static void app_state_update(void) {
             } else if(KEY_E == event.key && !event.event_args.pressed) {
                 s_app_state->camera_move_up = true;
                 s_app_state->view_dirty = true;
+            } else if(KEY_UP == event.key && !event.event_args.pressed) {
+                s_app_state->camera_rot_pitch_plus = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_DOWN == event.key && !event.event_args.pressed) {
+                s_app_state->camera_rot_pitch_minus = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_LEFT == event.key && !event.event_args.pressed) {
+                s_app_state->camera_rot_yaw_plus = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_RIGHT == event.key && !event.event_args.pressed) {
+                s_app_state->camera_rot_yaw_minus = true;
+                s_app_state->view_dirty = true;
             } else {
                 INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
             }
@@ -737,6 +758,22 @@ static void app_state_dispatch(void) {
     if(s_app_state->camera_move_down) {
         flight_camera_controller_move_down(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
         s_app_state->camera_move_down = false;
+    }
+    if(s_app_state->camera_rot_pitch_plus) {
+        flight_camera_controller_rot_pitch_plus(0.1f, 1.0f, s_app_state->flight_camera);    // TODO: エラー処理
+        s_app_state->camera_rot_pitch_plus = false;
+    }
+    if(s_app_state->camera_rot_pitch_minus) {
+        flight_camera_controller_rot_pitch_minus(0.1f, 1.0f, s_app_state->flight_camera);   // TODO: エラー処理
+        s_app_state->camera_rot_pitch_minus = false;
+    }
+    if(s_app_state->camera_rot_yaw_plus) {
+        flight_camera_controller_rot_yaw_plus(0.1f, 1.0f, s_app_state->flight_camera);  // TODO: エラー処理
+        s_app_state->camera_rot_yaw_plus = false;
+    }
+    if(s_app_state->camera_rot_yaw_minus) {
+        flight_camera_controller_rot_yaw_minus(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
+        s_app_state->camera_rot_yaw_minus = false;
     }
     if(s_app_state->view_dirty) {
         camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理

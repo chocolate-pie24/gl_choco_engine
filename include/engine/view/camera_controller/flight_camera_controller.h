@@ -36,9 +36,13 @@ view_result_t flight_camera_controller_move_up(float speed_, float delta_time_, 
 
 view_result_t flight_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_);
 
-view_result_t flight_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_);
+view_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delta_time_, camera_t* camera_);
 
-view_result_t flight_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_);
+view_result_t flight_camera_controller_rot_pitch_minus(float speed_, float delta_time_, camera_t* camera_);
+
+view_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_time_, camera_t* camera_);
+
+view_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta_time_, camera_t* camera_);
 
 #ifdef __cplusplus
 }
