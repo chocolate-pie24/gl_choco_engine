@@ -32,7 +32,7 @@ typedef enum {
 } view_result_t;
 
 typedef enum {
-    CAMERA_TYPE_FIRST_PERSON = 0,   /**< カメラタイプ: 一人称視点のカメラ */
+    CAMERA_TYPE_FLIGHT_CAMERA = 0,  /**< 空間内自由飛行カメラ */
 } camera_type_t;
 
 #ifdef __cplusplus

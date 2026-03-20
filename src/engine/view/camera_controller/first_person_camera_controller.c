@@ -1,7 +1,8 @@
 /**
- * @file first_person_camera_controller.c
+ * @ingroup view
+ * @file flight_camera_controller.c
  * @author chocolate-pie24
- * @brief 一人称視点のカメラ制御機能の実装
+ * @brief 空間内を自由に移動する飛行型カメラの制御機能の実装
  *
  * @version 0.1
  * @date 2026-03-19
@@ -12,7 +13,7 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "engine/view/camera_controller/first_person_camera_controller.h"
+#include "engine/view/camera_controller/flight_camera_controller.h"
 
 #include "engine/view/camera/camera.h"
 
@@ -27,15 +28,15 @@
 
 static view_result_t camera_position_movement_apply(const vec3f_t* translation_, camera_t* camera_);
 
-view_result_t first_person_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_forward", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_forward", "camera_")
 
     // カメラ前方の正規化されたベクトルを取得
     vec3f_t forward_vec = { 0 };
     ret = camera_forward_vector_get(camera_, &forward_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to get forward vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_forward(%s) - Failed to get forward vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -47,7 +48,7 @@ view_result_t first_person_camera_controller_move_forward(float speed_, float de
     // カメラ位置更新
     ret = camera_position_movement_apply(&forward_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_forward(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_forward(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -57,15 +58,15 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_backward", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_backward", "camera_")
 
     // カメラ後方の正規化されたベクトルを取得
     vec3f_t backward_vec = { 0 };
     ret = camera_backward_vector_get(camera_, &backward_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_backward(%s) - Failed to get backward vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_backward(%s) - Failed to get backward vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -77,7 +78,7 @@ view_result_t first_person_camera_controller_move_backward(float speed_, float d
     // カメラ位置更新
     ret = camera_position_movement_apply(&backward_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_backward(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_backward(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -87,15 +88,15 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_right", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_right", "camera_")
 
     // カメラ右方向の正規化されたベクトルを取得
     vec3f_t right_vec = { 0 };
     ret = camera_right_vector_get(camera_, &right_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_right(%s) - Failed to get right vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_right(%s) - Failed to get right vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -107,7 +108,7 @@ view_result_t first_person_camera_controller_move_right(float speed_, float delt
     // カメラ位置更新
     ret = camera_position_movement_apply(&right_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_right(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_right(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -117,15 +118,15 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_left", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_left", "camera_")
 
     // カメラ左方向の正規化されたベクトルを取得
     vec3f_t left_vec = { 0 };
     ret = camera_left_vector_get(camera_, &left_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_left(%s) - Failed to get left vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_left(%s) - Failed to get left vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -137,7 +138,7 @@ view_result_t first_person_camera_controller_move_left(float speed_, float delta
     // カメラ位置更新
     ret = camera_position_movement_apply(&left_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_left(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_left(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -147,15 +148,15 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_up", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_up", "camera_")
 
     // カメラ上方向の正規化されたベクトルを取得
     vec3f_t up_vec = { 0 };
     ret = camera_up_vector_get(camera_, &up_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_up(%s) - Failed to get up vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_up(%s) - Failed to get up vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -167,7 +168,7 @@ view_result_t first_person_camera_controller_move_up(float speed_, float delta_t
     // カメラ位置更新
     ret = camera_position_movement_apply(&up_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_up(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_up(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -177,15 +178,15 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "first_person_camera_controller_move_down", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "flight_camera_controller_move_down", "camera_")
 
     // カメラ下方向の正規化されたベクトルを取得
     vec3f_t down_vec = { 0 };
     ret = camera_down_vector_get(camera_, &down_vec);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_down(%s) - Failed to get down vector.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_down(%s) - Failed to get down vector.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -197,7 +198,7 @@ view_result_t first_person_camera_controller_move_down(float speed_, float delta
     // カメラ位置更新
     ret = camera_position_movement_apply(&down_vec, camera_);
     if(VIEW_SUCCESS != ret) {
-        ERROR_MESSAGE("first_person_camera_controller_move_down(%s) - Failed to update camera position.", view_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_controller_move_down(%s) - Failed to update camera position.", view_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -207,12 +208,12 @@ cleanup:
     return ret;
 }
 
-view_result_t first_person_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_rot_pitch(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
 
-view_result_t first_person_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_) {
+view_result_t flight_camera_controller_rot_yaw(float speed_, float delta_time_, camera_t* camera_) {
     // 後で実装
     return VIEW_SUCCESS;
 }
