@@ -85,35 +85,13 @@ const char* camera_name_get(const camera_t* camera_);
  */
 view_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
 
-/**
- * @brief カメラ姿勢(位置、姿勢)を更新する
- *
- * @param[in] euler_ カメラオイラー角[deg]
- * @param[in] position_ カメラ位置
- * @param[out] camera_ 更新対象カメラ
- *
- * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
- * - euler_ == NULL
- * - position_ == NULL
- * - camera_ == NULL
- * @retval VIEW_SUCCESS 処理に成功し、正常終了
- */
-view_result_t camera_posture_update(const vec3f_t* euler_, const vec3f_t* position_, camera_t* camera_);
+view_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_);
 
-/**
- * @brief カメラ姿勢(位置、姿勢)を取得する
- *
- * @param[in] camera_ 姿勢取得対象カメラ
- * @param[out] out_euler_ カメラオイラー角格納先
- * @param[out] out_position_ カメラ位置格納先
- *
- * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
- * - camera_ == NULL
- * - out_euler_ == NULL
- * - out_position_ == NULL
- * @retval VIEW_SUCCESS 処理に成功し、正常終了
- */
-view_result_t camera_posture_get(const camera_t* camera_, vec3f_t* out_euler_, vec3f_t* out_position_);
+view_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_);
+
+view_result_t camera_euler_get(const camera_t* camera_, vec3f_t* out_euler_);
+
+view_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_position_);
 
 /**
  * @brief プロジェクション行列として、透視投影変換を行う行列を計算して取得する
@@ -132,7 +110,7 @@ view_result_t camera_posture_get(const camera_t* camera_, vec3f_t* out_euler_, v
  * @retval VIEW_BAD_OPERATION camera_が保持する視錐台パラメータが異常
  * @retval VIEW_SUCCESS 処理に成功し、正常終了
  */
-view_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
+view_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_);
 
 /**
  * @brief ビュー行列を計算して取得する
@@ -150,7 +128,103 @@ view_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* 
  * - 回転行列の逆行列 = 転置行列の性質を利用する
  * - 平行移動行列の逆行列は平行移動量 x (-1)の性質を利用する
  */
-view_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_);
+view_result_t camera_view_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_);
+
+/**
+ * @brief カメラ前方の正規化されたベクトルを返す
+ *
+ * @note カメラ前方: Z軸マイナス側
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+/**
+ * @brief カメラ後方の正規化されたベクトルを返す
+ *
+ * @note カメラ後方: Z軸プラス側
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+/**
+ * @brief カメラ右方向の正規化されたベクトルを返す
+ *
+ * @note カメラ右方向: X軸プラス側
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+/**
+ * @brief カメラ左方向の正規化されたベクトルを返す
+ *
+ * @note カメラ左方向: X軸マイナス側
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+/**
+ * @brief カメラ上方向の正規化されたベクトルを返す
+ *
+ * @note カメラ上方向: Y軸プラス側
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+/**
+ * @brief カメラ下方向の正規化されたベクトルを返す
+ *
+ * @note カメラ下方向: Y軸マイナス方向
+ *
+ * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param out_vec_ ベクトル格納先
+ *
+ * @retval VIEW_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_vec_ == NULL
+ * @retval VIEW_RUNTIME_ERROR ビュー行列更新の際の逆行列計算に失敗
+ * @retval VIEW_SUCCESS 処理に成功し、正常終了
+ */
+view_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_);
 
 #ifdef __cplusplus
 }

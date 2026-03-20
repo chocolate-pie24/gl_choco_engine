@@ -32,10 +32,6 @@ extern "C" {
  * @param delta_time_ 移動時間
  * @param camera_ 動かすカメラ構造体インスタンスへのポインタ
  *
- * @retval VIEW_INVALID_ARGUMENT camera_ == NULL
- * @retval VIEW_RUNTIME_ERROR 逆行列が求まらない
- * @retval VIEW_RUNTIME_ERROR カメラ姿勢の取得もしくは更新に失敗
- * @retval VIEW_SUCCESS 処理に成功し、正常終了
  */
 view_result_t first_person_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_);
 

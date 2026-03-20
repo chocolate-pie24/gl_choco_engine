@@ -61,24 +61,34 @@ typedef struct viewing_frustum {
  * @brief カメラ内部状態管理構造体
  *
  * @note カメラ姿勢に関しては以下を念頭に置くこと
+ * - 座標系: 右手座標系
  * - Roll: Z軸回りの回転
  * - Pitch: X軸回りの回転
  * - Yaw: Y軸回りの回転
  * - カメラ前方方向: Z軸マイナス方向
- *
- * @todo 不要な行列計算を省くため、以下を検討する
- * - view_dirtyとview_matrixキャッシュを内部で持ち、view_dirty == falseで計算を行わない
- * - projection_dirtyとperspective_matrixキャッシュを内部で持ち、projection_dirty == falseで計算を行わない
  */
 struct camera {
-    vec3f_t euler;              /**< カメラ姿勢オイラー角(degree) */
-    vec3f_t position;           /**< カメラ位置 */
+    vec3f_t euler;                      /**< カメラ姿勢オイラー角(degree) */
+    vec3f_t position;                   /**< カメラ位置 */
 
-    viewing_frustum_t frustum;  /**< 視錐台パラメータ */
+    mat4x4f_t camera_to_world_matrix;   /**< カメラ座標系のある座標をワールド座標系へ変換する行列 */
+    mat4x4f_t view_matrix;              /**< ビュー行列 */
+    mat4x4f_t perspective_matrix;       /**< プロジェクション行列(透視投影) */
 
-    choco_string_t* name;       /**< カメラ名称文字列 */
+    viewing_frustum_t frustum;          /**< 視錐台パラメータ */
+
+    choco_string_t* name;               /**< カメラ名称文字列 */
+
+    bool posture_cache_dirty;           /**< true: 姿勢が更新されているが、姿勢由来の行列が更新されていない, false: 姿勢と姿勢由来の行列が同期済み */
+    bool frustum_cache_dirty;           /**< true: 視錐台が更新されているが、視錐台由来の行列が更新されていない, false: 視錐台と視錐台由来の行列が同期済み */
 };
 
+static view_result_t camera_frustum_cache_sync(camera_t* camera_);
+static view_result_t camera_posture_cache_sync(camera_t* camera_);
+
+static void perspective_matrix_update(camera_t* camera_);
+static void camera_to_world_matrix_update(camera_t* camera_);
+static bool view_matrix_update(camera_t* camera_);
 static bool is_valid_frustum(const viewing_frustum_t* frustum_);
 
 view_result_t camera_create(const char* name_, camera_t** out_camera_) {
@@ -108,6 +118,13 @@ view_result_t camera_create(const char* name_, camera_t** out_camera_) {
     tmp_camera->frustum.far_clip = 0.0f;
     tmp_camera->frustum.near_clip = 0.0f;
     tmp_camera->frustum.fovy = 0.0f;
+
+    mat4f_identity(&tmp_camera->view_matrix);
+    mat4f_identity(&tmp_camera->camera_to_world_matrix);
+    mat4f_identity(&tmp_camera->perspective_matrix);
+
+    tmp_camera->posture_cache_dirty = true;
+    tmp_camera->frustum_cache_dirty = true;
 
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->euler);
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
@@ -169,6 +186,7 @@ view_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float ne
         goto cleanup;
     }
     camera_->frustum = frustum;
+    camera_->frustum_cache_dirty = true;
 
     ret = VIEW_SUCCESS;
 
@@ -176,19 +194,16 @@ cleanup:
     return ret;
 }
 
-view_result_t camera_posture_update(const vec3f_t* euler_, const vec3f_t* position_, camera_t* camera_) {
+view_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "euler_")
-    IF_ARG_NULL_GOTO_CLEANUP(position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "position_")
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_update", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_euler_update", "euler_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_euler_update", "camera_")
 
     camera_->euler.elem[0] = euler_->elem[0];
     camera_->euler.elem[1] = euler_->elem[1];
     camera_->euler.elem[2] = euler_->elem[2];
 
-    camera_->position.elem[0] = position_->elem[0];
-    camera_->position.elem[1] = position_->elem[1];
-    camera_->position.elem[2] = position_->elem[2];
+    camera_->posture_cache_dirty = true;
 
     ret = VIEW_SUCCESS;
 
@@ -196,15 +211,42 @@ cleanup:
     return ret;
 }
 
-view_result_t camera_posture_get(const camera_t* camera_, vec3f_t* out_euler_, vec3f_t* out_position_) {
+view_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "out_euler_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_get", "out_position_")
+    IF_ARG_NULL_GOTO_CLEANUP(position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_position_update", "position_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_position_update", "camera_")
+
+    camera_->position.elem[0] = position_->elem[0];
+    camera_->position.elem[1] = position_->elem[1];
+    camera_->position.elem[2] = position_->elem[2];
+
+    camera_->posture_cache_dirty = true;
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_euler_get(const camera_t* camera_, vec3f_t* out_euler_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_euler_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_euler_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_euler_get", "out_euler_")
 
     out_euler_->elem[0] = camera_->euler.elem[0];
     out_euler_->elem[1] = camera_->euler.elem[1];
     out_euler_->elem[2] = camera_->euler.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_position_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_position_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_position_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_position_get", "out_position_")
 
     out_position_->elem[0] = camera_->position.elem[0];
     out_position_->elem[1] = camera_->position.elem[1];
@@ -216,22 +258,37 @@ cleanup:
     return ret;
 }
 
-view_result_t camera_perspective_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+view_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_perspective_matrix_get", "out_mat_")
     IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, VIEW_BAD_OPERATION, view_rslt_to_str(VIEW_BAD_OPERATION), "camera_perspective_matrix_get", "camera_->frustum")
 
-    const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
+    ret = camera_frustum_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_perspective_matrix_get(%s) - Failed to sync frustum cache.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_copy(&camera_->perspective_matrix, out_mat_);
+    ret = VIEW_SUCCESS;
 
-    mat4f_identity(out_mat_);
-    out_mat_->elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(camera_->frustum.fovy) * 0.5f);
-    out_mat_->elem[0] = out_mat_->elem[5] / camera_->frustum.aspect;
-    out_mat_->elem[10] = -1.0f * (camera_->frustum.far_clip + camera_->frustum.near_clip) / dz;
-    out_mat_->elem[11] = -2.0f * camera_->frustum.far_clip * camera_->frustum.near_clip / dz;
-    out_mat_->elem[14] = -1.0f;
-    out_mat_->elem[15] = 0.0f;
+cleanup:
+    return ret;
+}
+
+view_result_t camera_view_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "out_mat_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_view_matrix_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_copy(&camera_->view_matrix, out_mat_);
 
     ret = VIEW_SUCCESS;
 
@@ -239,31 +296,292 @@ cleanup:
     return ret;
 }
 
-view_result_t camera_view_matrix_get(const camera_t* camera_, mat4x4f_t* out_mat_) {
+view_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     view_result_t ret = VIEW_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_view_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_forward_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_forward_vector_get", "out_vec_")
 
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_forward_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ前方の単位ベクトル[0, 0, -1, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを前方に移動させるための方向ベクトル
+    v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[2];
+    v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[6];
+    v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[10];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_backward_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_backward_vector_get", "out_vec_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_backward_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ後方の単位ベクトル[0, 0, 1, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを後方に移動させるための方向ベクトル
+    v.elem[0] = camera_->camera_to_world_matrix.elem[2];
+    v.elem[1] = camera_->camera_to_world_matrix.elem[6];
+    v.elem[2] = camera_->camera_to_world_matrix.elem[10];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_right_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_right_vector_get", "out_vec_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_right_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ右方向の単位ベクトル[1, 0, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを右に移動させるための方向ベクトル
+    v.elem[0] = camera_->camera_to_world_matrix.elem[0];
+    v.elem[1] = camera_->camera_to_world_matrix.elem[4];
+    v.elem[2] = camera_->camera_to_world_matrix.elem[8];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_left_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_left_vector_get", "out_vec_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_left_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ左方向の単位ベクトル[-1, 0, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを左に移動させるための方向ベクトル
+    v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[0];
+    v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[4];
+    v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[8];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_up_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_up_vector_get", "out_vec_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_up_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ上方向の単位ベクトル[0, 1, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを上に移動させるための方向ベクトル
+    v.elem[0] = camera_->camera_to_world_matrix.elem[1];
+    v.elem[1] = camera_->camera_to_world_matrix.elem[5];
+    v.elem[2] = camera_->camera_to_world_matrix.elem[9];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+view_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_down_vector_get", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_down_vector_get", "out_vec_")
+
+    ret = camera_posture_cache_sync(camera_);
+    if(VIEW_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_down_vector_get(%s) - Failed to sync camera posture.", view_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ下方向の単位ベクトル[0, -1, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを下に移動させるための方向ベクトル
+    v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[1];
+    v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[5];
+    v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[9];
+    vec3f_normalize(&v);
+
+    out_vec_->elem[0] = v.elem[0];
+    out_vec_->elem[1] = v.elem[1];
+    out_vec_->elem[2] = v.elem[2];
+
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/**
+ * @brief カメラ視錐台に合わせて以下の行列を更新する
+ * - 透視投影行列
+ *
+ * @note 行列が最新のカメラ視錐台と同期が取れていれば更新は行わない
+ *
+ * @param camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval VIEW_INVALID_ARGUMENT camera_ == NULL
+ * @retval VIEW_BAD_OPERATION 視錐台パラメータ異常
+ * @retval VIEW_SUCCESS 同期に成功し、正常終了
+ */
+static view_result_t camera_frustum_cache_sync(camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_frustum_cache_sync", "camera_")
+    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, VIEW_BAD_OPERATION, view_rslt_to_str(VIEW_BAD_OPERATION), "camera_frustum_cache_sync", "camera_->frustum")
+
+    if(camera_->frustum_cache_dirty) {
+        perspective_matrix_update(camera_);
+        camera_->frustum_cache_dirty = false;
+    }
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/**
+ * @brief カメラ姿勢に合わせて以下の行列を更新する
+ * - カメラ座標系からワールド座標系への変換行列
+ * - ビュー行列
+ *
+ * @note 行列が最新のカメラ姿勢と同期が取れていれば更新は行わない
+ *
+ * @param camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval VIEW_INVALID_ARGUMENT camera_ == NULL
+ * @retval VIEW_RUNTIME_ERROR 逆行列計算に失敗
+ * @retval VIEW_SUCCESS 同期に成功し、正常終了
+ */
+static view_result_t camera_posture_cache_sync(camera_t* camera_) {
+    view_result_t ret = VIEW_INVALID_ARGUMENT;
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, VIEW_INVALID_ARGUMENT, view_rslt_to_str(VIEW_INVALID_ARGUMENT), "camera_posture_cache_sync", "camera_")
+
+    if(camera_->posture_cache_dirty) {
+        camera_to_world_matrix_update(camera_);
+        if(!view_matrix_update(camera_)) {
+            ret = VIEW_RUNTIME_ERROR;
+            ERROR_MESSAGE("camera_posture_cache_sync(%s) - Matrix(view) inversion failed because the determinant is zero or near zero.", view_rslt_to_str(ret));
+            goto cleanup;
+        }
+        camera_->posture_cache_dirty = false;
+    }
+    ret = VIEW_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/**
+ * @brief プロジェクション行列(透視投影)を更新する
+ *
+ * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
+ * - camera_ != NULL
+ * - is_valid_frustum(&camera->frustum) == true
+ *
+ * @param camera_ プロジェクション行列取得対象カメラ構造体インスタンスへのポインタ
+ */
+static void perspective_matrix_update(camera_t* camera_) {
+    const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
+
+    mat4f_identity(&camera_->perspective_matrix);
+    camera_->perspective_matrix.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(camera_->frustum.fovy) * 0.5f);
+    camera_->perspective_matrix.elem[0] = camera_->perspective_matrix.elem[5] / camera_->frustum.aspect;
+    camera_->perspective_matrix.elem[10] = -1.0f * (camera_->frustum.far_clip + camera_->frustum.near_clip) / dz;
+    camera_->perspective_matrix.elem[11] = -2.0f * camera_->frustum.far_clip * camera_->frustum.near_clip / dz;
+    camera_->perspective_matrix.elem[14] = -1.0f;
+    camera_->perspective_matrix.elem[15] = 0.0f;
+}
+
+/**
+ * @brief カメラ座標系からワールド座標系へ変換する行列を更新する
+ *
+ * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
+ * - camera_ != NULL
+ *
+ * @param camera_ 座標変換行列取得対象カメラ構造体インスタンスへのポインタ
+ */
+static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t rot = { 0 };
     mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
 
     mat4x4f_t trans = { 0 };
     mat4f_translation(&camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
 
-    mat4x4f_t view = { 0 };
     // 後に変換するものを左から掛ける
-    mat4f_mul(&trans, &rot, &view); // カメラ座標系のある座標をワールド座標系へ変換する行列
-    if(!mat4f_inverse(&view)) {     // ワールド座標系のある座標をカメラ座標系へ変換する行列
-        ERROR_MESSAGE("camera_view_matrix_get(%s) - Matrix(view) inversion failed because the determinant is zero or near zero.", view_rslt_to_str(VIEW_RUNTIME_ERROR));
-        ret = VIEW_RUNTIME_ERROR;
-        goto cleanup;
+    mat4f_mul(&trans, &rot, &camera_->camera_to_world_matrix);
+}
+
+/**
+ * @brief ビュー行列を更新する
+ *
+ * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
+ * - camera_ != NULL
+ *
+ * @param camera_ ビュー行列取得対象カメラ構造体インスタンスへのポインタ
+ *
+ * @return true ビュー行列更新成功
+ * @return false ビュー行列の更新に失敗(逆行列の計算に失敗)
+ */
+static bool view_matrix_update(camera_t* camera_) {
+    mat4x4f_t tmp = { 0 };
+    mat4f_copy(&camera_->camera_to_world_matrix, &tmp);
+    const bool ret = mat4f_inverse(&tmp);
+    if(ret) {
+        mat4f_copy(&tmp, &camera_->view_matrix);
     }
-    mat4f_copy(&view, out_mat_);
-
-    ret = VIEW_SUCCESS;
-
-cleanup:
     return ret;
 }
 
