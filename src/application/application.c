@@ -57,6 +57,7 @@
 
 #include "engine/view/view_core/view_types.h"
 #include "engine/view/camera/camera.h"
+#include "engine/view/camera_controller/flight_camera_controller.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -93,7 +94,14 @@ typedef struct app_state {
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
-    camera_t* world_camera;
+    camera_t* flight_camera;
+    bool view_dirty;
+    bool camera_move_forward;   /**< KEY_Wが押下され前進イベント発生 */
+    bool camera_move_backward;  /**< KEY_Sが押下され後進イベント発生 */
+    bool camera_move_right;     /**< KEY_Dが押下され右移動イベント発生 */
+    bool camera_move_left;      /**< KEY_Aが押下され左移動イベント発生 */
+    bool camera_move_up;        /**< KEY_Eが押下され上方向移動イベント発生 */
+    bool camera_move_down;      /**< KEY_Qが押下され下方向移動イベント発生 */
 
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
@@ -285,7 +293,7 @@ application_result_t application_create(void) {
     }
 
     // camera create.
-    ret_view = camera_create("world camera", &tmp->world_camera);
+    ret_view = camera_create("flight camera", &tmp->flight_camera);
     if(VIEW_SUCCESS != ret_view) {
         ret = rslt_convert_view(ret_view);
         ERROR_MESSAGE("application_create(%s) - Failed to create camera.", rslt_to_str(ret));
@@ -303,8 +311,8 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
-            if(NULL != tmp->world_camera) {
-                camera_destroy(&tmp->world_camera);
+            if(NULL != tmp->flight_camera) {
+                camera_destroy(&tmp->flight_camera);
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->ui_vbo) {
@@ -358,8 +366,8 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
-    if(NULL != s_app_state->world_camera) {
-        camera_destroy(&s_app_state->world_camera);
+    if(NULL != s_app_state->flight_camera) {
+        camera_destroy(&s_app_state->flight_camera);
     }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->ui_vbo) {
@@ -438,16 +446,16 @@ application_result_t application_run(void) {
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
 
-    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-    camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
-    camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
+    camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix); // TODO: エラー処理
+    camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
     ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     // TODO: window NULLチェック
 
-    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->world_camera));
+    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->flight_camera));
     // end temporary
 
     struct timespec  req = {0, 1000000};
@@ -632,6 +640,24 @@ static void app_state_update(void) {
         } else {
             if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
+            } else if(KEY_W == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_forward = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_S == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_backward = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_A == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_left = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_D == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_right = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_Q == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_down = true;
+                s_app_state->view_dirty = true;
+            } else if(KEY_E == event.key && !event.event_args.pressed) {
+                s_app_state->camera_move_up = true;
+                s_app_state->view_dirty = true;
             } else {
                 INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
             }
@@ -667,14 +693,14 @@ cleanup:
 static void app_state_dispatch(void) {
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            view_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
+            view_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
             if(VIEW_SUCCESS != ret_camera) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_view(ret_camera)));
                 goto cleanup;
             }
 
             mat4x4f_t tmp_projection = { 0 };
-            ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &tmp_projection);
+            ret_camera = camera_perspective_matrix_get(s_app_state->flight_camera, &tmp_projection);
             if(VIEW_SUCCESS != ret_camera) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_view(ret_camera)));
                 goto cleanup;
@@ -687,6 +713,35 @@ static void app_state_dispatch(void) {
             }
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
+    }
+    if(s_app_state->camera_move_forward) {
+        flight_camera_controller_move_forward(0.1f, 1.0f, s_app_state->flight_camera);  // TODO: エラー処理
+        s_app_state->camera_move_forward = false;
+    }
+    if(s_app_state->camera_move_backward) {
+        flight_camera_controller_move_backward(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
+        s_app_state->camera_move_backward = false;
+    }
+    if(s_app_state->camera_move_right) {
+        flight_camera_controller_move_right(0.1f, 1.0f, s_app_state->flight_camera);    // TODO: エラー処理
+        s_app_state->camera_move_right = false;
+    }
+    if(s_app_state->camera_move_left) {
+        flight_camera_controller_move_left(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
+        s_app_state->camera_move_left = false;
+    }
+    if(s_app_state->camera_move_up) {
+        flight_camera_controller_move_up(0.1f, 1.0f, s_app_state->flight_camera);   // TODO: エラー処理
+        s_app_state->camera_move_up = false;
+    }
+    if(s_app_state->camera_move_down) {
+        flight_camera_controller_move_down(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
+        s_app_state->camera_move_down = false;
+    }
+    if(s_app_state->view_dirty) {
+        camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+        ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);  // TODO: エラー処理
+        s_app_state->view_dirty = false;
     }
 cleanup:
     return;
