@@ -30,6 +30,8 @@
 #include "application/application_core/application_types.h"
 #include "application/application_core/application_err_utils.h"
 
+#include "application/command_interpreter/flight_camera.h"
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
@@ -60,7 +62,6 @@
 
 #include "engine/view/view_core/view_types.h"
 #include "engine/view/camera/camera.h"
-#include "engine/view/camera_controller/flight_camera_controller.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -99,24 +100,11 @@ typedef struct app_state {
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
-    // TODO: アプリケーション各種状態管理構造体追加(選択中のカメラとか)app_runtime_state_t?
-    // begin TODO: 別モジュール化
-    // - イベント -> コマンド変換モジュール(コマンド構造体)
-    // - コマンド実行モジュール(コマンド構造体をもらってコマンド実行)
     camera_t* flight_camera;
-    bool view_dirty;
-    bool camera_move_forward;       /**< KEY_Wが押下され前進イベント発生 */
-    bool camera_move_backward;      /**< KEY_Sが押下され後進イベント発生 */
-    bool camera_move_right;         /**< KEY_Dが押下され右移動イベント発生 */
-    bool camera_move_left;          /**< KEY_Aが押下され左移動イベント発生 */
-    bool camera_move_up;            /**< KEY_Eが押下され上方向移動イベント発生 */
-    bool camera_move_down;          /**< KEY_Qが押下され下方向移動イベント発生 */
-    bool camera_rot_pitch_plus;     /**< KEY_UPが押下されピッチ方向(+)回転イベント発生 */
-    bool camera_rot_pitch_minus;    /**< KEY_DOWNが押下されピッチ方向(-)回転イベント発生 */
-    bool camera_rot_yaw_plus;       /**< KEY_LEFTが押下されヨー方向(+)回転イベント発生 */
-    bool camera_rot_yaw_minus;      /**< KEY_RIGHTが押下されヨー方向(-)回転イベント発生 */
+    command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
     // end
 
+    bool view_dirty;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
@@ -132,7 +120,6 @@ static void on_mouse(const mouse_event_t* event_);
 static void app_state_update(void);
 static void app_state_dispatch(void);
 static void app_state_clean(void);
-static const char* keycode_str(keycode_t keycode_);
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -295,6 +282,12 @@ application_result_t application_create(void) {
     if(VIEW_SUCCESS != ret_view) {
         ret = app_rslt_convert_view(ret_view);
         ERROR_MESSAGE("application_create(%s) - Failed to create camera.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize flight camera commands.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -638,38 +631,12 @@ static void app_state_update(void) {
         } else {
             if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
-            } else if(KEY_W == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_forward = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_S == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_backward = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_A == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_left = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_D == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_right = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_Q == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_down = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_E == event.key && !event.event_args.pressed) {
-                s_app_state->camera_move_up = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_UP == event.key && !event.event_args.pressed) {
-                s_app_state->camera_rot_pitch_plus = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_DOWN == event.key && !event.event_args.pressed) {
-                s_app_state->camera_rot_pitch_minus = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_LEFT == event.key && !event.event_args.pressed) {
-                s_app_state->camera_rot_yaw_plus = true;
-                s_app_state->view_dirty = true;
-            } else if(KEY_RIGHT == event.key && !event.event_args.pressed) {
-                s_app_state->camera_rot_yaw_minus = true;
-                s_app_state->view_dirty = true;
             } else {
-                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
+                ret = flight_camera_command_update(&event, s_app_state->flight_camera_commands);
+                if(APPLICATION_SUCCESS != ret) {
+                    WARN_MESSAGE("app_state_update(%s) - Failed to update flight camera command.", app_rslt_to_str(ret));
+                    goto cleanup;
+                }
             }
         }
     }
@@ -724,46 +691,12 @@ static void app_state_dispatch(void) {
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-    if(s_app_state->camera_move_forward) {
-        flight_camera_controller_move_forward(0.1f, 1.0f, s_app_state->flight_camera);  // TODO: エラー処理
-        s_app_state->camera_move_forward = false;
+    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera, s_app_state->flight_camera_commands, &s_app_state->view_dirty);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
+        goto cleanup;
     }
-    if(s_app_state->camera_move_backward) {
-        flight_camera_controller_move_backward(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
-        s_app_state->camera_move_backward = false;
-    }
-    if(s_app_state->camera_move_right) {
-        flight_camera_controller_move_right(0.1f, 1.0f, s_app_state->flight_camera);    // TODO: エラー処理
-        s_app_state->camera_move_right = false;
-    }
-    if(s_app_state->camera_move_left) {
-        flight_camera_controller_move_left(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
-        s_app_state->camera_move_left = false;
-    }
-    if(s_app_state->camera_move_up) {
-        flight_camera_controller_move_up(0.1f, 1.0f, s_app_state->flight_camera);   // TODO: エラー処理
-        s_app_state->camera_move_up = false;
-    }
-    if(s_app_state->camera_move_down) {
-        flight_camera_controller_move_down(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
-        s_app_state->camera_move_down = false;
-    }
-    if(s_app_state->camera_rot_pitch_plus) {
-        flight_camera_controller_rot_pitch_plus(0.1f, 1.0f, s_app_state->flight_camera);    // TODO: エラー処理
-        s_app_state->camera_rot_pitch_plus = false;
-    }
-    if(s_app_state->camera_rot_pitch_minus) {
-        flight_camera_controller_rot_pitch_minus(0.1f, 1.0f, s_app_state->flight_camera);   // TODO: エラー処理
-        s_app_state->camera_rot_pitch_minus = false;
-    }
-    if(s_app_state->camera_rot_yaw_plus) {
-        flight_camera_controller_rot_yaw_plus(0.1f, 1.0f, s_app_state->flight_camera);  // TODO: エラー処理
-        s_app_state->camera_rot_yaw_plus = false;
-    }
-    if(s_app_state->camera_rot_yaw_minus) {
-        flight_camera_controller_rot_yaw_minus(0.1f, 1.0f, s_app_state->flight_camera); // TODO: エラー処理
-        s_app_state->camera_rot_yaw_minus = false;
-    }
+
     if(s_app_state->view_dirty) {
         camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
         ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);  // TODO: エラー処理
@@ -786,189 +719,4 @@ static void app_state_clean(void) {
     s_app_state->window_resized = false;
 cleanup:
     return;
-}
-
-/**
- * @brief キーコードを文字列に変換する
- *
- * @param keycode_ 変換対象キーコード
- * @return const char* 変換された文字列
- */
-static const char* keycode_str(keycode_t keycode_) {
-    static const char* s_key_1 = "key: '1'";
-    static const char* s_key_2 = "key: '2'";
-    static const char* s_key_3 = "key: '3'";
-    static const char* s_key_4 = "key: '4'";
-    static const char* s_key_5 = "key: '5'";
-    static const char* s_key_6 = "key: '6'";
-    static const char* s_key_7 = "key: '7'";
-    static const char* s_key_8 = "key: '8'";
-    static const char* s_key_9 = "key: '9'";
-    static const char* s_key_0 = "key: '0'";
-    static const char* s_key_a = "key: 'a'";
-    static const char* s_key_b = "key: 'b'";
-    static const char* s_key_c = "key: 'c'";
-    static const char* s_key_d = "key: 'd'";
-    static const char* s_key_e = "key: 'e'";
-    static const char* s_key_f = "key: 'f'";
-    static const char* s_key_g = "key: 'g'";
-    static const char* s_key_h = "key: 'h'";
-    static const char* s_key_i = "key: 'i'";
-    static const char* s_key_j = "key: 'j'";
-    static const char* s_key_k = "key: 'k'";
-    static const char* s_key_l = "key: 'l'";
-    static const char* s_key_m = "key: 'm'";
-    static const char* s_key_n = "key: 'n'";
-    static const char* s_key_o = "key: 'o'";
-    static const char* s_key_p = "key: 'p'";
-    static const char* s_key_q = "key: 'q'";
-    static const char* s_key_r = "key: 'r'";
-    static const char* s_key_s = "key: 's'";
-    static const char* s_key_t = "key: 't'";
-    static const char* s_key_u = "key: 'u'";
-    static const char* s_key_v = "key: 'v'";
-    static const char* s_key_w = "key: 'w'";
-    static const char* s_key_x = "key: 'x'";
-    static const char* s_key_y = "key: 'y'";
-    static const char* s_key_z = "key: 'z'";
-    static const char* s_key_right = "key: 'right'";
-    static const char* s_key_left = "key: 'left'";
-    static const char* s_key_up = "key: 'up'";
-    static const char* s_key_down = "key: 'down'";
-    static const char* s_key_shift = "key: 'shift'";
-    static const char* s_key_space = "key: 'space'";
-    static const char* s_key_semicolon = "key: 'semicolon'";
-    static const char* s_key_minus = "key: 'minus'";
-    static const char* s_key_f1 = "key: 'f1'";
-    static const char* s_key_f2 = "key: 'f2'";
-    static const char* s_key_f3 = "key: 'f3'";
-    static const char* s_key_f4 = "key: 'f4'";
-    static const char* s_key_f5 = "key: 'f5'";
-    static const char* s_key_f6 = "key: 'f6'";
-    static const char* s_key_f7 = "key: 'f7'";
-    static const char* s_key_f8 = "key: 'f8'";
-    static const char* s_key_f9 = "key: 'f9'";
-    static const char* s_key_f10 = "key: 'f10'";
-    static const char* s_key_f11 = "key: 'f11'";
-    static const char* s_key_f12 = "key: 'f12'";
-    static const char* s_key_undefined = "key: 'undefined'";
-
-    switch(keycode_) {
-    case KEY_1:
-        return s_key_1;
-    case KEY_2:
-        return s_key_2;
-    case KEY_3:
-        return s_key_3;
-    case KEY_4:
-        return s_key_4;
-    case KEY_5:
-        return s_key_5;
-    case KEY_6:
-        return s_key_6;
-    case KEY_7:
-        return s_key_7;
-    case KEY_8:
-        return s_key_8;
-    case KEY_9:
-        return s_key_9;
-    case KEY_0:
-        return s_key_0;
-    case KEY_A:
-        return s_key_a;
-    case KEY_B:
-        return s_key_b;
-    case KEY_C:
-        return s_key_c;
-    case KEY_D:
-        return s_key_d;
-    case KEY_E:
-        return s_key_e;
-    case KEY_F:
-        return s_key_f;
-    case KEY_G:
-        return s_key_g;
-    case KEY_H:
-        return s_key_h;
-    case KEY_I:
-        return s_key_i;
-    case KEY_J:
-        return s_key_j;
-    case KEY_K:
-        return s_key_k;
-    case KEY_L:
-        return s_key_l;
-    case KEY_M:
-        return s_key_m;
-    case KEY_N:
-        return s_key_n;
-    case KEY_O:
-        return s_key_o;
-    case KEY_P:
-        return s_key_p;
-    case KEY_Q:
-        return s_key_q;
-    case KEY_R:
-        return s_key_r;
-    case KEY_S:
-        return s_key_s;
-    case KEY_T:
-        return s_key_t;
-    case KEY_U:
-        return s_key_u;
-    case KEY_V:
-        return s_key_v;
-    case KEY_W:
-        return s_key_w;
-    case KEY_X:
-        return s_key_x;
-    case KEY_Y:
-        return s_key_y;
-    case KEY_Z:
-        return s_key_z;
-    case KEY_RIGHT:
-        return s_key_right;
-    case KEY_LEFT:
-        return s_key_left;
-    case KEY_UP:
-        return s_key_up;
-    case KEY_DOWN:
-        return s_key_down;
-    case KEY_LEFT_SHIFT:
-        return s_key_shift;
-    case KEY_SPACE:
-        return s_key_space;
-    case KEY_SEMICOLON:
-        return s_key_semicolon;
-    case KEY_MINUS:
-        return s_key_minus;
-    case KEY_F1:
-        return s_key_f1;
-    case KEY_F2:
-        return s_key_f2;
-    case KEY_F3:
-        return s_key_f3;
-    case KEY_F4:
-        return s_key_f4;
-    case KEY_F5:
-        return s_key_f5;
-    case KEY_F6:
-        return s_key_f6;
-    case KEY_F7:
-        return s_key_f7;
-    case KEY_F8:
-        return s_key_f8;
-    case KEY_F9:
-        return s_key_f9;
-    case KEY_F10:
-        return s_key_f10;
-    case KEY_F11:
-        return s_key_f11;
-    case KEY_F12:
-        return s_key_f12;
-    case KEY_CODE_MAX:
-        return s_key_undefined;
-    default:
-        return s_key_undefined;
-    }
 }
