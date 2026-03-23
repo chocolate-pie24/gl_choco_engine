@@ -71,6 +71,29 @@ void vec3f_initialize(float x_, float y_, float z_, vec3f_t* out_vec3f_);
 void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_);
 
 /**
+ * @brief 3次元ベクトルの長さの2乗を返す
+ *
+ * @param[in] vec_ 計算対象ベクトル
+ * @return float 長さの2乗値
+ */
+float vec3f_length_squared(const vec3f_t* vec_);
+
+/**
+ * @brief 3次元ベクトルの長さを返す
+ *
+ * @param[in] vec_ 計算対象ベクトル
+ * @return float 計算されたベクトルの長さ
+ */
+float vec3f_length(const vec3f_t* vec_);
+
+/**
+ * @brief 3次元ベクトルを正規化する
+ *
+ * @param[in,out] vec_ 正規化対象ベクトル
+ */
+void vec3f_normalize(vec3f_t* vec_);
+
+/**
  * @brief 4次元ベクトルxyzwを初期化する
  *
  * @note out_vec4f_ == NULLの場合はエラーメッセージを出力し、何もしない

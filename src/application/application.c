@@ -27,6 +27,11 @@
 
 #include "application/application.h"
 
+#include "application/application_core/application_types.h"
+#include "application/application_core/application_err_utils.h"
+
+#include "application/command_interpreter/flight_camera.h"
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
@@ -55,13 +60,16 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
-#include "engine/camera/camera.h"
+#include "engine/view/view_core/view_types.h"
+#include "engine/view/camera/camera.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
  */
 typedef struct app_state {
+    app_build_config_t build_config;
+
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
     bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
@@ -92,8 +100,11 @@ typedef struct app_state {
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
 
-    camera_t* world_camera;
+    camera_t* flight_camera;
+    command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
+    // end
 
+    bool view_dirty;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
@@ -109,25 +120,6 @@ static void on_mouse(const mouse_event_t* event_);
 static void app_state_update(void);
 static void app_state_dispatch(void);
 static void app_state_clean(void);
-static const char* keycode_str(keycode_t keycode_);
-
-static const char* rslt_to_str(application_result_t rslt_);
-static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
-static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
-static application_result_t rslt_convert_platform(platform_result_t rslt_);
-static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_);
-static application_result_t rslt_convert_renderer(renderer_result_t rslt_);
-static application_result_t rslt_convert_camera(camera_result_t rslt_);
-
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -138,27 +130,27 @@ application_result_t application_create(void) {
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+    view_result_t ret_view = VIEW_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
-        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", s_rslt_str_runtime_error);
+        ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         ret = APPLICATION_RUNTIME_ERROR;
         goto cleanup;
     }
 
     ret_mem_sys = memory_system_create();
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = rslt_convert_mem_sys(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", rslt_to_str(ret));
+        ret = app_rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     // begin Simulation
     ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = rslt_convert_mem_sys(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", rslt_to_str(ret));
+        ret = app_rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", app_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
@@ -177,23 +169,23 @@ application_result_t application_create(void) {
     linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = rslt_convert_mem_sys(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", rslt_to_str(ret));
+        ret = app_rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp->linear_alloc_pool_size = 1 * KIB;
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
-        ret = rslt_convert_mem_sys(ret_mem_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", rslt_to_str(ret));
+        ret = app_rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_linear_alloc = linear_allocator_init(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", rslt_to_str(ret));
+        ret = app_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", app_rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
@@ -203,10 +195,11 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Initializing platform state...");
     ret_platform = platform_initialize(tmp->linear_alloc, PLATFORM_USE_GLFW, &tmp->platform_context);
     if(PLATFORM_SUCCESS != ret_platform) {
-        ret = rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", rslt_to_str(ret));
+        ret = app_rslt_convert_platform(ret_platform);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", app_rslt_to_str(ret));
         goto cleanup;
     }
+    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
     INFO_MESSAGE("platform_backend initialized successfully.");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,8 +207,8 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Starting window event queue initialize...");
     ret_ring_queue = ring_queue_create(8, sizeof(window_event_t), alignof(window_event_t), &tmp->window_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", rslt_to_str(ret));
+        ret = app_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", app_rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("window event queue initialized successfully.");
@@ -225,8 +218,8 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Starting keyboard event queue initialize...");
     ret_ring_queue = ring_queue_create(KEY_CODE_MAX, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp->keyboard_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", rslt_to_str(ret));
+        ret = app_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", app_rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("keyboard event queue initialized successfully.");
@@ -236,8 +229,8 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Starting mouse event queue initialize...");
     ret_ring_queue = ring_queue_create(128, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp->mouse_event_queue);
     if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", rslt_to_str(ret));
+        ret = app_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", app_rslt_to_str(ret));
         goto cleanup;
     }
     INFO_MESSAGE("mouse event queue initialized successfully.");
@@ -253,41 +246,48 @@ application_result_t application_create(void) {
     tmp->window_height = 768;
     ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768, &tmp->framebuffer_width, &tmp->framebuffer_height);
     if(PLATFORM_SUCCESS != ret_platform) {
-        ret = rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("application_create(%s) - Failed to create window.", rslt_to_str(ret));
+        ret = app_rslt_convert_platform(ret_platform);
+        ERROR_MESSAGE("application_create(%s) - Failed to create window.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer = renderer_backend_initialize(tmp->linear_alloc, GRAPHICS_API_GL33, &tmp->renderer_backend_context);
     if(RENDERER_SUCCESS != ret_renderer) {
-        ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", rslt_to_str(ret));
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = ui_shader_create("assets/shaders/test_shader/", "ui_shader", tmp->renderer_backend_context, &tmp->ui_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
-        ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", rslt_to_str(ret));
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = renderer_backend_vertex_array_create(tmp->renderer_backend_context, &tmp->ui_vao);
     if(RENDERER_SUCCESS != ret_renderer) {
-        ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", rslt_to_str(ret));
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = renderer_backend_vertex_buffer_create(tmp->renderer_backend_context, &tmp->ui_vbo);
     if(RENDERER_SUCCESS != ret_renderer) {
-        ret = rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", rslt_to_str(ret));
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
+
+    // camera create.
+    ret_view = camera_create("flight camera", &tmp->flight_camera);
+    if(VIEW_SUCCESS != ret_view) {
+        ret = app_rslt_convert_view(ret_view);
+        ERROR_MESSAGE("application_create(%s) - Failed to create camera.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    // camera create.
-    ret_camera = camera_create("world camera", &tmp->world_camera);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to create camera.", rslt_to_str(ret));
+    ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize flight camera commands.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -302,8 +302,8 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
-            if(NULL != tmp->world_camera) {
-                camera_destroy(&tmp->world_camera);
+            if(NULL != tmp->flight_camera) {
+                camera_destroy(&tmp->flight_camera);
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->ui_vbo) {
@@ -357,8 +357,8 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
-    if(NULL != s_app_state->world_camera) {
-        camera_destroy(&s_app_state->world_camera);
+    if(NULL != s_app_state->flight_camera) {
+        camera_destroy(&s_app_state->flight_camera);
     }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->ui_vbo) {
@@ -414,7 +414,7 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Application is not initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("application_run(%s) - Application is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -437,16 +437,16 @@ application_result_t application_run(void) {
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
 
-    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-    camera_perspective_matrix_get(s_app_state->world_camera, &s_app_state->projection_matrix); // TODO: エラー処理
-    camera_view_matrix_get(s_app_state->world_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
+    camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix); // TODO: エラー処理
+    camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
     ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
     // TODO: window NULLチェック
 
-    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->world_camera));
+    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->flight_camera));
     // end temporary
 
     struct timespec  req = {0, 1000000};
@@ -456,8 +456,8 @@ application_result_t application_run(void) {
             s_app_state->window_should_close = true;
             continue;
         } else if(PLATFORM_SUCCESS != ret_event) {
-            ret = rslt_convert_platform(ret_event);
-            WARN_MESSAGE("application_run(%s) - Failed to pump events.", rslt_to_str(ret));
+            ret = app_rslt_convert_platform(ret_event);
+            WARN_MESSAGE("application_run(%s) - Failed to pump events.", app_rslt_to_str(ret));
             continue;
         }
         app_state_update();
@@ -506,8 +506,8 @@ static void on_window(const window_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->window_event_queue, event_, sizeof(window_event_t), alignof(window_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_window(%s) - Failed to push window event.", rslt_to_str(ret));
+        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_window(%s) - Failed to push window event.", app_rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -534,8 +534,8 @@ static void on_key(const keyboard_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->keyboard_event_queue, event_, sizeof(keyboard_event_t), alignof(keyboard_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", rslt_to_str(ret));
+        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", app_rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -562,8 +562,8 @@ static void on_mouse(const mouse_event_t* event_) {
 
     ret_push = ring_queue_push(s_app_state->mouse_event_queue, event_, sizeof(mouse_event_t), alignof(mouse_event_t));
     if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", rslt_to_str(ret));
+        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
+        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", app_rslt_to_str(ret));
         goto cleanup;
     }
 cleanup:
@@ -578,22 +578,22 @@ static void app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->window_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->keyboard_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
     if(NULL == s_app_state->mouse_event_queue) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -602,8 +602,8 @@ static void app_state_update(void) {
         window_event_t event;
         ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", rslt_to_str(ret));
+            ret = app_rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", app_rslt_to_str(ret));
             goto cleanup;
         } else {
             if(WINDOW_EVENT_RESIZE == event.event_code) {
@@ -625,14 +625,18 @@ static void app_state_update(void) {
         keyboard_event_t event;
         ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", rslt_to_str(ret));
+            ret = app_rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", app_rslt_to_str(ret));
             goto cleanup;
         } else {
             if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
             } else {
-                INFO_MESSAGE("Keyboard event: %s %s", keycode_str(event.key), (event.event_args.pressed) ? "pressed" : "released");
+                ret = flight_camera_command_update(&event, s_app_state->flight_camera_commands);
+                if(APPLICATION_SUCCESS != ret) {
+                    WARN_MESSAGE("app_state_update(%s) - Failed to update flight camera command.", app_rslt_to_str(ret));
+                    goto cleanup;
+                }
             }
         }
     }
@@ -642,8 +646,8 @@ static void app_state_update(void) {
         mouse_event_t event;
         ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
         if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", rslt_to_str(ret));
+            ret = app_rslt_convert_ring_queue(ret_ring);
+            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", app_rslt_to_str(ret));
             goto cleanup;
         } else {
             if(MOUSE_BUTTON_LEFT == event.button) {
@@ -666,26 +670,37 @@ cleanup:
 static void app_state_dispatch(void) {
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->world_camera); // TODO: エラー処理
-            if(CAMERA_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", rslt_to_str(rslt_convert_camera(ret_camera)));
+            view_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
+            if(VIEW_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(app_rslt_convert_view(ret_camera)));
                 goto cleanup;
             }
 
             mat4x4f_t tmp_projection = { 0 };
-            ret_camera = camera_perspective_matrix_get(s_app_state->world_camera, &tmp_projection);
-            if(CAMERA_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", rslt_to_str(rslt_convert_camera(ret_camera)));
+            ret_camera = camera_perspective_matrix_get(s_app_state->flight_camera, &tmp_projection);
+            if(VIEW_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", app_rslt_to_str(app_rslt_convert_view(ret_camera)));
                 goto cleanup;
             }
 
             renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
             if(RENDERER_SUCCESS != ret_renderer) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", rslt_to_str(rslt_convert_renderer(ret_renderer)));
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
+    }
+    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera, s_app_state->flight_camera_commands, &s_app_state->view_dirty);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if(s_app_state->view_dirty) {
+        camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+        ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);  // TODO: エラー処理
+        s_app_state->view_dirty = false;
     }
 cleanup:
     return;
@@ -698,388 +713,10 @@ cleanup:
  */
 static void app_state_clean(void) {
     if(NULL == s_app_state) {
-        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
     s_app_state->window_resized = false;
 cleanup:
     return;
-}
-
-/**
- * @brief キーコードを文字列に変換する
- *
- * @param keycode_ 変換対象キーコード
- * @return const char* 変換された文字列
- */
-static const char* keycode_str(keycode_t keycode_) {
-    static const char* s_key_1 = "key: '1'";
-    static const char* s_key_2 = "key: '2'";
-    static const char* s_key_3 = "key: '3'";
-    static const char* s_key_4 = "key: '4'";
-    static const char* s_key_5 = "key: '5'";
-    static const char* s_key_6 = "key: '6'";
-    static const char* s_key_7 = "key: '7'";
-    static const char* s_key_8 = "key: '8'";
-    static const char* s_key_9 = "key: '9'";
-    static const char* s_key_0 = "key: '0'";
-    static const char* s_key_a = "key: 'a'";
-    static const char* s_key_b = "key: 'b'";
-    static const char* s_key_c = "key: 'c'";
-    static const char* s_key_d = "key: 'd'";
-    static const char* s_key_e = "key: 'e'";
-    static const char* s_key_f = "key: 'f'";
-    static const char* s_key_g = "key: 'g'";
-    static const char* s_key_h = "key: 'h'";
-    static const char* s_key_i = "key: 'i'";
-    static const char* s_key_j = "key: 'j'";
-    static const char* s_key_k = "key: 'k'";
-    static const char* s_key_l = "key: 'l'";
-    static const char* s_key_m = "key: 'm'";
-    static const char* s_key_n = "key: 'n'";
-    static const char* s_key_o = "key: 'o'";
-    static const char* s_key_p = "key: 'p'";
-    static const char* s_key_q = "key: 'q'";
-    static const char* s_key_r = "key: 'r'";
-    static const char* s_key_s = "key: 's'";
-    static const char* s_key_t = "key: 't'";
-    static const char* s_key_u = "key: 'u'";
-    static const char* s_key_v = "key: 'v'";
-    static const char* s_key_w = "key: 'w'";
-    static const char* s_key_x = "key: 'x'";
-    static const char* s_key_y = "key: 'y'";
-    static const char* s_key_z = "key: 'z'";
-    static const char* s_key_right = "key: 'right'";
-    static const char* s_key_left = "key: 'left'";
-    static const char* s_key_up = "key: 'up'";
-    static const char* s_key_down = "key: 'down'";
-    static const char* s_key_shift = "key: 'shift'";
-    static const char* s_key_space = "key: 'space'";
-    static const char* s_key_semicolon = "key: 'semicolon'";
-    static const char* s_key_minus = "key: 'minus'";
-    static const char* s_key_f1 = "key: 'f1'";
-    static const char* s_key_f2 = "key: 'f2'";
-    static const char* s_key_f3 = "key: 'f3'";
-    static const char* s_key_f4 = "key: 'f4'";
-    static const char* s_key_f5 = "key: 'f5'";
-    static const char* s_key_f6 = "key: 'f6'";
-    static const char* s_key_f7 = "key: 'f7'";
-    static const char* s_key_f8 = "key: 'f8'";
-    static const char* s_key_f9 = "key: 'f9'";
-    static const char* s_key_f10 = "key: 'f10'";
-    static const char* s_key_f11 = "key: 'f11'";
-    static const char* s_key_f12 = "key: 'f12'";
-    static const char* s_key_undefined = "key: 'undefined'";
-
-    switch(keycode_) {
-    case KEY_1:
-        return s_key_1;
-    case KEY_2:
-        return s_key_2;
-    case KEY_3:
-        return s_key_3;
-    case KEY_4:
-        return s_key_4;
-    case KEY_5:
-        return s_key_5;
-    case KEY_6:
-        return s_key_6;
-    case KEY_7:
-        return s_key_7;
-    case KEY_8:
-        return s_key_8;
-    case KEY_9:
-        return s_key_9;
-    case KEY_0:
-        return s_key_0;
-    case KEY_A:
-        return s_key_a;
-    case KEY_B:
-        return s_key_b;
-    case KEY_C:
-        return s_key_c;
-    case KEY_D:
-        return s_key_d;
-    case KEY_E:
-        return s_key_e;
-    case KEY_F:
-        return s_key_f;
-    case KEY_G:
-        return s_key_g;
-    case KEY_H:
-        return s_key_h;
-    case KEY_I:
-        return s_key_i;
-    case KEY_J:
-        return s_key_j;
-    case KEY_K:
-        return s_key_k;
-    case KEY_L:
-        return s_key_l;
-    case KEY_M:
-        return s_key_m;
-    case KEY_N:
-        return s_key_n;
-    case KEY_O:
-        return s_key_o;
-    case KEY_P:
-        return s_key_p;
-    case KEY_Q:
-        return s_key_q;
-    case KEY_R:
-        return s_key_r;
-    case KEY_S:
-        return s_key_s;
-    case KEY_T:
-        return s_key_t;
-    case KEY_U:
-        return s_key_u;
-    case KEY_V:
-        return s_key_v;
-    case KEY_W:
-        return s_key_w;
-    case KEY_X:
-        return s_key_x;
-    case KEY_Y:
-        return s_key_y;
-    case KEY_Z:
-        return s_key_z;
-    case KEY_RIGHT:
-        return s_key_right;
-    case KEY_LEFT:
-        return s_key_left;
-    case KEY_UP:
-        return s_key_up;
-    case KEY_DOWN:
-        return s_key_down;
-    case KEY_LEFT_SHIFT:
-        return s_key_shift;
-    case KEY_SPACE:
-        return s_key_space;
-    case KEY_SEMICOLON:
-        return s_key_semicolon;
-    case KEY_MINUS:
-        return s_key_minus;
-    case KEY_F1:
-        return s_key_f1;
-    case KEY_F2:
-        return s_key_f2;
-    case KEY_F3:
-        return s_key_f3;
-    case KEY_F4:
-        return s_key_f4;
-    case KEY_F5:
-        return s_key_f5;
-    case KEY_F6:
-        return s_key_f6;
-    case KEY_F7:
-        return s_key_f7;
-    case KEY_F8:
-        return s_key_f8;
-    case KEY_F9:
-        return s_key_f9;
-    case KEY_F10:
-        return s_key_f10;
-    case KEY_F11:
-        return s_key_f11;
-    case KEY_F12:
-        return s_key_f12;
-    case KEY_CODE_MAX:
-        return s_key_undefined;
-    default:
-        return s_key_undefined;
-    }
-}
-
-/**
- * @brief アプリケーション実行結果コードを文字列に変換する
- *
- * @param rslt_ アプリケーション実行結果コード
- * @return const char* 変換された文字列
- */
-static const char* rslt_to_str(application_result_t rslt_) {
-    switch(rslt_) {
-    case APPLICATION_SUCCESS:
-        return s_rslt_str_success;
-    case APPLICATION_NO_MEMORY:
-        return s_rslt_str_no_memory;
-    case APPLICATION_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
-    case APPLICATION_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
-    case APPLICATION_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
-    case APPLICATION_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
-    case APPLICATION_OVERFLOW:
-        return s_rslt_str_overflow;
-    case APPLICATION_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
-    case APPLICATION_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
-    default:
-        return s_rslt_str_undefined_error;
-    }
-}
-
-/**
- * @brief メモリシステム実行結果コードをアプリケーション実行結果コードに変換する
- *
- * @param rslt_ メモリシステム実行結果コード
- * @return application_result_t 変換されたアプリケーション実行結果コード
- */
-static application_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
-    switch(rslt_) {
-    case MEMORY_SYSTEM_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-/**
- * @brief リニアアロケータ実行結果コードをアプリケーション実行結果コードに変換する
- *
- * @param rslt_ リニアアロケータ実行結果コード
- * @return application_result_t 変換されたアプリケーション実行結果コード
- */
-static application_result_t rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-/**
- * @brief プラットフォームシステム実行結果コードをアプリケーション実行結果コードに変換する
- *
- * @param rslt_ プラットフォームシステム実行結果コード
- * @return application_result_t 変換されたアプリケーション実行結果コード
- */
-static application_result_t rslt_convert_platform(platform_result_t rslt_) {
-    switch(rslt_) {
-    case PLATFORM_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case PLATFORM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case PLATFORM_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case PLATFORM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case PLATFORM_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case PLATFORM_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case PLATFORM_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    case PLATFORM_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case PLATFORM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case PLATFORM_WINDOW_CLOSE:
-        return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-/**
- * @brief リングキュー実行結果コードをアプリケーション実行結果コードに変換する
- *
- * @param rslt_ リングキュー実行結果コード
- * @return application_result_t 変換されたアプリケーション実行結果コード
- */
-static application_result_t rslt_convert_ring_queue(ring_queue_result_t rslt_) {
-    switch(rslt_) {
-    case RING_QUEUE_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case RING_QUEUE_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case RING_QUEUE_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case RING_QUEUE_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RING_QUEUE_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    case RING_QUEUE_EMPTY:
-        return APPLICATION_RUNTIME_ERROR;   // リングキュー空はRuntime errorに変換
-    case RING_QUEUE_OVERFLOW:
-        return APPLICATION_RUNTIME_ERROR;   // オーバーフローもRuntime errorに変換
-    case RING_QUEUE_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case RING_QUEUE_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-/**
- * @brief レンダラーシステム実行結果コードをアプリケーション実行結果コードに変換する
- *
- * @param rslt_ レンダラーシステム実行結果コード
- * @return application_result_t アプリケーション実行結果コード
- */
-static application_result_t rslt_convert_renderer(renderer_result_t rslt_) {
-    switch(rslt_) {
-    case RENDERER_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case RENDERER_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case RENDERER_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDERER_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case RENDERER_SHADER_COMPILE_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDERER_SHADER_LINK_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDERER_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case RENDERER_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case RENDERER_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case RENDERER_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-static application_result_t rslt_convert_camera(camera_result_t rslt_) {
-    switch(rslt_) {
-    case CAMERA_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case CAMERA_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case CAMERA_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case CAMERA_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case CAMERA_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case CAMERA_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case CAMERA_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case CAMERA_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
 }

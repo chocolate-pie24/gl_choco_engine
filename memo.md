@@ -13,10 +13,11 @@
 
 一旦はapplication.c内に下記の処理を追加する。その後、renderer_frontendを新設し、そちらに移動する。
 
-- 当面はモデル行列は単位行列でいく
-- ウィンドウサイズ変更後にプロジェクション行列を再生成する
+- [x] 当面はモデル行列は単位行列でいく
+- [x] ウィンドウサイズ変更後にプロジェクション行列を再生成する
 - MVP行列をGPU側へ送信する
 - ui_shaderの頂点座標をvec2に変更
+- layer.md / groups.doxにviewを追加
 
 ## TODO
 
@@ -30,4 +31,8 @@
 - [ ] concrete_shader.cに追加したAPIのテスト追加
 - [ ] context.cに追加したAPIのテスト追加
 - [ ] ui_shaderテスト
+- [ ] texture
+- [ ] ui_geometry
+- [ ] buffer_manager
+- [ ] renderer_coreのインクルードガードがRENDERER_BASEになっているのでRENDERER_COREに修正する
 - todo.mdを整理し、全部処理できた場合は削除

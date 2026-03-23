@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc TODO: remove this!!
+#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -31,7 +32,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h> // for memset strcmp
 #include "engine/core/memory/test_choco_memory.h"
 
 // 外部公開APIテスト設定
@@ -106,7 +106,7 @@ memory_system_result_t memory_system_create(void) {
     tmp->mem_tag_str[MEMORY_TAG_RING_QUEUE] = "ring_queue";
     tmp->mem_tag_str[MEMORY_TAG_RENDERER] = "renderer";
     tmp->mem_tag_str[MEMORY_TAG_FILE_IO] = "file_io";
-    tmp->mem_tag_str[MEMORY_TAG_CAMERA] = "camera";
+    tmp->mem_tag_str[MEMORY_TAG_VIEW] = "view";
 
     // commit
     s_mem_sys_ptr = tmp;
@@ -392,7 +392,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         assert(0 == strcmp("ring_queue", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RING_QUEUE]));
         assert(0 == strcmp("renderer", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_RENDERER]));
         assert(0 == strcmp("file_io", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_FILE_IO]));
-        assert(0 == strcmp("camera", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_CAMERA]));
+        assert(0 == strcmp("view", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_VIEW]));
 
         memory_system_destroy();
         assert(NULL == s_mem_sys_ptr);
