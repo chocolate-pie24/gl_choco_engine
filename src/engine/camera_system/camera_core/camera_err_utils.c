@@ -20,6 +20,7 @@
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
@@ -90,6 +91,19 @@ camera_result_t camera_rslt_convert_choco_string(choco_string_result_t rslt_) {
         return CAMERA_RUNTIME_ERROR;  // OVERFLOW -> RUNTIMEERRORに伝播
     case CHOCO_STRING_LIMIT_EXCEEDED:
         return CAMERA_LIMIT_EXCEEDED;
+    default:
+        return CAMERA_UNDEFINED_ERROR;
+    }
+}
+
+camera_result_t camera_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+    switch(rslt_) {
+    case LINEAR_ALLOC_SUCCESS:
+        return CAMERA_SUCCESS;
+    case LINEAR_ALLOC_NO_MEMORY:
+        return CAMERA_NO_MEMORY;
+    case LINEAR_ALLOC_INVALID_ARGUMENT:
+        return CAMERA_INVALID_ARGUMENT;
     default:
         return CAMERA_UNDEFINED_ERROR;
     }

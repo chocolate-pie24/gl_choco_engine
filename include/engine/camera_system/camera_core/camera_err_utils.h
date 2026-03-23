@@ -25,6 +25,7 @@ extern "C" {
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
 /**
  * @brief カメラシステムレイヤー実行結果コードを文字列に変換する
@@ -51,6 +52,8 @@ camera_result_t camera_rslt_convert_choco_memory(memory_system_result_t rslt_);
  * @return camera_result_t 変換されたカメラシステムレイヤー実行結果コード
  */
 camera_result_t camera_rslt_convert_choco_string(choco_string_result_t rslt_);
+
+camera_result_t camera_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
 #ifdef __cplusplus
 }

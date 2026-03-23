@@ -25,7 +25,7 @@ typedef enum {
     CAMERA_INVALID_ARGUMENT,      /**< 無効な引数 */
     CAMERA_RUNTIME_ERROR,         /**< 実行時エラー */
     CAMERA_NO_MEMORY,             /**< メモリ不足 */
-    CAMERA_LIMIT_EXCEEDED,        /**< メモリシステム使用可能範囲超過 */
+    CAMERA_LIMIT_EXCEEDED,        /**< システム使用可能範囲超過 */
     CAMERA_BAD_OPERATION,         /**< API誤用 */
     CAMERA_DATA_CORRUPTED,        /**< メモリ破損,未初期化 */
     CAMERA_UNDEFINED_ERROR,       /**< 不明なエラー */

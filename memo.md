@@ -17,7 +17,7 @@
 - [x] ウィンドウサイズ変更後にプロジェクション行列を再生成する
 - MVP行列をGPU側へ送信する
 - ui_shaderの頂点座標をvec2に変更
-- layer.md / groups.doxにviewを追加
+- layer.md / groups.doxにcamera_systemを追加
 
 ## TODO
 
@@ -35,4 +35,5 @@
 - [ ] ui_geometry
 - [ ] buffer_manager
 - [ ] renderer_coreのインクルードガードがRENDERER_BASEになっているのでRENDERER_COREに修正する
+- [ ] リニアアロケータ経由で確保するシステムはdestroyではなくdeinitializeにする
 - todo.mdを整理し、全部処理できた場合は削除

@@ -1,0 +1,139 @@
+#include "engine/camera_system/camera_manager/camera_manager.h"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h> // for memset
+#include <stdalign.h>
+#include <stdbool.h>
+
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/camera_system/camera_core/camera_types.h"
+#include "engine/camera_system/camera_core/camera_err_utils.h"
+
+#include "engine/camera_system/camera/camera.h"
+
+struct camera_manager {
+    size_t max_camera_count;
+    camera_t** camera_array;
+};
+
+camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, size_t max_camera_count_, camera_manager_t** out_camera_manager_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    void* backend_ptr = NULL;
+    size_t memory_req = 0;
+    size_t align_req = 0;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "out_camera_manager_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "*out_camera_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < max_camera_count_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "max_camera_count_")
+
+    // Simulation.
+    camera_manager_t* tmp_manager = NULL;
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(camera_manager_t), alignof(camera_manager_t), (void**)&tmp_manager);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = camera_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("camera_manager_initialize(%s) - Failed to allocate memory for camera manager.", camera_rslt_to_str(ret));
+        goto cleanup;
+    }
+    memset(tmp_manager, 0, sizeof(camera_manager_t));
+    tmp_manager->max_camera_count = max_camera_count_;
+
+    camera_t** tmp_camera_array = NULL;
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(camera_t*) * max_camera_count_, alignof(camera_t*), (void**)&tmp_camera_array);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = camera_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("camera_manager_initialize(%s) - Failed to allocate memory for camera.", camera_rslt_to_str(ret));
+        goto cleanup;
+    }
+    tmp_manager->camera_array = tmp_camera_array;
+    for(size_t i = 0; i != max_camera_count_; ++i) {
+        tmp_manager->camera_array[i] = NULL;
+    }
+
+    // commit.
+    *out_camera_manager_ = tmp_manager;
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    // リニアアロケータで確保したメモリは個別解放不可であるためクリーンナップ処理はなし
+    return ret;
+}
+
+void camera_manager_deinitialize(camera_manager_t** camera_manager_) {
+    if(NULL == camera_manager_) {
+        return;
+    }
+    if(NULL == *camera_manager_) {
+        return;
+    }
+    if(0 == (*camera_manager_)->max_camera_count) {
+        return;
+    }
+    for(size_t i = 0; i != (*camera_manager_)->max_camera_count; ++i) {
+        camera_destroy(&(*camera_manager_)->camera_array[i]);
+    }
+}
+
+camera_result_t camera_manager_regist(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_regist", "camera_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_regist", "camera_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_id_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_regist", "out_camera_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_regist", "camera_manager_->max_camera_count")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_regist", "camera_manager_->camera_array")
+
+    bool found_free_slot = false;
+    for(size_t i = 0; i != camera_manager_->max_camera_count; ++i) {
+        if(NULL == camera_manager_->camera_array[i]) {
+            ret = camera_create(camera_name_, &camera_manager_->camera_array[i]);
+            if(CAMERA_SUCCESS != ret) {
+                ERROR_MESSAGE("camera_manager_regist(%s) - Failed to register camera(%s).", camera_rslt_to_str(ret), camera_name_);
+                goto cleanup;
+            }
+            *out_camera_id_ = i;
+            found_free_slot = true;
+            break;
+        }
+    }
+    if(!found_free_slot) {
+        ret = CAMERA_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("camera_manager_regist(%s) - Camera manager has no free slot.", camera_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+camera_result_t camera_manager_unregist(int16_t camera_id_) {
+    return CAMERA_SUCCESS;
+}
+
+camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* camera_manager_, camera_t** out_camera_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->max_camera_count")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->camera_array")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > camera_id_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
+
+    if(NULL == camera_manager_->camera_array[camera_id_]) {
+        ret = CAMERA_BAD_OPERATION;
+        ERROR_MESSAGE("camera_manager_camera_get(%s) - Provided camera id is not valid.", camera_rslt_to_str(ret));
+        goto cleanup;
+    }
+    *out_camera_ = camera_manager_->camera_array[camera_id_];
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
