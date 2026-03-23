@@ -18,6 +18,7 @@
 - MVP行列をGPU側へ送信する
 - ui_shaderの頂点座標をvec2に変更
 - layer.md / groups.doxにcamera_systemを追加
+- リニアアロケータの使用量レポート追加
 
 ## TODO
 
