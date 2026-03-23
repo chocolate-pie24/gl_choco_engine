@@ -700,6 +700,13 @@ static size_t NO_COVERAGE mock_strlen(const char* str_) {
     return strlen(str_);
 }
 
+bool choco_string_equal(const char* str1_, const char* str2_) {
+    if(NULL == str1_ || NULL == str2_) {
+        return false;
+    }
+    return (0 == strcmp(str1_, str2_) ? true : false);
+}
+
 #ifdef TEST_BUILD
 void test_choco_string_default_create_config_set(const test_call_control_t* config_) {
     s_test_config_choco_string_default_create.fail_on_call = config_->fail_on_call;

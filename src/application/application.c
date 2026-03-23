@@ -304,6 +304,7 @@ application_result_t application_create(void) {
     }
 
     ret_camera = camera_manager_camera_get(tmp->active_camera_id, tmp->camera_manager, &tmp->active_camera);
+    // ret_camera = camera_manager_camera_get_by_name("flight camera", tmp->camera_manager, &tmp->active_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
         ERROR_MESSAGE("application_create(%s) - Failed to get camera.", app_rslt_to_str(ret));

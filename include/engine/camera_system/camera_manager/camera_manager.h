@@ -30,7 +30,7 @@ camera_result_t camera_manager_unregist(int16_t camera_id_);
 
 camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* camera_manager_, camera_t** out_camera_);
 
-// camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_manager_t* camera_manager_, camera_t** out_camera_);
+camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_manager_t* camera_manager_, camera_t** out_camera_);
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,8 @@
 
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/containers/choco_string.h"
+
 #include "engine/camera_system/camera_core/camera_types.h"
 #include "engine/camera_system/camera_core/camera_err_utils.h"
 
@@ -134,6 +136,34 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* 
         goto cleanup;
     }
     *out_camera_ = camera_manager_->camera_array[camera_id_];
+    ret = CAMERA_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_manager_t* camera_manager_, camera_t** out_camera_) {
+    camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    bool found = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "camera_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get_by_name", "camera_manager_->max_camera_count")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get_by_name", "camera_manager_->camera_array")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "out_camera_")
+
+    for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
+        if(choco_string_equal(camera_name_get(camera_manager_->camera_array[i]), name_)) {
+            *out_camera_ = camera_manager_->camera_array[i];
+            found = true;
+            break;
+        }
+    }
+    if(!found) {
+        ret = CAMERA_BAD_OPERATION;
+        ERROR_MESSAGE("camera_manager_camera_get_by_name(%s) - Camera not found. %s", camera_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
     ret = CAMERA_SUCCESS;
 
 cleanup:
