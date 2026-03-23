@@ -12,7 +12,7 @@ extern "C" {
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/view/view_core/view_types.h"
+#include "engine/camera_system/camera_core/camera_types.h"
 
 #include "engine/platform/platform_core/platform_types.h"
 
@@ -30,7 +30,7 @@ application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
 application_result_t app_rslt_convert_renderer(renderer_result_t rslt_);
 
-application_result_t app_rslt_convert_view(view_result_t rslt_);
+application_result_t app_rslt_convert_camera(camera_result_t rslt_);
 
 #ifdef __cplusplus
 }

@@ -11,8 +11,8 @@
 
 #include "engine/core/event/keyboard_event.h"
 
-#include "engine/view/camera/camera.h"
-#include "engine/view/camera_controller/flight_camera_controller.h"
+#include "engine/camera_system/camera/camera.h"
+#include "engine/camera_system/camera_controller/flight_camera_controller.h"
 
 static const char* s_command_str_move_forward = "FLIGHT CAMERA: Move(Forward)";
 static const char* s_command_str_move_backward = "FLIGHT CAMERA: Move(Backward)";
@@ -125,7 +125,7 @@ cleanup:
 
 application_result_t flight_camera_command_execute(float speed_, float delta_time_, camera_t* camera_, command_status_flight_camera_t* command_status_, bool* out_view_updated_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-    view_result_t ret_view = VIEW_INVALID_ARGUMENT;
+    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "flight_camera_command_execute", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(command_status_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "flight_camera_command_execute", "command_status_")
@@ -133,9 +133,9 @@ application_result_t flight_camera_command_execute(float speed_, float delta_tim
 
     for(size_t i = 0; i != FLIGHT_CAMERA_COMMAND_MAX; ++i) {
         if(command_status_[i].status) {
-            ret_view = command_status_[i].pfn_command_executor(speed_, delta_time_, camera_);
-            if(VIEW_SUCCESS != ret_view) {
-                ret = app_rslt_convert_view(ret_view);
+            ret_camera = command_status_[i].pfn_command_executor(speed_, delta_time_, camera_);
+            if(CAMERA_SUCCESS != ret_camera) {
+                ret = app_rslt_convert_camera(ret_camera);
                 ERROR_MESSAGE("flight_camera_command_execute(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
                 goto cleanup;
             }

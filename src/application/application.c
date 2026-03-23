@@ -60,8 +60,8 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
-#include "engine/view/view_core/view_types.h"
-#include "engine/view/camera/camera.h"
+#include "engine/camera_system/camera_core/camera_types.h"
+#include "engine/camera_system/camera/camera.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -130,7 +130,7 @@ application_result_t application_create(void) {
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
-    view_result_t ret_view = VIEW_INVALID_ARGUMENT;
+    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -278,9 +278,9 @@ application_result_t application_create(void) {
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
     // camera create.
-    ret_view = camera_create("flight camera", &tmp->flight_camera);
-    if(VIEW_SUCCESS != ret_view) {
-        ret = app_rslt_convert_view(ret_view);
+    ret_camera = camera_create("flight camera", &tmp->flight_camera);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = app_rslt_convert_camera(ret_camera);
         ERROR_MESSAGE("application_create(%s) - Failed to create camera.", app_rslt_to_str(ret));
         goto cleanup;
     }
@@ -670,16 +670,16 @@ cleanup:
 static void app_state_dispatch(void) {
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            view_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
-            if(VIEW_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(app_rslt_convert_view(ret_camera)));
+            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->flight_camera); // TODO: エラー処理
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(app_rslt_convert_camera(ret_camera)));
                 goto cleanup;
             }
 
             mat4x4f_t tmp_projection = { 0 };
             ret_camera = camera_perspective_matrix_get(s_app_state->flight_camera, &tmp_projection);
-            if(VIEW_SUCCESS != ret_camera) {
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", app_rslt_to_str(app_rslt_convert_view(ret_camera)));
+            if(CAMERA_SUCCESS != ret_camera) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", app_rslt_to_str(app_rslt_convert_camera(ret_camera)));
                 goto cleanup;
             }
 

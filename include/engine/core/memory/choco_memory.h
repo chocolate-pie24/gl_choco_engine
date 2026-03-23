@@ -46,7 +46,7 @@ typedef enum {
     MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
     MEMORY_TAG_RENDERER,    /**< メモリタグ: レンダラー */
     MEMORY_TAG_FILE_IO,     /**< メモリタグ: ファイルI/O */
-    MEMORY_TAG_VIEW,        /**< メモリタグ: ビュー(カメラ) */
+    MEMORY_TAG_CAMERA,      /**< メモリタグ: ビュー(カメラ) */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
