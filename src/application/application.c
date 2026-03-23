@@ -295,6 +295,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    tmp->active_camera_id = INVALID_CAMERA_ID;
     ret_camera = camera_manager_regist("flight camera", tmp->camera_manager, &tmp->active_camera_id);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
@@ -320,7 +321,7 @@ cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
             if(NULL != tmp->camera_manager) {
-                camera_manager_deinitialize(&tmp->camera_manager);
+                camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->ui_vbo) {
@@ -375,7 +376,7 @@ void application_destroy(void) {
 
     // begin cleanup all systems.
     if(NULL != s_app_state->camera_manager) {
-        camera_manager_deinitialize(&s_app_state->camera_manager);
+        camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->ui_vbo) {

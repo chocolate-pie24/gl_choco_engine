@@ -17,11 +17,11 @@
 #include "engine/camera_system/camera/camera.h"
 
 struct camera_manager {
-    size_t max_camera_count;
+    int16_t max_camera_count;
     camera_t** camera_array;
 };
 
-camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, size_t max_camera_count_, camera_manager_t** out_camera_manager_) {
+camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, int16_t max_camera_count_, camera_manager_t** out_camera_manager_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     void* backend_ptr = NULL;
@@ -53,7 +53,7 @@ camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, size_t max
         goto cleanup;
     }
     tmp_manager->camera_array = tmp_camera_array;
-    for(size_t i = 0; i != max_camera_count_; ++i) {
+    for(int16_t i = 0; i != max_camera_count_; ++i) {
         tmp_manager->camera_array[i] = NULL;
     }
 
@@ -66,19 +66,17 @@ cleanup:
     return ret;
 }
 
-void camera_manager_deinitialize(camera_manager_t** camera_manager_) {
+void camera_manager_deinitialize(camera_manager_t* camera_manager_) {
     if(NULL == camera_manager_) {
         return;
     }
-    if(NULL == *camera_manager_) {
+    if(0 == camera_manager_->max_camera_count) {
         return;
     }
-    if(0 == (*camera_manager_)->max_camera_count) {
-        return;
+    for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
+        camera_destroy(&camera_manager_->camera_array[i]);
     }
-    for(size_t i = 0; i != (*camera_manager_)->max_camera_count; ++i) {
-        camera_destroy(&(*camera_manager_)->camera_array[i]);
-    }
+    camera_manager_->max_camera_count = 0;
 }
 
 camera_result_t camera_manager_regist(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_) {
@@ -91,7 +89,7 @@ camera_result_t camera_manager_regist(const char* camera_name_, camera_manager_t
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_regist", "camera_manager_->camera_array")
 
     bool found_free_slot = false;
-    for(size_t i = 0; i != camera_manager_->max_camera_count; ++i) {
+    for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
         if(NULL == camera_manager_->camera_array[i]) {
             ret = camera_create(camera_name_, &camera_manager_->camera_array[i]);
             if(CAMERA_SUCCESS != ret) {
@@ -100,6 +98,7 @@ camera_result_t camera_manager_regist(const char* camera_name_, camera_manager_t
             }
             *out_camera_id_ = i;
             found_free_slot = true;
+            INFO_MESSAGE("camera_manager_regist - Camera system registered new camera(%s) successfully.", camera_name_);
             break;
         }
     }
@@ -125,6 +124,9 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* 
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->max_camera_count")
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->camera_array")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > camera_id_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "out_camera_")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_id_ >= 0, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(camera_id_ < camera_manager_->max_camera_count, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
 
     if(NULL == camera_manager_->camera_array[camera_id_]) {
         ret = CAMERA_BAD_OPERATION;

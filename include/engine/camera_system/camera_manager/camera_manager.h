@@ -16,15 +16,21 @@ typedef struct camera_manager camera_manager_t;
 
 #include "engine/camera_system/camera/camera.h"
 
-camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, size_t max_camera_count_, camera_manager_t** out_camera_manager_);
+#define INVALID_CAMERA_ID (-1)
 
-void camera_manager_deinitialize(camera_manager_t** camera_manager_);
+// リニアアロケータ経由でのメモリ確保を行うため、初期化に失敗した場合は続行不可。リニアアロケータ自身を破棄すること。
+camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, int16_t max_camera_count_, camera_manager_t** out_camera_manager_);
+
+// 内部メモリのうち、リニアアロケータ経由で確保したメモリは解放しない。このため、リニアアロケータを破棄しないと再度initializeは不可
+void camera_manager_deinitialize(camera_manager_t* camera_manager_);
 
 camera_result_t camera_manager_regist(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_);
 
 camera_result_t camera_manager_unregist(int16_t camera_id_);
 
 camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* camera_manager_, camera_t** out_camera_);
+
+// camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_manager_t* camera_manager_, camera_t** out_camera_);
 
 #ifdef __cplusplus
 }
