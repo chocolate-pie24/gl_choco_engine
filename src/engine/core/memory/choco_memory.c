@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc TODO: remove this!!
+#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -31,7 +32,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h> // for memset strcmp
 #include "engine/core/memory/test_choco_memory.h"
 
 // 外部公開APIテスト設定
