@@ -2,7 +2,7 @@
  *
  * @file camera_memory.h
  * @author chocolate-pie24
- * @brief ビューレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する
+ * @brief カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する
  *
  * @version 0.1
  * @date 2026-03-19
@@ -26,7 +26,7 @@ extern "C" {
 
 /**
  * @brief memory_system_allocateのラッパーAPI
- * @note ビューレイヤー専用APIのため、メモリータグはMEMORY_TAG_CAMERA固定
+ * @note カメラシステムレイヤー専用APIのため、メモリータグはMEMORY_TAG_CAMERA固定
  *
  * @param size_ メモリ確保サイズ(byte)
  * @param out_ptr_ 確保したメモリの格納先
@@ -45,7 +45,7 @@ camera_result_t camera_mem_allocate(size_t size_, void** out_ptr_);
 
 /**
  * @brief memory_system_freeのラッパーAPI
- * @note ビューレイヤー専用APIのため、メモリータグはMEMORY_TAG_CAMERA固定
+ * @note カメラシステムレイヤー専用APIのため、メモリータグはMEMORY_TAG_CAMERA固定
  *
  * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
  * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。

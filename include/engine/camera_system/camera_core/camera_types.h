@@ -2,7 +2,7 @@
  *
  * @file camera_types.h
  * @author chocolate-pie24
- * @brief ビューレイヤー全体で使用されるデータ型を提供する
+ * @brief カメラシステムレイヤー全体で使用されるデータ型を提供する
  *
  * @version 0.1
  * @date 2026-03-19

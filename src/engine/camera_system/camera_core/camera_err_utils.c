@@ -2,7 +2,7 @@
  *
  * @file camera_err_utils.c
  * @author chocolate-pie24
- * @brief ビューレイヤー内でのエラー処理仕様を統一する実行結果コード変換機能の実装
+ * @brief カメラシステムレイヤー内でのエラー処理仕様を統一する実行結果コード変換機能の実装
  *
  * @version 0.1
  * @date 2026-03-19
