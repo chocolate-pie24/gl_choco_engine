@@ -296,10 +296,10 @@ application_result_t application_create(void) {
     }
 
     tmp->active_camera_id = INVALID_CAMERA_ID;
-    ret_camera = camera_manager_regist("flight camera", tmp->camera_manager, &tmp->active_camera_id);
+    ret_camera = camera_manager_register("flight camera", tmp->camera_manager, &tmp->active_camera_id);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to regist camera.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to register camera.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
