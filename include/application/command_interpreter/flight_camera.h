@@ -10,8 +10,8 @@ extern "C" {
 
 #include "engine/core/event/keyboard_event.h"
 
-#include "engine/view/camera/camera.h"
-#include "engine/view/camera_controller/flight_camera_controller.h"
+#include "engine/camera_system/camera/camera.h"
+#include "engine/camera_system/camera_controller/flight_camera_controller.h"
 
 #include "application/application_core/application_types.h"
 
@@ -33,14 +33,14 @@ typedef struct command_status_flight_camera {
     command_list_flight_camera_t command;   /**< フライトカメラ制御コマンド */
     keycode_t keybind;                      /**< 制御コマンドに対応するキーバインド */
     bool status;                            /**< 制御コマンド状態(true: コマンドあり / false: コマンドなし) */
-    view_result_t (*pfn_command_executor)(float speed_, float delta_time_, camera_t* camera_);  /**< コマンド実行関数 */
+    camera_result_t (*pfn_command_executor)(float speed_, float delta_time_, camera_t* camera_);  /**< コマンド実行関数 */
 } command_status_flight_camera_t;
 
 application_result_t flight_camera_command_initialize(size_t array_size_, command_status_flight_camera_t* command_status_);
 
 application_result_t flight_camera_command_update(const keyboard_event_t* keyboard_event_, command_status_flight_camera_t* command_status_);
 
-application_result_t flight_camera_command_execute(float speed_, float delta_time_, camera_t* camera_, command_status_flight_camera_t* command_status_, bool* out_view_updated_);
+application_result_t flight_camera_command_execute(float speed_, float delta_time_, camera_t* camera_, command_status_flight_camera_t* command_status_, bool* out_camera_updated_);
 
 #ifdef __cplusplus
 }

@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief choco_string_t前方宣言
@@ -308,6 +309,8 @@ size_t choco_string_length(const choco_string_t* string_);
  * @return const char* 文字列先頭アドレス
  */
 const char* choco_string_c_str(const choco_string_t* string_);
+
+bool choco_string_equal(const char* str1_, const char* str2_);
 
 #ifdef __cplusplus
 }
