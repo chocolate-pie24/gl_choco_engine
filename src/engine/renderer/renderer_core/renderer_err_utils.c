@@ -5,7 +5,7 @@
  * @brief レンダラーレイヤー全体で使用されるエラー処理関連APIの実装
  *
  * @version 0.1
- * @date 2025-12.19
+ * @date 2025-12-19
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *

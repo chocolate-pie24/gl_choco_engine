@@ -5,7 +5,7 @@
  * @brief ファイル処理に関するユーティリティAPIの実装
  *
  * @version 0.1
- * @date 2025-12.26
+ * @date 2025-12-26
  *
  * @todo ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える
  *

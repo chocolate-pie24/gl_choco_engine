@@ -5,7 +5,7 @@
  * @brief レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装
  *
  * @version 0.1
- * @date 2025-12.19
+ * @date 2025-12-19
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
