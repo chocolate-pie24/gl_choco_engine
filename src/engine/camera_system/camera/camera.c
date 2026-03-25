@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2026-03-09
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -130,6 +130,7 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
 
     *out_camera_ = tmp_camera;
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -173,10 +174,10 @@ const char* camera_name_get(const camera_t* camera_) {
 
 camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    viewing_frustum_t frustum = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_viewing_frustum_update", "camera_")
 
-    viewing_frustum_t frustum = { 0 };
     frustum.aspect = aspect_;
     frustum.far_clip = far_clip_;
     frustum.fovy = fovy_;
@@ -276,6 +277,7 @@ camera_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_
         goto cleanup;
     }
     mat4f_copy(&camera_->perspective_matrix, out_mat_);
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -491,6 +493,7 @@ static camera_result_t camera_frustum_cache_sync(camera_t* camera_) {
         perspective_matrix_update(camera_);
         camera_->frustum_cache_dirty = false;
     }
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -524,6 +527,7 @@ static camera_result_t camera_posture_cache_sync(camera_t* camera_) {
         }
         camera_->posture_cache_dirty = false;
     }
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -561,9 +565,9 @@ static void perspective_matrix_update(camera_t* camera_) {
  */
 static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t rot = { 0 };
-    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
-
     mat4x4f_t trans = { 0 };
+
+    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
     mat4f_translation(&camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
 
     // 後に変換するものを左から掛ける
@@ -583,11 +587,13 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
  */
 static bool view_matrix_update(camera_t* camera_) {
     mat4x4f_t tmp = { 0 };
+
     mat4f_copy(&camera_->camera_to_world_matrix, &tmp);
     const bool ret = mat4f_inverse(&tmp);
     if(ret) {
         mat4f_copy(&tmp, &camera_->view_matrix);
     }
+
     return ret;
 }
 

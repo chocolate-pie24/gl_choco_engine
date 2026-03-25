@@ -10,7 +10,7 @@
  * @version 0.1
  * @date 2026-03-09
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -85,12 +85,56 @@ const char* camera_name_get(const camera_t* camera_);
  */
 camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
 
+/**
+ * @brief カメラ姿勢情報を更新する
+ *
+ * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンスへのポインタ
+ * @param[out] camera_ 姿勢更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - euler_ == NULL
+ * - camera_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_);
 
+/**
+ * @brief カメラ位置情報を更新する
+ *
+ * @param[in] position_ カメラ位置ベクトル構造体インスタンスへのポインタ
+ * @param[out] camera_ 位置更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - position_ == NULL
+ * - camera_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_);
 
+/**
+ * @brief カメラ姿勢情報を取得する
+ *
+ * @param[in] camera_ 姿勢情報取得対象カメラ構造体インスタンスへのポインタ
+ * @param[out] out_euler_ 姿勢情報格納先
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_euler_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_euler_get(const camera_t* camera_, vec3f_t* out_euler_);
 
+/**
+ * @brief カメラ位置情報を取得する
+ *
+ * @param camera_ 位置情報取得対象カメラ構造体インスタンスへのポインタ
+ * @param out_position_ 位置情報格納先
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_position_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_position_);
 
 /**
