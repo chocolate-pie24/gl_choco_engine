@@ -13,3 +13,4 @@
 - uint16_t *variableのように、ポインタ記号が変数の前に来ている箇所を修正
 - シェーダープログラム、シェーダーオブジェクトを区別し、ドキュメントを修正
 - URDFローダー
+- renderer_frontendを作成した後にdocs/guide/camera_systemを作成する
