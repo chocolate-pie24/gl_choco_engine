@@ -49,8 +49,9 @@
 /**
  * @brief ゲームアプリケーションメイン
  *
- * @param argc_ 引数の個数
- * @param argv_ 引数
+ * @param[in] argc_ 引数の個数
+ * @param[in] argv_ 引数
+ *
  * @return int
  */
 int main(int argc_, char** argv_) {

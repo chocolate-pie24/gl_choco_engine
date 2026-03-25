@@ -27,7 +27,7 @@ extern "C" {
  *
  * @note API呼び出し回数についてはコピーされず、Ring Queue内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_ring_queue_create_config_set(const test_call_control_t* config_);
 
@@ -36,7 +36,7 @@ void test_ring_queue_create_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Ring Queue内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_ring_queue_push_config_set(const test_call_control_t* config_);
 
@@ -45,7 +45,7 @@ void test_ring_queue_push_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Ring Queue内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_ring_queue_pop_config_set(const test_call_control_t* config_);
 
@@ -54,7 +54,7 @@ void test_ring_queue_pop_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Ring Queue内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_ring_queue_empty_config_set(const test_call_control_bool_t* config_);
 

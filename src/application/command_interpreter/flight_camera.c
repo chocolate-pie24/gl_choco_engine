@@ -172,7 +172,7 @@ cleanup:
 /**
  * @brief フライトカメラ制御コマンドを文字列に変換する
  *
- * @param command_ フライトカメラ制御コマンド
+ * @param[in] command_ フライトカメラ制御コマンド
  * @return const char* 変換された文字列へのポインタ
  */
 static const char* s_command_to_str(command_list_flight_camera_t command_) {

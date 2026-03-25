@@ -509,7 +509,7 @@ cleanup:
  * @brief event_をウィンドウイベント用リングキューに格納する
  * @note ウィンドウイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_window(const window_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
@@ -537,7 +537,7 @@ cleanup:
  * @brief event_をキーボードイベント用リングキューに格納する
  * @note キーボードイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_key(const keyboard_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
@@ -565,7 +565,7 @@ cleanup:
  * @brief event_をマウスイベント用リングキューに格納する
  * @note マウスイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_mouse(const mouse_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;

@@ -500,7 +500,7 @@ cleanup:
 /**
  * @brief 全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する
  *
- * @param keycode_ 全プラットフォーム共通キーコード
+ * @param[in] keycode_ 全プラットフォーム共通キーコード
  * @return int GLFWキーコード
  */
 static int keycode_to_glfw_keycode(keycode_t keycode_) {

@@ -407,7 +407,7 @@ const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_) {
 /**
  * @brief filesystemモジュール実行結果コードを文字列に変換する
  *
- * @param rslt_ 実行結果コード
+ * @param[in] rslt_ 実行結果コード
  * @return const char* 変換された文字列の先頭アドレス
  */
 static const char* rslt_to_str(filesystem_result_t rslt_) {
@@ -438,9 +438,10 @@ static const char* rslt_to_str(filesystem_result_t rslt_) {
 /**
  * @brief mode_がREAD可能なファイルオープンモードかを判定する
  *
- * @param mode_ 判定対象モード
- * @return true READ可能
- * @return false READ不可
+ * @param[in] mode_ 判定対象モード
+ *
+ * @retval true READ可能
+ * @retval false READ不可
  */
 static bool open_mode_readable(filesystem_open_mode_t mode_) {
     bool ret = false;
@@ -498,8 +499,9 @@ static bool open_mode_readable(filesystem_open_mode_t mode_) {
  * - シナリオ = TEST_SCENARIO_FOPEN_SUCCESS: 通常のfopen()の返り値
  * - シナリオ = TEST_SCENARIO_FOPEN_OPEN_ERROR: NULL
  *
- * @param fullpath_ オープン対象ファイルのフルパス
- * @param mode_ ファイルオープンモード
+ * @param[in] fullpath_ オープン対象ファイルのフルパス
+ * @param[in] mode_ ファイルオープンモード
+ *
  * @return FILE* オープンされたファイルハンドル
  */
 static FILE* NO_COVERAGE mock_fopen(const char* fullpath_, const char* mode_) {

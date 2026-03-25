@@ -27,7 +27,7 @@ extern "C" {
  *
  * @note API呼び出し回数についてはコピーされず、Linear Allocator内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_linear_allocator_init_config_set(const test_call_control_t* config_);
 
@@ -36,7 +36,7 @@ void test_linear_allocator_init_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Linear Allocator内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_linear_allocator_allocate_config_set(const test_call_control_t* config_);
 

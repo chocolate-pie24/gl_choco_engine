@@ -239,7 +239,7 @@ cleanup:
 /**
  * @brief 実行結果コードを文字列に変換する
  *
- * @param rslt_ 文字列に変換する実行結果コード
+ * @param[in] rslt_ 文字列に変換する実行結果コード
  * @return const char* 変換された文字列の先頭アドレス
  */
 static const char* rslt_to_str(memory_system_result_t rslt_) {
@@ -265,7 +265,8 @@ static const char* rslt_to_str(memory_system_result_t rslt_) {
  * @note choco_memory保有APIの単体テストのため、test_config_test_mallocの設定により、強制的にNULLを返させる、以下の条件でNULLになる
  * - s_test_config_test_malloc.fail_on_call > 0 && s_test_config_test_malloc.call_count == s_test_config_test_malloc.fail_on_call
  *
- * @param size_ 確保するメモリ容量
+ * @param[in] size_ 確保するメモリ容量
+ *
  * @return void* 確保されたメモリの先頭アドレス
  */
 static void* test_malloc(size_t size_) {

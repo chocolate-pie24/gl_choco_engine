@@ -477,7 +477,7 @@ cleanup:
  *
  * @note 行列が最新のカメラ視錐台と同期が取れていれば更新は行わない
  *
- * @param camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in,out] camera_ 更新対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_BAD_OPERATION 視錐台パラメータ異常
@@ -507,7 +507,7 @@ cleanup:
  *
  * @note 行列が最新のカメラ姿勢と同期が取れていれば更新は行わない
  *
- * @param camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in,out] camera_ 更新対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 逆行列計算に失敗
@@ -541,7 +541,7 @@ cleanup:
  * - camera_ != NULL
  * - is_valid_frustum(&camera->frustum) == true
  *
- * @param camera_ プロジェクション行列取得対象カメラ構造体インスタンスへのポインタ
+ * @param[in,out] camera_ プロジェクション行列取得対象カメラ構造体インスタンスへのポインタ
  */
 static void perspective_matrix_update(camera_t* camera_) {
     const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
@@ -561,7 +561,7 @@ static void perspective_matrix_update(camera_t* camera_) {
  * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
  * - camera_ != NULL
  *
- * @param camera_ 座標変換行列取得対象カメラ構造体インスタンスへのポインタ
+ * @param[in,out] camera_ 座標変換行列取得対象カメラ構造体インスタンスへのポインタ
  */
 static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t rot = { 0 };
@@ -580,7 +580,7 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
  * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
  * - camera_ != NULL
  *
- * @param camera_ ビュー行列取得対象カメラ構造体インスタンスへのポインタ
+ * @param[in,out] camera_ ビュー行列取得対象カメラ構造体インスタンスへのポインタ
  *
  * @return true ビュー行列更新成功
  * @return false ビュー行列の更新に失敗(逆行列の計算に失敗)

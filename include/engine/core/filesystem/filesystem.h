@@ -86,7 +86,7 @@ typedef enum {
  * // エラー処理
  * @endcode
  *
- * @param filesystem_ ファイルシステム内部状態管理構造体へのダブルポインタ
+ * @param[out] filesystem_ ファイルシステム内部状態管理構造体へのダブルポインタ
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - filesystem_がNULL

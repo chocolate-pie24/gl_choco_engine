@@ -474,7 +474,7 @@ const char* choco_string_c_str(const choco_string_t* string_) {
 /**
  * @brief 実行結果コードを文字列に変換する
  *
- * @param rslt_ 文字列に変換する実行結果コード
+ * @param[in] rslt_ 文字列に変換する実行結果コード
  * @return const char* 変換された文字列の先頭アドレス
  */
 static const char* rslt_to_str(choco_string_result_t rslt_) {
@@ -509,8 +509,9 @@ static const char* rslt_to_str(choco_string_result_t rslt_) {
  * - 実行結果コードをchoco_stringモジュールの実行結果コードに変換して出力する
  * - メモリタグはMEMORY_TAG_STRING固定
  *
- * @param size_ 確保するメモリサイズ
- * @param out_ptr_ 確保したメモリの先頭アドレス
+ * @param[in] size_ 確保するメモリサイズ
+ * @param[out] out_ptr_ 確保したメモリの先頭アドレス
+ *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 下記のいずれか
  * - out_ptr_ == NULL
  * - *out_ptr_ != NULL

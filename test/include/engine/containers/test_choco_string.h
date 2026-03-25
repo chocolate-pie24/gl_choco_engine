@@ -27,7 +27,7 @@ extern "C" {
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_default_create_config_set(const test_call_control_t* config_);
 
@@ -36,7 +36,7 @@ void test_choco_string_default_create_config_set(const test_call_control_t* conf
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_create_from_c_string_config_set(const test_call_control_t* config_);
 
@@ -45,7 +45,7 @@ void test_choco_string_create_from_c_string_config_set(const test_call_control_t
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_copy_config_set(const test_call_control_t* config_);
 
@@ -54,7 +54,7 @@ void test_choco_string_copy_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_copy_from_c_string_config_set(const test_call_control_t* config_);
 
@@ -63,7 +63,7 @@ void test_choco_string_copy_from_c_string_config_set(const test_call_control_t* 
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_concat_config_set(const test_call_control_t* config_);
 
@@ -72,7 +72,7 @@ void test_choco_string_concat_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_concat_from_c_string_config_set(const test_call_control_t* config_);
 
@@ -81,7 +81,7 @@ void test_choco_string_concat_from_c_string_config_set(const test_call_control_t
  *
  * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_choco_string_length_config_set(const test_call_control_size_t_t* config_);
 

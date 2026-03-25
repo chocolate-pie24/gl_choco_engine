@@ -38,7 +38,7 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void);
  *
  * @note この関数を実行した後は、gl33_shader_fail_disableが呼ばれるまで効果が継続する
  *
- * @param result_code_ 出力実行結果コード
+ * @param[in] result_code_ 出力実行結果コード
  */
 void gl33_shader_fail_enable(renderer_result_t result_code_);
 

@@ -321,8 +321,8 @@ cleanup:
 /**
  * @brief カメラ位置にカメラ移動量を適用する
  *
- * @param translation_ カメラ移動量
- * @param camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in] translation_ カメラ移動量
+ * @param[in,out] camera_ 更新対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - translation_ == NULL

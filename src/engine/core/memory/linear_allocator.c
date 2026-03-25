@@ -167,7 +167,7 @@ cleanup:
 /**
  * @brief 実行結果コードを文字列に変換する
  *
- * @param rslt_ 文字列に変換する実行結果コード
+ * @param[in] rslt_ 文字列に変換する実行結果コード
  * @return const char* 変換された文字列の先頭アドレス
  */
 static const char* rslt_to_str(linear_allocator_result_t rslt_) {
