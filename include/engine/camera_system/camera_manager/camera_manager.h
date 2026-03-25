@@ -91,14 +91,13 @@ camera_result_t camera_manager_register(const char* camera_name_, camera_manager
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_manager_ == NULL
- * - name_ == NULL
  * - camera_id_ < 0
  * - camera_manager_->max_camera_count <= camera_id_
  * @retval CAMERA_BAD_OPERATION 以下のいずれか
  * - camera_manager_->max_camera_count <= 0
  * - camera_manager_->camera_array == NULL
  * - カメラIDに対応するカメラが管理システム内に見つからない
- * @retval CAMERA_SUCCESS 処理人成功し、正常終了
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* camera_manager_);
 
@@ -115,7 +114,7 @@ camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* 
  * - camera_manager_->max_camera_count <= 0
  * - camera_manager_->camera_array == NULL
  * - カメラ名称に対応するカメラが管理システム内に見つからない
- * @retval CAMERA_SUCCESS 処理人成功し、正常終了
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_unregister_by_name(const char* name_, camera_manager_t* camera_manager_);
 
@@ -166,10 +165,10 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manag
  * - camera_manager_ == NULL
  * - name_ == NULL
  * - out_camera_ == NULL
- * - name_に対応するカメラが管理システム内に見つからない
  * @retval CAMERA_BAD_OPERATION
  * - camera_manager_->max_camera_count <= 0
  * - camera_manager_->camera_array == NULL
+ * - name_に対応するカメラが管理システム内に見つからない
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_camera_get_by_name(const char* name_, const camera_manager_t* camera_manager_, camera_t** out_camera_);
