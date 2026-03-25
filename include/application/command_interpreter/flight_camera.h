@@ -122,7 +122,7 @@ application_result_t flight_camera_command_update(const keyboard_event_t* keyboa
  * - 逆行列計算に失敗
  * @retval APPLICATION_SUCCESS 処理に成功し、正常終了
  */
-application_result_t flight_camera_command_execute(float speed_, float delta_time_, command_status_flight_camera_t* command_status_, camera_t* camera_, bool* out_camera_updated_);
+application_result_t flight_camera_command_execute(float speed_, float delta_time_, command_status_flight_camera_t* command_status_, camera_t* camera_, bool* out_view_updated_);
 
 #ifdef __cplusplus
 }

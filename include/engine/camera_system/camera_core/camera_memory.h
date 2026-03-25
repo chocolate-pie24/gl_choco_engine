@@ -52,7 +52,7 @@ camera_result_t camera_mem_allocate(size_t size_, void** out_ptr_);
  * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
  * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。
  *
- * @param[out] ptr_ 解放対象メモリアドレス
+ * @param[in] ptr_ 解放対象メモリアドレス
  * @param[in] size_ 解放サイズ
  */
 void camera_mem_free(void* ptr_, size_t size_);
