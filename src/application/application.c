@@ -239,6 +239,13 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("mouse event queue initialized successfully.");
 
+    ret_camera = camera_manager_initialize(8, tmp->linear_alloc, &tmp->camera_manager);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = app_rslt_convert_camera(ret_camera);
+        ERROR_MESSAGE("application_create(%s) - Failed to create camera manager.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("camera manager initialized successfully.");
     // end Simulation -> launch all systems.
 
     // end Simulation
@@ -285,13 +292,6 @@ application_result_t application_create(void) {
     ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize flight camera commands.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_camera = camera_manager_initialize(tmp->linear_alloc, 8, &tmp->camera_manager);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to create camera manager.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

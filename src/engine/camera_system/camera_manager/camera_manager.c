@@ -1,3 +1,18 @@
+/** @ingroup camera_system
+ *
+ * @file camera_manager.c
+ * @author chocolate-pie24
+ * @brief カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装
+ *
+ * @version 0.1
+ * @date 2026-03-25
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/camera_system/camera_manager/camera_manager.h"
 
 #include <stddef.h>
@@ -18,12 +33,16 @@
 
 #include "engine/camera_system/camera/camera.h"
 
+/**
+ * @brief カメラ管理システム内部状態管理構造体
+ *
+ */
 struct camera_manager {
-    int16_t max_camera_count;
-    camera_t** camera_array;
+    int16_t max_camera_count;   /**< 管理システムに登録可能なカメラ数上限値 */
+    camera_t** camera_array;    /**< カメラ構造体インスタンス格納配列 */
 };
 
-camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, int16_t max_camera_count_, camera_manager_t** out_camera_manager_) {
+camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_alloc_t* allocator_, camera_manager_t** out_camera_manager_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     void* backend_ptr = NULL;
@@ -59,6 +78,7 @@ camera_result_t camera_manager_initialize(linear_alloc_t* allocator_, int16_t ma
 
     // commit.
     *out_camera_manager_ = tmp_manager;
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -115,6 +135,7 @@ camera_result_t camera_manager_register(const char* camera_name_, camera_manager
         camera_manager_->camera_array[free_slot] = tmp_camera;
         *out_camera_id_ = free_slot;
     }
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -135,8 +156,8 @@ camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* 
         ERROR_MESSAGE("camera_manager_unregister(%s) - Provided camera id '%d' is not registered.", camera_rslt_to_str(ret), camera_id_);
         goto cleanup;
     }
-
     camera_destroy(&camera_manager_->camera_array[camera_id_]);
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
@@ -145,13 +166,13 @@ cleanup:
 
 camera_result_t camera_manager_unregister_by_name(const char* name_, camera_manager_t* camera_manager_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    bool found = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_unregister_by_name", "camera_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_unregister_by_name", "camera_manager_->max_camera_count")
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_unregister_by_name", "camera_manager_->camera_array")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_unregister_by_name", "name_")
 
-    bool found = false;
     for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
         if(NULL != camera_manager_->camera_array[i]) {
             if(choco_string_equal(name_, camera_name_get(camera_manager_->camera_array[i]))) {
@@ -202,13 +223,12 @@ cleanup:
     return ret_id;
 }
 
-camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* camera_manager_, camera_t** out_camera_) {
+camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manager_t* camera_manager_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->max_camera_count")
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get", "camera_manager_->camera_array")
-    IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > camera_id_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "out_camera_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_id_ < camera_manager_->max_camera_count, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_id_ >= 0, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get", "camera_id_")
@@ -219,13 +239,14 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, camera_manager_t* 
         goto cleanup;
     }
     *out_camera_ = camera_manager_->camera_array[camera_id_];
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_manager_t* camera_manager_, camera_t** out_camera_) {
+camera_result_t camera_manager_camera_get_by_name(const char* name_, const camera_manager_t* camera_manager_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     bool found = false;
 
@@ -249,6 +270,7 @@ camera_result_t camera_manager_camera_get_by_name(const char* name_, camera_mana
         ERROR_MESSAGE("camera_manager_camera_get_by_name(%s) - Provided camera name '%s' is not registered.", camera_rslt_to_str(ret), name_);
         goto cleanup;
     }
+
     ret = CAMERA_SUCCESS;
 
 cleanup:
