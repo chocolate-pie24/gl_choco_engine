@@ -1,4 +1,4 @@
-/** @ingroup command_interpreter
+/** @ingroup application
  *
  * @file flight_camera.h
  * @author chocolate-pie24
