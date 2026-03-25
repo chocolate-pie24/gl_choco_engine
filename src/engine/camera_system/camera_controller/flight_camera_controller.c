@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2026-03-19
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -30,10 +30,11 @@ static camera_result_t camera_position_movement_apply(const vec3f_t* translation
 
 camera_result_t flight_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t forward_vec = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_forward", "camera_")
 
     // カメラ前方の正規化されたベクトルを取得
-    vec3f_t forward_vec = { 0 };
     ret = camera_forward_vector_get(camera_, &forward_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_forward(%s) - Failed to get forward vector.", camera_rslt_to_str(ret));
@@ -60,6 +61,7 @@ cleanup:
 
 camera_result_t flight_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_backward", "camera_")
 
     // カメラ後方の正規化されたベクトルを取得
@@ -90,10 +92,11 @@ cleanup:
 
 camera_result_t flight_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t right_vec = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_right", "camera_")
 
     // カメラ右方向の正規化されたベクトルを取得
-    vec3f_t right_vec = { 0 };
     ret = camera_right_vector_get(camera_, &right_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_right(%s) - Failed to get right vector.", camera_rslt_to_str(ret));
@@ -120,10 +123,11 @@ cleanup:
 
 camera_result_t flight_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t left_vec = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_left", "camera_")
 
     // カメラ左方向の正規化されたベクトルを取得
-    vec3f_t left_vec = { 0 };
     ret = camera_left_vector_get(camera_, &left_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_left(%s) - Failed to get left vector.", camera_rslt_to_str(ret));
@@ -150,10 +154,11 @@ cleanup:
 
 camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t up_vec = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_up", "camera_")
 
     // カメラ上方向の正規化されたベクトルを取得
-    vec3f_t up_vec = { 0 };
     ret = camera_up_vector_get(camera_, &up_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_up(%s) - Failed to get up vector.", camera_rslt_to_str(ret));
@@ -180,10 +185,11 @@ cleanup:
 
 camera_result_t flight_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t down_vec = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_down", "camera_")
 
     // カメラ下方向の正規化されたベクトルを取得
-    vec3f_t down_vec = { 0 };
     ret = camera_down_vector_get(camera_, &down_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_down(%s) - Failed to get down vector.", camera_rslt_to_str(ret));
@@ -210,9 +216,10 @@ cleanup:
 
 camera_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t euler = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_rot_pitch_plus", "camera_")
 
-    vec3f_t euler = { 0 };
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_plus(%s) - Failed to get camera posture.", camera_rslt_to_str(ret));
@@ -235,9 +242,10 @@ cleanup:
 
 camera_result_t flight_camera_controller_rot_pitch_minus(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t euler = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_rot_pitch_minus", "camera_")
 
-    vec3f_t euler = { 0 };
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_minus(%s) - Failed to get camera posture.", camera_rslt_to_str(ret));
@@ -260,9 +268,10 @@ cleanup:
 
 camera_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t euler = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_rot_yaw_plus", "camera_")
 
-    vec3f_t euler = { 0 };
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_plus(%s) - Failed to get camera posture.", camera_rslt_to_str(ret));
@@ -285,9 +294,10 @@ cleanup:
 
 camera_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta_time_, camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t euler = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_rot_yaw_minus", "camera_")
 
-    vec3f_t euler = { 0 };
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_minus(%s) - Failed to get camera posture.", camera_rslt_to_str(ret));
