@@ -1,6 +1,6 @@
-/** @ingroup command_interpreter
+/** @ingroup application
  *
- * @file flight_camera.h
+ * @file flight_camera.c
  * @author chocolate-pie24
  * @brief アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装
  *
