@@ -710,7 +710,7 @@ static void app_state_dispatch(void) {
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->active_camera, s_app_state->flight_camera_commands, &s_app_state->view_dirty);
+    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera_commands, s_app_state->active_camera, &s_app_state->view_dirty);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
         goto cleanup;
