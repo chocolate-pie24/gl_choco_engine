@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2026-03-19
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -27,8 +27,8 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**<
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
 static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ破損) */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過)文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ破損)文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
 
 const char* camera_rslt_to_str(camera_result_t rslt_) {

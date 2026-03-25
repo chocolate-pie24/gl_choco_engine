@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2026-03-19
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -26,10 +26,12 @@ extern "C" {
 
 /**
  * @brief memory_system_allocateのラッパーAPI
+ *
  * @note カメラシステムレイヤー専用APIのため、メモリータグはMEMORY_TAG_CAMERA固定
  *
- * @param size_ メモリ確保サイズ(byte)
- * @param out_ptr_ 確保したメモリの格納先
+ * @param[in] size_ メモリ確保サイズ(byte)
+ * @param[out] out_ptr_ 確保したメモリの格納先
+ *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - メモリシステム未初期化
  * - out_ptr_ == NULL
@@ -50,8 +52,8 @@ camera_result_t camera_mem_allocate(size_t size_, void** out_ptr_);
  * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
  * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。
  *
- * @param ptr_ 解放対象メモリアドレス
- * @param size_ 解放サイズ
+ * @param[out] ptr_ 解放対象メモリアドレス
+ * @param[in] size_ 解放サイズ
  */
 void camera_mem_free(void* ptr_, size_t size_);
 
