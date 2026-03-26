@@ -158,8 +158,8 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
  * - string_が管理する文字列が""の場合は何もしない
  * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
  *
- * @param string_ 連結元文字列
- * @param dst_ 連結先文字列
+ * @param[in] string_ 連結元文字列
+ * @param[in,out] dst_ 連結先文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -182,8 +182,8 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
  * - string_が""の場合は何もしない
  * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
  *
- * @param string_ 連結元文字列
- * @param dst_ 連結先文字列
+ * @param[in] string_ 連結元文字列
+ * @param[in,out] dst_ 連結先文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -204,7 +204,8 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
  * - string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す
  * - 終端文字を含まない長さが返される
  *
- * @param string_ 文字列長さ取得元構造体インスタンス
+ * @param[in] string_ 文字列長さ取得元構造体インスタンス
+ *
  * @return size_t 文字列長さ
  */
 size_t choco_string_length(const choco_string_t* string_);
@@ -216,11 +217,24 @@ size_t choco_string_length(const choco_string_t* string_);
  * - string_がNULLまたは内部管理バッファがNULLで空の文字列を返す
  * - 取得したconst char*は @ref choco_string_destroy でstring_が破棄されるまで有効
  *
- * @param string_ 文字列先頭アドレス取得元構造体インスタンス
+ * @param[in] string_ 文字列先頭アドレス取得元構造体インスタンス
+ *
  * @return const char* 文字列先頭アドレス
  */
 const char* choco_string_c_str(const choco_string_t* string_);
 
+/**
+ * @brief 2つの文字列が等しいかを判定する
+ *
+ * @param[in] str1_ 比較文字列1
+ * @param[in] str2_ 比較文字列2
+ *
+ * @retval true 2つの文字列が等しい
+ * @retval false 以下のいずれか
+ * - str1_またはstr2_がNULL
+ * - str1_とstr2_がNULL
+ * - 2つの文字列が等しくない
+ */
 bool choco_string_equal(const char* str1_, const char* str2_);
 
 #ifdef __cplusplus
