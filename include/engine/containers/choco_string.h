@@ -98,7 +98,7 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
  * - string_ == NULLの場合はno-op
  * - *string_ == NULLの場合はno-op
  *
- * @param string_ 破棄対象構造体インスタンス
+ * @param[in,out] string_ 破棄対象構造体インスタンス
  */
 void choco_string_destroy(choco_string_t** string_);
 
@@ -110,8 +110,8 @@ void choco_string_destroy(choco_string_t** string_);
  * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
  * - dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
- * @param dst_ コピー先文字列コンテナ
- * @param src_ コピー元文字列コンテナ
+ * @param[in] src_ コピー元文字列コンテナ
+ * @param[in,out] dst_ コピー先文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -125,7 +125,7 @@ void choco_string_destroy(choco_string_t** string_);
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
+choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string_t* dst_);
 
 /**
  * @brief const char*型文字列src_をdst_にコピーする

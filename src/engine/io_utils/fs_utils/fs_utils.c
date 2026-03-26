@@ -279,7 +279,7 @@ fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* o
         goto cleanup;
     }
 
-    ret_str = choco_string_copy(out_fullpath_, fs_utils_->filepath);
+    ret_str = choco_string_copy(fs_utils_->filepath, out_fullpath_);
     if(CHOCO_STRING_SUCCESS != ret_str) {
         ret = choco_string_result_convert(ret_str);
         ERROR_MESSAGE("fs_utils_fullpath_get(%s) - Failed to copy filepath string.", rslt_to_str(ret));
