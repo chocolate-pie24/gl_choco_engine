@@ -122,6 +122,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_) {
 
     // Commit.
     *string_ = tmp_string;
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -178,6 +179,7 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 
     // Commit.
     *string_ = tmp_string;
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -257,13 +259,14 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
         memcpy(dst_->buffer, src_->buffer, src_->len + 1);  // 終端文字を含めてコピー
         dst_->len = src_->len;
     }
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, const char* src_) {
+choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_string_t* dst_) {
 #ifdef TEST_BUILD
     s_test_config_choco_string_copy_from_c_string.call_count++;
     if(s_test_config_choco_string_copy_from_c_string.fail_on_call != 0) {
@@ -276,8 +279,9 @@ choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, cons
     size_t src_len = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
+
     if(!is_string_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Destination string (dst_) is corrupted.", rslt_to_str(ret));
@@ -312,6 +316,7 @@ choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, cons
         memcpy(dst_->buffer, src_, src_len + 1);
         dst_->len = src_len;
     }
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -377,6 +382,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
             dst_->len = dst_len_new;
         }
     }
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -438,6 +444,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
             dst_->len = dst_len_new;
         }
     }
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -562,7 +569,9 @@ static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
         goto cleanup;
     }
     *out_ptr_ = tmp_ptr;
+
     ret = CHOCO_STRING_SUCCESS;
+
 cleanup:
     return ret;
 }
@@ -597,6 +606,7 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
     string_->buffer = tmp_buffer;
     string_->len = 0;
     string_->capacity = size_;
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -651,6 +661,7 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
     string_->buffer = tmp_buffer;
     string_->len = 0;
     string_->capacity = size_;
+
     ret = CHOCO_STRING_SUCCESS;
 
 cleanup:
@@ -1458,7 +1469,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
         test_choco_string_copy_from_c_string_config_set(&config);
 
-        ret = choco_string_copy_from_c_string(dst, "aaa");
+        ret = choco_string_copy_from_c_string("aaa", dst);
         assert(CHOCO_STRING_NO_MEMORY == ret);
 
         choco_string_destroy(&dst);
@@ -1472,7 +1483,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
 
         test_choco_string_config_reset();
 
-        ret = choco_string_copy_from_c_string(NULL, "aaa");
+        ret = choco_string_copy_from_c_string("aaa", NULL);
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
         test_choco_string_config_reset();
@@ -1487,7 +1498,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         ret = choco_string_create_from_c_string("aaa", &dst);
         assert(CHOCO_STRING_SUCCESS == ret);
 
-        ret = choco_string_copy_from_c_string(dst, NULL);
+        ret = choco_string_copy_from_c_string(NULL, dst);
         assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
 
         choco_string_destroy(&dst);
@@ -1507,7 +1518,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
 
         test_choco_string_config_reset();
 
-        ret = choco_string_copy_from_c_string((choco_string_t*)&corrupted_dst, "aaa");
+        ret = choco_string_copy_from_c_string("aaa", (choco_string_t*)&corrupted_dst);
         assert(CHOCO_STRING_DATA_CORRUPTED == ret);
 
         test_choco_string_config_reset();
@@ -1523,7 +1534,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(NULL != dst->buffer);
 
-        ret = choco_string_copy_from_c_string(dst, "");
+        ret = choco_string_copy_from_c_string("", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(0U == dst->len);
         assert(0 == strcmp(dst->buffer, ""));
@@ -1544,7 +1555,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(NULL == dst->buffer);
 
-        ret = choco_string_copy_from_c_string(dst, "");
+        ret = choco_string_copy_from_c_string("", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(0U == dst->len);
         assert(0U == dst->capacity);
@@ -1568,7 +1579,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         s_test_config_mock_strlen.fail_on_call = 1U;
         s_test_config_mock_strlen.forced_result = SIZE_MAX;
 
-        ret = choco_string_copy_from_c_string(dst, "a");
+        ret = choco_string_copy_from_c_string("a", dst);
         assert(CHOCO_STRING_OVERFLOW == ret);
 
         choco_string_destroy(&dst);
@@ -1587,7 +1598,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(6U == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "aaa");
+        ret = choco_string_copy_from_c_string("aaa", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(3U == dst->len);
         assert(6U == dst->capacity);
@@ -1609,7 +1620,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(4U == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa");
+        ret = choco_string_copy_from_c_string("aaaaa", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(5U == dst->len);
         assert(6U == dst->capacity);
@@ -1632,7 +1643,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         assert(0U == dst->capacity);
         assert(NULL == dst->buffer);
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa");
+        ret = choco_string_copy_from_c_string("aaaaa", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(5U == dst->len);
         assert(6U == dst->capacity);
@@ -1663,7 +1674,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         s_test_config_buffer_resize.fail_on_call = 1U;
         s_test_config_buffer_resize.forced_result = (int)CHOCO_STRING_NO_MEMORY;
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa");
+        ret = choco_string_copy_from_c_string("aaaaa", dst);
         assert(CHOCO_STRING_NO_MEMORY == ret);
         assert(old_ptr == dst->buffer);
         assert(old_len == dst->len);
@@ -1697,7 +1708,7 @@ static void NO_COVERAGE test_choco_string_copy_from_c_string(void) {
         s_test_config_string_malloc.fail_on_call = 1U;
         s_test_config_string_malloc.forced_result = (int)CHOCO_STRING_NO_MEMORY;
 
-        ret = choco_string_copy_from_c_string(dst, "aaaaa");
+        ret = choco_string_copy_from_c_string("aaaaa", dst);
         assert(CHOCO_STRING_NO_MEMORY == ret);
         assert(old_ptr == dst->buffer);
         assert(old_len == dst->len);
@@ -1943,7 +1954,7 @@ static void NO_COVERAGE test_choco_string_concat(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(16U == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "bbb");
+        ret = choco_string_copy_from_c_string("bbb", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(3U == dst->len);
 
@@ -2212,7 +2223,7 @@ static void NO_COVERAGE test_choco_string_concat_from_c_string(void) {
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(16U == dst->capacity);
 
-        ret = choco_string_copy_from_c_string(dst, "bbb");
+        ret = choco_string_copy_from_c_string("bbb", dst);
         assert(CHOCO_STRING_SUCCESS == ret);
         assert(3U == dst->len);
 
