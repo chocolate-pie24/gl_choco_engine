@@ -135,8 +135,8 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
  * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
  * - dst_のバッファとsrc_の文字列長さ+1(終端文字)に等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
- * @param dst_ コピー先文字列コンテナ
- * @param src_ コピー元文字列
+ * @param[in] src_ コピー元文字列
+ * @param[in,out] dst_ コピー先文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_がNULL
@@ -148,7 +148,7 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, const char* src_);
+choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_string_t* dst_);
 
 /**
  * @brief 文字列コンテナstring_が管理する文字列をdst_の末尾に連結する
