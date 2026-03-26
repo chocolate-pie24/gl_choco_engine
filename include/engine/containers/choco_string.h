@@ -57,7 +57,7 @@ typedef enum {
  * - 文字列長さ0で初期化されたchoco_string_tインスタンスを生成する
  * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
- * @param string_ 初期化対象文字列コンテナ
+ * @param[out] string_ 初期化対象文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - string_ == NULL
@@ -75,8 +75,8 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * - string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される
  * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
- * @param string_ 初期化対象文字列コンテナ
- * @param src_ 初期化文字列
+ * @param[in] src_ 初期化文字列
+ * @param[out] string_ 初期化対象文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - string_ == NULL
@@ -88,7 +88,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_create_from_c_string(choco_string_t** string_, const char* src_);
+choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** string_);
 
 /**
  * @brief string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする

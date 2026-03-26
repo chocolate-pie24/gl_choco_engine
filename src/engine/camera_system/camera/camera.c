@@ -107,7 +107,7 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     }
     tmp_camera->name = NULL;
 
-    string_ret = choco_string_create_from_c_string(&tmp_camera->name, name_);
+    string_ret = choco_string_create_from_c_string(name_, &tmp_camera->name);
     if(CHOCO_STRING_SUCCESS != string_ret) {
         ret = camera_rslt_convert_choco_string(string_ret);
         ERROR_MESSAGE("camera_create(%s) - Failed to create string for camera name.", camera_rslt_to_str(ret));

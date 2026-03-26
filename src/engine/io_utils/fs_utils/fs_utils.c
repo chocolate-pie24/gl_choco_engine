@@ -121,14 +121,14 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     memset(tmp_fs_utils, 0, sizeof(fs_utils_t));
     tmp_fs_utils->mode = open_mode_;
 
-    ret_str = choco_string_create_from_c_string(&tmp_fs_utils->filepath, filepath_);
+    ret_str = choco_string_create_from_c_string(filepath_, &tmp_fs_utils->filepath);
     if(CHOCO_STRING_SUCCESS != ret_str) {
         ret = choco_string_result_convert(ret_str);
         ERROR_MESSAGE("fs_utils_create(%s) - Failed to initialize string from char for 'tmp_fs_utils->filepath'.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_str = choco_string_create_from_c_string(&tmp_fs_utils->filename, filename_);
+    ret_str = choco_string_create_from_c_string(filename_, &tmp_fs_utils->filename);
     if(CHOCO_STRING_SUCCESS != ret_str) {
         ret = choco_string_result_convert(ret_str);
         ERROR_MESSAGE("fs_utils_create(%s) - Failed to initialize string from char for 'tmp_fs_utils->filename'.", rslt_to_str(ret));
@@ -138,7 +138,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     if(NULL == extension_) {
         tmp_fs_utils->extension = NULL;
     } else {
-        ret_str = choco_string_create_from_c_string(&tmp_fs_utils->extension, extension_);
+        ret_str = choco_string_create_from_c_string(extension_, &tmp_fs_utils->extension);
         if(CHOCO_STRING_SUCCESS != ret_str) {
             ret = choco_string_result_convert(ret_str);
             ERROR_MESSAGE("fs_utils_create(%s) - Failed to initialize string from char for 'tmp_fs_utils->extension'.", rslt_to_str(ret));
@@ -1106,8 +1106,8 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.mode = FILESYSTEM_MODE_READ;
 
         // // filepath/filename は valid_check で必須
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, "assets/test/filesystem/"));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, "test_file"));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
         // fs.extension = NULL;
 
         // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, NULL);
@@ -1146,8 +1146,8 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.mode = FILESYSTEM_MODE_READ;
         // fs.extension = NULL;
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, "assets/test/filesystem/"));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, "test_file"));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
 
         // choco_string_t* out = NULL;
         // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
@@ -1171,9 +1171,9 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.filesystem = (filesystem_t*)0x1;
         // fs.mode = FILESYSTEM_MODE_READ;
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, "assets/test/filesystem/"));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, "test_file"));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.extension, ".txt"));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs.extension));
 
         // choco_string_t* out = NULL;
         // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
@@ -1199,8 +1199,8 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.mode = FILESYSTEM_MODE_READ;
         // fs.extension = NULL;
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, "assets/test/filesystem/"));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, "test_file"));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
 
         // choco_string_t* out = NULL;
         // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
@@ -1239,8 +1239,8 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.mode = FILESYSTEM_MODE_READ;
         // fs.extension = NULL;
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, filepath_buf));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, filename_buf));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filepath_buf, &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filename_buf, &fs.filename));
 
         // choco_string_t* out = NULL;
         // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
@@ -1284,9 +1284,9 @@ static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
         // fs.filesystem = (filesystem_t*)0x1;
         // fs.mode = FILESYSTEM_MODE_READ;
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filepath, filepath_buf));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.filename, filename_buf));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(&fs.extension, extension_buf));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filepath_buf, &fs.filepath));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filename_buf, &fs.filename));
+        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(extension_buf, &fs.extension));
 
         // choco_string_t* out = NULL;
         // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
