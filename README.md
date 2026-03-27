@@ -12,6 +12,7 @@
       - [Renderer System](#renderer-system)
       - [Renderer Backend](#renderer-backend)
       - [Platform System](#platform-system)
+      - [Camera System](#camera-system)
     - [Guide](#guide)
     - [API Reference](#api-reference)
   - [Contributing](#contributing)
@@ -93,6 +94,11 @@ GL CHOCO ENGINE is an independent codebase with its own architecture and design 
 
 - [Platform System(English)](docs/architecture/platform_system/architecture_en.md)
 - [Platform System(Japanese)](docs/architecture/platform_system/architecture_ja.md)
+
+#### Camera System
+
+- [Camera System(English)](docs/architecture/camera_system/architecture_en.md)
+- [Camera System(Japanese)](docs/architecture/camera_system/architecture_ja.md)
 
 ### Guide
 

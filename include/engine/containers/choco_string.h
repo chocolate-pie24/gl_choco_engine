@@ -57,13 +57,7 @@ typedef enum {
  * - 文字列長さ0で初期化されたchoco_string_tインスタンスを生成する
  * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
- * @code{.c}
- * choco_string_t* string = NULL;
- * choco_string_result_t ret = choco_string_default_create(&string);
- * // エラー処理
- * @endcode
- *
- * @param string_ 初期化対象文字列コンテナ
+ * @param[out] string_ 初期化対象文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - string_ == NULL
@@ -81,14 +75,8 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * - string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される
  * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
  *
- * @code{.c}
- * choco_string_t* string = NULL;
- * choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
- * // エラー処理
- * @endcode
- *
- * @param string_ 初期化対象文字列コンテナ
- * @param src_ 初期化文字列
+ * @param[in] src_ 初期化文字列
+ * @param[out] string_ 初期化対象文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - string_ == NULL
@@ -100,7 +88,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_create_from_c_string(choco_string_t** string_, const char* src_);
+choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** string_);
 
 /**
  * @brief string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする
@@ -110,17 +98,7 @@ choco_string_result_t choco_string_create_from_c_string(choco_string_t** string_
  * - string_ == NULLの場合はno-op
  * - *string_ == NULLの場合はno-op
  *
- * @code{.c}
- * choco_string_t* string = NULL;   // 必ずNULLで初期化しておく
- * choco_string_result_t ret = choco_string_create_from_c_string(&string, "abc");
- *
- * // エラー処理
- *
- * choco_string_destroy(&string);   // string = NULLになる
- * choco_string_destroy(&string);   // 2重デストロイ(何もしない)
- * @endcode
- *
- * @param string_ 破棄対象構造体インスタンス
+ * @param[in,out] string_ 破棄対象構造体インスタンス
  */
 void choco_string_destroy(choco_string_t** string_);
 
@@ -132,21 +110,8 @@ void choco_string_destroy(choco_string_t** string_);
  * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
  * - dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
- * @code{.c}
- * choco_string_t* dst = NULL;
- * choco_string_result_t ret = choco_string_default_create(&dst);
- * // エラー処理
- *
- * choco_string_t* src = NULL;
- * ret = choco_string_create_from_c_string(&src, "aaa");
- * // エラー処理
- *
- * ret = choco_string_copy(dst, src);   // dstのバッファにaaa+'\0'がコピーされる
- * // エラー処理
- * @endcode
- *
- * @param dst_ コピー先文字列コンテナ
- * @param src_ コピー元文字列コンテナ
+ * @param[in] src_ コピー元文字列コンテナ
+ * @param[in,out] dst_ コピー先文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -160,7 +125,7 @@ void choco_string_destroy(choco_string_t** string_);
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string_t* src_);
+choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string_t* dst_);
 
 /**
  * @brief const char*型文字列src_をdst_にコピーする
@@ -170,17 +135,8 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
  * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
  * - dst_のバッファとsrc_の文字列長さ+1(終端文字)に等しい: dst_のバッファサイズは変更せず,文字列をコピー
  *
- * @code{.c}
- * choco_string_t* dst = NULL;
- * choco_string_result_t ret = choco_string_default_create(&dst);
- * // エラー処理
- *
- * ret = choco_string_copy_from_c_string(dst, "aaa");   // dstのバッファにaaa+'\0'がコピーされる
- * // エラー処理
- * @endcode
- *
- * @param dst_ コピー先文字列コンテナ
- * @param src_ コピー元文字列
+ * @param[in] src_ コピー元文字列
+ * @param[in,out] dst_ コピー先文字列コンテナ
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_がNULL
@@ -192,7 +148,7 @@ choco_string_result_t choco_string_copy(choco_string_t* dst_, const choco_string
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
-choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, const char* src_);
+choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_string_t* dst_);
 
 /**
  * @brief 文字列コンテナstring_が管理する文字列をdst_の末尾に連結する
@@ -202,21 +158,8 @@ choco_string_result_t choco_string_copy_from_c_string(choco_string_t* dst_, cons
  * - string_が管理する文字列が""の場合は何もしない
  * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
  *
- * @code{.c}
- * choco_string_t* string = NULL;
- * choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaa");
- * // エラー処理
- *
- * choco_string_t* dst = NULL;
- * ret = choco_string_create_from_c_string(&dst, "bbb");
- * // エラー処理
- *
- * ret = choco_string_concat(string, dst);   // dstの文字列はbbbaaaとなる
- * // エラー処理
- * @endcode
- *
- * @param string_ 連結元文字列
- * @param dst_ 連結先文字列
+ * @param[in] string_ 連結元文字列
+ * @param[in,out] dst_ 連結先文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -239,17 +182,8 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
  * - string_が""の場合は何もしない
  * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
  *
- * @code{.c}
- * choco_string_t* dst = NULL;
- * ret = choco_string_create_from_c_string(&dst, "bbb");
- * // エラー処理
- *
- * ret = choco_string_concat_from_c_string("aaa", dst);   // dstの文字列はbbbaaaとなる
- * // エラー処理
- * @endcode
- *
- * @param string_ 連結元文字列
- * @param dst_ 連結先文字列
+ * @param[in] string_ 連結元文字列
+ * @param[in,out] dst_ 連結先文字列
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
@@ -270,18 +204,8 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
  * - string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す
  * - 終端文字を含まない長さが返される
  *
- * @code{.c}
- * choco_string_t* string = NULL;
- * choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaaaa");
+ * @param[in] string_ 文字列長さ取得元構造体インスタンス
  *
- * // エラー処理
- *
- * const size_t len = choco_string_length(string);  // len == 5
- *
- * choco_string_destroy(&string);
- * @endcode
- *
- * @param string_ 文字列長さ取得元構造体インスタンス
  * @return size_t 文字列長さ
  */
 size_t choco_string_length(const choco_string_t* string_);
@@ -293,23 +217,24 @@ size_t choco_string_length(const choco_string_t* string_);
  * - string_がNULLまたは内部管理バッファがNULLで空の文字列を返す
  * - 取得したconst char*は @ref choco_string_destroy でstring_が破棄されるまで有効
  *
- * @code{.c}
- * choco_string_t* string = NULL;
- * choco_string_result_t ret = choco_string_create_from_c_string(&string, "aaaaa");
+ * @param[in] string_ 文字列先頭アドレス取得元構造体インスタンス
  *
- * // エラー処理
- *
- * const char* c_ptr = choco_string_c_str(string);
- * fprintf(stdout, "%s\n", c_ptr);  // 標準出力にaaaaaが出力される
- *
- * choco_string_destroy(&string);
- * @endcode
- *
- * @param string_ 文字列先頭アドレス取得元構造体インスタンス
  * @return const char* 文字列先頭アドレス
  */
 const char* choco_string_c_str(const choco_string_t* string_);
 
+/**
+ * @brief 2つの文字列が等しいかを判定する
+ *
+ * @param[in] str1_ 比較文字列1
+ * @param[in] str2_ 比較文字列2
+ *
+ * @retval true 2つの文字列が等しい
+ * @retval false 以下のいずれか
+ * - str1_またはstr2_がNULL
+ * - str1_とstr2_がNULL
+ * - 2つの文字列が等しくない
+ */
 bool choco_string_equal(const char* str1_, const char* str2_);
 
 #ifdef __cplusplus

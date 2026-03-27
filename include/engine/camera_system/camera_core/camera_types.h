@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2026-03-19
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * @brief カメラシステムレイヤー実行結果コード定義
+ *
+ */
 typedef enum {
     CAMERA_SUCCESS = 0,           /**< 処理成功 */
     CAMERA_INVALID_ARGUMENT,      /**< 無効な引数 */
@@ -31,6 +35,10 @@ typedef enum {
     CAMERA_UNDEFINED_ERROR,       /**< 不明なエラー */
 } camera_result_t;
 
+/**
+ * @brief カメラ種別定義
+ *
+ */
 typedef enum {
     CAMERA_TYPE_FLIGHT_CAMERA = 0,  /**< 空間内自由飛行カメラ */
 } camera_type_t;

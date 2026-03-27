@@ -5,7 +5,7 @@
  * @brief OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装
  *
  * @version 0.1
- * @date 2025-12.19
+ * @date 2025-12-19
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *
@@ -80,7 +80,7 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
 /**
  * @brief VBO構造体インスタンスのメモリを確保し初期化する
  *
- * @param vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
+ * @param[out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}
@@ -129,7 +129,7 @@ cleanup:
 /**
  * @brief renderer_backend_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する
  *
- * @param vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
+ * @param[out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
  *
  * 使用例:
  * @code{.c}

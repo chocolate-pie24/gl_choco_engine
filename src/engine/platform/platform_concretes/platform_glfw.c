@@ -276,7 +276,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
         goto cleanup;
     }
 
-    ret_string = choco_string_create_from_c_string(&platform_backend_->window_label, window_label_);
+    ret_string = choco_string_create_from_c_string(window_label_, &platform_backend_->window_label);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = platform_rslt_convert_choco_string(ret_string);
         ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_rslt_to_str(ret));
@@ -500,7 +500,7 @@ cleanup:
 /**
  * @brief 全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する
  *
- * @param keycode_ 全プラットフォーム共通キーコード
+ * @param[in] keycode_ 全プラットフォーム共通キーコード
  * @return int GLFWキーコード
  */
 static int keycode_to_glfw_keycode(keycode_t keycode_) {

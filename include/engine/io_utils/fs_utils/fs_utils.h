@@ -9,7 +9,7 @@
  * - ファイルのオープン/クローズは呼び出し側のコード量を少なくするため,fs_utils_create, fs_utils_destroyにて自動的に行う.ユーザーがオープン/クローズ操作は行わない
  *
  * @version 0.1
- * @date 2025-12.26
+ * @date 2025-12-26
  *
  * @copyright Copyright (c) 2025 chocolate-pie24
  *

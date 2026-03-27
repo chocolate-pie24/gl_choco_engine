@@ -239,6 +239,13 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("mouse event queue initialized successfully.");
 
+    ret_camera = camera_manager_initialize(8, tmp->linear_alloc, &tmp->camera_manager);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = app_rslt_convert_camera(ret_camera);
+        ERROR_MESSAGE("application_create(%s) - Failed to create camera manager.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("camera manager initialized successfully.");
     // end Simulation -> launch all systems.
 
     // end Simulation
@@ -285,13 +292,6 @@ application_result_t application_create(void) {
     ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - Failed to initialize flight camera commands.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_camera = camera_manager_initialize(tmp->linear_alloc, 8, &tmp->camera_manager);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to create camera manager.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -509,7 +509,7 @@ cleanup:
  * @brief event_をウィンドウイベント用リングキューに格納する
  * @note ウィンドウイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_window(const window_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
@@ -537,7 +537,7 @@ cleanup:
  * @brief event_をキーボードイベント用リングキューに格納する
  * @note キーボードイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_key(const keyboard_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
@@ -565,7 +565,7 @@ cleanup:
  * @brief event_をマウスイベント用リングキューに格納する
  * @note マウスイベントコールバック
  *
- * @param event_ イベントキューに格納するイベントオブジェクト
+ * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
  */
 static void on_mouse(const mouse_event_t* event_) {
     ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
@@ -710,7 +710,7 @@ static void app_state_dispatch(void) {
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->active_camera, s_app_state->flight_camera_commands, &s_app_state->view_dirty);
+    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera_commands, s_app_state->active_camera, &s_app_state->view_dirty);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
         goto cleanup;

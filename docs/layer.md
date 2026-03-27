@@ -7,6 +7,7 @@ This document describes the high-level layering and module dependencies of GL CH
   - [Engine overview](#engine-overview)
   - [Detailed view: Platform](#detailed-view-platform)
   - [Detailed view: Renderer](#detailed-view-renderer)
+  - [Detailed view: Camera](#detailed-view-camera)
   - [Layer Reference](#layer-reference)
     - [application](#application)
     - [engine/base](#enginebase)
@@ -35,6 +36,10 @@ This diagram shows the module dependencies at the engine level.
 ## Detailed view: Renderer
 
 [Renderer Backend Architecture](./architecture/renderer_system/renderer_backend/architecture_en.md)
+
+## Detailed view: Camera
+
+[Camera System Architecture](./architecture/camera_system/architecture_en.md)
 
 ## Layer Reference
 
@@ -117,6 +122,15 @@ This will be removed once the frontend is introduced.
 
 ### engine/camera
 
-- Purpose: Manages the camera's position and orientation, and also provides functionality for generating projection and view matrices.
-- Characteristics: No module-specific initialization, but requires core memory system to be initialized.
-- Note: The camera module is currently placed as a standalone layer only temporarily. This is not considered the final layering structure, and it is expected to be moved under a more appropriate layer as the engine architecture evolves.
+- Purpose: The `Camera System` is a subsystem that provides camera state management and control functionality in three-dimensional space.
+  It provides upper layers with a unified API for creating, retrieving, and deleting cameras, as well as for handling position, orientation, view matrices, and projection matrices.
+  Control functionality for each camera type is also included in the responsibilities of this system.
+  As a result, upper layers can use camera functionality without being aware of the details of individual camera implementations or internal memory management.
+- Characteristics: Some modules require explicit initialization. In particular, camera_manager must be initialized before camera instances can be centrally registered, retrieved, and managed.
+- Modules:
+  - camera_controller/flight_camera_controller: Provides control APIs for flight-camera movement and orientation updates.
+  - camera_manager: Manages camera instances and provides registration, deletion, and retrieval APIs.
+  - camera: Holds camera state such as name, position, orientation, and projection parameters, and provides APIs for retrieving matrices and direction vectors.
+  - camera_core/camera_memory: Wrapper APIs over `choco_memory` tailored for the camera layer.
+  - camera_core/camera_err_utils: Provides utilities to translate lower-layer error codes into camera-system result codes and to convert them into strings.
+  - camera_core/camera_types: Common data types, constants, and result codes used throughout the camera system.

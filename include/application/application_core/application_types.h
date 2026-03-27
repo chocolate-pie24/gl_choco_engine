@@ -1,3 +1,18 @@
+/** @ingroup application
+ *
+ * @file application_types.h
+ * @author chocolate-pie24
+ * @brief アプリケーションレイヤー全体で使用されるデータ型を提供する
+ *
+ * @version 0.1
+ * @date 2026-03-25
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef GLCE_APPLICATION_APPLICATION_CORE_APPLICATION_TYPES_H
 #define GLCE_APPLICATION_APPLICATION_CORE_APPLICATION_TYPES_H
 
@@ -25,9 +40,13 @@ typedef enum {
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;
 
+/**
+ * @brief GLCEビルドコンフィグレーション値格納構造体
+ *
+ */
 typedef struct app_build_config {
-    platform_type_t selected_platform;
-    target_graphics_api_t selected_graphics_api;
+    platform_type_t selected_platform;              /**< 実行プラットフォーム選択 */
+    target_graphics_api_t selected_graphics_api;    /**< 使用グラフィックスAPI選択 */
 } app_build_config_t;
 
 #ifdef __cplusplus

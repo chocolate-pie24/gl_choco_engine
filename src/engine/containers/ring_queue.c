@@ -328,7 +328,7 @@ bool ring_queue_empty(const ring_queue_t* ring_queue_) {
 /**
  * @brief メモリシステム実行結果コードをリングキュー実行結果コードに変換する
  *
- * @param rslt_ メモリシステム実行結果コード
+ * @param[in] rslt_ メモリシステム実行結果コード
  * @return ring_queue_result_t 変換されたリングキュー実行結果コード
  */
 static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
@@ -354,7 +354,8 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
  * @warning 本関数は内部データ破損判定が目的であるため下記のチェックは行わない
  * - 引数ring_queue_のNULLチェック
  *
- * @param ring_queue_ 判定対象リングキュー
+ * @param[in] ring_queue_ 判定対象リングキュー
+ *
  * @retval true 以下のいずれか
  * - 0 == ring_queue_->element_align
  * - 0 == ring_queue_->max_element_count
@@ -433,7 +434,7 @@ static bool is_ring_queue_corrupted(const ring_queue_t* ring_queue_) {
 /**
  * @brief リングキュー実行結果コードを文字列に変換する
  *
- * @param rslt_ リングキュー実行結果コード
+ * @param[in] rslt_ リングキュー実行結果コード
  * @return const char* 変換された文字列
  */
 static const char* rslt_to_str(ring_queue_result_t rslt_) {

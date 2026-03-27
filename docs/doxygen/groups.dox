@@ -119,3 +119,7 @@
     @ingroup renderer
     @brief 上位レイヤーが使用するための、レンダラー層の描画リソースモジュールを提供する(現状ではUIシェーダーモジュールを提供)
 */
+
+/** @defgroup camera_system Camera System
+    @brief 3次元空間におけるカメラの状態管理と制御機能を上位層に提供する
+*/

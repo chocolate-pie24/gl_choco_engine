@@ -29,7 +29,7 @@ extern "C" {
  *
  * @note <math.h>のtanfラッパー
  *
- * @param radian_ tangentを計算するradian値
+ * @param[in] radian_ tangentを計算するradian値
  * @return float 計算結果
  */
 float choco_tanf(float radian_);
@@ -37,8 +37,8 @@ float choco_tanf(float radian_);
 /**
  * @brief 2つのfloat値が等しいかを判定する
  *
- * @param a_ 判定値1
- * @param b_ 判定値2
+ * @param[in] a_ 判定値1
+ * @param[in] b_ 判定値2
  * @retval true 等しい
  * @retval false 等しくない
  */

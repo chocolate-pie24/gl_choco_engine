@@ -24,7 +24,8 @@ extern "C" {
 /**
  * @brief プラットフォームレイヤーの実行結果コードを文字列に変換する
  *
- * @param rslt_ 変換するプラットフォームシステム実行結果コード
+ * @param[in] rslt_ 変換するプラットフォームシステム実行結果コード
+ *
  * @return const char* 変換された文字列の先頭アドレス
  */
 const char* platform_rslt_to_str(platform_result_t rslt_);
@@ -32,7 +33,8 @@ const char* platform_rslt_to_str(platform_result_t rslt_);
 /**
  * @brief choco_stringモジュールの実行結果コードをプラットフォームレイヤーの実行結果コードに変換する
  *
- * @param rslt_ choco_stringモジュール実行結果コード
+ * @param[in] rslt_ choco_stringモジュール実行結果コード
+ *
  * @return platform_result_t プラットフォームレイヤー実行結果コード
  */
 platform_result_t platform_rslt_convert_choco_string(choco_string_result_t rslt_);
@@ -40,7 +42,8 @@ platform_result_t platform_rslt_convert_choco_string(choco_string_result_t rslt_
 /**
  * @brief linear_allocatorモジュールの実行結果コードをプラットフォームレイヤーの実行結果コードに変換する
  *
- * @param rslt_ linear_allocatorモジュール実行結果コード
+ * @param[in] rslt_ linear_allocatorモジュール実行結果コード
+ *
  * @return platform_result_t プラットフォームレイヤー実行結果コード
  */
 platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);

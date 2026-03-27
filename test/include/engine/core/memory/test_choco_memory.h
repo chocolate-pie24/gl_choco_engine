@@ -6,7 +6,7 @@
  * @version 0.1
  * @date 2026-03-13
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -27,7 +27,7 @@ extern "C" {
  *
  * @note API呼び出し回数についてはコピーされず、メモリーシステム内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_memory_system_create_config_set(const test_call_control_t* config_);
 
@@ -36,7 +36,7 @@ void test_memory_system_create_config_set(const test_call_control_t* config_);
  *
  * @note API呼び出し回数についてはコピーされず、メモリーシステム内で管理している値が保持される
  *
- * @param config_ テスト設定値構造体インスタンスへのポインタ
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
 void test_memory_system_allocate_config_set(const test_call_control_t* config_);
 

@@ -39,7 +39,7 @@ const platform_vtable_t* platform_glfw_vtable_get(void);
  *
  * @note この関数を実行した後は、platform_glfw_result_controller_resetが呼ばれるまで効果が継続する
  *
- * @param result_code_ 出力実行結果コード
+ * @param[in] result_code_ 出力実行結果コード
  */
 void platform_glfw_result_controller_set(platform_result_t ret_);
 

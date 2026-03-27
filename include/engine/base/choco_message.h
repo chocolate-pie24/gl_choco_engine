@@ -75,9 +75,9 @@ typedef enum {
 /**
  * @brief メッセージ出力関数(メッセージの重要度に応じて出力フォーマットを変える)
  *
- * @param severity_ メッセージの重要度
- * @param format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
- * @param ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
+ * @param[in] severity_ メッセージの重要度
+ * @param[in] format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
+ * @param[in] ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
  */
 void message_output(message_severity_t severity_, const char* format_,  ...);
 

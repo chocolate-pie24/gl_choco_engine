@@ -10,7 +10,7 @@
  * @version 0.1
  * @date 2026-03-09
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
+ * @copyright Copyright (c) 2026 chocolate-pie24
  *
  * @par License
  * MIT License. See LICENSE file in the project root for full license text.
@@ -63,7 +63,7 @@ void camera_destroy(camera_t** camera_);
  * - camera_ == NULL
  * - camera_->name == NULL
  *
- * @param camera_ カメラ構造体インスタンスへのポインタ
+ * @param[in] camera_ カメラ構造体インスタンスへのポインタ
  *
  * @return const char* カメラ名称文字列
  */
@@ -85,12 +85,56 @@ const char* camera_name_get(const camera_t* camera_);
  */
 camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
 
+/**
+ * @brief カメラ姿勢情報を更新する
+ *
+ * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンスへのポインタ
+ * @param[out] camera_ 姿勢更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - euler_ == NULL
+ * - camera_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_);
 
+/**
+ * @brief カメラ位置情報を更新する
+ *
+ * @param[in] position_ カメラ位置ベクトル構造体インスタンスへのポインタ
+ * @param[out] camera_ 位置更新対象カメラ構造体インスタンスへのポインタ
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - position_ == NULL
+ * - camera_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_);
 
+/**
+ * @brief カメラ姿勢情報を取得する
+ *
+ * @param[in] camera_ 姿勢情報取得対象カメラ構造体インスタンスへのポインタ
+ * @param[out] out_euler_ 姿勢情報格納先
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_euler_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_euler_get(const camera_t* camera_, vec3f_t* out_euler_);
 
+/**
+ * @brief カメラ位置情報を取得する
+ *
+ * @param[in] camera_ 位置情報取得対象カメラ構造体インスタンスへのポインタ
+ * @param[out] out_position_ 位置情報格納先
+ *
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
+ * - camera_ == NULL
+ * - out_position_ == NULL
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
+ */
 camera_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_position_);
 
 /**
@@ -101,7 +145,9 @@ camera_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_positi
  * - V = (x, y, z, 1.0)に対して、得られた行列を左からかける
  * - カメラ前方はZ軸マイナス方向
  *
- * @param[in] camera_ カメラ構造体インスタンスへのポインタ
+ * @note カメラ位置、姿勢情報とプロジェクション行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ カメラ構造体インスタンスへのポインタ
  * @param[out] out_mat_ プロジェクション行列格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -115,7 +161,9 @@ camera_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_
 /**
  * @brief ビュー行列を計算して取得する
  *
- * @param[in] camera_ カメラ構造体インスタンスへのポインタ
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ カメラ構造体インスタンスへのポインタ
  * @param[out] out_mat_ ビュー行列格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -135,8 +183,10 @@ camera_result_t camera_view_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_);
  *
  * @note カメラ前方: Z軸マイナス側
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
@@ -151,8 +201,10 @@ camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_);
  *
  * @note カメラ後方: Z軸プラス側
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
@@ -167,8 +219,10 @@ camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_)
  *
  * @note カメラ右方向: X軸プラス側
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
@@ -183,8 +237,10 @@ camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_);
  *
  * @note カメラ左方向: X軸マイナス側
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
@@ -199,8 +255,10 @@ camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_);
  *
  * @note カメラ上方向: Y軸プラス側
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
@@ -215,8 +273,10 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_);
  *
  * @note カメラ下方向: Y軸マイナス方向
  *
- * @param camera_ 取得対象カメラ構造体インスタンスのポインタ
- * @param out_vec_ ベクトル格納先
+ * @note カメラ位置、姿勢情報とビュー行列の同期が取れていない場合は同期処理を行うため、カメラ構造体のフィールドが更新される
+ *
+ * @param[in,out] camera_ 取得対象カメラ構造体インスタンスのポインタ
+ * @param[out] out_vec_ ベクトル格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
