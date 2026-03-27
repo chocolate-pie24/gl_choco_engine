@@ -41,6 +41,7 @@
 #include "renderer/test_gl33_shader.h"
 
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
+#include "engine/camera_system/camera_core/test_camera_memory.h"
 
 #include "io_utils/test_fs_utils.h"
 
@@ -79,6 +80,7 @@ int main(int argc_, char** argv_) {
 
         // engine/camera
         test_camera_err_utils();
+        test_camera_memory();
 
         // test_platform_context();
         // test_platform_glfw();
