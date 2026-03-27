@@ -31,7 +31,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
 
-// choco_stringモジュール専用テスト制御構造体定義
+// camera_err_utils用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_camera_rslt_convert_choco_memory;  /**< camera_rslt_convert_choco_memory()テスト設定 */
@@ -160,16 +160,28 @@ camera_result_t camera_rslt_convert_linear_alloc(linear_allocator_result_t rslt_
 
 #ifdef TEST_BUILD
 void NO_COVERAGE test_camera_rslt_convert_choco_memory_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
     s_test_config_camera_rslt_convert_choco_memory.fail_on_call = config_->fail_on_call;
     s_test_config_camera_rslt_convert_choco_memory.forced_result = config_->forced_result;
 }
 
 void NO_COVERAGE test_camera_rslt_convert_choco_string_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
     s_test_config_camera_rslt_convert_choco_string.fail_on_call = config_->fail_on_call;
     s_test_config_camera_rslt_convert_choco_string.forced_result = config_->forced_result;
 }
 
 void NO_COVERAGE test_camera_rslt_convert_linear_alloc_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
     s_test_config_camera_rslt_convert_linear_alloc.fail_on_call = config_->fail_on_call;
     s_test_config_camera_rslt_convert_linear_alloc.forced_result = config_->forced_result;
 }

@@ -62,6 +62,7 @@ void test_camera_err_utils_config_reset(void);
  *
  */
 void test_camera_err_utils(void);
+
 #endif
 
 #ifdef __cplusplus
