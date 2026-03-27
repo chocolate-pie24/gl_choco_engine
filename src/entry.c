@@ -40,9 +40,9 @@
 #include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
 
-#include "io_utils/test_fs_utils.h"
+#include "engine/camera_system/camera_core/test_camera_err_utils.h"
 
-#include "camera/test_camera.h"
+#include "io_utils/test_fs_utils.h"
 
 #endif
 
@@ -76,6 +76,9 @@ int main(int argc_, char** argv_) {
         // containers
         test_choco_string();
         test_ring_queue();
+
+        // engine/camera
+        test_camera_err_utils();
 
         // test_platform_context();
         // test_platform_glfw();
