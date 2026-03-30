@@ -31,19 +31,66 @@
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
-#include <string.h>
+#include "test_controller.h"
 
-static void NO_COVERAGE test_camera_create(void);
-static void NO_COVERAGE test_camera_destroy(void);
-static void NO_COVERAGE test_camera_name_get(void);
-static void NO_COVERAGE test_camera_viewing_frustum_update(void);
-static void NO_COVERAGE test_camera_perspective_matrix_get(void);
-static void NO_COVERAGE test_camera_view_matrix_get(void);
-static void NO_COVERAGE test_rslt_to_str(void);
-static void NO_COVERAGE test_rslt_convert_choco_memory(void);
-static void NO_COVERAGE test_rslt_convert_choco_string(void);
-static void NO_COVERAGE test_is_valid_frustum(void);
+#include "engine/base/choco_macros.h"
+
+#include "engine/core/memory/test_choco_memory.h"
+
+#include "engine/camera_system/camera/test_camera.h"
+#include "engine/camera_system/camera_core/test_camera_memory.h"
+
+#include "engine/containers/test_choco_string.h"
+
+// camera用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_camera_create;                 /**< camera_create()テスト設定 */
+static test_call_control_t s_test_config_camera_viewing_frustum_update; /**< camera_viewing_frustum_update()テスト設定 */
+static test_call_control_t s_test_config_camera_euler_update;           /**< camera_euler_update()テスト設定 */
+static test_call_control_t s_test_config_camera_position_update;        /**< camera_position_update()テスト設定 */
+static test_call_control_t s_test_config_camera_euler_get;              /**< camera_euler_get()テスト設定 */
+static test_call_control_t s_test_config_camera_position_get;           /**< camera_position_get()テスト設定 */
+static test_call_control_t s_test_config_camera_perspective_matrix_get; /**< camera_perspective_matrix_get()テスト設定 */
+static test_call_control_t s_test_config_camera_view_matrix_get;        /**< camera_view_matrix_get()テスト設定 */
+static test_call_control_t s_test_config_camera_forward_vector_get;     /**< camera_forward_vector_get()テスト設定 */
+static test_call_control_t s_test_config_camera_backward_vector_get;    /**< camera_backward_vector_get()テスト設定 */
+static test_call_control_t s_test_config_camera_right_vector_get;       /**< camera_right_vector_get()テスト設定 */
+static test_call_control_t s_test_config_camera_left_vector_get;        /**< camera_left_vector_get()テスト設定 */
+static test_call_control_t s_test_config_camera_up_vector_get;          /**< camera_up_vector_get()テスト設定 */
+static test_call_control_t s_test_config_camera_down_vector_get;        /**< camera_down_vector_get()テスト設定 */
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_camera_frustum_cache_sync; /**< camera_frustum_cache_sync()テスト設定 */
+static test_call_control_t s_test_config_camera_posture_cache_sync; /**< camera_posture_cache_sync()テスト設定 */
+static test_call_control_bool_t s_test_config_view_matrix_update;   /**< view_matrix_update()テスト設定 */
+static test_call_control_bool_t s_test_config_is_valid_frustum;     /**< is_valid_frustum()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_camera_create(void);
+static void test_camera_destroy(void);
+static void test_camera_name_get(void);
+static void test_camera_viewing_frustum_update(void);
+static void test_camera_euler_update(void);
+static void test_camera_position_update(void);
+static void test_camera_euler_get(void);
+static void test_camera_position_get(void);
+static void test_camera_perspective_matrix_get(void);
+static void test_camera_view_matrix_get(void);
+static void test_camera_forward_vector_get(void);
+static void test_camera_backward_vector_get(void);
+static void test_camera_right_vector_get(void);
+static void test_camera_left_vector_get(void);
+static void test_camera_up_vector_get(void);
+static void test_camera_down_vector_get(void);
+static void test_camera_frustum_cache_sync(void);
+static void test_camera_posture_cache_sync(void);
+static void test_perspective_matrix_update(void);
+static void test_camera_to_world_matrix_update(void);
+static void test_view_matrix_update(void);
+static void test_is_valid_frustum(void);
 #endif
 
 /**
@@ -92,6 +139,14 @@ static bool view_matrix_update(camera_t* camera_);
 static bool is_valid_frustum(const viewing_frustum_t* frustum_);
 
 camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_create.call_count++;
+    if(s_test_config_camera_create.fail_on_call != 0) {
+        if(s_test_config_camera_create.call_count == s_test_config_camera_create.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_create.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     camera_t* tmp_camera = NULL;
     choco_string_result_t string_ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -173,6 +228,14 @@ const char* camera_name_get(const camera_t* camera_) {
 }
 
 camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_viewing_frustum_update.call_count++;
+    if(s_test_config_camera_viewing_frustum_update.fail_on_call != 0) {
+        if(s_test_config_camera_viewing_frustum_update.call_count == s_test_config_camera_viewing_frustum_update.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_viewing_frustum_update.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     viewing_frustum_t frustum = { 0 };
 
@@ -197,6 +260,14 @@ cleanup:
 }
 
 camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_euler_update.call_count++;
+    if(s_test_config_camera_euler_update.fail_on_call != 0) {
+        if(s_test_config_camera_euler_update.call_count == s_test_config_camera_euler_update.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_euler_update.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(euler_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_euler_update", "euler_")
@@ -215,6 +286,14 @@ cleanup:
 }
 
 camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_position_update.call_count++;
+    if(s_test_config_camera_position_update.fail_on_call != 0) {
+        if(s_test_config_camera_position_update.call_count == s_test_config_camera_position_update.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_position_update.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(position_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_update", "position_")
@@ -233,6 +312,14 @@ cleanup:
 }
 
 camera_result_t camera_euler_get(const camera_t* camera_, vec3f_t* out_euler_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_euler_get.call_count++;
+    if(s_test_config_camera_euler_get.fail_on_call != 0) {
+        if(s_test_config_camera_euler_get.call_count == s_test_config_camera_euler_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_euler_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_euler_get", "camera_")
@@ -249,6 +336,14 @@ cleanup:
 }
 
 camera_result_t camera_position_get(const camera_t* camera_, vec3f_t* out_position_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_position_get.call_count++;
+    if(s_test_config_camera_position_get.fail_on_call != 0) {
+        if(s_test_config_camera_position_get.call_count == s_test_config_camera_position_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_position_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_get", "camera_")
@@ -265,6 +360,14 @@ cleanup:
 }
 
 camera_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_perspective_matrix_get.call_count++;
+    if(s_test_config_camera_perspective_matrix_get.fail_on_call != 0) {
+        if(s_test_config_camera_perspective_matrix_get.call_count == s_test_config_camera_perspective_matrix_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_perspective_matrix_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
@@ -285,6 +388,14 @@ cleanup:
 }
 
 camera_result_t camera_view_matrix_get(camera_t* camera_, mat4x4f_t* out_mat_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_view_matrix_get.call_count++;
+    if(s_test_config_camera_view_matrix_get.fail_on_call != 0) {
+        if(s_test_config_camera_view_matrix_get.call_count == s_test_config_camera_view_matrix_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_view_matrix_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_view_matrix_get", "camera_")
@@ -304,6 +415,14 @@ cleanup:
 }
 
 camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_forward_vector_get.call_count++;
+    if(s_test_config_camera_forward_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_forward_vector_get.call_count == s_test_config_camera_forward_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_forward_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_forward_vector_get", "camera_")
@@ -332,6 +451,14 @@ cleanup:
 }
 
 camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_backward_vector_get.call_count++;
+    if(s_test_config_camera_backward_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_backward_vector_get.call_count == s_test_config_camera_backward_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_backward_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_backward_vector_get", "camera_")
@@ -360,6 +487,14 @@ cleanup:
 }
 
 camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_right_vector_get.call_count++;
+    if(s_test_config_camera_right_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_right_vector_get.call_count == s_test_config_camera_right_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_right_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_right_vector_get", "camera_")
@@ -388,6 +523,14 @@ cleanup:
 }
 
 camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_left_vector_get.call_count++;
+    if(s_test_config_camera_left_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_left_vector_get.call_count == s_test_config_camera_left_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_left_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_left_vector_get", "camera_")
@@ -416,6 +559,14 @@ cleanup:
 }
 
 camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_up_vector_get.call_count++;
+    if(s_test_config_camera_up_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_up_vector_get.call_count == s_test_config_camera_up_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_up_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_up_vector_get", "camera_")
@@ -444,6 +595,14 @@ cleanup:
 }
 
 camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_down_vector_get.call_count++;
+    if(s_test_config_camera_down_vector_get.fail_on_call != 0) {
+        if(s_test_config_camera_down_vector_get.call_count == s_test_config_camera_down_vector_get.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_down_vector_get.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_down_vector_get", "camera_")
@@ -484,6 +643,14 @@ cleanup:
  * @retval CAMERA_SUCCESS 同期に成功し、正常終了
  */
 static camera_result_t camera_frustum_cache_sync(camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_frustum_cache_sync.call_count++;
+    if(s_test_config_camera_frustum_cache_sync.fail_on_call != 0) {
+        if(s_test_config_camera_frustum_cache_sync.call_count == s_test_config_camera_frustum_cache_sync.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_frustum_cache_sync.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_frustum_cache_sync", "camera_")
@@ -514,6 +681,14 @@ cleanup:
  * @retval CAMERA_SUCCESS 同期に成功し、正常終了
  */
 static camera_result_t camera_posture_cache_sync(camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_camera_posture_cache_sync.call_count++;
+    if(s_test_config_camera_posture_cache_sync.fail_on_call != 0) {
+        if(s_test_config_camera_posture_cache_sync.call_count == s_test_config_camera_posture_cache_sync.fail_on_call) {
+            return (camera_result_t)s_test_config_camera_posture_cache_sync.forced_result;
+        }
+    }
+#endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_posture_cache_sync", "camera_")
@@ -586,6 +761,14 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
  * @return false ビュー行列の更新に失敗(逆行列の計算に失敗)
  */
 static bool view_matrix_update(camera_t* camera_) {
+#ifdef TEST_BUILD
+    s_test_config_view_matrix_update.call_count++;
+    if(s_test_config_view_matrix_update.fail_on_call != 0) {
+        if(s_test_config_view_matrix_update.call_count == s_test_config_view_matrix_update.fail_on_call) {
+            return s_test_config_view_matrix_update.forced_result;
+        }
+    }
+#endif
     mat4x4f_t tmp = { 0 };
 
     mat4f_copy(&camera_->camera_to_world_matrix, &tmp);
@@ -606,6 +789,14 @@ static bool view_matrix_update(camera_t* camera_) {
  * @retval false 視錐台パラメータ異常
  */
 static bool is_valid_frustum(const viewing_frustum_t* frustum_) {
+#ifdef TEST_BUILD
+    s_test_config_is_valid_frustum.call_count++;
+    if(s_test_config_is_valid_frustum.fail_on_call != 0) {
+        if(s_test_config_is_valid_frustum.call_count == s_test_config_is_valid_frustum.fail_on_call) {
+            return s_test_config_is_valid_frustum.forced_result;
+        }
+    }
+#endif
     if(NULL == frustum_) {
         return false;
     } else if(frustum_->near_clip >= frustum_->far_clip) {
@@ -619,975 +810,3910 @@ static bool is_valid_frustum(const viewing_frustum_t* frustum_) {
     } else if(frustum_->near_clip <= 0.0f) {
         return false;
     } else if(frustum_->far_clip <= 0.0f) {
+        // ここはnear_clip >= far_clipで先に引っかかるため通らないけど、許容+一応残しておく
         return false;
     }
     return true;
 }
 
 #ifdef TEST_BUILD
-void test_camera(void) {
+void NO_COVERAGE test_camera_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_create.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_viewing_frustum_update_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_viewing_frustum_update.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_viewing_frustum_update.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_euler_update_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_euler_update.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_euler_update.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_position_update_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_position_update.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_position_update.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_euler_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_euler_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_euler_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_position_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_position_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_position_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_perspective_matrix_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_perspective_matrix_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_perspective_matrix_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_view_matrix_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_view_matrix_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_view_matrix_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_forward_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_forward_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_forward_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_backward_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_backward_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_backward_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_right_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_right_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_right_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_left_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_left_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_left_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_up_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_up_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_up_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_down_vector_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_camera_down_vector_get.fail_on_call = config_->fail_on_call;
+    s_test_config_camera_down_vector_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_camera_config_reset(void) {
+    test_call_control_reset(&s_test_config_camera_create);
+    test_call_control_reset(&s_test_config_camera_viewing_frustum_update);
+    test_call_control_reset(&s_test_config_camera_euler_update);
+    test_call_control_reset(&s_test_config_camera_position_update);
+    test_call_control_reset(&s_test_config_camera_euler_get);
+    test_call_control_reset(&s_test_config_camera_position_get);
+    test_call_control_reset(&s_test_config_camera_perspective_matrix_get);
+    test_call_control_reset(&s_test_config_camera_view_matrix_get);
+    test_call_control_reset(&s_test_config_camera_forward_vector_get);
+    test_call_control_reset(&s_test_config_camera_backward_vector_get);
+    test_call_control_reset(&s_test_config_camera_right_vector_get);
+    test_call_control_reset(&s_test_config_camera_left_vector_get);
+    test_call_control_reset(&s_test_config_camera_up_vector_get);
+    test_call_control_reset(&s_test_config_camera_down_vector_get);
+
+    test_call_control_reset(&s_test_config_camera_frustum_cache_sync);
+    test_call_control_reset(&s_test_config_camera_posture_cache_sync);
+    test_call_control_bool_reset(&s_test_config_view_matrix_update);
+    test_call_control_bool_reset(&s_test_config_is_valid_frustum);
+}
+
+void NO_COVERAGE test_camera(void) {
     test_camera_create();
     test_camera_destroy();
     test_camera_name_get();
     test_camera_viewing_frustum_update();
+    test_camera_euler_update();
+    test_camera_position_update();
+    test_camera_euler_get();
+    test_camera_position_get();
     test_camera_perspective_matrix_get();
     test_camera_view_matrix_get();
+    test_camera_forward_vector_get();
+    test_camera_backward_vector_get();
+    test_camera_right_vector_get();
+    test_camera_left_vector_get();
+    test_camera_up_vector_get();
+    test_camera_down_vector_get();
+    test_camera_frustum_cache_sync();
+    test_camera_posture_cache_sync();
+    test_perspective_matrix_update();
+    test_camera_to_world_matrix_update();
+    test_view_matrix_update();
     test_is_valid_frustum();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_camera_create(void) {
-    // Generated by ChatGPT 5.4 Thinking
     {
-        // name_ == NULL
+        // camera_create() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_t* camera = NULL;
-        const camera_result_t ret = camera_create(NULL, &camera);
+        test_call_control_t config = {0};
 
+        test_camera_config_reset();
+        test_call_control_reset(&config);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_create_config_set(&config);
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(NULL == camera);
+
+        test_camera_config_reset();
+    }
+    {
+        // name_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+
+        ret = camera_create(NULL, &camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == camera);
+
+        test_camera_config_reset();
     }
     {
-        // out_camera_ == NULL
-        const camera_result_t ret = camera_create("main_camera", NULL);
+        // out_camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
 
+        test_camera_config_reset();
+
+        ret = camera_create("main_camera", NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
     }
     {
-        // *out_camera_ != NULL
-        int dummy = 0;
-        camera_t* camera = (camera_t*)&dummy;
-        const camera_result_t ret = camera_create("main_camera", &camera);
+        // *out_camera_ != NULL -> CAMERA_INVALID_ARGUMENT
+        // 既存ポインタは変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = (camera_t*)0x1;
 
+        test_camera_config_reset();
+
+        ret = camera_create("main_camera", &camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
-        assert((camera_t*)&dummy == camera);
+        assert((camera_t*)0x1 == camera);
+
+        test_camera_config_reset();
     }
     {
-        // camera本体のメモリ確保失敗
-        // camera_t* camera = NULL;
+        // camera_mem_allocate() 失敗 -> 注入結果がそのまま返ること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        test_call_control_t config = {0};
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(0);
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
-        //     assert(NULL == camera);
-        // }
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_NO_MEMORY;
+        test_camera_mem_allocate_config_set(&config);
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_NO_MEMORY == ret);
+        assert(NULL == camera);
+
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
-        // memory_systemの結果コードを強制的にLIMIT_EXCEEDEDへ固定
-        // camera_t* camera = NULL;
+        // choco_string_create_from_c_string() 失敗 ->
+        // camera_rslt_convert_choco_string() により CAMERA_LIMIT_EXCEEDED に変換されること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        test_call_control_t config = {0};
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
 
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_LIMIT_EXCEEDED == ret);
-        //     assert(NULL == camera);
-        // }
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // choco_string_create_from_c_string内のtmp_string確保失敗
-        // 0回目: camera本体
-        // 1回目: choco_string_t本体
-        // camera_t* camera = NULL;
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CHOCO_STRING_LIMIT_EXCEEDED;
+        test_choco_string_create_from_c_string_config_set(&config);
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(1);
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_LIMIT_EXCEEDED == ret);
+        assert(NULL == camera);
 
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
-        //     assert(NULL == camera);
-        // }
+        memory_system_destroy();
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // choco_string_create_from_c_string内のbuffer確保失敗
-        // 0回目: camera本体
-        // 1回目: choco_string_t本体
-        // 2回目: 文字列バッファ
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(2);
-
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_NO_MEMORY == ret);
-        //     assert(NULL == camera);
-        // }
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
         // 正常系
-        // camera_t* camera = NULL;
-        // const char* name = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
-        //     assert(NULL != camera);
-
-        //     name = camera_name_get(camera);
-        //     assert(NULL != name);
-        //     assert(0 == strcmp("main_camera", name));
-        // }
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-}
-
-static void NO_COVERAGE test_camera_destroy(void) {
-    // Generated by ChatGPT 5.4 Thinking
-    {
-        // camera_ == NULL
-        camera_destroy(NULL);
-    }
-    {
-        // *camera_ == NULL
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_t* camera = NULL;
+        mat4x4f_t identity = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // name 初期化確認
+        assert(NULL != camera->name);
+        assert(true == choco_string_equal("main_camera", camera_name_get(camera)));
+
+        // frustum 初期値確認
+        assert(is_equal_float(0.0f, camera->frustum.aspect));
+        assert(is_equal_float(0.0f, camera->frustum.fovy));
+        assert(is_equal_float(0.0f, camera->frustum.near_clip));
+        assert(is_equal_float(0.0f, camera->frustum.far_clip));
+
+        // posture 初期値確認
+        assert(is_equal_float(0.0f, camera->euler.elem[0]));
+        assert(is_equal_float(0.0f, camera->euler.elem[1]));
+        assert(is_equal_float(0.0f, camera->euler.elem[2]));
+        assert(is_equal_float(0.0f, camera->position.elem[0]));
+        assert(is_equal_float(0.0f, camera->position.elem[1]));
+        assert(is_equal_float(0.0f, camera->position.elem[2]));
+
+        // dirty flag 初期値確認
+        assert(true == camera->posture_cache_dirty);
+        assert(true == camera->frustum_cache_dirty);
+
+        // 行列初期値確認
+        mat4f_identity(&identity);
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(identity.elem[i], camera->view_matrix.elem[i]));
+            assert(is_equal_float(identity.elem[i], camera->camera_to_world_matrix.elem[i]));
+            assert(is_equal_float(identity.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
         camera_destroy(&camera);
         assert(NULL == camera);
-    }
-    {
-        // 正常系: createしたcameraをdestroyできる
-        // camera_t* camera = NULL;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        memory_system_destroy();
 
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
-        //     assert(NULL != camera);
-        // }
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 2回destroyしても問題ない
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
-        //     assert(NULL != camera);
-        // }
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
 }
 
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_destroy(void) {
+    {
+        // camera_ == NULL -> no-op
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        camera_destroy(NULL);
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // *camera_ == NULL -> no-op
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // name != NULL を持つ通常の camera を破棄できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(NULL != camera->name);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        // 2回目も no-op で呼べること
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // name == NULL の camera でも破棄できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(NULL != camera->name);
+
+        choco_string_destroy(&camera->name);
+        assert(NULL == camera->name);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_camera_name_get(void) {
-    // Generated by ChatGPT 5.4 Thinking
     {
-        // camera_ == NULL
-        const char* name = camera_name_get(NULL);
+        // camera_ == NULL -> NULL
+        const char* name = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        name = camera_name_get(NULL);
         assert(NULL == name);
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
-        // 正常系: create時に指定した名前を取得できる
-        // camera_t* camera = NULL;
-        // const char* name = NULL;
+        // camera_->name == NULL -> NULL
+        camera_t camera = {0};
+        const char* name = NULL;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
 
-        // {
-        //     const camera_result_t ret = camera_create("main_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
-        //     assert(NULL != camera);
-        // }
-
-        // name = camera_name_get(camera);
-        // assert(NULL != name);
-        // assert(0 == strcmp("main_camera", name));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 複数回呼んでも同じ内容を取得できる
-        // camera_t* camera = NULL;
-        // const char* name1 = NULL;
-        // const char* name2 = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // {
-        //     const camera_result_t ret = camera_create("sub_camera", &camera);
-        //     assert(CAMERA_SUCCESS == ret);
-        //     assert(NULL != camera);
-        // }
-
-        // name1 = camera_name_get(camera);
-        // name2 = camera_name_get(camera);
-
-        // assert(NULL != name1);
-        // assert(NULL != name2);
-        // assert(0 == strcmp("sub_camera", name1));
-        // assert(0 == strcmp("sub_camera", name2));
-        // assert(0 == strcmp(name1, name2));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // camera_->name == NULL
-        camera_t camera = { 0 };
-        const char* name = camera_name_get(&camera);
-
+        name = camera_name_get(&camera);
         assert(NULL == name);
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: 設定した名前を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        const char* name = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        name = camera_name_get(camera);
+        assert(NULL != name);
+        assert(true == choco_string_equal("main_camera", name));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: 空文字名でも取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        const char* name = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        name = camera_name_get(camera);
+        assert(NULL != name);
+        assert(true == choco_string_equal("", name));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
-    // Generated by ChatGPT 5.4 Thinking
     {
-        // camera_ == NULL
-        const camera_result_t ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
+        // camera_viewing_frustum_update() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_viewing_frustum_update_config_set(&config);
+
+        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+
+        test_camera_config_reset();
+
+        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
     }
     {
-        // fovy_ <= 0.0f
-        // camera_t* camera = NULL;
+        // 無効な視錐台入力 -> CAMERA_INVALID_ARGUMENT
+        // 既存の frustum 状態は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // fovy_ >= 180.0f
-        // camera_t* camera = NULL;
+        camera->frustum.aspect = 4.0f / 3.0f;
+        camera->frustum.fovy = 45.0f;
+        camera->frustum.near_clip = 0.5f;
+        camera->frustum.far_clip = 500.0f;
+        camera->frustum_cache_dirty = false;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(180.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // aspect_ <= 0.0f
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 0.0f, 0.1f, 100.0f, camera));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // near_clip_ <= 0.0f
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.0f, 100.0f, camera));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // far_clip_ <= 0.0f
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 0.0f, camera));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // near_clip_ >= far_clip_
-        // camera_t* camera = NULL;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 10.0f, camera));
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 100.0f, 10.0f, camera));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 正常系: 更新後にperspective行列を取得できる
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-        // const float fovy = 60.0f;
-        // const float aspect = 16.0f / 9.0f;
-        // const float near_clip = 0.1f;
-        // const float far_clip = 100.0f;
-        // const float dz = far_clip - near_clip;
-        // const float expected_5 = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
-        // const float expected_0 = expected_5 / aspect;
-        // const float expected_10 = -1.0f * (far_clip + near_clip) / dz;
-        // const float expected_11 = -2.0f * far_clip * near_clip / dz;
-        // const float expected_14 = -1.0f;
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat));
-
-        // assert(is_equal_float(mat.elem[0], expected_0));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
-
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], expected_5));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
-
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], expected_10));
-        // assert(is_equal_float(mat.elem[11], expected_11));
-
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], expected_14));
-        // assert(is_equal_float(mat.elem[15], 0.0f));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 失敗更新時は以前の正常な視錐台パラメータが維持される
-        // camera_t* camera = NULL;
-        // mat4x4f_t before = { 0 };
-        // mat4x4f_t after = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(60.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &before));
-
-        // assert(CAMERA_INVALID_ARGUMENT == camera_viewing_frustum_update(0.0f, 4.0f / 3.0f, 0.5f, 200.0f, camera));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &after));
-
-        // assert(is_equal_float(before.elem[0], after.elem[0]));
-        // assert(is_equal_float(before.elem[1], after.elem[1]));
-        // assert(is_equal_float(before.elem[2], after.elem[2]));
-        // assert(is_equal_float(before.elem[3], after.elem[3]));
-
-        // assert(is_equal_float(before.elem[4], after.elem[4]));
-        // assert(is_equal_float(before.elem[5], after.elem[5]));
-        // assert(is_equal_float(before.elem[6], after.elem[6]));
-        // assert(is_equal_float(before.elem[7], after.elem[7]));
-
-        // assert(is_equal_float(before.elem[8], after.elem[8]));
-        // assert(is_equal_float(before.elem[9], after.elem[9]));
-        // assert(is_equal_float(before.elem[10], after.elem[10]));
-        // assert(is_equal_float(before.elem[11], after.elem[11]));
-
-        // assert(is_equal_float(before.elem[12], after.elem[12]));
-        // assert(is_equal_float(before.elem[13], after.elem[13]));
-        // assert(is_equal_float(before.elem[14], after.elem[14]));
-        // assert(is_equal_float(before.elem[15], after.elem[15]));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-}
-
-static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
-    // Generated by ChatGPT 5.4 Thinking
-    {
-        // camera_ == NULL
-        mat4x4f_t mat = { 0 };
-        const camera_result_t ret = camera_perspective_matrix_get(NULL, &mat);
-
+        // near_clip >= far_clip で無効
+        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 1.0f, camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
-    }
-    {
-        // // out_mat_ == NULL
-        // camera_t* camera = NULL;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        // 既存状態が維持されること
+        assert(is_equal_float(camera->frustum.aspect, 4.0f / 3.0f));
+        assert(is_equal_float(camera->frustum.fovy, 45.0f));
+        assert(is_equal_float(camera->frustum.near_clip, 0.5f));
+        assert(is_equal_float(camera->frustum.far_clip, 500.0f));
+        assert(false == camera->frustum_cache_dirty);
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        camera_destroy(&camera);
+        assert(NULL == camera);
 
-        // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, NULL);
-        //     assert(CAMERA_INVALID_ARGUMENT == ret);
-        // }
+        memory_system_destroy();
 
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 視錐台未設定
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-
-        // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, &mat);
-        //     assert(CAMERA_BAD_OPERATION == ret);
-        // }
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
         // 正常系
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-        // const float fovy = 60.0f;
-        // const float aspect = 16.0f / 9.0f;
-        // const float near_clip = 0.1f;
-        // const float far_clip = 100.0f;
-        // const float dz = far_clip - near_clip;
-        // const float expected_5 = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
-        // const float expected_0 = expected_5 / aspect;
-        // const float expected_10 = -1.0f * (far_clip + near_clip) / dz;
-        // const float expected_11 = -2.0f * far_clip * near_clip / dz;
-        // const float expected_14 = -1.0f;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(fovy, aspect, near_clip, far_clip, camera));
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
-        // {
-        //     const camera_result_t ret = camera_perspective_matrix_get(camera, &mat);
-        //     assert(CAMERA_SUCCESS == ret);
-        // }
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
 
-        // assert(is_equal_float(mat.elem[0], expected_0));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
+        camera->frustum.aspect = 1.0f;
+        camera->frustum.fovy = 1.0f;
+        camera->frustum.near_clip = 1.0f;
+        camera->frustum.far_clip = 2.0f;
+        camera->frustum_cache_dirty = false;
 
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], expected_5));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
+        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        assert(CAMERA_SUCCESS == ret);
 
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], expected_10));
-        // assert(is_equal_float(mat.elem[11], expected_11));
+        assert(is_equal_float(camera->frustum.aspect, 16.0f / 9.0f));
+        assert(is_equal_float(camera->frustum.fovy, 60.0f));
+        assert(is_equal_float(camera->frustum.near_clip, 0.1f));
+        assert(is_equal_float(camera->frustum.far_clip, 100.0f));
+        assert(true == camera->frustum_cache_dirty);
 
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], expected_14));
-        // assert(is_equal_float(mat.elem[15], 0.0f));
+        camera_destroy(&camera);
+        assert(NULL == camera);
 
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
+        memory_system_destroy();
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 複数回呼んでも同じ結果を取得できる
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat1 = { 0 };
-        // mat4x4f_t mat2 = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_viewing_frustum_update(45.0f, 4.0f / 3.0f, 0.5f, 500.0f, camera));
-
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat1));
-        // assert(CAMERA_SUCCESS == camera_perspective_matrix_get(camera, &mat2));
-
-        // assert(is_equal_float(mat1.elem[0], mat2.elem[0]));
-        // assert(is_equal_float(mat1.elem[1], mat2.elem[1]));
-        // assert(is_equal_float(mat1.elem[2], mat2.elem[2]));
-        // assert(is_equal_float(mat1.elem[3], mat2.elem[3]));
-
-        // assert(is_equal_float(mat1.elem[4], mat2.elem[4]));
-        // assert(is_equal_float(mat1.elem[5], mat2.elem[5]));
-        // assert(is_equal_float(mat1.elem[6], mat2.elem[6]));
-        // assert(is_equal_float(mat1.elem[7], mat2.elem[7]));
-
-        // assert(is_equal_float(mat1.elem[8], mat2.elem[8]));
-        // assert(is_equal_float(mat1.elem[9], mat2.elem[9]));
-        // assert(is_equal_float(mat1.elem[10], mat2.elem[10]));
-        // assert(is_equal_float(mat1.elem[11], mat2.elem[11]));
-
-        // assert(is_equal_float(mat1.elem[12], mat2.elem[12]));
-        // assert(is_equal_float(mat1.elem[13], mat2.elem[13]));
-        // assert(is_equal_float(mat1.elem[14], mat2.elem[14]));
-        // assert(is_equal_float(mat1.elem[15], mat2.elem[15]));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
 }
 
-static void NO_COVERAGE test_camera_view_matrix_get(void) {
-    // Generated by ChatGPT 5.4 Thinking
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_euler_update(void) {
     {
-        // camera_ == NULL
-        mat4x4f_t mat = { 0 };
-        const camera_result_t ret = camera_view_matrix_get(NULL, &mat);
+        // camera_euler_update() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t euler = { .elem = { 10.0f, 20.0f, 30.0f } };
+        test_call_control_t config = {0};
 
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_euler_update_config_set(&config);
+
+        ret = camera_euler_update(&euler, camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // euler_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // 状態が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->euler.elem[0] = 1.0f;
+        camera->euler.elem[1] = 2.0f;
+        camera->euler.elem[2] = 3.0f;
+        camera->posture_cache_dirty = false;
+
+        ret = camera_euler_update(NULL, camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(camera->euler.elem[0], 1.0f));
+        assert(is_equal_float(camera->euler.elem[1], 2.0f));
+        assert(is_equal_float(camera->euler.elem[2], 3.0f));
+        assert(false == camera->posture_cache_dirty);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
-        // out_mat_ == NULL
-        // camera_t* camera = NULL;
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t euler = { .elem = { 10.0f, 20.0f, 30.0f } };
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        test_camera_config_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
+        ret = camera_euler_update(&euler, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
 
-        // {
-        //     const camera_result_t ret = camera_view_matrix_get(camera, NULL);
-        //     assert(CAMERA_INVALID_ARGUMENT == ret);
-        // }
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_camera_config_reset();
     }
     {
-        // デフォルト姿勢: 単位行列
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
+        // 正常系
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t euler = { .elem = { 15.0f, -25.0f, 35.0f } };
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
-        // assert(is_equal_float(mat.elem[0], 1.0f));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
 
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], 1.0f));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
+        camera->euler.elem[0] = 1.0f;
+        camera->euler.elem[1] = 2.0f;
+        camera->euler.elem[2] = 3.0f;
+        camera->position.elem[0] = 100.0f;
+        camera->position.elem[1] = 200.0f;
+        camera->position.elem[2] = 300.0f;
+        camera->posture_cache_dirty = false;
 
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], 1.0f));
-        // assert(is_equal_float(mat.elem[11], 0.0f));
+        ret = camera_euler_update(&euler, camera);
+        assert(CAMERA_SUCCESS == ret);
 
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], 0.0f));
-        // assert(is_equal_float(mat.elem[15], 1.0f));
+        assert(is_equal_float(camera->euler.elem[0], 15.0f));
+        assert(is_equal_float(camera->euler.elem[1], -25.0f));
+        assert(is_equal_float(camera->euler.elem[2], 35.0f));
+        assert(true == camera->posture_cache_dirty);
 
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
+        // 関係ない状態は変化しないこと
+        assert(is_equal_float(camera->position.elem[0], 100.0f));
+        assert(is_equal_float(camera->position.elem[1], 200.0f));
+        assert(is_equal_float(camera->position.elem[2], 300.0f));
 
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // 位置のみ変更: 逆平行移動行列になる
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
+        camera_destroy(&camera);
+        assert(NULL == camera);
 
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
+        memory_system_destroy();
 
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-
-        // vec3f_initialize(1.5f, -2.0f, 3.25f, &camera->position);
-        // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->euler);
-
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
-
-        // assert(is_equal_float(mat.elem[0], 1.0f));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], -1.5f));
-
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], 1.0f));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 2.0f));
-
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], 1.0f));
-        // assert(is_equal_float(mat.elem[11], -3.25f));
-
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], 0.0f));
-        // assert(is_equal_float(mat.elem[15], 1.0f));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // X軸回転のみ: viewはX軸逆回転行列
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-
-        // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
-        // vec3f_initialize(90.0f, 0.0f, 0.0f, &camera->euler);
-
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
-
-        // assert(is_equal_float(mat.elem[0], 1.0f));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
-
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], 0.0f));
-        // assert(is_equal_float(mat.elem[6], 1.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
-
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], -1.0f));
-        // assert(is_equal_float(mat.elem[10], 0.0f));
-        // assert(is_equal_float(mat.elem[11], 0.0f));
-
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], 0.0f));
-        // assert(is_equal_float(mat.elem[15], 1.0f));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // Y軸回転のみ: viewはY軸逆回転行列
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-
-        // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
-        // vec3f_initialize(0.0f, 90.0f, 0.0f, &camera->euler);
-
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
-
-        // assert(is_equal_float(mat.elem[0], 0.0f));
-        // assert(is_equal_float(mat.elem[1], 0.0f));
-        // assert(is_equal_float(mat.elem[2], -1.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
-
-        // assert(is_equal_float(mat.elem[4], 0.0f));
-        // assert(is_equal_float(mat.elem[5], 1.0f));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
-
-        // assert(is_equal_float(mat.elem[8], 1.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], 0.0f));
-        // assert(is_equal_float(mat.elem[11], 0.0f));
-
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], 0.0f));
-        // assert(is_equal_float(mat.elem[15], 1.0f));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
-    }
-    {
-        // Z軸回転のみ: viewはZ軸逆回転行列
-        // camera_t* camera = NULL;
-        // mat4x4f_t mat = { 0 };
-
-        // memory_system_destroy();
-        // assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-        // memory_system_test_param_reset();
-
-        // assert(CAMERA_SUCCESS == camera_create("main_camera", &camera));
-
-        // vec3f_initialize(0.0f, 0.0f, 0.0f, &camera->position);
-        // vec3f_initialize(0.0f, 0.0f, 90.0f, &camera->euler);
-
-        // assert(CAMERA_SUCCESS == camera_view_matrix_get(camera, &mat));
-
-        // assert(is_equal_float(mat.elem[0], 0.0f));
-        // assert(is_equal_float(mat.elem[1], 1.0f));
-        // assert(is_equal_float(mat.elem[2], 0.0f));
-        // assert(is_equal_float(mat.elem[3], 0.0f));
-
-        // assert(is_equal_float(mat.elem[4], -1.0f));
-        // assert(is_equal_float(mat.elem[5], 0.0f));
-        // assert(is_equal_float(mat.elem[6], 0.0f));
-        // assert(is_equal_float(mat.elem[7], 0.0f));
-
-        // assert(is_equal_float(mat.elem[8], 0.0f));
-        // assert(is_equal_float(mat.elem[9], 0.0f));
-        // assert(is_equal_float(mat.elem[10], 1.0f));
-        // assert(is_equal_float(mat.elem[11], 0.0f));
-
-        // assert(is_equal_float(mat.elem[12], 0.0f));
-        // assert(is_equal_float(mat.elem[13], 0.0f));
-        // assert(is_equal_float(mat.elem[14], 0.0f));
-        // assert(is_equal_float(mat.elem[15], 1.0f));
-
-        // camera_destroy(&camera);
-        // assert(NULL == camera);
-
-        // memory_system_test_param_reset();
-        // memory_system_destroy();
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
 }
 
-static void NO_COVERAGE test_is_valid_frustum(void) {
-    // Generated by ChatGPT 5.4 Thinking
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_position_update(void) {
     {
-        // frustum_ == NULL
-        assert(false == is_valid_frustum(NULL));
+        // camera_position_update() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t position = { .elem = { 10.0f, 20.0f, 30.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_position_update_config_set(&config);
+
+        ret = camera_position_update(&position, camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
     }
     {
-        // near_clip >= far_clip
+        // position_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // 状態が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->position.elem[0] = 1.0f;
+        camera->position.elem[1] = 2.0f;
+        camera->position.elem[2] = 3.0f;
+        camera->posture_cache_dirty = false;
+
+        ret = camera_position_update(NULL, camera);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(camera->position.elem[0], 1.0f));
+        assert(is_equal_float(camera->position.elem[1], 2.0f));
+        assert(is_equal_float(camera->position.elem[2], 3.0f));
+        assert(false == camera->posture_cache_dirty);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t position = { .elem = { 10.0f, 20.0f, 30.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_position_update(&position, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
+    }
+    {
+        // 正常系
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t position = { .elem = { 15.0f, -25.0f, 35.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->position.elem[0] = 1.0f;
+        camera->position.elem[1] = 2.0f;
+        camera->position.elem[2] = 3.0f;
+        camera->euler.elem[0] = 100.0f;
+        camera->euler.elem[1] = 200.0f;
+        camera->euler.elem[2] = 300.0f;
+        camera->posture_cache_dirty = false;
+
+        ret = camera_position_update(&position, camera);
+        assert(CAMERA_SUCCESS == ret);
+
+        assert(is_equal_float(camera->position.elem[0], 15.0f));
+        assert(is_equal_float(camera->position.elem[1], -25.0f));
+        assert(is_equal_float(camera->position.elem[2], 35.0f));
+        assert(true == camera->posture_cache_dirty);
+
+        // 関係ない状態は変化しないこと
+        assert(is_equal_float(camera->euler.elem[0], 100.0f));
+        assert(is_equal_float(camera->euler.elem[1], 200.0f));
+        assert(is_equal_float(camera->euler.elem[2], 300.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_euler_get(void) {
+    {
+        // camera_euler_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_euler = { .elem = { -1.0f, -1.0f, -1.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_euler_get_config_set(&config);
+
+        ret = camera_euler_get(camera, &out_euler);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_euler_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_euler = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_euler_get(NULL, &out_euler);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_euler.elem[0], 1.0f));
+        assert(is_equal_float(out_euler.elem[1], 2.0f));
+        assert(is_equal_float(out_euler.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_euler_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->euler.elem[0] = 10.0f;
+        camera->euler.elem[1] = 20.0f;
+        camera->euler.elem[2] = 30.0f;
+
+        ret = camera_euler_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_euler = { .elem = { -1.0f, -1.0f, -1.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->euler.elem[0] = 15.0f;
+        camera->euler.elem[1] = -25.0f;
+        camera->euler.elem[2] = 35.0f;
+
+        ret = camera_euler_get(camera, &out_euler);
+        assert(CAMERA_SUCCESS == ret);
+
+        assert(is_equal_float(out_euler.elem[0], 15.0f));
+        assert(is_equal_float(out_euler.elem[1], -25.0f));
+        assert(is_equal_float(out_euler.elem[2], 35.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_position_get(void) {
+    {
+        // camera_position_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_position = { .elem = { -1.0f, -1.0f, -1.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_position_get_config_set(&config);
+
+        ret = camera_position_get(camera, &out_position);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_position_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_position = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_position_get(NULL, &out_position);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_position.elem[0], 1.0f));
+        assert(is_equal_float(out_position.elem[1], 2.0f));
+        assert(is_equal_float(out_position.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_position_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->position.elem[0] = 10.0f;
+        camera->position.elem[1] = 20.0f;
+        camera->position.elem[2] = 30.0f;
+
+        ret = camera_position_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_position = { .elem = { -1.0f, -1.0f, -1.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->position.elem[0] = 15.0f;
+        camera->position.elem[1] = -25.0f;
+        camera->position.elem[2] = 35.0f;
+
+        ret = camera_position_get(camera, &out_position);
+        assert(CAMERA_SUCCESS == ret);
+
+        assert(is_equal_float(out_position.elem[0], 15.0f));
+        assert(is_equal_float(out_position.elem[1], -25.0f));
+        assert(is_equal_float(out_position.elem[2], 35.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_perspective_matrix_get(void) {
+    {
+        // camera_perspective_matrix_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = { 0 };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_perspective_matrix_get_config_set(&config);
+
+        ret = camera_perspective_matrix_get(camera, &out_mat);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        mat4x4f_t out_mat = { 0 };
+
+        test_camera_config_reset();
+
+        ret = camera_perspective_matrix_get(NULL, &out_mat);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
+    }
+    {
+        // out_mat_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_perspective_matrix_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 無効な frustum -> CAMERA_BAD_OPERATION
+        // out_mat_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = {
+            .elem = {
+                1.0f,  2.0f,  3.0f,  4.0f,
+                5.0f,  6.0f,  7.0f,  8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+               13.0f, 14.0f, 15.0f, 16.0f
+            }
+        };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // camera_create() 直後の frustum は 0 初期化で無効
+        ret = camera_perspective_matrix_get(camera, &out_mat);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_frustum_cache_sync() 失敗 -> そのまま返ること
+        // out_mat_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = {
+            .elem = {
+                1.0f,  2.0f,  3.0f,  4.0f,
+                5.0f,  6.0f,  7.0f,  8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+               13.0f, 14.0f, 15.0f, 16.0f
+            }
+        };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = 16.0f / 9.0f;
+        camera->frustum.fovy = 60.0f;
+        camera->frustum.near_clip = 0.1f;
+        camera->frustum.far_clip = 100.0f;
+        camera->frustum_cache_dirty = true;
+
+        s_test_config_camera_frustum_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_frustum_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_perspective_matrix_get(camera, &out_mat);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = { 0 };
+        mat4x4f_t expected = { 0 };
+        const float aspect = 16.0f / 9.0f;
+        const float fovy = 60.0f;
+        const float near_clip = 0.1f;
+        const float far_clip = 100.0f;
+        const float dz = far_clip - near_clip;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = aspect;
+        camera->frustum.fovy = fovy;
+        camera->frustum.near_clip = near_clip;
+        camera->frustum.far_clip = far_clip;
+        camera->frustum_cache_dirty = true;
+
+        ret = camera_perspective_matrix_get(camera, &out_mat);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->frustum_cache_dirty);
+
+        mat4f_identity(&expected);
+        expected.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
+        expected.elem[0] = expected.elem[5] / aspect;
+        expected.elem[10] = -1.0f * (far_clip + near_clip) / dz;
+        expected.elem[11] = -2.0f * far_clip * near_clip / dz;
+        expected.elem[14] = -1.0f;
+        expected.elem[15] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera->perspective_matrix.elem[i]));
+            assert(is_equal_float(expected.elem[i], out_mat.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_view_matrix_get(void) {
+    {
+        // camera_view_matrix_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = {
+            .elem = {
+                1.0f,  2.0f,  3.0f,  4.0f,
+                5.0f,  6.0f,  7.0f,  8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+               13.0f, 14.0f, 15.0f, 16.0f
+            }
+        };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_view_matrix_get_config_set(&config);
+
+        ret = camera_view_matrix_get(camera, &out_mat);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_mat_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        mat4x4f_t out_mat = {
+            .elem = {
+                1.0f,  2.0f,  3.0f,  4.0f,
+                5.0f,  6.0f,  7.0f,  8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+               13.0f, 14.0f, 15.0f, 16.0f
+            }
+        };
+
+        test_camera_config_reset();
+
+        ret = camera_view_matrix_get(NULL, &out_mat);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_mat_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_view_matrix_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_mat_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = {
+            .elem = {
+                1.0f,  2.0f,  3.0f,  4.0f,
+                5.0f,  6.0f,  7.0f,  8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+               13.0f, 14.0f, 15.0f, 16.0f
+            }
+        };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_view_matrix_get(camera, &out_mat);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき既存 view_matrix がそのまま返ること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->view_matrix.elem[0] = 1.0f;
+        camera->view_matrix.elem[1] = 2.0f;
+        camera->view_matrix.elem[2] = 3.0f;
+        camera->view_matrix.elem[3] = 4.0f;
+        camera->view_matrix.elem[4] = 5.0f;
+        camera->view_matrix.elem[5] = 6.0f;
+        camera->view_matrix.elem[6] = 7.0f;
+        camera->view_matrix.elem[7] = 8.0f;
+        camera->view_matrix.elem[8] = 9.0f;
+        camera->view_matrix.elem[9] = 10.0f;
+        camera->view_matrix.elem[10] = 11.0f;
+        camera->view_matrix.elem[11] = 12.0f;
+        camera->view_matrix.elem[12] = 13.0f;
+        camera->view_matrix.elem[13] = 14.0f;
+        camera->view_matrix.elem[14] = 15.0f;
+        camera->view_matrix.elem[15] = 16.0f;
+        camera->posture_cache_dirty = false;
+
+        ret = camera_view_matrix_get(camera, &out_mat);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_mat.elem[0], 1.0f));
+        assert(is_equal_float(out_mat.elem[1], 2.0f));
+        assert(is_equal_float(out_mat.elem[2], 3.0f));
+        assert(is_equal_float(out_mat.elem[3], 4.0f));
+        assert(is_equal_float(out_mat.elem[4], 5.0f));
+        assert(is_equal_float(out_mat.elem[5], 6.0f));
+        assert(is_equal_float(out_mat.elem[6], 7.0f));
+        assert(is_equal_float(out_mat.elem[7], 8.0f));
+        assert(is_equal_float(out_mat.elem[8], 9.0f));
+        assert(is_equal_float(out_mat.elem[9], 10.0f));
+        assert(is_equal_float(out_mat.elem[10], 11.0f));
+        assert(is_equal_float(out_mat.elem[11], 12.0f));
+        assert(is_equal_float(out_mat.elem[12], 13.0f));
+        assert(is_equal_float(out_mat.elem[13], 14.0f));
+        assert(is_equal_float(out_mat.elem[14], 15.0f));
+        assert(is_equal_float(out_mat.elem[15], 16.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき同期後の view_matrix が返ること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t out_mat = { 0 };
+        mat4x4f_t identity = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // camera_create() 直後は euler = {0,0,0}, position = {0,0,0}, posture_cache_dirty = true
+        // この場合、同期後の view_matrix は単位行列になる
+        ret = camera_view_matrix_get(camera, &out_mat);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        mat4f_identity(&identity);
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(identity.elem[i], camera->view_matrix.elem[i]));
+            assert(is_equal_float(identity.elem[i], out_mat.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_forward_vector_get(void) {
+    {
+        // camera_forward_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_forward_vector_get_config_set(&config);
+
+        ret = camera_forward_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_forward_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_forward_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_forward_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から forward vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_forward_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], -1.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、forward vector は {0, 0, -1} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_forward_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], -1.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_backward_vector_get(void) {
+    {
+        // camera_backward_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_backward_vector_get_config_set(&config);
+
+        ret = camera_backward_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_backward_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_backward_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_backward_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から backward vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_backward_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 1.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、backward vector は {0, 0, 1} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_backward_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 1.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_right_vector_get(void) {
+    {
+        // camera_right_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_right_vector_get_config_set(&config);
+
+        ret = camera_right_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_right_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_right_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_right_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から right vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_right_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、right vector は {1, 0, 0} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_right_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_left_vector_get(void) {
+    {
+        // camera_left_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_left_vector_get_config_set(&config);
+
+        ret = camera_left_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_left_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_left_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_left_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から left vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_left_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], -1.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、left vector は {-1, 0, 0} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_left_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], -1.0f));
+        assert(is_equal_float(out_vec.elem[1], 0.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_up_vector_get(void) {
+    {
+        // camera_up_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_up_vector_get_config_set(&config);
+
+        ret = camera_up_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_up_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_up_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_up_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から up vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_up_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 1.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、up vector は {0, 1, 0} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_up_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], 1.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_down_vector_get(void) {
+    {
+        // camera_down_vector_get() 冒頭で強制的に CAMERA_BAD_OPERATION を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+        test_call_control_t config = {0};
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+        test_call_control_reset(&config);
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
+        test_camera_down_vector_get_config_set(&config);
+
+        ret = camera_down_vector_get(camera, &out_vec);
+        assert(CAMERA_BAD_OPERATION == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        // out_vec_ は変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+
+        ret = camera_down_vector_get(NULL, &out_vec);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // out_vec_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        ret = camera_down_vector_get(camera, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_posture_cache_sync() 失敗 -> そのまま返ること
+        // out_vec_ が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 1.0f, 2.0f, 3.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_posture_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_posture_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_down_vector_get(camera, &out_vec);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        assert(is_equal_float(out_vec.elem[0], 1.0f));
+        assert(is_equal_float(out_vec.elem[1], 2.0f));
+        assert(is_equal_float(out_vec.elem[2], 3.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == false のとき
+        // 既存の camera_to_world_matrix から down vector を取得できること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        mat4f_identity(&camera->camera_to_world_matrix);
+        camera->posture_cache_dirty = false;
+
+        ret = camera_down_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], -1.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: posture_cache_dirty == true のとき
+        // camera_create() 直後の姿勢同期後、down vector は {0, -1, 0} になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        vec3f_t out_vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+        assert(true == camera->posture_cache_dirty);
+
+        ret = camera_down_vector_get(camera, &out_vec);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->posture_cache_dirty);
+
+        assert(is_equal_float(out_vec.elem[0], 0.0f));
+        assert(is_equal_float(out_vec.elem[1], -1.0f));
+        assert(is_equal_float(out_vec.elem[2], 0.0f));
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_frustum_cache_sync(void) {
+    {
+        // camera_frustum_cache_sync() 冒頭で強制的に CAMERA_RUNTIME_ERROR を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_frustum_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_frustum_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+
+        test_camera_config_reset();
+
+        ret = camera_frustum_cache_sync(NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
+    }
+    {
+        // 無効な frustum -> CAMERA_BAD_OPERATION
+        // matrix と dirty flag が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t before = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // 無効状態を作る
+        camera->frustum.aspect = 16.0f / 9.0f;
+        camera->frustum.fovy = 60.0f;
+        camera->frustum.near_clip = 10.0f;
+        camera->frustum.far_clip = 1.0f;   // near >= far で無効
+        camera->frustum_cache_dirty = true;
+
+        camera->perspective_matrix.elem[0] = 1.0f;
+        camera->perspective_matrix.elem[1] = 2.0f;
+        camera->perspective_matrix.elem[2] = 3.0f;
+        camera->perspective_matrix.elem[3] = 4.0f;
+        camera->perspective_matrix.elem[4] = 5.0f;
+        camera->perspective_matrix.elem[5] = 6.0f;
+        camera->perspective_matrix.elem[6] = 7.0f;
+        camera->perspective_matrix.elem[7] = 8.0f;
+        camera->perspective_matrix.elem[8] = 9.0f;
+        camera->perspective_matrix.elem[9] = 10.0f;
+        camera->perspective_matrix.elem[10] = 11.0f;
+        camera->perspective_matrix.elem[11] = 12.0f;
+        camera->perspective_matrix.elem[12] = 13.0f;
+        camera->perspective_matrix.elem[13] = 14.0f;
+        camera->perspective_matrix.elem[14] = 15.0f;
+        camera->perspective_matrix.elem[15] = 16.0f;
+        mat4f_copy(&camera->perspective_matrix, &before);
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(true == camera->frustum_cache_dirty);
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(before.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: frustum_cache_dirty == false のとき
+        // perspective_matrix は更新されず、そのまま維持されること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t before = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = 16.0f / 9.0f;
+        camera->frustum.fovy = 60.0f;
+        camera->frustum.near_clip = 0.1f;
+        camera->frustum.far_clip = 100.0f;
+        camera->frustum_cache_dirty = false;
+
+        camera->perspective_matrix.elem[0] = 1.0f;
+        camera->perspective_matrix.elem[1] = 2.0f;
+        camera->perspective_matrix.elem[2] = 3.0f;
+        camera->perspective_matrix.elem[3] = 4.0f;
+        camera->perspective_matrix.elem[4] = 5.0f;
+        camera->perspective_matrix.elem[5] = 6.0f;
+        camera->perspective_matrix.elem[6] = 7.0f;
+        camera->perspective_matrix.elem[7] = 8.0f;
+        camera->perspective_matrix.elem[8] = 9.0f;
+        camera->perspective_matrix.elem[9] = 10.0f;
+        camera->perspective_matrix.elem[10] = 11.0f;
+        camera->perspective_matrix.elem[11] = 12.0f;
+        camera->perspective_matrix.elem[12] = 13.0f;
+        camera->perspective_matrix.elem[13] = 14.0f;
+        camera->perspective_matrix.elem[14] = 15.0f;
+        camera->perspective_matrix.elem[15] = 16.0f;
+        mat4f_copy(&camera->perspective_matrix, &before);
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->frustum_cache_dirty);
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(before.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: frustum_cache_dirty == true のとき
+        // perspective_matrix が更新され、dirty flag が false になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t expected = { 0 };
+        const float aspect = 16.0f / 9.0f;
+        const float fovy = 60.0f;
+        const float near_clip = 0.1f;
+        const float far_clip = 100.0f;
+        const float dz = far_clip - near_clip;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = aspect;
+        camera->frustum.fovy = fovy;
+        camera->frustum.near_clip = near_clip;
+        camera->frustum.far_clip = far_clip;
+        camera->frustum_cache_dirty = true;
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->frustum_cache_dirty);
+
+        mat4f_identity(&expected);
+        expected.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
+        expected.elem[0] = expected.elem[5] / aspect;
+        expected.elem[10] = -1.0f * (far_clip + near_clip) / dz;
+        expected.elem[11] = -2.0f * far_clip * near_clip / dz;
+        expected.elem[14] = -1.0f;
+        expected.elem[15] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_posture_cache_sync(void) {
+    {
+        // camera_frustum_cache_sync() 冒頭で強制的に CAMERA_RUNTIME_ERROR を返させる
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        s_test_config_camera_frustum_cache_sync.fail_on_call = 1U;
+        s_test_config_camera_frustum_cache_sync.forced_result = (int)CAMERA_RUNTIME_ERROR;
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // camera_ == NULL -> CAMERA_INVALID_ARGUMENT
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+
+        test_camera_config_reset();
+
+        ret = camera_frustum_cache_sync(NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+
+        test_camera_config_reset();
+    }
+    {
+        // 無効な frustum -> CAMERA_BAD_OPERATION
+        // matrix と dirty flag が変更されないこと
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t before = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // 無効状態を作る
+        camera->frustum.aspect = 16.0f / 9.0f;
+        camera->frustum.fovy = 60.0f;
+        camera->frustum.near_clip = 10.0f;
+        camera->frustum.far_clip = 1.0f;   // near >= far で無効
+        camera->frustum_cache_dirty = true;
+
+        camera->perspective_matrix.elem[0] = 1.0f;
+        camera->perspective_matrix.elem[1] = 2.0f;
+        camera->perspective_matrix.elem[2] = 3.0f;
+        camera->perspective_matrix.elem[3] = 4.0f;
+        camera->perspective_matrix.elem[4] = 5.0f;
+        camera->perspective_matrix.elem[5] = 6.0f;
+        camera->perspective_matrix.elem[6] = 7.0f;
+        camera->perspective_matrix.elem[7] = 8.0f;
+        camera->perspective_matrix.elem[8] = 9.0f;
+        camera->perspective_matrix.elem[9] = 10.0f;
+        camera->perspective_matrix.elem[10] = 11.0f;
+        camera->perspective_matrix.elem[11] = 12.0f;
+        camera->perspective_matrix.elem[12] = 13.0f;
+        camera->perspective_matrix.elem[13] = 14.0f;
+        camera->perspective_matrix.elem[14] = 15.0f;
+        camera->perspective_matrix.elem[15] = 16.0f;
+        mat4f_copy(&camera->perspective_matrix, &before);
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(true == camera->frustum_cache_dirty);
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(before.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: frustum_cache_dirty == false のとき
+        // perspective_matrix は更新されず、そのまま維持されること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t before = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = 16.0f / 9.0f;
+        camera->frustum.fovy = 60.0f;
+        camera->frustum.near_clip = 0.1f;
+        camera->frustum.far_clip = 100.0f;
+        camera->frustum_cache_dirty = false;
+
+        camera->perspective_matrix.elem[0] = 1.0f;
+        camera->perspective_matrix.elem[1] = 2.0f;
+        camera->perspective_matrix.elem[2] = 3.0f;
+        camera->perspective_matrix.elem[3] = 4.0f;
+        camera->perspective_matrix.elem[4] = 5.0f;
+        camera->perspective_matrix.elem[5] = 6.0f;
+        camera->perspective_matrix.elem[6] = 7.0f;
+        camera->perspective_matrix.elem[7] = 8.0f;
+        camera->perspective_matrix.elem[8] = 9.0f;
+        camera->perspective_matrix.elem[9] = 10.0f;
+        camera->perspective_matrix.elem[10] = 11.0f;
+        camera->perspective_matrix.elem[11] = 12.0f;
+        camera->perspective_matrix.elem[12] = 13.0f;
+        camera->perspective_matrix.elem[13] = 14.0f;
+        camera->perspective_matrix.elem[14] = 15.0f;
+        camera->perspective_matrix.elem[15] = 16.0f;
+        mat4f_copy(&camera->perspective_matrix, &before);
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->frustum_cache_dirty);
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(before.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // posture_cache_dirty == true かつ view_matrix_update() が false を返すと
+        // CAMERA_RUNTIME_ERROR で cleanup に入ること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t before_view = { 0 };
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        // posture_cache_dirty == true の経路に入れる
+        camera->euler.elem[0] = 0.0f;
+        camera->euler.elem[1] = 0.0f;
+        camera->euler.elem[2] = 0.0f;
+        camera->position.elem[0] = 10.0f;
+        camera->position.elem[1] = 20.0f;
+        camera->position.elem[2] = 30.0f;
+        camera->posture_cache_dirty = true;
+
+        // view_matrix が失敗時に変更されないことも確認する
+        camera->view_matrix.elem[0] = 16.0f;
+        camera->view_matrix.elem[1] = 15.0f;
+        camera->view_matrix.elem[2] = 14.0f;
+        camera->view_matrix.elem[3] = 13.0f;
+        camera->view_matrix.elem[4] = 12.0f;
+        camera->view_matrix.elem[5] = 11.0f;
+        camera->view_matrix.elem[6] = 10.0f;
+        camera->view_matrix.elem[7] = 9.0f;
+        camera->view_matrix.elem[8] = 8.0f;
+        camera->view_matrix.elem[9] = 7.0f;
+        camera->view_matrix.elem[10] = 6.0f;
+        camera->view_matrix.elem[11] = 5.0f;
+        camera->view_matrix.elem[12] = 4.0f;
+        camera->view_matrix.elem[13] = 3.0f;
+        camera->view_matrix.elem[14] = 2.0f;
+        camera->view_matrix.elem[15] = 1.0f;
+        mat4f_copy(&camera->view_matrix, &before_view);
+
+        // ここで inner branch を直接踏ませる
+        s_test_config_view_matrix_update.fail_on_call = 1U;
+        s_test_config_view_matrix_update.forced_result = false;
+
+        ret = camera_posture_cache_sync(camera);
+        assert(CAMERA_RUNTIME_ERROR == ret);
+
+        // cleanup に飛ぶので dirty は false にならない
+        assert(true == camera->posture_cache_dirty);
+
+        // view_matrix_update() は false を返しただけなので、view_matrix は不変
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(before_view.elem[i], camera->view_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: frustum_cache_dirty == true のとき
+        // perspective_matrix が更新され、dirty flag が false になること
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_t* camera = NULL;
+        mat4x4f_t expected = { 0 };
+        const float aspect = 16.0f / 9.0f;
+        const float fovy = 60.0f;
+        const float near_clip = 0.1f;
+        const float far_clip = 100.0f;
+        const float dz = far_clip - near_clip;
+
+        test_camera_config_reset();
+        test_camera_memory_config_reset();
+        test_choco_string_config_reset();
+
+        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+        ret = camera_create("main_camera", &camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera);
+
+        camera->frustum.aspect = aspect;
+        camera->frustum.fovy = fovy;
+        camera->frustum.near_clip = near_clip;
+        camera->frustum.far_clip = far_clip;
+        camera->frustum_cache_dirty = true;
+
+        ret = camera_frustum_cache_sync(camera);
+        assert(CAMERA_SUCCESS == ret);
+        assert(false == camera->frustum_cache_dirty);
+
+        mat4f_identity(&expected);
+        expected.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
+        expected.elem[0] = expected.elem[5] / aspect;
+        expected.elem[10] = -1.0f * (far_clip + near_clip) / dz;
+        expected.elem[11] = -2.0f * far_clip * near_clip / dz;
+        expected.elem[14] = -1.0f;
+        expected.elem[15] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera->perspective_matrix.elem[i]));
+        }
+
+        camera_destroy(&camera);
+        assert(NULL == camera);
+
+        memory_system_destroy();
+
+        test_choco_string_config_reset();
+        test_camera_memory_config_reset();
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_perspective_matrix_update(void) {
+    {
+        // 正常系: 一般的な視錐台設定で透視投影行列が正しく更新されること
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+        const float aspect = 16.0f / 9.0f;
+        const float fovy = 60.0f;
+        const float near_clip = 0.1f;
+        const float far_clip = 100.0f;
+        const float dz = far_clip - near_clip;
+
+        camera.frustum.aspect = aspect;
+        camera.frustum.fovy = fovy;
+        camera.frustum.near_clip = near_clip;
+        camera.frustum.far_clip = far_clip;
+
+        // 事前にダミー値を入れて、全要素が更新されることを見やすくする
+        for(int i = 0; i < 16; ++i) {
+            camera.perspective_matrix.elem[i] = -999.0f;
+        }
+
+        perspective_matrix_update(&camera);
+
+        mat4f_identity(&expected);
+        expected.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
+        expected.elem[0] = expected.elem[5] / aspect;
+        expected.elem[10] = -1.0f * (far_clip + near_clip) / dz;
+        expected.elem[11] = -2.0f * far_clip * near_clip / dz;
+        expected.elem[14] = -1.0f;
+        expected.elem[15] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.perspective_matrix.elem[i]));
+        }
+    }
+    {
+        // 正常系: 別パラメータでも正しく更新されること
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+        const float aspect = 1.0f;
+        const float fovy = 90.0f;
+        const float near_clip = 1.0f;
+        const float far_clip = 10.0f;
+        const float dz = far_clip - near_clip;
+
+        camera.frustum.aspect = aspect;
+        camera.frustum.fovy = fovy;
+        camera.frustum.near_clip = near_clip;
+        camera.frustum.far_clip = far_clip;
+
+        for(int i = 0; i < 16; ++i) {
+            camera.perspective_matrix.elem[i] = 123.0f;
+        }
+
+        perspective_matrix_update(&camera);
+
+        mat4f_identity(&expected);
+        expected.elem[5] = 1.0f / choco_tanf(CHOCO_DEG_TO_RAD(fovy) * 0.5f);
+        expected.elem[0] = expected.elem[5] / aspect;
+        expected.elem[10] = -1.0f * (far_clip + near_clip) / dz;
+        expected.elem[11] = -2.0f * far_clip * near_clip / dz;
+        expected.elem[14] = -1.0f;
+        expected.elem[15] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.perspective_matrix.elem[i]));
+        }
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_camera_to_world_matrix_update(void) {
+    {
+        // 正常系: euler = {0,0,0}, position = {0,0,0} -> 単位行列
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+
+        camera.euler.elem[0] = 0.0f;
+        camera.euler.elem[1] = 0.0f;
+        camera.euler.elem[2] = 0.0f;
+        camera.position.elem[0] = 0.0f;
+        camera.position.elem[1] = 0.0f;
+        camera.position.elem[2] = 0.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            camera.camera_to_world_matrix.elem[i] = -999.0f;
+        }
+
+        camera_to_world_matrix_update(&camera);
+
+        mat4f_identity(&expected);
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.camera_to_world_matrix.elem[i]));
+        }
+    }
+    {
+        // 正常系: 回転なし、平行移動のみ -> translation 行列
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+        vec3f_t position = { .elem = { 10.0f, 20.0f, 30.0f } };
+
+        camera.euler.elem[0] = 0.0f;
+        camera.euler.elem[1] = 0.0f;
+        camera.euler.elem[2] = 0.0f;
+        camera.position.elem[0] = position.elem[0];
+        camera.position.elem[1] = position.elem[1];
+        camera.position.elem[2] = position.elem[2];
+
+        for(int i = 0; i < 16; ++i) {
+            camera.camera_to_world_matrix.elem[i] = 123.0f;
+        }
+
+        camera_to_world_matrix_update(&camera);
+
+        mat4f_translation(&position, &expected);
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.camera_to_world_matrix.elem[i]));
+        }
+    }
+    {
+        // 正常系: 回転 + 平行移動 -> trans * rot の順で更新されること
+        camera_t camera = { 0 };
+        mat4x4f_t rot = { 0 };
+        mat4x4f_t trans = { 0 };
+        mat4x4f_t expected = { 0 };
+        const float x_deg = 10.0f;
+        const float y_deg = 20.0f;
+        const float z_deg = 30.0f;
+        vec3f_t position = { .elem = { 1.5f, -2.5f, 3.5f } };
+
+        camera.euler.elem[0] = x_deg;
+        camera.euler.elem[1] = y_deg;
+        camera.euler.elem[2] = z_deg;
+        camera.position.elem[0] = position.elem[0];
+        camera.position.elem[1] = position.elem[1];
+        camera.position.elem[2] = position.elem[2];
+
+        for(int i = 0; i < 16; ++i) {
+            camera.camera_to_world_matrix.elem[i] = 456.0f;
+        }
+
+        camera_to_world_matrix_update(&camera);
+
+        mat4f_rot_xyz(
+            CHOCO_DEG_TO_RAD(x_deg),
+            CHOCO_DEG_TO_RAD(y_deg),
+            CHOCO_DEG_TO_RAD(z_deg),
+            &rot
+        );
+        mat4f_translation(&position, &trans);
+        mat4f_mul(&trans, &rot, &expected);
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.camera_to_world_matrix.elem[i]));
+        }
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_view_matrix_update(void) {
+    {
+        // view_matrix_update() 冒頭で強制的に false を返させる
+        camera_t camera = { 0 };
+        const bool ret = false;
+
+        test_camera_config_reset();
+
+        camera.view_matrix.elem[0] = 1.0f;
+        camera.view_matrix.elem[1] = 2.0f;
+        camera.view_matrix.elem[2] = 3.0f;
+        camera.view_matrix.elem[3] = 4.0f;
+        camera.view_matrix.elem[4] = 5.0f;
+        camera.view_matrix.elem[5] = 6.0f;
+        camera.view_matrix.elem[6] = 7.0f;
+        camera.view_matrix.elem[7] = 8.0f;
+        camera.view_matrix.elem[8] = 9.0f;
+        camera.view_matrix.elem[9] = 10.0f;
+        camera.view_matrix.elem[10] = 11.0f;
+        camera.view_matrix.elem[11] = 12.0f;
+        camera.view_matrix.elem[12] = 13.0f;
+        camera.view_matrix.elem[13] = 14.0f;
+        camera.view_matrix.elem[14] = 15.0f;
+        camera.view_matrix.elem[15] = 16.0f;
+
+        s_test_config_view_matrix_update.fail_on_call = 1U;
+        s_test_config_view_matrix_update.forced_result = false;
+
+        const bool actual = view_matrix_update(&camera);
+        assert(ret == actual);
+
+        // 強制返却時は view_matrix が変更されないこと
+        assert(is_equal_float(camera.view_matrix.elem[0], 1.0f));
+        assert(is_equal_float(camera.view_matrix.elem[1], 2.0f));
+        assert(is_equal_float(camera.view_matrix.elem[2], 3.0f));
+        assert(is_equal_float(camera.view_matrix.elem[3], 4.0f));
+        assert(is_equal_float(camera.view_matrix.elem[4], 5.0f));
+        assert(is_equal_float(camera.view_matrix.elem[5], 6.0f));
+        assert(is_equal_float(camera.view_matrix.elem[6], 7.0f));
+        assert(is_equal_float(camera.view_matrix.elem[7], 8.0f));
+        assert(is_equal_float(camera.view_matrix.elem[8], 9.0f));
+        assert(is_equal_float(camera.view_matrix.elem[9], 10.0f));
+        assert(is_equal_float(camera.view_matrix.elem[10], 11.0f));
+        assert(is_equal_float(camera.view_matrix.elem[11], 12.0f));
+        assert(is_equal_float(camera.view_matrix.elem[12], 13.0f));
+        assert(is_equal_float(camera.view_matrix.elem[13], 14.0f));
+        assert(is_equal_float(camera.view_matrix.elem[14], 15.0f));
+        assert(is_equal_float(camera.view_matrix.elem[15], 16.0f));
+
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: camera_to_world_matrix が単位行列なら view_matrix も単位行列になること
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+
+        test_camera_config_reset();
+
+        mat4f_identity(&camera.camera_to_world_matrix);
+
+        const bool ret = view_matrix_update(&camera);
+        assert(true == ret);
+
+        mat4f_identity(&expected);
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.view_matrix.elem[i]));
+        }
+
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: 平行移動行列の逆行列が view_matrix に設定されること
+        camera_t camera = { 0 };
+        mat4x4f_t expected = { 0 };
+        vec3f_t position = { .elem = { 10.0f, 20.0f, 30.0f } };
+
+        test_camera_config_reset();
+
+        mat4f_translation(&position, &camera.camera_to_world_matrix);
+
+        const bool ret = view_matrix_update(&camera);
+        assert(true == ret);
+
+        mat4f_identity(&expected);
+        expected.elem[3] = -10.0f;
+        expected.elem[7] = -20.0f;
+        expected.elem[11] = -30.0f;
+
+        for(int i = 0; i < 16; ++i) {
+            assert(is_equal_float(expected.elem[i], camera.view_matrix.elem[i]));
+        }
+
+        test_camera_config_reset();
+    }
+    {
+        // 異常系: 特異行列なら false を返し、view_matrix は変更されないこと
+        camera_t camera = { 0 };
+
+        test_camera_config_reset();
+
+        // 零行列は特異
+        for(int i = 0; i < 16; ++i) {
+            camera.camera_to_world_matrix.elem[i] = 0.0f;
+        }
+
+        camera.view_matrix.elem[0] = 1.0f;
+        camera.view_matrix.elem[1] = 2.0f;
+        camera.view_matrix.elem[2] = 3.0f;
+        camera.view_matrix.elem[3] = 4.0f;
+        camera.view_matrix.elem[4] = 5.0f;
+        camera.view_matrix.elem[5] = 6.0f;
+        camera.view_matrix.elem[6] = 7.0f;
+        camera.view_matrix.elem[7] = 8.0f;
+        camera.view_matrix.elem[8] = 9.0f;
+        camera.view_matrix.elem[9] = 10.0f;
+        camera.view_matrix.elem[10] = 11.0f;
+        camera.view_matrix.elem[11] = 12.0f;
+        camera.view_matrix.elem[12] = 13.0f;
+        camera.view_matrix.elem[13] = 14.0f;
+        camera.view_matrix.elem[14] = 15.0f;
+        camera.view_matrix.elem[15] = 16.0f;
+
+        const bool ret = view_matrix_update(&camera);
+        assert(false == ret);
+
+        assert(is_equal_float(camera.view_matrix.elem[0], 1.0f));
+        assert(is_equal_float(camera.view_matrix.elem[1], 2.0f));
+        assert(is_equal_float(camera.view_matrix.elem[2], 3.0f));
+        assert(is_equal_float(camera.view_matrix.elem[3], 4.0f));
+        assert(is_equal_float(camera.view_matrix.elem[4], 5.0f));
+        assert(is_equal_float(camera.view_matrix.elem[5], 6.0f));
+        assert(is_equal_float(camera.view_matrix.elem[6], 7.0f));
+        assert(is_equal_float(camera.view_matrix.elem[7], 8.0f));
+        assert(is_equal_float(camera.view_matrix.elem[8], 9.0f));
+        assert(is_equal_float(camera.view_matrix.elem[9], 10.0f));
+        assert(is_equal_float(camera.view_matrix.elem[10], 11.0f));
+        assert(is_equal_float(camera.view_matrix.elem[11], 12.0f));
+        assert(is_equal_float(camera.view_matrix.elem[12], 13.0f));
+        assert(is_equal_float(camera.view_matrix.elem[13], 14.0f));
+        assert(is_equal_float(camera.view_matrix.elem[14], 15.0f));
+        assert(is_equal_float(camera.view_matrix.elem[15], 16.0f));
+
+        test_camera_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_is_valid_frustum(void) {
+    {
+        // is_valid_frustum() 冒頭で強制的に true を返させる
+        viewing_frustum_t frustum = {
+            .aspect = 0.0f,
+            .fovy = 0.0f,
+            .near_clip = 0.0f,
+            .far_clip = 0.0f
+        };
+
+        test_camera_config_reset();
+
+        s_test_config_is_valid_frustum.fail_on_call = 1U;
+        s_test_config_is_valid_frustum.forced_result = true;
+
+        assert(true == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // frustum_ == NULL -> false
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(NULL));
+
+        test_camera_config_reset();
+    }
+    {
+        // near_clip >= far_clip -> false (等しい場合)
+        viewing_frustum_t frustum = {
+            .aspect = 16.0f / 9.0f,
+            .fovy = 60.0f,
+            .near_clip = 1.0f,
+            .far_clip = 1.0f
+        };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // near_clip >= far_clip -> false (near の方が大きい場合)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 60.0f,
             .near_clip = 10.0f,
-            .far_clip = 10.0f,
+            .far_clip = 1.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.near_clip = 100.0f;
-        frustum.far_clip = 10.0f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // aspect <= 0.0f
+        // aspect <= 0.0f -> false (0.0f)
         viewing_frustum_t frustum = {
             .aspect = 0.0f,
             .fovy = 60.0f,
             .near_clip = 0.1f,
-            .far_clip = 100.0f,
+            .far_clip = 100.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.aspect = -1.0f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // fovy <= 0.0f
+        // aspect <= 0.0f -> false (負値)
+        viewing_frustum_t frustum = {
+            .aspect = -1.0f,
+            .fovy = 60.0f,
+            .near_clip = 0.1f,
+            .far_clip = 100.0f
+        };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // fovy <= 0.0f -> false (0.0f)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 0.0f,
             .near_clip = 0.1f,
-            .far_clip = 100.0f,
+            .far_clip = 100.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.fovy = -1.0f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // fovy >= 180.0f
+        // fovy <= 0.0f -> false (負値)
+        viewing_frustum_t frustum = {
+            .aspect = 16.0f / 9.0f,
+            .fovy = -1.0f,
+            .near_clip = 0.1f,
+            .far_clip = 100.0f
+        };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // fovy >= 180.0f -> false (180.0f ちょうど)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 180.0f,
             .near_clip = 0.1f,
-            .far_clip = 100.0f,
+            .far_clip = 100.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.fovy = 181.0f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // near_clip <= 0.0f
+        // fovy >= 180.0f -> false (180.0f 超過)
+        viewing_frustum_t frustum = {
+            .aspect = 16.0f / 9.0f,
+            .fovy = 181.0f,
+            .near_clip = 0.1f,
+            .far_clip = 100.0f
+        };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // near_clip <= 0.0f -> false (0.0f)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 60.0f,
             .near_clip = 0.0f,
-            .far_clip = 100.0f,
+            .far_clip = 100.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.near_clip = -0.1f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // far_clip <= 0.0f
+        // near_clip <= 0.0f -> false (負値)
+        viewing_frustum_t frustum = {
+            .aspect = 16.0f / 9.0f,
+            .fovy = 60.0f,
+            .near_clip = -0.1f,
+            .far_clip = 100.0f
+        };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // far_clip <= 0.0f -> false (0.0f)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 60.0f,
             .near_clip = 0.1f,
-            .far_clip = 0.0f,
+            .far_clip = 0.0f
         };
+
+        test_camera_config_reset();
+
         assert(false == is_valid_frustum(&frustum));
 
-        frustum.far_clip = -100.0f;
-        assert(false == is_valid_frustum(&frustum));
+        test_camera_config_reset();
     }
     {
-        // 正常系
+        // far_clip <= 0.0f -> false (負値)
         viewing_frustum_t frustum = {
             .aspect = 16.0f / 9.0f,
             .fovy = 60.0f,
             .near_clip = 0.1f,
-            .far_clip = 100.0f,
+            .far_clip = -1.0f
         };
+
+        test_camera_config_reset();
+
+        assert(false == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
+    }
+    {
+        // 正常系: 一般的なパラメータ
+        viewing_frustum_t frustum = {
+            .aspect = 16.0f / 9.0f,
+            .fovy = 60.0f,
+            .near_clip = 0.1f,
+            .far_clip = 100.0f
+        };
+
+        test_camera_config_reset();
+
         assert(true == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
     }
     {
-        // 境界近傍の正常系
+        // 正常系: 境界近傍 (fovy が 180 未満, near < far)
         viewing_frustum_t frustum = {
             .aspect = 1.0f,
             .fovy = 179.999f,
             .near_clip = 0.0001f,
-            .far_clip = 0.0002f,
+            .far_clip = 0.0002f
         };
+
+        test_camera_config_reset();
+
         assert(true == is_valid_frustum(&frustum));
+
+        test_camera_config_reset();
     }
 }
 #endif
