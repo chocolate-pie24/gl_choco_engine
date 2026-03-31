@@ -44,6 +44,7 @@
 #include "engine/camera_system/camera_core/test_camera_memory.h"
 #include "engine/camera_system/camera/test_camera.h"
 #include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
+#include "engine/camera_system/camera_manager/test_camera_manager.h"
 
 #include "io_utils/test_fs_utils.h"
 
@@ -85,6 +86,7 @@ int main(int argc_, char** argv_) {
         test_camera_memory();
         test_camera();
         test_flight_camera_controller();
+        test_camera_manager();
 
         // test_platform_context();
         // test_platform_glfw();
