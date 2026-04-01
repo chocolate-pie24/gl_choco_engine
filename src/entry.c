@@ -40,9 +40,13 @@
 #include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
 
-#include "io_utils/test_fs_utils.h"
+#include "engine/camera_system/camera_core/test_camera_err_utils.h"
+#include "engine/camera_system/camera_core/test_camera_memory.h"
+#include "engine/camera_system/camera/test_camera.h"
+#include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
+#include "engine/camera_system/camera_manager/test_camera_manager.h"
 
-#include "camera/test_camera.h"
+#include "io_utils/test_fs_utils.h"
 
 #endif
 
@@ -77,6 +81,13 @@ int main(int argc_, char** argv_) {
         test_choco_string();
         test_ring_queue();
 
+        // engine/camera
+        test_camera_err_utils();
+        test_camera_memory();
+        test_camera();
+        test_flight_camera_controller();
+        test_camera_manager();
+
         // test_platform_context();
         // test_platform_glfw();
         // test_platform_err_utils();
@@ -91,7 +102,6 @@ int main(int argc_, char** argv_) {
         // test_renderer_backend_context();
 
         // test_choco_math();
-        // test_camera();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

@@ -57,7 +57,7 @@ camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_allo
  *
  * @warning カメラ管理システム自身はリニアアロケータによるメモリ確保であるため、自身のリソース破棄は行わない
  *
- * @param[out] camera_manager_ 処理対象カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in,out] camera_manager_ 処理対象カメラ管理システム構造体インスタンスへのポインタ
  */
 void camera_manager_deinitialize(camera_manager_t* camera_manager_);
 
