@@ -1,8 +1,14 @@
-#ifdef TEST_BUILD
-#include <string.h>
-#include <assert.h>
-#endif
-
+/**
+ * @ingroup platform_core
+ * @file platform_err_utils.c
+ * @author chocolate-pie24
+ * @brief プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装
+ * @version 0.1
+ * @date 2026-02-13
+ *
+ * @copyright Copyright (c) 2026
+ *
+ */
 #include "engine/base/choco_macros.h"
 
 #include "engine/core/memory/linear_allocator.h"
@@ -17,9 +23,12 @@
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
 #include <assert.h>
+#include <string.h>
+
 #include "test_controller.h"
 #include "engine/base/choco_macros.h"
-#include "engine/camera_system/camera_core/test_camera_err_utils.h"
+
+#include "engine/platform/platform_core/test_platform_err_utils.h"
 
 // platform_err_utils用モジュール専用テスト制御構造体定義
 
