@@ -35,43 +35,17 @@
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
 #include <stdlib.h> // for malloc
-#include "engine/core/memory/choco_memory.h"
 
-typedef struct platform_test {
-    // platform_type_t type;   // TODO: 何に使われるのかが分からない
-    // bool test_enable;       // TODO: 廃止
+#include "test_controller.h"
 
-    bool enable_use_test_vtable;                    // trueでテスト専用vtableを使用、falseで通常vtable
-    bool enable_platform_vtable_get_return_null;    // trueでplatform_vtable_getがNULLを返す(falseは正常処理を走らせる)
+#include "engine/base/choco_macros.h"
 
-    platform_result_t test_vtable_init_result_code;             // test_vtable_init関数に出力させる実行結果コード
-    platform_result_t test_vtable_window_create_result_code;    // test_vtable_window_create関数に出力させる実行結果コード
-    platform_result_t test_vtable_pump_messages_result_code;    // test_vtable_pump_messages関数に出力させる実行結果コード
-    platform_result_t test_vtable_swap_buffers_result_code;     // test_vtable_swap_buffers関数に出力させる実行結果コード
-} platform_test_t;
+#include "engine/platform/test_platform_context.h"
 
-static platform_test_t s_test_param;
-#endif
-
-/**
- * @brief プラットフォームコンテキスト構造体
- *
- */
-struct platform_context {
-    platform_type_t type;               /**< プラットフォームタイプ */
-    platform_backend_t* backend;        /**< 各プラットフォーム固有実装バックエンドデータ */
-    const platform_vtable_t* vtable;    /**< 各プラットフォーム仮想関数テーブル */
-};
-
-static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
-
-static bool platform_type_valid_check(platform_type_t platform_type_);
-
-#ifdef TEST_BUILD
-
-#define TEST_PLATFORM_TYPE 128  // テスト時専用プラットフォームタイプ
+// platform_context用モジュール専用テスト制御構造体定義
 
 // テスト用リニアアロケータ初期化処理/終了処理
 static void test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_);
@@ -90,16 +64,6 @@ static void dummy_window_event_callback(const window_event_t* event_);
 static void dummy_keyboard_event_callback(const keyboard_event_t* event_);
 static void dummy_mouse_event_callback(const mouse_event_t* event_);
 
-// platform_context保有関数のテスト関数
-static void test_platform_initialize(void);
-static void test_platform_destroy(void);
-static void test_platform_window_create(void);
-static void test_platform_pump_messages(void);
-static void test_platform_swap_buffers(void);
-static void test_platform_vtable_get(void);
-static void test_platform_type_valid_check(void);
-static void test_rslt_convert_linear_alloc(void);
-
 static const platform_vtable_t s_test_vtable = {
     .platform_backend_preinit = test_vtable_preinit,
     .platform_backend_init = test_vtable_init,
@@ -107,10 +71,74 @@ static const platform_vtable_t s_test_vtable = {
     .platform_backend_window_create = test_vtable_window_create,
     .platform_backend_pump_messages = test_vtable_pump_messages,
     .platform_backend_swap_buffers = test_vtable_swap_buffers,
-};
+};  /**< テスト専用vtable */
+
+/**
+ * @brief platform_vtable_get()に強制的に返させるvtable選択リスト
+ *
+ */
+typedef enum test_vtable_list {
+    TEST_PLATFORM_VTABLE_NULL,  /**< platform_vtable_get()の返り値: NULL */
+    TEST_PLATFORM_VTABLE_TEST,  /**< platform_vtable_get()の返り値: s_test_vtable */
+    TEST_PLATFORM_VTABLE_GLFW   /**< platform_vtable_get()の返り値: platform_glfw_vtable_get()の返り値 */
+} test_vtable_list_t;
+
+/**
+ * @brief platform_vtable_get()の返り値制御用コンフィグレーション構造体
+ *
+ */
+typedef struct test_vtable_config {
+    bool enable_test_vtable;            /**< テスト用vtable差し替え有効/無効フラグ(true: 有効, false: 無効) */
+    test_vtable_list_t vtable_select;   /**< テスト用に差し替えるvtable選択値 */
+} test_vtable_config_t;
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_platform_initialize;       /**< platform_initialize()テスト設定 */
+static test_call_control_t s_test_config_platform_window_create;    /**< platform_window_create()テスト設定 */
+static test_call_control_t s_test_config_platform_pump_messages;    /**< platform_pump_messages()テスト設定 */
+static test_call_control_t s_test_config_platform_swap_buffers;     /**< platform_swap_buffers()テスト設定 */
+
+// プライベート関数テスト設定
+static test_vtable_config_t s_test_config_platform_vtable_config;             /**< テスト用vtable選択設定 */
+static test_call_control_bool_t s_test_config_platform_type_valid_check;      /**< platform_type_valid_check()テスト設定 */
+static test_call_control_t s_test_config_test_vtable_init;                    /**< test_vtable_init()テスト設定 */
+static test_call_control_t s_test_config_test_vtable_window_create;           /**< test_vtable_window_create()テスト設定 */
+static test_call_control_t s_test_config_test_vtable_pump_messages;           /**< test_vtable_pump_messages()テスト設定 */
+static test_call_control_t s_test_config_test_vtable_swap_buffers;            /**< test_vtable_swap_buffers()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_platform_initialize(void);
+static void test_platform_destroy(void);
+static void test_platform_window_create(void);
+static void test_platform_pump_messages(void);
+static void test_platform_swap_buffers(void);
+static void test_platform_vtable_get(void);
+static void test_platform_type_valid_check(void);
 #endif
 
+/**
+ * @brief プラットフォームコンテキスト構造体
+ *
+ */
+struct platform_context {
+    platform_type_t type;               /**< プラットフォームタイプ */
+    platform_backend_t* backend;        /**< 各プラットフォーム固有実装バックエンドデータ */
+    const platform_vtable_t* vtable;    /**< 各プラットフォーム仮想関数テーブル */
+};
+
+static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_);
+
+static bool platform_type_valid_check(platform_type_t platform_type_);
+
 platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_t platform_type_, platform_context_t** out_platform_context_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_initialize.call_count++;
+    if(s_test_config_platform_initialize.fail_on_call != 0) {
+        if(s_test_config_platform_initialize.call_count == s_test_config_platform_initialize.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_initialize.forced_result;
+        }
+    }
+#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     void* backend_ptr = NULL;
@@ -159,6 +187,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
 
     // commit.
     *out_platform_context_ = tmp_context;
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -182,21 +211,31 @@ cleanup:
 }
 
 platform_result_t platform_window_create(platform_context_t* platform_context_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_window_create.call_count++;
+    if(s_test_config_platform_window_create.fail_on_call != 0) {
+        if(s_test_config_platform_window_create.call_count == s_test_config_platform_window_create.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_window_create.forced_result;
+        }
+    }
+#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_->vtable")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "platform_context_->backend")
     IF_ARG_NULL_GOTO_CLEANUP(window_label_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_label_")
     IF_ARG_NULL_GOTO_CLEANUP(framebuffer_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "framebuffer_width_")
     IF_ARG_NULL_GOTO_CLEANUP(framebuffer_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "framebuffer_height_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_height_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < window_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < window_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_window_create", "window_height_")
 
     ret = platform_context_->vtable->platform_backend_window_create(platform_context_->backend, window_label_, window_width_, window_height_, framebuffer_width_, framebuffer_height_);
     if(PLATFORM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_window_create(%s) - Failed to create window.", platform_rslt_to_str(ret));
         goto cleanup;
     }
+
     ret = PLATFORM_SUCCESS;
 cleanup:
     return ret;
@@ -207,8 +246,16 @@ platform_result_t platform_pump_messages(
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
-
+#ifdef TEST_BUILD
+    s_test_config_platform_pump_messages.call_count++;
+    if(s_test_config_platform_pump_messages.fail_on_call != 0) {
+        if(s_test_config_platform_pump_messages.call_count == s_test_config_platform_pump_messages.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_pump_messages.forced_result;
+        }
+    }
+#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->vtable")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->backend")
@@ -228,7 +275,16 @@ cleanup:
 }
 
 platform_result_t platform_swap_buffers(platform_context_t* platform_context_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_swap_buffers.call_count++;
+    if(s_test_config_platform_swap_buffers.fail_on_call != 0) {
+        if(s_test_config_platform_swap_buffers.call_count == s_test_config_platform_swap_buffers.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_swap_buffers.forced_result;
+        }
+    }
+#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_swap_buffers", "platform_context_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, ret, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "platform_swap_buffers", "platform_context_->vtable")
     IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, ret, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "platform_swap_buffers", "platform_context_->backend")
@@ -256,10 +312,14 @@ cleanup:
  */
 static const platform_vtable_t* platform_vtable_get(platform_type_t platform_type_) {
 #ifdef TEST_BUILD
-    if(s_test_param.enable_platform_vtable_get_return_null) {
-        return NULL;
-    } else if(s_test_param.enable_use_test_vtable) {
-        return &s_test_vtable;
+    if(s_test_config_platform_vtable_config.enable_test_vtable) {
+        if(TEST_PLATFORM_VTABLE_NULL == s_test_config_platform_vtable_config.vtable_select) {
+            return NULL;
+        } else if(TEST_PLATFORM_VTABLE_TEST == s_test_config_platform_vtable_config.vtable_select) {
+            return &s_test_vtable;
+        } else if(TEST_PLATFORM_VTABLE_GLFW == s_test_config_platform_vtable_config.vtable_select) {
+            return platform_glfw_vtable_get();
+        }
     }
 #endif
 
@@ -272,6 +332,14 @@ static const platform_vtable_t* platform_vtable_get(platform_type_t platform_typ
 }
 
 static bool platform_type_valid_check(platform_type_t platform_type_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_type_valid_check.call_count++;
+    if(s_test_config_platform_type_valid_check.fail_on_call != 0) {
+        if(s_test_config_platform_type_valid_check.call_count == s_test_config_platform_type_valid_check.fail_on_call) {
+            return s_test_config_platform_type_valid_check.forced_result;
+        }
+    }
+#endif
     switch(platform_type_) {
     case PLATFORM_USE_GLFW:
         return true;
@@ -281,6 +349,73 @@ static bool platform_type_valid_check(platform_type_t platform_type_) {
 }
 
 #ifdef TEST_BUILD
+void NO_COVERAGE test_platform_initialize_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_initialize.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_initialize.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_window_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_window_create.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_window_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_pump_messages_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_pump_messages.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_pump_messages.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_swap_buffers_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_swap_buffers.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_swap_buffers.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_context_config_reset(void) {
+    test_call_control_reset(&s_test_config_platform_initialize);
+    test_call_control_reset(&s_test_config_platform_pump_messages);
+    test_call_control_reset(&s_test_config_platform_swap_buffers);
+    test_call_control_reset(&s_test_config_platform_window_create);
+
+    test_call_control_bool_reset(&s_test_config_platform_type_valid_check);
+
+    test_call_control_reset(&s_test_config_test_vtable_init);
+    test_call_control_reset(&s_test_config_test_vtable_window_create);
+    test_call_control_reset(&s_test_config_test_vtable_pump_messages);
+    test_call_control_reset(&s_test_config_test_vtable_swap_buffers);
+
+    s_test_config_platform_vtable_config.enable_test_vtable = false;
+    s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_GLFW;
+}
+
+void test_platform_context(void) {
+    test_platform_context_config_reset();
+
+    test_platform_initialize();
+    test_platform_destroy();
+    test_platform_window_create();
+    test_platform_pump_messages();
+    test_platform_swap_buffers();
+    test_platform_vtable_get();
+    test_platform_type_valid_check();
+
+    test_platform_context_config_reset();
+}
+
 static void NO_COVERAGE test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_) {
     assert(NULL == *allocator_);
     assert(NULL == *out_memory_pool_);
@@ -317,7 +452,7 @@ static void NO_COVERAGE test_vtable_preinit(size_t* memory_requirement_, size_t*
 }
 
 static platform_result_t NO_COVERAGE test_vtable_init(platform_backend_t* platform_backend_) {
-    return s_test_param.test_vtable_init_result_code;
+    return s_test_config_test_vtable_init.forced_result;
 }
 
 static void NO_COVERAGE test_vtable_destroy(platform_backend_t* platform_backend_) {
@@ -326,15 +461,15 @@ static void NO_COVERAGE test_vtable_destroy(platform_backend_t* platform_backend
 }
 
 static platform_result_t NO_COVERAGE test_vtable_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
-    return s_test_param.test_vtable_window_create_result_code;
+    return s_test_config_test_vtable_window_create.forced_result;
 }
 
 static platform_result_t NO_COVERAGE test_vtable_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_)) {
-    return s_test_param.test_vtable_pump_messages_result_code;
+    return s_test_config_test_vtable_pump_messages.forced_result;
 }
 
 static platform_result_t NO_COVERAGE test_vtable_swap_buffers(platform_backend_t* platform_backend_) {
-    return s_test_param.test_vtable_swap_buffers_result_code;
+    return s_test_config_test_vtable_swap_buffers.forced_result;
 }
 
 static void NO_COVERAGE dummy_window_event_callback(const window_event_t* event_) {
@@ -349,655 +484,950 @@ static void NO_COVERAGE dummy_mouse_event_callback(const mouse_event_t* event_) 
     return;
 }
 
-void NO_COVERAGE test_platform_context(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-    test_platform_vtable_get();
-    test_platform_type_valid_check();
-    test_platform_initialize();
-    test_platform_destroy();
-    test_platform_window_create();
-    test_platform_pump_messages();
-    test_platform_swap_buffers();
-
-    memory_system_destroy();
-}
-
+// Generated by ChatGPT
 static void NO_COVERAGE test_platform_initialize(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    s_test_param.enable_platform_vtable_get_return_null = false;
-    s_test_param.enable_use_test_vtable = false;
-    s_test_param.test_vtable_init_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_pump_messages_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_swap_buffers_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_window_create_result_code = PLATFORM_SUCCESS;
+    test_platform_context_config_reset();
+
     {
-        // allocator_ == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(NULL, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-        assert(NULL == platform_context);
-    }
-    {
-        // out_platform_context_ == NULLでPLATFORM_INVALID_ARGUMENT
+        // テスト基盤による強制失敗（前提条件チェックより前）
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        test_call_control_t config = {0};
+
         linear_alloc_t* allocator = NULL;
         void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
+        platform_context_t* context = NULL;
+
+        test_linear_allocator_create(&allocator, &memory_pool, 128U);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)PLATFORM_RUNTIME_ERROR;
+        test_platform_initialize_config_set(&config);
+
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(NULL == context);
+        assert(1U == s_test_config_platform_initialize.call_count);
+
+        test_platform_context_config_reset();
+        test_linear_allocator_destroy(&allocator, &memory_pool);
+    }
+
+    {
+        // allocator_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+
+        test_platform_context_config_reset();
+
+        ret = platform_initialize(NULL, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        assert(NULL == context);
+    }
+
+    {
+        // out_platform_context_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+        linear_alloc_t* allocator = NULL;
+        void* memory_pool = NULL;
+
+        test_linear_allocator_create(&allocator, &memory_pool, 128U);
+        test_platform_context_config_reset();
 
         ret = platform_initialize(allocator, PLATFORM_USE_GLFW, NULL);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
 
         test_linear_allocator_destroy(&allocator, &memory_pool);
     }
+
     {
-        // *out_platform_context_ != NULLでPLATFORM_INVALID_ARGUMENT
+        // *out_platform_context_ != NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t dummy_context = {0};
+        platform_context_t* context = &dummy_context;
+
         linear_alloc_t* allocator = NULL;
         void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
+        test_linear_allocator_create(&allocator, &memory_pool, 128U);
+        test_platform_context_config_reset();
 
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
         assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-        test_linear_allocator_destroy(&allocator, &memory_pool);
-    }
-    {
-        // platform_type_が既定値外でPLATFORM_INVALID_ARGUMENT
-        linear_alloc_t* allocator = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
-
-        platform_context_t* platform_context = NULL;
-
-        ret = platform_initialize(allocator, 128, &platform_context);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-        assert(NULL == platform_context);
+        assert(&dummy_context == context);
 
         test_linear_allocator_destroy(&allocator, &memory_pool);
     }
+
     {
-        // リニアアロケータによるtmp_contextメモリ確保失敗(NO_MEMORY)でPLATFORM_NO_MEMORY
-        // linear_allocator_malloc_fail_set(0);
+        // platform_type_ が無効値
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
 
-        // linear_alloc_t* allocator = NULL;
-        // void* memory_pool = NULL;
-        // test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
-
-        // platform_context_t* platform_context = NULL;
-        // ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
-        // assert(PLATFORM_NO_MEMORY == ret);
-        // assert(NULL == platform_context);
-
-        // test_linear_allocator_destroy(&allocator, &memory_pool);
-
-        // linear_allocator_malloc_fail_reset();
-    }
-    {
-        // vtable_getで取得したvtableがNULLでPLATFORM_RUNTIME_ERROR
         linear_alloc_t* allocator = NULL;
         void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        s_test_param.enable_platform_vtable_get_return_null = true;
+        test_linear_allocator_create(&allocator, &memory_pool, 128U);
+        test_platform_context_config_reset();
 
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
+        ret = platform_initialize(allocator, (platform_type_t)100, &context);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        assert(NULL == context);
+
+        test_linear_allocator_destroy(&allocator, &memory_pool);
+    }
+
+    {
+        // platform context 用メモリ確保失敗
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+        const size_t pool_size = (sizeof(platform_context_t) > 1U) ? (sizeof(platform_context_t) - 1U) : 1U;
+
+        linear_alloc_t* allocator = NULL;
+        void* memory_pool = NULL;
+
+        test_linear_allocator_create(&allocator, &memory_pool, pool_size);
+        test_platform_context_config_reset();
+
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_NO_MEMORY == ret);
+        assert(NULL == context);
+
+        test_linear_allocator_destroy(&allocator, &memory_pool);
+    }
+
+    {
+        // vtable 取得失敗
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+
+        linear_alloc_t* allocator = NULL;
+        void* memory_pool = NULL;
+
+        test_linear_allocator_create(&allocator, &memory_pool, sizeof(platform_context_t) + 16U);
+        test_platform_context_config_reset();
+
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_NULL;
+
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
         assert(PLATFORM_RUNTIME_ERROR == ret);
-        assert(NULL == platform_context);
-
-        s_test_param.enable_platform_vtable_get_return_null = false;
+        assert(NULL == context);
 
         test_linear_allocator_destroy(&allocator, &memory_pool);
     }
+
     {
-        // 2回目のlinear_allocator_allocateで失敗し、NO_MEMORY
-        // linear_allocator_malloc_fail_set(1);
+        // backend 用メモリ確保失敗
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+        const size_t pool_size = sizeof(platform_context_t);
 
-        // linear_alloc_t* allocator = NULL;
-        // void* memory_pool = NULL;
-        // test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
-
-        // s_test_param.enable_use_test_vtable = true;
-
-        // platform_context_t* platform_context = NULL;
-        // ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
-        // assert(PLATFORM_NO_MEMORY == ret);
-        // assert(NULL == platform_context);
-
-        // test_linear_allocator_destroy(&allocator, &memory_pool);
-
-        // s_test_param.enable_use_test_vtable = false;
-        // linear_allocator_malloc_fail_reset();
-    }
-    {
-        // platform_backend_init()にPLATFORM_BAD_OPERATIONを出力させ、PLATFORM_BAD_OPERATION
         linear_alloc_t* allocator = NULL;
         void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        s_test_param.test_vtable_init_result_code = PLATFORM_BAD_OPERATION;
-        s_test_param.enable_use_test_vtable = true;
+        test_linear_allocator_create(&allocator, &memory_pool, pool_size);
+        test_platform_context_config_reset();
 
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_BAD_OPERATION == ret);
-        assert(NULL == platform_context);
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_TEST;
+        s_test_config_test_vtable_init.forced_result = PLATFORM_SUCCESS;
 
-        s_test_param.enable_use_test_vtable = false;
-        s_test_param.test_vtable_init_result_code = PLATFORM_SUCCESS;
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_NO_MEMORY == ret);
+        assert(NULL == context);
 
         test_linear_allocator_destroy(&allocator, &memory_pool);
     }
+
     {
-        // 正常系
+        // backend 初期化失敗
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+
         linear_alloc_t* allocator = NULL;
         void* memory_pool = NULL;
-        test_linear_allocator_create(&allocator, &memory_pool, 128); // 仮で128byteのリニアアロケータ生成
 
-        s_test_param.enable_use_test_vtable = true;
+        test_linear_allocator_create(&allocator, &memory_pool, sizeof(platform_context_t) + 64U);
+        test_platform_context_config_reset();
 
-        platform_context_t* platform_context = NULL;
-        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &platform_context);
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_TEST;
+        s_test_config_test_vtable_init.forced_result = PLATFORM_RUNTIME_ERROR;
+
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(NULL == context);
+
+        test_linear_allocator_destroy(&allocator, &memory_pool);
+    }
+
+    {
+        // 正常系（test vtable 使用）
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t* context = NULL;
+
+        linear_alloc_t* allocator = NULL;
+        void* memory_pool = NULL;
+
+        test_linear_allocator_create(&allocator, &memory_pool, sizeof(platform_context_t) + 64U);
+        test_platform_context_config_reset();
+
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_TEST;
+        s_test_config_test_vtable_init.forced_result = PLATFORM_SUCCESS;
+
+        ret = platform_initialize(allocator, PLATFORM_USE_GLFW, &context);
         assert(PLATFORM_SUCCESS == ret);
-        assert(NULL != platform_context);
+        assert(NULL != context);
+        assert(PLATFORM_USE_GLFW == context->type);
+        assert(&s_test_vtable == context->vtable);
+        assert(NULL != context->backend);
 
-        s_test_param.enable_use_test_vtable = false;
+        platform_destroy(context);
+        context = NULL;
+
         test_linear_allocator_destroy(&allocator, &memory_pool);
     }
-    s_test_param.enable_platform_vtable_get_return_null = false;
-    s_test_param.enable_use_test_vtable = false;
-    s_test_param.test_vtable_init_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_pump_messages_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_swap_buffers_result_code = PLATFORM_SUCCESS;
-    s_test_param.test_vtable_window_create_result_code = PLATFORM_SUCCESS;
+
+    test_platform_context_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_platform_destroy(void) {
+    test_platform_context_config_reset();
+
     {
         // platform_context_ == NULL
         platform_destroy(NULL);
     }
+
     {
         // platform_context_->vtable == NULL
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
+        platform_context_t context;
+        memset(&context, 0, sizeof(platform_context_t));
 
-        platform_destroy(platform_context);
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)0x1;
+        context.vtable = NULL;
 
-        free(platform_context);
-        platform_context = NULL;
+        platform_destroy(&context);
     }
+
     {
         // platform_context_->backend == NULL
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
+        platform_context_t context;
+        memset(&context, 0, sizeof(platform_context_t));
 
-        platform_context->vtable = &s_test_vtable;
-        platform_destroy(platform_context);
-        platform_context->vtable = NULL;
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = NULL;
+        context.vtable = &s_test_vtable;
 
-        free(platform_context);
-        platform_context = NULL;
+        platform_destroy(&context);
     }
+
     {
         // 正常系
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+        // 現状は test_vtable_destroy() に副作用や call_count がないため、
+        // 自動assertではなく、ステップ実行で
+        // platform_context_->vtable->platform_backend_destroy(platform_context_->backend)
+        // に到達することを確認する前提
+        platform_context_t context;
+        uint8_t dummy_backend[8] = {0};
 
-        s_test_param.enable_use_test_vtable = true;
+        memset(&context, 0, sizeof(platform_context_t));
 
-        platform_result_t ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        platform_destroy(platform_context);
-        platform_destroy(platform_context); // 2重呼び出し
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
 
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_test_param.enable_use_test_vtable = false;
+        platform_destroy(&context);
     }
+
+    test_platform_context_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_platform_window_create(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+    test_platform_context_config_reset();
+
     {
-        // platform_context_ == NULLでPLATFORM_INVALID_ARGUMENT
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(NULL, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-    }
-    {
-        // platform_context_->vtable == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
+        // テスト基盤による強制失敗（前提条件チェックより前）
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        test_call_control_t config = {0};
+        int framebuffer_width = 111;
+        int framebuffer_height = 222;
 
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)PLATFORM_RUNTIME_ERROR;
+        test_platform_window_create_config_set(&config);
 
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // platform_context_->backend == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        platform_context->vtable = &s_test_vtable;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // window_label_ == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, NULL, 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // framebuffer_width_ == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, NULL, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // framebuffer_height == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, NULL);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // window_width == 0でPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, "test_window", 0, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // window_height_ == 0でPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, "test_window", 1024, 0, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // platform_backend_window_createがBAD_OPERATIONを返すようにし、BAD_OPERATION
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        s_test_param.test_vtable_window_create_result_code = PLATFORM_BAD_OPERATION;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_BAD_OPERATION == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_test_param.test_vtable_window_create_result_code = PLATFORM_SUCCESS;
-    }
-    {
-        // 正常系
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        int framebuffer_width = 1024;
-        int framebuffer_height = 768;
-        ret = platform_window_create(platform_context, "test_window", 1024, 768, &framebuffer_width, &framebuffer_height);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-}
-
-static void NO_COVERAGE test_platform_pump_messages(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    {
-        // platform_context_ == NULLでPLATFORM_INVALID_ARGUMENT
-        ret = platform_pump_messages(NULL, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-    }
-    {
-        // platform_context_->vtable == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
-
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // platform_context_->backend == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
-
-        platform_context->vtable = &s_test_vtable;
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // window_event_callback == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        ret = platform_pump_messages(platform_context, NULL, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // keyboard_event_callback == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, NULL, &dummy_mouse_event_callback);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // mouse_event_callback == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, NULL);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // platform_backend_pump_messagesにWINDOW_CLOSEを出力させ、WINDOW_CLOSE
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.test_vtable_pump_messages_result_code = PLATFORM_WINDOW_CLOSE;
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_WINDOW_CLOSE == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_test_param.test_vtable_pump_messages_result_code = PLATFORM_SUCCESS;
-    }
-    {
-        // platform_backend_pump_messagesにBAD_OPERATIONを出力させ、BAD_OPERATION
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.test_vtable_pump_messages_result_code = PLATFORM_BAD_OPERATION;
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_BAD_OPERATION == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_test_param.test_vtable_pump_messages_result_code = PLATFORM_SUCCESS;
-    }
-    {
-        // 正常系
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        ret = platform_pump_messages(platform_context, &dummy_window_event_callback, &dummy_keyboard_event_callback, &dummy_mouse_event_callback);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-}
-
-static void NO_COVERAGE test_platform_swap_buffers(void) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    {
-        // platform_context_ == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_swap_buffers(NULL);
-        assert(PLATFORM_INVALID_ARGUMENT == ret);
-    }
-    {
-        // platform_context_->vtable == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
-
-        ret = platform_swap_buffers(platform_context);
-        assert(PLATFORM_BAD_OPERATION == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // platform_context_->backend == NULLでPLATFORM_INVALID_ARGUMENT
-        platform_context_t* platform_context = NULL;
-        platform_context = malloc(sizeof(platform_context_t));
-        assert(NULL != platform_context);
-        memset(platform_context, 0, sizeof(platform_context_t));
-
-        platform_context->vtable = &s_test_vtable;
-        ret = platform_swap_buffers(platform_context);
-        assert(PLATFORM_BAD_OPERATION == ret);
-
-        free(platform_context);
-        platform_context = NULL;
-    }
-    {
-        // swap_buffersにRUNTIME_ERRORを出力させてRUNTIME_ERROR
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.test_vtable_swap_buffers_result_code = PLATFORM_RUNTIME_ERROR;
-
-        ret = platform_swap_buffers(platform_context);
+        ret = platform_window_create(NULL, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(1U == s_test_config_platform_window_create.call_count);
+        assert(111 == framebuffer_width);
+        assert(222 == framebuffer_height);
 
-        s_test_param.enable_use_test_vtable = false;
-        s_test_param.test_vtable_swap_buffers_result_code = PLATFORM_SUCCESS;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+        test_platform_context_config_reset();
     }
+
+    {
+        // platform_context_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(NULL, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // platform_context_->vtable == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = NULL;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // platform_context_->backend == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = NULL;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_label_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, NULL, 640, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // framebuffer_width_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, 480, NULL, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // framebuffer_height_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, 480, &framebuffer_width, NULL);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_width_ == 0 -> INVALID_ARGUMENT
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 0, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_width_ < 0 -> INVALID_ARGUMENT
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", -1, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_height_ == 0 -> INVALID_ARGUMENT
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, 0, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_height_ < 0 -> INVALID_ARGUMENT
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 0;
+        int framebuffer_height = 0;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_window_create(&context, "test_window", 640, -1, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // vtable委譲先が失敗を返す
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 333;
+        int framebuffer_height = 444;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_window_create.forced_result = PLATFORM_RUNTIME_ERROR;
+
+        ret = platform_window_create(&context, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(333 == framebuffer_width);
+        assert(444 == framebuffer_height);
+    }
+
     {
         // 正常系
-        platform_context_t* platform_context = NULL;
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+        int framebuffer_width = 555;
+        int framebuffer_height = 666;
 
-        s_test_param.enable_use_test_vtable = true;
-        ret = platform_initialize(linear_alloc, PLATFORM_USE_GLFW, &platform_context);
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_window_create.forced_result = PLATFORM_SUCCESS;
+
+        ret = platform_window_create(&context, "test_window", 640, 480, &framebuffer_width, &framebuffer_height);
         assert(PLATFORM_SUCCESS == ret);
-
-        ret = platform_swap_buffers(platform_context);
-        assert(PLATFORM_SUCCESS == ret);
-
-        s_test_param.enable_use_test_vtable = false;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
+        assert(555 == framebuffer_width);
+        assert(666 == framebuffer_height);
     }
+
+    test_platform_context_config_reset();
 }
 
+// Generated by ChatGPT
+static void NO_COVERAGE test_platform_pump_messages(void) {
+    test_platform_context_config_reset();
+
+    {
+        // テスト基盤による強制失敗（前提条件チェックより前）
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        test_call_control_t config = {0};
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)PLATFORM_RUNTIME_ERROR;
+        test_platform_pump_messages_config_set(&config);
+
+        ret = platform_pump_messages(NULL, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(1U == s_test_config_platform_pump_messages.call_count);
+
+        test_platform_context_config_reset();
+    }
+
+    {
+        // platform_context_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(NULL, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // platform_context_->vtable == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = NULL;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // platform_context_->backend == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = NULL;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // window_event_callback == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(&context, NULL, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // keyboard_event_callback == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, NULL, dummy_mouse_event_callback);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // mouse_event_callback == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, NULL);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // vtable委譲先が失敗を返す
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_pump_messages.forced_result = PLATFORM_RUNTIME_ERROR;
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+    }
+
+    {
+        // PLATFORM_WINDOW_CLOSE は正常系としてそのまま返す
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_pump_messages.forced_result = PLATFORM_WINDOW_CLOSE;
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_WINDOW_CLOSE == ret);
+    }
+
+    {
+        // 正常系
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_pump_messages.forced_result = PLATFORM_SUCCESS;
+
+        ret = platform_pump_messages(&context, dummy_window_event_callback, dummy_keyboard_event_callback, dummy_mouse_event_callback);
+        assert(PLATFORM_SUCCESS == ret);
+    }
+
+    test_platform_context_config_reset();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_platform_swap_buffers(void) {
+    test_platform_context_config_reset();
+
+    {
+        // テスト基盤による強制失敗（前提条件チェックより前）
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        test_call_control_t config = {0};
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)PLATFORM_RUNTIME_ERROR;
+        test_platform_swap_buffers_config_set(&config);
+
+        ret = platform_swap_buffers(NULL);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+        assert(1U == s_test_config_platform_swap_buffers.call_count);
+
+        test_platform_context_config_reset();
+    }
+
+    {
+        // platform_context_ == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+        test_platform_context_config_reset();
+
+        ret = platform_swap_buffers(NULL);
+        assert(PLATFORM_INVALID_ARGUMENT == ret);
+    }
+
+    {
+        // platform_context_->vtable == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = NULL;
+
+        test_platform_context_config_reset();
+
+        ret = platform_swap_buffers(&context);
+        assert(PLATFORM_BAD_OPERATION == ret);
+    }
+
+    {
+        // platform_context_->backend == NULL
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = NULL;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+
+        ret = platform_swap_buffers(&context);
+        assert(PLATFORM_BAD_OPERATION == ret);
+    }
+
+    {
+        // vtable委譲先が失敗を返す
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_swap_buffers.forced_result = PLATFORM_RUNTIME_ERROR;
+
+        ret = platform_swap_buffers(&context);
+        assert(PLATFORM_RUNTIME_ERROR == ret);
+    }
+
+    {
+        // 正常系
+        platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+        platform_context_t context;
+        char dummy_backend[8] = {0};
+
+        memset(&context, 0, sizeof(platform_context_t));
+        context.type = PLATFORM_USE_GLFW;
+        context.backend = (platform_backend_t*)dummy_backend;
+        context.vtable = &s_test_vtable;
+
+        test_platform_context_config_reset();
+        s_test_config_test_vtable_swap_buffers.forced_result = PLATFORM_SUCCESS;
+
+        ret = platform_swap_buffers(&context);
+        assert(PLATFORM_SUCCESS == ret);
+    }
+
+    test_platform_context_config_reset();
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_platform_vtable_get(void) {
+    test_platform_context_config_reset();
+
     {
-        // return NULL
-        s_test_param.enable_platform_vtable_get_return_null = true;
+        // 通常系: TEST_BUILD差し替え無効 + PLATFORM_USE_GLFW
+        const platform_vtable_t* vtable = NULL;
+        const platform_vtable_t* glfw_vtable = platform_glfw_vtable_get();
 
-        const platform_vtable_t* vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        test_platform_context_config_reset();
 
-        s_test_param.enable_platform_vtable_get_return_null = false;
+        vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != vtable);
+        assert(glfw_vtable == vtable);
     }
+
     {
-        // return test_vtable
-        s_test_param.enable_use_test_vtable = true;
+        // 通常系: TEST_BUILD差し替え無効 + 無効なplatform_type_
+        const platform_vtable_t* vtable = NULL;
 
-        const platform_vtable_t* vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        test_platform_context_config_reset();
 
-        s_test_param.enable_use_test_vtable = false;
-    }
-    {
-        // vtable_typeが既定値外
-        s_test_param.enable_platform_vtable_get_return_null = false;
-        s_test_param.enable_use_test_vtable = false;
-
-        const platform_vtable_t* vtable = platform_vtable_get(100);
+        vtable = platform_vtable_get((platform_type_t)100);
         assert(NULL == vtable);
     }
+
     {
-        // 通常vtable
-        s_test_param.enable_platform_vtable_get_return_null = false;
-        s_test_param.enable_use_test_vtable = false;
+        // 差し替え有効: NULLを返させる（通常のplatform_type_判定より優先）
+        const platform_vtable_t* vtable = (const platform_vtable_t*)0x1;
 
-        const platform_vtable_t* vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_NULL;
+
+        vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL == vtable);
     }
+
+    {
+        // 差し替え有効: NULLを返させる（無効なplatform_type_でも差し替えが優先）
+        const platform_vtable_t* vtable = (const platform_vtable_t*)0x1;
+
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_NULL;
+
+        vtable = platform_vtable_get((platform_type_t)100);
+        assert(NULL == vtable);
+    }
+
+    {
+        // 差し替え有効: test vtable を返させる
+        const platform_vtable_t* vtable = NULL;
+
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_TEST;
+
+        vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != vtable);
+        assert(&s_test_vtable == vtable);
+    }
+
+    {
+        // 差し替え有効: test vtable を返させる（無効なplatform_type_でも差し替えが優先）
+        const platform_vtable_t* vtable = NULL;
+
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_TEST;
+
+        vtable = platform_vtable_get((platform_type_t)100);
+        assert(NULL != vtable);
+        assert(&s_test_vtable == vtable);
+    }
+
+    {
+        // 差し替え有効: GLFW vtable を返させる
+        const platform_vtable_t* vtable = NULL;
+        const platform_vtable_t* glfw_vtable = platform_glfw_vtable_get();
+
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_GLFW;
+
+        vtable = platform_vtable_get(PLATFORM_USE_GLFW);
+        assert(NULL != vtable);
+        assert(glfw_vtable == vtable);
+    }
+
+    {
+        // 差し替え有効: GLFW vtable を返させる（無効なplatform_type_でも差し替えが優先）
+        const platform_vtable_t* vtable = NULL;
+        const platform_vtable_t* glfw_vtable = platform_glfw_vtable_get();
+
+        test_platform_context_config_reset();
+        s_test_config_platform_vtable_config.enable_test_vtable = true;
+        s_test_config_platform_vtable_config.vtable_select = TEST_PLATFORM_VTABLE_GLFW;
+
+        vtable = platform_vtable_get((platform_type_t)100);
+        assert(NULL != vtable);
+        assert(glfw_vtable == vtable);
+    }
+
+    test_platform_context_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_platform_type_valid_check(void) {
-    bool ret = platform_type_valid_check(PLATFORM_USE_GLFW);
-    assert(ret);
+    test_platform_context_config_reset();
 
-    ret = platform_type_valid_check(20);
-    assert(!ret);
+    {
+        // テスト基盤による強制失敗（通常はtrueになる入力をfalseへ上書き）
+        bool ret = true;
+
+        test_platform_context_config_reset();
+        s_test_config_platform_type_valid_check.fail_on_call = 1U;
+        s_test_config_platform_type_valid_check.forced_result = false;
+
+        ret = platform_type_valid_check(PLATFORM_USE_GLFW);
+        assert(false == ret);
+        assert(1U == s_test_config_platform_type_valid_check.call_count);
+    }
+
+    {
+        // テスト基盤による強制成功（通常はfalseになる入力をtrueへ上書き）
+        bool ret = false;
+
+        test_platform_context_config_reset();
+        s_test_config_platform_type_valid_check.fail_on_call = 1U;
+        s_test_config_platform_type_valid_check.forced_result = true;
+
+        ret = platform_type_valid_check((platform_type_t)100);
+        assert(true == ret);
+        assert(1U == s_test_config_platform_type_valid_check.call_count);
+    }
+
+    {
+        // 正常系: 有効なplatform_type_
+        bool ret = false;
+
+        test_platform_context_config_reset();
+
+        ret = platform_type_valid_check(PLATFORM_USE_GLFW);
+        assert(true == ret);
+    }
+
+    {
+        // 異常系: 無効なplatform_type_
+        bool ret = true;
+
+        test_platform_context_config_reset();
+
+        ret = platform_type_valid_check((platform_type_t)100);
+        assert(false == ret);
+    }
+
+    test_platform_context_config_reset();
 }
-
 #endif

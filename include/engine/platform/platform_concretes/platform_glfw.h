@@ -32,24 +32,6 @@ extern "C" {
  */
 const platform_vtable_t* platform_glfw_vtable_get(void);
 
-#ifdef TEST_BUILD
-#include "engine/platform/platform_core/platform_types.h"
-/**
- * @brief テスト用に、platform_glfwモジュールの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、platform_glfw_result_controller_resetが呼ばれるまで効果が継続する
- *
- * @param[in] result_code_ 出力実行結果コード
- */
-void platform_glfw_result_controller_set(platform_result_t ret_);
-
-/**
- * @brief platform_glfw_result_controller_setによる実行結果コードの固定を解除する
- *
- */
-void platform_glfw_result_controller_reset(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
