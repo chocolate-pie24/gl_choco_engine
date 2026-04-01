@@ -97,10 +97,6 @@ int main(int argc_, char** argv_) {
         test_platform_glfw();
         test_platform_context();
 
-        // test_platform_context();
-        // test_platform_glfw();
-        // test_platform_err_utils();
-
         // test_renderer_memory();
         // test_renderer_err_utils();
         // test_gl33_vbo();
