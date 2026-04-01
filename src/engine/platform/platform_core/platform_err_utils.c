@@ -12,6 +12,29 @@
 #include "engine/platform/platform_core/platform_err_utils.h"
 #include "engine/platform/platform_core/platform_types.h"
 
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+#include "test_controller.h"
+#include "engine/base/choco_macros.h"
+#include "engine/camera_system/camera_core/test_camera_err_utils.h"
+
+// platform_err_utils用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_platform_rslt_convert_choco_string;  /**< platform_rslt_convert_choco_string()テスト設定 */
+static test_call_control_t s_test_config_platform_rslt_convert_linear_alloc;  /**< platform_rslt_convert_linear_alloc()テスト設定 */
+
+// プライベート関数テスト設定
+
+// 全テスト関数プロトタイプ宣言
+static void test_platform_rslt_to_str(void);
+static void test_platform_rslt_convert_choco_string(void);
+static void test_platform_rslt_convert_linear_alloc(void);
+#endif
+
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< プラットフォームAPI実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< プラットフォームAPI実行結果コード(無効な引数)に対応する文字列 */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< プラットフォームAPI実行結果コード(実行時エラー)に対応する文字列 */
@@ -22,12 +45,6 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**<
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
-
-#ifdef TEST_BUILD
-static void NO_COVERAGE test_platform_rslt_to_str(void);
-static void NO_COVERAGE test_platform_rslt_convert_choco_string(void);
-static void NO_COVERAGE test_platform_rslt_convert_linear_alloc(void);
-#endif
 
 const char* platform_rslt_to_str(platform_result_t rslt_) {
     switch(rslt_) {
@@ -57,6 +74,14 @@ const char* platform_rslt_to_str(platform_result_t rslt_) {
 }
 
 platform_result_t platform_rslt_convert_choco_string(choco_string_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_rslt_convert_choco_string.call_count++;
+    if(s_test_config_platform_rslt_convert_choco_string.fail_on_call != 0) {
+        if(s_test_config_platform_rslt_convert_choco_string.call_count == s_test_config_platform_rslt_convert_choco_string.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_rslt_convert_choco_string.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
         return PLATFORM_SUCCESS;
@@ -82,6 +107,14 @@ platform_result_t platform_rslt_convert_choco_string(choco_string_result_t rslt_
 }
 
 platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_rslt_convert_linear_alloc.call_count++;
+    if(s_test_config_platform_rslt_convert_linear_alloc.fail_on_call != 0) {
+        if(s_test_config_platform_rslt_convert_linear_alloc.call_count == s_test_config_platform_rslt_convert_linear_alloc.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_rslt_convert_linear_alloc.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
         return PLATFORM_SUCCESS;
@@ -95,10 +128,37 @@ platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t r
 }
 
 #ifdef TEST_BUILD
-void test_platform_err_utils(void) {
+void NO_COVERAGE test_platform_rslt_convert_choco_string_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_rslt_convert_choco_string.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_rslt_convert_choco_string.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_rslt_convert_linear_alloc_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_platform_rslt_convert_linear_alloc.fail_on_call = config_->fail_on_call;
+    s_test_config_platform_rslt_convert_linear_alloc.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_platform_err_utils_config_reset(void) {
+    test_call_control_reset(&s_test_config_platform_rslt_convert_choco_string);
+    test_call_control_reset(&s_test_config_platform_rslt_convert_linear_alloc);
+}
+
+void NO_COVERAGE test_platform_err_utils(void) {
+    test_platform_err_utils_config_reset();
+
     test_platform_rslt_to_str();
     test_platform_rslt_convert_choco_string();
     test_platform_rslt_convert_linear_alloc();
+
+    test_platform_err_utils_config_reset();
 }
 
 static void NO_COVERAGE test_platform_rslt_to_str(void) {
@@ -179,6 +239,15 @@ static void NO_COVERAGE test_platform_rslt_convert_choco_string(void) {
 
     ret = platform_rslt_convert_choco_string(100);
     assert(PLATFORM_UNDEFINED_ERROR == ret);
+
+    // 失敗注入の確認
+    test_call_control_reset(&s_test_config_platform_rslt_convert_choco_string);
+    s_test_config_platform_rslt_convert_choco_string.fail_on_call = 1;
+    s_test_config_platform_rslt_convert_choco_string.forced_result = PLATFORM_BAD_OPERATION;
+
+    ret = platform_rslt_convert_choco_string(CHOCO_STRING_OVERFLOW);
+    assert(PLATFORM_BAD_OPERATION == ret);
+    test_call_control_reset(&s_test_config_platform_rslt_convert_choco_string);
 }
 
 static void NO_COVERAGE test_platform_rslt_convert_linear_alloc(void) {
@@ -194,6 +263,15 @@ static void NO_COVERAGE test_platform_rslt_convert_linear_alloc(void) {
 
     ret = platform_rslt_convert_linear_alloc(100);
     assert(PLATFORM_UNDEFINED_ERROR == ret);
+
+    // 失敗注入の確認
+    test_call_control_reset(&s_test_config_platform_rslt_convert_linear_alloc);
+    s_test_config_platform_rslt_convert_linear_alloc.fail_on_call = 1;
+    s_test_config_platform_rslt_convert_linear_alloc.forced_result = PLATFORM_BAD_OPERATION;
+
+    ret = platform_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+    assert(PLATFORM_BAD_OPERATION == ret);
+    test_call_control_reset(&s_test_config_platform_rslt_convert_linear_alloc);
 }
 
 #endif

@@ -31,7 +31,6 @@
 
 #include "platform/test_platform_context.h"
 #include "platform/test_platform_glfw.h"
-#include "platform/test_platform_err_utils.h"
 
 #include "renderer/test_renderer_backend_context.h"
 #include "renderer/test_renderer_memory.h"
@@ -39,6 +38,8 @@
 #include "renderer/test_gl33_vbo.h"
 #include "renderer/test_gl33_vao.h"
 #include "renderer/test_gl33_shader.h"
+
+#include "engine/platform/platform_core/test_platform_err_utils.h"
 
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/camera_system/camera_core/test_camera_memory.h"
@@ -87,6 +88,9 @@ int main(int argc_, char** argv_) {
         test_camera();
         test_flight_camera_controller();
         test_camera_manager();
+
+        // engine/platform
+        test_platform_err_utils();
 
         // test_platform_context();
         // test_platform_glfw();
