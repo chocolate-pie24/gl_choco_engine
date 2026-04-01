@@ -92,6 +92,7 @@ int main(int argc_, char** argv_) {
         // engine/platform
         test_platform_err_utils();
         test_platform_glfw();
+        test_platform_context();
 
         // test_platform_context();
         // test_platform_glfw();
