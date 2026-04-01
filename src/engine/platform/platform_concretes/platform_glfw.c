@@ -37,6 +37,43 @@
 
 #include "engine/containers/choco_string.h"
 
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+
+#include "test_controller.h"
+
+#include "engine/base/choco_macros.h"
+
+#include "engine/platform/platform_concretes/test_platform_glfw.h"
+
+// platform_glfw用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_platform_glfw_init;            /**< platform_glfw_init()テスト設定 */
+static test_call_control_t s_test_config_platform_glfw_window_create;   /**< platform_glfw_window_create()テスト設定 */
+static test_call_control_t s_test_config_platform_snapshot_collect;     /**< platform_snapshot_collect()テスト設定 */
+static test_call_control_t s_test_config_platform_snapshot_process;     /**< platform_snapshot_process()テスト設定 */
+static test_call_control_t s_test_config_platform_glfw_pump_messages;   /**< platform_glfw_pump_messages()テスト設定 */
+static test_call_control_t s_test_config_platform_glfw_swap_buffers;    /**< platform_glfw_swap_buffers()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_platform_glfw_vtable_get(void);
+static void test_platform_glfw_preinit(void);
+static void test_platform_glfw_init(void);
+static void test_platform_glfw_destroy(void);
+static void test_platform_glfw_window_create(void);
+static void test_platform_snapshot_collect(void);
+static void test_platform_snapshot_process(void);
+static void test_platform_glfw_pump_messages(void);
+static void test_platform_glfw_swap_buffers(void);
+static void test_keycode_to_glfw_keycode(void);
+#endif
+
 /**
  * @brief 入力状態格納構造体
  *
@@ -83,22 +120,6 @@ static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform
 
 static int keycode_to_glfw_keycode(keycode_t keycode_);
 
-// #define TEST_BUILD
-#ifdef TEST_BUILD
-#include <assert.h>
-#include <string.h>
-
-typedef struct test_controller {
-    platform_result_t ret;  /**< 強制的にこのエラーコードを返すようにする */
-    bool test_enable;       /**< テスト有効 */
-} test_contoller_t;
-
-static test_contoller_t s_test_controller;
-
-static void NO_COVERAGE test_keycode_to_glfw_keycode(void);
-static void NO_COVERAGE test_rslt_convert_string(void);
-#endif
-
 /**
  * @brief GLFW用仮想関数テーブル定義
  *
@@ -139,12 +160,16 @@ cleanup:
 
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    s_test_config_platform_glfw_init.call_count++;
+    if(s_test_config_platform_glfw_init.fail_on_call != 0) {
+        if(s_test_config_platform_glfw_init.call_count == s_test_config_platform_glfw_init.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_glfw_init.forced_result;
+        }
     }
 #endif
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_init", "platform_backend_")
 
     platform_backend_->initialized_glfw = false;
@@ -251,8 +276,11 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    s_test_config_platform_glfw_window_create.call_count++;
+    if(s_test_config_platform_glfw_window_create.fail_on_call != 0) {
+        if(s_test_config_platform_glfw_window_create.call_count == s_test_config_platform_glfw_window_create.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_glfw_window_create.forced_result;
+        }
     }
 #endif
 
@@ -317,6 +345,7 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
 
     *framebuffer_width_ = framebuffer_width;
     *framebuffer_height_ = framebuffer_height;
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -331,6 +360,15 @@ cleanup:
 }
 
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_snapshot_collect.call_count++;
+    if(s_test_config_platform_snapshot_collect.fail_on_call != 0) {
+        if(s_test_config_platform_snapshot_collect.call_count == s_test_config_platform_snapshot_collect.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_snapshot_collect.forced_result;
+        }
+    }
+#endif
+
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     int left_button_state = 0;
     int right_button_state = 0;
@@ -373,8 +411,17 @@ static platform_result_t platform_snapshot_process(
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
+#ifdef TEST_BUILD
+    s_test_config_platform_snapshot_process.call_count++;
+    if(s_test_config_platform_snapshot_process.fail_on_call != 0) {
+        if(s_test_config_platform_snapshot_process.call_count == s_test_config_platform_snapshot_process.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_snapshot_process.forced_result;
+        }
+    }
+#endif
 
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->window")
     IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->initialized_glfw")
@@ -434,6 +481,7 @@ static platform_result_t platform_snapshot_process(
     }
 
     platform_backend_->prev = platform_backend_->current;
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -447,8 +495,11 @@ static platform_result_t platform_glfw_pump_messages(
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
 
 #ifdef TEST_BUILD
-    if(s_test_controller.test_enable) {
-        return s_test_controller.ret;
+    s_test_config_platform_glfw_pump_messages.call_count++;
+    if(s_test_config_platform_glfw_pump_messages.fail_on_call != 0) {
+        if(s_test_config_platform_glfw_pump_messages.call_count == s_test_config_platform_glfw_pump_messages.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_glfw_pump_messages.forced_result;
+        }
     }
 #endif
 
@@ -477,6 +528,7 @@ static platform_result_t platform_glfw_pump_messages(
         ERROR_MESSAGE("platform_glfw_pump_messages(%s) - Failed to process snapshot.", platform_rslt_to_str(ret));
         goto cleanup;
     }
+
     ret = PLATFORM_SUCCESS;
 
 cleanup:
@@ -484,6 +536,15 @@ cleanup:
 }
 
 static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform_backend_) {
+#ifdef TEST_BUILD
+    s_test_config_platform_glfw_swap_buffers.call_count++;
+    if(s_test_config_platform_glfw_swap_buffers.fail_on_call != 0) {
+        if(s_test_config_platform_glfw_swap_buffers.call_count == s_test_config_platform_glfw_swap_buffers.fail_on_call) {
+            return (platform_result_t)s_test_config_platform_glfw_swap_buffers.forced_result;
+        }
+    }
+#endif
+
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_swap_buffers", "platform_backend_")
@@ -624,9 +685,62 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
 }
 
 #ifdef TEST_BUILD
+void NO_COVERAGE test_platform_glfw_config_reset(void) {
+    test_call_control_reset(&s_test_config_platform_glfw_init);
+    test_call_control_reset(&s_test_config_platform_glfw_window_create);
+    test_call_control_reset(&s_test_config_platform_snapshot_collect);
+    test_call_control_reset(&s_test_config_platform_snapshot_process);
+    test_call_control_reset(&s_test_config_platform_glfw_pump_messages);
+    test_call_control_reset(&s_test_config_platform_glfw_swap_buffers);
+}
 
-void test_platform_glfw(void) {
+void NO_COVERAGE test_platform_glfw(void) {
+    test_platform_glfw_vtable_get();
+    test_platform_glfw_preinit();
+    test_platform_glfw_init();
+    test_platform_glfw_destroy();
+    test_platform_glfw_window_create();
+    test_platform_snapshot_collect();
+    test_platform_snapshot_process();
+    test_platform_glfw_pump_messages();
+    test_platform_glfw_swap_buffers();
     test_keycode_to_glfw_keycode();
+}
+
+static void NO_COVERAGE test_platform_glfw_vtable_get(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_preinit(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_init(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_destroy(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_window_create(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_snapshot_collect(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_snapshot_process(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_pump_messages(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
+}
+
+static void NO_COVERAGE test_platform_glfw_swap_buffers(void) {
+    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
 }
 
 static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
@@ -804,15 +918,4 @@ static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
     glfw_key = keycode_to_glfw_keycode(1000);
     assert(GLFW_KEY_0 == glfw_key);
 }
-
-void platform_glfw_result_controller_set(platform_result_t ret_) {
-    s_test_controller.ret = ret_;
-    s_test_controller.test_enable = true;
-}
-
-void platform_glfw_result_controller_reset(void) {
-    s_test_controller.ret = PLATFORM_SUCCESS;
-    s_test_controller.test_enable = false;
-}
-
 #endif

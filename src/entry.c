@@ -30,7 +30,6 @@
 #include "engine/containers/test_ring_queue.h"
 
 #include "platform/test_platform_context.h"
-#include "platform/test_platform_glfw.h"
 
 #include "renderer/test_renderer_backend_context.h"
 #include "renderer/test_renderer_memory.h"
@@ -40,6 +39,7 @@
 #include "renderer/test_gl33_shader.h"
 
 #include "engine/platform/platform_core/test_platform_err_utils.h"
+#include "engine/platform/platform_concretes/test_platform_glfw.h"
 
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/camera_system/camera_core/test_camera_memory.h"
@@ -91,6 +91,7 @@ int main(int argc_, char** argv_) {
 
         // engine/platform
         test_platform_err_utils();
+        test_platform_glfw();
 
         // test_platform_context();
         // test_platform_glfw();
