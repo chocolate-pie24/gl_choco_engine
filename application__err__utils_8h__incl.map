@@ -1,0 +1,12 @@
+<map id="include/application/application_core/application_err_utils.h" name="include/application/application_core/application_err_utils.h">
+<area shape="rect" id="node1" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="359,5,569,60"/>
+<area shape="rect" id="node2" href="$application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="122,108,310,148"/>
+<area shape="rect" id="node3" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="5,196,192,236"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="243,196,427,236"/>
+<area shape="rect" id="node5" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="385,108,543,148"/>
+<area shape="rect" id="node7" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="567,108,724,148"/>
+<area shape="rect" id="node8" href="$ring__queue_8h.html" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="749,108,915,148"/>
+<area shape="rect" id="node10" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="940,108,1159,148"/>
+<area shape="rect" id="node6" title=" " alt="" coords="608,203,683,229"/>
+<area shape="rect" id="node9" title=" " alt="" coords="791,203,873,229"/>
+</map>

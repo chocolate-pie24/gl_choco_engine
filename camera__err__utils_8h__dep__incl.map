@@ -1,0 +1,8 @@
+<map id="include/engine/camera_system/camera_core/camera_err_utils.h" name="include/engine/camera_system/camera_core/camera_err_utils.h">
+<area shape="rect" id="node1" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="437,5,656,60"/>
+<area shape="rect" id="node2" href="$camera_8c.html" title="カメラモジュール実装" alt="" coords="5,115,203,155"/>
+<area shape="rect" id="node3" href="$flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="227,108,424,163"/>
+<area shape="rect" id="node4" href="$camera__err__utils_8c.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一する実行結果コード変換機能の実装" alt="" coords="448,108,645,163"/>
+<area shape="rect" id="node5" href="$camera__memory_8c.html" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIの実装" alt="" coords="669,115,904,155"/>
+<area shape="rect" id="node6" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="928,108,1125,163"/>
+</map>

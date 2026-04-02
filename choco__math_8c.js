@@ -1,0 +1,26 @@
+var choco__math_8c =
+[
+    [ "DET_EPS", "choco__math_8c.html#a4f2cc316cdae8dc2a43f874b4164006b", null ],
+    [ "FLOAT_EQUAL_EPS", "choco__math_8c.html#a06e0ffbee1dfccc996da04becc93764c", null ],
+    [ "choco_tanf", "choco__math_8c.html#a93ffa957d3a16e0757abf00ceebead73", null ],
+    [ "is_equal_float", "choco__math_8c.html#a7b9642a045ca402e72c83e97cf29f0a1", null ],
+    [ "mat4f_copy", "choco__math_8c.html#adc4112fc21d8e4748574ac1171ad21cd", null ],
+    [ "mat4f_identity", "choco__math_8c.html#a797f25c47d86499e265d33143e0c6555", null ],
+    [ "mat4f_inverse", "choco__math_8c.html#a127faca6dd0a62e66cbb757faf7a593b", null ],
+    [ "mat4f_mul", "choco__math_8c.html#a4068e9d5f528501e4373808d7ad701af", null ],
+    [ "mat4f_rot_x", "choco__math_8c.html#a2a795cb12abb16004bfdd0a81ff08f29", null ],
+    [ "mat4f_rot_xyz", "choco__math_8c.html#a21ed3aca4298729f618e35bd8d5e0f49", null ],
+    [ "mat4f_rot_y", "choco__math_8c.html#a95591740b43f5225979fa756b7c3e01e", null ],
+    [ "mat4f_rot_z", "choco__math_8c.html#a590e10234190e08f49f6987d567f22c0", null ],
+    [ "mat4f_translation", "choco__math_8c.html#aea75a624f3a5efc156b4e71e01cc799f", null ],
+    [ "mat4f_transpose", "choco__math_8c.html#a0d9cce33e131189b24d80e186bfa2728", null ],
+    [ "mat4f_vec4f_mul", "choco__math_8c.html#a62e7a36a759da036950f8e3d6684e9fd", null ],
+    [ "mat4f_zero", "choco__math_8c.html#a341fa9c2f49c25afce7a2938ae7554b1", null ],
+    [ "vec3f_add", "choco__math_8c.html#a92b43e2c87b31879ac7123ef97f72c70", null ],
+    [ "vec3f_initialize", "choco__math_8c.html#af284f3f32c75b277fa8545d83936b783", null ],
+    [ "vec3f_length", "choco__math_8c.html#a188703116f6c116f0e71c5ec4c5eb310", null ],
+    [ "vec3f_length_squared", "choco__math_8c.html#a1fa493a5b44abc35d8bd196fabf18454", null ],
+    [ "vec3f_normalize", "choco__math_8c.html#ad1662565fb8cffb597226f6f405a0581", null ],
+    [ "vec4f_add", "choco__math_8c.html#a7dbff4c06bc0e559d1e033e2dea746a2", null ],
+    [ "vec4f_initialize", "choco__math_8c.html#a8d7f8a19f1d8a745592799fbf86d6b3d", null ]
+];

@@ -1,0 +1,9 @@
+<map id="include/engine/renderer/renderer_resources/ui_shader.h" name="include/engine/renderer/renderer_resources/ui_shader.h">
+<area shape="rect" id="node1" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="180,5,356,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,123,88,148"/>
+<area shape="rect" id="node3" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="112,115,296,155"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="241,211,425,251"/>
+<area shape="rect" id="node5" href="$context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="371,108,573,163"/>
+<area shape="rect" id="node6" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="449,211,607,251"/>
+<area shape="rect" id="node7" title=" " alt="" coords="491,299,565,324"/>
+</map>

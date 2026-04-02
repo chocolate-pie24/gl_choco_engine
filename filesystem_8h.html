@@ -116,11 +116,17 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="filesystem_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2core_2filesystem_2filesystem_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2core_2filesystem_2filesystem_8hdep" id="ainclude_2engine_2core_2filesystem_2filesystem_8hdep">
-<area shape="rect" title="ファイルシステムモジュールAPIの提供" alt="" coords="177,5,355,45"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="122,93,290,133"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,189,209,214"/>
-<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="245,181,385,221"/>
-<area shape="rect" href="filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="365,93,559,133"/>
+<area shape="rect" title="ファイルシステムモジュールAPIの提供" alt="" coords="1051,5,1230,45"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="935,93,1103,133"/>
+<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1068,189,1208,229"/>
+<area shape="rect" href="filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="1179,93,1372,133"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="681,181,857,236"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1079,291,1229,346"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,284,207,353"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,284,432,353"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,284,657,353"/>
+<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="681,291,856,346"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="880,291,1055,346"/>
 </map>
 </div>
 </div>
@@ -376,12 +382,12 @@ Functions</h2></td></tr>
 <div class="line">    <span class="comment">// エラー処理</span></div>
 <div class="line">}</div>
 <div class="ttc" id="afilesystem_8h_html_a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f"><div class="ttname"><a href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f">FILESYSTEM_MODE_READ</a></div><div class="ttdeci">@ FILESYSTEM_MODE_READ</div><div class="ttdef"><b>Definition:</b> filesystem.h:60</div></div>
-<div class="ttc" id="afilesystem_8h_html_a8771bdc19bbd8dd1f7941a55deb07b36"><div class="ttname"><a href="filesystem_8h.html#a8771bdc19bbd8dd1f7941a55deb07b36">filesystem_byte_read</a></div><div class="ttdeci">filesystem_result_t filesystem_byte_read(filesystem_t *filesystem_, size_t read_bytes_, size_t *result_n_, char *buffer_)</div><div class="ttdoc">ファイルからバイト単位でデータを読み込む</div><div class="ttdef"><b>Definition:</b> filesystem.c:249</div></div>
+<div class="ttc" id="afilesystem_8h_html_a8771bdc19bbd8dd1f7941a55deb07b36"><div class="ttname"><a href="filesystem_8h.html#a8771bdc19bbd8dd1f7941a55deb07b36">filesystem_byte_read</a></div><div class="ttdeci">filesystem_result_t filesystem_byte_read(filesystem_t *filesystem_, size_t read_bytes_, size_t *result_n_, char *buffer_)</div><div class="ttdoc">ファイルからバイト単位でデータを読み込む</div><div class="ttdef"><b>Definition:</b> filesystem.c:306</div></div>
 <div class="ttc" id="afilesystem_8h_html_a9e2e60a6bb794f175b5bda17a4210796"><div class="ttname"><a href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a></div><div class="ttdeci">filesystem_result_t</div><div class="ttdoc">ファイルシステムモジュールの実行結果コード定義</div><div class="ttdef"><b>Definition:</b> filesystem.h:42</div></div>
 <div class="ttc" id="afilesystem_8h_html_a9e2e60a6bb794f175b5bda17a4210796a21c7686b3d172c4ea8505fa06601dc64"><div class="ttname"><a href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796a21c7686b3d172c4ea8505fa06601dc64">FILESYSTEM_SUCCESS</a></div><div class="ttdeci">@ FILESYSTEM_SUCCESS</div><div class="ttdef"><b>Definition:</b> filesystem.h:43</div></div>
-<div class="ttc" id="afilesystem_8h_html_ad5d47279498bce65ae2118126d62d3fb"><div class="ttname"><a href="filesystem_8h.html#ad5d47279498bce65ae2118126d62d3fb">filesystem_open</a></div><div class="ttdeci">filesystem_result_t filesystem_open(filesystem_t *filesystem_, const char *fullpath_, filesystem_open_mode_t mode_)</div><div class="ttdoc">filesystem_が保持するファイルハンドルをオープンする</div><div class="ttdef"><b>Definition:</b> filesystem.c:185</div></div>
-<div class="ttc" id="afilesystem_8h_html_af5799a36131defb3b2effc3388fa410b"><div class="ttname"><a href="filesystem_8h.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a></div><div class="ttdeci">filesystem_result_t filesystem_create(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_t構造体インスタンスを生成し、初期化する</div><div class="ttdef"><b>Definition:</b> filesystem.c:116</div></div>
-<div class="ttc" id="astructfilesystem_html"><div class="ttname"><a href="structfilesystem.html">filesystem</a></div><div class="ttdoc">ファイルシステムモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> filesystem.c:31</div></div>
+<div class="ttc" id="afilesystem_8h_html_ad5d47279498bce65ae2118126d62d3fb"><div class="ttname"><a href="filesystem_8h.html#ad5d47279498bce65ae2118126d62d3fb">filesystem_open</a></div><div class="ttdeci">filesystem_result_t filesystem_open(filesystem_t *filesystem_, const char *fullpath_, filesystem_open_mode_t mode_)</div><div class="ttdoc">filesystem_が保持するファイルハンドルをオープンする</div><div class="ttdef"><b>Definition:</b> filesystem.c:234</div></div>
+<div class="ttc" id="afilesystem_8h_html_af5799a36131defb3b2effc3388fa410b"><div class="ttname"><a href="filesystem_8h.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a></div><div class="ttdeci">filesystem_result_t filesystem_create(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_t構造体インスタンスを生成し、初期化する</div><div class="ttdef"><b>Definition:</b> filesystem.c:161</div></div>
+<div class="ttc" id="astructfilesystem_html"><div class="ttname"><a href="structfilesystem.html">filesystem</a></div><div class="ttdoc">ファイルシステムモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> filesystem.c:124</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filesystem_</td><td>読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ </td></tr>
@@ -449,7 +455,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line">ret = <a class="code hl_function" href="filesystem_8h.html#a3654261af5768226774c43027f04a439">filesystem_close</a>(<a class="code hl_struct" href="structfilesystem.html">filesystem</a>);</div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="ttc" id="afilesystem_8h_html_a3654261af5768226774c43027f04a439"><div class="ttname"><a href="filesystem_8h.html#a3654261af5768226774c43027f04a439">filesystem_close</a></div><div class="ttdeci">filesystem_result_t filesystem_close(filesystem_t *filesystem_)</div><div class="ttdoc">filesystem_が保持するファイルハンドルをクローズする</div><div class="ttdef"><b>Definition:</b> filesystem.c:220</div></div>
+<div class="ttc" id="afilesystem_8h_html_a3654261af5768226774c43027f04a439"><div class="ttname"><a href="filesystem_8h.html#a3654261af5768226774c43027f04a439">filesystem_close</a></div><div class="ttdeci">filesystem_result_t filesystem_close(filesystem_t *filesystem_)</div><div class="ttdoc">filesystem_が保持するファイルハンドルをクローズする</div><div class="ttdef"><b>Definition:</b> filesystem.c:273</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filesystem_</td><td>クローズ対象構造体インスタンスへのポインタ</td></tr>
@@ -465,7 +471,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>既にクローズ済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>既にクローズ済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する </dd></dl>
 
 </div>
 </div>
@@ -498,7 +504,7 @@ Functions</h2></td></tr>
 <div class="line"><span class="comment">// エラー処理</span></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">filesystem_</td><td>ファイルシステム内部状態管理構造体へのダブルポインタ</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">filesystem_</td><td>ファイルシステム内部状態管理構造体へのダブルポインタ</td></tr>
   </table>
   </dd>
 </dl>
@@ -550,7 +556,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a>(&amp;<a class="code hl_struct" href="structfilesystem.html">filesystem</a>); <span class="comment">// filesystem == NULLになる</span></div>
 <div class="line"><a class="code hl_function" href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a>(&amp;<a class="code hl_struct" href="structfilesystem.html">filesystem</a>); <span class="comment">// 2重デストロイ許可</span></div>
-<div class="ttc" id="afilesystem_8h_html_a5378884428195551cd63e9176a920d73"><div class="ttname"><a href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a></div><div class="ttdeci">void filesystem_destroy(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_が管理しているメモリと自身のメモリを解放し、*filesystem_=NULLにする</div><div class="ttdef"><b>Definition:</b> filesystem.c:164</div></div>
+<div class="ttc" id="afilesystem_8h_html_a5378884428195551cd63e9176a920d73"><div class="ttname"><a href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a></div><div class="ttdeci">void filesystem_destroy(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_が管理しているメモリと自身のメモリを解放し、*filesystem_=NULLにする</div><div class="ttdef"><b>Definition:</b> filesystem.c:213</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filesystem_</td><td>メモリ解放対象構造体インスタンスへのダブルポインタ </td></tr>
@@ -621,7 +627,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する </dd></dl>
 
 </div>
 </div>

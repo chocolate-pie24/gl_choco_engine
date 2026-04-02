@@ -95,14 +95,14 @@ $(document).ready(function(){initNavTree('md_docs_guide_event_system_event_en.ht
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="guide_event_system_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md71"></a>
+<h1><a class="anchor" id="autotoc_md101"></a>
 Event System Guide</h1>
 <p>This page provides the following to help engine developers operate the event system safely:</p>
 <ul>
 <li>The event system design (structure and data flow)</li>
 <li>Procedures and guidelines for adding new events</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md72"></a>
+<h2><a class="anchor" id="autotoc_md102"></a>
 Event System Overview</h2>
 <p>The event system is executed in <code><a class="el" href="application_8h.html#a625d4385834abd6a3da348778c08d4f1" title="アプリケーションメインループ">application_run()</a></code> in <code><a class="el" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装">application.c</a></code> as follows:</p>
 <ol type="1">
@@ -127,20 +127,20 @@ Event System Overview</h2>
 <div class="line">        app_state_clean();</div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="aapplication_8h_html_a625d4385834abd6a3da348778c08d4f1"><div class="ttname"><a href="application_8h.html#a625d4385834abd6a3da348778c08d4f1">application_run</a></div><div class="ttdeci">application_result_t application_run(void)</div><div class="ttdoc">アプリケーションメインループ</div><div class="ttdef"><b>Definition:</b> application.c:394</div></div>
-<div class="ttc" id="aplatform__context_8h_html_ab719441d87f981040fedc46aba9c5fd1"><div class="ttname"><a href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a></div><div class="ttdeci">platform_result_t platform_pump_messages(platform_context_t *platform_context_, void(*window_event_callback)(const window_event_t *event_), void(*keyboard_event_callback)(const keyboard_event_t *event_), void(*mouse_event_callback)(const mouse_event_t *event_))</div><div class="ttdoc">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す</div><div class="ttdef"><b>Definition:</b> platform_context.c:205</div></div>
+<div class="ttc" id="aapplication_8h_html_a625d4385834abd6a3da348778c08d4f1"><div class="ttname"><a href="application_8h.html#a625d4385834abd6a3da348778c08d4f1">application_run</a></div><div class="ttdeci">application_result_t application_run(void)</div><div class="ttdoc">アプリケーションメインループ</div><div class="ttdef"><b>Definition:</b> application.c:432</div></div>
+<div class="ttc" id="aplatform__context_8h_html_ab719441d87f981040fedc46aba9c5fd1"><div class="ttname"><a href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a></div><div class="ttdeci">platform_result_t platform_pump_messages(platform_context_t *platform_context_, void(*window_event_callback)(const window_event_t *event_), void(*keyboard_event_callback)(const keyboard_event_t *event_), void(*mouse_event_callback)(const mouse_event_t *event_))</div><div class="ttdoc">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す</div><div class="ttdef"><b>Definition:</b> platform_context.c:244</div></div>
 <div class="ttc" id="aplatform__types_8h_html_af8313b3164989f0ef2d24d2b299601b7a3a2a487e33b2eba4a4315d5d2184da7d"><div class="ttname"><a href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7a3a2a487e33b2eba4a4315d5d2184da7d">PLATFORM_WINDOW_CLOSE</a></div><div class="ttdeci">@ PLATFORM_WINDOW_CLOSE</div><div class="ttdef"><b>Definition:</b> platform_types.h:37</div></div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md73"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md103"></a>
 Event System Data Flow</h2>
 <div class="image">
 <img src="dataflow.png" alt=""/>
 <div class="caption">
 dataflow</div></div>
-    <h2><a class="anchor" id="autotoc_md74"></a>
+    <h2><a class="anchor" id="autotoc_md104"></a>
 Guidelines for Adding Events</h2>
 <p>When adding an event, you must first evaluate the nature of the event. The key question is: <b>Does this event affect the control flow of <code><a class="el" href="application_8h.html#a625d4385834abd6a3da348778c08d4f1" title="アプリケーションメインループ">application_run()</a></code>?</b></p>
 <p>If it does (e.g., a window close event), refer to <b>Guidelines for Adding Must-Not-Drop Events</b>. Otherwise, refer to <b>Guidelines for Adding Normal Events</b>.</p>
-<h3><a class="anchor" id="autotoc_md75"></a>
+<h3><a class="anchor" id="autotoc_md105"></a>
 Guidelines for Adding Normal Events</h3>
 <p>A <b>normal event</b> is an event for which the application control flow does not break even if events are dropped (oldest discarded when the queue is full).</p>
 <p>There are two types of normal event additions:</p>
@@ -149,7 +149,7 @@ Guidelines for Adding Normal Events</h3>
 <li>Introducing a new event category</li>
 </ul>
 <p>Because the required steps differ, each procedure is described below.</p>
-<h4><a class="anchor" id="autotoc_md76"></a>
+<h4><a class="anchor" id="autotoc_md106"></a>
 Adding an Event Code to an Existing Event Category</h4>
 <ul>
 <li>Add an event code and (if necessary) accompanying event arguments (modify the appropriate file under <code>engine/include/core/event</code> based on the target event category).</li>
@@ -163,7 +163,7 @@ Adding an Event Code to an Existing Event Category</h4>
 <li>Add clearing of the corresponding state-change information to <code>app_state_clean()</code>.</li>
 </ul>
 <p>As long as the normal event addition stays within the existing event categories (keyboard/mouse/window), no changes to the event callback functions are required.</p>
-<h4><a class="anchor" id="autotoc_md77"></a>
+<h4><a class="anchor" id="autotoc_md107"></a>
 Introducing a New Event Category</h4>
 <ul>
 <li>Create a new header file for the new event category under <code>engine/include/core/event</code>.</li>
@@ -187,7 +187,7 @@ Introducing a New Event Category</h4>
 <li>Notify subsystems of the resulting application state changes via <code>app_state_dispatch()</code>.</li>
 <li>Add clearing of the corresponding state-change information to <code>app_state_clean()</code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md78"></a>
+<h3><a class="anchor" id="autotoc_md108"></a>
 Guidelines for Adding Must-Not-Drop Events</h3>
 <p>For must-not-drop events, processing is not performed via event codes or callback functions. Instead, the event is handled by the return value of <code><a class="el" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1" title="OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す">platform_pump_messages()</a></code>.</p>
 <p>The steps to add this type of event are:</p>

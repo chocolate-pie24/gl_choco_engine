@@ -1,0 +1,7 @@
+<map id="include/engine/camera_system/camera_manager/camera_manager.h" name="include/engine/camera_system/camera_manager/camera_manager.h">
+<area shape="rect" id="node1" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIを提供する" alt="" coords="32,5,226,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="54,196,129,221"/>
+<area shape="rect" id="node3" title=" " alt="" coords="24,115,95,141"/>
+<area shape="rect" id="node4" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="120,108,277,148"/>
+<area shape="rect" id="node5" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="301,108,520,148"/>
+</map>

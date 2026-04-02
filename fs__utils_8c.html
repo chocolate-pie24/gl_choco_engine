@@ -115,16 +115,16 @@ Include dependency graph for fs_utils.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="fs__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c" alt=""/></div>
 <map name="asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c" id="asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c">
-<area shape="rect" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="305,5,445,45"/>
+<area shape="rect" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="428,5,568,45"/>
 <area shape="rect" title=" " alt="" coords="5,101,76,126"/>
-<area shape="rect" title=" " alt="" coords="405,269,479,295"/>
-<area shape="rect" title=" " alt="" coords="151,101,234,126"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="309,93,442,133"/>
+<area shape="rect" title=" " alt="" coords="527,269,602,295"/>
+<area shape="rect" title=" " alt="" coords="137,269,219,295"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="327,93,461,133"/>
 <area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="152,181,332,221"/>
 <area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="357,181,527,221"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="551,181,709,221"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="605,101,815,126"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="783,189,922,214"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="602,181,759,221"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="655,101,866,126"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="834,189,973,214"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -158,8 +158,8 @@ Functions</h2></td></tr>
 <div class="textblock"><p>ファイル処理に関するユーティリティAPIの実装 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2025-12.26</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2025-12-26</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -340,7 +340,7 @@ Functions</h2></td></tr>
 
 <p>fs_utils_が保持するファイルパス,ファイル名,拡張子の文字列からフルパス文字列を生成する </p>
 <dl class="section note"><dt>Note</dt><dd>処理に失敗した場合,out_fullpath_の内部データは変更される可能性がある </dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>out_fullpath_は <a class="el" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a> <a class="el" href="choco__string_8h.html#ad24bb90ce4b5feff03eddad38d0e8a7d">choco_string_create_from_c_string</a> によって初期化されたインスタンスを渡すこと</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>out_fullpath_は <a class="el" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a> <a class="el" href="choco__string_8h.html#a8c318047bb5207356632daf7ff0cf45e">choco_string_create_from_c_string</a> によって初期化されたインスタンスを渡すこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fs_utils_</td><td>fs_utils_t構造体インスタンスへのポインタ </td></tr>
@@ -429,10 +429,10 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line">ret = <a class="code hl_function" href="fs__utils_8h.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a>(<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>, <span class="keywordtype">string</span>); <span class="comment">// path/to/filename.txtの中身が全て読み込まれ、stringに格納される</span></div>
 <div class="line"><span class="comment">// エラー処理</span></div>
-<div class="ttc" id="achoco__string_8h_html_a6db4c5eb14de032dfed5c2d3834e19f7"><div class="ttname"><a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a></div><div class="ttdeci">choco_string_result_t</div><div class="ttdoc">文字列API実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_string.h:40</div></div>
-<div class="ttc" id="achoco__string_8h_html_af01ca795324a4347a1ce80057f71de42"><div class="ttname"><a href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a></div><div class="ttdeci">choco_string_result_t choco_string_default_create(choco_string_t **string_)</div><div class="ttdoc">空の文字列コンテナを生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:92</div></div>
+<div class="ttc" id="achoco__string_8h_html_a6db4c5eb14de032dfed5c2d3834e19f7"><div class="ttname"><a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a></div><div class="ttdeci">choco_string_result_t</div><div class="ttdoc">文字列API実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_string.h:41</div></div>
+<div class="ttc" id="achoco__string_8h_html_af01ca795324a4347a1ce80057f71de42"><div class="ttname"><a href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a></div><div class="ttdeci">choco_string_result_t choco_string_default_create(choco_string_t **string_)</div><div class="ttdoc">空の文字列コンテナを生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:99</div></div>
 <div class="ttc" id="afs__utils_8h_html_affe6cb5e85b87975b0017d4e05a8a62f"><div class="ttname"><a href="fs__utils_8h.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a></div><div class="ttdeci">fs_utils_result_t fs_utils_text_file_read(fs_utils_t *fs_utils_, choco_string_t *out_string_)</div><div class="ttdoc">fs_utils_create で指定したファイルの中身を全て読み込む</div><div class="ttdef"><b>Definition:</b> fs_utils.c:203</div></div>
-<div class="ttc" id="astructchoco__string_html"><div class="ttname"><a href="structchoco__string.html">choco_string</a></div><div class="ttdoc">文字列コンテナ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> choco_string.c:68</div></div>
+<div class="ttc" id="astructchoco__string_html"><div class="ttname"><a href="structchoco__string.html">choco_string</a></div><div class="ttdoc">文字列コンテナ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> choco_string.c:76</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fs_utils_</td><td>fs_utils_t構造体インスタンスへのポインタ </td></tr>

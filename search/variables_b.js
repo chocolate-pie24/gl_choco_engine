@@ -1,5 +1,19 @@
 var searchData=
 [
-  ['shader_5fvtable_0',['shader_vtable',['../structrenderer__backend__context.html#ab532279778c8eebd1cfbe967b1f10d20',1,'renderer_backend_context']]],
-  ['stride_1',['stride',['../structring__queue.html#a75535dae236624d37fc8c1aca2c51dae',1,'ring_queue']]]
+  ['padding_0',['padding',['../structring__queue.html#a200bf551e0a05a2d3755abd15c83f432',1,'ring_queue']]],
+  ['perspective_5fmatrix_1',['perspective_matrix',['../structcamera.html#a24562c33cd724c731932edc4f60227a9',1,'camera']]],
+  ['pfn_5fcommand_5fexecutor_2',['pfn_command_executor',['../structcommand__status__flight__camera.html#ab39be1774a3cb39e93eceb769eb303fd',1,'command_status_flight_camera']]],
+  ['platform_5fbackend_5fdestroy_3',['platform_backend_destroy',['../structplatform__vtable.html#a2bfb6e674266be2665be9f5b753901f2',1,'platform_vtable']]],
+  ['platform_5fbackend_5finit_4',['platform_backend_init',['../structplatform__vtable.html#ac24546ccaae4812b2d0eefd694bcc00f',1,'platform_vtable']]],
+  ['platform_5fbackend_5fpreinit_5',['platform_backend_preinit',['../structplatform__vtable.html#ab0174315cf40677841b186065d6bd0ce',1,'platform_vtable']]],
+  ['platform_5fbackend_5fpump_5fmessages_6',['platform_backend_pump_messages',['../structplatform__vtable.html#a6b8643c867e5a6c141c8127daf1cc0ad',1,'platform_vtable']]],
+  ['platform_5fbackend_5fswap_5fbuffers_7',['platform_backend_swap_buffers',['../structplatform__vtable.html#a7a4fd6f22bc8eb87228c0042c413e3a6',1,'platform_vtable']]],
+  ['platform_5fbackend_5fwindow_5fcreate_8',['platform_backend_window_create',['../structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b',1,'platform_vtable']]],
+  ['platform_5fcontext_9',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
+  ['position_10',['position',['../structcamera.html#a1b74c0923abb981d870c9f8abbea688c',1,'camera']]],
+  ['posture_5fcache_5fdirty_11',['posture_cache_dirty',['../structcamera.html#adf8f11f2f978815e4ad6432a9680749d',1,'camera']]],
+  ['pressed_12',['pressed',['../structkeyboard__event__args.html#a52c0c67f7d8320c6040b18ee511aaae6',1,'keyboard_event_args::pressed()'],['../structmouse__event__args.html#a9495f63736e3b431af4bd02a5f6a725a',1,'mouse_event_args::pressed()']]],
+  ['prev_13',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]],
+  ['program_5fid_14',['program_id',['../structrenderer__backend__shader.html#a5be96473ac8df57873fcd583fcb8a6f1',1,'renderer_backend_shader']]],
+  ['projection_5fmatrix_5flocation_15',['projection_matrix_location',['../structui__shader.html#ac5bfd78e38627b49ce3fc8561d3e3dde',1,'ui_shader']]]
 ];

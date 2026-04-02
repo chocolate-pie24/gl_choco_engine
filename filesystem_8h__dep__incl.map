@@ -1,7 +1,13 @@
 <map id="include/engine/core/filesystem/filesystem.h" name="include/engine/core/filesystem/filesystem.h">
-<area shape="rect" id="node1" title="ファイルシステムモジュールAPIの提供" alt="" coords="177,5,355,45"/>
-<area shape="rect" id="node2" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="122,93,290,133"/>
-<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,189,209,214"/>
-<area shape="rect" id="node4" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="245,181,385,221"/>
-<area shape="rect" id="node5" href="$filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="365,93,559,133"/>
+<area shape="rect" id="node1" title="ファイルシステムモジュールAPIの提供" alt="" coords="1051,5,1230,45"/>
+<area shape="rect" id="node2" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="935,93,1103,133"/>
+<area shape="rect" id="node10" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1068,189,1208,229"/>
+<area shape="rect" id="node11" href="$filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="1179,93,1372,133"/>
+<area shape="rect" id="node3" href="$renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="681,181,857,236"/>
+<area shape="rect" id="node9" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1079,291,1229,346"/>
+<area shape="rect" id="node4" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,284,207,353"/>
+<area shape="rect" id="node5" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,284,432,353"/>
+<area shape="rect" id="node6" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,284,657,353"/>
+<area shape="rect" id="node7" href="$renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="681,291,856,346"/>
+<area shape="rect" id="node8" href="$renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="880,291,1055,346"/>
 </map>

@@ -13,6 +13,7 @@ var choco__memory_8h =
       [ "MEMORY_TAG_RING_QUEUE", "choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca6aed8fe38d265080aaf69095c2a5c497", null ],
       [ "MEMORY_TAG_RENDERER", "choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca7b4c1e90432c602af81107af1c9cf1b8", null ],
       [ "MEMORY_TAG_FILE_IO", "choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395ca56e14f1fce1bbf4af8c046a231ae9d5c", null ],
+      [ "MEMORY_TAG_CAMERA", "choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395caee521a3853ddadba96bb16d9e2c6e65f", null ],
       [ "MEMORY_TAG_MAX", "choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395cacaebd46852e13ef746fd312e0f1ef8bd", null ]
     ] ],
     [ "memory_system_allocate", "choco__memory_8h.html#a0874ee6816154203790c2c3630530557", null ],

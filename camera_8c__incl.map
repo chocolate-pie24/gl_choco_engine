@@ -1,0 +1,16 @@
+<map id="src/engine/camera_system/camera/camera.c" name="src/engine/camera_system/camera/camera.c">
+<area shape="rect" id="node1" title="カメラモジュール実装" alt="" coords="484,5,681,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="84,284,167,309"/>
+<area shape="rect" id="node3" href="$camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="293,101,467,141"/>
+<area shape="rect" id="node4" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="383,196,601,236"/>
+<area shape="rect" id="node5" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="163,196,347,236"/>
+<area shape="rect" id="node6" href="$camera__err__utils_8h.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="853,93,1041,148"/>
+<area shape="rect" id="node7" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="677,196,857,236"/>
+<area shape="rect" id="node11" href="$camera__memory_8h.html" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="543,101,777,141"/>
+<area shape="rect" id="node12" href="$choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="33,101,217,141"/>
+<area shape="rect" id="node13" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1116,108,1327,133"/>
+<area shape="rect" id="node14" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1295,203,1433,229"/>
+<area shape="rect" id="node9" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1063,196,1220,236"/>
+<area shape="rect" id="node10" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="881,196,1039,236"/>
+<area shape="rect" id="node8" title=" " alt="" coords="923,284,997,309"/>
+</map>

@@ -214,12 +214,12 @@ Functions</h2></td></tr>
 <div class="line"><a class="code hl_function" href="platform__context_8h.html#a1abffb11ea233961bc4072e55ddbc5a6">platform_destroy</a>(<a class="code hl_struct" href="structplatform__context.html">platform_context</a>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// リニアアロケータによるメモリ破棄</span></div>
-<div class="ttc" id="aplatform__context_8h_html_a1abffb11ea233961bc4072e55ddbc5a6"><div class="ttname"><a href="platform__context_8h.html#a1abffb11ea233961bc4072e55ddbc5a6">platform_destroy</a></div><div class="ttdeci">void platform_destroy(platform_context_t *platform_context_)</div><div class="ttdoc">プラットフォームStrategyパターンのContext構造体インスタンスの内部データをクリアする</div><div class="ttdef"><b>Definition:</b> platform_context.c:169</div></div>
-<div class="ttc" id="aplatform__context_8h_html_ad1bd7840aa3cc01e627c1c81ee3edbf7"><div class="ttname"><a href="platform__context_8h.html#ad1bd7840aa3cc01e627c1c81ee3edbf7">platform_initialize</a></div><div class="ttdeci">platform_result_t platform_initialize(linear_alloc_t *allocator_, platform_type_t platform_type_, platform_context_t **out_platform_context_)</div><div class="ttdoc">プラットフォームStrategyパターンを初期化する</div><div class="ttdef"><b>Definition:</b> platform_context.c:113</div></div>
+<div class="ttc" id="aplatform__context_8h_html_a1abffb11ea233961bc4072e55ddbc5a6"><div class="ttname"><a href="platform__context_8h.html#a1abffb11ea233961bc4072e55ddbc5a6">platform_destroy</a></div><div class="ttdeci">void platform_destroy(platform_context_t *platform_context_)</div><div class="ttdoc">プラットフォームStrategyパターンのContext構造体インスタンスの内部データをクリアする</div><div class="ttdef"><b>Definition:</b> platform_context.c:198</div></div>
+<div class="ttc" id="aplatform__context_8h_html_ad1bd7840aa3cc01e627c1c81ee3edbf7"><div class="ttname"><a href="platform__context_8h.html#ad1bd7840aa3cc01e627c1c81ee3edbf7">platform_initialize</a></div><div class="ttdeci">platform_result_t platform_initialize(linear_alloc_t *allocator_, platform_type_t platform_type_, platform_context_t **out_platform_context_)</div><div class="ttdoc">プラットフォームStrategyパターンを初期化する</div><div class="ttdef"><b>Definition:</b> platform_context.c:133</div></div>
 <div class="ttc" id="aplatform__types_8h_html_a2ac3ce8ab152a6ec490b8a846ae28905a974591108e0c4e3673140fe016fc13ea"><div class="ttname"><a href="platform__types_8h.html#a2ac3ce8ab152a6ec490b8a846ae28905a974591108e0c4e3673140fe016fc13ea">PLATFORM_USE_GLFW</a></div><div class="ttdeci">@ PLATFORM_USE_GLFW</div><div class="ttdef"><b>Definition:</b> platform_types.h:45</div></div>
 <div class="ttc" id="aplatform__types_8h_html_af8313b3164989f0ef2d24d2b299601b7"><div class="ttname"><a href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a></div><div class="ttdeci">platform_result_t</div><div class="ttdoc">プラットフォームシステム実行結果コード定義</div><div class="ttdef"><b>Definition:</b> platform_types.h:27</div></div>
-<div class="ttc" id="astructlinear__alloc_html"><div class="ttname"><a href="structlinear__alloc.html">linear_alloc</a></div><div class="ttdoc">linear_alloc_t内部データ構造</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:32</div></div>
-<div class="ttc" id="astructplatform__context_html"><div class="ttname"><a href="structplatform__context.html">platform_context</a></div><div class="ttdoc">プラットフォームコンテキスト構造体</div><div class="ttdef"><b>Definition:</b> platform_context.c:62</div></div>
+<div class="ttc" id="astructlinear__alloc_html"><div class="ttname"><a href="structlinear__alloc.html">linear_alloc</a></div><div class="ttdoc">linear_alloc_t内部データ構造</div><div class="ttdef"><b>Definition:</b> linear_allocator.c:54</div></div>
+<div class="ttc" id="astructplatform__context_html"><div class="ttname"><a href="structplatform__context.html">platform_context</a></div><div class="ttdoc">プラットフォームコンテキスト構造体</div><div class="ttdef"><b>Definition:</b> platform_context.c:123</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">platform_context_</td><td>クリア対象構造体インスタンス </td></tr>
@@ -370,8 +370,8 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><span class="comment">// リニアアロケータによるメモリ破棄</span></div>
 <div class="line">}</div>
-<div class="ttc" id="aplatform__context_8h_html_a9f8780367bbf81346a52721b7a7cae7e"><div class="ttname"><a href="platform__context_8h.html#a9f8780367bbf81346a52721b7a7cae7e">platform_window_create</a></div><div class="ttdeci">platform_result_t platform_window_create(platform_context_t *platform_context_, const char *window_label_, int window_width_, int window_height_, int *framebuffer_width_, int *framebuffer_height_)</div><div class="ttdoc">プラットフォームに応じたウィンドウ生成処理を行う</div><div class="ttdef"><b>Definition:</b> platform_context.c:184</div></div>
-<div class="ttc" id="aplatform__context_8h_html_ab719441d87f981040fedc46aba9c5fd1"><div class="ttname"><a href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a></div><div class="ttdeci">platform_result_t platform_pump_messages(platform_context_t *platform_context_, void(*window_event_callback)(const window_event_t *event_), void(*keyboard_event_callback)(const keyboard_event_t *event_), void(*mouse_event_callback)(const mouse_event_t *event_))</div><div class="ttdoc">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す</div><div class="ttdef"><b>Definition:</b> platform_context.c:205</div></div>
+<div class="ttc" id="aplatform__context_8h_html_a9f8780367bbf81346a52721b7a7cae7e"><div class="ttname"><a href="platform__context_8h.html#a9f8780367bbf81346a52721b7a7cae7e">platform_window_create</a></div><div class="ttdeci">platform_result_t platform_window_create(platform_context_t *platform_context_, const char *window_label_, int window_width_, int window_height_, int *framebuffer_width_, int *framebuffer_height_)</div><div class="ttdoc">プラットフォームに応じたウィンドウ生成処理を行う</div><div class="ttdef"><b>Definition:</b> platform_context.c:213</div></div>
+<div class="ttc" id="aplatform__context_8h_html_ab719441d87f981040fedc46aba9c5fd1"><div class="ttname"><a href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a></div><div class="ttdeci">platform_result_t platform_pump_messages(platform_context_t *platform_context_, void(*window_event_callback)(const window_event_t *event_), void(*keyboard_event_callback)(const keyboard_event_t *event_), void(*mouse_event_callback)(const mouse_event_t *event_))</div><div class="ttdoc">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す</div><div class="ttdef"><b>Definition:</b> platform_context.c:244</div></div>
 <div class="ttc" id="astructkeyboard__event_html"><div class="ttname"><a href="structkeyboard__event.html">keyboard_event</a></div><div class="ttdoc">キーボードイベント構造体</div><div class="ttdef"><b>Definition:</b> keyboard_event.h:103</div></div>
 <div class="ttc" id="astructmouse__event_html"><div class="ttname"><a href="structmouse__event.html">mouse_event</a></div><div class="ttdoc">マウスイベント構造体</div><div class="ttdef"><b>Definition:</b> mouse_event.h:48</div></div>
 <div class="ttc" id="astructwindow__event_html"><div class="ttname"><a href="structwindow__event.html">window_event</a></div><div class="ttdoc">ウィンドウイベント構造体</div><div class="ttdef"><b>Definition:</b> window_event.h:46</div></div>
@@ -504,22 +504,7 @@ Functions</h2></td></tr>
 <li>window_label_はplatform_window_create内部でdeep copyするため、呼び出し側でメモリを破棄すること</li>
 </ul>
 </dd></dl>
-<p>使用例: </p><div class="fragment"><div class="line"><a class="code hl_struct" href="structlinear__alloc.html">linear_alloc_t</a>* <a class="code hl_struct" href="structlinear__alloc.html">linear_alloc</a> = NULL;</div>
-<div class="line"><span class="comment">// リニアアロケータ初期化</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_struct" href="structplatform__context.html">platform_context_t</a>* <a class="code hl_struct" href="structplatform__context.html">platform_context</a> = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a> ret = <a class="code hl_function" href="platform__context_8h.html#ad1bd7840aa3cc01e627c1c81ee3edbf7">platform_initialize</a>(<a class="code hl_struct" href="structlinear__alloc.html">linear_alloc</a>, <a class="code hl_enumvalue" href="platform__types_8h.html#a2ac3ce8ab152a6ec490b8a846ae28905a974591108e0c4e3673140fe016fc13ea">PLATFORM_USE_GLFW</a>, &amp;<a class="code hl_struct" href="structplatform__context.html">platform_context</a>);</div>
-<div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> framebuffer_width = 0;</div>
-<div class="line"><span class="keywordtype">int</span> framebuffer_height = 0;</div>
-<div class="line">ret = <a class="code hl_function" href="platform__context_8h.html#a9f8780367bbf81346a52721b7a7cae7e">platform_window_create</a>(<a class="code hl_struct" href="structplatform__context.html">platform_context</a>, <span class="stringliteral">&quot;test_window&quot;</span>, 1024, 768, &amp;framebuffer_width, &amp;framebuffer_height);</div>
-<div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_function" href="platform__context_8h.html#a1abffb11ea233961bc4072e55ddbc5a6">platform_destroy</a>(<a class="code hl_struct" href="structplatform__context.html">platform_context</a>);</div>
-<div class="line"> </div>
-<div class="line"><span class="comment">// リニアアロケータによるメモリ破棄</span></div>
-</div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">platform_context_</td><td>プラットフォームStrategy Context構造体インスタンス </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">window_label_</td><td>ウィンドウラベル </td></tr>
@@ -537,8 +522,8 @@ Functions</h2></td></tr>
 <li>platform_context_-&gt;vtable</li>
 <li>platform_context_-&gt;backend</li>
 <li>window_label_ == NULL</li>
-<li>window_width_ == 0</li>
-<li>window_height_ == 0</li>
+<li>window_width_ &lt;= 0</li>
+<li>window_height_ &lt;= 0</li>
 <li>framebuffer_width_ == NULL</li>
 <li>framebuffer_height_ == NULL </li>
 </ul>
