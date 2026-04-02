@@ -20,7 +20,7 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-#include "base/test_choco_math.h"
+#include "engine/base/choco_math/test_choco_math.h"
 
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
@@ -73,12 +73,15 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
-        // core
+        // engine/base
+        test_choco_math();
+
+        // engine/core
         test_linear_allocator();
         test_choco_memory();
         test_filesystem();
 
-        // containers
+        // engine/containers
         test_choco_string();
         test_ring_queue();
 
@@ -94,10 +97,6 @@ int main(int argc_, char** argv_) {
         test_platform_glfw();
         test_platform_context();
 
-        // test_platform_context();
-        // test_platform_glfw();
-        // test_platform_err_utils();
-
         // test_renderer_memory();
         // test_renderer_err_utils();
         // test_gl33_vbo();
@@ -106,8 +105,6 @@ int main(int argc_, char** argv_) {
         // test_fs_utils();
         // test_gl33_shader();
         // test_renderer_backend_context();
-
-        // test_choco_math();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
