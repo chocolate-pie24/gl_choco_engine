@@ -1,5 +1,0 @@
-<map id="include/engine/renderer/renderer_resources/ui_shader.h" name="include/engine/renderer/renderer_resources/ui_shader.h">
-<area shape="rect" id="node1" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="119,5,295,60"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,123,209,148"/>
-<area shape="rect" id="node3" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="233,108,384,163"/>
-</map>

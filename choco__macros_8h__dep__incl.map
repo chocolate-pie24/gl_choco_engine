@@ -1,22 +1,15 @@
 <map id="include/engine/base/choco_macros.h" name="include/engine/base/choco_macros.h">
-<area shape="rect" id="node1" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1919,5,2071,45"/>
+<area shape="rect" id="node1" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1131,5,1283,45"/>
 <area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,115,209,141"/>
-<area shape="rect" id="node3" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="234,108,437,148"/>
-<area shape="rect" id="node4" href="$choco__math_8c.html" title="GLCE以外のプロジェクトでも使用可能な数学演算実装" alt="" coords="461,108,628,148"/>
-<area shape="rect" id="node5" href="$camera_8c.html" title="カメラモジュール実装" alt="" coords="653,108,850,148"/>
-<area shape="rect" id="node6" href="$flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="874,101,1071,155"/>
-<area shape="rect" id="node7" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="1095,101,1293,155"/>
-<area shape="rect" id="node8" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="1317,108,1479,148"/>
-<area shape="rect" id="node9" href="$ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="1503,108,1664,148"/>
-<area shape="rect" id="node10" href="$filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="1688,108,1881,148"/>
-<area shape="rect" id="node11" href="$choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="1905,108,2085,148"/>
-<area shape="rect" id="node12" href="$linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="2109,108,2289,148"/>
-<area shape="rect" id="node13" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="2313,108,2453,148"/>
-<area shape="rect" id="node14" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="2478,101,2630,155"/>
-<area shape="rect" id="node15" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="2654,108,2803,148"/>
-<area shape="rect" id="node16" href="$platform__err__utils_8c.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="2828,101,3005,155"/>
-<area shape="rect" id="node17" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="3029,93,3231,163"/>
-<area shape="rect" id="node18" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="3255,93,3456,163"/>
-<area shape="rect" id="node19" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="3480,93,3681,163"/>
-<area shape="rect" id="node20" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="3705,101,3856,155"/>
+<area shape="rect" id="node3" href="$choco__string_8c.html" title="文字列を格納するコンテナモジュールAPIの実装" alt="" coords="233,108,395,148"/>
+<area shape="rect" id="node4" href="$ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="419,108,580,148"/>
+<area shape="rect" id="node5" href="$filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="604,108,797,148"/>
+<area shape="rect" id="node6" href="$choco__memory_8c.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装" alt="" coords="821,108,1001,148"/>
+<area shape="rect" id="node7" href="$linear__allocator_8c.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装" alt="" coords="1025,108,1205,148"/>
+<area shape="rect" id="node8" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1229,108,1369,148"/>
+<area shape="rect" id="node9" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="1394,101,1546,155"/>
+<area shape="rect" id="node10" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="1570,108,1719,148"/>
+<area shape="rect" id="node11" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1744,93,1945,163"/>
+<area shape="rect" id="node12" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1969,93,2171,163"/>
+<area shape="rect" id="node13" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="2195,93,2396,163"/>
 </map>

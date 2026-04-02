@@ -95,12 +95,12 @@ $(document).ready(function(){initNavTree('md_docs_architecture_platform_system_a
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_platform_system_ja"></a> </p>
-<h1><a class="anchor" id="autotoc_md66"></a>
+<h1><a class="anchor" id="autotoc_md44"></a>
 Platform System architecture</h1>
-<h2><a class="anchor" id="autotoc_md67"></a>
+<h2><a class="anchor" id="autotoc_md45"></a>
 目的と位置づけ</h2>
 <p><code>Platform System</code>は、アプリケーション開発者がプラットフォームを意識せず、グラフィックスアプリケーションを構築できるように、 差し替え可能で全プラットフォーム共通のインターフェイスAPIを提供するサブシステムである。</p>
-<h2><a class="anchor" id="autotoc_md68"></a>
+<h2><a class="anchor" id="autotoc_md46"></a>
 Platform Systemコンセプト</h2>
 <p><code>Platform System</code>は、目的を達成するために、オブジェクト指向のデザインパターンであるStrategyを適用した。 Strategyパターンは以下のような構造を取る。</p>
 <div class="image">
@@ -134,13 +134,13 @@ strategy</div></div>
 <img src="layer.png" alt=""/>
 <div class="caption">
 layer</div></div>
-    <h3><a class="anchor" id="autotoc_md69"></a>
+    <h3><a class="anchor" id="autotoc_md47"></a>
 Platform Concreteの選択(現状)</h3>
 <p>現状では<code>Platform System</code>のインスタンス生成時にプラットフォームを指定することで使用するプラットフォームを選択している。</p>
-<h3><a class="anchor" id="autotoc_md70"></a>
+<h3><a class="anchor" id="autotoc_md48"></a>
 Platform Concreteの選択(将来)</h3>
 <p>現状の仕様では、全プラットフォームの内部実装がビルド可能であることが求められるが、実現は難しい。将来的にはビルドオプションでプラットフォームを指定する方式に移行する。</p>
-<h2><a class="anchor" id="autotoc_md71"></a>
+<h2><a class="anchor" id="autotoc_md49"></a>
 仕組み / 内部構造 / 使い方の流れ</h2>
 <p><code>Platform Context</code>は、システムの内部状態を管理する構造体として、<code>platform_context_t</code>を上位層に公開(型名の公開のみで内部構造は非公開)している。 <code>platform_context_t</code>構造体インスタンスは、applicationレイヤーの内部状態管理構造体である<code>app_state_t</code>がインスタンス名称<code><a class="el" href="structplatform__context.html" title="プラットフォームコンテキスト構造体">platform_context</a></code>で保持することにする。 applicationレイヤーでは、<code><a class="el" href="structplatform__context.html" title="プラットフォームコンテキスト構造体">platform_context</a></code>インスタンスのリソース確保、リソース解放の責務も担う。</p>
 <p>ここで、<code>Platform System</code>は、システム起動時に立ち上げられ、システム終了時まで常駐する性質を持つ。 よって、実行中のリソース解放を行わないため、<code>Platform System</code>自体のメモリリソースはLinear Allocatorを使用する。 Linear Allocatorは、<code>app_state_t</code>が保持する<code><a class="el" href="structlinear__alloc.html" title="linear_alloc_t内部データ構造">linear_alloc</a></code>がサブシステム用アロケータの役割を担っているため、これを使用する。</p>
@@ -160,17 +160,17 @@ Platform Concreteの選択(将来)</h3>
 <td class="markdownTableBodyNone">実行時(毎フレーム)   </td><td class="markdownTableBodyNone">ダブルバッファによるバッファスワップ   </td><td class="markdownTableBodyNone"><code><a class="el" href="application_8h.html#a625d4385834abd6a3da348778c08d4f1" title="アプリケーションメインループ">application_run()</a></code>にて<code><a class="el" href="platform__context_8h.html#a2bdb286e90983482d8288ec4a15bbe88" title="描画サーフェイスのフロント/バックバッファをスワップする">platform_swap_buffers()</a></code>を呼び出し(毎フレーム)(<code>renderer_frontend</code>作成後に移動予定)   </td></tr>
 </table>
 <p><code><a class="el" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1" title="OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す">platform_pump_messages()</a></code>によるイベントの吸い上げについては、<a class="el" href="md_docs_guide_event_system_event_ja.html">Event System Guide</a>を参照のこと。</p>
-<h2><a class="anchor" id="autotoc_md72"></a>
+<h2><a class="anchor" id="autotoc_md50"></a>
 現状の非対応項目</h2>
 <p>現状では以下には対応していない。GLCEの機能拡張に伴い、必要に応じて対応する。</p>
 <ul>
 <li>スレッドセーフなAPIの提供</li>
 <li>実行時の使用プラットフォーム切り替え</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md73"></a>
+<h2><a class="anchor" id="autotoc_md51"></a>
 設定方法</h2>
 <p>現状では設定項目はなし。</p>
-<h2><a class="anchor" id="autotoc_md74"></a>
+<h2><a class="anchor" id="autotoc_md52"></a>
 参照</h2>
 <p>対応プラットフォームを追加する際には、<a class="el" href="md_docs_guide_platform_system_adding_concretes_ja.html">Platform System Guide</a>を参照のこと。 </p>
 </div></div><!-- contents -->

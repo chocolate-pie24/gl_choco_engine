@@ -1,8 +1,5 @@
 <map id="include/engine/containers/ring_queue.h" name="include/engine/containers/ring_queue.h">
-<area shape="rect" id="node1" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="311,5,501,45"/>
-<area shape="rect" id="node2" href="$application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="231,93,440,148"/>
-<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,203,209,229"/>
-<area shape="rect" id="node4" href="$application__err__utils_8c.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="461,196,665,236"/>
-<area shape="rect" id="node6" href="$ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="516,101,677,141"/>
-<area shape="rect" id="node5" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="234,196,437,236"/>
+<area shape="rect" id="node1" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="115,5,305,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
+<area shape="rect" id="node3" href="$ring__queue_8c.html" title="ジェネリック型のリングキューモジュールの実装" alt="" coords="233,93,395,133"/>
 </map>

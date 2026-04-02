@@ -1,18 +1,13 @@
 var annotated_dup =
 [
-    [ "app_build_config", "structapp__build__config.html", "structapp__build__config" ],
     [ "app_state", "structapp__state.html", "structapp__state" ],
-    [ "camera", "structcamera.html", "structcamera" ],
-    [ "camera_manager", "structcamera__manager.html", "structcamera__manager" ],
     [ "choco_string", "structchoco__string.html", "structchoco__string" ],
-    [ "command_status_flight_camera", "structcommand__status__flight__camera.html", "structcommand__status__flight__camera" ],
     [ "filesystem", "structfilesystem.html", "structfilesystem" ],
     [ "fs_utils", "structfs__utils.html", "structfs__utils" ],
     [ "input_snapshot", "structinput__snapshot.html", "structinput__snapshot" ],
     [ "keyboard_event", "structkeyboard__event.html", "structkeyboard__event" ],
     [ "keyboard_event_args", "structkeyboard__event__args.html", "structkeyboard__event__args" ],
     [ "linear_alloc", "structlinear__alloc.html", "structlinear__alloc" ],
-    [ "mat4x4f", "structmat4x4f.html", "structmat4x4f" ],
     [ "memory_system", "structmemory__system.html", "structmemory__system" ],
     [ "mouse_event", "structmouse__event.html", "structmouse__event" ],
     [ "mouse_event_args", "structmouse__event__args.html", "structmouse__event__args" ],
@@ -27,10 +22,6 @@ var annotated_dup =
     [ "renderer_vao_vtable", "structrenderer__vao__vtable.html", "structrenderer__vao__vtable" ],
     [ "renderer_vbo_vtable", "structrenderer__vbo__vtable.html", "structrenderer__vbo__vtable" ],
     [ "ring_queue", "structring__queue.html", "structring__queue" ],
-    [ "ui_shader", "structui__shader.html", "structui__shader" ],
-    [ "vec3f", "structvec3f.html", "structvec3f" ],
-    [ "vec4f", "structvec4f.html", "structvec4f" ],
-    [ "viewing_frustum", "structviewing__frustum.html", "structviewing__frustum" ],
     [ "window_event", "structwindow__event.html", "structwindow__event" ],
     [ "window_event_args", "structwindow__event__args.html", "structwindow__event__args" ]
 ];

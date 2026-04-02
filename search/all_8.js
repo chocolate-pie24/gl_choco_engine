@@ -12,7 +12,5 @@ var searchData=
   ['interface_5fshader_2eh_9',['interface_shader.h',['../interface__shader_8h.html',1,'']]],
   ['interface_5fvao_2eh_10',['interface_vao.h',['../interface__vao_8h.html',1,'']]],
   ['interface_5fvbo_2eh_11',['interface_vbo.h',['../interface__vbo_8h.html',1,'']]],
-  ['invalid_5fcamera_5fid_12',['INVALID_CAMERA_ID',['../camera__manager_8h.html#acfb0db3c40f795b1cb28270c9b478ce5',1,'camera_manager.h']]],
-  ['is_5fequal_5ffloat_13',['is_equal_float',['../choco__math_8h.html#a7b9642a045ca402e72c83e97cf29f0a1',1,'is_equal_float(float a_, float b_):&#160;choco_math.c'],['../choco__math_8c.html#a7b9642a045ca402e72c83e97cf29f0a1',1,'is_equal_float(float a_, float b_):&#160;choco_math.c']]],
-  ['is_5fpower_5fof_5ftwo_14',['IS_POWER_OF_TWO',['../choco__macros_8h.html#af770043678408217b3232efd66a65f7c',1,'choco_macros.h']]]
+  ['is_5fpower_5fof_5ftwo_12',['IS_POWER_OF_TWO',['../choco__macros_8h.html#af770043678408217b3232efd66a65f7c',1,'choco_macros.h']]]
 ];

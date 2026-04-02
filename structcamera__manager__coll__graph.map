@@ -1,8 +1,0 @@
-<map id="camera_manager" name="camera_manager">
-<area shape="rect" id="node1" title="カメラ管理システム内部状態管理構造体" alt="" coords="157,211,293,236"/>
-<area shape="rect" id="node2" href="$structcamera.html" title="カメラ内部状態管理構造体" alt="" coords="190,123,261,148"/>
-<area shape="rect" id="node3" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="5,5,64,31"/>
-<area shape="rect" id="node4" href="$structmat4x4f.html" title="float型4x4行列定義" alt="" coords="88,5,165,31"/>
-<area shape="rect" id="node5" href="$structviewing__frustum.html" title="視錐台データホルダ" alt="" coords="259,5,389,31"/>
-<area shape="rect" id="node6" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="413,5,517,31"/>
-</map>

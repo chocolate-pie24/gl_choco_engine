@@ -1,5 +1,0 @@
-<map id="include/engine/camera_system/camera_manager/camera_manager.h" name="include/engine/camera_system/camera_manager/camera_manager.h">
-<area shape="rect" id="node1" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIを提供する" alt="" coords="122,5,317,60"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,123,209,148"/>
-<area shape="rect" id="node3" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="234,108,431,163"/>
-</map>

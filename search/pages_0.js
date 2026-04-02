@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['camera_20system_20architecture_28english_29_0',['Camera System Architecture(English)',['../md_docs_architecture_camera_system_architecture_en.html',1,'']]],
-  ['camera_20system_20architecture_28japanese_29_1',['Camera System Architecture(Japanese)',['../md_docs_architecture_camera_system_architecture_ja.html',1,'']]]
+  ['event_20system_20guide_28english_29_0',['Event System Guide(English)',['../md_docs_guide_event_system_event_en.html',1,'']]],
+  ['event_20system_20guide_28japanese_29_1',['Event System Guide(Japanese)',['../md_docs_guide_event_system_event_ja.html',1,'']]]
 ];

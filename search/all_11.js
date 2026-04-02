@@ -1,9 +1,19 @@
 var searchData=
 [
-  ['tail_0',['tail',['../structring__queue.html#a7cc28df4062e48e01554211151e0194f',1,'ring_queue']]],
-  ['target_5fapi_1',['target_api',['../structrenderer__backend__context.html#a8ab221fa50b96f30e5dfbf4f47bbc58e',1,'renderer_backend_context']]],
-  ['target_5fgraphics_5fapi_5ft_2',['target_graphics_api_t',['../renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241',1,'renderer_types.h']]],
-  ['todo_20list_3',['Todo List',['../todo.html',1,'']]],
-  ['total_5fallocated_4',['total_allocated',['../structmemory__system.html#a5029a9e7fdefd7da6646c3a5f22d5b88',1,'memory_system']]],
-  ['type_5',['type',['../structplatform__context.html#adfc5f1d3ec40cbf6e101dd536098302e',1,'platform_context']]]
+  ['vao_5fhandle_0',['vao_handle',['../structrenderer__backend__vao.html#a9a51d9e19127effa093dcbf29e70ccbe',1,'renderer_backend_vao']]],
+  ['vao_5fvtable_1',['vao_vtable',['../structrenderer__backend__context.html#accb7186b7d913c2b4a3b1888b6d3ea4e',1,'renderer_backend_context']]],
+  ['vbo_5fhandle_2',['vbo_handle',['../structrenderer__backend__vbo.html#a549e359d443f3aec9f1b3a737eede2a6',1,'renderer_backend_vbo']]],
+  ['vbo_5fvtable_3',['vbo_vtable',['../structrenderer__backend__context.html#aaab43dac09c26b5d52223ca65d16d29e',1,'renderer_backend_context']]],
+  ['vertex_5farray_5fattribute_5fset_4',['vertex_array_attribute_set',['../structrenderer__vao__vtable.html#aaba9afb825ecf45d6a6c3dae47b7b46b',1,'renderer_vao_vtable']]],
+  ['vertex_5farray_5fbind_5',['vertex_array_bind',['../structrenderer__vao__vtable.html#a1da87b31f54bc91a620b4f14b5239f6f',1,'renderer_vao_vtable']]],
+  ['vertex_5farray_5fcreate_6',['vertex_array_create',['../structrenderer__vao__vtable.html#ad55227795de2e69217dda3172750e871',1,'renderer_vao_vtable']]],
+  ['vertex_5farray_5fdestroy_7',['vertex_array_destroy',['../structrenderer__vao__vtable.html#a6f1eb8f75c83dad49fc5436782bc6c38',1,'renderer_vao_vtable']]],
+  ['vertex_5farray_5funbind_8',['vertex_array_unbind',['../structrenderer__vao__vtable.html#a57087bd6aba796d485b1f326d4bd03bf',1,'renderer_vao_vtable']]],
+  ['vertex_5fbuffer_5fbind_9',['vertex_buffer_bind',['../structrenderer__vbo__vtable.html#af68af8ff528e7131163410968c0c232b',1,'renderer_vbo_vtable']]],
+  ['vertex_5fbuffer_5fcreate_10',['vertex_buffer_create',['../structrenderer__vbo__vtable.html#a6152262ed994c636822bc340b96fddbe',1,'renderer_vbo_vtable']]],
+  ['vertex_5fbuffer_5fdestroy_11',['vertex_buffer_destroy',['../structrenderer__vbo__vtable.html#afa43b6f156b63b7e70423768359cb37b',1,'renderer_vbo_vtable']]],
+  ['vertex_5fbuffer_5funbind_12',['vertex_buffer_unbind',['../structrenderer__vbo__vtable.html#af7273c51b7e6eea94dc3a4ce3892b211',1,'renderer_vbo_vtable']]],
+  ['vertex_5fbuffer_5fvertex_5fload_13',['vertex_buffer_vertex_load',['../structrenderer__vbo__vtable.html#ad767b9e049e1a283c38442e8e6bca87e',1,'renderer_vbo_vtable']]],
+  ['vertex_5fshader_5fhandle_14',['vertex_shader_handle',['../structrenderer__backend__shader.html#af18ecb3fcebaf3cf9e70fc1537bea475',1,'renderer_backend_shader']]],
+  ['vtable_15',['vtable',['../structplatform__context.html#a2f20108ccf2232f4ddf7d86710f7e8a7',1,'platform_context']]]
 ];

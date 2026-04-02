@@ -1,11 +1,5 @@
 <map id="include/engine/io_utils/fs_utils/fs_utils.h" name="include/engine/io_utils/fs_utils/fs_utils.h">
-<area shape="rect" id="node1" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="939,5,1107,45"/>
-<area shape="rect" id="node2" href="$renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="681,93,857,148"/>
-<area shape="rect" id="node8" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1079,203,1229,258"/>
-<area shape="rect" id="node9" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1061,101,1201,141"/>
-<area shape="rect" id="node3" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,196,207,265"/>
-<area shape="rect" id="node4" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,196,432,265"/>
-<area shape="rect" id="node5" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,196,657,265"/>
-<area shape="rect" id="node6" href="$renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="681,203,856,258"/>
-<area shape="rect" id="node7" href="$renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="880,203,1055,258"/>
+<area shape="rect" id="node1" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="121,5,289,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
+<area shape="rect" id="node3" href="$fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="233,93,373,133"/>
 </map>
