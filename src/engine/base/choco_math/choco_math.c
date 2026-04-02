@@ -21,25 +21,46 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
 
+// #define TEST_BUILD
+
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
-static void NO_COVERAGE test_is_equal_float(void);
-static void NO_COVERAGE test_vec3f_initialize(void);
-static void NO_COVERAGE test_vec3f_add(void);
-static void NO_COVERAGE test_vec4f_initialize(void);
-static void NO_COVERAGE test_vec4f_add(void);
-static void NO_COVERAGE test_mat4f_zero(void);
-static void NO_COVERAGE test_mat4f_identity(void);
-static void NO_COVERAGE test_mat4f_mul(void);
-static void NO_COVERAGE test_mat4f_transpose(void);
-static void NO_COVERAGE test_mat4f_copy(void);
-static void NO_COVERAGE test_mat4f_inverse(void);
-static void NO_COVERAGE test_mat4f_vec4f_mul(void);
-static void NO_COVERAGE test_mat4f_translation(void);
-static void NO_COVERAGE test_mat4f_rot_x(void);
-static void NO_COVERAGE test_mat4f_rot_y(void);
-static void NO_COVERAGE test_mat4f_rot_z(void);
-static void NO_COVERAGE test_mat4f_rot_xyz(void);
+#include "test_controller.h"
+#include "engine/base/choco_macros.h"
+
+#include "engine/base/choco_math/test_choco_math.h"
+
+// choco_math用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_bool_t s_test_config_mat4f_inverse;    /**< mat4f_inverse()テスト設定 */
+
+// プライベート関数テスト設定
+
+// 全テスト関数プロトタイプ宣言
+
+static void test_choco_tanf(void);
+static void test_is_equal_float(void);
+static void test_vec3f_initialize(void);
+static void test_vec3f_add(void);
+static void test_vec3f_length_squared(void);
+static void test_vec3f_length(void);
+static void test_vec3f_normalize(void);
+static void test_vec4f_initialize(void);
+static void test_vec4f_add(void);
+static void test_mat4f_zero(void);
+static void test_mat4f_identity(void);
+static void test_mat4f_mul(void);
+static void test_mat4f_transpose(void);
+static void test_mat4f_copy(void);
+static void test_mat4f_inverse(void);
+static void test_mat4f_vec4f_mul(void);
+static void test_mat4f_translation(void);
+static void test_mat4f_rot_x(void);
+static void test_mat4f_rot_y(void);
+static void test_mat4f_rot_z(void);
+static void test_mat4f_rot_xyz(void);
 #endif
 
 #define DET_EPS 1.0e-6f           /**< 行列式ゼロ判定用閾値 */
@@ -88,7 +109,7 @@ void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_) 
 
 float vec3f_length_squared(const vec3f_t* vec_) {
     if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_length_squared(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        ERROR_MESSAGE("vec3f_length_squared(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
         return 0.0f;
     }
 
@@ -97,7 +118,7 @@ float vec3f_length_squared(const vec3f_t* vec_) {
 
 float vec3f_length(const vec3f_t* vec_) {
     if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_length(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        ERROR_MESSAGE("vec3f_length(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
         return 0.0f;
     }
     return sqrtf(vec3f_length_squared(vec_));
@@ -105,10 +126,14 @@ float vec3f_length(const vec3f_t* vec_) {
 
 void vec3f_normalize(vec3f_t* vec_) {
     if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_normalize(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        ERROR_MESSAGE("vec3f_normalize(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
         return;
     }
     const float length = vec3f_length(vec_);
+    if(is_equal_float(length, 0.0f)) {
+        WARN_MESSAGE("vec3f_normalize - Argument vec_ is a zero vector.");
+        return;
+    }
     vec_->elem[0] /= length;
     vec_->elem[1] /= length;
     vec_->elem[2] /= length;
@@ -320,6 +345,15 @@ void mat4f_copy(const mat4x4f_t* src_, mat4x4f_t* dst_) {
 }
 
 bool mat4f_inverse(mat4x4f_t* mat_) {
+#ifdef TEST_BUILD
+    s_test_config_mat4f_inverse.call_count++;
+    if(s_test_config_mat4f_inverse.fail_on_call != 0) {
+        if(s_test_config_mat4f_inverse.call_count == s_test_config_mat4f_inverse.fail_on_call) {
+            return s_test_config_mat4f_inverse.forced_result;
+        }
+    }
+#endif
+
     if(NULL == mat_) {
         ERROR_MESSAGE("mat4f_inverse(INVALID_ARGUMENT) - Argument mat_ requires a valid pointer.");
         return false;
@@ -467,10 +501,27 @@ void mat4f_rot_xyz(float x_radian_, float y_radian_, float z_radian_, mat4x4f_t*
 }
 
 #ifdef TEST_BUILD
-void test_choco_math(void) {
+void NO_COVERAGE test_mat4f_inverse_config_set(const test_call_control_bool_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_mat4f_inverse.fail_on_call = config_->fail_on_call;
+    s_test_config_mat4f_inverse.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_choco_math_config_reset(void) {
+    test_call_control_bool_reset(&s_test_config_mat4f_inverse);
+}
+
+void NO_COVERAGE test_choco_math(void) {
+    test_choco_tanf();
     test_is_equal_float();
     test_vec3f_initialize();
     test_vec3f_add();
+    test_vec3f_length_squared();
+    test_vec3f_length();
+    test_vec3f_normalize();
     test_vec4f_initialize();
     test_vec4f_add();
     test_mat4f_zero();
@@ -485,6 +536,28 @@ void test_choco_math(void) {
     test_mat4f_rot_y();
     test_mat4f_rot_z();
     test_mat4f_rot_xyz();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_choco_tanf(void) {
+    {
+        // 0 rad
+        assert(is_equal_float(choco_tanf(0.0f), 0.0f));
+    }
+    {
+        // 45 deg (= π/4 rad)
+        const float rad = CHOCO_DEG_TO_RAD(45.0f);
+        assert(is_equal_float(choco_tanf(rad), 1.0f));
+    }
+    {
+        // -45 deg (= -π/4 rad)
+        const float rad = CHOCO_DEG_TO_RAD(-45.0f);
+        assert(is_equal_float(choco_tanf(rad), -1.0f));
+    }
+    {
+        // π rad (= 180 deg)
+        assert(is_equal_float(choco_tanf(CHOCO_PI), 0.0f));
+    }
 }
 
 static void NO_COVERAGE test_is_equal_float(void) {
@@ -539,9 +612,9 @@ static void NO_COVERAGE test_vec3f_initialize(void) {
         vec3f_t vec = { 0 };
         vec3f_initialize(1.0f, -2.0f, 3.5f, &vec);
 
-        assert(1.0f == vec.elem[0]);
-        assert(-2.0f == vec.elem[1]);
-        assert(3.5f == vec.elem[2]);
+        assert(is_equal_float(1.0f, vec.elem[0]));
+        assert(is_equal_float(-2.0f, vec.elem[1]));
+        assert(is_equal_float(3.5f, vec.elem[2]));
     }
 }
 
@@ -601,6 +674,118 @@ static void NO_COVERAGE test_vec3f_add(void) {
         assert(is_equal_float(vec2.elem[0], 5.0f));
         assert(is_equal_float(vec2.elem[1], 7.0f));
         assert(is_equal_float(vec2.elem[2], 9.0f));
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_vec3f_length_squared(void) {
+    {
+        // vec_ == NULL
+        const float ret = vec3f_length_squared(NULL);
+        assert(is_equal_float(ret, 0.0f));
+    }
+    {
+        // ゼロベクトル
+        vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+        const float ret = vec3f_length_squared(&vec);
+
+        assert(is_equal_float(ret, 0.0f));
+    }
+    {
+        // 正の一般値
+        vec3f_t vec = { .elem = { 1.0f, 2.0f, 2.0f } };
+        const float ret = vec3f_length_squared(&vec);
+
+        assert(is_equal_float(ret, 9.0f));
+    }
+    {
+        // 負値を含む一般値
+        vec3f_t vec = { .elem = { -3.0f, 4.0f, -12.0f } };
+        const float ret = vec3f_length_squared(&vec);
+
+        assert(is_equal_float(ret, 169.0f));
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_vec3f_length(void) {
+    {
+        // vec_ == NULL
+        const float ret = vec3f_length(NULL);
+        assert(is_equal_float(ret, 0.0f));
+    }
+    {
+        // ゼロベクトル
+        vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+        const float ret = vec3f_length(&vec);
+
+        assert(is_equal_float(ret, 0.0f));
+    }
+    {
+        // 一般値
+        vec3f_t vec = { .elem = { 3.0f, 4.0f, 12.0f } };
+        const float ret = vec3f_length(&vec);
+
+        assert(is_equal_float(ret, 13.0f));
+    }
+    {
+        // 負値を含む一般値
+        vec3f_t vec = { .elem = { -1.0f, -2.0f, -2.0f } };
+        const float ret = vec3f_length(&vec);
+
+        assert(is_equal_float(ret, 3.0f));
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_vec3f_normalize(void) {
+    {
+        // vec_ == NULL
+        vec3f_normalize(NULL);
+    }
+    {
+        // ゼロベクトル: 値不変
+        vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
+
+        vec3f_normalize(&vec);
+
+        assert(is_equal_float(vec.elem[0], 0.0f));
+        assert(is_equal_float(vec.elem[1], 0.0f));
+        assert(is_equal_float(vec.elem[2], 0.0f));
+        assert(is_equal_float(vec3f_length(&vec), 0.0f));
+    }
+    {
+        // 軸ベクトル
+        vec3f_t vec = { .elem = { 3.0f, 0.0f, 0.0f } };
+
+        vec3f_normalize(&vec);
+
+        assert(is_equal_float(vec.elem[0], 1.0f));
+        assert(is_equal_float(vec.elem[1], 0.0f));
+        assert(is_equal_float(vec.elem[2], 0.0f));
+        assert(is_equal_float(vec3f_length(&vec), 1.0f));
+    }
+    {
+        // 一般値
+        vec3f_t vec = { .elem = { 1.0f, 2.0f, 2.0f } };
+
+        vec3f_normalize(&vec);
+
+        assert(is_equal_float(vec.elem[0], (1.0f / 3.0f)));
+        assert(is_equal_float(vec.elem[1], (2.0f / 3.0f)));
+        assert(is_equal_float(vec.elem[2], (2.0f / 3.0f)));
+        assert(is_equal_float(vec3f_length(&vec), 1.0f));
+    }
+    {
+        // 負値を含む一般値
+        vec3f_t vec = { .elem = { -2.0f, 0.0f, 0.0f } };
+
+        vec3f_normalize(&vec);
+
+        assert(is_equal_float(vec.elem[0], -1.0f));
+        assert(is_equal_float(vec.elem[1], 0.0f));
+        assert(is_equal_float(vec.elem[2], 0.0f));
+        assert(is_equal_float(vec3f_length(&vec), 1.0f));
     }
 }
 
@@ -1112,6 +1297,21 @@ static void NO_COVERAGE test_mat4f_copy(void) {
 
 static void NO_COVERAGE test_mat4f_inverse(void) {
     // Generated by ChatGPT 5.4 Thinking
+    {
+        test_call_control_bool_t config = { 0 };
+        /* 1回目呼び出しでの失敗注入確認 */
+        test_choco_math_config_reset();
+        test_call_control_bool_reset(&config);
+
+        config.fail_on_call = 1;
+        config.forced_result = false;
+        test_mat4f_inverse_config_set(&config);
+
+        mat4x4f_t mat = { 0 };
+        bool ret = mat4f_inverse(&mat);
+
+        assert(!ret);
+    }
     {
         // mat_ == NULL
         const bool ret = mat4f_inverse(NULL);

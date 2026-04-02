@@ -89,6 +89,8 @@ float vec3f_length(const vec3f_t* vec_);
 /**
  * @brief 3次元ベクトルを正規化する
  *
+ * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し何もしない
+ *
  * @param[in,out] vec_ 正規化対象ベクトル
  */
 void vec3f_normalize(vec3f_t* vec_);
