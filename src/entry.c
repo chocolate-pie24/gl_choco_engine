@@ -49,6 +49,7 @@
 
 // test: renderer
 #include "engine/renderer/renderer_core/test_renderer_err_utils.h"
+#include "engine/renderer/renderer_core/test_renderer_memory.h"
 
 #endif
 
@@ -103,6 +104,7 @@ int main(int argc_, char** argv_) {
 
         // engine/renderer
         test_renderer_err_utils();
+        test_renderer_memory();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
