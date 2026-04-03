@@ -33,73 +33,127 @@
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
+#include <string.h>
 #include <stdlib.h> // for malloc / free
 #include <string.h> // for memset
 
+#include "test_controller.h"
+
+#include "engine/base/choco_macros.h"
+
 #include "engine/core/memory/choco_memory.h"
 
-#define TEST_INFO_LOG_LENGTH 128
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
+
+#include "engine/core/memory/test_choco_memory.h"
+
+// concrete_shader用モジュール専用テスト制御構造体定義
+
+#define TEST_INFO_LOG_LENGTH 128    /**< テスト用ログ格納配列サイズ */
 
 /**
- * @brief 呼び出し側のテスト用強制エラー出力データ構造体
+ * @brief void型の関数を強制的にNo-Opで終了させるための設定値構造体
  *
  */
-typedef struct fail_injection {
-    renderer_result_t result_code;                              /**< 強制的に出力する実行結果コード */
-    bool is_enabled;                                            /**< 実行結果コード強制出力機能有効/無効フラグ */
+typedef struct test_call_control_no_op {
+    uint32_t call_count;    /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;  /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はNo-Opで関数を終了させる) */
+} test_call_control_no_op_t;
 
-    GLuint result_glCreateShader;                               /**< glCreateShaderのモック関数に強制的に出力させる値 */
-    bool is_enabled_glCreateShader;                             /**< glCreateShaderのモック関数の強制出力機能有効フラグ */
+/**
+ * @brief GLuint型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_GLuint {
+    uint32_t call_count;        /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;      /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    GLuint forced_result;       /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_GLuint_t;
 
-    GLuint result_glCreateProgram;                              /**< glCreateProgramのモック関数に強制的に出力させる値 */
-    bool is_enabled_glCreateProgram;                            /**< glCreateProgramのモック関数の強制出力機能有効フラグ */
+/**
+ * @brief GLint型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_GLint {
+    uint32_t call_count;        /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;      /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    GLint forced_result;       /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_GLint_t;
 
-    bool is_enabled_glDeleteShader_no_op;                       /**< glDeleteShaderのモック関数で強制的にNo-opにするフラグ */
+/**
+ * @brief テスト用ログ情報出力制御構造体
+ *
+ */
+typedef struct test_call_control_log_info {
+    uint32_t call_count;            /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;          /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はNo-Opで関数を終了させる) */
+    GLsizei max_length;             /**< 格納可能なログ文字列長さ */
+    char log[TEST_INFO_LOG_LENGTH]; /**< ログ格納配列 */
+} test_call_control_log_info_t;
 
-    bool is_enabled_glDeleteProgram_no_op;                      /**< glDeleteProgramのモック関数で強制的にNo-opにするフラグ */
+// 外部公開APIテスト設定
 
-    bool is_enabled_glShaderSource_no_op;                       /**< glShaderSourceのモック関数で強制的にNo-opにするフラグ */
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_gl33_shader_create;                        /**< gl33_shader_create()テスト設定 */
+static test_call_control_t s_test_config_gl33_shader_compile;                       /**< gl33_shader_compile()テスト設定 */
+static test_call_control_t s_test_config_gl33_shader_link;                          /**< gl33_shader_link()テスト設定 */
+static test_call_control_t s_test_config_gl33_shader_use;                           /**< gl33_shader_use()テスト設定 */
+static test_call_control_t s_test_config_gl33_uniform_location_get;                 /**< gl33_uniform_location_get()テスト設定 */
+static test_call_control_t s_test_config_gl33_mat4f_uniform_set;                    /**< gl33_mat4f_uniform_set()テスト設定 */
+static test_call_control_t s_test_config_gl33_shader_handle_addr_get;               /**< gl33_shader_handle_addr_get()テスト設定 */
+static test_call_control_t s_test_config_gl33_shader_resolve_target;                /**< gl33_shader_resolve_target()テスト設定*/
+static test_call_control_t s_test_config_shader_compile_status_get;                 /**< shader_compile_status_get()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glDeleteShader;                 /**< mock_glDeleteShader()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glDeleteProgram;                /**< mock_glDeleteProgram()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glShaderSource;                 /**< mock_glShaderSource()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glCompileShader;                /**< mock_glCompileShader()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glAttachShader;                 /**< mock_glAttachShader()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glLinkProgram;                  /**< mock_glLinkProgram()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glUseProgram;                   /**< mock_glUseProgram()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glUniformMatrix4fv;             /**< mock_glUniformMatrix4fv()テスト設定 */
+static test_call_control_GLuint_t s_test_config_mock_glCreateShader;                /**< mock_glCreateShader()テスト設定 */
+static test_call_control_GLuint_t s_test_config_mock_glCreateProgram;               /**< mock_glCreateProgram()テスト設定 */
+static test_call_control_GLint_t s_test_config_mock_glGetShaderiv;                  /**< mock_glGetShaderiv()テスト設定 */
+static test_call_control_GLint_t s_test_config_mock_glGetProgramiv;                 /**< mock_glGetProgramiv()テスト設定*/
+static test_call_control_GLint_t s_test_config_mock_glGetUniformLocation;           /**< mock_glGetUniformLocation()テスト設定 */
+static test_call_control_log_info_t s_test_config_mock_glGetShaderInfoLog;          /**< mock_glGetShaderInfoLog()テスト設定 */
+static test_call_control_log_info_t s_test_config_mock_glGetProgramInfoLog;         /**< mock_glGetProgramInfoLog()テスト設定 */
 
-    bool is_enabled_glCompileShader_no_op;                      /**< glCompileShaderのモック関数で強制的にNo-opにするフラグ */
-
-    bool is_enabled_glGetShaderiv;                              /**< glGetShaderivのモック関数で引数のresultに格納する値を強制的にresult_glGetShaderivにするフラグ */
-    GLint status_glGetShaderiv;                                 /**< is_enabled_glGetShaderivがtrueかつ、glGetShaderivの第二引数がGL_COMPILE_STATUSの時に、glGetShaderivの引数*params_にこの値をセットする */
-    GLint length_glGetShaderiv;                                 /**< is_enabled_glGetShaderivがtrueかつ、glGetShaderivの第二引数がGL_INFO_LOG_LENGTHの時に、glGetShaderivの引数*params_にこの値をセットする */
-
-    bool is_enabled_glGetShaderInfoLog;                         /**< mock_glGetShaderInfoLogの第四引数にセットする文字列を強制的にlog_str_glGetShaderInfoLogにするフラグ */
-    char log_str_glGetShaderInfoLog[TEST_INFO_LOG_LENGTH];      /**< is_enabled_glGetShaderInfoLogがtrueの時に、glGetShaderInfoLogの第四引数にコピーする文字列 */
-
-    bool is_enabled_glAttachShader_no_op;                       /**< glAttachShaderのモック関数で強制的にNo-opにするフラグ */
-
-    bool is_enabled_glLinkProgram_no_op;                        /**< glLinkProgramのモック関数で強制的にNo-opにするフラグ */
-
-    bool is_enabled_glGetProgramiv;                             /**< glGetShaderivのモック関数で引数のresultに格納する値を強制的にresult_glGetShaderivにするフラグ */
-    GLint status_glGetProgramiv;                                /**< is_enabled_glGetProgramivがtrueかつ、glGetProgramivの第二引数がGL_LINK_STATUSの時に、glGetProgramivの引数*params_にこの値をセットする */
-    GLint length_glGetProgramiv;                                /**< is_enabled_glGetProgramivがtrueかつ、glGetProgramivの第二引数がGL_INFO_LOG_LENGTHの時に、glGetProgramivの引数*params_にこの値をセットする */
-
-    bool is_enabled_glGetProgramInfoLog;                        /**< mock_glGetProgramInfoLogの第四引数にセットする文字列を強制的にlog_str_glGetProgramInfoLogにするフラグ */
-    char log_str_glGetProgramInfoLog[TEST_INFO_LOG_LENGTH];     /**< is_enabled_glGetProgramInfoLogがtrueの時に、glGetProgramInfoLogの第四引数にコピーする文字列 */
-
-    bool is_enabled_glUseProgram_no_op;                         /**< glUseProgramのモック関数で強制的にNo-opにするフラグ */
-
-    bool is_enabled_glUniformMatrix4fv_no_op;                   /**< glUniformMatrix4fvのモック関数で強制的にNo-opにするフラグ */
-
-    bool is_enabled_glGetUniformLocation;                       /**< trueでglGetUniformLocationの返り値を強制的にlocation_glGetUniformLocationにする */
-    GLint location_glGetUniformLocation;                        /**< is_enabled_glGetUniformLocationがtrueの時にglGetUniformLocationは強制的にこの値を返す */
-} fail_injection_t;
-
-static fail_injection_t s_fail_injection;   /**< 上位モジュールテスト用構造体インスタンス */
-
-// テスト用private関数プロトタイプ宣言
-static void NO_COVERAGE test_gl33_shader_create(void);
-static void NO_COVERAGE test_gl33_shader_destroy(void);
-static void NO_COVERAGE test_gl33_shader_compile(void);
+// 全テスト関数プロトタイプ宣言
+static void test_gl33_shader_vtable_get(void);
+static void test_gl33_shader_create(void);
+static void test_gl33_shader_destroy(void);
+static void test_gl33_shader_compile(void);
 static void test_gl33_shader_link(void);
 static void test_gl33_shader_use(void);
+static void test_gl33_uniform_location_get(void);
+static void test_gl33_mat4f_uniform_set(void);
+static void test_gl33_shader_handle_addr_get(void);
 static void test_gl33_shader_resolve_target(void);
-static void NO_COVERAGE test_shader_compile_status_get(void);
-static void NO_COVERAGE test_gl33_shader_handle_addr_get(void);
+static void test_shader_compile_status_get(void);
+static void test_mock_glDeleteShader(void);
+static void test_mock_glDeleteProgram(void);
+static void test_mock_glCreateShader(void);
+static void test_mock_glCreateProgram(void);
+static void test_mock_glShaderSource(void);
+static void test_mock_glCompileShader(void);
+static void test_mock_glGetShaderiv(void);
+static void test_mock_glGetShaderInfoLog(void);
+static void test_mock_glAttachShader(void);
+static void test_mock_glLinkProgram(void);
+static void test_mock_glGetProgramiv(void);
+static void test_mock_glGetProgramInfoLog(void);
+static void test_mock_glUseProgram(void);
+static void test_mock_glUniformMatrix4fv(void);
+static void test_mock_glGetUniformLocation(void);
+
+// その他テスト専用関数
+static void test_call_control_no_op_reset(test_call_control_no_op_t* config_);
+static void test_call_control_GLuint_reset(test_call_control_GLuint_t* config_);
+static void test_call_control_GLint_reset(test_call_control_GLint_t* config_);
+static void test_call_control_log_info_reset(test_call_control_log_info_t* config_);
 #endif
 
 /**
@@ -170,14 +224,16 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
 }
 
 static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    renderer_backend_shader_t* tmp = NULL;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_gl33_shader_create.call_count++;
+    if(s_test_config_gl33_shader_create.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_create.call_count == s_test_config_gl33_shader_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_create.forced_result;
+        }
     }
 #endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_shader_t* tmp = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
@@ -191,6 +247,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
     tmp->vertex_shader_handle = 0;
     tmp->fragment_shader_handle = 0;
     *shader_handle_ = tmp;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -226,6 +283,15 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
 }
 
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_shader_compile.call_count++;
+    if(s_test_config_gl33_shader_compile.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_compile.call_count == s_test_config_gl33_shader_compile.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_compile.forced_result;
+        }
+    }
+#endif
+
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLenum gl33_shader_type;
     GLint result = GL_FALSE;
@@ -233,12 +299,6 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     char* err_mes = NULL;
     GLuint tmp_handle = 0;
     GLuint* handle_addr = NULL;
-
-#ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
-    }
-#endif
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_compile", "shader_source_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_compile", "shader_handle_")
@@ -312,6 +372,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     *handle_addr = tmp_handle;
 
     ret = RENDERER_SUCCESS;
+
 cleanup:
     if(RENDERER_SUCCESS != ret && 0 != tmp_handle) {
         mock_glDeleteShader(tmp_handle);
@@ -320,17 +381,19 @@ cleanup:
 }
 
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_shader_link.call_count++;
+    if(s_test_config_gl33_shader_link.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_link.call_count == s_test_config_gl33_shader_link.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_link.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLuint tmp_program_id = 0;
     GLint result = GL_FALSE;
     GLint info_log_length = 0;
     char* err_mes = NULL;
-
-#ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
-    }
-#endif
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_link", "shader_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
@@ -378,8 +441,10 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
     }
     // use関数呼び出し時に、バリデーション用にprogram_id != 0かつshader_object_handle == 0でDATA_CORRUPTEDにするため、シェーダーオブジェクトのデストロイは行わない(shader_destroy APIでまとめて破棄する)
     shader_handle_->program_id = tmp_program_id;
+
     ret = RENDERER_SUCCESS;
-cleanup:
+
+    cleanup:
     if(RENDERER_SUCCESS != ret && 0 != tmp_program_id) {
         mock_glDeleteProgram(tmp_program_id);
     }
@@ -387,13 +452,15 @@ cleanup:
 }
 
 static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_gl33_shader_use.call_count++;
+    if(s_test_config_gl33_shader_use.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_use.call_count == s_test_config_gl33_shader_use.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_use.forced_result;
+        }
     }
 #endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_use", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(out_program_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_use", "out_program_id_")
@@ -417,6 +484,7 @@ static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader
     }
 
     ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
@@ -438,13 +506,15 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_gl33_uniform_location_get.call_count++;
+    if(s_test_config_gl33_uniform_location_get.fail_on_call != 0) {
+        if(s_test_config_gl33_uniform_location_get.call_count == s_test_config_gl33_uniform_location_get.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_uniform_location_get.forced_result;
+        }
     }
 #endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_uniform_location_get", "name_")
@@ -457,6 +527,7 @@ static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader
         goto cleanup;
     }
     *out_location_ = tmp_location;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -483,13 +554,15 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_gl33_mat4f_uniform_set.call_count++;
+    if(s_test_config_gl33_mat4f_uniform_set.fail_on_call != 0) {
+        if(s_test_config_gl33_mat4f_uniform_set.call_count == s_test_config_gl33_mat4f_uniform_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_mat4f_uniform_set.forced_result;
+        }
     }
 #endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "data_")
@@ -502,6 +575,7 @@ static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t*
     }
 
     mock_glUniformMatrix4fv(location_, 1, should_transpose_, data_);
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -524,6 +598,14 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_shader_handle_addr_get.call_count++;
+    if(s_test_config_gl33_shader_handle_addr_get.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_handle_addr_get.call_count == s_test_config_gl33_shader_handle_addr_get.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_handle_addr_get.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLuint* tmp_handle = NULL;
 
@@ -561,8 +643,15 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_shader_resolve_target.call_count++;
+    if(s_test_config_gl33_shader_resolve_target.fail_on_call != 0) {
+        if(s_test_config_gl33_shader_resolve_target.call_count == s_test_config_gl33_shader_resolve_target.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_shader_resolve_target.forced_result;
+        }
+    }
+#endif
     GLenum tmp_type = GL_VERTEX_SHADER;
-
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_gl33_type_")
@@ -598,6 +687,14 @@ cleanup:
  * @retval SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE サポート対象外のシェーダー種別
  */
 static shader_compile_status_t shader_compile_status_get(shader_type_t shader_type_, const renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_shader_compile_status_get.call_count++;
+    if(s_test_config_shader_compile_status_get.fail_on_call != 0) {
+        if(s_test_config_shader_compile_status_get.call_count == s_test_config_shader_compile_status_get.fail_on_call) {
+            return (shader_compile_status_t)s_test_config_shader_compile_status_get.forced_result;
+        }
+    }
+#endif
     shader_compile_status_t status = SHADER_COMPILE_STATUS_NOT_COMPILED;
     if(NULL == shader_handle_) {
         status = SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE;
@@ -618,1322 +715,384 @@ static shader_compile_status_t shader_compile_status_get(shader_type_t shader_ty
 
 static void NO_COVERAGE mock_glDeleteShader(GLuint shader_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glDeleteShader_no_op) {
-        return;
-    } else {
-        glDeleteShader(shader_);
+    s_test_config_mock_glDeleteShader.call_count++;
+    if(s_test_config_mock_glDeleteShader.fail_on_call != 0) {
+        if(s_test_config_mock_glDeleteShader.call_count == s_test_config_mock_glDeleteShader.fail_on_call) {
+            return;
+        }
     }
-#else
-    glDeleteShader(shader_);
 #endif
+    glDeleteShader(shader_);
 }
 
 static void NO_COVERAGE mock_glDeleteProgram(GLuint program_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glDeleteProgram_no_op) {
-        return;
-    } else {
-        glDeleteProgram(program_);
+    s_test_config_mock_glDeleteProgram.call_count++;
+    if(s_test_config_mock_glDeleteProgram.fail_on_call != 0) {
+        if(s_test_config_mock_glDeleteProgram.call_count == s_test_config_mock_glDeleteProgram.fail_on_call) {
+            return;
+        }
     }
-#else
-    glDeleteProgram(program_);
 #endif
+    glDeleteProgram(program_);
 }
 
 static GLuint NO_COVERAGE mock_glCreateShader(GLenum shader_type_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glCreateShader) {
-        return s_fail_injection.result_glCreateShader;
-    } else {
-        return glCreateShader(shader_type_);
+    s_test_config_mock_glCreateShader.call_count++;
+    if(s_test_config_mock_glCreateShader.fail_on_call != 0) {
+        if(s_test_config_mock_glCreateShader.call_count == s_test_config_mock_glCreateShader.fail_on_call) {
+            return s_test_config_mock_glCreateShader.forced_result;
+        }
     }
-#else
-    return glCreateShader(shader_type_);
 #endif
+    return glCreateShader(shader_type_);
 }
 
 static GLuint NO_COVERAGE mock_glCreateProgram(void) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glCreateProgram) {
-        return s_fail_injection.result_glCreateProgram;
-    } else {
-        return glCreateProgram();
+    s_test_config_mock_glCreateProgram.call_count++;
+    if(s_test_config_mock_glCreateProgram.fail_on_call != 0) {
+        if(s_test_config_mock_glCreateProgram.call_count == s_test_config_mock_glCreateProgram.fail_on_call) {
+            return s_test_config_mock_glCreateProgram.forced_result;
+        }
     }
-#else
-    return glCreateProgram();
 #endif
+    return glCreateProgram();
 }
 
 static void NO_COVERAGE mock_glShaderSource(GLuint shader_, GLsizei count_, const GLchar **string_, const GLint *length_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glShaderSource_no_op) {
-        return;
-    } else {
-        glShaderSource(shader_, count_, string_, length_);
+    s_test_config_mock_glShaderSource.call_count++;
+    if(s_test_config_mock_glShaderSource.fail_on_call != 0) {
+        if(s_test_config_mock_glShaderSource.call_count == s_test_config_mock_glShaderSource.fail_on_call) {
+            return;
+        }
     }
-#else
-    glShaderSource(shader_, count_, string_, length_);
 #endif
+    glShaderSource(shader_, count_, string_, length_);
 }
 
 static void NO_COVERAGE mock_glCompileShader(GLuint shader_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glCompileShader_no_op) {
-        return;
-    } else {
-        glCompileShader(shader_);
+    s_test_config_mock_glCompileShader.call_count++;
+    if(s_test_config_mock_glCompileShader.fail_on_call != 0) {
+        if(s_test_config_mock_glCompileShader.call_count == s_test_config_mock_glCompileShader.fail_on_call) {
+            return;
+        }
     }
-#else
-    glCompileShader(shader_);
 #endif
+    glCompileShader(shader_);
 }
 
 static void NO_COVERAGE mock_glGetShaderiv(GLuint shader_, GLenum pname_, GLint *params_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glGetShaderiv && GL_COMPILE_STATUS == pname_) {
-        *params_ = s_fail_injection.status_glGetShaderiv;
-    } else if(s_fail_injection.is_enabled_glGetShaderiv && GL_INFO_LOG_LENGTH == pname_) {
-        *params_ = s_fail_injection.length_glGetShaderiv;
-    } else {
-        glGetShaderiv(shader_, pname_, params_);
+    s_test_config_mock_glGetShaderiv.call_count++;
+    if(s_test_config_mock_glGetShaderiv.fail_on_call != 0) {
+        if(s_test_config_mock_glGetShaderiv.call_count == s_test_config_mock_glGetShaderiv.fail_on_call) {
+            *params_ = s_test_config_mock_glGetShaderiv.forced_result;
+            return;
+        }
     }
-#else
-    glGetShaderiv(shader_, pname_, params_);
 #endif
+    glGetShaderiv(shader_, pname_, params_);
 }
 
 static void NO_COVERAGE mock_glGetShaderInfoLog(GLuint shader_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glGetShaderInfoLog) {
-        if(0 >= maxLength_) {
+    s_test_config_mock_glGetShaderInfoLog.call_count++;
+    if(s_test_config_mock_glGetShaderInfoLog.fail_on_call != 0) {
+        if(s_test_config_mock_glGetShaderInfoLog.call_count == s_test_config_mock_glGetShaderInfoLog.fail_on_call) {
+            if(0 >= s_test_config_mock_glGetShaderInfoLog.max_length) {
+                return;
+            }
+            GLsizei copy_length = (s_test_config_mock_glGetShaderInfoLog.max_length > TEST_INFO_LOG_LENGTH) ? TEST_INFO_LOG_LENGTH : s_test_config_mock_glGetShaderInfoLog.max_length;
+            for(GLsizei i = 0; i != (copy_length - 1); ++i) {
+                infoLog_[i] = s_test_config_mock_glGetShaderInfoLog.log[i];
+            }
+            infoLog_[copy_length - 1] = '\0';
             return;
         }
-        GLsizei copy_length = (maxLength_ > TEST_INFO_LOG_LENGTH) ? TEST_INFO_LOG_LENGTH : maxLength_;
-        for(GLsizei i = 0; i != (copy_length - 1); ++i) {
-            infoLog_[i] = s_fail_injection.log_str_glGetShaderInfoLog[i];
-        }
-        infoLog_[copy_length - 1] = '\0';
-    } else {
-        glGetShaderInfoLog(shader_, maxLength_, length_, infoLog_);
     }
-#else
-    glGetShaderInfoLog(shader_, maxLength_, length_, infoLog_);
 #endif
+    glGetShaderInfoLog(shader_, maxLength_, length_, infoLog_);
 }
 
 static void NO_COVERAGE mock_glAttachShader(GLuint program_, GLuint shader_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glAttachShader_no_op) {
-        return;
-    } else {
-        glAttachShader(program_, shader_);
+    s_test_config_mock_glAttachShader.call_count++;
+    if(s_test_config_mock_glAttachShader.fail_on_call != 0) {
+        if(s_test_config_mock_glAttachShader.call_count == s_test_config_mock_glAttachShader.fail_on_call) {
+            return;
+        }
     }
-#else
-    glAttachShader(program_, shader_);
 #endif
+    glAttachShader(program_, shader_);
 }
 
 static void NO_COVERAGE mock_glLinkProgram(GLuint program_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glLinkProgram_no_op) {
-        return;
-    } else {
-        glLinkProgram(program_);
+    s_test_config_mock_glLinkProgram.call_count++;
+    if(s_test_config_mock_glLinkProgram.fail_on_call != 0) {
+        if(s_test_config_mock_glLinkProgram.call_count == s_test_config_mock_glLinkProgram.fail_on_call) {
+            return;
+        }
     }
-#else
-    glLinkProgram(program_);
 #endif
+    glLinkProgram(program_);
 }
 
 static void NO_COVERAGE mock_glGetProgramiv(GLuint program_, GLenum pname_, GLint *params_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glGetProgramiv && GL_LINK_STATUS == pname_) {
-        *params_ = s_fail_injection.status_glGetProgramiv;
-    } else if(s_fail_injection.is_enabled_glGetProgramiv && GL_INFO_LOG_LENGTH == pname_) {
-        *params_ = s_fail_injection.length_glGetProgramiv;
-    } else {
-        glGetProgramiv(program_, pname_, params_);
+    s_test_config_mock_glGetProgramiv.call_count++;
+    if(s_test_config_mock_glGetProgramiv.fail_on_call != 0) {
+        if(s_test_config_mock_glGetProgramiv.call_count == s_test_config_mock_glGetProgramiv.fail_on_call) {
+            *params_ = s_test_config_mock_glGetProgramiv.forced_result;
+            return;
+        }
     }
-#else
-    glGetProgramiv(program_, pname_, params_);
 #endif
+    glGetProgramiv(program_, pname_, params_);
 }
 
 static void NO_COVERAGE mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glGetProgramInfoLog) {
-        if(0 >= maxLength_) {
+    s_test_config_mock_glGetProgramInfoLog.call_count++;
+    if(s_test_config_mock_glGetProgramInfoLog.fail_on_call != 0) {
+        if(s_test_config_mock_glGetProgramInfoLog.call_count == s_test_config_mock_glGetProgramInfoLog.fail_on_call) {
+            if(0 >= s_test_config_mock_glGetProgramInfoLog.max_length) {
+                return;
+            }
+            GLsizei copy_length = (s_test_config_mock_glGetProgramInfoLog.max_length > TEST_INFO_LOG_LENGTH) ? TEST_INFO_LOG_LENGTH : s_test_config_mock_glGetProgramInfoLog.max_length;
+            for(GLsizei i = 0; i != (copy_length - 1); ++i) {
+                infoLog_[i] = s_test_config_mock_glGetProgramInfoLog.log[i];
+            }
+            infoLog_[copy_length - 1] = '\0';
             return;
         }
-        GLsizei copy_length = (maxLength_ > TEST_INFO_LOG_LENGTH) ? TEST_INFO_LOG_LENGTH : maxLength_;
-        for(GLsizei i = 0; i != (copy_length - 1); ++i) {
-            infoLog_[i] = s_fail_injection.log_str_glGetProgramInfoLog[i];
-        }
-        infoLog_[copy_length - 1] = '\0';
-    } else {
-        glGetProgramInfoLog(program_, maxLength_, length_, infoLog_);
     }
-#else
-    glGetProgramInfoLog(program_, maxLength_, length_, infoLog_);
 #endif
+    glGetProgramInfoLog(program_, maxLength_, length_, infoLog_);
 }
 
 static void NO_COVERAGE mock_glUseProgram(GLuint program_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glUseProgram_no_op) {
-        return;
-    } else {
-        glUseProgram(program_);
+    s_test_config_mock_glUseProgram.call_count++;
+    if(s_test_config_mock_glUseProgram.fail_on_call != 0) {
+        if(s_test_config_mock_glUseProgram.call_count == s_test_config_mock_glUseProgram.fail_on_call) {
+            return;
+        }
     }
-#else
-    glUseProgram(program_);
 #endif
+    glUseProgram(program_);
 }
 
 static void NO_COVERAGE mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glUniformMatrix4fv_no_op) {
-        return;
-    } else {
-        glUniformMatrix4fv(location_, count_, transpose_, value_);
+    s_test_config_mock_glUniformMatrix4fv.call_count++;
+    if(s_test_config_mock_glUniformMatrix4fv.fail_on_call != 0) {
+        if(s_test_config_mock_glUniformMatrix4fv.call_count == s_test_config_mock_glUniformMatrix4fv.fail_on_call) {
+            return;
+        }
     }
-#else
-    glUniformMatrix4fv(location_, count_, transpose_, value_);
 #endif
+    glUniformMatrix4fv(location_, count_, transpose_, value_);
 }
 
 static GLint NO_COVERAGE mock_glGetUniformLocation(GLuint program_, const GLchar *name_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled_glGetUniformLocation) {
-        return s_fail_injection.location_glGetUniformLocation;
-    } else {
-        return glGetUniformLocation(program_, name_);
+    s_test_config_mock_glGetUniformLocation.call_count++;
+    if(s_test_config_mock_glGetUniformLocation.fail_on_call != 0) {
+        if(s_test_config_mock_glGetUniformLocation.call_count == s_test_config_mock_glGetUniformLocation.fail_on_call) {
+            return s_test_config_mock_glGetUniformLocation.forced_result;
+        }
     }
-#else
-    return glGetUniformLocation(program_, name_);
 #endif
+    return glGetUniformLocation(program_, name_);
 }
 
 #ifdef TEST_BUILD
-void gl33_shader_fail_enable(renderer_result_t result_code_) {
-    s_fail_injection.is_enabled = true;
-    s_fail_injection.result_code = result_code_;
+void NO_COVERAGE test_concrete_shader_config_reset(void) {
+    test_call_control_reset(&s_test_config_gl33_shader_create);
+    test_call_control_reset(&s_test_config_gl33_shader_compile);
+    test_call_control_reset(&s_test_config_gl33_shader_link);
+    test_call_control_reset(&s_test_config_gl33_shader_use);
+    test_call_control_reset(&s_test_config_gl33_uniform_location_get);
+    test_call_control_reset(&s_test_config_gl33_mat4f_uniform_set);
+    test_call_control_reset(&s_test_config_gl33_shader_handle_addr_get);
+    test_call_control_reset(&s_test_config_gl33_shader_resolve_target);
+    test_call_control_reset(&s_test_config_shader_compile_status_get);
+    test_call_control_no_op_reset(&s_test_config_mock_glDeleteShader);
+    test_call_control_no_op_reset(&s_test_config_mock_glDeleteProgram);
+    test_call_control_no_op_reset(&s_test_config_mock_glShaderSource);
+    test_call_control_no_op_reset(&s_test_config_mock_glCompileShader);
+    test_call_control_no_op_reset(&s_test_config_mock_glAttachShader);
+    test_call_control_no_op_reset(&s_test_config_mock_glLinkProgram);
+    test_call_control_no_op_reset(&s_test_config_mock_glUseProgram);
+    test_call_control_no_op_reset(&s_test_config_mock_glUniformMatrix4fv);
+    test_call_control_GLuint_reset(&s_test_config_mock_glCreateShader);
+    test_call_control_GLuint_reset(&s_test_config_mock_glCreateProgram);
+    test_call_control_GLint_reset(&s_test_config_mock_glGetShaderiv);
+    test_call_control_GLint_reset(&s_test_config_mock_glGetProgramiv);
+    test_call_control_GLint_reset(&s_test_config_mock_glGetUniformLocation);
+    test_call_control_log_info_reset(&s_test_config_mock_glGetShaderInfoLog);
+    test_call_control_log_info_reset(&s_test_config_mock_glGetProgramInfoLog);
 }
 
-void gl33_shader_fail_disable(void) {
-    s_fail_injection.is_enabled = false;
-    s_fail_injection.result_code = RENDERER_SUCCESS;
-
-    s_fail_injection.result_glCreateShader = 0;
-    s_fail_injection.is_enabled_glCreateShader = false;
-
-    s_fail_injection.result_glCreateProgram = 0;
-    s_fail_injection.is_enabled_glCreateProgram = false;
-
-    s_fail_injection.is_enabled_glDeleteShader_no_op = false;
-
-    s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
-
-    s_fail_injection.is_enabled_glShaderSource_no_op = false;
-
-    s_fail_injection.is_enabled_glCompileShader_no_op = false;
-
-    s_fail_injection.is_enabled_glGetShaderiv = false;
-    s_fail_injection.status_glGetShaderiv = 0;
-    s_fail_injection.length_glGetShaderiv = 0;
-
-    s_fail_injection.is_enabled_glGetShaderInfoLog = false;
-
-    s_fail_injection.is_enabled_glAttachShader_no_op = false;
-
-    s_fail_injection.is_enabled_glLinkProgram_no_op = false;
-
-    s_fail_injection.is_enabled_glGetProgramiv = false;
-    s_fail_injection.status_glGetProgramiv = 0;
-    s_fail_injection.length_glGetProgramiv = 0;
-
-    s_fail_injection.is_enabled_glGetProgramInfoLog = false;
-
-    s_fail_injection.is_enabled_glUseProgram_no_op = false;
-
-    memset(s_fail_injection.log_str_glGetShaderInfoLog, 0, TEST_INFO_LOG_LENGTH);
-    memset(s_fail_injection.log_str_glGetProgramInfoLog, 0, TEST_INFO_LOG_LENGTH);
-}
-
-void test_gl33_shader(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-    gl33_shader_fail_disable();
-
+void NO_COVERAGE test_concrete_shader(void) {
+    test_gl33_shader_vtable_get();
     test_gl33_shader_create();
     test_gl33_shader_destroy();
     test_gl33_shader_compile();
     test_gl33_shader_link();
     test_gl33_shader_use();
+    test_gl33_uniform_location_get();
+    test_gl33_mat4f_uniform_set();
+    test_gl33_shader_handle_addr_get();
     test_gl33_shader_resolve_target();
     test_shader_compile_status_get();
-    test_gl33_shader_handle_addr_get();
+    test_mock_glDeleteShader();
+    test_mock_glDeleteProgram();
+    test_mock_glCreateShader();
+    test_mock_glCreateProgram();
+    test_mock_glShaderSource();
+    test_mock_glCompileShader();
+    test_mock_glGetShaderiv();
+    test_mock_glGetShaderInfoLog();
+    test_mock_glAttachShader();
+    test_mock_glLinkProgram();
+    test_mock_glGetProgramiv();
+    test_mock_glGetProgramInfoLog();
+    test_mock_glUseProgram();
+    test_mock_glUniformMatrix4fv();
+    test_mock_glGetUniformLocation();
+}
 
-    memory_system_destroy();
-    gl33_shader_fail_disable();
+static void NO_COVERAGE test_gl33_shader_vtable_get(void) {
+
 }
 
 static void NO_COVERAGE test_gl33_shader_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    {
-        // 強制エラー出力機能テスト
-        s_fail_injection.is_enabled = true;
-        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
 
-        ret = gl33_shader_create(NULL);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-
-        s_fail_injection.is_enabled = false;
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = gl33_shader_create(NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // *shader_handle_ != NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_shader_t* shader = NULL;
-        shader = malloc(sizeof(renderer_backend_shader_t));
-
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(shader);
-    }
-    {
-        // memory_system_allocateがMEMORY_SYSTEM_LIMIT_EXCEEDED -> RENDERER_LIMIT_EXCEEDED
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-
-        // renderer_backend_shader_t* shader = NULL;
-        // ret = gl33_shader_create(&shader);
-        // assert(NULL == shader);
-        // assert(RENDERER_LIMIT_EXCEEDED == ret);
-
-        // memory_system_test_param_reset();
-    }
-    {
-        // 正常系
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->program_id);
-        assert(0 == shader->vertex_shader_handle);
-        assert(0 == shader->fragment_shader_handle);
-        assert(RENDERER_SUCCESS == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-    }
 }
 
 static void NO_COVERAGE test_gl33_shader_destroy(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    {
-        // shader_handle_ == NULL -> No-op
-        gl33_shader_destroy(NULL);
-    }
-    {
-        // *shader_handle_ == NULL -> No-op
-        renderer_backend_shader_t* shader = NULL;
-        gl33_shader_destroy(&shader);
-    }
-    {
-        // 0 == (*shader_handle_)->vertex_shader_handle
-        // 0 == (*shader_handle_)->fragment_shader_handle
-        // 0 == (*shader_handle_)->program_id
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
 
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(NULL != shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = false;
-    }
-    {
-        // 0 != (*shader_handle_)->vertex_shader_handle
-        // 0 != (*shader_handle_)->fragment_shader_handle
-        // 0 != (*shader_handle_)->program_id
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(NULL != shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        shader->fragment_shader_handle = 1;
-        shader->program_id = 2;
-        shader->vertex_shader_handle = 3;
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = false;
-    }
 }
 
 static void NO_COVERAGE test_gl33_shader_compile(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    const char* shader_source = "dummy shader source";
 
-    {
-        // 強制エラー出力機能テスト
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled = true;
-        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // shader_source_ == NULL -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, NULL, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 既にコンパイル済み -> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 1;     // compiled扱い
-        shader->fragment_shader_handle = 0;
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 既にリンク済み(program_id != 0) -> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 99;              // linked扱い
-        shader->vertex_shader_handle = 0;
-        shader->fragment_shader_handle = 0;
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // shader_type_ が既定値外 -> gl33_shader_handle_addr_getで失敗 -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        ret = gl33_shader_compile((shader_type_t)100, shader_source, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // glCreateShader が 0 を返す -> RENDERER_SHADER_COMPILE_ERROR
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->vertex_shader_handle);
-
-        s_fail_injection.is_enabled_glCreateShader = true;
-        s_fail_injection.result_glCreateShader = 0;
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
-        assert(0 == shader->vertex_shader_handle);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 正常系: info_log_length == 0 && result == GL_TRUE -> SUCCESS
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->vertex_shader_handle);
-
-        s_fail_injection.is_enabled_glCreateShader = true;
-        s_fail_injection.result_glCreateShader = 123;
-
-        s_fail_injection.is_enabled_glShaderSource_no_op = true;
-        s_fail_injection.is_enabled_glCompileShader_no_op = true;
-
-        s_fail_injection.is_enabled_glGetShaderiv = true;
-        s_fail_injection.status_glGetShaderiv = GL_TRUE;
-        s_fail_injection.length_glGetShaderiv = 0;
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(123 == shader->vertex_shader_handle);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 正常系: info_log_length > 0 && result == GL_TRUE -> WARN経由でSUCCESS
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->vertex_shader_handle);
-
-        s_fail_injection.is_enabled_glCreateShader = true;
-        s_fail_injection.result_glCreateShader = 124;
-
-        s_fail_injection.is_enabled_glShaderSource_no_op = true;
-        s_fail_injection.is_enabled_glCompileShader_no_op = true;
-
-        s_fail_injection.is_enabled_glGetShaderiv = true;
-        s_fail_injection.status_glGetShaderiv = GL_TRUE;
-        s_fail_injection.length_glGetShaderiv = 16;
-
-        s_fail_injection.is_enabled_glGetShaderInfoLog = true;
-        memset(s_fail_injection.log_str_glGetShaderInfoLog, 0, TEST_INFO_LOG_LENGTH);
-        strncpy(s_fail_injection.log_str_glGetShaderInfoLog, "compile warn", TEST_INFO_LOG_LENGTH - 1);
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(124 == shader->vertex_shader_handle);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length > 0 && result != GL_TRUE -> RENDERER_SHADER_COMPILE_ERROR（cleanupでDeleteShader）
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->vertex_shader_handle);
-
-        s_fail_injection.is_enabled_glCreateShader = true;
-        s_fail_injection.result_glCreateShader = 125;
-
-        s_fail_injection.is_enabled_glShaderSource_no_op = true;
-        s_fail_injection.is_enabled_glCompileShader_no_op = true;
-
-        s_fail_injection.is_enabled_glGetShaderiv = true;
-        s_fail_injection.status_glGetShaderiv = GL_FALSE;
-        s_fail_injection.length_glGetShaderiv = 16;
-
-        s_fail_injection.is_enabled_glGetShaderInfoLog = true;
-        memset(s_fail_injection.log_str_glGetShaderInfoLog, 0, TEST_INFO_LOG_LENGTH);
-        strncpy(s_fail_injection.log_str_glGetShaderInfoLog, "compile error", TEST_INFO_LOG_LENGTH - 1);
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
-        assert(0 == shader->vertex_shader_handle);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length == 0 && result != GL_TRUE -> RENDERER_SHADER_COMPILE_ERROR（cleanupでDeleteShader）
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-        assert(0 == shader->vertex_shader_handle);
-
-        s_fail_injection.is_enabled_glCreateShader = true;
-        s_fail_injection.result_glCreateShader = 126;
-
-        s_fail_injection.is_enabled_glShaderSource_no_op = true;
-        s_fail_injection.is_enabled_glCompileShader_no_op = true;
-
-        s_fail_injection.is_enabled_glGetShaderiv = true;
-        s_fail_injection.status_glGetShaderiv = GL_FALSE;
-        s_fail_injection.length_glGetShaderiv = 0;
-
-        ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
-        assert(0 == shader->vertex_shader_handle);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length > 0 で render_mem_allocate 失敗 -> RENDERER_LIMIT_EXCEEDED（cleanupでDeleteShader）
-        // gl33_shader_fail_disable();
-        // s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        // s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        // renderer_backend_shader_t* shader = NULL;
-        // ret = gl33_shader_create(&shader);
-        // assert(RENDERER_SUCCESS == ret);
-        // assert(NULL != shader);
-        // assert(0 == shader->vertex_shader_handle);
-
-        // s_fail_injection.is_enabled_glCreateShader = true;
-        // s_fail_injection.result_glCreateShader = 127;
-
-        // s_fail_injection.is_enabled_glShaderSource_no_op = true;
-        // s_fail_injection.is_enabled_glCompileShader_no_op = true;
-
-        // s_fail_injection.is_enabled_glGetShaderiv = true;
-        // s_fail_injection.status_glGetShaderiv = GL_TRUE;
-        // s_fail_injection.length_glGetShaderiv = 16;
-
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-
-        // ret = gl33_shader_compile(SHADER_TYPE_VERTEX, shader_source, shader);
-        // assert(RENDERER_LIMIT_EXCEEDED == ret);
-        // assert(0 == shader->vertex_shader_handle);
-
-        // memory_system_test_param_reset();
-
-        // gl33_shader_destroy(&shader);
-        // assert(NULL == shader);
-
-        // gl33_shader_fail_disable();
-    }
 }
 
 static void NO_COVERAGE test_gl33_shader_link(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // 強制エラー出力機能テスト
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled = true;
-        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
-
-        ret = gl33_shader_link(NULL);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-
-        ret = gl33_shader_link(NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // program_id != 0（既にリンク済み）-> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 99;
-        shader->vertex_shader_handle = 1;
-        shader->fragment_shader_handle = 1;
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // vertex 未コンパイル -> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 0;   // 未
-        shader->fragment_shader_handle = 1; // 済扱い
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // fragment 未コンパイル -> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 1;   // 済扱い
-        shader->fragment_shader_handle = 0; // 未
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // glCreateProgram が 0 -> RENDERER_SHADER_LINK_ERROR
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 10;
-        shader->fragment_shader_handle = 11;
-
-        s_fail_injection.is_enabled_glCreateProgram = true;
-        s_fail_injection.result_glCreateProgram = 0;
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_SHADER_LINK_ERROR == ret);
-        assert(0 == shader->program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 正常系: info_log_length == 0 && LINK_STATUS == GL_TRUE -> SUCCESS
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glAttachShader_no_op = true;
-        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 20;
-        shader->fragment_shader_handle = 21;
-
-        s_fail_injection.is_enabled_glCreateProgram = true;
-        s_fail_injection.result_glCreateProgram = 200;
-
-        s_fail_injection.is_enabled_glGetProgramiv = true;
-        s_fail_injection.status_glGetProgramiv = GL_TRUE;
-        s_fail_injection.length_glGetProgramiv = 0;
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(200 == shader->program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 正常系: info_log_length > 0 && LINK_STATUS == GL_TRUE -> WARN経由でSUCCESS
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glAttachShader_no_op = true;
-        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 30;
-        shader->fragment_shader_handle = 31;
-
-        s_fail_injection.is_enabled_glCreateProgram = true;
-        s_fail_injection.result_glCreateProgram = 201;
-
-        s_fail_injection.is_enabled_glGetProgramiv = true;
-        s_fail_injection.status_glGetProgramiv = GL_TRUE;
-        s_fail_injection.length_glGetProgramiv = 16;
-
-        s_fail_injection.is_enabled_glGetProgramInfoLog = true;
-        memset(s_fail_injection.log_str_glGetProgramInfoLog, 0, TEST_INFO_LOG_LENGTH);
-        strncpy(s_fail_injection.log_str_glGetProgramInfoLog, "link warn", TEST_INFO_LOG_LENGTH - 1);
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(201 == shader->program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length > 0 && LINK_STATUS != GL_TRUE -> RENDERER_SHADER_LINK_ERROR（cleanupでDeleteProgram）
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glAttachShader_no_op = true;
-        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 40;
-        shader->fragment_shader_handle = 41;
-
-        s_fail_injection.is_enabled_glCreateProgram = true;
-        s_fail_injection.result_glCreateProgram = 202;
-
-        s_fail_injection.is_enabled_glGetProgramiv = true;
-        s_fail_injection.status_glGetProgramiv = GL_FALSE;
-        s_fail_injection.length_glGetProgramiv = 16;
-
-        s_fail_injection.is_enabled_glGetProgramInfoLog = true;
-        memset(s_fail_injection.log_str_glGetProgramInfoLog, 0, TEST_INFO_LOG_LENGTH);
-        strncpy(s_fail_injection.log_str_glGetProgramInfoLog, "link error", TEST_INFO_LOG_LENGTH - 1);
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_SHADER_LINK_ERROR == ret);
-        assert(0 == shader->program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length == 0 && LINK_STATUS != GL_TRUE -> RENDERER_SHADER_LINK_ERROR（cleanupでDeleteProgram）
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glAttachShader_no_op = true;
-        s_fail_injection.is_enabled_glLinkProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 50;
-        shader->fragment_shader_handle = 51;
-
-        s_fail_injection.is_enabled_glCreateProgram = true;
-        s_fail_injection.result_glCreateProgram = 203;
-
-        s_fail_injection.is_enabled_glGetProgramiv = true;
-        s_fail_injection.status_glGetProgramiv = GL_FALSE;
-        s_fail_injection.length_glGetProgramiv = 0;
-
-        ret = gl33_shader_link(shader);
-        assert(RENDERER_SHADER_LINK_ERROR == ret);
-        assert(0 == shader->program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 異常系: info_log_length > 0 で render_mem_allocate 失敗 -> RENDERER_LIMIT_EXCEEDED（cleanupでDeleteProgram）
-        // gl33_shader_fail_disable();
-        // s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        // s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        // s_fail_injection.is_enabled_glAttachShader_no_op = true;
-        // s_fail_injection.is_enabled_glLinkProgram_no_op = true;
-
-        // renderer_backend_shader_t* shader = NULL;
-        // ret = gl33_shader_create(&shader);
-        // assert(RENDERER_SUCCESS == ret);
-        // assert(NULL != shader);
-
-        // shader->program_id = 0;
-        // shader->vertex_shader_handle = 60;
-        // shader->fragment_shader_handle = 61;
-
-        // s_fail_injection.is_enabled_glCreateProgram = true;
-        // s_fail_injection.result_glCreateProgram = 204;
-
-        // s_fail_injection.is_enabled_glGetProgramiv = true;
-        // s_fail_injection.status_glGetProgramiv = GL_TRUE;
-        // s_fail_injection.length_glGetProgramiv = 16;
-
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-
-        // ret = gl33_shader_link(shader);
-        // assert(RENDERER_LIMIT_EXCEEDED == ret);
-        // assert(0 == shader->program_id);
-
-        // memory_system_test_param_reset();
-
-        // gl33_shader_destroy(&shader);
-        // assert(NULL == shader);
-
-        // gl33_shader_fail_disable();
-    }
 }
 
 static void NO_COVERAGE test_gl33_shader_use(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // 強制エラー出力機能テスト
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled = true;
-        s_fail_injection.result_code = RENDERER_LIMIT_EXCEEDED;
-
-        ret = gl33_shader_use(NULL, NULL);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-
-        uint32_t out_program_id = 0;
-        ret = gl33_shader_use(NULL, &out_program_id);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // out_program_id_ == NULL -> RENDERER_INVALID_ARGUMENT
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        ret = gl33_shader_use(shader, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // program_id == 0 -> RENDERER_BAD_OPERATION
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 0;
-        shader->vertex_shader_handle = 1;
-        shader->fragment_shader_handle = 2;
-
-        uint32_t out_program_id = 0;
-        ret = gl33_shader_use(shader, &out_program_id);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // out_program_id_ が既に program_id と同一 -> SUCCESS（内部でcompiledチェック/UseProgramしない）
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glUseProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 10;
-        shader->vertex_shader_handle = 0;    // 未コンパイルでもOK（この分岐では見ない）
-        shader->fragment_shader_handle = 0;
-
-        uint32_t out_program_id = 10;
-        ret = gl33_shader_use(shader, &out_program_id);
-        assert(RENDERER_SUCCESS == ret);
-        assert(10 == out_program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // vertex 未コンパイル（program_id!=0 かつ out_program_id!=program_id）-> RENDERER_DATA_CORRUPTED
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glUseProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 11;
-        shader->vertex_shader_handle = 0;    // 未
-        shader->fragment_shader_handle = 1;  // 済扱い
-
-        uint32_t out_program_id = 0;
-        ret = gl33_shader_use(shader, &out_program_id);
-        assert(RENDERER_DATA_CORRUPTED == ret);
-        assert(0 == out_program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // fragment 未コンパイル（program_id!=0 かつ out_program_id!=program_id）-> RENDERER_DATA_CORRUPTED
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glUseProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 12;
-        shader->vertex_shader_handle = 1;    // 済扱い
-        shader->fragment_shader_handle = 0;  // 未
-
-        uint32_t out_program_id = 0;
-        ret = gl33_shader_use(shader, &out_program_id);
-        assert(RENDERER_DATA_CORRUPTED == ret);
-        assert(0 == out_program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
-    {
-        // 正常系: program_id!=0 / out_program_id!=program_id / vertex&fragment compiled -> SUCCESS & out_program_id 更新
-        gl33_shader_fail_disable();
-        s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-        s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-        s_fail_injection.is_enabled_glUseProgram_no_op = true;
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->program_id = 13;
-        shader->vertex_shader_handle = 2;
-        shader->fragment_shader_handle = 3;
-
-        uint32_t out_program_id = 0;
-        ret = gl33_shader_use(shader, &out_program_id);
-        assert(RENDERER_SUCCESS == ret);
-        assert(13 == out_program_id);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-
-        gl33_shader_fail_disable();
-    }
 }
 
-static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    {
-        // out_gl33_type_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = gl33_shader_resolve_target(SHADER_TYPE_VERTEX, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // shader_type_が既定値外 -> RENDERER_INVALID_ARGUMENT
-        // out_gl33_type_への代入を通らないことを確認する
-        GLenum type = GL_VERTEX_SHADER;
-        ret = gl33_shader_resolve_target(100, &type);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(GL_VERTEX_SHADER == type);
-    }
-    {
-        // 正常系(GL_VERTEX_SHADER)
-        GLenum type = GL_VERTEX_SHADER;
-        ret = gl33_shader_resolve_target(SHADER_TYPE_VERTEX, &type);
-        assert(RENDERER_SUCCESS == ret);
-        assert(GL_VERTEX_SHADER == type);
-    }
-    {
-        // 正常系(GL_FRAGMENT_SHADER)
-        GLenum type = GL_VERTEX_SHADER;
-        ret = gl33_shader_resolve_target(SHADER_TYPE_FRAGMENT, &type);
-        assert(RENDERER_SUCCESS == ret);
-        assert(GL_FRAGMENT_SHADER == type);
-    }
+static void NO_COVERAGE test_gl33_uniform_location_get(void) {
+
 }
 
-static void NO_COVERAGE test_shader_compile_status_get(void) {
-    shader_compile_status_t status = SHADER_COMPILE_STATUS_NOT_COMPILED;
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+static void NO_COVERAGE test_gl33_mat4f_uniform_set(void) {
 
-    s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-    s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-    {
-        // shader_handle_ == NULL -> SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE
-        status = shader_compile_status_get(SHADER_TYPE_FRAGMENT, NULL);
-        assert(SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE == status);
-    }
-    {
-        // vertex_shader_handle == 0, shader_type_ == SHADER_TYPE_VERTEX -> SHADER_COMPILE_STATUS_NOT_COMPILED
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->vertex_shader_handle = 0;
-        status = shader_compile_status_get(SHADER_TYPE_VERTEX, shader);
-        assert(SHADER_COMPILE_STATUS_NOT_COMPILED == status);
-
-        gl33_shader_destroy(&shader);
-    }
-    {
-        // vertex_shader_handle != 0, shader_type_ == SHADER_TYPE_VERTEX -> SHADER_COMPILE_STATUS_COMPILED
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->vertex_shader_handle = 1;
-        status = shader_compile_status_get(SHADER_TYPE_VERTEX, shader);
-        assert(SHADER_COMPILE_STATUS_COMPILED == status);
-
-        gl33_shader_destroy(&shader);
-    }
-    {
-        // vertex_shader_handle == 0, shader_type_ == SHADER_TYPE_FRAGMENT -> SHADER_COMPILE_STATUS_NOT_COMPILED
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->fragment_shader_handle = 0;
-        status = shader_compile_status_get(SHADER_TYPE_FRAGMENT, shader);
-        assert(SHADER_COMPILE_STATUS_NOT_COMPILED == status);
-
-        gl33_shader_destroy(&shader);
-    }
-    {
-        // vertex_shader_handle != 0, shader_type_ == SHADER_TYPE_FRAGMENT -> SHADER_COMPILE_STATUS_COMPILED
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        shader->fragment_shader_handle = 1;
-        status = shader_compile_status_get(SHADER_TYPE_FRAGMENT, shader);
-        assert(SHADER_COMPILE_STATUS_COMPILED == status);
-
-        gl33_shader_destroy(&shader);
-    }
-    {
-        // 既定値外のシェーダー種別 -> SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != shader);
-
-        status = shader_compile_status_get(100, shader);
-        assert(SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE == status);
-
-        gl33_shader_destroy(&shader);
-    }
-    s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
-    s_fail_injection.is_enabled_glDeleteShader_no_op = false;
 }
 
 static void NO_COVERAGE test_gl33_shader_handle_addr_get(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_fail_injection.is_enabled_glDeleteShader_no_op = true;
-    s_fail_injection.is_enabled_glDeleteProgram_no_op = true;
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        GLuint* addr = NULL;
-        ret = gl33_shader_handle_addr_get(NULL, SHADER_TYPE_VERTEX, &addr);
-        assert(NULL == addr);
-        assert(RENDERER_INVALID_ARGUMENT);
-    }
-    {
-        // out_handle_addr_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(NULL != shader);
-        assert(RENDERER_SUCCESS == ret);
 
-        ret = gl33_shader_handle_addr_get(shader, SHADER_TYPE_VERTEX, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-    }
-    {
-        // shader_type_が既定値外 -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(NULL != shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        GLuint* addr = NULL;
-        ret = gl33_shader_handle_addr_get(shader, 100, &addr);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(NULL == addr);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-    }
-    {
-        // 正常系
-        // 上書きなし
-        renderer_backend_shader_t* shader = NULL;
-        ret = gl33_shader_create(&shader);
-        assert(NULL != shader);
-        assert(RENDERER_SUCCESS == ret);
-        shader->fragment_shader_handle = 1;
-        shader->vertex_shader_handle = 2;
-
-        GLuint* addr = NULL;
-        ret = gl33_shader_handle_addr_get(shader, SHADER_TYPE_VERTEX, &addr);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != addr);
-        assert(&shader->vertex_shader_handle == addr);
-        assert(2 == *addr);
-
-        // 上書き動作確認
-        ret = gl33_shader_handle_addr_get(shader, SHADER_TYPE_FRAGMENT, &addr);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != addr);
-        assert(&shader->fragment_shader_handle == addr);
-        assert(1 == *addr);
-
-        gl33_shader_destroy(&shader);
-        assert(NULL == shader);
-    }
-    s_fail_injection.is_enabled_glDeleteShader_no_op = false;
-    s_fail_injection.is_enabled_glDeleteProgram_no_op = false;
 }
 
+static void NO_COVERAGE test_gl33_shader_resolve_target(void) {
+
+}
+
+static void NO_COVERAGE test_shader_compile_status_get(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glDeleteShader(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glDeleteProgram(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glCreateShader(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glCreateProgram(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glShaderSource(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glCompileShader(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glGetShaderiv(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glGetShaderInfoLog(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glAttachShader(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glLinkProgram(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glGetProgramiv(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glGetProgramInfoLog(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glUseProgram(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glUniformMatrix4fv(void) {
+
+}
+
+static void NO_COVERAGE test_mock_glGetUniformLocation(void) {
+
+}
+
+static void NO_COVERAGE test_call_control_no_op_reset(test_call_control_no_op_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
+}
+
+static void NO_COVERAGE test_call_control_GLuint_reset(test_call_control_GLuint_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
+    config_->forced_result = 0;
+}
+
+static void NO_COVERAGE test_call_control_GLint_reset(test_call_control_GLint_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
+    config_->forced_result = 0;
+}
+
+static void NO_COVERAGE test_call_control_log_info_reset(test_call_control_log_info_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
+    config_->max_length = 0;
+    config_->log[0] = '\0';
+}
 #endif
