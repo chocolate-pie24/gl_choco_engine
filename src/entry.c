@@ -20,34 +20,39 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
+// test: base
 #include "engine/base/choco_math/test_choco_math.h"
 
+// test: core
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
 
+// test: containers
 #include "engine/containers/test_choco_string.h"
 #include "engine/containers/test_ring_queue.h"
 
-#include "platform/test_platform_context.h"
+// test: io_utils
+#include "engine/io_utils/fs_utils/test_fs_utils.h"
 
-#include "renderer/test_renderer_backend_context.h"
-#include "renderer/test_renderer_memory.h"
-#include "renderer/test_renderer_err_utils.h"
-#include "renderer/test_gl33_vbo.h"
-#include "renderer/test_gl33_vao.h"
-#include "renderer/test_gl33_shader.h"
+// #include "renderer/test_renderer_backend_context.h"
+// #include "renderer/test_renderer_memory.h"
+// #include "renderer/test_renderer_err_utils.h"
+// #include "renderer/test_gl33_vbo.h"
+// #include "renderer/test_gl33_vao.h"
+// #include "renderer/test_gl33_shader.h"
 
+// test: platform
 #include "engine/platform/platform_core/test_platform_err_utils.h"
 #include "engine/platform/platform_concretes/test_platform_glfw.h"
+#include "engine/platform/test_platform_context.h"
 
+// test: camera_system
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/camera_system/camera_core/test_camera_memory.h"
 #include "engine/camera_system/camera/test_camera.h"
 #include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/camera_system/camera_manager/test_camera_manager.h"
-
-#include "io_utils/test_fs_utils.h"
 
 #endif
 
@@ -85,6 +90,9 @@ int main(int argc_, char** argv_) {
         test_choco_string();
         test_ring_queue();
 
+        // engine/io_utils
+        test_fs_utils();
+
         // engine/camera
         test_camera_err_utils();
         test_camera_memory();
@@ -101,8 +109,6 @@ int main(int argc_, char** argv_) {
         // test_renderer_err_utils();
         // test_gl33_vbo();
         // test_gl33_vao();
-
-        // test_fs_utils();
         // test_gl33_shader();
         // test_renderer_backend_context();
     }

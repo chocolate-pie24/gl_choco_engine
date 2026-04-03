@@ -34,20 +34,32 @@
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
-#include <stdio.h>
+#include <string.h>
 
-/**
- * @brief 呼び出し側のテスト用強制エラー出力データ構造体
- *
- */
-typedef struct fail_injection {
-    fs_utils_result_t result_code;  /**< 強制的に出力する実行結果コード */
-    bool is_enabled;                /**< 実行結果コード強制出力機能有効/無効フラグ */
-} fail_injection_t;
+#include "test_controller.h"
 
-static fail_injection_t s_fail_injection;   /**< 上位モジュールテスト用構造体インスタンス */
+#include "engine/base/choco_macros.h"
 
+#include "engine/core/memory/test_choco_memory.h"
+#include "engine/core/filesystem/test_filesystem.h"
+
+#include "engine/containers/test_choco_string.h"
+
+#include "engine/io_utils/fs_utils/test_fs_utils.h"
+
+// fs_utils用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_fs_utils_create;           /**< fs_utils_create()テスト設定 */
+static test_call_control_t s_test_config_fs_utils_text_file_read;   /**< fs_utils_text_file_read()テスト設定 */
+static test_call_control_t s_test_config_fs_utils_fullpath_get;     /**< fs_utils_fullpath_get()テスト設定 */
+
+// プライベート関数テスト設定
+static test_call_control_bool_t s_test_config_fs_utils_valid_check; /**< fs_utils_valid_check()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
 static void test_fs_utils_create(void);
 static void test_fs_utils_destroy(void);
 static void test_fs_utils_text_file_read(void);
@@ -89,19 +101,21 @@ static fs_utils_result_t choco_string_result_convert(choco_string_result_t resul
 static fs_utils_result_t memory_system_result_convert(memory_system_result_t result_);
 
 fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, filesystem_open_mode_t open_mode_, fs_utils_t** fs_utils_) {
+#ifdef TEST_BUILD
+    s_test_config_fs_utils_create.call_count++;
+    if(s_test_config_fs_utils_create.fail_on_call != 0) {
+        if(s_test_config_fs_utils_create.call_count == s_test_config_fs_utils_create.fail_on_call) {
+            return (fs_utils_result_t)s_test_config_fs_utils_create.forced_result;
+        }
+    }
+#endif
+
     fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
     fs_utils_t* tmp_fs_utils = NULL;
-
     choco_string_t* tmp_fullpath = NULL;
-
-#ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
-    }
-#endif
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(filepath_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filepath_")
@@ -175,6 +189,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     choco_string_destroy(&tmp_fullpath);
 
     *fs_utils_ = tmp_fs_utils;
+
     ret = FS_UTILS_SUCCESS;
 
 cleanup:
@@ -197,22 +212,28 @@ void fs_utils_destroy(fs_utils_t** fs_utils_) {
     choco_string_destroy(&(*fs_utils_)->filename);
     filesystem_destroy(&(*fs_utils_)->filesystem);
     memory_system_free(*fs_utils_, sizeof(fs_utils_t), MEMORY_TAG_FILE_IO);
+
     *fs_utils_ = NULL;
 }
 
 fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t* out_string_) {
-    fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
-    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_fs_utils_text_file_read.call_count++;
+    if(s_test_config_fs_utils_text_file_read.fail_on_call != 0) {
+        if(s_test_config_fs_utils_text_file_read.call_count == s_test_config_fs_utils_text_file_read.fail_on_call) {
+            return (fs_utils_result_t)s_test_config_fs_utils_text_file_read.forced_result;
+        }
     }
 #endif
 
+    fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
+    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
+    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
+    bool complete = false;
+
     IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_text_file_read", "fs_utils_")
     IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_text_file_read", "out_string_")
+
     if(!fs_utils_valid_check(fs_utils_)) {
         // fs_utilsはfs_utils_createを経由して生成されたものであればvalidであることが保証されるため,ここを通るということはデータが壊れているかデータが未初期化
         ret = FS_UTILS_DATA_CORRUPTED;
@@ -227,7 +248,6 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
         goto cleanup;
     }
 
-    bool complete = false;
     while(!complete) {
         char tmp_buffer[FS_READ_UNIT_SIZE + 1] = { 0 };
         size_t result = 0;
@@ -254,6 +274,7 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
             }
         }
     }
+
     ret = FS_UTILS_SUCCESS;
 
 cleanup:
@@ -261,17 +282,21 @@ cleanup:
 }
 
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_) {
-    fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
-
 #ifdef TEST_BUILD
-    if(s_fail_injection.is_enabled) {
-        return s_fail_injection.result_code;
+    s_test_config_fs_utils_fullpath_get.call_count++;
+    if(s_test_config_fs_utils_fullpath_get.fail_on_call != 0) {
+        if(s_test_config_fs_utils_fullpath_get.call_count == s_test_config_fs_utils_fullpath_get.fail_on_call) {
+            return (fs_utils_result_t)s_test_config_fs_utils_fullpath_get.forced_result;
+        }
     }
 #endif
 
+    fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
+    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_fullpath_get", "fs_utils_")
     IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_fullpath_get", "out_fullpath_")
+
     if(!fs_utils_valid_check(fs_utils_)) {
         // fs_utilsはfs_utils_createを経由して生成されたものであればvalidであることが保証されるため,ここを通るということはデータが壊れているかデータが未初期化
         ret = FS_UTILS_DATA_CORRUPTED;
@@ -301,6 +326,7 @@ fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* o
             goto cleanup;
         }
     }
+
     ret = FS_UTILS_SUCCESS;
 
 cleanup:
@@ -350,6 +376,14 @@ static const char* rslt_to_str(fs_utils_result_t rslt_) {
  * @return false 破損あり
  */
 static bool fs_utils_valid_check(const fs_utils_t* fs_utils_) {
+#ifdef TEST_BUILD
+    s_test_config_fs_utils_valid_check.call_count++;
+    if(s_test_config_fs_utils_valid_check.fail_on_call != 0) {
+        if(s_test_config_fs_utils_valid_check.call_count == s_test_config_fs_utils_valid_check.fail_on_call) {
+            return s_test_config_fs_utils_valid_check.forced_result;
+        }
+    }
+#endif
     // extensionはNULLを許可
     if(NULL == fs_utils_) {
         return false;
@@ -453,17 +487,42 @@ static fs_utils_result_t memory_system_result_convert(memory_system_result_t res
 
 #ifdef TEST_BUILD
 
-void fs_utils_fail_enable(fs_utils_result_t result_code_) {
-    s_fail_injection.is_enabled = true;
-    s_fail_injection.result_code = result_code_;
+void NO_COVERAGE test_fs_utils_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_fs_utils_create.fail_on_call = config_->fail_on_call;
+    s_test_config_fs_utils_create.forced_result = config_->forced_result;
 }
 
-void fs_utils_fail_disable(void) {
-    s_fail_injection.is_enabled = false;
-    s_fail_injection.result_code = FS_UTILS_SUCCESS;
+void NO_COVERAGE test_fs_utils_text_file_read_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_fs_utils_text_file_read.fail_on_call = config_->fail_on_call;
+    s_test_config_fs_utils_text_file_read.forced_result = config_->forced_result;
 }
 
-void test_fs_utils(void) {
+void NO_COVERAGE test_fs_utils_fullpath_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_fs_utils_fullpath_get.fail_on_call = config_->fail_on_call;
+    s_test_config_fs_utils_fullpath_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_fs_utils_config_reset(void) {
+    test_call_control_reset(&s_test_config_fs_utils_create);
+    test_call_control_reset(&s_test_config_fs_utils_text_file_read);
+    test_call_control_reset(&s_test_config_fs_utils_fullpath_get);
+
+    test_call_control_bool_reset(&s_test_config_fs_utils_valid_check);
+}
+
+void NO_COVERAGE test_fs_utils(void) {
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     test_fs_utils_create();
@@ -479,1046 +538,1053 @@ void test_fs_utils(void) {
     memory_system_destroy();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_create(void) {
     {
-        // 強制エラー出力
-        fs_utils_fail_enable(FS_UTILS_DATA_CORRUPTED);
-        fs_utils_result_t ret = fs_utils_create(NULL, NULL, NULL, FILESYSTEM_MODE_READ, NULL);
-        assert(FS_UTILS_DATA_CORRUPTED == ret);
-        fs_utils_fail_disable();
+        // fs_utils_create() 自体の失敗注入
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FS_UTILS_RUNTIME_ERROR;
+        test_fs_utils_create_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 正常系: extensionあり（test_file.txt を READ でオープンできること）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filepath_ == NULL
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
-
-        // // Commit後の最低限の状態確認
-        // assert(FILESYSTEM_MODE_READ == fs->mode);
-        // assert(NULL != fs->filesystem);
-        // assert(NULL != fs->filepath);
-        // assert(NULL != fs->filename);
-        // assert(NULL != fs->extension);
-
-        // assert(0 == strcmp("assets/test/filesystem/", choco_string_c_str(fs->filepath)));
-        // assert(0 == strcmp("test_file", choco_string_c_str(fs->filename)));
-        // assert(0 == strcmp(".txt", choco_string_c_str(fs->extension)));
-
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_create(NULL, "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 正常系: extensionなし（filename側に拡張子を含めてオープンできること / extensionポインタがNULL）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filename_ == NULL
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
-
-        // assert(FILESYSTEM_MODE_READ == fs->mode);
-        // assert(NULL != fs->filesystem);
-        // assert(NULL != fs->filepath);
-        // assert(NULL != fs->filename);
-        // assert(NULL == fs->extension);
-
-        // assert(0 == strcmp("assets/test/filesystem/", choco_string_c_str(fs->filepath)));
-        // assert(0 == strcmp("test_file.txt", choco_string_c_str(fs->filename)));
-
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_create("path/to/", NULL, ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: filepath_ == NULL -> FS_UTILS_INVALID_ARGUMENT
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // fs_utils_ == NULL
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
-
-        // ret = fs_utils_create(NULL, "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
-        // assert(NULL == fs);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, NULL));
     }
     {
-        // 異常系: filename_ == NULL -> FS_UTILS_INVALID_ARGUMENT
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // *fs_utils_ != NULL
+        fs_utils_t* fs_utils = (fs_utils_t*)1;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // ret = fs_utils_create("assets/test/filesystem/", NULL, ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
-        // assert(NULL == fs);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert((fs_utils_t*)1 == fs_utils);
     }
     {
-        // 異常系: fs_utils_ == NULL -> FS_UTILS_INVALID_ARGUMENT
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // open_mode_ == FILESYSTEM_MODE_NONE
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, NULL);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_NONE, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: *fs_utils_ != NULL -> FS_UTILS_INVALID_ARGUMENT（sentinelのまま不変であること）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // memory_system_allocate() 失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = (fs_utils_t*)0x1;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
-        // assert((fs_utils_t*)0x1 == fs);
+        config.fail_on_call = 1;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        assert(FS_UTILS_NO_MEMORY == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: open_mode_ == FILESYSTEM_MODE_NONE -> FS_UTILS_INVALID_ARGUMENT（Preconditionsで弾く）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_create_from_c_string() 失敗(filepath)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_NONE, &fs);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
-        // assert(NULL == fs);
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_create_from_c_string_config_set(&config);
+
+        assert(FS_UTILS_NO_MEMORY == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: tmp_fs_utils のメモリ確保失敗 -> FS_UTILS_NO_MEMORY
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_create_from_c_string() 失敗(filename)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(0); // 1回目の確保（tmp_fs_utils）を失敗させる
+        config.fail_on_call = 2;
+        config.forced_result = (int)CHOCO_STRING_OVERFLOW;
+        test_choco_string_create_from_c_string_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_OVERFLOW == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: filepath 文字列生成失敗 -> FS_UTILS_NO_MEMORY
-        // allocation順: tmp_fs_utils(0) -> filepath構造体(1) ...
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_create_from_c_string() 失敗(extension)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(1); // filepath用の確保を失敗させる
+        config.fail_on_call = 3;
+        config.forced_result = (int)CHOCO_STRING_LIMIT_EXCEEDED;
+        test_choco_string_create_from_c_string_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_LIMIT_EXCEEDED == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: filename 文字列生成失敗 -> FS_UTILS_NO_MEMORY
-        // allocation順: tmp_fs_utils(0) -> filepath(1,2) -> filename構造体(3) ...
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filesystem_create() 失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(3); // filename構造体の確保を失敗させる
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_NO_MEMORY;
+        test_filesystem_create_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_NO_MEMORY == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: extension 文字列生成失敗 -> FS_UTILS_NO_MEMORY
-        // allocation順: tmp_fs_utils(0) -> filepath(1,2) -> filename(3,4) -> extension構造体(5) ...
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_default_create() 失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(5); // extension構造体の確保を失敗させる
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_default_create_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_NO_MEMORY == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: filesystem_create のメモリ確保失敗 -> FS_UTILS_NO_MEMORY
-        // （extensionなしルートで allocation順を固定: tmp_fs_utils(0) -> filepath(1,2) -> filename(3,4) -> filesystem(5)）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // fs_utils_fullpath_get() 失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(5); // filesystem_create 内の確保を失敗させる想定
+        config.fail_on_call = 1;
+        config.forced_result = (int)FS_UTILS_RUNTIME_ERROR;
+        test_fs_utils_fullpath_get_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: tmp_fullpath 生成失敗 -> FS_UTILS_NO_MEMORY
-        // allocation順（extensionなし）: tmp_fs_utils(0) -> filepath(1,2) -> filename(3,4) -> filesystem(5) -> tmp_fullpath(6)
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filesystem_open() 失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(6); // tmp_fullpath 構造体の確保を失敗させる想定
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_FILE_OPEN_ERROR;
+        test_filesystem_open_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
-
-        // memory_system_test_param_reset();
+        assert(FS_UTILS_FILE_OPEN_ERROR == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: fs_utils_fullpath_get 内部の choco_string_copy でバッファ確保失敗 -> FS_UTILS_NO_MEMORY
-        // allocation順（extensionなし）:
-        // tmp_fs_utils(0) -> filepath(1,2) -> filename(3,4) -> filesystem(5) -> tmp_fullpath構造体(6) -> tmp_fullpathバッファ(7)
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionあり)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // memory_system_test_param_set(7); // fullpath生成(copy)のバッファ確保を失敗させる想定
+        // 実ファイル依存を避けるため filesystem_open() だけ成功注入
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_open_config_set(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-        // assert(NULL == fs);
+        assert(FS_UTILS_SUCCESS == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+        assert(NULL != fs_utils->filesystem);
+        assert(NULL != fs_utils->filepath);
+        assert(NULL != fs_utils->filename);
+        assert(NULL != fs_utils->extension);
+        assert(FILESYSTEM_MODE_READ == fs_utils->mode);
+        assert(0 == strcmp(choco_string_c_str(fs_utils->filepath), "path/to/"));
+        assert(0 == strcmp(choco_string_c_str(fs_utils->filename), "file"));
+        assert(0 == strcmp(choco_string_c_str(fs_utils->extension), ".txt"));
 
-        // memory_system_test_param_reset();
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == fs_utils);
     }
     {
-        // 異常系: filesystem_open 失敗（存在しないファイル） -> FS_UTILS_FILE_OPEN_ERROR
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionなし)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_SUCCESS;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_create(
-        //     "assets/test/filesystem/",
-        //     "this_file_should_not_exist_0123456789",
-        //     ".txt",
-        //     FILESYSTEM_MODE_READ,
-        //     &fs
-        // );
-        // assert(FS_UTILS_FILE_OPEN_ERROR == ret);
-        // assert(NULL == fs);
+        // 実ファイル依存を避けるため filesystem_open() だけ成功注入
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_open_config_set(&config);
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("path/to/", "file", NULL, FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+        assert(NULL != fs_utils->filesystem);
+        assert(NULL != fs_utils->filepath);
+        assert(NULL != fs_utils->filename);
+        assert(NULL == fs_utils->extension);
+        assert(FILESYSTEM_MODE_READ == fs_utils->mode);
+        assert(0 == strcmp(choco_string_c_str(fs_utils->filepath), "path/to/"));
+        assert(0 == strcmp(choco_string_c_str(fs_utils->filename), "file"));
+
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == fs_utils);
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_destroy(void) {
     {
-        // 異常系: fs_utils_ == NULL -> 何もせずreturn（クラッシュしないこと）
+        // fs_utils_ == NULL
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
         fs_utils_destroy(NULL);
     }
     {
-        // 異常系: *fs_utils_ == NULL -> 何もせずreturn（クラッシュしないこと）
-        fs_utils_t* fs = NULL;
+        // *fs_utils_ == NULL
+        fs_utils_t* fs_utils = NULL;
 
-        fs_utils_destroy(&fs);
-        assert(NULL == fs);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == fs_utils);
     }
     {
-        // 正常系: extensionあり -> 破棄後にNULLになること（内部メンバ破棄 + free が通る）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionあり)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        // 実ファイル依存を避けるため filesystem_open() だけ成功注入
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_open_config_set(&config);
 
-        // // Destroy前の最低限状態確認
-        // assert(NULL != fs->filesystem);
-        // assert(NULL != fs->filepath);
-        // assert(NULL != fs->filename);
-        // assert(NULL != fs->extension);
+        assert(FS_UTILS_SUCCESS == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
 
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        fs_utils_destroy(&fs_utils);
 
-        // // 追加確認: 2回呼んでも安全（*fs_utils_==NULLの早期returnを通る）
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        assert(NULL == fs_utils);
     }
     {
-        // 正常系: extensionなし -> 破棄後にNULLになること（extension==NULLでも安全に破棄できる）
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionなし)
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
 
-        // fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
-        // fs_utils_t* fs = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_create("assets/test/filesystem/", "test_file.txt", NULL, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        // 実ファイル依存を避けるため filesystem_open() だけ成功注入
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_open_config_set(&config);
 
-        // // Destroy前の最低限状態確認
-        // assert(NULL != fs->filesystem);
-        // assert(NULL != fs->filepath);
-        // assert(NULL != fs->filename);
-        // assert(NULL == fs->extension);
+        assert(FS_UTILS_SUCCESS == fs_utils_create("path/to/", "file", NULL, FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
 
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        fs_utils_destroy(&fs_utils);
+
+        assert(NULL == fs_utils);
+    }
+    {
+        // 2重destroy許可
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        // 実ファイル依存を避けるため filesystem_open() だけ成功注入
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_open_config_set(&config);
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("path/to/", "file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == fs_utils);
+
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == fs_utils);
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_text_file_read(void) {
-    const char* dir = "assets/test/filesystem/";
-    const char* f_empty = "tmp_fs_utils_text_read_empty";
-    const char* f_512   = "tmp_fs_utils_text_read_512";
-    const char* f_600   = "tmp_fs_utils_text_read_600";
-    const char* ext = ".txt";
-
-    const char* path_empty = "assets/test/filesystem/tmp_fs_utils_text_read_empty.txt";
-    const char* path_512   = "assets/test/filesystem/tmp_fs_utils_text_read_512.txt";
-    const char* path_600   = "assets/test/filesystem/tmp_fs_utils_text_read_600.txt";
-
-    // ---- テスト用ファイル生成（実ファイルで EOF / partial read を確実に踏む）----
     {
-        // 空ファイル
-        FILE* fp = fopen(path_empty, "wb");
-        assert(NULL != fp);
-        fclose(fp);
+        // fs_utils_text_file_read() 自体の失敗注入
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // 512 bytes（1回 SUCCESS(result=512) → 次回 EOF を踏む）
-        fp = fopen(path_512, "wb");
-        assert(NULL != fp);
-        for(size_t i = 0; i < 512; ++i) {
-            const unsigned char c = (unsigned char)'A';
-            assert(1 == fwrite(&c, 1, 1, fp));
-        }
-        fclose(fp);
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // 600 bytes（1回目 SUCCESS(result=512) → 2回目 SUCCESS(result=88<512) で complete=true を踏む）
-        fp = fopen(path_600, "wb");
-        assert(NULL != fp);
-        for(size_t i = 0; i < 600; ++i) {
-            const unsigned char c = (unsigned char)'B';
-            assert(1 == fwrite(&c, 1, 1, fp));
-        }
-        fclose(fp);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FS_UTILS_RUNTIME_ERROR;
+        test_fs_utils_text_file_read_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- fail injection（fs_utils 側の早期 return 分岐）----
     {
-        fs_utils_fail_enable(FS_UTILS_OVERFLOW);
-        fs_utils_result_t ret = fs_utils_text_file_read(NULL, NULL);
-        assert(FS_UTILS_OVERFLOW == ret);
-        fs_utils_fail_disable();
+        // fs_utils_ == NULL
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_read(NULL, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- 引数チェック：fs_utils_ == NULL -> FS_UTILS_INVALID_ARGUMENT ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // out_string_ == NULL
+        fs_utils_t fs_utils = { 0 };
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // fs_utils_result_t ret = fs_utils_text_file_read(NULL, out);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // choco_string_destroy(&out);
-        // assert(NULL == out);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_read(&fs_utils, NULL));
     }
-
-    // ---- 引数チェック：out_string_ == NULL -> FS_UTILS_INVALID_ARGUMENT ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // fs_utils_valid_check() が false
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_600, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // ret = fs_utils_text_file_read(fs, NULL);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        s_test_config_fs_utils_valid_check.fail_on_call = 1;
+        s_test_config_fs_utils_valid_check.forced_result = false;
+
+        assert(FS_UTILS_DATA_CORRUPTED == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- 破損/未初期化：fs_utils_valid_check NG -> FS_UTILS_DATA_CORRUPTED ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // mode が読み込み系ではない
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // // ※fs_utils_create を経由しない未初期化インスタンスを渡して valid_check false を踏む
-        // fs_utils_t dummy;
-        // memset(&dummy, 0, sizeof(dummy));
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_WRITE;
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // fs_utils_result_t ret = fs_utils_text_file_read(&dummy, out);
-        // assert(FS_UTILS_DATA_CORRUPTED == ret);
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // choco_string_destroy(&out);
-        // assert(NULL == out);
+        assert(FS_UTILS_BAD_OPERATION == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- API誤用：open mode 不正（READ/READ_PLUS 以外） -> FS_UTILS_BAD_OPERATION ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filesystem_byte_read() が INVALID_ARGUMENT
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, "tmp_fs_utils_text_read_write_open", ext, FILESYSTEM_MODE_WRITE, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_BAD_OPERATION == ret);
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_INVALID_ARGUMENT;
+        test_filesystem_byte_read_config_set(&config);
 
-        // remove("assets/test/filesystem/tmp_fs_utils_text_read_write_open.txt");
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- filesystem 注入：filesystem_byte_read -> FILESYSTEM_INVALID_ARGUMENT を強制 -> FS_UTILS_INVALID_ARGUMENT ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // filesystem_byte_read() が RUNTIME_ERROR
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_600, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // filesystem_rslt_code_set(FILESYSTEM_INVALID_ARGUMENT);
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
-        // filesystem_test_param_reset(); // 注入解除
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_RUNTIME_ERROR;
+        test_filesystem_byte_read_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- filesystem 注入：filesystem_byte_read -> FILESYSTEM_RUNTIME_ERROR を強制 -> FS_UTILS_RUNTIME_ERROR ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_concat_from_c_string() が失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_600, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // filesystem_rslt_code_set(FILESYSTEM_RUNTIME_ERROR);
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_RUNTIME_ERROR == ret);
-        // filesystem_test_param_reset(); // 注入解除
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_SUCCESS;
+        test_filesystem_byte_read_config_set(&config);
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_concat_from_c_string_config_set(&config);
+
+        assert(FS_UTILS_NO_MEMORY == fs_utils_text_file_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
     }
-
-    // ---- 正常系：空ファイル（filesystem_byte_read が EOF を返す）----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系: 中身ありファイル
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_empty, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
 
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(0 == strcmp("", choco_string_c_str(out)));
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "aaa\nbbbb\n"));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
     }
-
-    // ---- 正常系：600 bytes（複数ループ + SUCCESS(result<512) 終了分岐）----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系: 空ファイル
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
 
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_600, ext, FILESYSTEM_MODE_READ_PLUS, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_w", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
 
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_SUCCESS == ret);
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
 
-        // const char* s = choco_string_c_str(out);
-        // assert(NULL != s);
-        // assert(600 == strlen(s));
-        // assert('B' == s[0]);
-        // assert('B' == s[599]);
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), ""));
 
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
-    }
-
-    // ---- 正常系：512 bytes（SUCCESS(result=512) → 次回 EOF）----
-    {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
-
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_512, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
-
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
-
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_SUCCESS == ret);
-
-        // const char* s = choco_string_c_str(out);
-        // assert(NULL != s);
-        // assert(512 == strlen(s));
-        // assert('A' == s[0]);
-        // assert('A' == s[511]);
-
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
-    }
-
-    // ---- concat 失敗分岐：choco_string_concat_from_c_string が NO_MEMORY -> FS_UTILS_NO_MEMORY ----
-    {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
-
-        // fs_utils_t* fs = NULL;
-        // fs_utils_result_t ret = fs_utils_create(dir, f_600, ext, FILESYSTEM_MODE_READ, &fs);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(NULL != fs);
-
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
-
-        // // read開始直前からの最初の確保を落とす（concat 内の確保を狙う）
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(0);
-
-        // ret = fs_utils_text_file_read(fs, out);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-
-        // memory_system_test_param_reset();
-
-        // choco_string_destroy(&out);
-        // fs_utils_destroy(&fs);
-        // assert(NULL == fs);
-    }
-
-    // ---- 後始末：生成ファイル削除 ----
-    {
-        remove(path_empty);
-        remove(path_512);
-        remove(path_600);
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
-    // ---- fail injection（fs_utils 側の早期 return 分岐）----
     {
-        fs_utils_fail_enable(FS_UTILS_DATA_CORRUPTED);
-        fs_utils_result_t ret = fs_utils_fullpath_get(NULL, NULL);
-        assert(FS_UTILS_DATA_CORRUPTED == ret);
-        fs_utils_fail_disable();
+        // fs_utils_fullpath_get() 自体の失敗注入
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FS_UTILS_RUNTIME_ERROR;
+        test_fs_utils_fullpath_get_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_fullpath_get(&fs_utils, out_fullpath));
+
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 引数チェック：fs_utils_ == NULL -> FS_UTILS_INVALID_ARGUMENT ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // fs_utils_ == NULL
+        choco_string_t* out_fullpath = NULL;
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(NULL, out);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // choco_string_destroy(&out);
-        // assert(NULL == out);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_fullpath_get(NULL, out_fullpath));
+
+        choco_string_destroy(&out_fullpath);
+        assert(NULL == out_fullpath);
     }
-
-    // ---- 引数チェック：out_fullpath_ == NULL -> FS_UTILS_INVALID_ARGUMENT ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // out_fullpath_ == NULL
+        fs_utils_t fs_utils = { 0 };
 
-        // // fs_utils_valid_check を通すための最小限の“擬似 fs_utils”
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // // filepath/filename は valid_check で必須
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
-        // fs.extension = NULL;
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, NULL);
-        // assert(FS_UTILS_INVALID_ARGUMENT == ret);
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_fullpath_get(&fs_utils, NULL));
 
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 破損/未初期化：fs_utils_valid_check NG -> FS_UTILS_DATA_CORRUPTED ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // fs_utils_valid_check() が false
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // fs_utils_t dummy;
-        // memset(&dummy, 0, sizeof(dummy)); // filesystem/filename/filepath/mode が全部NGになる
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&dummy, out);
-        // assert(FS_UTILS_DATA_CORRUPTED == ret);
+        s_test_config_fs_utils_valid_check.fail_on_call = 1;
+        s_test_config_fs_utils_valid_check.forced_result = false;
 
-        // choco_string_destroy(&out);
-        // assert(NULL == out);
+        assert(FS_UTILS_DATA_CORRUPTED == fs_utils_fullpath_get(&fs_utils, out_fullpath));
+
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 正常系：extension == NULL（filepath + filename）----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_copy() 失敗(filepath copy)
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
-        // fs.extension = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_copy_config_set(&config);
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, out);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(0 == strcmp("assets/test/filesystem/test_file", choco_string_c_str(out)));
+        assert(FS_UTILS_NO_MEMORY == fs_utils_fullpath_get(&fs_utils, out_fullpath));
 
-        // choco_string_destroy(&out);
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 正常系：extension != NULL（filepath + filename + extension）----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_concat() 失敗(filename concat)
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs.extension));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_OVERFLOW;
+        test_choco_string_concat_config_set(&config);
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, out);
-        // assert(FS_UTILS_SUCCESS == ret);
-        // assert(0 == strcmp("assets/test/filesystem/test_file.txt", choco_string_c_str(out)));
+        assert(FS_UTILS_OVERFLOW == fs_utils_fullpath_get(&fs_utils, out_fullpath));
 
-        // choco_string_destroy(&out);
-        // choco_string_destroy(&fs.extension);
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 異常系：choco_string_copy が NO_MEMORY -> FS_UTILS_NO_MEMORY ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // choco_string_concat() 失敗(extension concat)
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
-        // fs.extension = NULL;
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("assets/test/filesystem/", &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("test_file", &fs.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
+        config.fail_on_call = 2;
+        config.forced_result = (int)CHOCO_STRING_LIMIT_EXCEEDED;
+        test_choco_string_concat_config_set(&config);
 
-        // // fullpath_get 内で最初に発生する確保（copy 側）を落とす
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(0);
+        assert(FS_UTILS_LIMIT_EXCEEDED == fs_utils_fullpath_get(&fs_utils, out_fullpath));
 
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, out);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-
-        // memory_system_test_param_reset();
-
-        // choco_string_destroy(&out);
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 異常系：filename concat が NO_MEMORY -> FS_UTILS_NO_MEMORY ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionあり)
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // // concat が確実に再確保を要するように、長めの filepath / filename を作る
-        // char filepath_buf[2048 + 2] = { 0 };
-        // char filename_buf[2048 + 1] = { 0 };
-        // memset(filepath_buf, 'a', 2048);
-        // filepath_buf[2048] = '/';
-        // filepath_buf[2049] = '\0';
-        // memset(filename_buf, 'b', 2048);
-        // filename_buf[2048] = '\0';
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
-        // fs.extension = NULL;
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(".txt", &fs_utils.extension));
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filepath_buf, &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filename_buf, &fs.filename));
+        assert(FS_UTILS_SUCCESS == fs_utils_fullpath_get(&fs_utils, out_fullpath));
+        assert(0 == strcmp(choco_string_c_str(out_fullpath), "path/to/file.txt"));
 
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
-
-        // // 想定：copy で 1回確保(0) → filename concat の再確保(1) を落とす
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(1);
-
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, out);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-
-        // memory_system_test_param_reset();
-
-        // choco_string_destroy(&out);
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.extension);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
-
-    // ---- 異常系：extension concat が NO_MEMORY -> FS_UTILS_NO_MEMORY ----
     {
-        // filesystem_test_param_reset();
-        // memory_system_test_param_reset();
+        // 正常系(extensionなし)
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_fullpath = NULL;
 
-        // char filepath_buf[2048 + 2] = { 0 };
-        // char filename_buf[2048 + 1] = { 0 };
-        // char extension_buf[4096 + 2] = { 0 };
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
 
-        // memset(filepath_buf, 'a', 2048);
-        // filepath_buf[2048] = '/';
-        // filepath_buf[2049] = '\0';
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("path/to/", &fs_utils.filepath));
+        assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string("file", &fs_utils.filename));
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_fullpath));
 
-        // memset(filename_buf, 'b', 2048);
-        // filename_buf[2048] = '\0';
+        assert(FS_UTILS_SUCCESS == fs_utils_fullpath_get(&fs_utils, out_fullpath));
+        assert(0 == strcmp(choco_string_c_str(out_fullpath), "path/to/file"));
 
-        // extension_buf[0] = '.';
-        // memset(&extension_buf[1], 'c', 4096);
-        // extension_buf[4097] = '\0';
-
-        // fs_utils_t fs;
-        // memset(&fs, 0, sizeof(fs));
-        // fs.filesystem = (filesystem_t*)0x1;
-        // fs.mode = FILESYSTEM_MODE_READ;
-
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filepath_buf, &fs.filepath));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(filename_buf, &fs.filename));
-        // assert(CHOCO_STRING_SUCCESS == choco_string_create_from_c_string(extension_buf, &fs.extension));
-
-        // choco_string_t* out = NULL;
-        // assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out));
-
-        // // 想定：copy(0) → filename concat(1) → extension concat(2) を落とす
-        // // ※extension を巨大化して「2回目のconcat後もまだ再確保が必要」を強制
-        // memory_system_test_param_reset();
-        // memory_system_test_param_set(2);
-
-        // fs_utils_result_t ret = fs_utils_fullpath_get(&fs, out);
-        // assert(FS_UTILS_NO_MEMORY == ret);
-
-        // memory_system_test_param_reset();
-
-        // choco_string_destroy(&out);
-        // choco_string_destroy(&fs.extension);
-        // choco_string_destroy(&fs.filename);
-        // choco_string_destroy(&fs.filepath);
+        choco_string_destroy(&out_fullpath);
+        choco_string_destroy(&fs_utils.filename);
+        choco_string_destroy(&fs_utils.filepath);
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_rslt_to_str(void) {
     {
-        const char* str = rslt_to_str(FS_UTILS_SUCCESS);
-        assert(0 == strcmp(str, s_rslt_str_success));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_SUCCESS), "SUCCESS"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "INVALID_ARGUMENT"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_BAD_OPERATION), "BAD_OPERATION"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_DATA_CORRUPTED), "DATA_CORRUPTED"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_NO_MEMORY), "NO_MEMORY"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_LIMIT_EXCEEDED), "LIMIT_EXCEEDED"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_OVERFLOW), "OVERFLOW"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_RUNTIME_ERROR), "RUNTIME_ERROR"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_UNDEFINED_ERROR), "UNDEFINED_ERROR"));
     }
     {
-        const char* str = rslt_to_str(FS_UTILS_INVALID_ARGUMENT);
-        assert(0 == strcmp(str, s_rslt_str_invalid_argument));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_BAD_OPERATION);
-        assert(0 == strcmp(str, s_rslt_str_bad_operation));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_DATA_CORRUPTED);
-        assert(0 == strcmp(str, s_rslt_str_data_corrupted));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_NO_MEMORY);
-        assert(0 == strcmp(str, s_rslt_str_no_memory));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_LIMIT_EXCEEDED);
-        assert(0 == strcmp(str, s_rslt_str_limit_exceeded));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_OVERFLOW);
-        assert(0 == strcmp(str, s_rslt_str_overflow));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_FILE_OPEN_ERROR);
-        assert(0 == strcmp(str, s_rslt_str_file_open_error));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_RUNTIME_ERROR);
-        assert(0 == strcmp(str, s_rslt_str_runtime_error));
-    }
-    {
-        const char* str = rslt_to_str(FS_UTILS_UNDEFINED_ERROR);
-        assert(0 == strcmp(str, s_rslt_str_undefined_error));
-    }
-    {
-        // default 分岐（未定義値）
-        const char* str = rslt_to_str((fs_utils_result_t)100);
-        assert(0 == strcmp(str, s_rslt_str_undefined_error));
+        // 想定外値
+        assert(0 == strcmp(rslt_to_str((fs_utils_result_t)9999), "UNDEFINED_ERROR"));
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_valid_check(void) {
     {
-        // 異常系: fs_utils_ == NULL
+        // fs_utils_valid_check() 自体の失敗注入
+        test_fs_utils_config_reset();
+
+        s_test_config_fs_utils_valid_check.fail_on_call = 1;
+        s_test_config_fs_utils_valid_check.forced_result = false;
+
+        {
+            fs_utils_t fs_utils = { 0 };
+            fs_utils.filepath = (choco_string_t*)1;
+            fs_utils.filename = (choco_string_t*)1;
+            fs_utils.extension = NULL;
+            fs_utils.filesystem = (filesystem_t*)1;
+            fs_utils.mode = FILESYSTEM_MODE_READ;
+
+            assert(false == fs_utils_valid_check(&fs_utils));
+        }
+    }
+    {
+        // fs_utils_ == NULL
+        test_fs_utils_config_reset();
+
         assert(false == fs_utils_valid_check(NULL));
     }
     {
-        // 異常系: filename == NULL
-        fs_utils_t tmp = { 0 };
-        tmp.filename = NULL;
-        tmp.filepath = (choco_string_t*)0x1;
-        tmp.filesystem = (filesystem_t*)0x1;
-        tmp.mode = FILESYSTEM_MODE_READ;
-        assert(false == fs_utils_valid_check(&tmp));
+        // filename == NULL
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = NULL;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        assert(false == fs_utils_valid_check(&fs_utils));
     }
     {
-        // 異常系: filepath == NULL
-        fs_utils_t tmp = { 0 };
-        tmp.filename = (choco_string_t*)0x1;
-        tmp.filepath = NULL;
-        tmp.filesystem = (filesystem_t*)0x1;
-        tmp.mode = FILESYSTEM_MODE_READ;
-        assert(false == fs_utils_valid_check(&tmp));
+        // filepath == NULL
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = NULL;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        assert(false == fs_utils_valid_check(&fs_utils));
     }
     {
-        // 異常系: filesystem == NULL
-        fs_utils_t tmp = { 0 };
-        tmp.filename = (choco_string_t*)0x1;
-        tmp.filepath = (choco_string_t*)0x1;
-        tmp.filesystem = NULL;
-        tmp.mode = FILESYSTEM_MODE_READ;
-        assert(false == fs_utils_valid_check(&tmp));
+        // filesystem == NULL
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = NULL;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        assert(false == fs_utils_valid_check(&fs_utils));
     }
     {
-        // 異常系: mode == FILESYSTEM_MODE_NONE
-        fs_utils_t tmp = { 0 };
-        tmp.filename = (choco_string_t*)0x1;
-        tmp.filepath = (choco_string_t*)0x1;
-        tmp.filesystem = (filesystem_t*)0x1;
-        tmp.mode = FILESYSTEM_MODE_NONE;
-        assert(false == fs_utils_valid_check(&tmp));
+        // mode == FILESYSTEM_MODE_NONE
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_NONE;
+
+        assert(false == fs_utils_valid_check(&fs_utils));
     }
     {
-        // 正常系: extension は NULL 許容（この関数では参照しない）
-        fs_utils_t tmp = { 0 };
-        tmp.filename = (choco_string_t*)0x1;
-        tmp.filepath = (choco_string_t*)0x1;
-        tmp.filesystem = (filesystem_t*)0x1;
-        tmp.extension = NULL;
-        tmp.mode = FILESYSTEM_MODE_READ;
-        assert(true == fs_utils_valid_check(&tmp));
+        // 正常系(extensionあり)
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = (choco_string_t*)1;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        assert(true == fs_utils_valid_check(&fs_utils));
+    }
+    {
+        // 正常系(extensionなし)
+        test_fs_utils_config_reset();
+
+        fs_utils_t fs_utils = { 0 };
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ_PLUS;
+
+        assert(true == fs_utils_valid_check(&fs_utils));
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_filesystem_result_convert(void) {
     {
-        // SUCCESS -> FS_UTILS_SUCCESS
         assert(FS_UTILS_SUCCESS == filesystem_result_convert(FILESYSTEM_SUCCESS));
-    }
-    {
-        // INVALID_ARGUMENT -> FS_UTILS_INVALID_ARGUMENT
         assert(FS_UTILS_INVALID_ARGUMENT == filesystem_result_convert(FILESYSTEM_INVALID_ARGUMENT));
-    }
-    {
-        // RUNTIME_ERROR -> FS_UTILS_RUNTIME_ERROR
         assert(FS_UTILS_RUNTIME_ERROR == filesystem_result_convert(FILESYSTEM_RUNTIME_ERROR));
-    }
-    {
-        // NO_MEMORY -> FS_UTILS_NO_MEMORY
         assert(FS_UTILS_NO_MEMORY == filesystem_result_convert(FILESYSTEM_NO_MEMORY));
-    }
-    {
-        // FILE_OPEN_ERROR -> FS_UTILS_FILE_OPEN_ERROR
         assert(FS_UTILS_FILE_OPEN_ERROR == filesystem_result_convert(FILESYSTEM_FILE_OPEN_ERROR));
-    }
-    {
-        // UNDEFINED_ERROR -> FS_UTILS_UNDEFINED_ERROR
         assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_UNDEFINED_ERROR));
-    }
-    {
-        // LIMIT_EXCEEDED -> FS_UTILS_LIMIT_EXCEEDED
         assert(FS_UTILS_LIMIT_EXCEEDED == filesystem_result_convert(FILESYSTEM_LIMIT_EXCEEDED));
     }
     {
-        // EOF は convert 内では UNDEFINED 扱い（コメント仕様通り）
+        // fs_utilsでは直接扱わない結果コードは UNDEFINED_ERROR に変換される
         assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_EOF));
-    }
-    {
-        // FILE_CLOSE_ERROR も fs_utils では発生しない想定なので UNDEFINED 扱い（コメント仕様通り）
         assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_FILE_CLOSE_ERROR));
     }
     {
-        // default: 未定義値 -> FS_UTILS_UNDEFINED_ERROR
-        assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert((filesystem_result_t)999));
+        // 想定外値
+        assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert((filesystem_result_t)9999));
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_choco_string_result_convert(void) {
     {
-        // SUCCESS -> FS_UTILS_SUCCESS
         assert(FS_UTILS_SUCCESS == choco_string_result_convert(CHOCO_STRING_SUCCESS));
-    }
-    {
-        // DATA_CORRUPTED -> FS_UTILS_DATA_CORRUPTED
         assert(FS_UTILS_DATA_CORRUPTED == choco_string_result_convert(CHOCO_STRING_DATA_CORRUPTED));
-    }
-    {
-        // BAD_OPERATION -> FS_UTILS_BAD_OPERATION
         assert(FS_UTILS_BAD_OPERATION == choco_string_result_convert(CHOCO_STRING_BAD_OPERATION));
-    }
-    {
-        // NO_MEMORY -> FS_UTILS_NO_MEMORY
         assert(FS_UTILS_NO_MEMORY == choco_string_result_convert(CHOCO_STRING_NO_MEMORY));
-    }
-    {
-        // INVALID_ARGUMENT -> FS_UTILS_INVALID_ARGUMENT
         assert(FS_UTILS_INVALID_ARGUMENT == choco_string_result_convert(CHOCO_STRING_INVALID_ARGUMENT));
-    }
-    {
-        // RUNTIME_ERROR -> FS_UTILS_RUNTIME_ERROR
         assert(FS_UTILS_RUNTIME_ERROR == choco_string_result_convert(CHOCO_STRING_RUNTIME_ERROR));
-    }
-    {
-        // UNDEFINED_ERROR -> FS_UTILS_UNDEFINED_ERROR
         assert(FS_UTILS_UNDEFINED_ERROR == choco_string_result_convert(CHOCO_STRING_UNDEFINED_ERROR));
-    }
-    {
-        // OVERFLOW -> FS_UTILS_OVERFLOW
         assert(FS_UTILS_OVERFLOW == choco_string_result_convert(CHOCO_STRING_OVERFLOW));
-    }
-    {
-        // LIMIT_EXCEEDED -> FS_UTILS_LIMIT_EXCEEDED
         assert(FS_UTILS_LIMIT_EXCEEDED == choco_string_result_convert(CHOCO_STRING_LIMIT_EXCEEDED));
     }
     {
-        // default: 未定義値 -> FS_UTILS_UNDEFINED_ERROR
-        assert(FS_UTILS_UNDEFINED_ERROR == choco_string_result_convert((choco_string_result_t)999));
+        // 想定外値
+        assert(FS_UTILS_UNDEFINED_ERROR == choco_string_result_convert((choco_string_result_t)9999));
     }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_memory_system_result_convert(void) {
     {
-        // SUCCESS -> FS_UTILS_SUCCESS
         assert(FS_UTILS_SUCCESS == memory_system_result_convert(MEMORY_SYSTEM_SUCCESS));
-    }
-    {
-        // INVALID_ARGUMENT -> FS_UTILS_INVALID_ARGUMENT
         assert(FS_UTILS_INVALID_ARGUMENT == memory_system_result_convert(MEMORY_SYSTEM_INVALID_ARGUMENT));
-    }
-    {
-        // RUNTIME_ERROR -> FS_UTILS_RUNTIME_ERROR
         assert(FS_UTILS_RUNTIME_ERROR == memory_system_result_convert(MEMORY_SYSTEM_RUNTIME_ERROR));
-    }
-    {
-        // LIMIT_EXCEEDED -> FS_UTILS_LIMIT_EXCEEDED
         assert(FS_UTILS_LIMIT_EXCEEDED == memory_system_result_convert(MEMORY_SYSTEM_LIMIT_EXCEEDED));
-    }
-    {
-        // NO_MEMORY -> FS_UTILS_NO_MEMORY
         assert(FS_UTILS_NO_MEMORY == memory_system_result_convert(MEMORY_SYSTEM_NO_MEMORY));
     }
     {
-        // default: 未定義値 -> FS_UTILS_UNDEFINED_ERROR
-        assert(FS_UTILS_UNDEFINED_ERROR == memory_system_result_convert((memory_system_result_t)999));
+        // 想定外値
+        assert(FS_UTILS_UNDEFINED_ERROR == memory_system_result_convert((memory_system_result_t)9999));
     }
 }
 

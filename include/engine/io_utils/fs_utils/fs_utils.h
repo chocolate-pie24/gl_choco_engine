@@ -180,23 +180,6 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
  */
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_);
 
-#ifdef TEST_BUILD
-/**
- * @brief テスト用に、fs_utilsモジュールの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、fs_utils_fail_disableが呼ばれるまで効果が継続する
- *
- * @param result_code_ 出力実行結果コード
- */
-void fs_utils_fail_enable(fs_utils_result_t result_code_);
-
-/**
- * @brief fs_utils_fail_enableによる実行結果コードの固定を解除する
- *
- */
-void fs_utils_fail_disable(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
