@@ -4,7 +4,7 @@
  * @brief gl33/concrete_vaoモジュール用テストAPI定義
  *
  * @version 0.1
- * @date 2026-04-03
+ * @date 2026-04-07
  *
  * @copyright Copyright (c) 2026 chocolate-pie24
  *

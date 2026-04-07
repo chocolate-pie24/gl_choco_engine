@@ -52,6 +52,7 @@
 #include "engine/renderer/renderer_core/test_renderer_memory.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
 
 #endif
 
@@ -109,6 +110,7 @@ int main(int argc_, char** argv_) {
         test_renderer_memory();
         test_concrete_shader();
         test_concrete_vao();
+        test_concrete_vbo();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

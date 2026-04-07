@@ -32,6 +32,52 @@
 
 // #define TEST_BUILD
 
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+#include <string.h>
+
+#include "test_controller.h"
+
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
+
+#include "engine/core/memory/test_choco_memory.h"
+
+#include "engine/core/memory/choco_memory.h"
+
+// concrete_vbo用モジュール専用テスト制御構造体定義
+/**
+ * @brief void型の関数を強制的にNo-Opで終了させるための設定値構造体
+ *
+ */
+typedef struct test_call_control_no_op {
+    uint32_t call_count;    /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;  /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はNo-Opで関数を終了させる) */
+} test_call_control_no_op_t;
+
+// 外部公開APIテスト設定
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_gl33_vbo_create;               /**< gl33_vbo_create()テスト設定 */
+static test_call_control_no_op_t s_test_config_gl33_vbo_destroy;        /**< gl33_vbo_destroy()テスト設定 */
+static test_call_control_t s_test_config_gl33_vbo_bind;                 /**< gl33_vbo_bind()テスト設定 */
+static test_call_control_t s_test_config_gl33_vbo_unbind;               /**< gl33_vbo_unbind()テスト設定 */
+static test_call_control_t s_test_config_gl33_vbo_vertex_load;          /**< gl33_vbo_vertex_load()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glGenBuffers;       /**< mock_glGenBuffers()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glBindBuffer;       /**< mock_glBindBuffer()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glDeleteBuffers;    /**< mock_glDeleteBuffers()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glBufferData;       /**< mock_glBufferData()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_gl33_vbo_create(void);
+static void test_gl33_vbo_destroy(void);
+static void test_gl33_vbo_bind(void);
+static void test_gl33_vbo_unbind(void);
+static void test_gl33_vbo_vertex_load(void);
+
+static void test_call_control_no_op_reset(test_call_control_no_op_t* config_);
+#endif
+
 /**
  * @brief VBOモジュール内部状態管理構造体
  *
@@ -50,20 +96,6 @@ static void mock_glGenBuffers(GLsizei n_, GLuint* buffer_);
 static void mock_glBindBuffer(GLenum target_, GLuint buffer_);
 static void mock_glDeleteBuffers(GLsizei n_, const GLuint* buffer_);
 static void mock_glBufferData(GLenum target_, GLsizeiptr size_, const void* data_, GLenum usage_);
-
-#ifdef TEST_BUILD
-#include <assert.h>
-#include <stdlib.h>
-#include "engine/core/memory/choco_memory.h"
-
-static bool s_vertex_buffer_object_test = false;    /**< gl33_vbo API単体テスト有効フラグ */
-
-static void test_gl33_vbo_create(void);
-static void test_gl33_vbo_destroy(void);
-static void test_gl33_vbo_bind(void);
-static void test_gl33_vbo_unbind(void);
-static void test_gl33_vbo_vertex_load(void);
-#endif
 
 static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vertex_buffer_create = gl33_vbo_create,
@@ -99,6 +131,14 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_create.call_count++;
+    if(s_test_config_gl33_vbo_create.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_create.call_count == s_test_config_gl33_vbo_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vbo_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     renderer_backend_vbo_t* tmp = NULL;
 
@@ -114,6 +154,7 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
     mock_glGenBuffers(1, &tmp->vbo_handle);
 
     *vertex_buffer_ = tmp;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -141,6 +182,14 @@ cleanup:
  * @endcode
  */
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_destroy.call_count++;
+    if(s_test_config_gl33_vbo_destroy.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_destroy.call_count == s_test_config_gl33_vbo_destroy.fail_on_call) {
+            return;
+        }
+    }
+#endif
     if(NULL == vertex_buffer_) {
         goto cleanup;
     }
@@ -181,11 +230,24 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_bind.call_count++;
+    if(s_test_config_gl33_vbo_bind.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_bind.call_count == s_test_config_gl33_vbo_bind.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vbo_bind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "out_vbo_id_")
-    // TODO: VBO == 0をBAD_OPERATION
+
+    if(0 == vertex_buffer_->vbo_handle) {
+        ret = RENDERER_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_vbo_bind(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     if(vertex_buffer_->vbo_handle != *out_vbo_id_) {
         mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
@@ -193,15 +255,28 @@ static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buff
     }
 
     ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
 
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_unbind.call_count++;
+    if(s_test_config_gl33_vbo_unbind.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_unbind.call_count == s_test_config_gl33_vbo_unbind.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vbo_unbind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_unbind", "vertex_buffer_")
-    // TODO: VBO == 0をBAD_OPERATION
+    if(0 == vertex_buffer_->vbo_handle) {
+        ret = RENDERER_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_vbo_unbind(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -212,12 +287,24 @@ cleanup:
 }
 
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_vertex_load.call_count++;
+    if(s_test_config_gl33_vbo_vertex_load.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_vertex_load.call_count == s_test_config_gl33_vbo_vertex_load.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vbo_vertex_load.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
-    // TODO: VBO == 0をBAD_OPERATION
+    if(0 == vertex_buffer_->vbo_handle) {
+        ret = RENDERER_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:
@@ -231,279 +318,104 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
         ret = RENDERER_RUNTIME_ERROR;
         goto cleanup;
     }
+
     ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
 
 static void NO_COVERAGE mock_glGenBuffers(GLsizei n_, GLuint* buffer_) {
 #ifdef TEST_BUILD
-    if(s_vertex_buffer_object_test) {
-        return;
-    } else {
-        glGenBuffers(n_, buffer_);
+    s_test_config_mock_glGenBuffers.call_count++;
+    if(s_test_config_mock_glGenBuffers.fail_on_call != 0) {
+        if(s_test_config_mock_glGenBuffers.call_count == s_test_config_mock_glGenBuffers.fail_on_call) {
+            return;
+        }
     }
-#else
-    glGenBuffers(n_, buffer_);
 #endif
+    glGenBuffers(n_, buffer_);
 }
 
 static void NO_COVERAGE mock_glBindBuffer(GLenum target_, GLuint buffer_) {
 #ifdef TEST_BUILD
-    if(s_vertex_buffer_object_test) {
-        return;
-    } else {
-        glBindBuffer(target_, buffer_);
+    s_test_config_mock_glBindBuffer.call_count++;
+    if(s_test_config_mock_glBindBuffer.fail_on_call != 0) {
+        if(s_test_config_mock_glBindBuffer.call_count == s_test_config_mock_glBindBuffer.fail_on_call) {
+            return;
+        }
     }
-#else
-    glBindBuffer(target_, buffer_);
 #endif
+    glBindBuffer(target_, buffer_);
 }
 
 static void NO_COVERAGE mock_glDeleteBuffers(GLsizei n_, const GLuint* buffer_) {
 #ifdef TEST_BUILD
-    if(s_vertex_buffer_object_test) {
-        return;
-    } else {
-        glDeleteBuffers(n_, buffer_);
+    s_test_config_mock_glDeleteBuffers.call_count++;
+    if(s_test_config_mock_glDeleteBuffers.fail_on_call != 0) {
+        if(s_test_config_mock_glDeleteBuffers.call_count == s_test_config_mock_glDeleteBuffers.fail_on_call) {
+            return;
+        }
     }
-#else
-    glDeleteBuffers(n_, buffer_);
 #endif
+    glDeleteBuffers(n_, buffer_);
 }
 
 static void NO_COVERAGE mock_glBufferData(GLenum target_, GLsizeiptr size_, const void* data_, GLenum usage_) {
 #ifdef TEST_BUILD
-    if(s_vertex_buffer_object_test) {
-        return;
-    } else {
-        glBufferData(target_, size_, data_, usage_);
+    s_test_config_mock_glBufferData.call_count++;
+    if(s_test_config_mock_glBufferData.fail_on_call != 0) {
+        if(s_test_config_mock_glBufferData.call_count == s_test_config_mock_glBufferData.fail_on_call) {
+            return;
+        }
     }
-#else
-    glBufferData(target_, size_, data_, usage_);
 #endif
+    glBufferData(target_, size_, data_, usage_);
 }
 
 #ifdef TEST_BUILD
-void test_gl33_vbo(void) {
-    s_vertex_buffer_object_test = true;
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+void test_concrete_vbo_config_reset(void) {
+    test_call_control_reset(&s_test_config_gl33_vbo_create);
+    test_call_control_no_op_reset(&s_test_config_gl33_vbo_destroy);
+    test_call_control_reset(&s_test_config_gl33_vbo_bind);
+    test_call_control_reset(&s_test_config_gl33_vbo_unbind);
+    test_call_control_reset(&s_test_config_gl33_vbo_vertex_load);
+    test_call_control_no_op_reset(&s_test_config_mock_glGenBuffers);
+    test_call_control_no_op_reset(&s_test_config_mock_glBindBuffer);
+    test_call_control_no_op_reset(&s_test_config_mock_glDeleteBuffers);
+    test_call_control_no_op_reset(&s_test_config_mock_glBufferData);
+}
 
+void test_concrete_vbo(void) {
     test_gl33_vbo_create();
     test_gl33_vbo_destroy();
     test_gl33_vbo_bind();
     test_gl33_vbo_unbind();
     test_gl33_vbo_vertex_load();
-
-    memory_system_destroy();
-    s_vertex_buffer_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vbo_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_buffer_object_test = true;
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = gl33_vbo_create(NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // *vertex_buffer_ != NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vbo_t* vbo = NULL;
-        vbo = malloc(sizeof(renderer_backend_vbo_t));
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        free(vbo);
-    }
-    {
-        // memory_system_allocateがMEMORY_SYSTEM_LIMIT_EXCEEDEDでRENDERER_LIMIT_EXCEEDED
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-        // renderer_backend_vbo_t* vbo = NULL;
-        // ret = gl33_vbo_create(&vbo);
-        // assert(NULL == vbo);
-        // assert(RENDERER_LIMIT_EXCEEDED == ret);
-        // memory_system_test_param_reset();
-    }
-    {
-        // 正常系
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(NULL != vbo);
-        assert(RENDERER_SUCCESS == ret);
 
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    s_vertex_buffer_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vbo_destroy(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_buffer_object_test = true;
-    {
-        // vertex_buffer_ == NULLでNo-op
-        gl33_vbo_destroy(NULL);
-    }
-    {
-        // *vertex_buffer_ == NULLでNo-op
-        renderer_backend_vbo_t* vbo = NULL;
-        gl33_vbo_destroy(&vbo);
-    }
-    {
-        // 正常系
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(NULL != vbo);
-        assert(RENDERER_SUCCESS == ret);
 
-        gl33_vbo_destroy(&vbo);
-    }
-    s_vertex_buffer_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vbo_bind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_buffer_object_test = true;
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint32_t id = 0;
-        ret = gl33_vbo_bind(NULL, &id);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // out_vbo_id_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(NULL != vbo);
-        assert(RENDERER_SUCCESS == ret);
 
-        ret = gl33_vbo_bind(vbo, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    {
-        // 正常系
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(NULL != vbo);
-        assert(RENDERER_SUCCESS == ret);
-        vbo->vbo_handle = 1;
-
-        uint32_t id = 0;
-        ret = gl33_vbo_bind(vbo, &id);
-        assert(RENDERER_SUCCESS == ret);
-        assert(vbo->vbo_handle == id);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    s_vertex_buffer_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vbo_unbind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_buffer_object_test = true;
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = gl33_vbo_unbind(NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // 正常系
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
 
-        ret = gl33_vbo_unbind(vbo);
-        assert(RENDERER_SUCCESS == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    s_vertex_buffer_object_test = false;
 }
 
 static void NO_COVERAGE test_gl33_vbo_vertex_load(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_buffer_object_test = true;
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        float data[3] = { 1.0f, 2.0f , 3.0f };
-        ret = gl33_vbo_vertex_load(NULL, 128, (void*)data, BUFFER_USAGE_STATIC);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // load_data_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
 
-        ret = gl33_vbo_vertex_load(vbo, 128, NULL, BUFFER_USAGE_STATIC);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
+}
 
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    {
-        // load_size_ == 0 -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
-
-        float data[3] = { 1.0f, 2.0f , 3.0f };
-        ret = gl33_vbo_vertex_load(vbo, 0, (void*)data, BUFFER_USAGE_STATIC);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    {
-        // buffer_usage_tが既定値外 -> RENDERER_RUNTIME_ERROR
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
-
-        float data[3] = { 1.0f, 2.0f , 3.0f };
-        ret = gl33_vbo_vertex_load(vbo, 128, (void*)data, 100);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    {
-        // 正常系(BUFFER_USAGE_STATIC)
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
-
-        float data[3] = { 1.0f, 2.0f , 3.0f };
-        ret = gl33_vbo_vertex_load(vbo, 12, (void*)data, BUFFER_USAGE_STATIC);
-        assert(RENDERER_SUCCESS == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    {
-        // 正常系(BUFFER_USAGE_DYNAMIC)
-        renderer_backend_vbo_t* vbo = NULL;
-        ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vbo);
-
-        float data[3] = { 1.0f, 2.0f , 3.0f };
-        ret = gl33_vbo_vertex_load(vbo, 12, (void*)data, BUFFER_USAGE_DYNAMIC);
-        assert(RENDERER_SUCCESS == ret);
-
-        gl33_vbo_destroy(&vbo);
-        assert(NULL == vbo);
-    }
-    s_vertex_buffer_object_test = false;
+static void NO_COVERAGE test_call_control_no_op_reset(test_call_control_no_op_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
 }
 #endif
