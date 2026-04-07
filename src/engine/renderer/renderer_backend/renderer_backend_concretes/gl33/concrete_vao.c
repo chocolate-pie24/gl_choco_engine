@@ -244,11 +244,7 @@ static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_arra
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "vertex_array_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vao_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "out_vao_id_")
-    if(0 == vertex_array_->vao_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vao_bind(%s) - Provided vertex_array is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_bind", "vertex_array_->vao_handle")
 
     if(*out_vao_id_ != vertex_array_->vao_handle) {
         mock_glBindVertexArray(vertex_array_->vao_handle);
@@ -292,11 +288,7 @@ static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_ar
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_unbind", "vertex_array_")
-    if(0 == vertex_array_->vao_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vao_unbind(%s) - Provided vertex_array is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_unbind", "vertex_array_->vao_handle")
 
     mock_glBindVertexArray(0);
 
@@ -318,11 +310,7 @@ static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* ve
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_attribute_set", "vertex_array_")
-    if(0 == vertex_array_->vao_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vao_attribute_set(%s) - Provided vertex_array is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_attribute_set", "0 == vertex_array_->vao_handle")
 
     switch(type_) {
     case RENDERER_TYPE_FLOAT:

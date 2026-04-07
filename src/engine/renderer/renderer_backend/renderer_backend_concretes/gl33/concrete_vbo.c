@@ -241,12 +241,7 @@ static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buff
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "out_vbo_id_")
-
-    if(0 == vertex_buffer_->vbo_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vbo_bind(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_bind", "vertex_buffer_->vbo_handle")
 
     if(vertex_buffer_->vbo_handle != *out_vbo_id_) {
         mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
@@ -271,11 +266,7 @@ static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_bu
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_unbind", "vertex_buffer_")
-    if(0 == vertex_buffer_->vbo_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vbo_unbind(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_unbind", "vertex_buffer_->vbo_handle")
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -299,11 +290,7 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
-    if(0 == vertex_buffer_->vbo_handle) {
-        ret = RENDERER_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided vertex_buffer is not valid.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_vertex_load", "vertex_buffer_->vbo_handle")
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:
