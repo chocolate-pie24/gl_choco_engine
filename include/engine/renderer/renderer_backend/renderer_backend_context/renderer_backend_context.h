@@ -1,7 +1,7 @@
 /**
  * @ingroup renderer_backend_context
  *
- * @file context.h
+ * @file renderer_backend_context.h
  * @author chocolate-pie24
  * @brief renderer_backend内部情報管理構造体のリソース管理APIを提供する
  *
@@ -14,8 +14,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
-#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_H
+#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_CONTEXT_H
+#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_CONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
