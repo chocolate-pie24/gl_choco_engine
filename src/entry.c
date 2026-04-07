@@ -51,6 +51,7 @@
 #include "engine/renderer/renderer_core/test_renderer_err_utils.h"
 #include "engine/renderer/renderer_core/test_renderer_memory.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 
 #endif
 
@@ -107,6 +108,7 @@ int main(int argc_, char** argv_) {
         test_renderer_err_utils();
         test_renderer_memory();
         test_concrete_shader();
+        test_concrete_vao();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

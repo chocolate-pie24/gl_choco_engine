@@ -74,6 +74,7 @@ static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
 };
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
+    // TODO: 外部からの失敗注入についてどうするか考える
     return &s_gl33_vbo_vtable;
 }
 
@@ -184,6 +185,7 @@ static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buff
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_bind", "out_vbo_id_")
+    // TODO: VBO == 0をBAD_OPERATION
 
     if(vertex_buffer_->vbo_handle != *out_vbo_id_) {
         mock_glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_->vbo_handle);
@@ -199,6 +201,7 @@ static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_bu
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_unbind", "vertex_buffer_")
+    // TODO: VBO == 0をBAD_OPERATION
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -214,6 +217,7 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
+    // TODO: VBO == 0をBAD_OPERATION
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:

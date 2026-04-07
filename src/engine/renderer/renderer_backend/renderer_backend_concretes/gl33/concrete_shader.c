@@ -220,6 +220,7 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
 };
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
+    // TODO: 外部からの失敗注入についてどうするか考える
     return &s_gl33_shader_vtable;
 }
 
