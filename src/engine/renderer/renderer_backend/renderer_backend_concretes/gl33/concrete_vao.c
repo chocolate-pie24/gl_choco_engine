@@ -44,6 +44,8 @@
 
 #include "engine/core/memory/test_choco_memory.h"
 
+#include "engine/core/memory/choco_memory.h"
+
 // concrete_vao用モジュール専用テスト制御構造体定義
 /**
  * @brief void型の関数を強制的にNo-Opで終了させるための設定値構造体
