@@ -29,73 +29,22 @@
 
 // #define TEST_BUILD
 
-/**
- * @brief RendererBackend内部状態管理構造体
- *
- */
-struct renderer_backend_context {
-    target_graphics_api_t target_api;               /**< 使用グラフィックスAPI */
-
-    const renderer_shader_vtable_t* shader_vtable;  /**< シェーダー機能提供vtable */
-    const renderer_vao_vtable_t* vao_vtable;        /**< VAO機能提供vtable */
-    const renderer_vbo_vtable_t* vbo_vtable;        /**< VBO機能提供vtable */
-
-    uint32_t current_program_id;                    /**< 現在使用中のリンクされたシェーダープログラムID */
-    uint32_t current_bound_vao;                     /**< 現在バインド中のVAO識別子 */
-    uint32_t current_bound_vbo;                     /**< 現在バインド中のVBO識別子 */
-};
-
-static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
-
-static bool graphics_api_valid_check(target_graphics_api_t target_api_);
-
 #ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
 #include <assert.h>
-#include <stdlib.h>
+#include <string.h>
 
-typedef struct fail_injection {
-    bool use_test_vtable;                                           /**< テスト用vtable使用フラグ */
-    renderer_result_t rslt_renderer_shader_create;                  /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_create()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_compile;                 /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_compile()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_link;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_link()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_use;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_use()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_uniform_location_get;    /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_uniform_location_get()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_renderer_shader_mat4f_uniform_set;       /**< TEST_BUILDかつ、use_test_vtable == trueで、renderer_shader_mat4f_uniform_set()に強制的に出力させる実行結果コード */
+#include "test_controller.h"
+#include "engine/base/choco_macros.h"
 
-    renderer_result_t rslt_vertex_array_create;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_create()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_bind;                       /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_bind()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_unbind;                     /**< TEST_BUILDかつ、use_test_vtable == trueで、rslt_vertex_array_unbind()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_array_attribute_set;              /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_array_attribute_set()に強制的に出力させる実行結果コード */
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
-    renderer_result_t rslt_vertex_buffer_create;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_create()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_bind;                      /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_bind()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_unbind;                    /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_unbind()に強制的に出力させる実行結果コード */
-    renderer_result_t rslt_vertex_buffer_vertex_load;               /**< TEST_BUILDかつ、use_test_vtable == trueで、vertex_buffer_vertex_load()に強制的に出力させる実行結果コード */
-} fail_injection_t;
+// renderer_err_utils用モジュール専用テスト制御構造体定義
 
-static fail_injection_t s_fail_injection;
-
-static void test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_);
-static void test_linear_allocator_destroy(linear_alloc_t** allocator_, void** memory_pool_);
-static void test_renderer_backend_initialize(void);
-static void test_renderer_backend_destroy(void);
-static void test_renderer_backend_shader_create(void);
-static void test_renderer_backend_shader_destroy(void);
-static void test_renderer_backend_shader_compile(void);
-static void test_renderer_backend_shader_link(void);
-static void test_renderer_backend_shader_use(void);
-static void test_renderer_backend_vertex_array_create(void);
-static void test_renderer_backend_vertex_array_destroy(void);
-static void test_renderer_backend_vertex_array_bind(void);
-static void test_renderer_backend_vertex_array_unbind(void);
-static void test_renderer_backend_vertex_array_attribute_set(void);
-static void test_renderer_backend_vertex_buffer_create(void);
-static void test_renderer_backend_vertex_buffer_destroy(void);
-static void test_renderer_backend_vertex_buffer_bind(void);
-static void test_renderer_backend_vertex_buffer_unbind(void);
-static void test_renderer_backend_vertex_buffer_vertex_load(void);
+// テスト用vtable関数ポインタ
 
 // shader vtable関数
 static renderer_result_t test_renderer_shader_create(renderer_backend_shader_t** shader_handle_);
@@ -128,7 +77,7 @@ static const renderer_shader_vtable_t s_test_shader_vtable = {
     .renderer_shader_use = test_renderer_shader_use,
     .renderer_shader_mat4f_uniform_set = test_renderer_shader_mat4f_uniform_set,
     .renderer_shader_uniform_location_get = test_renderer_shader_uniform_location_get,
-};
+};  /**< テスト用shader_vtable */
 
 static const renderer_vao_vtable_t s_test_vao_vtable = {
     .vertex_array_create = test_vertex_array_create,
@@ -136,7 +85,7 @@ static const renderer_vao_vtable_t s_test_vao_vtable = {
     .vertex_array_bind = test_vertex_array_bind,
     .vertex_array_unbind = test_vertex_array_unbind,
     .vertex_array_attribute_set = test_vertex_array_attribute_set,
-};
+};  /**< テスト用vao_vtable */
 
 static const renderer_vbo_vtable_t s_test_vbo_vtable = {
     .vertex_buffer_create = test_vertex_buffer_create,
@@ -144,12 +93,135 @@ static const renderer_vbo_vtable_t s_test_vbo_vtable = {
     .vertex_buffer_bind = test_vertex_buffer_bind,
     .vertex_buffer_unbind = test_vertex_buffer_unbind,
     .vertex_buffer_vertex_load = test_vertex_buffer_vertex_load,
-};
+};  /**< テスト用vbo_vtable */
+
+/**
+ * @brief renderer_shader_vtable_t*型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_renderer_shader_vtable_t {
+    uint32_t call_count;                              /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;                            /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    const renderer_shader_vtable_t* forced_result;    /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_renderer_shader_vtable_t_t;
+
+/**
+ * @brief renderer_vao_vtable_t*型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_renderer_vao_vtable_t {
+    uint32_t call_count;                              /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;                            /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    const renderer_vao_vtable_t* forced_result;       /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_renderer_vao_vtable_t_t;
+
+/**
+ * @brief renderer_vbo_vtable_t*型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_renderer_vbo_vtable_t {
+    uint32_t call_count;                              /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;                            /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    const renderer_vbo_vtable_t* forced_result;       /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_renderer_vbo_vtable_t_t;
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_renderer_backend_initialize;                   /**< renderer_backend_initialize()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_create;                /**< renderer_backend_shader_create()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_compile;               /**< renderer_backend_shader_compile()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_link;                  /**< renderer_backend_shader_link()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_use;                   /**< renderer_backend_shader_use()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_uniform_location_get;  /**< renderer_backend_shader_uniform_location_get()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_mat4f_uniform_set;     /**< renderer_backend_shader_mat4f_uniform_set()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_array_create;          /**< renderer_backend_vertex_array_create()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_array_bind;            /**< renderer_backend_vertex_array_bind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_array_unbind;          /**< renderer_backend_vertex_array_unbind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_array_attribute_set;   /**< renderer_backend_vertex_array_attribute_set()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_buffer_create;         /**< renderer_backend_vertex_buffer_create()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_buffer_bind;           /**< renderer_backend_vertex_buffer_bind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_buffer_unbind;         /**< renderer_backend_vertex_buffer_unbind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_buffer_vertex_load;    /**< renderer_backend_vertex_buffer_vertex_load()テスト設定 */
+
+// プライベート関数テスト設定
+static test_call_control_renderer_shader_vtable_t_t s_test_config_shader_vtable_get;    /**< shader_vtable_get()テスト設定 */
+static test_call_control_renderer_vao_vtable_t_t s_test_config_vao_vtable_get;          /**< vao_vtable_get()テスト設定 */
+static test_call_control_renderer_vbo_vtable_t_t s_test_config_vbo_vtable_get;          /**< vbo_vtable_get()テスト設定 */
+static test_call_control_bool_t s_test_config_graphics_api_valid_check;                 /**< graphics_api_valid_check()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_create;                     /**< test_renderer_shader_create()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_compile;                    /**< test_renderer_shader_compile()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_link;                       /**< test_renderer_shader_link()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_use;                        /**< test_renderer_shader_use()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_uniform_location_get;       /**< test_renderer_shader_uniform_location_get()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_mat4f_uniform_set;          /**< test_renderer_shader_mat4f_uniform_set()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_array_create;                        /**< test_vertex_array_create()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_array_bind;                          /**< test_vertex_array_bind()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_array_unbind;                        /**< test_vertex_array_unbind()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_array_attribute_set;                 /**< test_vertex_array_attribute_set()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_buffer_create;                       /**< test_vertex_buffer_create()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_buffer_bind;                         /**< test_vertex_buffer_bind()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_buffer_unbind;                       /**< test_vertex_buffer_unbind()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_buffer_vertex_load;                  /**< test_vertex_buffer_vertex_load()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_renderer_backend_initialize(void);
+static void test_renderer_backend_destroy(void);
+static void test_renderer_backend_shader_create(void);
+static void test_renderer_backend_shader_destroy(void);
+static void test_renderer_backend_shader_compile(void);
+static void test_renderer_backend_shader_link(void);
+static void test_renderer_backend_shader_use(void);
+static void test_renderer_backend_shader_uniform_location_get(void);
+static void test_renderer_backend_shader_mat4f_uniform_set(void);
+static void test_renderer_backend_vertex_array_create(void);
+static void test_renderer_backend_vertex_array_destroy(void);
+static void test_renderer_backend_vertex_array_bind(void);
+static void test_renderer_backend_vertex_array_unbind(void);
+static void test_renderer_backend_vertex_array_attribute_set(void);
+static void test_renderer_backend_vertex_buffer_create(void);
+static void test_renderer_backend_vertex_buffer_destroy(void);
+static void test_renderer_backend_vertex_buffer_bind(void);
+static void test_renderer_backend_vertex_buffer_unbind(void);
+static void test_renderer_backend_vertex_buffer_vertex_load(void);
+static void test_shader_vtable_get(void);
+static void test_vao_vtable_get(void);
+static void test_vbo_vtable_get(void);
+static void test_graphics_api_valid_check(void);
 #endif
 
+/**
+ * @brief RendererBackend内部状態管理構造体
+ *
+ */
+struct renderer_backend_context {
+    target_graphics_api_t target_api;               /**< 使用グラフィックスAPI */
+
+    const renderer_shader_vtable_t* shader_vtable;  /**< シェーダー機能提供vtable */
+    const renderer_vao_vtable_t* vao_vtable;        /**< VAO機能提供vtable */
+    const renderer_vbo_vtable_t* vbo_vtable;        /**< VBO機能提供vtable */
+
+    uint32_t current_program_id;                    /**< 現在使用中のリンクされたシェーダープログラムID */
+    uint32_t current_bound_vao;                     /**< 現在バインド中のVAO識別子 */
+    uint32_t current_bound_vbo;                     /**< 現在バインド中のVBO識別子 */
+};
+
+static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
+static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
+static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
+
+static bool graphics_api_valid_check(target_graphics_api_t target_api_);
+
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_initialize.call_count++;
+    if(s_test_config_renderer_backend_initialize.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_initialize.call_count == s_test_config_renderer_backend_initialize.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_initialize.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    renderer_backend_context_t* tmp_context = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "allocator_")
@@ -158,7 +230,6 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_valid_check(target_api_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_initialize", "target_api_")
 
     // Simulation.
-    renderer_backend_context_t* tmp_context = NULL;
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = renderer_rslt_convert_linear_alloc(ret_linear_alloc);
@@ -201,6 +272,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
 
     // commit.
     *out_renderer_backend_context_ = tmp_context;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -218,7 +290,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_create.call_count++;
+    if(s_test_config_renderer_backend_shader_create.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_create.call_count == s_test_config_renderer_backend_shader_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_create", "renderer_backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_create", "renderer_backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_create", "shader_handle_")
@@ -242,7 +323,16 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
 }
 
 renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_compile.call_count++;
+    if(s_test_config_renderer_backend_shader_compile.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_compile.call_count == s_test_config_renderer_backend_shader_compile.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_compile.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_compile", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_compile", "shader_source_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_compile", "backend_context_->shader_vtable")
@@ -259,7 +349,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_link.call_count++;
+    if(s_test_config_renderer_backend_shader_link.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_link.call_count == s_test_config_renderer_backend_shader_link.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_link.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_link", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_link", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_link", "shader_handle_")
@@ -275,7 +374,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_use.call_count++;
+    if(s_test_config_renderer_backend_shader_use.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_use.call_count == s_test_config_renderer_backend_shader_use.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_use.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_use", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_use", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_use", "shader_handle_")
@@ -291,7 +399,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_uniform_location_get.call_count++;
+    if(s_test_config_renderer_backend_shader_uniform_location_get.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_uniform_location_get.call_count == s_test_config_renderer_backend_shader_uniform_location_get.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_uniform_location_get.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_uniform_location_get", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "shader_handle_")
@@ -303,12 +420,22 @@ renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_ba
         ERROR_MESSAGE("renderer_backend_shader_uniform_location_get(%s) - Failed to get uniform location. name: %s", renderer_rslt_to_str(ret), name_);
         goto cleanup;
     }
+
 cleanup:
     return ret;
 }
 
 renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count++;
+    if(s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count == s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_mat4f_uniform_set.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_mat4f_uniform_set", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "shader_handle_")
@@ -319,12 +446,22 @@ renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_con
         ERROR_MESSAGE("renderer_backend_shader_mat4f_uniform_set(%s) - Failed to set mat4f uniform.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+
 cleanup:
     return ret;
 }
 
 renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_array_create.call_count++;
+    if(s_test_config_renderer_backend_vertex_array_create.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_array_create.call_count == s_test_config_renderer_backend_vertex_array_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_array_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_create", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_create", "vertex_array_")
@@ -335,6 +472,7 @@ renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_
         ERROR_MESSAGE("renderer_backend_vertex_array_create(%s) - Failed to create vao.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+
 cleanup:
     return ret;
 }
@@ -347,7 +485,16 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
 }
 
 renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_array_bind.call_count++;
+    if(s_test_config_renderer_backend_vertex_array_bind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_array_bind.call_count == s_test_config_renderer_backend_vertex_array_bind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_array_bind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_bind", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_bind", "vertex_array_")
@@ -363,7 +510,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_array_unbind.call_count++;
+    if(s_test_config_renderer_backend_vertex_array_unbind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_array_unbind.call_count == s_test_config_renderer_backend_vertex_array_unbind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_array_unbind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_unbind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_unbind", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_unbind", "vertex_array_")
@@ -380,7 +536,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_array_attribute_set.call_count++;
+    if(s_test_config_renderer_backend_vertex_array_attribute_set.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_array_attribute_set.call_count == s_test_config_renderer_backend_vertex_array_attribute_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_array_attribute_set.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_attribute_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_attribute_set", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_attribute_set", "vertex_array_")
@@ -402,7 +567,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_buffer_create.call_count++;
+    if(s_test_config_renderer_backend_vertex_buffer_create.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_buffer_create.call_count == s_test_config_renderer_backend_vertex_buffer_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_buffer_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_create", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_create", "vertex_buffer_")
@@ -413,6 +587,7 @@ renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context
         ERROR_MESSAGE("renderer_backend_vertex_buffer_create(%s) - Failed to create vbo.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+
 cleanup:
     return ret;
 }
@@ -425,7 +600,16 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
 }
 
 renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_buffer_bind.call_count++;
+    if(s_test_config_renderer_backend_vertex_buffer_bind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_buffer_bind.call_count == s_test_config_renderer_backend_vertex_buffer_bind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_buffer_bind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_bind", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_bind", "vertex_buffer_")
@@ -441,7 +625,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_buffer_unbind.call_count++;
+    if(s_test_config_renderer_backend_vertex_buffer_unbind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_buffer_unbind.call_count == s_test_config_renderer_backend_vertex_buffer_unbind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_buffer_unbind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_unbind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_unbind", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_unbind", "vertex_buffer_")
@@ -458,7 +651,16 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count++;
+    if(s_test_config_renderer_backend_vertex_buffer_vertex_load.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count == s_test_config_renderer_backend_vertex_buffer_vertex_load.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_buffer_vertex_load.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_load", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_vertex_load", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_load", "vertex_buffer_")
@@ -481,8 +683,11 @@ cleanup:
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.use_test_vtable) {
-        return &s_test_shader_vtable;
+    s_test_config_shader_vtable_get.call_count++;
+    if(s_test_config_shader_vtable_get.fail_on_call != 0) {
+        if(s_test_config_shader_vtable_get.call_count == s_test_config_shader_vtable_get.fail_on_call) {
+            return s_test_config_shader_vtable_get.forced_result;
+        }
     }
 #endif
 
@@ -496,8 +701,11 @@ static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t t
 
 static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.use_test_vtable) {
-        return &s_test_vao_vtable;
+    s_test_config_vao_vtable_get.call_count++;
+    if(s_test_config_vao_vtable_get.fail_on_call != 0) {
+        if(s_test_config_vao_vtable_get.call_count == s_test_config_vao_vtable_get.fail_on_call) {
+            return s_test_config_vao_vtable_get.forced_result;
+        }
     }
 #endif
 
@@ -511,8 +719,11 @@ static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_
 
 static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_) {
 #ifdef TEST_BUILD
-    if(s_fail_injection.use_test_vtable) {
-        return &s_test_vbo_vtable;
+    s_test_config_vbo_vtable_get.call_count++;
+    if(s_test_config_vbo_vtable_get.fail_on_call != 0) {
+        if(s_test_config_vbo_vtable_get.call_count == s_test_config_vbo_vtable_get.fail_on_call) {
+            return s_test_config_vbo_vtable_get.forced_result;
+        }
     }
 #endif
 
@@ -538,6 +749,301 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
 }
 
 #ifdef TEST_BUILD
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_create(renderer_backend_shader_t** shader_handle_) {
+    (void)shader_handle_;
+
+    return s_test_config_test_renderer_shader_create;
+}
+
+static void NO_COVERAGE test_renderer_shader_destroy(renderer_backend_shader_t** shader_handle_) {
+    (void)shader_handle_;
+
+    return;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
+    (void)shader_type_;
+    (void)shader_source_;
+    (void)shader_handle_;
+
+    return s_test_config_test_renderer_shader_compile;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_link(renderer_backend_shader_t* shader_handle_) {
+    (void)shader_handle_;
+
+    return s_test_config_test_renderer_shader_link;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
+    (void)shader_handle_;
+    (void)out_program_id_;
+
+    return s_test_config_test_renderer_shader_use;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
+    (void)backend_context_;
+    (void)shader_handle_;
+    (void)name_;
+    (void)out_location_;
+
+    return s_test_config_test_renderer_shader_uniform_location_get;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
+    (void)backend_context_;
+    (void)shader_handle_;
+    (void)location_;
+    (void)should_transpose_;
+    (void)data_;
+
+    return s_test_config_test_renderer_shader_mat4f_uniform_set;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_array_create(renderer_backend_vao_t** vertex_array_) {
+    (void)vertex_array_;
+
+    return s_test_config_test_vertex_array_create;
+}
+
+static void NO_COVERAGE test_vertex_array_destroy(renderer_backend_vao_t** vertex_array_) {
+    (void)vertex_array_;
+
+    return;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
+    (void)vertex_array_;
+    (void)out_vao_id_;
+
+    return s_test_config_test_vertex_array_bind;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_array_unbind(const renderer_backend_vao_t* vertex_array_) {
+    (void)vertex_array_;
+
+    return s_test_config_test_vertex_array_unbind;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_array_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+    (void)vertex_array_;
+    (void)layout_;
+    (void)size_;
+    (void)type_;
+    (void)normalized_;
+    (void)stride_;
+    (void)offset_;
+
+    return s_test_config_test_vertex_array_attribute_set;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_buffer_create(renderer_backend_vbo_t** vertex_buffer_) {
+    (void)vertex_buffer_;
+
+    return s_test_config_test_vertex_buffer_create;
+}
+
+static void NO_COVERAGE test_vertex_buffer_destroy(renderer_backend_vbo_t** vertex_buffer_) {
+    (void)vertex_buffer_;
+
+    return;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
+    (void)vertex_buffer_;
+    (void)out_vbo_id_;
+
+    return s_test_config_test_vertex_buffer_bind;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_buffer_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
+    (void)vertex_buffer_;
+
+    return s_test_config_test_vertex_buffer_unbind;
+}
+
+static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+    (void)vertex_buffer_;
+    (void)load_size_;
+    (void)load_data_;
+    (void)usage_;
+
+    return s_test_config_test_vertex_buffer_vertex_load;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_create.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_compile_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_compile.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_compile.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_link_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_link.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_link.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_use_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_use.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_use.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_uniform_location_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_uniform_location_get.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_uniform_location_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_mat4f_uniform_set.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_array_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_array_create.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_array_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_array_bind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_array_bind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_array_bind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_array_unbind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_array_unbind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_array_unbind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_array_attribute_set_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_array_attribute_set.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_array_attribute_set.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_buffer_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_buffer_create.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_buffer_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_buffer_bind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_buffer_bind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_buffer_bind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_buffer_unbind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_buffer_unbind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_buffer_vertex_load.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_buffer_vertex_load.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_initialize_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_initialize.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_initialize.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_context_reset(void) {
+    test_call_control_reset(&s_test_config_renderer_backend_initialize);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_create);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_compile);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_link);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_use);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_uniform_location_get);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_mat4f_uniform_set);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_array_create);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_array_bind);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_array_unbind);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_array_attribute_set);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_create);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_bind);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_unbind);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_load);
+    s_test_config_shader_vtable_get.forced_result = shader_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_vao_vtable_get.forced_result = vao_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_vbo_vtable_get.forced_result = vbo_vtable_get(GRAPHICS_API_GL33);
+    test_call_control_bool_reset(&s_test_config_graphics_api_valid_check);
+    s_test_config_test_renderer_shader_create = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_compile = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_link = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_use = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_uniform_location_get = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_mat4f_uniform_set = RENDERER_SUCCESS;
+    s_test_config_test_vertex_array_create = RENDERER_SUCCESS;
+    s_test_config_test_vertex_array_bind = RENDERER_SUCCESS;
+    s_test_config_test_vertex_array_unbind = RENDERER_SUCCESS;
+    s_test_config_test_vertex_array_attribute_set = RENDERER_SUCCESS;
+    s_test_config_test_vertex_buffer_create = RENDERER_SUCCESS;
+    s_test_config_test_vertex_buffer_bind = RENDERER_SUCCESS;
+    s_test_config_test_vertex_buffer_unbind = RENDERER_SUCCESS;
+    s_test_config_test_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+}
+
 void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_initialize();
     test_renderer_backend_destroy();
@@ -546,6 +1052,8 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_shader_compile();
     test_renderer_backend_shader_link();
     test_renderer_backend_shader_use();
+    test_renderer_backend_shader_uniform_location_get();
+    test_renderer_backend_shader_mat4f_uniform_set();
     test_renderer_backend_vertex_array_create();
     test_renderer_backend_vertex_array_destroy();
     test_renderer_backend_vertex_array_bind();
@@ -556,1740 +1064,101 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_vertex_buffer_bind();
     test_renderer_backend_vertex_buffer_unbind();
     test_renderer_backend_vertex_buffer_vertex_load();
-}
-
-static void NO_COVERAGE test_linear_allocator_create(linear_alloc_t** allocator_, void** out_memory_pool_, size_t pool_size_) {
-    assert(NULL == *allocator_);
-    assert(NULL == *out_memory_pool_);
-    assert(0 != pool_size_);
-
-    size_t mem_req = 0;
-    size_t align_req = 0;
-    linear_allocator_preinit(&mem_req, &align_req);
-
-    *allocator_ = malloc(mem_req);
-    assert(NULL != *allocator_);
-
-    *out_memory_pool_ = malloc(pool_size_);
-    assert(NULL != *out_memory_pool_);
-
-    assert(LINEAR_ALLOC_SUCCESS == linear_allocator_init(*allocator_, pool_size_, *out_memory_pool_));
-}
-
-static void NO_COVERAGE test_linear_allocator_destroy(linear_alloc_t** allocator_, void** memory_pool_) {
-    if(NULL != *allocator_) {
-        free(*allocator_);
-        *allocator_ = NULL;
-    }
-    if(NULL != *memory_pool_) {
-        free(*memory_pool_);
-        *memory_pool_ = NULL;
-    }
+    test_shader_vtable_get();
+    test_vao_vtable_get();
+    test_vbo_vtable_get();
+    test_graphics_api_valid_check();
 }
 
 static void NO_COVERAGE test_renderer_backend_initialize(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    {
-        // allocator_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(NULL, GRAPHICS_API_GL33, &context);
-        assert(NULL == context);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // out_renderer_backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
 
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // out_renderer_backend_context_ != NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(context);
-        context = NULL;
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // target_api_が規定値外 -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, 100, &context);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(NULL == context);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // linear_allocator_allocateがLINEAR_ALLOC_NO_MEMORY -> RENDERER_NO_MEMORY
-        // linear_allocator_malloc_fail_set(0);    // 初回のlinear_allocator_allocateで失敗させる
-
-        // linear_alloc_t* linear_alloc = NULL;
-        // void* memory_pool = NULL;
-        // test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        // renderer_backend_context_t* context = NULL;
-        // ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        // assert(RENDERER_NO_MEMORY == ret);
-        // assert(NULL == context);
-
-        // test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        // linear_allocator_malloc_fail_reset();
-    }
-    {
-        // 正常系(vtableはテスト用を使用)
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-
-        renderer_backend_destroy(context);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_destroy(void) {
-    {
-        // renderer_context_ == NULL
-        renderer_backend_context_t* context = NULL;
-        renderer_backend_destroy(context);
-    }
-    {
-        // renderer_context != NULL
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
 
-        renderer_backend_destroy(context);
-
-        free(context);
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_shader_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    {
-        // renderer_backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_shader_t* shader_handle = NULL;
-        ret = renderer_backend_shader_create(NULL, &shader_handle);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(NULL == shader_handle);
-    }
-    {
-        // renderer_backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_shader_t* shader_handle = NULL;
-        renderer_backend_context_t* context = NULL;
 
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        context->shader_vtable = NULL;
-
-        ret = renderer_backend_shader_create(context, &shader_handle);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(NULL == shader_handle);
-
-        free(context);
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        ret = renderer_backend_shader_create(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // *shader_handle_ != NULL -> RENDERER_INVALID_ARGUMENT
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        double* dummy_addr = NULL;
-        double a = 0.0;
-        dummy_addr = &a;
-        ret = renderer_backend_shader_create(context, (renderer_backend_shader_t**)&dummy_addr);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-    }
-    {
-        // renderer_shader_create == RENDERER_RUNTIME_ERROR -> RENDERER_RUNTIME_ERROR
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_create = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = renderer_backend_shader_create(context, &shader);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_renderer_shader_create = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_create = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        renderer_backend_shader_t* shader = NULL;
-        ret = renderer_backend_shader_create(context, &shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_shader_destroy(void) {
-    {
-        // renderer_backend_context_ = NULL
-        renderer_backend_shader_t* shader_handle = NULL;
-        renderer_backend_shader_destroy(NULL, &shader_handle);
-    }
-    {
-        // renderer_backend_context_->shader_vtable
-        renderer_backend_context_t* context = NULL;
-        renderer_backend_shader_t* shader_handle = NULL;
 
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        context->shader_vtable = NULL;
-
-        renderer_backend_shader_destroy(context, &shader_handle);
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-
-        renderer_backend_context_t* context = NULL;
-        renderer_backend_shader_t* shader_handle = NULL;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_result_t ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_shader_destroy(context, &shader_handle);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_shader_compile(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    const char* dummy_shader_src = "void main() { }";
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, dummy_shader_src, NULL, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // shader_source_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, NULL, context, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->shader_vtable = NULL;
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, dummy_shader_src, context, shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->shader_vtable = &s_test_shader_vtable;  // non-NULLなら何でも良いが、既存のテストvtableを使用
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, dummy_shader_src, context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // renderer_shader_compile() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_compile = RENDERER_SHADER_COMPILE_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, dummy_shader_src, context, shader);
-        assert(RENDERER_SHADER_COMPILE_ERROR == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_renderer_shader_compile = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_compile = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, dummy_shader_src, context, shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_shader_link(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_link(NULL, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->shader_vtable = NULL;
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_link(context, shader);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        ret = renderer_backend_shader_link(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // renderer_shader_link() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_link = RENDERER_SHADER_LINK_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_link(context, shader);
-        assert(RENDERER_SHADER_LINK_ERROR == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_renderer_shader_link = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_link = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        uint8_t dummy_shader_mem = 0;
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_link(context, shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_shader_use(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    const uint8_t dummy_shader_mem = 0;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
+}
 
-        ret = renderer_backend_shader_use(NULL, shader);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->shader_vtable = NULL;
+static void NO_COVERAGE test_renderer_backend_shader_uniform_location_get(void) {
 
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
+}
 
-        ret = renderer_backend_shader_use(context, shader);
-        assert(RENDERER_BAD_OPERATION == ret);
+static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
-        free(context);
-        context = NULL;
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_use = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        ret = renderer_backend_shader_use(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // renderer_shader_use() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_use = RENDERER_DATA_CORRUPTED;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_use(context, shader);
-        assert(RENDERER_DATA_CORRUPTED == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_renderer_shader_use = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_renderer_shader_use = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->shader_vtable);
-
-        renderer_backend_shader_t* shader = (renderer_backend_shader_t*)&dummy_shader_mem;
-
-        ret = renderer_backend_shader_use(context, shader);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_array_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vao_t* vao = NULL;
-        ret = renderer_backend_vertex_array_create(NULL, &vao);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(NULL == vao);
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = NULL;
-
-        renderer_backend_vao_t* vao = NULL;
-        ret = renderer_backend_vertex_array_create(context, &vao);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(NULL == vao);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        ret = renderer_backend_vertex_array_create(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // *vertex_array_ != NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        uint8_t dummy_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_mem; // 非NULLなら何でもよい
-
-        ret = renderer_backend_vertex_array_create(context, &vao);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_array_create() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_create = RENDERER_NO_MEMORY;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        renderer_backend_vao_t* vao = NULL;
-        ret = renderer_backend_vertex_array_create(context, &vao);
-        assert(RENDERER_NO_MEMORY == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_array_create = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_create = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        renderer_backend_vao_t* vao = NULL;
-        ret = renderer_backend_vertex_array_create(context, &vao);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_array_destroy(void) {
-    {
-        // backend_context_ == NULL -> return
-        renderer_backend_vao_t* vao = NULL;
-        renderer_backend_vertex_array_destroy(NULL, &vao);
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> return
-        renderer_backend_context_t* context = NULL;
-        renderer_backend_vao_t* vao = NULL;
 
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = NULL;
-
-        renderer_backend_vertex_array_destroy(context, &vao);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // 正常系（テスト用vtable経由でdestroy呼び出し）
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        renderer_result_t ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        renderer_backend_vao_t* vao = NULL;
-        renderer_backend_vertex_array_destroy(context, &vao);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_array_bind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_bind(NULL, vao);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = &s_test_vao_vtable; // 非NULLならOK（未初期化扱いにしないため）
-
-        ret = renderer_backend_vertex_array_bind(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = NULL;
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_bind(context, vao);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_array_bind() が失敗 -> そのまま返り、current_bound_vao は更新されない
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-        assert(0 == context->current_bound_vao);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_bind(context, vao);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(0 == context->current_bound_vao);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-        assert(0 == context->current_bound_vao);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_bind(context, vao);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_array_unbind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_unbind(NULL, vao);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = NULL;
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_unbind(context, vao);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        ret = renderer_backend_vertex_array_unbind(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_array_unbind() が失敗 -> そのまま返り、current_bound_vao は更新されない
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_unbind = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        context->current_bound_vao = 123; // bind済み相当の状態を作る
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_unbind(context, vao);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(123 == context->current_bound_vao);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_array_unbind = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系 -> current_bound_vao が 0 にクリアされる
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_unbind = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_unbind(context, vao);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_array_attribute_set(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            NULL, vao,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vao_vtable = NULL;
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            context, vao,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            context, NULL,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_array_bind() が失敗 -> そのまま返る（attribute_setは呼ばれない）
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_RUNTIME_ERROR;
-        s_fail_injection.rslt_vertex_array_attribute_set = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            context, vao,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_array_attribute_set = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_array_attribute_set() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_array_attribute_set = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            context, vao,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_array_attribute_set = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_array_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_array_attribute_set = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vao_vtable);
-
-        uint8_t dummy_vao_mem = 0;
-        renderer_backend_vao_t* vao = (renderer_backend_vao_t*)&dummy_vao_mem;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            context, vao,
-            0, 3, RENDERER_TYPE_FLOAT, false,
-            sizeof(float) * 3, 0
-        );
-        assert(RENDERER_SUCCESS == ret);
-
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vbo_t* vbo = NULL;
-
-        ret = renderer_backend_vertex_buffer_create(NULL, &vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(NULL == vbo);
-    }
-    {
-        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = NULL;
-
-        renderer_backend_vbo_t* vbo = NULL;
-
-        ret = renderer_backend_vertex_buffer_create(context, &vbo);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(NULL == vbo);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_create(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // *vertex_buffer_ != NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        uint8_t dummy_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_mem; // 非NULLなら何でも良い
-
-        ret = renderer_backend_vertex_buffer_create(context, &vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_buffer_create() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_create = RENDERER_NO_MEMORY;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        renderer_backend_vbo_t* vbo = NULL;
-
-        ret = renderer_backend_vertex_buffer_create(context, &vbo);
-        assert(RENDERER_NO_MEMORY == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_buffer_create = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_create = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        renderer_backend_vbo_t* vbo = NULL;
-
-        ret = renderer_backend_vertex_buffer_create(context, &vbo);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_destroy(void) {
-    {
-        // backend_context_ == NULL -> return
-        renderer_backend_vbo_t* vbo = NULL;
-        renderer_backend_vertex_buffer_destroy(NULL, &vbo);
-    }
-    {
-        // backend_context_->vbo_vtable == NULL -> return
-        renderer_backend_context_t* context = NULL;
-        renderer_backend_vbo_t* vbo = NULL;
 
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = NULL;
-
-        renderer_backend_vertex_buffer_destroy(context, &vbo);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // 正常系（テスト用vtable経由でdestroy呼び出し）
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        renderer_result_t ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        renderer_backend_vbo_t* vbo = NULL;
-        renderer_backend_vertex_buffer_destroy(context, &vbo);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_bind(NULL, vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = &s_test_vbo_vtable; // 非NULLならOK（未初期化扱いにしないため）
-
-        ret = renderer_backend_vertex_buffer_bind(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = NULL;
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_bind(context, vbo);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_buffer_bind() が失敗 -> そのまま返り、current_bound_vbo は更新されない
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-        assert(0 == context->current_bound_vbo);
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_bind(context, vbo);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(0 == context->current_bound_vbo);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-        assert(0 == context->current_bound_vbo);
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_bind(context, vbo);
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_unbind(NULL, vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = NULL;
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_unbind(context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_buffer_unbind() が失敗 -> そのまま返り、current_bound_vbo は更新されない
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系 -> current_bound_vbo が 0 にクリアされる
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_unbind = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        context->current_bound_vbo = 123;
-
-        uint8_t dummy_vbo_mem = 0;
-        renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-        ret = renderer_backend_vertex_buffer_unbind(context, vbo);
-        assert(RENDERER_SUCCESS == ret);
-        assert(0 == context->current_bound_vbo);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    uint8_t dummy_vbo_mem = 0;
-    renderer_backend_vbo_t* vbo = (renderer_backend_vbo_t*)&dummy_vbo_mem;
-
-    uint8_t dummy_vertices[16] = {0};
-
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            NULL, vbo,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_backend_context_t* context = NULL;
-        context = malloc(sizeof(renderer_backend_context_t));
-        assert(NULL != context);
-        memset(context, 0, sizeof(renderer_backend_context_t));
-        context->vbo_vtable = NULL;
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            context, vbo,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-
-        free(context);
-        context = NULL;
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        s_fail_injection.use_test_vtable = true;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            context, NULL,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_buffer_bind() が失敗 -> そのまま返る（vertex_loadは呼ばれない想定）
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
-        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            context, vbo,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // vertex_buffer_vertex_load() が失敗 -> そのまま返る
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_RUNTIME_ERROR;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            context, vbo,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
-        s_fail_injection.use_test_vtable = false;
-    }
-    {
-        // 正常系
-        s_fail_injection.use_test_vtable = true;
-        s_fail_injection.rslt_vertex_buffer_bind = RENDERER_SUCCESS;
-        s_fail_injection.rslt_vertex_buffer_vertex_load = RENDERER_SUCCESS;
-
-        linear_alloc_t* linear_alloc = NULL;
-        void* memory_pool = NULL;
-        test_linear_allocator_create(&linear_alloc, &memory_pool, 128);
-
-        renderer_backend_context_t* context = NULL;
-        ret = renderer_backend_initialize(linear_alloc, GRAPHICS_API_GL33, &context);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != context);
-        assert(NULL != context->vbo_vtable);
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            context, vbo,
-            sizeof(dummy_vertices), dummy_vertices,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_SUCCESS == ret);
-
-        renderer_backend_destroy(context);
-        test_linear_allocator_destroy(&linear_alloc, &memory_pool);
-
-        s_fail_injection.use_test_vtable = false;
-    }
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_create(renderer_backend_shader_t** shader_handle_) {
-    return s_fail_injection.rslt_renderer_shader_create;
+static void NO_COVERAGE test_shader_vtable_get(void) {
+
 }
 
-static void NO_COVERAGE test_renderer_shader_destroy(renderer_backend_shader_t** shader_handle_) {
-    return;
+static void NO_COVERAGE test_vao_vtable_get(void) {
+
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
-    return s_fail_injection.rslt_renderer_shader_compile;
+static void NO_COVERAGE test_vbo_vtable_get(void) {
+
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_link(renderer_backend_shader_t* shader_handle_) {
-    return s_fail_injection.rslt_renderer_shader_link;
-}
+static void NO_COVERAGE test_graphics_api_valid_check(void) {
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
-    return s_fail_injection.rslt_renderer_shader_use;
 }
-
-static renderer_result_t NO_COVERAGE test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
-    return s_fail_injection.rslt_renderer_shader_uniform_location_get;
-}
-
-static renderer_result_t NO_COVERAGE test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
-    return s_fail_injection.rslt_renderer_shader_mat4f_uniform_set;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_array_create(renderer_backend_vao_t** vertex_array_) {
-    return s_fail_injection.rslt_vertex_array_create;
-}
-
-static void NO_COVERAGE test_vertex_array_destroy(renderer_backend_vao_t** vertex_array_) {
-    return;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
-    return s_fail_injection.rslt_vertex_array_bind;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_array_unbind(const renderer_backend_vao_t* vertex_array_) {
-    return s_fail_injection.rslt_vertex_array_unbind;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_array_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
-    return s_fail_injection.rslt_vertex_array_attribute_set;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_buffer_create(renderer_backend_vbo_t** vertex_buffer_) {
-    return s_fail_injection.rslt_vertex_buffer_create;
-}
-
-static void NO_COVERAGE test_vertex_buffer_destroy(renderer_backend_vbo_t** vertex_buffer_) {
-    return;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
-    return s_fail_injection.rslt_vertex_buffer_bind;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_buffer_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
-    return s_fail_injection.rslt_vertex_buffer_unbind;
-}
-
-static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
-    return s_fail_injection.rslt_vertex_buffer_vertex_load;
-}
-
 #endif

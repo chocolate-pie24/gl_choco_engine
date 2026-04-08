@@ -53,6 +53,10 @@
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 #endif
 
@@ -111,6 +115,7 @@ int main(int argc_, char** argv_) {
         test_concrete_shader();
         test_concrete_vao();
         test_concrete_vbo();
+        test_renderer_backend_context();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
