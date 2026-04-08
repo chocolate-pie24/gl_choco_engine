@@ -1,5 +1,5 @@
 /**
- * @file test_renderer_backendcontext.h
+ * @file test_renderer_backend_context.h
  * @author chocolate-pie24
  * @brief renderer_backend_contextモジュール用テストAPI定義
  *
@@ -37,7 +37,7 @@ void test_renderer_backend_initialize_config_set(const test_call_control_t* conf
  * @brief renderer_backend_contextが内部で管理するテスト設定値を全て初期化し、テスト用の出力強制制御をなくす
  *
  */
-void test_renderer_backend_context_reset(void);
+void test_renderer_backend_context_config_reset(void);
 
 /**
  * @brief renderer_backend_context保有APIのテストを行う

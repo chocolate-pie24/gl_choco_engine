@@ -27,22 +27,20 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-// #define TEST_BUILD
+#define TEST_BUILD
 
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
 #include <assert.h>
-#include <string.h>
 
 #include "test_controller.h"
-#include "engine/base/choco_macros.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
-// renderer_err_utils用モジュール専用テスト制御構造体定義
+// renderer_backend_context用モジュール専用テスト制御構造体定義
 
 // テスト用vtable関数ポインタ
 
@@ -51,9 +49,9 @@ static renderer_result_t test_renderer_shader_create(renderer_backend_shader_t**
 static void test_renderer_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t test_renderer_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t test_renderer_shader_link(renderer_backend_shader_t* shader_handle_);
-static renderer_result_t test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
-static renderer_result_t test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
-static renderer_result_t test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
+static renderer_result_t test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+static renderer_result_t test_renderer_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+static renderer_result_t test_renderer_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
 
 // vao vtable関数
 static renderer_result_t test_vertex_array_create(renderer_backend_vao_t** vertex_array_);
@@ -75,8 +73,8 @@ static const renderer_shader_vtable_t s_test_shader_vtable = {
     .renderer_shader_compile = test_renderer_shader_compile,
     .renderer_shader_link = test_renderer_shader_link,
     .renderer_shader_use = test_renderer_shader_use,
-    .renderer_shader_mat4f_uniform_set = test_renderer_shader_mat4f_uniform_set,
-    .renderer_shader_uniform_location_get = test_renderer_shader_uniform_location_get,
+    .renderer_shader_mat4f_uniform_set = test_renderer_mat4f_uniform_set,
+    .renderer_shader_uniform_location_get = test_renderer_uniform_location_get,
 };  /**< テスト用shader_vtable */
 
 static const renderer_vao_vtable_t s_test_vao_vtable = {
@@ -736,6 +734,14 @@ static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_
 }
 
 static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
+#ifdef TEST_BUILD
+    s_test_config_graphics_api_valid_check.call_count++;
+    if(s_test_config_graphics_api_valid_check.fail_on_call != 0) {
+        if(s_test_config_graphics_api_valid_check.call_count == s_test_config_graphics_api_valid_check.fail_on_call) {
+            return s_test_config_graphics_api_valid_check.forced_result;
+        }
+    }
+#endif
     bool ret = false;
     switch(target_api_) {
     case GRAPHICS_API_GL33:
@@ -776,15 +782,14 @@ static renderer_result_t NO_COVERAGE test_renderer_shader_link(renderer_backend_
     return s_test_config_test_renderer_shader_link;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_use(renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
+static renderer_result_t NO_COVERAGE test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
     (void)shader_handle_;
     (void)out_program_id_;
 
     return s_test_config_test_renderer_shader_use;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
-    (void)backend_context_;
+static renderer_result_t NO_COVERAGE test_renderer_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
     (void)shader_handle_;
     (void)name_;
     (void)out_location_;
@@ -792,12 +797,12 @@ static renderer_result_t NO_COVERAGE test_renderer_shader_uniform_location_get(c
     return s_test_config_test_renderer_shader_uniform_location_get;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
-    (void)backend_context_;
+static renderer_result_t NO_COVERAGE test_renderer_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
     (void)shader_handle_;
     (void)location_;
     (void)should_transpose_;
     (void)data_;
+    (void)out_program_id_;
 
     return s_test_config_test_renderer_shader_mat4f_uniform_set;
 }
@@ -1008,7 +1013,7 @@ void NO_COVERAGE test_renderer_backend_initialize_config_set(const test_call_con
     s_test_config_renderer_backend_initialize.forced_result = config_->forced_result;
 }
 
-void NO_COVERAGE test_renderer_backend_context_reset(void) {
+void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     test_call_control_reset(&s_test_config_renderer_backend_initialize);
     test_call_control_reset(&s_test_config_renderer_backend_shader_create);
     test_call_control_reset(&s_test_config_renderer_backend_shader_compile);
@@ -1025,8 +1030,14 @@ void NO_COVERAGE test_renderer_backend_context_reset(void) {
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_unbind);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_load);
     s_test_config_shader_vtable_get.forced_result = shader_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_shader_vtable_get.call_count = 0;
+    s_test_config_shader_vtable_get.fail_on_call = 0;
     s_test_config_vao_vtable_get.forced_result = vao_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_vao_vtable_get.call_count = 0;
+    s_test_config_vao_vtable_get.fail_on_call = 0;
     s_test_config_vbo_vtable_get.forced_result = vbo_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_vbo_vtable_get.call_count = 0;
+    s_test_config_vbo_vtable_get.fail_on_call = 0;
     test_call_control_bool_reset(&s_test_config_graphics_api_valid_check);
     s_test_config_test_renderer_shader_create = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_compile = RENDERER_SUCCESS;
