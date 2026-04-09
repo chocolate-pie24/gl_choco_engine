@@ -431,6 +431,8 @@ cleanup:
 
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
+    struct timespec  req = {0, 1000000};
+
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", app_rslt_to_str(ret));
@@ -468,7 +470,6 @@ application_result_t application_run(void) {
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
     // end temporary
 
-    struct timespec  req = {0, 1000000};
     while(!s_app_state->window_should_close) {
         platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
         if(PLATFORM_WINDOW_CLOSE == ret_event) {
@@ -687,6 +688,8 @@ cleanup:
  * @todo ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする
  */
 static void app_state_dispatch(void) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
             camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->active_camera); // TODO: エラー処理
@@ -710,7 +713,7 @@ static void app_state_dispatch(void) {
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-    application_result_t ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera_commands, s_app_state->active_camera, &s_app_state->view_dirty);
+    ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera_commands, s_app_state->active_camera, &s_app_state->view_dirty);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
         goto cleanup;

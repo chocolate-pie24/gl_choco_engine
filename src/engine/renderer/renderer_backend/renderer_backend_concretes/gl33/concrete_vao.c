@@ -314,7 +314,7 @@ static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* ve
 
     switch(type_) {
     case RENDERER_TYPE_FLOAT:
-        mock_glVertexAttribPointer(layout_, size_, GL_FLOAT, normalized_ ? GL_TRUE : GL_FALSE, stride_, (void*)offset_);
+        mock_glVertexAttribPointer(layout_, size_, GL_FLOAT, normalized_ ? GL_TRUE : GL_FALSE, (GLsizei)stride_, (void*)offset_);
         break;
     default:
         ret = RENDERER_RUNTIME_ERROR;

@@ -51,7 +51,6 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     ui_shader_t* tmp_ui_shader = NULL;
 

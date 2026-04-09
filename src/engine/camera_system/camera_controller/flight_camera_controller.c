@@ -125,11 +125,11 @@ camera_result_t flight_camera_controller_move_backward(float speed_, float delta
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t backward_vec = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_controller_move_backward", "camera_")
 
     // カメラ後方の正規化されたベクトルを取得
-    vec3f_t backward_vec = { 0 };
     ret = camera_backward_vector_get(camera_, &backward_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_backward(%s) - Failed to get backward vector.", camera_rslt_to_str(ret));

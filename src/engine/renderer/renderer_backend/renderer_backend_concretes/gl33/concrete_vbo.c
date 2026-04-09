@@ -294,10 +294,10 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:
-        mock_glBufferData(GL_ARRAY_BUFFER, load_size_, load_data_, GL_STATIC_DRAW);
+        mock_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)load_size_, load_data_, GL_STATIC_DRAW);
         break;
     case BUFFER_USAGE_DYNAMIC:
-        mock_glBufferData(GL_ARRAY_BUFFER, load_size_, load_data_, GL_DYNAMIC_DRAW);
+        mock_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)load_size_, load_data_, GL_DYNAMIC_DRAW);
         break;
     default:
         ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided usage_ is not valid.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));

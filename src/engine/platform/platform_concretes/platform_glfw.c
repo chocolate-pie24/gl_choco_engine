@@ -386,7 +386,7 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
     // keyboard events.
     platform_backend_->current.escape_pressed = (GLFW_PRESS == glfwGetKey(platform_backend_->window, GLFW_KEY_ESCAPE)) ? true : false;
     for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
-        const int glfw_key = keycode_to_glfw_keycode(i);
+        const int glfw_key = keycode_to_glfw_keycode((keycode_t)(i));
         const int action = glfwGetKey(platform_backend_->window, glfw_key);
         platform_backend_->current.keycode_state[i] = (GLFW_PRESS == action) ? true : false;
     }

@@ -189,10 +189,10 @@ application_result_t flight_camera_command_update(const keyboard_event_t* keyboa
         if(command_status_[i].keybind == keyboard_event_->key) {
             if(keyboard_event_->event_args.pressed) {   // キーが押されたらコマンドON
                 command_status_[i].status = true;
-                INFO_MESSAGE("flight_camera_command_update: %s", s_command_to_str(i));
+                INFO_MESSAGE("flight_camera_command_update: %s", s_command_to_str((command_list_flight_camera_t)(i)));
             } else if(command_status_[i].status && !keyboard_event_->event_args.pressed) {  // キーが離されたらコマンドOFF
                 command_status_[i].status = false;
-                INFO_MESSAGE("flight_camera_command_update: %s Released", s_command_to_str(i));
+                INFO_MESSAGE("flight_camera_command_update: %s Released", s_command_to_str((command_list_flight_camera_t)(i)));
             }
             break;
         }

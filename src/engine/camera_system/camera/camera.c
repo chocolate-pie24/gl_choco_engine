@@ -424,6 +424,7 @@ camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) 
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを前方に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_forward_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_forward_vector_get", "out_vec_")
@@ -434,7 +435,6 @@ camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) 
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ前方の単位ベクトル[0, 0, -1, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを前方に移動させるための方向ベクトル
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[10];
@@ -460,6 +460,7 @@ camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_)
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを後方に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_backward_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_backward_vector_get", "out_vec_")
@@ -470,7 +471,6 @@ camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_)
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ後方の単位ベクトル[0, 0, 1, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを後方に移動させるための方向ベクトル
     v.elem[0] = camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = camera_->camera_to_world_matrix.elem[10];
@@ -496,6 +496,7 @@ camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを右に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_right_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_right_vector_get", "out_vec_")
@@ -506,7 +507,6 @@ camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ右方向の単位ベクトル[1, 0, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを右に移動させるための方向ベクトル
     v.elem[0] = camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = camera_->camera_to_world_matrix.elem[8];
@@ -532,6 +532,7 @@ camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを左に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_left_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_left_vector_get", "out_vec_")
@@ -542,7 +543,6 @@ camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ左方向の単位ベクトル[-1, 0, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを左に移動させるための方向ベクトル
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[8];
@@ -568,6 +568,7 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを上に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_up_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_up_vector_get", "out_vec_")
@@ -578,7 +579,6 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ上方向の単位ベクトル[0, 1, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを上に移動させるための方向ベクトル
     v.elem[0] = camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = camera_->camera_to_world_matrix.elem[9];
@@ -604,6 +604,7 @@ camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+    vec3f_t v = { 0 };  // ワールド座標系でカメラを下に移動させるための方向ベクトル
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_down_vector_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vec_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_down_vector_get", "out_vec_")
@@ -614,7 +615,6 @@ camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
         goto cleanup;
     }
     // カメラ座標系からワールド座標系への変換行列に対して、カメラ座標系におけるカメラ下方向の単位ベクトル[0, -1, 0, 0]を掛けて得られる値をカメラワールド座標に加算すれば新しいカメラ座標になる。
-    vec3f_t v = { 0 };  // ワールド座標系でカメラを下に移動させるための方向ベクトル
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[9];

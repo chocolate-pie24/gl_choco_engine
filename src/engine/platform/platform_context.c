@@ -144,6 +144,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     void* backend_ptr = NULL;
     size_t backend_memory_req = 0;
     size_t backend_align_req = 0;
+    platform_context_t* tmp_context = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "allocator_")
@@ -152,7 +153,6 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
     IF_ARG_FALSE_GOTO_CLEANUP(platform_type_valid_check(platform_type_), ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_initialize", "platform_type_")
 
     // Simulation.
-    platform_context_t* tmp_context = NULL;
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(platform_context_t), alignof(platform_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = platform_rslt_convert_linear_alloc(ret_linear_alloc);
@@ -182,7 +182,7 @@ platform_result_t platform_initialize(linear_alloc_t* allocator_, platform_type_
         ERROR_MESSAGE("platform_initialize(%s) - Failed to initialize platform backend.", platform_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp_context->backend = backend_ptr;
+    tmp_context->backend = (platform_backend_t*)backend_ptr;
     tmp_context->type = platform_type_;
 
     // commit.
@@ -425,7 +425,7 @@ static void NO_COVERAGE test_linear_allocator_create(linear_alloc_t** allocator_
     size_t align_req = 0;
     linear_allocator_preinit(&mem_req, &align_req);
 
-    *allocator_ = malloc(mem_req);
+    *allocator_ = (linear_alloc_t*)malloc(mem_req);
     assert(NULL != *allocator_);
 
     *out_memory_pool_ = malloc(pool_size_);
@@ -452,35 +452,51 @@ static void NO_COVERAGE test_vtable_preinit(size_t* memory_requirement_, size_t*
 }
 
 static platform_result_t NO_COVERAGE test_vtable_init(platform_backend_t* platform_backend_) {
-    return s_test_config_test_vtable_init.forced_result;
+    (void)platform_backend_;
+    return (platform_result_t)s_test_config_test_vtable_init.forced_result;
 }
 
 static void NO_COVERAGE test_vtable_destroy(platform_backend_t* platform_backend_) {
+    (void)platform_backend_;
     // 現状では何もしない
     return;
 }
 
 static platform_result_t NO_COVERAGE test_vtable_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
-    return s_test_config_test_vtable_window_create.forced_result;
+    (void)platform_backend_;
+    (void)window_label_;
+    (void)window_width_;
+    (void)window_height_;
+    (void)framebuffer_width_;
+    (void)framebuffer_height_;
+    return (platform_result_t)s_test_config_test_vtable_window_create.forced_result;
 }
 
 static platform_result_t NO_COVERAGE test_vtable_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_)) {
-    return s_test_config_test_vtable_pump_messages.forced_result;
+    (void)platform_backend_;
+    (void)window_event_callback;
+    (void)keyboard_event_callback;
+    (void)mouse_event_callback;
+    return (platform_result_t)s_test_config_test_vtable_pump_messages.forced_result;
 }
 
 static platform_result_t NO_COVERAGE test_vtable_swap_buffers(platform_backend_t* platform_backend_) {
-    return s_test_config_test_vtable_swap_buffers.forced_result;
+    (void)platform_backend_;
+    return (platform_result_t)s_test_config_test_vtable_swap_buffers.forced_result;
 }
 
 static void NO_COVERAGE dummy_window_event_callback(const window_event_t* event_) {
+    (void)event_;
     return;
 }
 
 static void NO_COVERAGE dummy_keyboard_event_callback(const keyboard_event_t* event_) {
+    (void)event_;
     return;
 }
 
 static void NO_COVERAGE dummy_mouse_event_callback(const mouse_event_t* event_) {
+    (void)event_;
     return;
 }
 

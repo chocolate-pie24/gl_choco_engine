@@ -91,7 +91,8 @@ camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_allo
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    void* backend_ptr = NULL;
+    camera_manager_t* tmp_manager = NULL;
+    camera_t** tmp_camera_array = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "allocator_")
@@ -100,7 +101,6 @@ camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_allo
     IF_ARG_FALSE_GOTO_CLEANUP(0 < max_camera_count_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_initialize", "max_camera_count_")
 
     // Simulation.
-    camera_manager_t* tmp_manager = NULL;
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(camera_manager_t), alignof(camera_manager_t), (void**)&tmp_manager);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = camera_rslt_convert_linear_alloc(ret_linear_alloc);
@@ -110,8 +110,7 @@ camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_allo
     memset(tmp_manager, 0, sizeof(camera_manager_t));
     tmp_manager->max_camera_count = max_camera_count_;
 
-    camera_t** tmp_camera_array = NULL;
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(camera_t*) * max_camera_count_, alignof(camera_t*), (void**)&tmp_camera_array);
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(camera_t*) * (size_t)(max_camera_count_), alignof(camera_t*), (void**)&tmp_camera_array);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = camera_rslt_convert_linear_alloc(ret_linear_alloc);
         ERROR_MESSAGE("camera_manager_initialize(%s) - Failed to allocate memory for camera_array.", camera_rslt_to_str(ret));

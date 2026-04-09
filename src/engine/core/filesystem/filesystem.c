@@ -170,11 +170,12 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
 
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
     filesystem_t* tmp = NULL;
+    memory_system_result_t mem_result = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
 
-    const memory_system_result_t mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
+    mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT..", rslt_to_str(ret));
@@ -242,6 +243,7 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
 #endif
 
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
+    const char* open_mode_str = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
@@ -251,7 +253,7 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
         ERROR_MESSAGE("filesystem_open(%s) - File is already open; close it before opening another file.", rslt_to_str(ret));
         goto cleanup;
     }
-    const char* open_mode_str = filesystem_open_mode_c_str(mode_);
+    open_mode_str = filesystem_open_mode_c_str(mode_);
     if(NULL == open_mode_str) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_open(%s) - Invalid open mode (mode=%d).", rslt_to_str(ret), mode_);
