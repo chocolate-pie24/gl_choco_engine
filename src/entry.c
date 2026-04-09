@@ -35,13 +35,6 @@
 // test: io_utils
 #include "engine/io_utils/fs_utils/test_fs_utils.h"
 
-// #include "renderer/test_renderer_backend_context.h"
-// #include "renderer/test_renderer_memory.h"
-// #include "renderer/test_renderer_err_utils.h"
-// #include "renderer/test_gl33_vbo.h"
-// #include "renderer/test_gl33_vao.h"
-// #include "renderer/test_gl33_shader.h"
-
 // test: platform
 #include "engine/platform/platform_core/test_platform_err_utils.h"
 #include "engine/platform/platform_concretes/test_platform_glfw.h"
@@ -53,6 +46,17 @@
 #include "engine/camera_system/camera/test_camera.h"
 #include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/camera_system/camera_manager/test_camera_manager.h"
+
+// test: renderer
+#include "engine/renderer/renderer_core/test_renderer_err_utils.h"
+#include "engine/renderer/renderer_core/test_renderer_memory.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 #endif
 
@@ -105,12 +109,13 @@ int main(int argc_, char** argv_) {
         test_platform_glfw();
         test_platform_context();
 
-        // test_renderer_memory();
-        // test_renderer_err_utils();
-        // test_gl33_vbo();
-        // test_gl33_vao();
-        // test_gl33_shader();
-        // test_renderer_backend_context();
+        // engine/renderer
+        test_renderer_err_utils();
+        test_renderer_memory();
+        test_concrete_shader();
+        test_concrete_vao();
+        test_concrete_vbo();
+        test_renderer_backend_context();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

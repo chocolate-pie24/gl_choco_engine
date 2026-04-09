@@ -33,6 +33,53 @@
 
 // #define TEST_BUILD
 
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+#include <string.h>
+
+#include "test_controller.h"
+
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
+
+#include "engine/core/memory/test_choco_memory.h"
+
+#include "engine/core/memory/choco_memory.h"
+
+// concrete_vao用モジュール専用テスト制御構造体定義
+/**
+ * @brief void型の関数を強制的にNo-Opで終了させるための設定値構造体
+ *
+ */
+typedef struct test_call_control_no_op {
+    uint32_t call_count;    /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;  /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はNo-Opで関数を終了させる) */
+} test_call_control_no_op_t;
+
+// 外部公開APIテスト設定
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_gl33_vao_create;                       /**< gl33_vao_create()テスト設定 */
+static test_call_control_no_op_t s_test_config_gl33_vao_destroy;                /**< gl33_vao_destroy()テスト設定 */
+static test_call_control_t s_test_config_gl33_vao_bind;                         /**< gl33_vao_bind()テスト設定 */
+static test_call_control_t s_test_config_gl33_vao_unbind;                       /**< gl33_vao_unbind()テスト設定 */
+static test_call_control_t s_test_config_gl33_vao_attribute_set;                /**< gl33_vao_attribute_set()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glGenVertexArrays;          /**< mock_glGenVertexArrays()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glDeleteVertexArrays;       /**< mock_glDeleteVertexArrays()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glBindVertexArray;          /**< mock_glBindVertexArray()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glVertexAttribPointer;      /**< mock_glVertexAttribPointer()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glEnableVertexAttribArray;  /**< mock_glEnableVertexAttribArray()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_gl33_vao_create(void);
+static void test_gl33_vao_destroy(void);
+static void test_gl33_vao_bind(void);
+static void test_gl33_vao_unbind(void);
+static void test_gl33_vao_attribute_set(void);
+
+static void test_call_control_no_op_reset(test_call_control_no_op_t* config_);
+#endif
+
 /**
  * @brief VAOモジュール内部状態管理構造体
  *
@@ -53,21 +100,6 @@ static void mock_glBindVertexArray(GLuint array_);
 static void mock_glVertexAttribPointer(GLuint index_, GLint size_, GLenum type_, GLboolean normalized_, GLsizei stride_, const void * pointer_);
 static void mock_glEnableVertexAttribArray(GLuint index_);
 
-#ifdef TEST_BUILD
-#include <assert.h>
-#include <stdlib.h>
-#include "engine/core/memory/choco_memory.h"
-
-static bool s_vertex_array_object_test = false;
-
-static void test_gl33_vao_create(void);
-static void test_gl33_vao_destroy(void);
-static void test_gl33_vao_bind(void);
-static void test_gl33_vao_unbind(void);
-static void test_gl33_vao_attribute_set(void);
-
-#endif
-
 static const renderer_vao_vtable_t s_gl33_vao_vtable = {
     .vertex_array_create = gl33_vao_create,
     .vertex_array_destroy = gl33_vao_destroy,
@@ -77,6 +109,7 @@ static const renderer_vao_vtable_t s_gl33_vao_vtable = {
 };
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
+    // TODO: 外部からの失敗注入についてどうするか考える
     return &s_gl33_vao_vtable;
 }
 
@@ -101,6 +134,14 @@ const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vao_create.call_count++;
+    if(s_test_config_gl33_vao_create.fail_on_call != 0) {
+        if(s_test_config_gl33_vao_create.call_count == s_test_config_gl33_vao_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vao_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     renderer_backend_vao_t* tmp = NULL;
 
@@ -114,8 +155,8 @@ static renderer_result_t gl33_vao_create(renderer_backend_vao_t** vertex_array_)
     }
 
     mock_glGenVertexArrays(1, &tmp->vao_handle);
-
     *vertex_array_ = tmp;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
@@ -143,6 +184,14 @@ cleanup:
  * @endcode
  */
 static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vao_destroy.call_count++;
+    if(s_test_config_gl33_vao_destroy.fail_on_call != 0) {
+        if(s_test_config_gl33_vao_destroy.call_count == s_test_config_gl33_vao_destroy.fail_on_call) {
+            return;
+        }
+    }
+#endif
     if(NULL == vertex_array_) {
         goto cleanup;
     }
@@ -150,12 +199,12 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
         goto cleanup;
     }
 
-    // NOTE: 現状ではvertex_buffer_unbindはエラーを返さないため、このif文内は到達不可でカバレッジは100にはならないが許容する
     if(RENDERER_SUCCESS != gl33_vao_unbind(*vertex_array_)) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
     render_mem_free(*vertex_array_, sizeof(renderer_backend_vao_t));
+
     *vertex_array_ = NULL;
 cleanup:
     return;
@@ -183,16 +232,27 @@ cleanup:
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vao_bind.call_count++;
+    if(s_test_config_gl33_vao_bind.fail_on_call != 0) {
+        if(s_test_config_gl33_vao_bind.call_count == s_test_config_gl33_vao_bind.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vao_bind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "vertex_array_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vao_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_bind", "out_vao_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_bind", "vertex_array_->vao_handle")
+
     if(*out_vao_id_ != vertex_array_->vao_handle) {
         mock_glBindVertexArray(vertex_array_->vao_handle);
         *out_vao_id_ = vertex_array_->vao_handle;
     }
 
     ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
@@ -213,12 +273,22 @@ cleanup:
  * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
  *
  * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_array_が渡された
  * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindVertexArrayに対して個別にglGetErrorを行わないため、常に成功
  */
 static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vao_unbind.call_count++;
+    if(s_test_config_gl33_vao_unbind.fail_on_call != 0) {
+        if(s_test_config_gl33_vao_unbind.call_count == s_test_config_gl33_vao_unbind.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vao_unbind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_unbind", "vertex_array_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_unbind", "vertex_array_->vao_handle")
 
     mock_glBindVertexArray(0);
 
@@ -229,9 +299,18 @@ cleanup:
 }
 
 static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vao_attribute_set.call_count++;
+    if(s_test_config_gl33_vao_attribute_set.fail_on_call != 0) {
+        if(s_test_config_gl33_vao_attribute_set.call_count == s_test_config_gl33_vao_attribute_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vao_attribute_set.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vao_attribute_set", "vertex_array_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_array_->vao_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vao_attribute_set", "0 == vertex_array_->vao_handle")
 
     switch(type_) {
     case RENDERER_TYPE_FLOAT:
@@ -242,273 +321,687 @@ static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* ve
         goto cleanup;
     }
     mock_glEnableVertexAttribArray(layout_);
+
     ret = RENDERER_SUCCESS;
+
 cleanup:
     return ret;
 }
 
 static void NO_COVERAGE mock_glGenVertexArrays(GLsizei n_, GLuint* array_) {
 #ifdef TEST_BUILD
-    if(s_vertex_array_object_test) {
-        return;
-    } else {
-        glGenVertexArrays(n_, array_);
+    s_test_config_mock_glGenVertexArrays.call_count++;
+    if(s_test_config_mock_glGenVertexArrays.fail_on_call != 0) {
+        if(s_test_config_mock_glGenVertexArrays.call_count == s_test_config_mock_glGenVertexArrays.fail_on_call) {
+            return;
+        }
     }
-#else
-    glGenVertexArrays(n_, array_);
 #endif
+    glGenVertexArrays(n_, array_);
 }
 
 static void NO_COVERAGE mock_glDeleteVertexArrays(GLsizei n_, GLuint* array_) {
 #ifdef TEST_BUILD
-    if(s_vertex_array_object_test) {
-        return;
-    } else {
-        glDeleteVertexArrays(n_, array_);
+    s_test_config_mock_glDeleteVertexArrays.call_count++;
+    if(s_test_config_mock_glDeleteVertexArrays.fail_on_call != 0) {
+        if(s_test_config_mock_glDeleteVertexArrays.call_count == s_test_config_mock_glDeleteVertexArrays.fail_on_call) {
+            return;
+        }
     }
-#else
-    glDeleteVertexArrays(n_, array_);
 #endif
+    glDeleteVertexArrays(n_, array_);
 }
 
 static void NO_COVERAGE mock_glBindVertexArray(GLuint array_) {
 #ifdef TEST_BUILD
-    if(s_vertex_array_object_test) {
-        return;
-    } else {
-        glBindVertexArray(array_);
+    s_test_config_mock_glBindVertexArray.call_count++;
+    if(s_test_config_mock_glBindVertexArray.fail_on_call != 0) {
+        if(s_test_config_mock_glBindVertexArray.call_count == s_test_config_mock_glBindVertexArray.fail_on_call) {
+            return;
+        }
     }
-#else
-    glBindVertexArray(array_);
 #endif
+    glBindVertexArray(array_);
 }
 
 static void NO_COVERAGE mock_glVertexAttribPointer(GLuint index_, GLint size_, GLenum type_, GLboolean normalized_, GLsizei stride_, const void * pointer_) {
 #ifdef TEST_BUILD
-    if(s_vertex_array_object_test) {
-        return;
-    } else {
-        glVertexAttribPointer(index_, size_, type_, normalized_, stride_, pointer_);
+    s_test_config_mock_glVertexAttribPointer.call_count++;
+    if(s_test_config_mock_glVertexAttribPointer.fail_on_call != 0) {
+        if(s_test_config_mock_glVertexAttribPointer.call_count == s_test_config_mock_glVertexAttribPointer.fail_on_call) {
+            return;
+        }
     }
-#else
-    glVertexAttribPointer(index_, size_, type_, normalized_, stride_, pointer_);
 #endif
+    glVertexAttribPointer(index_, size_, type_, normalized_, stride_, pointer_);
 }
 
 static void NO_COVERAGE mock_glEnableVertexAttribArray(GLuint index_) {
 #ifdef TEST_BUILD
-    if(s_vertex_array_object_test) {
-        return;
-    } else {
-        glEnableVertexAttribArray(index_);
+    s_test_config_mock_glEnableVertexAttribArray.call_count++;
+    if(s_test_config_mock_glEnableVertexAttribArray.fail_on_call != 0) {
+        if(s_test_config_mock_glEnableVertexAttribArray.call_count == s_test_config_mock_glEnableVertexAttribArray.fail_on_call) {
+            return;
+        }
     }
-#else
-    glEnableVertexAttribArray(index_);
 #endif
+    glEnableVertexAttribArray(index_);
 }
 
 #ifdef TEST_BUILD
-void test_gl33_vao(void) {
-    s_vertex_array_object_test = true;
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+void NO_COVERAGE test_concrete_vao_config_reset(void) {
+    test_call_control_reset(&s_test_config_gl33_vao_create);
+    test_call_control_no_op_reset(&s_test_config_gl33_vao_destroy);
+    test_call_control_reset(&s_test_config_gl33_vao_bind);
+    test_call_control_reset(&s_test_config_gl33_vao_unbind);
+    test_call_control_reset(&s_test_config_gl33_vao_attribute_set);
+    test_call_control_no_op_reset(&s_test_config_mock_glGenVertexArrays);
+    test_call_control_no_op_reset(&s_test_config_mock_glDeleteVertexArrays);
+    test_call_control_no_op_reset(&s_test_config_mock_glBindVertexArray);
+    test_call_control_no_op_reset(&s_test_config_mock_glVertexAttribPointer);
+    test_call_control_no_op_reset(&s_test_config_mock_glEnableVertexAttribArray);
+}
 
+void NO_COVERAGE test_concrete_vao(void) {
     test_gl33_vao_create();
     test_gl33_vao_destroy();
     test_gl33_vao_bind();
     test_gl33_vao_unbind();
     test_gl33_vao_attribute_set();
-
-    memory_system_destroy();
-    s_vertex_array_object_test = false;
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_gl33_vao_create(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
+    {
+        // gl33_vao_create() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t* vao = NULL;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        s_test_config_gl33_vao_create.fail_on_call = 1U;
+        s_test_config_gl33_vao_create.forced_result = (int)RENDERER_BAD_OPERATION;
+
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(NULL == vao);
+        assert(1U == s_test_config_gl33_vao_create.call_count);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
     {
         // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
         ret = gl33_vao_create(NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
     }
     {
-        // *vertex_array != NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vao_t* vertex_array = NULL;
-        vertex_array = malloc(sizeof(renderer_backend_vao_t));
-        assert(NULL != vertex_array);
+        // *vertex_array_ != NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t dummy = { 0 };
+        renderer_backend_vao_t* vao = &dummy;
 
-        ret = gl33_vao_create(&vertex_array);
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret = gl33_vao_create(&vao);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(&dummy == vao);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
 
-        free(vertex_array);
-        vertex_array = NULL;
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
     }
     {
-        // render_mem_allocateがRENDERER_LIMIT_EXCEEDEDでRENDERER_LIMIT_EXCEEDED, vertex_arrayはNULLのまま
-        // memory_system_rslt_code_set(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-
-        // renderer_backend_vao_t* vertex_array = NULL;
-        // ret = gl33_vao_create(&vertex_array);
-        // assert(RENDERER_LIMIT_EXCEEDED == ret);
-        // assert(NULL == vertex_array);
-
-        // memory_system_test_param_reset();
-    }
-    {
-        // 正常系
-        renderer_backend_vao_t* vertex_array = NULL;
-        ret = gl33_vao_create(&vertex_array);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vertex_array);
-
-        gl33_vao_destroy(&vertex_array);
-        assert(NULL == vertex_array);
-    }
-    s_vertex_array_object_test = false;
-}
-
-static void NO_COVERAGE test_gl33_vao_destroy(void) {
-    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
-    {
-        // vertex_array_ == NULL -> No-op
+        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_vao_t* vao = NULL;
-        gl33_vao_destroy(&vao);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(NULL == vao);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
     }
     {
-        // vertex_array_ == NULL -> No-op
-        gl33_vao_destroy(NULL);
-    }
-    {
-        // 正常系
+        // 下位 memory_system_allocate() 冒頭で MEMORY_SYSTEM_NO_MEMORY を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
         renderer_backend_vao_t* vao = NULL;
-        renderer_result_t ret = gl33_vao_create(&vao);
+        test_call_control_t config = { 0 };
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_NO_MEMORY == ret);
+        assert(NULL == vao);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 下位 memory_system_allocate() 冒頭で未定義値を返させる -> RENDERER_UNDEFINED_ERROR
+        renderer_result_t ret = RENDERER_SUCCESS;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        renderer_backend_vao_t* vao = NULL;
+        test_call_control_t config = { 0 };
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = 99999;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_UNDEFINED_ERROR == ret);
+        assert(NULL == vao);
+        assert(0U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: VAO構造体確保成功、mock_glGenVertexArrays() が1回呼ばれる
+        // 実 OpenGL 呼び出しを避けるため、mock_glGenVertexArrays() は no-op にする
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        renderer_backend_vao_t* vao = NULL;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        s_test_config_mock_glGenVertexArrays.fail_on_call = 1U;
+
+        ret = gl33_vao_create(&vao);
         assert(RENDERER_SUCCESS == ret);
         assert(NULL != vao);
+        assert(1U == s_test_config_mock_glGenVertexArrays.call_count);
+
+        // render_mem_allocate() のゼロ初期化により、no-op の場合は vao_handle は 0 のまま
+        assert(0U == vao->vao_handle);
+
+        // destroy 時の実 OpenGL 呼び出しを避ける
+        s_test_config_gl33_vao_unbind.fail_on_call = 1U;
+        s_test_config_gl33_vao_unbind.forced_result = (int)RENDERER_RUNTIME_ERROR;
+        s_test_config_mock_glDeleteVertexArrays.fail_on_call = 1U;
 
         gl33_vao_destroy(&vao);
         assert(NULL == vao);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
     }
-    s_vertex_array_object_test = false;
 }
 
+// Generated by ChatGPT
+static void NO_COVERAGE test_gl33_vao_destroy(void) {
+    {
+        // gl33_vao_destroy() 冒頭で No-Op 終了させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        renderer_backend_vao_t* vao = NULL;
 
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        s_test_config_mock_glGenVertexArrays.fail_on_call = 1U;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        s_test_config_gl33_vao_destroy.fail_on_call = 1U;
+
+        gl33_vao_destroy(&vao);
+
+        // No-Op なのでポインタはそのまま
+        assert(NULL != vao);
+        assert(1U == s_test_config_gl33_vao_destroy.call_count);
+        assert(0U == s_test_config_gl33_vao_unbind.call_count);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+        assert(0U == s_test_config_mock_glDeleteVertexArrays.call_count);
+
+        // 後片付け
+        test_concrete_vao_config_reset();
+        s_test_config_mock_glDeleteVertexArrays.fail_on_call = 1U;
+        gl33_vao_destroy(&vao);
+        assert(NULL == vao);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertex_array_ == NULL -> no-op
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        gl33_vao_destroy(NULL);
+
+        assert(1U == s_test_config_gl33_vao_destroy.call_count);
+        assert(0U == s_test_config_gl33_vao_unbind.call_count);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+        assert(0U == s_test_config_mock_glDeleteVertexArrays.call_count);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *vertex_array_ == NULL -> no-op
+        renderer_backend_vao_t* vao = NULL;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        gl33_vao_destroy(&vao);
+
+        assert(NULL == vao);
+        assert(1U == s_test_config_gl33_vao_destroy.call_count);
+        assert(0U == s_test_config_gl33_vao_unbind.call_count);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+        assert(0U == s_test_config_mock_glDeleteVertexArrays.call_count);
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vao_handle == 0 -> gl33_vao_unbind() は BAD_OPERATION だが、delete/free は継続される
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        renderer_backend_vao_t* vao = NULL;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        // create 成功、ただし glGen は no-op なので vao_handle は 0 のまま
+        s_test_config_mock_glGenVertexArrays.fail_on_call = 1U;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+        assert(0U == vao->vao_handle);
+
+        s_test_config_mock_glDeleteVertexArrays.fail_on_call = 1U;
+
+        gl33_vao_destroy(&vao);
+
+        assert(NULL == vao);
+        assert(1U == s_test_config_gl33_vao_destroy.call_count);
+        assert(1U == s_test_config_gl33_vao_unbind.call_count);
+        // unbind は BAD_OPERATION で cleanup へ行くので glBindVertexArray(0) は呼ばれない
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+        assert(1U == s_test_config_mock_glDeleteVertexArrays.call_count);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: vao_handle != 0 なら unbind -> delete -> free -> NULL化
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        renderer_backend_vao_t* vao = NULL;
+
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        ret_msys = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_msys);
+
+        // 実 OpenGL 呼び出しを避けるため glGen は no-op、生成後に有効ハンドルを手動設定
+        s_test_config_mock_glGenVertexArrays.fail_on_call = 1U;
+        ret = gl33_vao_create(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL != vao);
+
+        vao->vao_handle = 321U;
+
+        s_test_config_mock_glBindVertexArray.fail_on_call = 1U;
+        s_test_config_mock_glDeleteVertexArrays.fail_on_call = 1U;
+
+        gl33_vao_destroy(&vao);
+
+        assert(NULL == vao);
+        assert(1U == s_test_config_gl33_vao_destroy.call_count);
+        assert(1U == s_test_config_gl33_vao_unbind.call_count);
+        assert(1U == s_test_config_mock_glBindVertexArray.call_count);
+        assert(1U == s_test_config_mock_glDeleteVertexArrays.call_count);
+
+        memory_system_destroy();
+        test_concrete_vao_config_reset();
+        test_choco_memory_config_reset();
+    }
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_gl33_vao_bind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_array_object_test = true;  // OpenGL未初期化でもテストできるようOpenGL関数をスルーさせる
+    {
+        // gl33_vao_bind() 冒頭で強制的に RENDERER_RUNTIME_ERROR を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+        uint32_t out_vao_id = 0U;
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 123U;
+        s_test_config_gl33_vao_bind.fail_on_call = 1U;
+        s_test_config_gl33_vao_bind.forced_result = (int)RENDERER_RUNTIME_ERROR;
+
+        ret = gl33_vao_bind(&vao, &out_vao_id);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(0U == out_vao_id);
+        assert(1U == s_test_config_gl33_vao_bind.call_count);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
     {
         // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        uint32_t id = 0;
-        ret = gl33_vao_bind(NULL, &id);
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        uint32_t out_vao_id = 999U;
+
+        test_concrete_vao_config_reset();
+
+        ret = gl33_vao_bind(NULL, &out_vao_id);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(999U == out_vao_id);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
     {
         // out_vao_id_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
 
-        ret = gl33_vao_bind(vao, NULL);
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 123U;
+
+        ret = gl33_vao_bind(&vao, NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        test_concrete_vao_config_reset();
     }
     {
-        // *out_vao_id_ == vertex_array_->vao_handle -> RENDERER_SUCCESS
-        // NOTE: if文を通らないことを確認する
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
+        // vao_handle == 0 -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+        uint32_t out_vao_id = 999U;
 
-        vao->vao_handle = 1;
-        uint32_t id = 1;
+        test_concrete_vao_config_reset();
 
-        ret = gl33_vao_bind(vao, &id);
-        assert(RENDERER_SUCCESS == ret);
+        vao.vao_handle = 0U;
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        ret = gl33_vao_bind(&vao, &out_vao_id);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(999U == out_vao_id);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
     {
-        // *out_vao_id_ != vertex_array_->vao_handle -> RENDERER_SUCCESS
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
-        vao->vao_handle = 5;
-        uint32_t id = 1;
-        assert(vao->vao_handle != id);
+        // 既に同じ vao id が bind 済み -> glBindVertexArray は呼ばれず成功
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+        uint32_t out_vao_id = 456U;
 
-        ret = gl33_vao_bind(vao, &id);
-        assert(RENDERER_SUCCESS == ret);
-        assert(vao->vao_handle == id);
+        test_concrete_vao_config_reset();
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        vao.vao_handle = 456U;
+
+        ret = gl33_vao_bind(&vao, &out_vao_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(456U == out_vao_id);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
-    s_vertex_array_object_test = false;
+    {
+        // 異なる vao id が入っている -> bind して out_vao_id_ を更新
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+        uint32_t out_vao_id = 111U;
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 789U;
+        s_test_config_mock_glBindVertexArray.fail_on_call = 1U;   // 実 OpenGL 呼び出しを避ける
+
+        ret = gl33_vao_bind(&vao, &out_vao_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(789U == out_vao_id);
+        assert(1U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_gl33_vao_unbind(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_array_object_test = true;
+    {
+        // gl33_vao_unbind() 冒頭で強制的に RENDERER_RUNTIME_ERROR を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 123U;
+        s_test_config_gl33_vao_unbind.fail_on_call = 1U;
+        s_test_config_gl33_vao_unbind.forced_result = (int)RENDERER_RUNTIME_ERROR;
+
+        ret = gl33_vao_unbind(&vao);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(1U == s_test_config_gl33_vao_unbind.call_count);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
     {
         // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+
+        test_concrete_vao_config_reset();
+
         ret = gl33_vao_unbind(NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
     {
-        // 正常系
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
+        // vao_handle == 0 -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
 
-        ret = gl33_vao_unbind(vao);
-        assert(RENDERER_SUCCESS == ret);
+        test_concrete_vao_config_reset();
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        vao.vao_handle = 0U;
+
+        ret = gl33_vao_unbind(&vao);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(0U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
-    s_vertex_array_object_test = false;
+    {
+        // 正常系: 有効な vao_handle なら glBindVertexArray(0) を呼んで成功
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 456U;
+        s_test_config_mock_glBindVertexArray.fail_on_call = 1U;   // 実 OpenGL 呼び出しを避ける
+
+        ret = gl33_vao_unbind(&vao);
+        assert(RENDERER_SUCCESS == ret);
+        assert(1U == s_test_config_mock_glBindVertexArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_gl33_vao_attribute_set(void) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    s_vertex_array_object_test = true;
+    {
+        // gl33_vao_attribute_set() 冒頭で強制的に RENDERER_RUNTIME_ERROR を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 123U;
+        s_test_config_gl33_vao_attribute_set.fail_on_call = 1U;
+        s_test_config_gl33_vao_attribute_set.forced_result = (int)RENDERER_RUNTIME_ERROR;
+
+        ret = gl33_vao_attribute_set(&vao, 0U, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3U, 0U);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(1U == s_test_config_gl33_vao_attribute_set.call_count);
+        assert(0U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(0U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
     {
         // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        ret = gl33_vao_attribute_set(NULL, 4, 8, RENDERER_TYPE_FLOAT, true, 8, 8);
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+
+        test_concrete_vao_config_reset();
+
+        ret = gl33_vao_attribute_set(NULL, 0U, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3U, 0U);
         assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(0U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
     {
-        // type_が既定値外 -> RENDERER_RUNTIME_ERROR
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
+        // vao_handle == 0 -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
 
-        ret = gl33_vao_attribute_set(vao, 4, 8, 100, true, 8, 8);
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 0U;
+
+        ret = gl33_vao_attribute_set(&vao, 1U, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3U, 0U);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(0U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(0U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
+    {
+        // 未対応 type_ -> RENDERER_RUNTIME_ERROR
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 456U;
+
+        ret = gl33_vao_attribute_set(&vao, 2U, 3, (renderer_type_t)99999, false, sizeof(float) * 3U, 0U);
         assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(0U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(0U == s_test_config_mock_glEnableVertexAttribArray.call_count);
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        test_concrete_vao_config_reset();
     }
     {
-        // 正常系
-        renderer_backend_vao_t* vao = NULL;
-        ret = gl33_vao_create(&vao);
-        assert(RENDERER_SUCCESS == ret);
-        assert(NULL != vao);
+        // 正常系: normalized_ == false
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
 
-        ret = gl33_vao_attribute_set(vao, 4, 8, RENDERER_TYPE_FLOAT, true, 8, 8);
-        assert(RENDERER_SUCCESS == ret);
+        test_concrete_vao_config_reset();
 
-        gl33_vao_destroy(&vao);
-        assert(NULL == vao);
+        vao.vao_handle = 789U;
+        s_test_config_mock_glVertexAttribPointer.fail_on_call = 1U;      // 実 OpenGL 呼び出しを避ける
+        s_test_config_mock_glEnableVertexAttribArray.fail_on_call = 1U;  // 実 OpenGL 呼び出しを避ける
+
+        ret = gl33_vao_attribute_set(&vao, 0U, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 5U, sizeof(float) * 2U);
+        assert(RENDERER_SUCCESS == ret);
+        assert(1U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(1U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
     }
+    {
+        // 正常系: normalized_ == true
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
 
-    s_vertex_array_object_test = false;
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 987U;
+        s_test_config_mock_glVertexAttribPointer.fail_on_call = 1U;      // 実 OpenGL 呼び出しを避ける
+        s_test_config_mock_glEnableVertexAttribArray.fail_on_call = 1U;  // 実 OpenGL 呼び出しを避ける
+
+        ret = gl33_vao_attribute_set(&vao, 1U, 4, RENDERER_TYPE_FLOAT, true, sizeof(float) * 8U, sizeof(float) * 4U);
+        assert(RENDERER_SUCCESS == ret);
+        assert(1U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(1U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
+}
+
+static void NO_COVERAGE test_call_control_no_op_reset(test_call_control_no_op_t* config_) {
+    config_->call_count = 0;
+    config_->fail_on_call = 0;
 }
 #endif

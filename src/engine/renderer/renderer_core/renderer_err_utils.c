@@ -13,20 +13,41 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-// #define TEST_BUILD
-
-#ifdef TEST_BUILD
-#include <string.h>
-#include <assert.h>
-
-#include "engine/base/choco_macros.h"
-#endif
-
 #include "engine/renderer/renderer_core/renderer_types.h"
 #include "engine/renderer/renderer_core/renderer_err_utils.h"
 
 #include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+#include <string.h>
+
+#include "test_controller.h"
+#include "engine/base/choco_macros.h"
+
+#include "engine/renderer/renderer_core/test_renderer_err_utils.h"
+
+// renderer_err_utils用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_renderer_rslt_convert_linear_alloc;    /**< renderer_rslt_convert_linear_alloc()テスト設定 */
+static test_call_control_t s_test_config_renderer_rslt_convert_choco_memory;    /**< renderer_rslt_convert_choco_memory()テスト設定 */
+static test_call_control_t s_test_config_renderer_rslt_convert_choco_string;    /**< renderer_rslt_convert_choco_string()テスト設定 */
+static test_call_control_t s_test_config_renderer_rslt_convert_fs_utils;        /**< renderer_rslt_convert_fs_utils()テスト設定 */
+
+// プライベート関数テスト設定
+
+// 全テスト関数プロトタイプ宣言
+static void test_renderer_rslt_to_str(void);
+static void test_renderer_rslt_convert_linear_alloc(void);
+static void test_renderer_rslt_convert_choco_memory(void);
+static void test_renderer_rslt_convert_choco_string(void);
+static void test_renderer_rslt_convert_fs_utils(void);
+#endif
 
 static const char* s_rslt_str_success = "SUCCESS";                            /**< 実行結果コードRENDERER_SUCCESSの文字列 */
 static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";          /**< 実行結果コードRENDERER_INVALID_ARGUMENTの文字列 */
@@ -38,14 +59,6 @@ static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";            /*
 static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";              /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
 static const char* s_rslt_str_bad_operation = "BAD_OPERATION";                /**< 実行結果コードRENDERER_BAD_OPERATIONの文字列 */
 static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";              /**< 実行結果コードRENDERER_DATA_CORRUPTEDの文字列 */
-
-#ifdef TEST_BUILD
-static void NO_COVERAGE test_renderer_result_str(void);
-static void NO_COVERAGE test_renderer_rslt_convert_linear_alloc(void);
-static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void);
-static void NO_COVERAGE test_renderer_rslt_convert_choco_string(void);
-static void NO_COVERAGE test_renderer_rslt_convert_fs_utils(void);
-#endif
 
 const char* renderer_rslt_to_str(renderer_result_t rslt_) {
     switch(rslt_) {
@@ -75,6 +88,14 @@ const char* renderer_rslt_to_str(renderer_result_t rslt_) {
 }
 
 renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_rslt_convert_linear_alloc.call_count++;
+    if(s_test_config_renderer_rslt_convert_linear_alloc.fail_on_call != 0) {
+        if(s_test_config_renderer_rslt_convert_linear_alloc.call_count == s_test_config_renderer_rslt_convert_linear_alloc.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_rslt_convert_linear_alloc.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case LINEAR_ALLOC_SUCCESS:
         return RENDERER_SUCCESS;
@@ -88,6 +109,14 @@ renderer_result_t renderer_rslt_convert_linear_alloc(linear_allocator_result_t r
 }
 
 renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_rslt_convert_choco_memory.call_count++;
+    if(s_test_config_renderer_rslt_convert_choco_memory.fail_on_call != 0) {
+        if(s_test_config_renderer_rslt_convert_choco_memory.call_count == s_test_config_renderer_rslt_convert_choco_memory.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_rslt_convert_choco_memory.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RENDERER_SUCCESS;
@@ -105,6 +134,14 @@ renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt
 }
 
 renderer_result_t renderer_rslt_convert_choco_string(choco_string_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_rslt_convert_choco_string.call_count++;
+    if(s_test_config_renderer_rslt_convert_choco_string.fail_on_call != 0) {
+        if(s_test_config_renderer_rslt_convert_choco_string.call_count == s_test_config_renderer_rslt_convert_choco_string.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_rslt_convert_choco_string.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case CHOCO_STRING_SUCCESS:
         return RENDERER_SUCCESS;
@@ -130,6 +167,14 @@ renderer_result_t renderer_rslt_convert_choco_string(choco_string_result_t rslt_
 }
 
 renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_rslt_convert_fs_utils.call_count++;
+    if(s_test_config_renderer_rslt_convert_fs_utils.fail_on_call != 0) {
+        if(s_test_config_renderer_rslt_convert_fs_utils.call_count == s_test_config_renderer_rslt_convert_fs_utils.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_rslt_convert_fs_utils.forced_result;
+        }
+    }
+#endif
     switch(rslt_) {
     case FS_UTILS_SUCCESS:
         return RENDERER_SUCCESS;
@@ -157,225 +202,336 @@ renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
 }
 
 #ifdef TEST_BUILD
-void test_renderer_err_utils(void) {
-    test_renderer_result_str();
+void NO_COVERAGE test_renderer_rslt_convert_linear_alloc_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_rslt_convert_linear_alloc.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_rslt_convert_linear_alloc.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_rslt_convert_choco_memory_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_rslt_convert_choco_memory.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_rslt_convert_choco_memory.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_rslt_convert_choco_string_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_rslt_convert_choco_string.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_rslt_convert_choco_string.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_rslt_convert_fs_utils_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_rslt_convert_fs_utils.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_rslt_convert_fs_utils.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_err_utils_config_reset(void) {
+    test_call_control_reset(&s_test_config_renderer_rslt_convert_linear_alloc);
+    test_call_control_reset(&s_test_config_renderer_rslt_convert_choco_memory);
+    test_call_control_reset(&s_test_config_renderer_rslt_convert_choco_string);
+    test_call_control_reset(&s_test_config_renderer_rslt_convert_fs_utils);
+}
+
+void NO_COVERAGE test_renderer_err_utils(void) {
+    test_renderer_rslt_to_str();
     test_renderer_rslt_convert_linear_alloc();
     test_renderer_rslt_convert_choco_memory();
     test_renderer_rslt_convert_choco_string();
     test_renderer_rslt_convert_fs_utils();
 }
 
-static void NO_COVERAGE test_renderer_result_str(void) {
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_SUCCESS);
-        assert(0 == strcmp(tmp, s_rslt_str_success));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT);
-        assert(0 == strcmp(tmp, s_rslt_str_invalid_argument));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_RUNTIME_ERROR);
-        assert(0 == strcmp(tmp, s_rslt_str_runtime_error));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_NO_MEMORY);
-        assert(0 == strcmp(tmp, s_rslt_str_no_memory));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_SHADER_COMPILE_ERROR);
-        assert(0 == strcmp(tmp, s_rslt_str_shader_compile_error));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_SHADER_LINK_ERROR);
-        assert(0 == strcmp(tmp, s_rslt_str_shader_link_error));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_UNDEFINED_ERROR);
-        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED);
-        assert(0 == strcmp(tmp, s_rslt_str_limit_exceeded));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_BAD_OPERATION);
-        assert(0 == strcmp(tmp, s_rslt_str_bad_operation));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(RENDERER_DATA_CORRUPTED);
-        assert(0 == strcmp(tmp, s_rslt_str_data_corrupted));
-    }
-    {
-        const char* tmp = renderer_rslt_to_str(1000);
-        assert(0 == strcmp(tmp, s_rslt_str_undefined_error));
-    }
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_rslt_to_str(void) {
+    const char* actual = NULL;
+
+    actual = renderer_rslt_to_str(RENDERER_SUCCESS);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "SUCCESS"));
+
+    actual = renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "INVALID_ARGUMENT"));
+
+    actual = renderer_rslt_to_str(RENDERER_RUNTIME_ERROR);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "RUNTIME_ERROR"));
+
+    actual = renderer_rslt_to_str(RENDERER_NO_MEMORY);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "NO_MEMORY"));
+
+    actual = renderer_rslt_to_str(RENDERER_SHADER_COMPILE_ERROR);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "SHADER_COMPILE_ERROR"));
+
+    actual = renderer_rslt_to_str(RENDERER_SHADER_LINK_ERROR);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "SHADER_LINK_ERROR"));
+
+    actual = renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "LIMIT_EXCEEDED"));
+
+    actual = renderer_rslt_to_str(RENDERER_BAD_OPERATION);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "BAD_OPERATION"));
+
+    actual = renderer_rslt_to_str(RENDERER_DATA_CORRUPTED);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "DATA_CORRUPTED"));
+
+    actual = renderer_rslt_to_str(RENDERER_UNDEFINED_ERROR);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "UNDEFINED_ERROR"));
+
+    actual = renderer_rslt_to_str((renderer_result_t)99999);
+    assert(NULL != actual);
+    assert(0 == strcmp(actual, "UNDEFINED_ERROR"));
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_renderer_rslt_convert_linear_alloc(void) {
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
-        assert(RENDERER_SUCCESS == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY);
-        assert(RENDERER_NO_MEMORY == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_linear_alloc(100);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
+    renderer_result_t actual = RENDERER_UNDEFINED_ERROR;
+    test_call_control_t config = { 0 };
+
+    // 通常変換確認
+    test_renderer_err_utils_config_reset();
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY);
+    assert(RENDERER_NO_MEMORY == actual);
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT);
+    assert(RENDERER_INVALID_ARGUMENT == actual);
+
+    actual = renderer_rslt_convert_linear_alloc((linear_allocator_result_t)99999);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    // 失敗注入確認: 1回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 1;
+    config.forced_result = (int)RENDERER_BAD_OPERATION;
+    test_renderer_rslt_convert_linear_alloc_config_set(&config);
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+    assert(RENDERER_BAD_OPERATION == actual);
+
+    // 失敗注入確認: 2回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 2;
+    config.forced_result = (int)RENDERER_LIMIT_EXCEEDED;
+    test_renderer_rslt_convert_linear_alloc_config_set(&config);
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS);
+    assert(RENDERER_LIMIT_EXCEEDED == actual);
+
+    // 後続へ影響を残さないようにリセット
+    test_renderer_err_utils_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void) {
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
-        assert(RENDERER_SUCCESS == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY);
-        assert(RENDERER_NO_MEMORY == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_memory(100);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
+    renderer_result_t actual = RENDERER_UNDEFINED_ERROR;
+    test_call_control_t config = { 0 };
+
+    // 通常変換確認
+    test_renderer_err_utils_config_reset();
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT);
+    assert(RENDERER_INVALID_ARGUMENT == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED);
+    assert(RENDERER_LIMIT_EXCEEDED == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY);
+    assert(RENDERER_NO_MEMORY == actual);
+
+    actual = renderer_rslt_convert_choco_memory((memory_system_result_t)99999);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    // 失敗注入確認: 1回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 1;
+    config.forced_result = (int)RENDERER_BAD_OPERATION;
+    test_renderer_rslt_convert_choco_memory_config_set(&config);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
+    assert(RENDERER_BAD_OPERATION == actual);
+
+    // 失敗注入確認: 2回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 2;
+    config.forced_result = (int)RENDERER_DATA_CORRUPTED;
+    test_renderer_rslt_convert_choco_memory_config_set(&config);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS);
+    assert(RENDERER_DATA_CORRUPTED == actual);
+
+    // 後続テストへの影響防止
+    test_renderer_err_utils_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_renderer_rslt_convert_choco_string(void) {
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
-        assert(RENDERER_SUCCESS == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_DATA_CORRUPTED);
-        assert(RENDERER_DATA_CORRUPTED == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_BAD_OPERATION);
-        assert(RENDERER_BAD_OPERATION == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_NO_MEMORY);
-        assert(RENDERER_NO_MEMORY == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_INVALID_ARGUMENT);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_RUNTIME_ERROR);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_UNDEFINED_ERROR);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_OVERFLOW);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(CHOCO_STRING_LIMIT_EXCEEDED);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_choco_string(100);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
+    renderer_result_t actual = RENDERER_UNDEFINED_ERROR;
+    test_call_control_t config = { 0 };
+
+    // 通常変換確認
+    test_renderer_err_utils_config_reset();
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_DATA_CORRUPTED);
+    assert(RENDERER_DATA_CORRUPTED == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_BAD_OPERATION);
+    assert(RENDERER_BAD_OPERATION == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_NO_MEMORY);
+    assert(RENDERER_NO_MEMORY == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_INVALID_ARGUMENT);
+    assert(RENDERER_INVALID_ARGUMENT == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_RUNTIME_ERROR);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_UNDEFINED_ERROR);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_OVERFLOW);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_LIMIT_EXCEEDED);
+    assert(RENDERER_LIMIT_EXCEEDED == actual);
+
+    actual = renderer_rslt_convert_choco_string((choco_string_result_t)99999);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    // 失敗注入確認: 1回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 1;
+    config.forced_result = (int)RENDERER_SHADER_COMPILE_ERROR;
+    test_renderer_rslt_convert_choco_string_config_set(&config);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
+    assert(RENDERER_SHADER_COMPILE_ERROR == actual);
+
+    // 失敗注入確認: 2回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 2;
+    config.forced_result = (int)RENDERER_SHADER_LINK_ERROR;
+    test_renderer_rslt_convert_choco_string_config_set(&config);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_choco_string(CHOCO_STRING_SUCCESS);
+    assert(RENDERER_SHADER_LINK_ERROR == actual);
+
+    // 後続テストへの影響防止
+    test_renderer_err_utils_config_reset();
 }
 
+// Generated by ChatGPT
 static void NO_COVERAGE test_renderer_rslt_convert_fs_utils(void) {
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
-        assert(RENDERER_SUCCESS == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_INVALID_ARGUMENT);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_BAD_OPERATION);
-        assert(RENDERER_BAD_OPERATION == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_DATA_CORRUPTED);
-        assert(RENDERER_DATA_CORRUPTED == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_NO_MEMORY);
-        assert(RENDERER_NO_MEMORY == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_LIMIT_EXCEEDED);
-        assert(RENDERER_LIMIT_EXCEEDED == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_OVERFLOW);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_FILE_OPEN_ERROR);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_RUNTIME_ERROR);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(FS_UTILS_UNDEFINED_ERROR);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
-    {
-        renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-        ret = renderer_rslt_convert_fs_utils(100);
-        assert(RENDERER_UNDEFINED_ERROR == ret);
-    }
+    renderer_result_t actual = RENDERER_UNDEFINED_ERROR;
+    test_call_control_t config = { 0 };
+
+    // 通常変換確認
+    test_renderer_err_utils_config_reset();
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_INVALID_ARGUMENT);
+    assert(RENDERER_INVALID_ARGUMENT == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_BAD_OPERATION);
+    assert(RENDERER_BAD_OPERATION == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_DATA_CORRUPTED);
+    assert(RENDERER_DATA_CORRUPTED == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_NO_MEMORY);
+    assert(RENDERER_NO_MEMORY == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_LIMIT_EXCEEDED);
+    assert(RENDERER_LIMIT_EXCEEDED == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_OVERFLOW);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_FILE_OPEN_ERROR);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_RUNTIME_ERROR);
+    assert(RENDERER_RUNTIME_ERROR == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_UNDEFINED_ERROR);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    actual = renderer_rslt_convert_fs_utils((fs_utils_result_t)99999);
+    assert(RENDERER_UNDEFINED_ERROR == actual);
+
+    // 失敗注入確認: 1回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 1;
+    config.forced_result = (int)RENDERER_SHADER_COMPILE_ERROR;
+    test_renderer_rslt_convert_fs_utils_config_set(&config);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
+    assert(RENDERER_SHADER_COMPILE_ERROR == actual);
+
+    // 失敗注入確認: 2回目の呼び出しで強制返却
+    test_renderer_err_utils_config_reset();
+    test_call_control_reset(&config);
+    config.fail_on_call = 2;
+    config.forced_result = (int)RENDERER_SHADER_LINK_ERROR;
+    test_renderer_rslt_convert_fs_utils_config_set(&config);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
+    assert(RENDERER_SUCCESS == actual);
+
+    actual = renderer_rslt_convert_fs_utils(FS_UTILS_SUCCESS);
+    assert(RENDERER_SHADER_LINK_ERROR == actual);
+
+    // 後続テストへの影響防止
+    test_renderer_err_utils_config_reset();
 }
 #endif

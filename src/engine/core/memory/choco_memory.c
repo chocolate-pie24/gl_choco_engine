@@ -154,6 +154,7 @@ memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag
     void* tmp = NULL;
 
     // Preconditions.
+    // TODO: s_mem_sys_ptr == NULLはINVALID_ARGUMENTではなく、BAD_OPERATIONを返すようにする
     IF_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "s_mem_sys_ptr")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "*out_ptr_")

@@ -55,23 +55,6 @@ renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_);
  */
 void render_mem_free(void* ptr_, size_t size_);
 
-#ifdef TEST_BUILD
-/**
- * @brief テスト用に、renderer_memoryの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、render_mem_test_param_resetが呼ばれるまで効果が継続する
- *
- * @param result_code_ 出力実行結果コード
- */
-void render_mem_test_param_set(renderer_result_t result_code_);
-
-/**
- * @brief render_mem_test_param_setによる実行結果コードの固定を解除する
- *
- */
-void render_mem_test_param_reset(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif

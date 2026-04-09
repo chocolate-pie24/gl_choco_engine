@@ -30,25 +30,6 @@ extern "C" {
  */
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void);
 
-#ifdef TEST_BUILD
-#include "engine/renderer/renderer_core/renderer_types.h"
-
-/**
- * @brief テスト用に、gl33_shaderの実行結果コードを指定値に固定する
- *
- * @note この関数を実行した後は、gl33_shader_fail_disableが呼ばれるまで効果が継続する
- *
- * @param[in] result_code_ 出力実行結果コード
- */
-void gl33_shader_fail_enable(renderer_result_t result_code_);
-
-/**
- * @brief gl33_shader_fail_enableによる実行結果コードの固定を解除する
- *
- */
-void gl33_shader_fail_disable(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif

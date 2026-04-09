@@ -26,7 +26,7 @@ extern "C" {
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_context/context.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
 typedef struct ui_shader ui_shader_t;   /**< UIシェーダーリソース構造体前方宣言 */
 

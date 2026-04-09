@@ -79,7 +79,9 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - vertex_array_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_->vao_vtable == NULL
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - backend_context_->vao_vtable == NULL
+ * - VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_);
@@ -93,7 +95,9 @@ renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t*
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - vertex_array_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - backend_context_が未初期化
+ * - VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_);
@@ -133,7 +137,9 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - vertex_array_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - backend_context_が未初期化
+ * - VAOが未初期化
  * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
