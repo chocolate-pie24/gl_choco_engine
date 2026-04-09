@@ -106,6 +106,7 @@ application_result_t flight_camera_command_update(const keyboard_event_t* keyboa
  *
  * @note
  * - 制御が実行され、カメラが動いた場合はcamera_構造体フィールドが更新される
+ * - 複数のコマンドを実行する場合に、コマンド実行に成功したのち、別のコマンド実行に失敗した場合は実行結果コードがエラーになり、かつ、out_view_updated_はtrueになる
  *
  * @param[in] speed_ カメラ移動速度
  * @param[in] delta_time_ カメラ移動時間

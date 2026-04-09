@@ -31,6 +31,10 @@
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
 #include <assert.h>
+
+#include "engine/core/memory/choco_memory.h"
+#include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
+
 #include "test_controller.h"
 
 #include "engine/core/memory/test_choco_memory.h"

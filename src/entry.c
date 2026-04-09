@@ -20,34 +20,37 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-// test: base
+// test: application/command_interpreter
+#include "application/command_interpreter/test_flight_camera.h"
+
+// test: engine/base
 #include "engine/base/choco_math/test_choco_math.h"
 
-// test: core
+// test: engine/core
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
 
-// test: containers
+// test: engine/containers
 #include "engine/containers/test_choco_string.h"
 #include "engine/containers/test_ring_queue.h"
 
-// test: io_utils
+// test: engine/io_utils
 #include "engine/io_utils/fs_utils/test_fs_utils.h"
 
-// test: platform
+// test: engine/platform
 #include "engine/platform/platform_core/test_platform_err_utils.h"
 #include "engine/platform/platform_concretes/test_platform_glfw.h"
 #include "engine/platform/test_platform_context.h"
 
-// test: camera_system
+// test: engine/camera_system
 #include "engine/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/camera_system/camera_core/test_camera_memory.h"
 #include "engine/camera_system/camera/test_camera.h"
 #include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/camera_system/camera_manager/test_camera_manager.h"
 
-// test: renderer
+// test: engine/renderer
 #include "engine/renderer/renderer_core/test_renderer_err_utils.h"
 #include "engine/renderer/renderer_core/test_renderer_memory.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
@@ -81,6 +84,9 @@ int main(int argc_, char** argv_) {
     INFO_MESSAGE("Build mode: TEST.");
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
+
+        // application/command_interpreter
+        test_flight_camera();
 
         // engine/base
         test_choco_math();
