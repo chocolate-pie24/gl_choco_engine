@@ -58,7 +58,7 @@ void test_flight_camera_command_execute_config_set(const test_call_control_t* co
 void test_flight_camera_config_reset(void);
 
 /**
- * @brief platform_err_utils保有APIのテストを行う
+ * @brief flight_camera保有APIのテストを行う
  *
  */
 void test_flight_camera(void);
