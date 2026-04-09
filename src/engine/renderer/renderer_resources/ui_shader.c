@@ -34,6 +34,8 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+// TODO: テスト(ui_shaderは今後も拡張されるため、テストはまだ行わない)
+
 /**
  * @brief UIシェーダーリソース構造体
  *
