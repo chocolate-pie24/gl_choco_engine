@@ -29,6 +29,35 @@
 #include "engine/camera_system/camera/camera.h"
 #include "engine/camera_system/camera_controller/flight_camera_controller.h"
 
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+// テスト時のみ使用するヘッダのinclude
+#include <assert.h>
+#include <string.h>
+
+#include "test_controller.h"
+
+#include "application/command_interpreter/test_flight_camera.h"
+
+// flight_camera用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+
+static test_call_control_t s_test_config_flight_camera_command_initialize;  /**< flight_camera_command_initialize()テスト設定 */
+static test_call_control_t s_test_config_flight_camera_command_update;      /**< flight_camera_command_update()テスト設定 */
+static test_call_control_t s_test_config_flight_camera_command_execute;     /**< flight_camera_command_execute()テスト設定 */
+
+// プライベート関数テスト設定
+
+// 全テスト関数プロトタイプ宣言
+
+static void test_flight_camera_command_initialize(void);
+static void test_flight_camera_command_update(void);
+static void test_flight_camera_command_execute(void);
+static void test_s_command_to_str(void);
+#endif
+
 // ファイル内静的変数宣言
 
 static const char* s_command_str_move_forward = "FLIGHT CAMERA: Move(Forward)";             /**< フライトカメラ制御コマンド文字列: 前方移動 */
@@ -48,6 +77,14 @@ static const char* s_command_str_undefined_command = "FLIGHT CAMERA: Undefined C
 static const char* s_command_to_str(command_list_flight_camera_t command_);
 
 application_result_t flight_camera_command_initialize(size_t array_size_, command_status_flight_camera_t* command_status_) {
+#ifdef TEST_BUILD
+    s_test_config_flight_camera_command_initialize.call_count++;
+    if(s_test_config_flight_camera_command_initialize.fail_on_call != 0) {
+        if(s_test_config_flight_camera_command_initialize.call_count == s_test_config_flight_camera_command_initialize.fail_on_call) {
+            return (application_result_t)s_test_config_flight_camera_command_initialize.forced_result;
+        }
+    }
+#endif
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(command_status_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "flight_camera_command_initialize", "command_status_")
@@ -120,6 +157,14 @@ cleanup:
 }
 
 application_result_t flight_camera_command_update(const keyboard_event_t* keyboard_event_, command_status_flight_camera_t* command_status_) {
+#ifdef TEST_BUILD
+    s_test_config_flight_camera_command_update.call_count++;
+    if(s_test_config_flight_camera_command_update.fail_on_call != 0) {
+        if(s_test_config_flight_camera_command_update.call_count == s_test_config_flight_camera_command_update.fail_on_call) {
+            return (application_result_t)s_test_config_flight_camera_command_update.forced_result;
+        }
+    }
+#endif
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "flight_camera_command_update", "keyboard_event_")
@@ -144,6 +189,14 @@ cleanup:
 }
 
 application_result_t flight_camera_command_execute(float speed_, float delta_time_, command_status_flight_camera_t* command_status_, camera_t* camera_, bool* out_view_updated_) {
+#ifdef TEST_BUILD
+    s_test_config_flight_camera_command_execute.call_count++;
+    if(s_test_config_flight_camera_command_execute.fail_on_call != 0) {
+        if(s_test_config_flight_camera_command_execute.call_count == s_test_config_flight_camera_command_execute.fail_on_call) {
+            return (application_result_t)s_test_config_flight_camera_command_execute.forced_result;
+        }
+    }
+#endif
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
@@ -201,3 +254,61 @@ static const char* s_command_to_str(command_list_flight_camera_t command_) {
         return s_command_str_undefined_command;
     }
 }
+
+#ifdef TEST_BUILD
+void NO_COVERAGE test_flight_camera_command_initialize_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_flight_camera_command_initialize.fail_on_call = config_->fail_on_call;
+    s_test_config_flight_camera_command_initialize.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_flight_camera_command_update_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_flight_camera_command_update.fail_on_call = config_->fail_on_call;
+    s_test_config_flight_camera_command_update.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_flight_camera_command_execute_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_flight_camera_command_execute.fail_on_call = config_->fail_on_call;
+    s_test_config_flight_camera_command_execute.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_flight_camera_config_reset(void) {
+    test_call_control_reset(&s_test_config_flight_camera_command_initialize);
+    test_call_control_reset(&s_test_config_flight_camera_command_update);
+    test_call_control_reset(&s_test_config_flight_camera_command_execute);
+}
+
+void NO_COVERAGE test_flight_camera(void) {
+    test_flight_camera_command_initialize();
+    test_flight_camera_command_update();
+    test_flight_camera_command_execute();
+    test_s_command_to_str();
+}
+
+static void NO_COVERAGE test_flight_camera_command_initialize(void) {
+
+}
+
+static void NO_COVERAGE test_flight_camera_command_update(void) {
+
+}
+
+static void NO_COVERAGE test_flight_camera_command_execute(void) {
+
+}
+
+static void NO_COVERAGE test_s_command_to_str(void) {
+
+}
+#endif
