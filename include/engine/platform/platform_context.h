@@ -118,6 +118,7 @@ void platform_destroy(platform_context_t* platform_context_);
  * - window_height_ <= 0
  * - framebuffer_width_ == NULL
  * - framebuffer_height_ == NULL
+ * @retval PLATFORM_BAD_OPERATION メモリシステム未初期化
  * @retval PLATFORM_SUCCESS ウィンドウ生成に成功し、正常終了
  *
  * @note 上記以外の実行結果コードは各プラットフォーム実装依存

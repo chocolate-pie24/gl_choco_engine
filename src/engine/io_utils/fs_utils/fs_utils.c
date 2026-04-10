@@ -422,6 +422,8 @@ static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_) 
         return FS_UTILS_UNDEFINED_ERROR;
     case FILESYSTEM_LIMIT_EXCEEDED:
         return FS_UTILS_LIMIT_EXCEEDED;
+    case FILESYSTEM_BAD_OPERATION:
+        return FS_UTILS_BAD_OPERATION;
     case FILESYSTEM_EOF:
         return FS_UTILS_UNDEFINED_ERROR;    // EOFを出力するAPIを使う場所では本関数ではなく、直接実行結果コードを見る必要があるため、本関数ではUNDEFINEDとする
     case FILESYSTEM_FILE_CLOSE_ERROR:
@@ -478,6 +480,8 @@ static fs_utils_result_t memory_system_result_convert(memory_system_result_t res
         return FS_UTILS_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return FS_UTILS_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return FS_UTILS_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return FS_UTILS_NO_MEMORY;
     default:
@@ -1415,6 +1419,7 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         assert(0 == strcmp(rslt_to_str(FS_UTILS_DATA_CORRUPTED), "DATA_CORRUPTED"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_NO_MEMORY), "NO_MEMORY"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_LIMIT_EXCEEDED), "LIMIT_EXCEEDED"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_BAD_OPERATION), "BAD_OPERATION"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_OVERFLOW), "OVERFLOW"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_RUNTIME_ERROR), "RUNTIME_ERROR"));
@@ -1542,6 +1547,7 @@ static void NO_COVERAGE test_filesystem_result_convert(void) {
         assert(FS_UTILS_FILE_OPEN_ERROR == filesystem_result_convert(FILESYSTEM_FILE_OPEN_ERROR));
         assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_UNDEFINED_ERROR));
         assert(FS_UTILS_LIMIT_EXCEEDED == filesystem_result_convert(FILESYSTEM_LIMIT_EXCEEDED));
+        assert(FS_UTILS_BAD_OPERATION == filesystem_result_convert(FILESYSTEM_BAD_OPERATION));
     }
     {
         // fs_utilsでは直接扱わない結果コードは UNDEFINED_ERROR に変換される
@@ -1580,6 +1586,7 @@ static void NO_COVERAGE test_memory_system_result_convert(void) {
         assert(FS_UTILS_INVALID_ARGUMENT == memory_system_result_convert(MEMORY_SYSTEM_INVALID_ARGUMENT));
         assert(FS_UTILS_RUNTIME_ERROR == memory_system_result_convert(MEMORY_SYSTEM_RUNTIME_ERROR));
         assert(FS_UTILS_LIMIT_EXCEEDED == memory_system_result_convert(MEMORY_SYSTEM_LIMIT_EXCEEDED));
+        assert(FS_UTILS_BAD_OPERATION == memory_system_result_convert(MEMORY_SYSTEM_BAD_OPERATION));
         assert(FS_UTILS_NO_MEMORY == memory_system_result_convert(MEMORY_SYSTEM_NO_MEMORY));
     }
     {

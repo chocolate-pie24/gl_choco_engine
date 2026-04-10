@@ -39,6 +39,7 @@ extern "C" {
  * @retval CAMERA_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval CAMERA_NO_MEMORY メモリ割り当て失敗
  * @retval CAMERA_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った
+ * @retval CAMERA_BAD_OPERATION メモリシステム未初期化
  * @retval CAMERA_SUCCESS 以下のいずれか
  * - size_ == 0(*out_ptr_はNULLのまま)
  * - 割り当てに成功し正常終了

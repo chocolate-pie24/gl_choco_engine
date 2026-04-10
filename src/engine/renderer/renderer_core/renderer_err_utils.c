@@ -126,6 +126,8 @@ renderer_result_t renderer_rslt_convert_choco_memory(memory_system_result_t rslt
         return RENDERER_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return RENDERER_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return RENDERER_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return RENDERER_NO_MEMORY;
     default:
@@ -368,6 +370,9 @@ static void NO_COVERAGE test_renderer_rslt_convert_choco_memory(void) {
 
     actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED);
     assert(RENDERER_LIMIT_EXCEEDED == actual);
+
+    actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_BAD_OPERATION);
+    assert(RENDERER_BAD_OPERATION == actual);
 
     actual = renderer_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY);
     assert(RENDERER_NO_MEMORY == actual);

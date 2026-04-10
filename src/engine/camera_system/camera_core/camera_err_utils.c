@@ -97,6 +97,8 @@ camera_result_t camera_rslt_convert_choco_memory(memory_system_result_t rslt_) {
         return CAMERA_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return CAMERA_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return CAMERA_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return CAMERA_NO_MEMORY;
     default:

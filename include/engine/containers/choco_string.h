@@ -64,6 +64,7 @@ typedef enum {
  * - *string_ != NULL
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
  */
 choco_string_result_t choco_string_default_create(choco_string_t** string_);
@@ -85,6 +86,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_);
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
  * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの最大値を超過
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
@@ -122,6 +124,7 @@ void choco_string_destroy(choco_string_t** string_);
  * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの最大値を超過
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
@@ -145,6 +148,7 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
  * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの上限を超過
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
  * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
  */
@@ -164,7 +168,9 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - dst_ == NULL
  * - string_ == NULL
- * @retval CHOCO_STRING_BAD_OPERATION 連結先文字列と連結元文字列の先頭アドレスが等しい(自己連結は禁止する)
+ * @retval CHOCO_STRING_BAD_OPERATION 以下のいずれか
+ * - 連結先文字列と連結元文字列の先頭アドレスが等しい(自己連結は禁止する)
+ * - メモリシステム未初期化
  * @retval CHOCO_STRING_DATA_CORRUPTED 以下のいずれか
  * - string_の内部データが破損(アドレスへの不正アクセス等により発生)
  * - dst_の内部データが破損(アドレスへの不正アクセス等により発生)
@@ -193,6 +199,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
  * @retval CHOCO_STRING_OVERFLOW 連結後の文字列長さがsize_tの上限を超過
  * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
  * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS 文字列の連結に成功し,正常終了
  */
 choco_string_result_t choco_string_concat_from_c_string(const char* string_, choco_string_t* dst_);

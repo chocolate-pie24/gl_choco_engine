@@ -79,6 +79,7 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**<
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< リングキューAPI実行結果コード(API誤用)に対応する文字列 */
 static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< リングキューAPI実行結果コード(内部データ破損)に対応する文字列 */
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
 static const char* const s_rslt_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
@@ -113,6 +114,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     IF_ARG_FALSE_GOTO_CLEANUP(element_align_ > 0, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
+
     if(SIZE_MAX / element_size_ < max_element_count_) {
         ret = RING_QUEUE_OVERFLOW;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", rslt_to_str(ret));
@@ -176,6 +178,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     tmp_queue->tail = 0;
 
     *ring_queue_ = tmp_queue;
+
     ret = RING_QUEUE_SUCCESS;
 
 cleanup:
@@ -343,6 +346,8 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return RING_QUEUE_NO_MEMORY;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return RING_QUEUE_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return RING_QUEUE_BAD_OPERATION;
     default:
         return RING_QUEUE_UNDEFINED_ERROR;
     }
@@ -451,6 +456,8 @@ static const char* rslt_to_str(ring_queue_result_t rslt_) {
         return s_rslt_str_undefined_error;
     case RING_QUEUE_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
+    case RING_QUEUE_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
     case RING_QUEUE_DATA_CORRUPTED:
         return s_rslt_str_data_corrupted;
     case RING_QUEUE_OVERFLOW:
@@ -1459,6 +1466,10 @@ static void NO_COVERAGE test_rslt_convert_mem_sys(void) {
         assert(RING_QUEUE_LIMIT_EXCEEDED == ret);
     }
     {
+        ring_queue_result_t ret = rslt_convert_mem_sys(MEMORY_SYSTEM_BAD_OPERATION);
+        assert(RING_QUEUE_BAD_OPERATION == ret);
+    }
+    {
         ring_queue_result_t ret = rslt_convert_mem_sys((memory_system_result_t)999);
         assert(RING_QUEUE_UNDEFINED_ERROR == ret);
     }
@@ -1924,6 +1935,11 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         const char* str = rslt_to_str(RING_QUEUE_LIMIT_EXCEEDED);
         assert(NULL != str);
         assert(0 == strcmp("LIMIT_EXCEEDED", str));
+    }
+    {
+        const char* str = rslt_to_str(RING_QUEUE_BAD_OPERATION);
+        assert(NULL != str);
+        assert(0 == strcmp("BAD_OPERATION", str));
     }
     {
         const char* str = rslt_to_str(RING_QUEUE_DATA_CORRUPTED);

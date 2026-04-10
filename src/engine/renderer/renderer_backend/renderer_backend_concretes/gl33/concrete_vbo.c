@@ -128,6 +128,7 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_) {
@@ -437,7 +438,7 @@ static void NO_COVERAGE test_gl33_vbo_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_INVALID_ARGUMENT
+        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_vbo_t* vbo = NULL;
 
@@ -446,7 +447,7 @@ static void NO_COVERAGE test_gl33_vbo_create(void) {
         memory_system_destroy();
 
         ret = gl33_vbo_create(&vbo);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == vbo);
         assert(0U == s_test_config_mock_glGenBuffers.call_count);
 

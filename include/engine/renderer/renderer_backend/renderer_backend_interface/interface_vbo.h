@@ -38,6 +38,7 @@ extern "C" {
  * - *vertex_buffer_ != NULL
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  * @retval 上記以外 グラフィックスAPI実装依存
  */

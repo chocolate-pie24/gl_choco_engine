@@ -93,6 +93,7 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - shader_handle_が保持するシェーダーオブジェクトがコンパイル済み
  * - shader_handle_が保持するシェーダープログラムがリンク済み
+ * - メモリシステム未初期化
  * @retval RENDERER_SHADER_COMPILE_ERROR シェーダーオブジェクトのGPU側リソース確保に失敗、またはシェーダーソースのコンパイル失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
@@ -119,6 +120,7 @@ renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, co
  * - プログラムが既にリンク済み
  * - バーテックスシェーダーオブジェクトが未コンパイル
  * - フラグメントシェーダーオブジェクトが未コンパイル
+ * - メモリシステム未初期化
  * @retval RENDERER_SHADER_LINK_ERROR シェーダープログラムのGPU側リソース確保に失敗、またはシェーダーリンクエラー
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗

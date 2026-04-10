@@ -94,6 +94,7 @@ typedef void (*pfn_platform_backend_destroy)(platform_backend_t* platform_backen
  * - framebuffer_height_ == NULL
  * @retval PLATFORM_NO_MEMORY        メモリ確保失敗
  * @retval PLATFORM_SUCCESS          ウィンドウの生成に成功し、正常終了
+ * @retval PLATFORM_BAD_OPERATION    メモリシステム未初期化
  * @retval その他                     プラットフォーム実装依存
  */
 typedef platform_result_t (*pfn_platform_backend_window_create)(

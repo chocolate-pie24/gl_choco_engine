@@ -48,6 +48,7 @@ typedef enum {
     FILESYSTEM_FILE_CLOSE_ERROR,    /**< 実行結果コード: ファイルクローズ失敗 */
     FILESYSTEM_UNDEFINED_ERROR,     /**< 実行結果コード: 未定義エラー */
     FILESYSTEM_LIMIT_EXCEEDED,      /**< 実行結果コード: システムリソースが使用可能範囲を超過 */
+    FILESYSTEM_BAD_OPERATION,       /**< 実行結果コード: API誤用 */
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
 
@@ -95,6 +96,7 @@ typedef enum {
  * @retval FILESYSTEM_NO_MEMORY メモリ不足によりfilesystem_tのメモリ確保に失敗
  * @retval FILESYSTEM_LIMIT_EXCEEDED メモリシステムの管理変数がシステム使用可能範囲を超過
  * @retval FILESYSTEM_UNDEFINED_ERROR 未定義のエラーが発生
+ * @retval FILESYSTEM_BAD_OPERATION メモリシステム未初期化
  * @retval FILESYSTEM_SUCCESS filesystem_のメモリ確保と初期化に成功し、正常終了
  */
 filesystem_result_t filesystem_create(filesystem_t** filesystem_);

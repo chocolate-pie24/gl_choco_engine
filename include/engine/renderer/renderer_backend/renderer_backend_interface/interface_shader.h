@@ -41,10 +41,10 @@ extern "C" {
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - shader_handle_ == NULL
  * - *shader_handle_ != NULL
- * - メモリシステム未初期化(render_mem_allocateからのエラー伝播)
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
  * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播)
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_SUCCESS メモリ確保および初期化に成功し、正常終了
  * @retval 上記以外 グラフィックスAPI実装依存
  */
