@@ -25,13 +25,13 @@ extern "C" {
 #include "test_controller.h"
 
 /**
- * @brief render_mem_allocate()APIに対して失敗注入設定を行う
+ * @brief renderer_mem_allocate()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、renderer_memory内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_render_mem_allocate_config_set(const test_call_control_t* config_);
+void test_renderer_mem_allocate_config_set(const test_call_control_t* config_);
 
 /**
  * @brief renderer_memoryが内部で管理するテスト設定値を全て初期化し、テスト用の出力強制制御をなくす

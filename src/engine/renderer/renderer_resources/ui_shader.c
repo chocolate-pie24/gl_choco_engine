@@ -109,7 +109,7 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
     }
 
     // ui shader構造体インスタンス生成
-    ret = render_mem_allocate(sizeof(ui_shader_t), (void**)&tmp_ui_shader);
+    ret = renderer_mem_allocate(sizeof(ui_shader_t), (void**)&tmp_ui_shader);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_create(%s) - Failed to allocate memory for tmp_ui_shader.", renderer_rslt_to_str(ret));
         goto cleanup;
