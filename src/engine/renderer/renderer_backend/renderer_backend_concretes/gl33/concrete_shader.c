@@ -239,7 +239,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
 
-    ret = render_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
+    ret = renderer_mem_allocate(sizeof(renderer_backend_shader_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -253,7 +253,7 @@ static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_h
 
 cleanup:
 #ifdef TEST_BUILD
-    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // NOTE: 将来的に仕様変更でrenderer_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
     // ここはカバレッジ到達不可だけど許容する
     if(RENDERER_SUCCESS != ret && NULL != tmp) {
         assert(false);
@@ -349,7 +349,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
     mock_glGetShaderiv(tmp_handle, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
     mock_glGetShaderiv(tmp_handle, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
     if(0 < info_log_length) {
-        ret = render_mem_allocate((size_t)info_log_length, (void**)&err_mes);
+        ret = renderer_mem_allocate((size_t)info_log_length, (void**)&err_mes);
         if(RENDERER_SUCCESS != ret) {
             ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to allocate memory for shader info log.", renderer_rslt_to_str(ret));
             goto cleanup;
@@ -420,7 +420,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
     mock_glGetProgramiv(tmp_program_id, GL_LINK_STATUS, &result);
     mock_glGetProgramiv(tmp_program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(0 < info_log_length) {
-        ret = render_mem_allocate((size_t)info_log_length, (void**)&err_mes);
+        ret = renderer_mem_allocate((size_t)info_log_length, (void**)&err_mes);
         if(RENDERER_SUCCESS != ret) {
             ERROR_MESSAGE("gl33_shader_link(%s) - Failed to allocate memory for program info log.", renderer_rslt_to_str(ret));
             goto cleanup;
@@ -1058,7 +1058,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_BAD_OPERATION
+        // メモリシステム未初期化 -> renderer_mem_allocate() 経由で RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_shader_t* shader_handle = NULL;
 

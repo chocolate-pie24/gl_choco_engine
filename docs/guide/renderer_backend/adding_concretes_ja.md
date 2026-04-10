@@ -37,7 +37,7 @@ shader concreteモジュール用実装ファイルには`Renderer Backend Inter
 
 各関数の実装においては下記に留意する
 
-- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`renderer_mem_allocate()`,`render_mem_free()`を使用すること
 - 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
 
 | カテゴリー       | 関数名称                 | 役割                                                                                                   |
@@ -60,7 +60,7 @@ VAO concreteモジュール用実装ファイルには`Renderer Backend Interfac
 
 各関数の実装においては下記に留意する
 
-- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`renderer_mem_allocate()`,`render_mem_free()`を使用すること
 - 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
 
 | カテゴリー       | 関数名称                   | 役割                                                                              |
@@ -83,7 +83,7 @@ VBO concreteモジュール用実装ファイルには`Renderer Backend Interfac
 
 各関数の実装においては下記に留意する
 
-- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`render_mem_allocate()`,`render_mem_free()`を使用すること
+- メモリ確保が必要な場合は、`renderer_core/renderer_memory`が提供する`renderer_mem_allocate()`,`render_mem_free()`を使用すること
 - 実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は`renderer_core/renderer_err_utils`が提供するAPIを使用すること
 
 | カテゴリー       | 関数名称                 | 役割                                                                              |

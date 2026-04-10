@@ -41,7 +41,7 @@ extern "C" {
  * - size_ == 0(*out_ptr_はNULLのまま)
  * - 割り当てに成功し正常終了
  */
-renderer_result_t render_mem_allocate(size_t size_, void** out_ptr_);
+renderer_result_t renderer_mem_allocate(size_t size_, void** out_ptr_);
 
 /**
  * @brief memory_system_freeのラッパーAPI

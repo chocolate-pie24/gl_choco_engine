@@ -146,7 +146,7 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_create", "vertex_buffer_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_create", "vertex_buffer_")
 
-    ret = render_mem_allocate(sizeof(renderer_backend_vbo_t), (void**)&tmp);
+    ret = renderer_mem_allocate(sizeof(renderer_backend_vbo_t), (void**)&tmp);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("gl33_vbo_create(%s) - Failed to allocate memory for 'tmp'.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -160,7 +160,7 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
 
 cleanup:
 #ifdef TEST_BUILD
-    // NOTE: 将来的に仕様変更でrender_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
+    // NOTE: 将来的に仕様変更でrenderer_mem_allocate成功した後で失敗することを想定し、cleanup漏れ検出を追加
     // ここはカバレッジ到達不可だけど許容する
     if(RENDERER_SUCCESS != ret && NULL != tmp) {
         assert(false);
@@ -438,7 +438,7 @@ static void NO_COVERAGE test_gl33_vbo_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_BAD_OPERATION
+        // メモリシステム未初期化 -> renderer_mem_allocate() 経由で RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_vbo_t* vbo = NULL;
 
@@ -531,7 +531,7 @@ static void NO_COVERAGE test_gl33_vbo_create(void) {
         assert(NULL != vbo);
         assert(1U == s_test_config_mock_glGenBuffers.call_count);
 
-        // render_mem_allocate() のゼロ初期化により、no-op の場合は vbo_handle は 0 のまま
+        // renderer_mem_allocate() のゼロ初期化により、no-op の場合は vbo_handle は 0 のまま
         assert(0U == vbo->vbo_handle);
 
         // destroy 時の実 OpenGL 呼び出しを避ける

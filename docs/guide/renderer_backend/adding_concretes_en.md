@@ -39,7 +39,7 @@ In the shader concrete module implementation file, implement the following funct
 
 When implementing each function, keep the following in mind:
 
-- If memory allocation is required, use `render_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
+- If memory allocation is required, use `renderer_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
 - For converting result codes to strings and translating lower-layer result codes, use the APIs provided by `renderer_core/renderer_err_utils`.
 
 | Category          | Function Name            | Role                                                                                         |
@@ -63,7 +63,7 @@ In the VAO concrete module implementation file, implement the following function
 
 When implementing each function, keep the following in mind:
 
-- If memory allocation is required, use `render_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
+- If memory allocation is required, use `renderer_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
 - For converting result codes to strings and translating lower-layer result codes, use the APIs provided by `renderer_core/renderer_err_utils`.
 
 | Category        | Function Name              | Role                                                                                         |
@@ -87,7 +87,7 @@ In the VBO concrete module implementation file, implement the following function
 
 When implementing each function, keep the following in mind:
 
-- If memory allocation is required, use `render_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
+- If memory allocation is required, use `renderer_mem_allocate()` and `render_mem_free()` provided by `renderer_core/renderer_memory`.
 - For converting result codes to strings and translating lower-layer result codes, use the APIs provided by `renderer_core/renderer_err_utils`.
 
 | Category        | Function Name             | Role                                                                                          |
