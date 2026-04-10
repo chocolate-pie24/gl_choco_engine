@@ -237,6 +237,7 @@ platform_result_t platform_window_create(platform_context_t* platform_context_, 
     }
 
     ret = PLATFORM_SUCCESS;
+
 cleanup:
     return ret;
 }

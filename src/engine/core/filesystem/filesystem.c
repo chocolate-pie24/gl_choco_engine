@@ -271,6 +271,7 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
         goto cleanup;
     }
     filesystem_->mode = mode_;
+
     ret = FILESYSTEM_SUCCESS;
 
 cleanup:
@@ -286,10 +287,10 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
         }
     }
 #endif
-
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_close", "filesystem_")
+
     if(NULL == filesystem_->file_handle) {
         ret = FILESYSTEM_RUNTIME_ERROR;
         ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", rslt_to_str(ret));
@@ -304,6 +305,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
     }
     filesystem_->file_handle = NULL;
     filesystem_->mode = FILESYSTEM_MODE_NONE;
+
     ret = FILESYSTEM_SUCCESS;
 
 cleanup:
@@ -319,7 +321,6 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
         }
     }
 #endif
-
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")

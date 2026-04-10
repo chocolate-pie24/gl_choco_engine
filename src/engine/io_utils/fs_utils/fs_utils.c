@@ -109,7 +109,6 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
         }
     }
 #endif
-
     fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
@@ -225,7 +224,6 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
         }
     }
 #endif
-
     fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
@@ -290,7 +288,6 @@ fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* o
         }
     }
 #endif
-
     fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
     choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
 

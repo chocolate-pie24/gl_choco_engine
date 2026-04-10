@@ -81,8 +81,8 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
         }
     }
 #endif
-
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "memory_pool_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, ret, LINEAR_ALLOC_INVALID_ARGUMENT, rslt_to_str(LINEAR_ALLOC_INVALID_ARGUMENT), "linear_allocator_init", "capacity_")
@@ -90,6 +90,7 @@ linear_allocator_result_t linear_allocator_init(linear_alloc_t* allocator_, size
     allocator_->capacity = capacity_;
     allocator_->head_ptr = memory_pool_;
     allocator_->memory_pool = memory_pool_;
+
     ret = LINEAR_ALLOC_SUCCESS;
 
 cleanup:
@@ -105,7 +106,6 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
         }
     }
 #endif
-
     linear_allocator_result_t ret = LINEAR_ALLOC_INVALID_ARGUMENT;
     uintptr_t head = 0;
     uintptr_t align = 0;
@@ -158,6 +158,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_alloc_t* allocator_, 
     *out_ptr_ = (void*)start_addr;
     head += offset + size;
     allocator_->head_ptr = (void*)head;
+
     ret = LINEAR_ALLOC_SUCCESS;
 
 cleanup:

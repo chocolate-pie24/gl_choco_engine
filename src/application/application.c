@@ -316,6 +316,7 @@ application_result_t application_create(void) {
     s_app_state = tmp;
     INFO_MESSAGE("Application created successfully.");
     memory_system_report();
+
     ret = APPLICATION_SUCCESS;
 
 cleanup:
@@ -432,6 +433,7 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     struct timespec  req = {0, 1000000};
+    static vec3f_t vertex_buffer_data[3] = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -442,7 +444,6 @@ application_result_t application_run(void) {
     // begin temporary
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
-    static vec3f_t vertex_buffer_data[3] = { 0 };
     vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
     vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
     vec3f_initialize(0.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
@@ -596,6 +597,7 @@ cleanup:
  */
 static void app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_rslt_to_str(ret));

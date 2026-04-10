@@ -203,7 +203,9 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
     }
     mock_glDeleteBuffers(1, &(*vertex_buffer_)->vbo_handle);
     render_mem_free(*vertex_buffer_, sizeof(renderer_backend_vbo_t));
+
     *vertex_buffer_ = NULL;
+
 cleanup:
     return;
 }

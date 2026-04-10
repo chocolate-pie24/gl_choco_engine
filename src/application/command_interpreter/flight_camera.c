@@ -327,7 +327,9 @@ static bool is_valid_keybind(size_t array_size_, const command_status_flight_cam
             return false;
         }
     }
+
     return true;
+
 }
 
 #ifdef TEST_BUILD

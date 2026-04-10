@@ -111,6 +111,7 @@ memory_system_result_t memory_system_create(void) {
 
     // commit
     s_mem_sys_ptr = tmp;
+
     ret = MEMORY_SYSTEM_SUCCESS;
 
 cleanup:
@@ -235,6 +236,7 @@ void memory_system_report(void) {
         fprintf(stdout, "\t\ttag(%s): %zu\n", (NULL != tag_str) ? tag_str : "unknown", s_mem_sys_ptr->mem_tag_allocated[i]);
     }
     fprintf(stdout, "\033[0m\n");
+
 cleanup:
     return;
 }

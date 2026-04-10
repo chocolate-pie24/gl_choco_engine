@@ -207,6 +207,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
     render_mem_free(*vertex_array_, sizeof(renderer_backend_vao_t));
 
     *vertex_array_ = NULL;
+
 cleanup:
     return;
 }

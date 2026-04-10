@@ -292,7 +292,6 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
         }
     }
 #endif
-
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     GLenum gl33_shader_type;
     GLint result = GL_FALSE;
@@ -701,6 +700,7 @@ static shader_compile_status_t shader_compile_status_get(shader_type_t shader_ty
     }
 #endif
     shader_compile_status_t status = SHADER_COMPILE_STATUS_NOT_COMPILED;
+
     if(NULL == shader_handle_) {
         status = SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE;
     } else {
@@ -715,6 +715,7 @@ static shader_compile_status_t shader_compile_status_get(shader_type_t shader_ty
             status = SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE;
         }
     }
+
     return status;
 }
 

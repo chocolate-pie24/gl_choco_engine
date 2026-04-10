@@ -167,7 +167,6 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_init", "platform_backend_")
@@ -283,7 +282,6 @@ static platform_result_t platform_glfw_window_create(platform_backend_t* platfor
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     int framebuffer_width = 0;
@@ -368,7 +366,6 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     int left_button_state = 0;
     int right_button_state = 0;
@@ -419,7 +416,6 @@ static platform_result_t platform_snapshot_process(
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_")
@@ -502,7 +498,6 @@ static platform_result_t platform_glfw_pump_messages(
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_")
@@ -544,7 +539,6 @@ static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform
         }
     }
 #endif
-
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_swap_buffers", "platform_backend_")
