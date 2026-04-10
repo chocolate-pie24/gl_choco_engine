@@ -54,6 +54,7 @@ typedef enum {
     RING_QUEUE_RUNTIME_ERROR,       /**< 実行時エラー */
     RING_QUEUE_UNDEFINED_ERROR,     /**< 未定義エラー */
     RING_QUEUE_LIMIT_EXCEEDED,      /**< システム使用可能範囲上限超過 */
+    RING_QUEUE_BAD_OPERATION,       /**< API誤用 */
     RING_QUEUE_DATA_CORRUPTED,      /**< 内部データ破損 */
     RING_QUEUE_OVERFLOW,            /**< 計算過程のオーバーフロー */
     RING_QUEUE_EMPTY,               /**< リングキューが空 */

@@ -59,6 +59,7 @@ typedef enum {
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
     MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
     MEMORY_SYSTEM_LIMIT_EXCEEDED,   /**< メモリ使用量管理システムの使用量が使用範囲上限を超過 */
+    MEMORY_SYSTEM_BAD_OPERATION,    /**< メモリシステムAPI誤用 */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
 } memory_system_result_t;
 

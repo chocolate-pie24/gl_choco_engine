@@ -68,6 +68,7 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**<
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< メモリシステムAPI実行結果コード(実行時エラー)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< メモリシステムAPI実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< メモリシステムAPI実行結果コード(システム使用上限超過)に対応する文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< メモリシステムAPI実行結果コード(API誤用)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< メモリシステムAPI実行結果コード(不明なエラー)に対応する文字列 */
 
 static const char* rslt_to_str(memory_system_result_t rslt_);
@@ -253,6 +254,8 @@ static const char* rslt_to_str(memory_system_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
     case MEMORY_SYSTEM_NO_MEMORY:
         return s_rslt_str_no_memory;
     default:
@@ -812,6 +815,11 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         const char* str = rslt_to_str(MEMORY_SYSTEM_LIMIT_EXCEEDED);
         assert(NULL != str);
         assert(0 == strcmp("LIMIT_EXCEEDED", str));
+    }
+    {
+        const char* str = rslt_to_str(MEMORY_SYSTEM_BAD_OPERATION);
+        assert(NULL != str);
+        assert(0 == strcmp("BAD_OPERATION", str));
     }
     {
         const char* str = rslt_to_str(MEMORY_SYSTEM_NO_MEMORY);

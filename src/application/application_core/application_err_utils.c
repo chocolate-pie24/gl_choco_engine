@@ -75,6 +75,8 @@ application_result_t app_rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return APPLICATION_NO_MEMORY;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
@@ -138,6 +140,8 @@ application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_) {
         return APPLICATION_RUNTIME_ERROR;   // オーバーフローもRuntime errorに変換
     case RING_QUEUE_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
+    case RING_QUEUE_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
     case RING_QUEUE_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
     default:

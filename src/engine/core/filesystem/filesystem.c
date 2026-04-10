@@ -148,15 +148,16 @@ static const char* s_open_mode_write_plus_binary = "w+b";   /**< ファイルオ
 static const char* s_open_mode_append_plus_binary = "a+b";  /**< ファイルオープンモード文字列: APPEND+(Binary) */
 static const char* s_open_mode_undefined = "undefined";     /**< ファイルオープンモード文字列: 不明なモード */
 
-static const char* s_rslt_str_success = "SUCCESS";                     /**< 実行結果コード文字列: 成功 */
-static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果コード文字列: 無効な引数 */
-static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";         /**< 実行結果コード文字列: 実行時エラー */
-static const char* s_rslt_str_no_memory = "NO_MEMORY";                 /**< 実行結果コード文字列: メモリ不足 */
-static const char* s_rslt_str_file_open_error = "FILE_OPEN_ERROR";     /**< 実行結果コード文字列: ファイルオープン失敗 */
-static const char* s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";   /**< 実行結果コード文字列: ファイルクローズ失敗 */
-static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";       /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
-static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果コード文字列: 未定義エラー */
-static const char* s_rslt_str_eof = "EOF";                             /**< 実行結果コード文字列: ファイル読み込みEOF */
+static const char* const s_rslt_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 成功 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 無効な引数 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";            /**< 実行結果コード文字列: 実行時エラー */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                    /**< 実行結果コード文字列: メモリ不足 */
+static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";        /**< 実行結果コード文字列: ファイルオープン失敗 */
+static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";      /**< 実行結果コード文字列: ファイルクローズ失敗 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";          /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";            /**< 実行結果コード文字列: API誤用 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード文字列: 未定義エラー */
+static const char* const s_rslt_str_eof = "EOF";                                /**< 実行結果コード文字列: ファイル読み込みEOF */
 
 filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
 #ifdef TEST_BUILD
@@ -178,15 +179,19 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
     mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT..", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_NO_MEMORY == mem_result) {
         ret = FILESYSTEM_NO_MEMORY;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned NO_MEMORY..", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned NO_MEMORY.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_LIMIT_EXCEEDED == mem_result) {
         ret = FILESYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned LIMIT_EXCEEDED..", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned LIMIT_EXCEEDED.", rslt_to_str(ret));
+        goto cleanup;
+    } else if(MEMORY_SYSTEM_BAD_OPERATION == mem_result) {
+        ret = FILESYSTEM_BAD_OPERATION;
+        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned BAD_OPERATION.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_SUCCESS != mem_result) {
         ret = FILESYSTEM_UNDEFINED_ERROR;
@@ -430,6 +435,8 @@ static const char* rslt_to_str(filesystem_result_t rslt_) {
         return s_rslt_str_eof;
     case FILESYSTEM_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
+    case FILESYSTEM_BAD_OPERATION:
+        return s_rslt_str_bad_operation;
     case FILESYSTEM_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -1727,6 +1734,11 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         const char* str = rslt_to_str(FILESYSTEM_LIMIT_EXCEEDED);
         assert(NULL != str);
         assert(0 == strcmp("LIMIT_EXCEEDED", str));
+    }
+    {
+        const char* str = rslt_to_str(FILESYSTEM_BAD_OPERATION);
+        assert(NULL != str);
+        assert(0 == strcmp("BAD_OPERATION", str));
     }
     {
         const char* str = rslt_to_str(FILESYSTEM_UNDEFINED_ERROR);

@@ -48,6 +48,7 @@ typedef enum {
     FILESYSTEM_FILE_CLOSE_ERROR,    /**< 実行結果コード: ファイルクローズ失敗 */
     FILESYSTEM_UNDEFINED_ERROR,     /**< 実行結果コード: 未定義エラー */
     FILESYSTEM_LIMIT_EXCEEDED,      /**< 実行結果コード: システムリソースが使用可能範囲を超過 */
+    FILESYSTEM_BAD_OPERATION,       /**< 実行結果コード: API誤用 */
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
 

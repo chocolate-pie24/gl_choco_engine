@@ -558,6 +558,9 @@ static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         ret = CHOCO_STRING_LIMIT_EXCEEDED;
         goto cleanup;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        ret = CHOCO_STRING_BAD_OPERATION;
+        goto cleanup;
     case MEMORY_SYSTEM_RUNTIME_ERROR:
         ret = CHOCO_STRING_RUNTIME_ERROR;
         goto cleanup;
@@ -2633,6 +2636,26 @@ static void NO_COVERAGE test_string_malloc(void) {
 
         ret = string_malloc(16U, &p);
         assert(CHOCO_STRING_LIMIT_EXCEEDED == ret);
+        assert(NULL == p);
+
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // memory_system_allocate() -> MEMORY_SYSTEM_BAD_OPERATION
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        void* p = NULL;
+        test_call_control_t config = {0};
+
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_BAD_OPERATION;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = string_malloc(16U, &p);
+        assert(CHOCO_STRING_BAD_OPERATION == ret);
         assert(NULL == p);
 
         test_choco_string_config_reset();
