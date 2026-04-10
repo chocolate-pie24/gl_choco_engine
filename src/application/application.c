@@ -463,9 +463,9 @@ application_result_t application_run(void) {
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-    ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+    ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+    ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
@@ -488,7 +488,7 @@ application_result_t application_run(void) {
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_shader_use(s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
@@ -525,7 +525,7 @@ static void on_window(const window_event_t* event_) {
         goto cleanup;
     }
 
-    ret_push = ring_queue_push(s_app_state->window_event_queue, event_, sizeof(window_event_t), alignof(window_event_t));
+    ret_push = ring_queue_push(event_, sizeof(window_event_t), alignof(window_event_t), s_app_state->window_event_queue);
     if(RING_QUEUE_SUCCESS != ret_push) {
         application_result_t ret = app_rslt_convert_ring_queue(ret_push);
         WARN_MESSAGE("on_window(%s) - Failed to push window event.", app_rslt_to_str(ret));
@@ -553,7 +553,7 @@ static void on_key(const keyboard_event_t* event_) {
         goto cleanup;
     }
 
-    ret_push = ring_queue_push(s_app_state->keyboard_event_queue, event_, sizeof(keyboard_event_t), alignof(keyboard_event_t));
+    ret_push = ring_queue_push(event_, sizeof(keyboard_event_t), alignof(keyboard_event_t), s_app_state->keyboard_event_queue);
     if(RING_QUEUE_SUCCESS != ret_push) {
         application_result_t ret = app_rslt_convert_ring_queue(ret_push);
         WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", app_rslt_to_str(ret));
@@ -581,7 +581,7 @@ static void on_mouse(const mouse_event_t* event_) {
         goto cleanup;
     }
 
-    ret_push = ring_queue_push(s_app_state->mouse_event_queue, event_, sizeof(mouse_event_t), alignof(mouse_event_t));
+    ret_push = ring_queue_push(event_, sizeof(mouse_event_t), alignof(mouse_event_t), s_app_state->mouse_event_queue);
     if(RING_QUEUE_SUCCESS != ret_push) {
         application_result_t ret = app_rslt_convert_ring_queue(ret_push);
         WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", app_rslt_to_str(ret));
@@ -622,7 +622,7 @@ static void app_state_update(void) {
     // window events.
     while(!ring_queue_empty(s_app_state->window_event_queue)) {
         window_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->window_event_queue, &event, sizeof(window_event_t), alignof(window_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(window_event_t), alignof(window_event_t), s_app_state->window_event_queue, &event);
         if(RING_QUEUE_SUCCESS != ret_ring) {
             ret = app_rslt_convert_ring_queue(ret_ring);
             WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", app_rslt_to_str(ret));
@@ -645,7 +645,7 @@ static void app_state_update(void) {
     // keyboard events.
     while(!ring_queue_empty(s_app_state->keyboard_event_queue)) {
         keyboard_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->keyboard_event_queue, &event, sizeof(keyboard_event_t), alignof(keyboard_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(keyboard_event_t), alignof(keyboard_event_t), s_app_state->keyboard_event_queue, &event);
         if(RING_QUEUE_SUCCESS != ret_ring) {
             ret = app_rslt_convert_ring_queue(ret_ring);
             WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", app_rslt_to_str(ret));
@@ -666,7 +666,7 @@ static void app_state_update(void) {
     // mouse events.
     while(!ring_queue_empty(s_app_state->mouse_event_queue)) {
         mouse_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(s_app_state->mouse_event_queue, &event, sizeof(mouse_event_t), alignof(mouse_event_t));
+        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(mouse_event_t), alignof(mouse_event_t), s_app_state->mouse_event_queue, &event);
         if(RING_QUEUE_SUCCESS != ret_ring) {
             ret = app_rslt_convert_ring_queue(ret_ring);
             WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", app_rslt_to_str(ret));
@@ -707,7 +707,7 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);
+            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
@@ -723,7 +723,7 @@ static void app_state_dispatch(void) {
 
     if(s_app_state->view_dirty) {
         camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
-        ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->renderer_backend_context, s_app_state->ui_shader);  // TODO: エラー処理
+        ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
         s_app_state->view_dirty = false;
     }
 cleanup:

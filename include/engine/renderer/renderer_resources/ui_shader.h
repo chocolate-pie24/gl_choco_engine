@@ -89,8 +89,8 @@ void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子がUIシェーダープログラムに切り替わる
  *
- * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] ui_shader_ UIシェーダーリソースインスタンスへのポインタ
+ * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
@@ -102,7 +102,7 @@ void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_);
+renderer_result_t ui_shader_use(const ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_);
 
 /**
  * @brief GPUにモデル行列を送信する
@@ -111,8 +111,8 @@ renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, co
  *
  * @param[in] model_matrix_ 送信するモデル行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
+ * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - model_matrix_ == NULL
@@ -125,7 +125,7 @@ renderer_result_t ui_shader_use(renderer_backend_context_t* backend_context_, co
  * - backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_);
+renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, const ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_);
 
 /**
  * @brief GPUにビュー行列を送信する
@@ -134,8 +134,8 @@ renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, boo
  *
  * @param[in] view_matrix_ 送信するビュー行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
+ * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - view_matrix_ == NULL
@@ -148,7 +148,7 @@ renderer_result_t ui_shader_model_matrix_set(const mat4x4f_t* model_matrix_, boo
  * - backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_);
+renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_);
 
 /**
  * @brief GPUにプロジェクション行列を送信する
@@ -157,8 +157,8 @@ renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool 
  *
  * @param[in] projection_matrix_ 送信するプロジェクション行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] ui_shader_ UI描画用シェーダーリソースへのポインタ
+ * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - projection_matrix_ == NULL
@@ -171,7 +171,7 @@ renderer_result_t ui_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool 
  * - backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
+renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_);
 
 #ifdef __cplusplus
 }

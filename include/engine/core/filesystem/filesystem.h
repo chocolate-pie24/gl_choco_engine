@@ -128,18 +128,9 @@ void filesystem_destroy(filesystem_t** filesystem_);
 /**
  * @brief filesystem_が保持するファイルハンドルをオープンする
  *
- * @code{.c}
- * filesystem_t* filesystem = NULL;
- * filesystem_result_t ret = filesystem_create(&filesystem);
- * // エラー処理
- *
- * ret = filesystem_open(filesystem, "/path/to/file", FILESYSTEM_MODE_READ);
- * // エラー処理
- * @endcode
- *
- * @param filesystem_ オープン対象ファイルシステムモジュール構造体インスタンスへのポインタ
- * @param fullpath_ オープンするファイルのフルパス
- * @param mode_ ファイルオープンモード @ref filesystem_open_mode_t
+ * @param[in] fullpath_ オープンするファイルのフルパス
+ * @param[in] mode_ ファイルオープンモード @ref filesystem_open_mode_t
+ * @param[in,out] filesystem_ オープン対象ファイルシステムモジュール構造体インスタンスへのポインタ
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - filesystem_がNULL
@@ -151,7 +142,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  *
  * @todo 既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する
  */
-filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullpath_, filesystem_open_mode_t mode_);
+filesystem_result_t filesystem_open(const char* fullpath_, filesystem_open_mode_t mode_, filesystem_t* filesystem_);
 
 /**
  * @brief filesystem_が保持するファイルハンドルをクローズする
@@ -162,19 +153,7 @@ filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullp
  * fcloseに失敗する事例として、NASとの接続断等によりファイルの変更内容のフラッシュに失敗した場合がある。
  * この場合、クローズ後のファイルハンドルは再利用不可となりFILESYSTEM_FILE_CLOSE_ERRORを返す。
  *
- * @code{.c}
- * filesystem_t* filesystem = NULL;
- * filesystem_result_t ret = filesystem_create(&filesystem);
- * // エラー処理
- *
- * ret = filesystem_open(filesystem, "/path/to/file", FILESYSTEM_MODE_READ);
- * // エラー処理
- *
- * ret = filesystem_close(filesystem);
- * // エラー処理
- * @endcode
- *
- * @param filesystem_ クローズ対象構造体インスタンスへのポインタ
+ * @param[in,out] filesystem_ クローズ対象構造体インスタンスへのポインタ
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT filesystem_がNULL
  * @retval FILESYSTEM_RUNTIME_ERROR 既にクローズ済のファイルハンドルが渡された
@@ -204,34 +183,10 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  *   - FILESYSTEM_MODE_READ_PLUS_BINARY
  *   - FILESYSTEM_MODE_WRITE_PLUS_BINARY
  *   - FILESYSTEM_MODE_APPEND_PLUS_BINARY
- *
- * @code{.c}
- * filesystem_t* filesystem = NULL;
- * filesystem_result_t ret = filesystem_create(&filesystem);
- * // エラー処理
- *
- * ret = filesystem_open(filesystem, "/path/to/file", FILESYSTEM_MODE_READ);
- * // エラー処理
- *
- * size_t read_size = 64;
- * size_t result = 0;
- * char buffer[128] = { 0 };
- * ret = filesystem_byte_read(filesystem, read_size, &result, buffer);
- * if(FILESYSTEM_SUCCESS == ret) {
- *     if(result == read_size) {
- *         // 正常読み込み
- *     } else {
- *         // ファイル末尾に到達し、指定バイト数未満を読み込み
- *     }
- * } else {
- *     // エラー処理
- * }
- * @endcode
- *
- * @param filesystem_ 読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ
- * @param read_bytes_ 読み込みバイト数
- * @param result_n_ 実際に読み込みに成功したバイト数
- * @param buffer_ データ格納先バッファ(バッファサイズはread_bytes_以上であること)
+ * @param[in] read_bytes_ 読み込みバイト数
+ * @param[out] result_n_ 実際に読み込みに成功したバイト数
+ * @param[in,out] filesystem_ 読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ
+ * @param[out] buffer_ データ格納先バッファ(バッファサイズはread_bytes_以上であること)
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - filesystem_がNULL
@@ -247,7 +202,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  * - 読み込んだ結果EOFとなり指定バイト数未満を読み込み
  * - 指定したバイト数の読み込みに成功し、正常終了
  */
-filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_);
+filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_);
 
 /**
  * @brief ファイルオープンモードを文字列に変換する

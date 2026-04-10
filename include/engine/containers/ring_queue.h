@@ -127,25 +127,10 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * - ワーニングメッセージを出力する(DEBUG_BUILD,TEST_BUILD時のみ)
  * - 最古のデータを捨てて新しいデータを格納する(返り値はRING_QUEUE_SUCCESS)
  *
- * 使用例:
- * @code{.c}
- * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
- * ring_queue_t* ring_queue = NULL;
- *
- * // int型のデータを格納するリングキュー初期化処理(格納要素数は8)
- * ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
- *
- * int a = 0;
- * ret = ring_queue_push(ring_queue, &a, sizeof(int), alignof(int));
- *
- * ring_queue_destroy(&ring_queue); // ring_queue = NULLになる
- * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
- * @endcode
- *
- * @param ring_queue_ データをpushするリングキュー構造体インスタンスへのポインタ
- * @param data_ 格納データへのポインタ
- * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
- * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
+ * @param[in] data_ 格納データへのポインタ
+ * @param[in] element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
+ * @param[in] element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
+ * @param[in,out] ring_queue_ データをpushするリングキュー構造体インスタンスへのポインタ
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
  * - ring_queue_ == NULL
@@ -155,33 +140,15 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_SUCCESS          データの格納に成功し、正常終了(キューが満杯で古いデータを捨てて新しいデータを格納した場合でも成功となる)
  */
-ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_);
+ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_);
 
 /**
  * @brief ring_queue_からdata_にデータをpopする
  *
- * 使用例:
- * @code{.c}
- * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
- * ring_queue_t* ring_queue = NULL;
- *
- * // int型のデータを格納するリングキュー初期化処理(格納要素数は8)
- * ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
- *
- * int a = 10;
- * ret = ring_queue_push(ring_queue, &a, sizeof(int), alignof(int));
- *
- * int b = 0;
- * ret = ring_queue_pop(ring_queue, &b, sizeof(int), alignof(int)); // b = 10になる
- *
- * ring_queue_destroy(&ring_queue); // ring_queue = NULLになる
- * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
- * @endcode
- *
- * @param ring_queue_ データをpopするリングキュー構造体インスタンスへのポインタ
- * @param data_ popしたデータの格納先アドレス
- * @param element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
- * @param element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
+ * @param[in] element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
+ * @param[in] element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
+ * @param[in,out] ring_queue_ データをpopするリングキュー構造体インスタンスへのポインタ
+ * @param[out] data_ popしたデータの格納先アドレス
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
  * - ring_queue_ == NULL
@@ -192,38 +159,13 @@ ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_
  * @retval RING_QUEUE_EMPTY            ring_queueが空
  * @retval RING_QUEUE_SUCCESS          データの取得に成功し、正常終了
  */
-ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_);
+ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_, void* data_);
 
 /**
  * @brief リングキューが空かを判定する
  *
  * @note
  * - 引数で与えたring_queue_がNULLの場合は何もせず、true(=空)を返す
- *
- * 使用例:
- * @code{.c}
- * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
- * ring_queue_t* ring_queue = NULL;
- *
- * // int型のデータを格納するリングキュー初期化処理(格納要素数は8)
- * ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
- *
- * bool empty = false;
- * empty = ring_queue_empty(ring_queue);   // empty == true
- *
- * int a = 10;
- * ret = ring_queue_push(ring_queue, &a, sizeof(int), alignof(int));
- *
- * empty = ring_queue_empty(ring_queue);   // empty == false
- *
- * int b = 0;
- * ret = ring_queue_pop(ring_queue, &b, sizeof(int), alignof(int)); // b = 10になる
- *
- * empty = ring_queue_empty(ring_queue);   // empty == true
- *
- * ring_queue_destroy(&ring_queue); // ring_queue = NULLになる
- * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
- * @endcode
  *
  * @param ring_queue_ 判定対象リングキュー
  *

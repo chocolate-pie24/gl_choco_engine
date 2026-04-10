@@ -217,7 +217,7 @@ cleanup:
     return;
 }
 
-ring_queue_result_t ring_queue_push(ring_queue_t* ring_queue_, const void* data_, size_t element_size_, size_t element_align_) {
+ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_) {
 #ifdef TEST_BUILD
     s_test_config_ring_queue_push.call_count++;
     if(s_test_config_ring_queue_push.fail_on_call != 0) {
@@ -262,7 +262,7 @@ cleanup:
     return ret;
 }
 
-ring_queue_result_t ring_queue_pop(ring_queue_t* ring_queue_, void* data_, size_t element_size_, size_t element_align_) {
+ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_, void* data_) {
 #ifdef TEST_BUILD
     s_test_config_ring_queue_pop.call_count++;
     if(s_test_config_ring_queue_pop.fail_on_call != 0) {
@@ -816,7 +816,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         config.forced_result = (int)RING_QUEUE_RUNTIME_ERROR;
         test_ring_queue_push_config_set(&config);
 
-        ret = ring_queue_push(NULL, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), NULL);
         assert(RING_QUEUE_RUNTIME_ERROR == ret);
 
         test_ring_queue_config_reset();
@@ -826,7 +826,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         ring_queue_result_t ret = RING_QUEUE_SUCCESS;
         uint32_t value = 123U;
 
-        ret = ring_queue_push(NULL, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), NULL);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
     }
     {
@@ -838,7 +838,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, NULL, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(NULL, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -862,7 +862,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         saved_memory_pool = ring_queue->memory_pool;
         ring_queue->memory_pool = NULL;
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -882,7 +882,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint16_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint16_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -901,7 +901,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint16_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint16_t), ring_queue);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -925,7 +925,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         s_test_config_is_ring_queue_corrupted.fail_on_call = 1U;
         s_test_config_is_ring_queue_corrupted.forced_result = true;
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_DATA_CORRUPTED == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -947,7 +947,7 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(0U == ring_queue->head);
@@ -974,9 +974,9 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value1, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value1, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value2, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value2, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(0U == ring_queue->head);
@@ -1008,16 +1008,16 @@ static void NO_COVERAGE test_ring_queue_push(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value1, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value1, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value2, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value2, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
         assert(2U == ring_queue->len);
 
-        ret = ring_queue_push(ring_queue, &value3, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value3, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(1U == ring_queue->head);
@@ -1055,7 +1055,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         config.forced_result = (int)RING_QUEUE_RUNTIME_ERROR;
         test_ring_queue_pop_config_set(&config);
 
-        ret = ring_queue_pop(NULL, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), NULL, &out);
         assert(RING_QUEUE_RUNTIME_ERROR == ret);
         assert(0U == out);
 
@@ -1066,7 +1066,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         ring_queue_result_t ret = RING_QUEUE_SUCCESS;
         uint32_t out = 0U;
 
-        ret = ring_queue_pop(NULL, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), NULL, &out);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == out);
     }
@@ -1079,7 +1079,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_pop(ring_queue, NULL, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, NULL);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == ring_queue->head);
         assert(0U == ring_queue->tail);
@@ -1103,7 +1103,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         saved_memory_pool = ring_queue->memory_pool;
         ring_queue->memory_pool = NULL;
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == out);
         assert(0U == ring_queue->head);
@@ -1124,7 +1124,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint16_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint16_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == out);
         assert(0U == ring_queue->head);
@@ -1144,7 +1144,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint16_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint16_t), ring_queue, &out);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
         assert(0U == out);
         assert(0U == ring_queue->head);
@@ -1169,7 +1169,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         s_test_config_is_ring_queue_corrupted.fail_on_call = 1U;
         s_test_config_is_ring_queue_corrupted.forced_result = true;
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_DATA_CORRUPTED == ret);
         assert(0U == out);
         assert(0U == ring_queue->head);
@@ -1191,7 +1191,7 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_EMPTY == ret);
         assert(0xFFFFFFFFU == out);
         assert(0U == ring_queue->head);
@@ -1212,13 +1212,13 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(0U == ring_queue->head);
         assert(1U == ring_queue->tail);
         assert(1U == ring_queue->len);
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value == out);
         assert(0U == ring_queue->head);
@@ -1241,23 +1241,23 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value1, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value1, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value2, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value2, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(0U == ring_queue->head);
         assert(2U == ring_queue->tail);
         assert(2U == ring_queue->len);
 
-        ret = ring_queue_pop(ring_queue, &out1, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out1);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value1 == out1);
         assert(1U == ring_queue->head);
         assert(2U == ring_queue->tail);
         assert(1U == ring_queue->len);
 
-        ret = ring_queue_pop(ring_queue, &out2, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out2);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value2 == out2);
         assert(0U == ring_queue->head);
@@ -1282,16 +1282,16 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(3U == ring_queue->padding);
         assert(4U == ring_queue->stride);
 
-        ret = ring_queue_push(ring_queue, &value1, sizeof(uint8_t), 4U);
+        ret = ring_queue_push(&value1, sizeof(uint8_t), 4U, ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value2, sizeof(uint8_t), 4U);
+        ret = ring_queue_push(&value2, sizeof(uint8_t), 4U, ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
-        ret = ring_queue_pop(ring_queue, &out1, sizeof(uint8_t), 4U);
+        ret = ring_queue_pop(sizeof(uint8_t), 4U, ring_queue, &out1);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value1 == out1);
 
-        ret = ring_queue_pop(ring_queue, &out2, sizeof(uint8_t), 4U);
+        ret = ring_queue_pop(sizeof(uint8_t), 4U, ring_queue, &out2);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value2 == out2);
         assert(0U == ring_queue->head);
@@ -1314,18 +1314,18 @@ static void NO_COVERAGE test_ring_queue_pop(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value1, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value1, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value2, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value2, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
-        ret = ring_queue_push(ring_queue, &value3, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value3, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
 
         assert(1U == ring_queue->head);
         assert(1U == ring_queue->tail);
         assert(2U == ring_queue->len);
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value2 == out);
         assert(0U == ring_queue->head);
@@ -1407,7 +1407,7 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(1U == ring_queue->len);
 
@@ -1427,11 +1427,11 @@ static void NO_COVERAGE test_ring_queue_empty(void) {
         assert(RING_QUEUE_SUCCESS == ret);
         assert(NULL != ring_queue);
 
-        ret = ring_queue_push(ring_queue, &value, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_push(&value, sizeof(uint32_t), alignof(uint32_t), ring_queue);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(false == ring_queue_empty(ring_queue));
 
-        ret = ring_queue_pop(ring_queue, &out, sizeof(uint32_t), alignof(uint32_t));
+        ret = ring_queue_pop(sizeof(uint32_t), alignof(uint32_t), ring_queue, &out);
         assert(RING_QUEUE_SUCCESS == ret);
         assert(value == out);
         assert(0U == ring_queue->len);

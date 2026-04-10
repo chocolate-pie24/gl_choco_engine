@@ -237,7 +237,7 @@ cleanup:
     return;
 }
 
-filesystem_result_t filesystem_open(filesystem_t* filesystem_, const char* fullpath_, filesystem_open_mode_t mode_) {
+filesystem_result_t filesystem_open(const char* fullpath_, filesystem_open_mode_t mode_, filesystem_t* filesystem_) {
 #ifdef TEST_BUILD
     s_test_config_filesystem_open.call_count++;
     if(s_test_config_filesystem_open.fail_on_call != 0) {
@@ -312,7 +312,7 @@ cleanup:
     return ret;
 }
 
-filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
+filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_) {
 #ifdef TEST_BUILD
     s_test_config_filesystem_byte_read.call_count++;
     if(s_test_config_filesystem_byte_read.fail_on_call != 0) {
@@ -1021,7 +1021,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         config.forced_result = (int)FILESYSTEM_FILE_OPEN_ERROR;
         test_filesystem_open_config_set(&config);
 
-        ret = filesystem_open(NULL, NULL, FILESYSTEM_MODE_APPEND);
+        ret = filesystem_open(NULL, FILESYSTEM_MODE_APPEND, NULL);
         assert(FILESYSTEM_FILE_OPEN_ERROR == ret);
 
         test_filesystem_config_reset();
@@ -1030,7 +1030,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         // filesystem_ == NULL -> FILESYSTEM_INVALID_ARGUMENT
         test_filesystem_config_reset();
 
-        ret = filesystem_open(NULL, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, NULL);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
 
         test_filesystem_config_reset();
@@ -1048,7 +1048,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
 
-        ret = filesystem_open(tmp, NULL, FILESYSTEM_MODE_READ);
+        ret = filesystem_open(NULL, FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
@@ -1071,14 +1071,14 @@ static void NO_COVERAGE test_filesystem_open(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
         fp_before = tmp->file_handle;
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         assert(fp_before == tmp->file_handle);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
@@ -1107,7 +1107,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_NONE);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_NONE, tmp);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
@@ -1134,7 +1134,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         s_test_scenario_control_fopen.enable_test_scenario = true;
         s_test_scenario_control_fopen.scenario = TEST_SCENARIO_FOPEN_OPEN_ERROR;
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_FILE_OPEN_ERROR == ret);
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
@@ -1158,7 +1158,7 @@ static void NO_COVERAGE test_filesystem_open(void) {
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp->file_handle);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
@@ -1284,7 +1284,7 @@ static void NO_COVERAGE test_filesystem_close(void) {
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp->file_handle);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
@@ -1325,7 +1325,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         config.forced_result = (int)FILESYSTEM_RUNTIME_ERROR;
         test_filesystem_byte_read_config_set(&config);
 
-        ret = filesystem_byte_read(NULL, 16U, &result, buffer);
+        ret = filesystem_byte_read(16U, NULL, &result, buffer);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         assert(123U == result);
 
@@ -1338,7 +1338,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
 
         test_filesystem_config_reset();
 
-        ret = filesystem_byte_read(NULL, 64U, &result, buffer);
+        ret = filesystem_byte_read(64U, NULL, &result, buffer);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         assert(0U == result);
 
@@ -1356,7 +1356,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_byte_read(tmp, 64U, NULL, buffer);
+        ret = filesystem_byte_read(64U, tmp, NULL, buffer);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
 
         filesystem_destroy(&tmp);
@@ -1377,7 +1377,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_byte_read(tmp, 64U, &result, NULL);
+        ret = filesystem_byte_read(64U, tmp, &result, NULL);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         assert(0U == result);
 
@@ -1402,7 +1402,7 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(NULL == tmp->file_handle);
         assert(FILESYSTEM_MODE_NONE == tmp->mode);
 
-        ret = filesystem_byte_read(tmp, 64U, &result, buffer);
+        ret = filesystem_byte_read(64U, tmp, &result, buffer);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         assert(0U == result);
 
@@ -1425,12 +1425,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file_w.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file_w.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 0U, &result, buffer);
+        ret = filesystem_byte_read(0U, tmp, &result, buffer);
         assert(FILESYSTEM_INVALID_ARGUMENT == ret);
         assert(0U == result);
 
@@ -1456,12 +1456,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file_w.txt", FILESYSTEM_MODE_WRITE);
+        ret = filesystem_open("assets/test/filesystem/test_file_w.txt", FILESYSTEM_MODE_WRITE, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_WRITE == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 64U, &result, buffer);
+        ret = filesystem_byte_read(64U, tmp, &result, buffer);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         assert(0U == result);
 
@@ -1490,12 +1490,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 128U, &result, buffer);
+        ret = filesystem_byte_read(128U, tmp, &result, buffer);
         assert(FILESYSTEM_RUNTIME_ERROR == ret);
         assert(0U == result);
 
@@ -1524,12 +1524,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 128U, &result, buffer);
+        ret = filesystem_byte_read(128U, tmp, &result, buffer);
         assert(FILESYSTEM_EOF == ret);
         assert(0U == result);
 
@@ -1558,12 +1558,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 128U, &result, buffer);
+        ret = filesystem_byte_read(128U, tmp, &result, buffer);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(127U == result);
 
@@ -1592,12 +1592,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 128U, &result, buffer);
+        ret = filesystem_byte_read(128U, tmp, &result, buffer);
         assert(FILESYSTEM_UNDEFINED_ERROR == ret);
         assert(0U == result);
 
@@ -1623,12 +1623,12 @@ static void NO_COVERAGE test_filesystem_byte_read(void) {
         assert(FILESYSTEM_SUCCESS == ret);
         assert(NULL != tmp);
 
-        ret = filesystem_open(tmp, "assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ);
+        ret = filesystem_open("assets/test/filesystem/test_file.txt", FILESYSTEM_MODE_READ, tmp);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(FILESYSTEM_MODE_READ == tmp->mode);
         assert(NULL != tmp->file_handle);
 
-        ret = filesystem_byte_read(tmp, 2U, &result, buffer);
+        ret = filesystem_byte_read(2U, tmp, &result, buffer);
         assert(FILESYSTEM_SUCCESS == ret);
         assert(2U == result);
 

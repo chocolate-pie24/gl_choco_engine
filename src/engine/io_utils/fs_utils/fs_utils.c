@@ -179,7 +179,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(tmp_fs_utils->filesystem, choco_string_c_str(tmp_fullpath), open_mode_);
+    ret_fs = filesystem_open(choco_string_c_str(tmp_fullpath), open_mode_, tmp_fs_utils->filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = filesystem_result_convert(ret_fs);
         ERROR_MESSAGE("fs_utils_create(%s) - Failed to open file. File open mode = '%s'.", rslt_to_str(ret), filesystem_open_mode_c_str(open_mode_));
@@ -249,7 +249,7 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
     while(!complete) {
         char tmp_buffer[FS_READ_UNIT_SIZE + 1] = { 0 };
         size_t result = 0;
-        ret_fs = filesystem_byte_read(fs_utils_->filesystem, FS_READ_UNIT_SIZE, &result, tmp_buffer);
+        ret_fs = filesystem_byte_read(FS_READ_UNIT_SIZE, fs_utils_->filesystem, &result, tmp_buffer);
         if(FILESYSTEM_INVALID_ARGUMENT == ret_fs) {
             ret = FS_UTILS_INVALID_ARGUMENT;
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
