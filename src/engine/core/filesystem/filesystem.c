@@ -187,11 +187,11 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
         goto cleanup;
     } else if(MEMORY_SYSTEM_LIMIT_EXCEEDED == mem_result) {
         ret = FILESYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned LIMIT_EXCEEDED.", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_sytem_allocate returned LIMIT_EXCEEDED.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_BAD_OPERATION == mem_result) {
         ret = FILESYSTEM_BAD_OPERATION;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_ssytem_allocate returned BAD_OPERATION.", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_create(%s) - memory_sytem_allocate returned BAD_OPERATION.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_SUCCESS != mem_result) {
         ret = FILESYSTEM_UNDEFINED_ERROR;
@@ -826,6 +826,25 @@ static void NO_COVERAGE test_filesystem_create(void) {
 
         ret = filesystem_create(&tmp);
         assert(FILESYSTEM_LIMIT_EXCEEDED == ret);
+        assert(NULL == tmp);
+
+        test_choco_memory_config_reset();
+        test_filesystem_config_reset();
+    }
+    {
+        // memory_system_allocate() が MEMORY_SYSTEM_BAD_OPERATION を返す
+        filesystem_t* tmp = NULL;
+        test_call_control_t config = {0};
+
+        test_filesystem_config_reset();
+        test_choco_memory_config_reset();
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_BAD_OPERATION;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = filesystem_create(&tmp);
+        assert(FILESYSTEM_BAD_OPERATION == ret);
         assert(NULL == tmp);
 
         test_choco_memory_config_reset();
