@@ -96,6 +96,7 @@ typedef enum {
  * @retval FILESYSTEM_NO_MEMORY メモリ不足によりfilesystem_tのメモリ確保に失敗
  * @retval FILESYSTEM_LIMIT_EXCEEDED メモリシステムの管理変数がシステム使用可能範囲を超過
  * @retval FILESYSTEM_UNDEFINED_ERROR 未定義のエラーが発生
+ * @retval FILESYSTEM_BAD_OPERATION メモリシステム未初期化
  * @retval FILESYSTEM_SUCCESS filesystem_のメモリ確保と初期化に成功し、正常終了
  */
 filesystem_result_t filesystem_create(filesystem_t** filesystem_);

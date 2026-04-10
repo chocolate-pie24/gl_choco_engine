@@ -131,7 +131,6 @@ void memory_system_destroy(void);
  * @endcode
  *
  * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 以下のいずれか
- * - メモリシステム未初期化
  * - out_ptr_ == NULL
  * - *out_ptr_ != NULL
  * - mem_tag_ >= MEMORY_TAG_MAX
@@ -139,6 +138,7 @@ void memory_system_destroy(void);
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
  * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
  * @retval MEMORY_SYSTEM_NO_MEMORY        メモリ割り当て失敗
+ * @retval MEMORY_SYSTEM_BAD_OPERATION メモリシステム未初期化
  * @retval MEMORY_SYSTEM_SUCCESS          size_ == 0または割り当てに成功し正常終了
  *
  * @see memory_tag_t

@@ -38,7 +38,9 @@ extern "C" {
  * - backend_context_ == NULL
  * - vertex_array_ == NULL
  * - *vertex_array_ != NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - backend_context_が未初期化
+ * - メモリシステム未初期化
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了

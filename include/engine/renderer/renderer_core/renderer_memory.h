@@ -31,12 +31,12 @@ extern "C" {
  * @param size_ メモリ確保サイズ(byte)
  * @param out_ptr_ 確保したメモリの格納先
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - メモリシステム未初期化
  * - out_ptr_ == NULL
  * - *out_ptr_ != NULL
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
  * @retval RENDERER_UNDEFINED_ERROR 想定していない実行結果コードを処理過程で受け取った
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_SUCCESS 以下のいずれか
  * - size_ == 0(*out_ptr_はNULLのまま)
  * - 割り当てに成功し正常終了

@@ -340,6 +340,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
     IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
     IF_ARG_FALSE_GOTO_CLEANUP((const void*)dst_ != (const void*)string_, ret, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_concat", "dst_, string_")
+
     if(!is_string_valid(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         ERROR_MESSAGE("choco_string_concat(%s) - Source string (string_) is corrupted.", rslt_to_str(ret));
@@ -406,6 +407,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "dst_")
     IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "string_")
+
     if(!is_string_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
         ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Destination string (dst_) is corrupted.", rslt_to_str(ret));
@@ -529,6 +531,7 @@ static const char* rslt_to_str(choco_string_result_t rslt_) {
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
  * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
  * @retval CHOCO_STRING_RUNTIME_ERROR memory_system_allocateがMEMORY_SYSTEM_RUNTIME_ERRORを返した
+ * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS メモリ確保に成功し、正常終了
  */
 static choco_string_result_t string_malloc(size_t size_, void** out_ptr_) {

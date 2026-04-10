@@ -447,7 +447,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
 
     ret = RENDERER_SUCCESS;
 
-    cleanup:
+cleanup:
     if(RENDERER_SUCCESS != ret && 0 != tmp_program_id) {
         mock_glDeleteProgram(tmp_program_id);
     }
@@ -1058,7 +1058,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_INVALID_ARGUMENT
+        // メモリシステム未初期化 -> render_mem_allocate() 経由で RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_shader_t* shader_handle = NULL;
 
@@ -1067,7 +1067,7 @@ static void NO_COVERAGE test_gl33_shader_create(void) {
         memory_system_destroy();
 
         ret = gl33_shader_create(&shader_handle);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == shader_handle);
 
         test_concrete_shader_config_reset();

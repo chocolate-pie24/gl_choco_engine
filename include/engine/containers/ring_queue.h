@@ -89,6 +89,7 @@ typedef enum {
  * @retval RING_QUEUE_OVERFLOW 処理過程でオーバーフローが発生
  * @retval RING_QUEUE_NO_MEMORY メモリ不足によりメモリ確保失敗
  * @retval RING_QUEUE_LIMIT_EXCEEDED メモリ管理システムのリソースがシステム使用可能範囲上限を超過
+ * @retval RING_QUEUE_BAD_OPERATION メモリシステム未初期化
  * @retval RING_QUEUE_SUCCESS 初期化に成功し、正常終了
  */
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_);

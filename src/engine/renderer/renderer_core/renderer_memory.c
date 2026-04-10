@@ -130,7 +130,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         test_render_mem_allocate_config_set(&config);
 
         ret = render_mem_allocate(128U, &ptr);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == ptr);
 
         ret = render_mem_allocate(128U, &ptr);
@@ -141,7 +141,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         test_choco_memory_config_reset();
     }
     {
-        // メモリシステム未初期化 -> RENDERER_INVALID_ARGUMENT
+        // メモリシステム未初期化 -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         void* ptr = NULL;
 
@@ -150,7 +150,7 @@ static void NO_COVERAGE test_render_mem_allocate(void) {
         memory_system_destroy();
 
         ret = render_mem_allocate(128U, &ptr);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == ptr);
 
         test_renderer_memory_config_reset();

@@ -114,6 +114,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     IF_ARG_FALSE_GOTO_CLEANUP(element_align_ > 0, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(element_align_), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(element_align_ <= alignof(max_align_t), ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "element_align_")
+
     if(SIZE_MAX / element_size_ < max_element_count_) {
         ret = RING_QUEUE_OVERFLOW;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided 'element_size_' and 'max_element_count_' are too large.", rslt_to_str(ret));
@@ -177,6 +178,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     tmp_queue->tail = 0;
 
     *ring_queue_ = tmp_queue;
+
     ret = RING_QUEUE_SUCCESS;
 
 cleanup:

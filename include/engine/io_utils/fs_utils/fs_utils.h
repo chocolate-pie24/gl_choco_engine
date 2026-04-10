@@ -74,7 +74,6 @@ typedef enum {
  * - fs_utils_ == NULL
  * - *fs_utils_ != NULL
  * - open_mode_ == FILESYSTEM_MODE_NONE
- * - メモリシステム未初期化
  * @retval FS_UTILS_LIMIT_EXCEEDED メモリシステムのシステム使用可能範囲上限を超過
  * @retval FS_UTILS_NO_MEMORY メモリ割り当て失敗
  * @retval FS_UTILS_OVERFLOW 文字列が長すぎてオーバーフロー
@@ -82,6 +81,7 @@ typedef enum {
  * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
  * @retval FS_UTILS_FILE_OPEN_ERROR ファイルオープンエラー
  * @retval FS_UTILS_RUNTIME_ERROR 既にオープン済みのファイルハンドル(初期化済みのハンドルは引数チェックで弾かれるため起こり得ない。発生したらバグ)
+ * @retval FS_UTILS_BAD_OPERATION メモリシステム未初期化
  * @retval FS_UTILS_SUCCESS メモリ確保と初期化に成功し、正常終了
  */
 fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, filesystem_open_mode_t open_mode_, fs_utils_t** fs_utils_);
@@ -134,7 +134,9 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
  * - fs_utils_ == NULL
  * - out_string_ == NULL
  * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
- * @retval FS_UTILS_BAD_OPERATION 読み込み用ではないファイルオープンモードが渡された
+ * @retval FS_UTILS_BAD_OPERATION 以下のいずれか
+ * - 読み込み用ではないファイルオープンモードが渡された
+ * - メモリシステム未初期化
  * @retval FS_UTILS_RUNTIME_ERROR ファイル読み込み中にエラーが発生
  * @retval FS_UTILS_NO_MEMORY メモリ確保に失敗
  * @retval FS_UTILS_OVERFLOW 処理過程でオーバーフローが発生
@@ -176,6 +178,7 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
  * - filenameの文字列をコピーする際にchoco_string_concatがCHOCO_STRING_LIMIT_EXCEEDEDを返した
  * - extensionの文字列をコピーする際にchoco_string_concatがCHOCO_STRING_LIMIT_EXCEEDEDを返した
  * @retval FS_UTILS_UNDEFINED_ERROR 処理過程において想定外のエラーコードを受け取った
+ * @retval FS_UTILS_BAD_OPERATION メモリシステム未初期化
  * @retval FS_UTILS_SUCCESS フルパス文字列の生成に成功し,正常終了
  */
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_);

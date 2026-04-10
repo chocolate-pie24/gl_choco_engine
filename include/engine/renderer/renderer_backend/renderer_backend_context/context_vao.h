@@ -48,6 +48,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - *vertex_array_ != NULL
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_);
