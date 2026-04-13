@@ -78,4 +78,44 @@ z \\
 \right]
 $$
 
-## 変更対象モジュール
+## 数学系ライブラリの追加
+
+今回から行列演算が追加されますので、この機会に数学系ライブラリを整えます。
+このライブラリはGL Choco Engine以外の私のプロジェクトにも使えるようにしたいので、engine/baseに置くことにします。
+
+| パス                                 | 役割                    |
+| ----------------------------------- | ----------------------- |
+| engine/base/choco_math/math_types.h | 数学系データ型定義         |
+| engine/base/choco_math/choco_math.h | 行列、ベクトル計算モジュール |
+
+それぞれに持たせる機能 / 型は当面、以下のものがあればGL Choco Engineの数学機能としては十分です。
+
+| ヘッダ        | 機能 / 型             | 説明                                                       |
+| ------------ | -------------------- | --------------------------------------------------------- |
+| math_types.h | CHOCO_PI             | 円周率定義                                                  |
+|              | CHOCO_DEG_TO_RAD     | degree -> radian変換マクロ                                  |
+|              | CHOCO_RAD_TO_DEG     | radian -> degree変換マクロ                                  |
+|              | vec3f_t              | float型3次元ベクトル構造体                                    |
+|              | vec4f_t              | float型4次元ベクトル構造体                                    |
+|              | mat4x4f_t            | float型4x4行列構造体                                        |
+| choco_math.h | choco_tanf           | <math.h>のtanfラッパーAPI                                   |
+|              | is_equal_float       | float値のイコール判定API                                     |
+|              | vec3f_initialize     | 3次元ベクトル構造体インスタンスを引数x_, y_, z_で初期化するAPI     |
+|              | vec3f_add            | 3次元ベクトル構造体インスタンスの足し算API                       |
+|              | vec3f_length_squared | 3次元ベクトルの長さの2乗値を返すAPI                             |
+|              | vec3f_length         | 3次元ベクトルの長さを返すAPI                                   |
+|              | vec3f_normalize      | 3次元ベクトルを正規化するAPI                                   |
+|              | vec4f_initialize     | 4次元ベクトル構造体インスタンスを引数x_, y_, z_, w_で初期化するAPI |
+|              | vec4f_add            | 4次元ベクトル構造体インスタンスの足し算API                       |
+|              | mat4f_zero           | 4x4行列の要素を全て0.0fで初期化するAPI                         |
+|              | mat4f_identity       | 4x4行列を単位行列で初期化するAPI                               |
+|              | mat4f_mul            | 4x4行列の掛け算を行うAPI                                      |
+|              | mat4f_transpose      | 4x4行列を転置するAPI                                         |
+|              | mat4f_copy           | 4x4行列のコピーを行うAPI                                      |
+|              | mat4f_inverse        | 4x4行列の逆行列を計算するAPI                                   |
+|              | mat4f_vec4f_mul      | 4x4行列と4次元ベクトルの掛け算を行うAPI                          |
+|              | mat4f_translation    | 平行移動行列を取得するAPI                                      |
+|              | mat4f_rot_x          | x軸周りの回転行列を取得するAPI                                  |
+|              | mat4f_rot_y          | y軸周りの回転行列を取得するAPI                                  |
+|              | mat4f_rot_z          | z軸周りの回転行列を取得するAPI                                  |
+|              | mat4f_rot_xyz        | x, y, z周りの回転行列を取得するAPI(順番はx, y, z)               |
