@@ -12,18 +12,18 @@ free: true
 このステップでは、カメラの導入によって描画空間と視点を扱えるようにするための準備を行います。
 そのために、GPU側、CPU側両方のプログラムに、MVP行列を使用した頂点座標の座標変換処理を追加します。
 
-MVP行列とは、Model, View, Projection行列の総称であり、コンピュータグラフィックスにおいて描画視点を変更するための基本的な行列です。
+MVP行列とは、Model, View, Projection行列の総称であり、3D空間上の座標を画面へ描画するための基本的な行列です。
 それぞれ以下の役割があります。
 
 | 行列           | 役割                                                                                      | 行列の中身が変化するタイミング                                                |
 | ------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Model行列      | モデル座標系で表現された座標をワールド座標系に変換する(=モデルを世界のどこにどう置くかを決める)          | モデル姿勢が変化                                                            |
+| Model行列      | モデル座標系で表現された座標をワールド座標系に変換する(=モデルを世界のどこにどう置くかを決める)          | モデルの位置・回転・拡大縮小が変化  |
 | View行列       | ワールド座標系で表現された座標をカメラ座標系に変換する(=世界をカメラから見た座標系に変換する)           | カメラ姿勢が変化                                                            |
-| Projection行列 | カメラ座標系で表現された座標をクリップ座標系に変換する(=カメラから見た3D空間を、画面に映せる形に変換する) | 視野角、アスペクト比、near/far、投影方式、画面サイズに応じたアスペクト比が変化したとき |
+| Projection行列 | カメラ座標系で表現された座標をクリップ座標系に変換する(=カメラから見た3D空間を、画面に映せる形に変換する) | 視野角、near/far、投影方式、画面サイズに応じたアスペクト比が変化したとき |
 
 なお、各座標系の意味については、[OpenGL座標系説明](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix_opengl_coordinates)を参考にしてください。
 
-これらの行列は、GPU側、CPU側それぞれのプログラムで管理し、行列の中身が変化するタイミングでCPU側のプログラムからGPU側のプログラムへ転送します。
+これらの行列は、CPU側で行列を管理し、必要なタイミングでGPUへ転送します。
 GPU側は、CPU側から転送された3D頂点座標全てに対し、これらの行列を掛けることによって全頂点座標を変換します。なお、座標変換処理はバーテックスシェーダーで行います。
 
 ## 前提条件(GL Choco Engineでの行列 / ベクトル数値格納方法)
@@ -119,3 +119,153 @@ $$
 |              | mat4f_rot_y          | y軸周りの回転行列を取得するAPI                                  |
 |              | mat4f_rot_z          | z軸周りの回転行列を取得するAPI                                  |
 |              | mat4f_rot_xyz        | x, y, z周りの回転行列を取得するAPI(順番はx, y, z)               |
+
+## シェーダーソースの変更
+
+前回までは、すでに[-1, +1]の範囲に正規化された正規化デバイス座標系で三角形座標を表現していました。
+このため座標値のみをCPU側プログラムからGPU側プログラムに転送し、何も変換を行わないままプログラムを終了していました。
+
+今回からは、CPU側プログラムからはモデル座標系(今回は三角形一個なのでワールド座標系と同一)で表現された3次元座標をGPUに転送し、
+GPU側プログラムで座標変換を行います。バーテックスシェーダーのプログラムを以下のように変更します。
+
+```c
+#version 330 core
+
+layout(location = 0) in vec3 in_position;
+
+uniform mat4 g_model_matrix;
+uniform mat4 g_view_matrix;
+uniform mat4 g_projection_matrix;
+
+void main() {
+	gl_Position = g_projection_matrix * g_view_matrix * g_model_matrix * vec4(in_position, 1.0);
+}
+```
+
+ソース内の、***g_model_matrix***, ***g_view_matrix***, ***g_projection_matrix***がMVP行列です。
+これらはCPU側プログラムからデータを転送するようにします。
+
+CPU側プログラムから転送された頂点座標に対して、モデル行列、ビュー行列、プロジェクション行列の順に掛けています。
+こうすることで、モデル座標系 -> ワールド座標系 -> カメラ座標系 -> クリップ座標系に変換されます。
+
+なお、描画するためには、座標値は[-1, +1]に正規化された正規化デバイス座標系で表現する必要があります。
+クリップ座標から正規化デバイス座標系への変換はOpenGLが行います。
+
+## Rendererレイヤーへの機能追加
+
+これでGPU側が座標変換を行えるようになったので、後はCPU側にも行列を用意し、GPU側に転送できるようにします。
+頂点情報はバーテックスバッファへ情報を送りましたが、今回はuniform変数への転送です。
+
+OpenGLでuniform変数へデータを転送するためには、
+
+1. glGetUniformLocationでuniform変数の位置を取得
+2. glUniformMatrix4fvでuniform変数に値をセット
+
+という流れを踏みます。これを行えるようにrenderer_backendに機能を追加していきます。
+renderer_backendは、Strategyパターンを取っており、以下のようなデータ構造になっています。
+
+```mermaid
+classDiagram
+    BackendContext : + context_method()
+
+    ShaderInterface : + strategy_method()
+    ShaderConcrete1 : + strategy_method()
+    ShaderConcrete2 : + strategy_method()
+
+    VAOInterface : + strategy_method()
+    VAOConcrete1 : + strategy_method()
+    VAOConcrete2 : + strategy_method()
+
+    VBOInterface : + strategy_method()
+    VBOConcrete1 : + strategy_method()
+    VBOConcrete2 : + strategy_method()
+
+    BackendContext --> ShaderInterface
+    ShaderInterface <|-- ShaderConcrete1
+    ShaderInterface <|-- ShaderConcrete2
+
+    BackendContext --> VAOInterface
+    VAOInterface <|-- VAOConcrete1
+    VAOInterface <|-- VAOConcrete2
+
+    BackendContext --> VBOInterface
+    VBOInterface <|-- VBOConcrete1
+    VBOInterface <|-- VBOConcrete2
+```
+
+uniform変数へのデータ転送はシェーダーの一機能として提供することにしますので、以下の手順で機能を追加します。
+
+1. ShaderInterfaceが提供するvtableに関数を追加
+2. ShaderConcreteへの関数追加
+3. BackendContextから呼び出し可能にする
+
+### ShaderInterfaceの変更
+
+renderer_backend/renderer_backend_interface/interface_shader.hにuniform変数の転送関連機能を追加します。
+
+```c
+typedef struct renderer_shader_vtable {
+    pfn_renderer_shader_create renderer_shader_create;                              /**< 関数ポインタ @ref pfn_renderer_shader_create 参照 */
+    pfn_renderer_shader_destroy renderer_shader_destroy;                            /**< 関数ポインタ @ref pfn_renderer_shader_destroy 参照 */
+    pfn_renderer_shader_compile renderer_shader_compile;                            /**< 関数ポインタ @ref pfn_renderer_shader_compile 参照 */
+    pfn_renderer_shader_link renderer_shader_link;                                  /**< 関数ポインタ @ref pfn_renderer_shader_link 参照 */
+    pfn_renderer_shader_use renderer_shader_use;                                    /**< 関数ポインタ @ref pfn_renderer_shader_use 参照 */
+    pfn_renderer_shader_uniform_location_get renderer_shader_uniform_location_get;  /**< 関数ポインタ @ref pfn_renderer_shader_uniform_location_get 参照 */
+    pfn_renderer_shader_mat4f_uniform_set renderer_shader_mat4f_uniform_set;        /**< 関数ポインタ @ref pfn_renderer_shader_mat4f_uniform_set 参照 */
+} renderer_shader_vtable_t;
+```
+
+### ShaderConcreteへの関数追加
+
+renderer_backend/renderer_backend_concretes/gl33/concrete_shader.cに以下のプライベート関数を追加しました。
+これらは、***glGetUniformLocation***, ***glUniformMatrix4fv***のラッパー関数です。
+
+- gl33_uniform_location_get
+- gl33_mat4f_uniform_set
+
+これらを先ほど追加したvtableの関数にセットすれば、InterfaceとConcreteは完成です。
+
+### BackendContextへのAPI追加
+
+BackendContextへの変更は、***renderer_backend_context***が既に保持しているshader_vtableの中身が変更になるだけです。
+shader_vtableが保有する***renderer_shader_uniform_location_get***と***renderer_shader_mat4f_uniform_set***を呼び出すAPIを追加するだけで良いです。
+
+今回追加したAPIは以下の2つです。
+
+- renderer_backend_shader_uniform_location_get
+- renderer_backend_shader_mat4f_uniform_set
+
+ここで、renderer_backend_shader_mat4f_uniform_setについては、以下のインターフェイスを持っています。
+
+```c
+/**
+ * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
+ *
+ * @note
+ * - OpenGL 3.3実装
+ * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
+ * @param[in] data_ 送信データへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - shader_handle_ == NULL
+ * - data_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク状態
+ * - backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
+```
+
+GL Choco Engineでは、行列の要素を行優先で格納しているため、GPUへのデータ転送時に行列を転置する必要があります。これを実行可能にするために、should_transpose_を入れています。
+上位レイヤーでAPIを呼び出す際には、should_transpose_ = trueにすることが必要です。
+
+以上で、シェーダー側、CPU側ともにMVP行列を使用する準備が整いました。
+次のステップでは、カメラモジュールを作成し、カメラの位置、姿勢に応じてV行列とP行列を生成する仕組みを作っていきます。
