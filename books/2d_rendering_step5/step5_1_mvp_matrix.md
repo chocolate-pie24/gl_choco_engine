@@ -267,5 +267,58 @@ renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_con
 GL Choco Engineでは、行列の要素を行優先で格納しているため、GPUへのデータ転送時に行列を転置する必要があります。これを実行可能にするために、should_transpose_を入れています。
 上位レイヤーでAPIを呼び出す際には、should_transpose_ = trueにすることが必要です。
 
-以上で、シェーダー側、CPU側ともにMVP行列を使用する準備が整いました。
+### UIシェーダーモジュールの作成
+
+以上で、シェーダー側、CPU側ともにMVP行列を使用する準備が整いました。これで、現状のエンジンでは、
+
+- uniform変数の取り扱い
+- VAOの取り扱い
+- VBOの取り扱い
+- シェーダーのコンパイル、リンク
+
+ができるようになりました。現状ではapplication.c内でこれらを扱っていますが、ここでこれらの機能をまとめたUIシェーダーモジュールを作っていきます。
+作成するモジュールは、
+
+- engine/renderer/renderer_resources/ui_shader
+
+です。今後、UI以外にも、
+
+- マテリアル情報を扱える3Dモデル描画用シェーダー
+- マテリアル情報のない3Dモデル描画用シェーダー
+
+といった様々なシェーダーモジュールを作っていく予定です。
+
+モジュールが管理する内部データは、以下のデータを管理するようにします。
+
+src/engine/renderer/renderer_resources/ui_shader.c
+
+```c
+struct ui_shader {
+    int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
+    int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
+    int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
+    renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
+};
+```
+
+また、モジュールが保有するAPIは以下の通りです。
+
+| API名称                          | 役割                                                 |
+| ------------------------------- | ---------------------------------------------------- |
+| ui_shader_create                | シェーダーソースのコンパイル、リンク、uniform変数の位置の取得 |
+| ui_shader_destroy               | リソースの破棄                                         |
+| ui_shader_use                   | シェーダープログラムの切り替え                            |
+| ui_shader_model_matrix_set      | モデル行列の転送                                        |
+| ui_shader_view_matrix_set       | ビュー行列の転送                                        |
+| ui_shader_projection_matrix_set | プロジェクション行列の転送                                |
+
+このようにすることで、アプリケーションレイヤーでは、
+
+- シェーダーソースの詳細
+- uniform変数の管理
+
+といったことをする必要がなくなり、より上位の責務に集中できるようになります。
+VAOやVBOの管理については、バッファの使用状況の管理モジュールを作った段階で、このモジュールに移していく予定です。
+
+以上でMVP行列の導入のステップは完了です。
 次のステップでは、カメラモジュールを作成し、カメラの位置、姿勢に応じてV行列とP行列を生成する仕組みを作っていきます。
