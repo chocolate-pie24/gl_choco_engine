@@ -1,13 +1,11 @@
 ---
-title: "step5_2: カメラモジュールの作成"
+title: "step5_3: カメラモジュールの作成"
 free: true
 ---
 
 ※本記事は [全体イントロダクション](https://zenn.dev/chocolate_pie24/articles/c-glfw-game-engine-introduction)のBook5に対応しています。
 
 実装コードについては、リポジトリのタグv0.1.0-step5を参照してください。
-
-TODO: カメラシステム全体像を先に入れた方が良い
 
 ## カメラモジュールの作成
 
