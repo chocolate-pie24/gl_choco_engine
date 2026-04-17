@@ -9,7 +9,7 @@ free: true
 
 ## Camera System
 
-前回までで、MVP行列が使用可能になりました。今回からはエンジンにカメラと、カメラを制御する機能を追加し、
+[前回](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_1_mvp_matrix)までで、MVP行列が使用可能になりました。今回からはエンジンにカメラと、カメラを制御する機能を追加し、
 カメラの位置や姿勢に応じてView行列、Projection行列を生成し、画面の三角形を様々な位置、角度から見えるようにしていきます。
 
 グラフィックスアプリケーションでは、描画対象によって様々なカメラを使い分けます。
