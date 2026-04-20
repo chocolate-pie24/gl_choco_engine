@@ -53,6 +53,11 @@ Book4の実行結果スクリーンショット
 - step4_6: [renderer_backend_interfaceの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_6_renderer_backend_interface)
 - step4_7: [renderer_backend_contextの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/step4_7_renderer_backend_context)
 
+付録
+
+- [OpenGLバッファ説明](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix_buffer_explanation)
+- [OpenGL座標系説明](https://zenn.dev/chocolate_pie24/books/2d_rendering_step4/viewer/appendix_opengl_coordinates)
+
 ## レイヤー構成図
 
 今回はこれまでに比べ、広範囲に渡る変更、機能追加を行いました。Book4の内容を実装した結果、エンジン構成は以下のようになりました。

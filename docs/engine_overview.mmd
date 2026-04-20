@@ -5,7 +5,7 @@ graph TD
     subgraph SYSTEMS[systems]
       PLATFORM[platform]
       RENDERER[renderer]
-      CAMERA[camera]
+      CAMERA_SYSTEM[camera_system]
     end
 
     subgraph IO_UTILS[io_utils]
@@ -26,7 +26,7 @@ graph TD
   APPLICATION --> PLATFORM
   APPLICATION --> CORE
   APPLICATION --> CONTAINERS
-  APPLICATION --> CAMERA
+  APPLICATION --> CAMERA_SYSTEM
 
   PLATFORM --> CONTAINERS
   PLATFORM --> CORE
@@ -34,8 +34,8 @@ graph TD
   RENDERER --> IO_UTILS
   RENDERER --> CONTAINERS
 
-  CAMERA --> CORE
-  CAMERA --> CONTAINERS
+  CAMERA_SYSTEM --> CORE
+  CAMERA_SYSTEM --> CONTAINERS
 
   IO_UTILS --> CONTAINERS
   IO_UTILS --> CORE

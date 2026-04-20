@@ -1,0 +1,13 @@
+title: "C言語とOpenGLで作るゲームエンジン開発(2Dレンダリング編 - Step5)"
+summary: "本Bookでは、MVP行列、カメラモジュール、カメラ制御モジュールを導入し視点変更を可能にします。"
+topics: ["c", "opengl", "glfw", "gameengine", "graphics"]
+published: true
+price: 0
+chapters:
+  - step5_0_introduction
+  - step5_1_mvp_matrix
+  - step5_2_camera_system_architecture
+  - step5_3_camera_module
+  - step5_4_camera_control_module
+  - step5_5_camera_system
+  - step5_6_control_command_interpreter
