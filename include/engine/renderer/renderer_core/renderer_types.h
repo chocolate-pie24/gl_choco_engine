@@ -71,6 +71,16 @@ typedef enum {
     SHADER_TYPE_FRAGMENT,   /**< フラグメントシェーダー */
 } shader_type_t;
 
+/**
+ * @brief テクスチャ種別リスト定義
+ *
+ */
+typedef enum {
+    TEXTURE_TYPE_DIFFUSE,   /**< テクスチャ種別: ディヒューズテクスチャ */
+    TEXTURE_TYPE_SPECULAR,  /**< テクスチャ種別: スペキュラーテクスチャ */
+    TEXTURE_TYPE_NORMAL,    /**< テクスチャ種別: ノーマルテクスチャ */
+} texture_type_t;
+
 #ifdef __cplusplus
 }
 #endif

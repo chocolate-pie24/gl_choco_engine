@@ -23,6 +23,8 @@ typedef struct renderer_backend_vao renderer_backend_vao_t;         /**< VAOモ�
 
 typedef struct renderer_backend_vbo renderer_backend_vbo_t;         /**< VBOモジュール内部状態管理構造体前方宣言 */
 
+typedef struct renderer_backend_texture renderer_backend_texture_t; /**< テクスチャハンドル構造体の前方宣言 */
+
 #ifdef __cplusplus
 }
 #endif
