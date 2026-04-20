@@ -149,9 +149,15 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a847c0fad9072a189801d1fefb081e0e0"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#a847c0fad9072a189801d1fefb081e0e0">pfn_renderer_shader_link</a>) (<a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_)</td></tr>
 <tr class="memdesc:a847c0fad9072a189801d1fefb081e0e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">コンパイル済みのシェーダーオブジェクトをリンクし、シェーダープログラムハンドルを初期化する  <br /></td></tr>
 <tr class="separator:a847c0fad9072a189801d1fefb081e0e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea61a2845241bb2c11f1f51dff36fb3d"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#aea61a2845241bb2c11f1f51dff36fb3d">pfn_renderer_shader_use</a>) (<a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, uint32_t *out_program_id_)</td></tr>
-<tr class="memdesc:aea61a2845241bb2c11f1f51dff36fb3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
-<tr class="separator:aea61a2845241bb2c11f1f51dff36fb3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0512efaa3e42df2dfcf2ec70a80120e1"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#a0512efaa3e42df2dfcf2ec70a80120e1">pfn_renderer_shader_use</a>) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, uint32_t *out_program_id_)</td></tr>
+<tr class="memdesc:a0512efaa3e42df2dfcf2ec70a80120e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
+<tr class="separator:a0512efaa3e42df2dfcf2ec70a80120e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d7793683140b7e2072fbca584141cf"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#a52d7793683140b7e2072fbca584141cf">pfn_renderer_shader_uniform_location_get</a>) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, const char *name_, int32_t *out_location_)</td></tr>
+<tr class="memdesc:a52d7793683140b7e2072fbca584141cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムのユニフォーム変数のLocationを取得する  <br /></td></tr>
+<tr class="separator:a52d7793683140b7e2072fbca584141cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae500267e3ee240a9975f1c7be9cf1399"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#ae500267e3ee240a9975f1c7be9cf1399">pfn_renderer_shader_mat4f_uniform_set</a>) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, bool should_transpose_, const float *data_, uint32_t *out_program_id_)</td></tr>
+<tr class="memdesc:ae500267e3ee240a9975f1c7be9cf1399"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにmat4f型のユニフォーム変数を送信する  <br /></td></tr>
+<tr class="separator:ae500267e3ee240a9975f1c7be9cf1399"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd6bb305a11c3c8fd7331150c6784be6"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a></td></tr>
 <tr class="memdesc:afd6bb305a11c3c8fd7331150c6784be6"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダー機能仮想関数テーブル  <br /></td></tr>
 <tr class="separator:afd6bb305a11c3c8fd7331150c6784be6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,7 +172,7 @@ Typedefs</h2></td></tr>
 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2026-02-23</dd></dl>
-<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
 <a id="a5619268012ea66cebf7f3c61e8b08c1a" name="a5619268012ea66cebf7f3c61e8b08c1a"></a>
@@ -246,13 +252,13 @@ Typedefs</h2></td></tr>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>shader_handle_ == NULL</li>
-<li>*shader_handle_ != NULL</li>
-<li>メモリシステム未初期化(render_mem_allocateからのエラー伝播) </li>
+<li>*shader_handle_ != NULL </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限超過 </td></tr>
     <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ割り当て失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_UNDEFINED_ERROR</td><td>想定していない実行結果コードを処理過程で受け取った(render_mem_allocateからのエラー伝播) </td></tr>
+    <tr><td class="paramname">RENDERER_UNDEFINED_ERROR</td><td>想定していない実行結果コードを処理過程で受け取った(renderer_mem_allocateからのエラー伝播) </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>メモリ確保および初期化に成功し、正常終了 </td></tr>
     <tr><td class="paramname">上記以外</td><td>グラフィックスAPI実装依存 </td></tr>
   </table>
@@ -336,14 +342,91 @@ Typedefs</h2></td></tr>
 
 </div>
 </div>
-<a id="aea61a2845241bb2c11f1f51dff36fb3d" name="aea61a2845241bb2c11f1f51dff36fb3d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea61a2845241bb2c11f1f51dff36fb3d">&#9670;&#160;</a></span>pfn_renderer_shader_use</h2>
+<a id="ae500267e3ee240a9975f1c7be9cf1399" name="ae500267e3ee240a9975f1c7be9cf1399"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae500267e3ee240a9975f1c7be9cf1399">&#9670;&#160;</a></span>pfn_renderer_shader_mat4f_uniform_set</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_shader_use) (<a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, uint32_t *out_program_id_)</td>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_shader_mat4f_uniform_set) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, bool should_transpose_, const float *data_, uint32_t *out_program_id_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>シェーダープログラムにmat4f型のユニフォーム変数を送信する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">shader_handle_</td><td>シェーダープログラムハンドルインスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">location_</td><td>ユニフォーム変数のLocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する / false: 送信時に行列を転置しない </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data_</td><td>送信データへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_program_id_</td><td>現在使用中のOpenGLプログラム識別子</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>shader_handle_ == NULL</li>
+<li>data_ == NULL</li>
+<li>out_program_id_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>シェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>シェーダープログラムが未リンク状態 </td></tr>
+    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a52d7793683140b7e2072fbca584141cf" name="a52d7793683140b7e2072fbca584141cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52d7793683140b7e2072fbca584141cf">&#9670;&#160;</a></span>pfn_renderer_shader_uniform_location_get</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_shader_uniform_location_get) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, const char *name_, int32_t *out_location_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>シェーダープログラムのユニフォーム変数のLocationを取得する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">shader_handle_</td><td>シェーダープログラムハンドルインスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name_</td><td>ユニフォーム変数名称 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_location_</td><td>Location格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>shader_handle_ == NULL</li>
+<li>name_ == NULL</li>
+<li>out_location_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_RUNTIME_ERROR</td><td>ユニフォーム変数の取得に失敗(変数名称誤り?) </td></tr>
+    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0512efaa3e42df2dfcf2ec70a80120e1" name="a0512efaa3e42df2dfcf2ec70a80120e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0512efaa3e42df2dfcf2ec70a80120e1">&#9670;&#160;</a></span>pfn_renderer_shader_use</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_shader_use) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, uint32_t *out_program_id_)</td>
         </tr>
       </table>
 </div><div class="memdoc">

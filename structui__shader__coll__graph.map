@@ -1,0 +1,4 @@
+<map id="ui_shader" name="ui_shader">
+<area shape="rect" id="node1" title="UIシェーダーリソース構造体" alt="" coords="57,93,143,119"/>
+<area shape="rect" id="node2" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="include/engine/camera_system/camera_core/camera_err_utils.h" name="include/engine/camera_system/camera_core/camera_err_utils.h">
+<area shape="rect" id="node1" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="308,5,527,60"/>
+<area shape="rect" id="node2" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,108,224,148"/>
+<area shape="rect" id="node3" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="611,108,791,148"/>
+<area shape="rect" id="node6" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="248,108,405,148"/>
+<area shape="rect" id="node7" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="429,108,587,148"/>
+<area shape="rect" id="node4" title=" " alt="" coords="471,196,545,221"/>
+<area shape="rect" id="node5" title=" " alt="" coords="660,196,743,221"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="include/application/command_interpreter/flight_camera.h" name="include/application/command_interpreter/flight_camera.h">
+<area shape="rect" id="node1" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIを提供する" alt="" coords="213,5,380,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="62,218,145,243"/>
+<area shape="rect" id="node3" title=" " alt="" coords="27,123,102,148"/>
+<area shape="rect" id="node4" href="$keyboard__event_8h.html" title="全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベント構造体定義" alt="" coords="126,115,329,155"/>
+<area shape="rect" id="node5" href="$camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="280,211,455,251"/>
+<area shape="rect" id="node8" href="$flight__camera__controller_8h.html" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="403,108,585,163"/>
+<area shape="rect" id="node9" href="$application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="609,115,797,155"/>
+<area shape="rect" id="node6" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="385,299,603,339"/>
+<area shape="rect" id="node7" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="177,299,361,339"/>
+<area shape="rect" id="node10" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="570,211,757,251"/>
+<area shape="rect" id="node11" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="781,211,965,251"/>
+</map>

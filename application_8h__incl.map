@@ -1,0 +1,6 @@
+<map id="include/application/application.h" name="include/application/application.h">
+<area shape="rect" id="node1" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義" alt="" coords="130,5,275,45"/>
+<area shape="rect" id="node2" href="$application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="109,93,297,133"/>
+<area shape="rect" id="node3" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="5,181,192,221"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="216,181,400,221"/>
+</map>

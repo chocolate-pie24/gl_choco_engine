@@ -1,18 +1,13 @@
 var searchData=
 [
-  ['warn_5fmessage_0',['WARN_MESSAGE',['../choco__message_8h.html#aa9550cb10d06bed989f8b23a02a85bd5',1,'choco_message.h']]],
-  ['window_1',['window',['../structplatform__backend.html#aeb03df164ac826042f05b2b06f8dd67a',1,'platform_backend']]],
-  ['window_5fevent_2',['window_event',['../structwindow__event.html',1,'']]],
-  ['window_5fevent_2eh_3',['window_event.h',['../window__event_8h.html',1,'']]],
-  ['window_5fevent_5fargs_4',['window_event_args',['../structwindow__event__args.html',1,'']]],
-  ['window_5fevent_5fargs_5ft_5',['window_event_args_t',['../window__event_8h.html#aae2c5b40045358502a395f616e8f1f9a',1,'window_event.h']]],
-  ['window_5fevent_5fcode_5ft_6',['window_event_code_t',['../window__event_8h.html#acd09aeb6aa1fb9d992b2fddba3d38dce',1,'window_event.h']]],
-  ['window_5fevent_5fqueue_7',['window_event_queue',['../structapp__state.html#a77ccdf51787f98f4b6ffe4503c32857f',1,'app_state']]],
-  ['window_5fevent_5fresize_8',['WINDOW_EVENT_RESIZE',['../window__event_8h.html#acd09aeb6aa1fb9d992b2fddba3d38dcea1ba39d3e72235c6f4f182c3cc5fd5156',1,'window_event.h']]],
-  ['window_5fevent_5ft_9',['window_event_t',['../window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd',1,'window_event.h']]],
-  ['window_5fheight_10',['window_height',['../structinput__snapshot.html#ab29a316f920ef9dabeead31c17aeced7',1,'input_snapshot::window_height()'],['../structapp__state.html#a0e2d53bb995c31a698da60be6cda7099',1,'app_state::window_height()'],['../structwindow__event__args.html#a6e2ac5685a1012723ebde7457e227952',1,'window_event_args::window_height()']]],
-  ['window_5flabel_11',['window_label',['../structplatform__backend.html#a634c5737492e5e4ff2e165da6d2fba2b',1,'platform_backend']]],
-  ['window_5fresized_12',['window_resized',['../structapp__state.html#ac48dba79a19ec36b0f33fde9ef7c6928',1,'app_state']]],
-  ['window_5fshould_5fclose_13',['window_should_close',['../structapp__state.html#a3cacec3686969beb558208bfe7a67d64',1,'app_state::window_should_close()'],['../structinput__snapshot.html#a446c820c0e2d770593eab4dbf58991c4',1,'input_snapshot::window_should_close()']]],
-  ['window_5fwidth_14',['window_width',['../structwindow__event__args.html#a1c2cb20a0b2fd2b5ff9dd97494a68e59',1,'window_event_args::window_width()'],['../structapp__state.html#a095a4ae7a922e6b76a4155486f963861',1,'app_state::window_width()'],['../structinput__snapshot.html#a10d590435fd39079f4e34b20e63dcb09',1,'input_snapshot::window_width()']]]
+  ['ui_5fshader_0',['ui_shader',['../structui__shader.html',1,'']]],
+  ['ui_5fshader_2ec_1',['ui_shader.c',['../ui__shader_8c.html',1,'']]],
+  ['ui_5fshader_2eh_2',['ui_shader.h',['../ui__shader_8h.html',1,'']]],
+  ['ui_5fshader_5fcreate_3',['ui_shader_create',['../ui__shader_8h.html#ae5d3c0270019153f91c099be8fafb409',1,'ui_shader_create(const char *file_path_, const char *name_, renderer_backend_context_t *backend_context_, ui_shader_t **out_ui_shader_):&#160;ui_shader.c'],['../ui__shader_8c.html#ae5d3c0270019153f91c099be8fafb409',1,'ui_shader_create(const char *file_path_, const char *name_, renderer_backend_context_t *backend_context_, ui_shader_t **out_ui_shader_):&#160;ui_shader.c']]],
+  ['ui_5fshader_5fdestroy_4',['ui_shader_destroy',['../ui__shader_8h.html#a3d80c907d2302eeabb50ff3cba5c038c',1,'ui_shader_destroy(renderer_backend_context_t *backend_context_, ui_shader_t **ui_shader_):&#160;ui_shader.c'],['../ui__shader_8c.html#a3d80c907d2302eeabb50ff3cba5c038c',1,'ui_shader_destroy(renderer_backend_context_t *backend_context_, ui_shader_t **ui_shader_):&#160;ui_shader.c']]],
+  ['ui_5fshader_5fmodel_5fmatrix_5fset_5',['ui_shader_model_matrix_set',['../ui__shader_8h.html#a783d90393d85b073f06a9f09f5406275',1,'ui_shader_model_matrix_set(const mat4x4f_t *model_matrix_, bool should_transpose_, const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c'],['../ui__shader_8c.html#a783d90393d85b073f06a9f09f5406275',1,'ui_shader_model_matrix_set(const mat4x4f_t *model_matrix_, bool should_transpose_, const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c']]],
+  ['ui_5fshader_5fprojection_5fmatrix_5fset_6',['ui_shader_projection_matrix_set',['../ui__shader_8h.html#a918a1696c6e133c9f1beea079224d15f',1,'ui_shader_projection_matrix_set(const mat4x4f_t *projection_matrix_, bool should_transpose_, ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c'],['../ui__shader_8c.html#a918a1696c6e133c9f1beea079224d15f',1,'ui_shader_projection_matrix_set(const mat4x4f_t *projection_matrix_, bool should_transpose_, ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c']]],
+  ['ui_5fshader_5ft_7',['ui_shader_t',['../ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7',1,'ui_shader.h']]],
+  ['ui_5fshader_5fuse_8',['ui_shader_use',['../ui__shader_8h.html#aebe23ce1c7a385a89dacdebae5a0c336',1,'ui_shader_use(const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c'],['../ui__shader_8c.html#aebe23ce1c7a385a89dacdebae5a0c336',1,'ui_shader_use(const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c']]],
+  ['ui_5fshader_5fview_5fmatrix_5fset_9',['ui_shader_view_matrix_set',['../ui__shader_8h.html#acffc4ef6b8b0ab904583b87f6b7c1ee6',1,'ui_shader_view_matrix_set(const mat4x4f_t *view_matrix_, bool should_transpose_, const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c'],['../ui__shader_8c.html#acffc4ef6b8b0ab904583b87f6b7c1ee6',1,'ui_shader_view_matrix_set(const mat4x4f_t *view_matrix_, bool should_transpose_, const ui_shader_t *ui_shader_, renderer_backend_context_t *backend_context_):&#160;ui_shader.c']]]
 ];

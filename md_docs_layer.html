@@ -101,6 +101,7 @@ $(document).ready(function(){initNavTree('md_docs_layer.html',''); initResizable
 <li>Engine overview</li>
 <li>Detailed view: Platform</li>
 <li>Detailed view: Renderer</li>
+<li>Detailed view: Camera</li>
 <li>Layer Reference<ul>
 <li><a class="el" href="group__application.html">application</a></li>
 <li>engine/base</li>
@@ -109,6 +110,7 @@ $(document).ready(function(){initNavTree('md_docs_layer.html',''); initResizable
 <li>engine/io\_utils</li>
 <li>engine/platform</li>
 <li>engine/renderer</li>
+<li>engine/camera</li>
 </ul>
 </li>
 </ul>
@@ -132,10 +134,13 @@ Detailed view: Platform</h1>
 <p><a class="el" href="md_docs_architecture_platform_system_architecture_en.html">Platform System Architecture</a></p>
 <h1><a class="anchor" id="autotoc_md4"></a>
 Detailed view: Renderer</h1>
-<p><a class="el" href="md_docs_architecture_renderer_system_architecture_en.html">Renderer System Architecture</a></p>
+<p><a class="el" href="md_docs_architecture_renderer_system_renderer_backend_architecture_en.html">Renderer Backend Architecture</a></p>
 <h1><a class="anchor" id="autotoc_md5"></a>
+Detailed view: Camera</h1>
+<p><a class="el" href="md_docs_architecture_camera_system_architecture_en.html">Camera System Architecture</a></p>
+<h1><a class="anchor" id="autotoc_md6"></a>
 Layer Reference</h1>
-<h2><a class="anchor" id="autotoc_md6"></a>
+<h2><a class="anchor" id="autotoc_md7"></a>
 application</h2>
 <ul>
 <li>Purpose: The top-level layer of the project, responsible for orchestrating all subsystems. It provides:<ul>
@@ -145,7 +150,7 @@ application</h2>
 </li>
 <li>Characteristics: Runs for the full lifetime of the application (startup to shutdown).</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md7"></a>
+<h2><a class="anchor" id="autotoc_md8"></a>
 engine/base</h2>
 <ul>
 <li>Purpose: Engine-wide, project-agnostic utilities reusable beyond GLCE.</li>
@@ -153,10 +158,11 @@ engine/base</h2>
 <li>Modules:<ul>
 <li>choco_macros: Common macro definitions.</li>
 <li>choco_message: Colored logging/output helpers for stdout/stderr.</li>
+<li>choco_math: General-purpose math utilities, including vector and matrix operations.</li>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md8"></a>
+<h2><a class="anchor" id="autotoc_md9"></a>
 engine/core</h2>
 <ul>
 <li>Purpose: GLCE-specific engine foundations used across the whole engine.</li>
@@ -169,7 +175,7 @@ engine/core</h2>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md9"></a>
+<h2><a class="anchor" id="autotoc_md10"></a>
 engine/containers</h2>
 <ul>
 <li>Purpose: Provides container modules that encapsulate resource ownership and management.</li>
@@ -180,7 +186,7 @@ engine/containers</h2>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md10"></a>
+<h2><a class="anchor" id="autotoc_md11"></a>
 engine/io_utils</h2>
 <ul>
 <li>Purpose: Provides higher-level I/O utilities that go beyond the standard C library by building on other GLCE modules.</li>
@@ -190,7 +196,7 @@ engine/io_utils</h2>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md11"></a>
+<h2><a class="anchor" id="autotoc_md12"></a>
 engine/platform</h2>
 <ul>
 <li>Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency. To keep room for future non-GLFW implementations, GLCE abstracts the platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.</li>
@@ -204,7 +210,7 @@ engine/platform</h2>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 engine/renderer</h2>
 <p><em>Note</em>: A renderer frontend has not been implemented yet, so the application currently uses some backend modules directly. This will be removed once the frontend is introduced.</p>
 <ul>
@@ -224,7 +230,23 @@ engine/renderer</h2>
 <li>renderer_backend/renderer_backend_types: Defines common data types shared across the entire renderer backend layer (shader, VAO, and VBO modules).</li>
 <li>renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.</li>
 <li>renderer_core/renderer_memory: Wrapper APIs over <b>engine/core/choco_memory</b> tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.</li>
-<li>renderer_core/renderer_types: Common data types shared across the renderer subsystem. </li>
+<li>renderer_core/renderer_types: Common data types shared across the renderer subsystem.</li>
+<li>renderer_resources: Provides renderer-level resource modules used by higher layers. Currently, this layer contains <a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>, which encapsulates a shader program together with cached uniform locations and shader-specific operations.</li>
+</ul>
+</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md14"></a>
+engine/camera</h2>
+<ul>
+<li>Purpose: The <code>Camera System</code> is a subsystem that provides camera state management and control functionality in three-dimensional space. It provides upper layers with a unified API for creating, retrieving, and deleting cameras, as well as for handling position, orientation, view matrices, and projection matrices. Control functionality for each camera type is also included in the responsibilities of this system. As a result, upper layers can use camera functionality without being aware of the details of individual camera implementations or internal memory management.</li>
+<li>Characteristics: Some modules require explicit initialization. In particular, <a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a> must be initialized before camera instances can be centrally registered, retrieved, and managed.</li>
+<li>Modules:<ul>
+<li>camera_controller/flight_camera_controller: Provides control APIs for flight-camera movement and orientation updates.</li>
+<li><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a>: Manages camera instances and provides registration, deletion, and retrieval APIs.</li>
+<li>camera: Holds camera state such as name, position, orientation, and projection parameters, and provides APIs for retrieving matrices and direction vectors.</li>
+<li>camera_core/camera_memory: Wrapper APIs over <code>choco_memory</code> tailored for the camera layer.</li>
+<li>camera_core/camera_err_utils: Provides utilities to translate lower-layer error codes into camera-system result codes and to convert them into strings.</li>
+<li>camera_core/camera_types: Common data types, constants, and result codes used throughout the camera system. </li>
 </ul>
 </li>
 </ul>

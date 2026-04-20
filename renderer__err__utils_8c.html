@@ -108,12 +108,16 @@ Include dependency graph for renderer_err_utils.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="renderer__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2renderer_2renderer__core_2renderer__err__utils_8c" alt=""/></div>
 <map name="asrc_2engine_2renderer_2renderer__core_2renderer__err__utils_8c" id="asrc_2engine_2renderer_2renderer__core_2renderer__err__utils_8c">
-<area shape="rect" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="150,5,325,60"/>
+<area shape="rect" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="318,5,493,60"/>
 <area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,196,189,236"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="210,108,398,148"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="395,196,552,236"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="213,196,371,236"/>
-<area shape="rect" title=" " alt="" coords="345,284,420,309"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="246,108,434,148"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="421,196,579,236"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="603,196,760,236"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="264,196,397,236"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="137,284,317,324"/>
+<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="341,284,512,324"/>
+<area shape="rect" title=" " alt="" coords="451,372,525,397"/>
+<area shape="rect" title=" " alt="" coords="185,372,268,397"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -128,12 +132,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a249f496a87375fcc6efcf0423849c289"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__err__utils_8c.html#a249f496a87375fcc6efcf0423849c289">renderer_rslt_convert_choco_memory</a> (<a class="el" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a> rslt_)</td></tr>
 <tr class="memdesc:a249f496a87375fcc6efcf0423849c289"><td class="mdescLeft">&#160;</td><td class="mdescRight">下位モジュールであるchoco_memoryが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する  <br /></td></tr>
 <tr class="separator:a249f496a87375fcc6efcf0423849c289"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a633841554221bd20a20ee89d987f40b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__err__utils_8c.html#a633841554221bd20a20ee89d987f40b4">renderer_rslt_convert_choco_string</a> (<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:a633841554221bd20a20ee89d987f40b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">下位モジュールであるchoco_stringが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する  <br /></td></tr>
+<tr class="separator:a633841554221bd20a20ee89d987f40b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfba520127fecd994a5db7f9bf9fcf10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__err__utils_8c.html#adfba520127fecd994a5db7f9bf9fcf10">renderer_rslt_convert_fs_utils</a> (<a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:adfba520127fecd994a5db7f9bf9fcf10"><td class="mdescLeft">&#160;</td><td class="mdescRight">下位モジュールであるfs_utilsが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する  <br /></td></tr>
+<tr class="separator:adfba520127fecd994a5db7f9bf9fcf10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>レンダラーレイヤー全体で使用されるエラー処理関連APIの実装 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2025-12.19</dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2025-12-19</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
@@ -156,11 +166,66 @@ Functions</h2></td></tr>
 <p>下位モジュールであるchoco_memoryが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">rslt_</td><td>choco_memoryモジュールが出力する実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>choco_memoryモジュールが出力する実行結果コード</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>renderer_result_t 変換されたレンダラーレイヤーの実行結果コード </dd></dl>
+
+</div>
+</div>
+<a id="a633841554221bd20a20ee89d987f40b4" name="a633841554221bd20a20ee89d987f40b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a633841554221bd20a20ee89d987f40b4">&#9670;&#160;</a></span>renderer_rslt_convert_choco_string()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_rslt_convert_choco_string </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>下位モジュールであるchoco_stringが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>choco_stringモジュールが出力する実行結果コード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>renderer_result_t 変換されたレンダラーレイヤーの実行結果コード </dd></dl>
+
+</div>
+</div>
+<a id="adfba520127fecd994a5db7f9bf9fcf10" name="adfba520127fecd994a5db7f9bf9fcf10"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adfba520127fecd994a5db7f9bf9fcf10">&#9670;&#160;</a></span>renderer_rslt_convert_fs_utils()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_rslt_convert_fs_utils </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>下位モジュールであるfs_utilsが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>fs_utilsモジュールが出力する実行結果コード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>renderer_result_t 変換されたレンダラーレイヤーの実行結果コード</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する </dd></dl>
 
 </div>
 </div>
@@ -183,7 +248,7 @@ Functions</h2></td></tr>
 <p>下位モジュールであるlinear_allocatorが出力する実行結果コードをレンダラーレイヤーの実行結果コードに変換する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">rslt_</td><td>linear_allocatorモジュールが出力する実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>linear_allocatorモジュールが出力する実行結果コード</td></tr>
   </table>
   </dd>
 </dl>
@@ -210,7 +275,7 @@ Functions</h2></td></tr>
 <p>ログ出力用にレンダラーレイヤーの実行結果コードを文字列に変換する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">rslt_</td><td>実行結果コード </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>実行結果コード</td></tr>
   </table>
   </dd>
 </dl>

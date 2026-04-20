@@ -1,0 +1,4 @@
+<map id="Renderer Resources" name="Renderer Resources">
+<area shape="rect" id="node1" href="$group__renderer.html" title="レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する" alt="" coords="5,5,87,31"/>
+<area shape="rect" id="node2" title="上位レイヤーが使用するための、レンダラー層の描画リソースモジュールを提供する(現状ではUIシェーダーモジュールを提供)" alt="" coords="135,5,287,31"/>
+</map>

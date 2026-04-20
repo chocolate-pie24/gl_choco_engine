@@ -1,4 +1,5 @@
 <map id="include/engine/renderer/renderer_backend/renderer_backend_context/context_shader.h" name="include/engine/renderer/renderer_backend/renderer_backend_context/context_shader.h">
-<area shape="rect" id="node1" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="7,5,208,75"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,123,209,148"/>
+<area shape="rect" id="node1" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="107,5,308,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
+<area shape="rect" id="node3" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="233,123,384,177"/>
 </map>

@@ -1,10 +1,11 @@
 var searchData=
 [
-  ['file_5fhandle_0',['file_handle',['../structfilesystem.html#a609d9ca4777764f740823271c3f9739d',1,'filesystem']]],
-  ['filename_1',['filename',['../structfs__utils.html#a20f414835e1783127d4c122877436b57',1,'fs_utils']]],
-  ['filepath_2',['filepath',['../structfs__utils.html#a8969ea5dc125c38c0569ac426ce67fe1',1,'fs_utils']]],
-  ['filesystem_3',['filesystem',['../structfs__utils.html#a253fadc50a8df8a7b9f0aeb0acf677b8',1,'fs_utils']]],
-  ['fragment_5fshader_5fhandle_4',['fragment_shader_handle',['../structrenderer__backend__shader.html#ad2529b8fac0735c6cd60981206415001',1,'renderer_backend_shader']]],
-  ['framebuffer_5fheight_5',['framebuffer_height',['../structwindow__event__args.html#a86a721410f8792a8c21c449b45546d07',1,'window_event_args::framebuffer_height()'],['../structapp__state.html#ab9de6a40fde3f1e7f4d2f9b9b9cb6879',1,'app_state::framebuffer_height()'],['../structinput__snapshot.html#a7eb41ec5a85afeb33ae395d48d9f8044',1,'input_snapshot::framebuffer_height()']]],
-  ['framebuffer_5fwidth_6',['framebuffer_width',['../structwindow__event__args.html#a9856c48afb6868e5af9a03c555260809',1,'window_event_args::framebuffer_width()'],['../structapp__state.html#aebd1f3fc21de6eea6cbdade076b56334',1,'app_state::framebuffer_width()'],['../structinput__snapshot.html#a8cfcd3765bd7278cf40efe56da9590b6',1,'input_snapshot::framebuffer_width()']]]
+  ['elem_0',['elem',['../structvec3f.html#a8c0f038fe1ee74153726f8e2286b1f76',1,'vec3f::elem()'],['../structvec4f.html#ab617b0048da35e6da8c05520b88a5df8',1,'vec4f::elem()'],['../structmat4x4f.html#a20739e0098197754b7fec8de45035d1a',1,'mat4x4f::elem()']]],
+  ['element_5falign_1',['element_align',['../structring__queue.html#a2eefaba327073368dc96c4d48c080db7',1,'ring_queue']]],
+  ['element_5fsize_2',['element_size',['../structring__queue.html#a30b8e4ac36064f928bb70a6f0dca6893',1,'ring_queue']]],
+  ['escape_5fpressed_3',['escape_pressed',['../structinput__snapshot.html#a730c34bd664c3c29bbd82df82a2f7126',1,'input_snapshot']]],
+  ['euler_4',['euler',['../structcamera.html#a6086badf5723d6080306cf41341fb839',1,'camera']]],
+  ['event_5fargs_5',['event_args',['../structkeyboard__event.html#a1a50c9236b582efe2940d13b7a408281',1,'keyboard_event::event_args()'],['../structmouse__event.html#a3c576ea5880664f809663a50afb9067d',1,'mouse_event::event_args()'],['../structwindow__event.html#a89bf6d30cf3e6ad7ebdf15cb2331170c',1,'window_event::event_args()']]],
+  ['event_5fcode_6',['event_code',['../structwindow__event.html#ab8f181d520f1852b9c9d7bde2ba98613',1,'window_event']]],
+  ['extension_7',['extension',['../structfs__utils.html#ad86b92d188ea1d3ef51518bf6984e031',1,'fs_utils']]]
 ];

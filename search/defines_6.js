@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mib_0',['MIB',['../choco__macros_8h.html#a9d11258d2beb9cc8297f7c4eff586868',1,'choco_macros.h']]]
+  ['kib_0',['KIB',['../choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2',1,'choco_macros.h']]]
 ];

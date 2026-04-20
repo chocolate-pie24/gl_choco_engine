@@ -8,6 +8,7 @@ var ring__queue_8h =
       [ "RING_QUEUE_RUNTIME_ERROR", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a7b8043809e8a07cfe1bdd8463ba6c433", null ],
       [ "RING_QUEUE_UNDEFINED_ERROR", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a02574c95f81b9b8d1aea1c072fad4ad5", null ],
       [ "RING_QUEUE_LIMIT_EXCEEDED", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a29d4dab50e3c113ce176b57d784ce036", null ],
+      [ "RING_QUEUE_BAD_OPERATION", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a51c7f95b34f35e64c47817c91b5de8e6", null ],
       [ "RING_QUEUE_DATA_CORRUPTED", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a6873f0ef43fe817a203ffb2ebdfbb312", null ],
       [ "RING_QUEUE_OVERFLOW", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417a9d7edd70fdeb513392edf30cf1f8bb32", null ],
       [ "RING_QUEUE_EMPTY", "ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417aa9bafe8734f1f1df977ed31e45e76d41", null ]
@@ -15,6 +16,6 @@ var ring__queue_8h =
     [ "ring_queue_create", "ring__queue_8h.html#a56e3ab58551b751a19d98a51b7e6b16e", null ],
     [ "ring_queue_destroy", "ring__queue_8h.html#a4acac0e1b7e004b8b40f3ece8d51180b", null ],
     [ "ring_queue_empty", "ring__queue_8h.html#a52ce710c8a44a8108d137f27dcc256e8", null ],
-    [ "ring_queue_pop", "ring__queue_8h.html#a291250b7476321e4a8c2f47a7eee5507", null ],
-    [ "ring_queue_push", "ring__queue_8h.html#a0b4d0c2278cf23eb082fabdee881f575", null ]
+    [ "ring_queue_pop", "ring__queue_8h.html#a25f72681c810a83695f44be322d04692", null ],
+    [ "ring_queue_push", "ring__queue_8h.html#a62c82e655aa97c954b4d41fa37104b43", null ]
 ];
