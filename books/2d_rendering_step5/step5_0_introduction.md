@@ -16,7 +16,7 @@ free: true
 - step5_3: [Cameraモジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_3_camera_module)
 - step5_4: [Camera制御モジュールの追加](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_4_camera_control_module)
 - step5_5: [Cameraシステムの構築](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_5_camera_system)
-- step5_6: [カメラ制御コマンドとキー操作イベントの連携](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_6_command_interpreter)
+- step5_6: [カメラ制御コマンドとキー操作イベントの連携](https://zenn.dev/chocolate_pie24/books/2d_rendering_step5/viewer/step5_6_control_command_interpreter)
 
 ## レイヤー構成図
 
