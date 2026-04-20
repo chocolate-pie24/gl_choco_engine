@@ -21,10 +21,10 @@ struct renderer_backend_texture {
     int32_t height;
     int32_t handle;
     uint8_t channel_count;
-    texture_type_t type;
+    int32_t unit_number;
 };
 
-static renderer_result_t gl33_texture_create(texture_type_t type_, renderer_backend_texture_t** texture_handle_);
+static renderer_result_t gl33_texture_create(int32_t unit_num_, renderer_backend_texture_t** texture_handle_);
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_internal_handle_);
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
@@ -43,7 +43,7 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
     return &s_gl33_texture_vtable;
 }
 
-static renderer_result_t gl33_texture_create(texture_type_t type_, renderer_backend_texture_t** texture_handle_) {
+static renderer_result_t gl33_texture_create(int32_t unit_num_, renderer_backend_texture_t** texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     return ret;

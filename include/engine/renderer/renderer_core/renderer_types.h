@@ -73,6 +73,7 @@ typedef enum {
 
 /**
  * @brief テクスチャ種別リスト定義
+ * @todo TODO: engine/resources/texture.hに移すかも
  *
  */
 typedef enum {

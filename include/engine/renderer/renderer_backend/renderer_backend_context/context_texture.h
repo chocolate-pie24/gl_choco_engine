@@ -14,7 +14,7 @@ extern "C" {
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
-renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, texture_type_t type_, renderer_backend_texture_t** texture_handle_);
+renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, renderer_backend_texture_t** texture_handle_);
 
 void renderer_backend_texture_destroy(renderer_backend_context_t* backend_context_, renderer_backend_texture_t** texture_handle_);
 

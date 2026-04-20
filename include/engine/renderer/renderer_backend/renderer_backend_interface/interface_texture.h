@@ -11,7 +11,7 @@ extern "C" {
 #include "engine/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_renderer_texture_create)(texture_type_t type_, renderer_backend_texture_t** texture_handle_);
+typedef renderer_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, renderer_backend_texture_t** texture_handle_);
 
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_);
 
