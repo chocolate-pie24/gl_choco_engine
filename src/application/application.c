@@ -433,7 +433,7 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     struct timespec  req = {0, 1000000};
-    static vec3f_t vertex_buffer_data[3] = { 0 };
+    static vec3f_t vertex_buffer_data[6] = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -446,7 +446,11 @@ application_result_t application_run(void) {
 
     vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
     vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
-    vec3f_initialize(0.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
+    vec3f_initialize(1.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
+
+    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[3]);
+    vec3f_initialize(1.0f, 1.0f, -1.0f, &vertex_buffer_data[4]);
+    vec3f_initialize(-1.0f, 1.0f, -1.0f, &vertex_buffer_data[5]);
 
     renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
@@ -494,7 +498,7 @@ application_result_t application_run(void) {
 
         renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
