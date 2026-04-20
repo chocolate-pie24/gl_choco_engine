@@ -699,16 +699,15 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, texture_type_t type_, renderer_backend_texture_t** texture_handle_) {
+renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, renderer_backend_texture_t** texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_create", "backend_context_->texture_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "texture_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "*texture_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(texture_type_valid_check(type_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "type_")
 
-    ret = backend_context_->texture_vtable->renderer_texture_create(type_, texture_handle_);
+    ret = backend_context_->texture_vtable->renderer_texture_create(unit_num_, texture_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_texture_create(%s) - Failed to create texture.", renderer_rslt_to_str(ret));
         goto cleanup;
