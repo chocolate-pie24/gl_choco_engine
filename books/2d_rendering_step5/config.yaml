@@ -8,6 +8,6 @@ chapters:
   - step5_1_mvp_matrix
   - step5_2_camera_system_architecture
   - step5_3_camera_module
-  - step5_4_camera_controller
+  - step5_4_camera_control_module
   - step5_5_camera_system
   - step5_6_control_command_interpreter
