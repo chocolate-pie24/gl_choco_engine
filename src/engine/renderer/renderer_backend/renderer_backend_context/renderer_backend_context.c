@@ -699,7 +699,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, renderer_backend_texture_t** texture_handle_) {
+renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "backend_context_")
@@ -707,7 +707,7 @@ renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* ba
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "texture_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "*texture_handle_")
 
-    ret = backend_context_->texture_vtable->renderer_texture_create(unit_num_, texture_handle_);
+    ret = backend_context_->texture_vtable->renderer_texture_create(unit_num_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, texture_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_texture_create(%s) - Failed to create texture.", renderer_rslt_to_str(ret));
         goto cleanup;

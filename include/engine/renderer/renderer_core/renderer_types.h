@@ -72,6 +72,39 @@ typedef enum {
 } shader_type_t;
 
 /**
+ * @brief 画像を拡大表示した際の表示設定
+ *
+ */
+typedef enum {
+    TEXTURE_MAG_FILTER_CONFIG_NEAREST,      /**< GL_NEAREST相当: 一番近いtexelをそのまま使う。ドットがくっきり見える */
+    TEXTURE_MAG_FILTER_CONFIG_LINEAR,       /**< GL_LINEAR相当: 近くのtexelを線形補間する。なめらかになる */
+} texture_mag_filter_config_t;
+
+/**
+ * @brief 画像を縮小表示した際の表示設定
+ *
+ */
+typedef enum {
+    TEXTURE_MIN_FILTER_CONFIG_NEAREST,                 /**< GL_NEAREST相当: mipmapなし。近いtexelを1個選ぶ */
+    TEXTURE_MIN_FILTER_CONFIG_LINEAR,                  /**< GL_LINEAR相当: mipmapなし。近いtexel群を補間する */
+    TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_NEAREST,  /**< GL_NEAREST_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内ではnearest */
+    TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_NEAREST,   /**< GL_LINEAR_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内では linear */
+    TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_LINEAR,   /**< GL_NEAREST_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間するが、各mip内ではnearest */
+    TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_LINEAR,    /**< GL_LINEAR_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間し、各mip内でも linear */
+} texture_min_filter_config_t;
+
+/**
+ * @brief uv座標が0...1の外に出た時の表示設定
+ *
+ */
+typedef enum {
+    TEXTURE_WRAP_CONFIG_REPEAT,             /**< GL_REPEAT相当: 小数部分だけを使って繰り返す。タイル状に敷き詰めたいときに使用 */
+    TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT,    /**< GL_MIRRORED_REPEAT相当: 繰り返しつつ、1枚おきに反転する */
+    TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE,      /**< GL_CLAMP_TO_EDGE相当: 端のtexelを引き延ばすように扱う。境界のにじみを避けたいときによく使用する */
+    TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
+} texture_wrap_config_t;
+
+/**
  * @brief テクスチャ種別リスト定義
  * @todo TODO: engine/resources/texture.hに移すかも
  *
