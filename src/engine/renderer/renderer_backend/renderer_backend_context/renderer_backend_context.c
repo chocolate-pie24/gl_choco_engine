@@ -204,7 +204,9 @@ struct renderer_backend_context {
     uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
     uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
     uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
-    uint32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
+
+    int32_t current_texture_unit;
+    int32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
@@ -283,6 +285,7 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     tmp_context->current_bound_vao = 0;
     tmp_context->current_bound_vbo = 0;
     tmp_context->current_program_id = 0;
+    tmp_context->current_texture_unit = 0;
     tmp_context->current_bound_texture = 0;
 
     // commit.
@@ -725,15 +728,14 @@ void renderer_backend_texture_destroy(renderer_backend_context_t* backend_contex
     backend_context_->texture_vtable->renderer_texture_destroy(texture_handle_);
 }
 
-renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_internal_handle_) {
+renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_bind", "backend_context_->texture_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "texture_handle_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_internal_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "out_texture_internal_handle_")
 
-    ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, out_texture_internal_handle_);
+    ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, &backend_context_->current_texture_unit, &backend_context_->current_bound_texture);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_texture_bind(%s) - Failed to bind texture.", renderer_rslt_to_str(ret));
         goto cleanup;

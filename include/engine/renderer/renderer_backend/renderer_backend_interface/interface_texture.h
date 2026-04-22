@@ -15,7 +15,7 @@ typedef renderer_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, text
 
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_);
 
-typedef renderer_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_internal_handle_);
+typedef renderer_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_);
 
 typedef renderer_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);
 

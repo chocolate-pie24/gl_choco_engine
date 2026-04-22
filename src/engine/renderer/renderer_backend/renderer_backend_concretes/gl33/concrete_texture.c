@@ -35,7 +35,7 @@ struct renderer_backend_texture {
 
 static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
-static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_internal_handle_);
+static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_);
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
 static renderer_result_t gl33_texture_pixel_upload(const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_);
 
@@ -124,9 +124,22 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
 
 }
 
-static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_internal_handle_) {
+static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "texture_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_unit_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "out_texture_unit_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_internal_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "out_texture_internal_handle_")
+
+    glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
+    glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
+
+    *out_texture_unit_ = texture_handle_->unit_number;
+    *out_texture_internal_handle_ = (int32_t)texture_handle_->handle;
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
     return ret;
 }
 
