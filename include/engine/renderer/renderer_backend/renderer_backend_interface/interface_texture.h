@@ -19,7 +19,7 @@ typedef renderer_result_t (*pfn_renderer_texture_bind)(const renderer_backend_te
 
 typedef renderer_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);
 
-typedef renderer_result_t (*pfn_renderer_texture_pixel_upload)(const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_);
+typedef renderer_result_t (*pfn_renderer_texture_pixel_upload)(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 typedef struct renderer_texture_vtable {
     pfn_renderer_texture_create renderer_texture_create;              /**< 関数ポインタ @ref pfn_renderer_texture_create 参照 */

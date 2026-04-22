@@ -82,15 +82,16 @@ typedef enum {
 
 /**
  * @brief 画像を縮小表示した際の表示設定
+ * @note mipmapは当面は使用しない
  *
  */
 typedef enum {
     TEXTURE_MIN_FILTER_CONFIG_NEAREST,                 /**< GL_NEAREST相当: mipmapなし。近いtexelを1個選ぶ */
     TEXTURE_MIN_FILTER_CONFIG_LINEAR,                  /**< GL_LINEAR相当: mipmapなし。近いtexel群を補間する */
-    TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_NEAREST,  /**< GL_NEAREST_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内ではnearest */
-    TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_NEAREST,   /**< GL_LINEAR_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内では linear */
-    TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_LINEAR,   /**< GL_NEAREST_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間するが、各mip内ではnearest */
-    TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_LINEAR,    /**< GL_LINEAR_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間し、各mip内でも linear */
+    // TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_NEAREST,  /**< GL_NEAREST_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内ではnearest */
+    // TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_NEAREST,   /**< GL_LINEAR_MIPMAP_NEAREST相当: mipmapあり。選ばれたmipレベル内では linear */
+    // TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_LINEAR,   /**< GL_NEAREST_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間するが、各mip内ではnearest */
+    // TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_LINEAR,    /**< GL_LINEAR_MIPMAP_LINEAR相当: 2つのmipレベルをまたいで補間し、各mip内でも linear */
 } texture_min_filter_config_t;
 
 /**

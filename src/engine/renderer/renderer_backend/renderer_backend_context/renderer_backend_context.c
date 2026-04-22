@@ -762,7 +762,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_) {
+renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "backend_context_")
@@ -770,7 +770,13 @@ renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "texture_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "pixels_")
 
-    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload(pixels_, texture_handle_);
+    ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, &backend_context_->current_texture_unit, &backend_context_->current_bound_texture);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Failed to bind texture.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload(width_, height_, channel_count_, pixels_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Failed to upload texture pixels.", renderer_rslt_to_str(ret));
         goto cleanup;

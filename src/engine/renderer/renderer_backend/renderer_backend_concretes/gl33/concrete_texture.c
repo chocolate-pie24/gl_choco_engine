@@ -20,11 +20,7 @@
 #endif
 
 struct renderer_backend_texture {
-    // TODO: 型はOpenGLのAPI仕様を見ながら合わせる
-    int32_t width;
-    int32_t height;
     GLuint handle;
-    uint8_t channel_count;
     int32_t unit_number;
 
     texture_min_filter_config_t min_filter_config;
@@ -37,7 +33,7 @@ static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filt
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_);
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
-static renderer_result_t gl33_texture_pixel_upload(const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_);
+static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 static bool resolv_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
 static bool resolv_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
@@ -78,10 +74,7 @@ static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filt
         ERROR_MESSAGE("gl33_texture_create(%s) - Failed to allocate memory for texture handle.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp->width = 0;
-    tmp->height = 0;
     tmp->handle = 0;
-    tmp->channel_count = 0;
     tmp->unit_number = unit_num_;
     tmp->min_filter_config = min_filter_config_;
     tmp->mag_filter_config = mag_filter_config_;
@@ -121,7 +114,17 @@ cleanup:
 }
 
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
+    if(NULL == texture_handle_) {
+        return;
+    }
+    if(NULL == *texture_handle_) {
+        return;
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    render_mem_free((void*)texture_handle_, sizeof(renderer_backend_texture_t));
+
+    *texture_handle_ = NULL;
 }
 
 static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_) {
@@ -131,11 +134,12 @@ static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* tex
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_unit_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "out_texture_unit_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_internal_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "out_texture_internal_handle_")
 
-    glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
-    glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
-
-    *out_texture_unit_ = texture_handle_->unit_number;
-    *out_texture_internal_handle_ = (int32_t)texture_handle_->handle;
+    if(*out_texture_unit_ != texture_handle_->unit_number || *out_texture_internal_handle_ != texture_handle_->handle) {
+        glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
+        glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
+        *out_texture_unit_ = texture_handle_->unit_number;
+        *out_texture_internal_handle_ = (int32_t)texture_handle_->handle;
+    }
 
     ret = RENDERER_SUCCESS;
 
@@ -146,12 +150,34 @@ cleanup:
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_bind", "texture_handle_")
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
     return ret;
 }
 
-static renderer_result_t gl33_texture_pixel_upload(const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_) {
+static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "pixels_")
+
+    if(3 == channel_count_) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    } else if(4 == channel_count_) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+    } else {
+        ret = RENDERER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided channel count is not valid.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
     return ret;
 }
 
@@ -171,22 +197,22 @@ static bool resolv_min_filter_config(texture_min_filter_config_t src_, GLint* ds
         *dst_ = GL_LINEAR;
         ret = true;
         break;
-    case TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_NEAREST:
-        *dst_ = GL_NEAREST_MIPMAP_NEAREST;
-        ret = true;
-        break;
-    case TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_NEAREST:
-        *dst_ = GL_LINEAR_MIPMAP_NEAREST;
-        ret = true;
-        break;
-    case TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_LINEAR:
-        *dst_ = GL_NEAREST_MIPMAP_LINEAR;
-        ret = true;
-        break;
-    case TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_LINEAR:
-        *dst_ = GL_LINEAR_MIPMAP_LINEAR;
-        ret = true;
-        break;
+    // case TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_NEAREST:
+    //     *dst_ = GL_NEAREST_MIPMAP_NEAREST;
+    //     ret = true;
+    //     break;
+    // case TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_NEAREST:
+    //     *dst_ = GL_LINEAR_MIPMAP_NEAREST;
+    //     ret = true;
+    //     break;
+    // case TEXTURE_MIN_FILTER_CONFIG_NEAREST_MIPMAP_LINEAR:
+    //     *dst_ = GL_NEAREST_MIPMAP_LINEAR;
+    //     ret = true;
+    //     break;
+    // case TEXTURE_MIN_FILTER_CONFIG_LINEAR_MIPMAP_LINEAR:
+    //     *dst_ = GL_LINEAR_MIPMAP_LINEAR;
+    //     ret = true;
+    //     break;
     default:
         ret = false;
         break;

@@ -22,7 +22,7 @@ renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* back
 
 renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
-renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const uint8_t* pixels_, const renderer_backend_texture_t* texture_handle_);
+renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 #ifdef __cplusplus
 }
