@@ -13,14 +13,17 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_interface/interface_texture.h"
 
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_texture.h"
 
 #include "engine/core/memory/linear_allocator.h"
 
@@ -191,22 +194,28 @@ static void test_graphics_api_valid_check(void);
  *
  */
 struct renderer_backend_context {
-    target_graphics_api_t target_api;               /**< 使用グラフィックスAPI */
+    target_graphics_api_t target_api;                   /**< 使用グラフィックスAPI */
 
-    const renderer_shader_vtable_t* shader_vtable;  /**< シェーダー機能提供vtable */
-    const renderer_vao_vtable_t* vao_vtable;        /**< VAO機能提供vtable */
-    const renderer_vbo_vtable_t* vbo_vtable;        /**< VBO機能提供vtable */
+    const renderer_shader_vtable_t* shader_vtable;      /**< シェーダー機能提供vtable */
+    const renderer_vao_vtable_t* vao_vtable;            /**< VAO機能提供vtable */
+    const renderer_vbo_vtable_t* vbo_vtable;            /**< VBO機能提供vtable */
+    const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
 
-    uint32_t current_program_id;                    /**< 現在使用中のリンクされたシェーダープログラムID */
-    uint32_t current_bound_vao;                     /**< 現在バインド中のVAO識別子 */
-    uint32_t current_bound_vbo;                     /**< 現在バインド中のVBO識別子 */
+    uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
+    uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
+    uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
+
+    int32_t current_texture_unit;
+    int32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
 static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
 static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
+static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
 
 static bool graphics_api_valid_check(target_graphics_api_t target_api_);
+static bool texture_type_valid_check(texture_type_t texture_type_);
 
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
 #ifdef TEST_BUILD
@@ -263,10 +272,21 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
         goto cleanup;
     }
 
+    // Textureバックエンドメモリ確保+初期化
+    tmp_context->texture_vtable = texture_vtable_get(target_api_);
+    if(NULL == tmp_context->texture_vtable) {
+        // ここは引数チェックが事前にされているので通らないため、カバレッジは100にならないが、許容
+        ret = RENDERER_RUNTIME_ERROR;
+        ERROR_MESSAGE("renderer_backend_initialize(%s) - Failed to get texture vtable.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     tmp_context->target_api = target_api_;
     tmp_context->current_bound_vao = 0;
     tmp_context->current_bound_vbo = 0;
     tmp_context->current_program_id = 0;
+    tmp_context->current_texture_unit = 0;
+    tmp_context->current_bound_texture = 0;
 
     // commit.
     *out_renderer_backend_context_ = tmp_context;
@@ -682,6 +702,90 @@ cleanup:
     return ret;
 }
 
+renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_create", "backend_context_->texture_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "texture_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "*texture_handle_")
+
+    ret = backend_context_->texture_vtable->renderer_texture_create(unit_num_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, texture_handle_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_create(%s) - Failed to create texture.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+void renderer_backend_texture_destroy(renderer_backend_context_t* backend_context_, renderer_backend_texture_t** texture_handle_) {
+    if(NULL == backend_context_ || NULL == backend_context_->texture_vtable) {
+        return;
+    }
+    // NOTE: texture_handle_のNULLチェックは下位に任せる
+    backend_context_->texture_vtable->renderer_texture_destroy(texture_handle_);
+}
+
+renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_bind", "backend_context_->texture_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "texture_handle_")
+
+    ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, &backend_context_->current_texture_unit, &backend_context_->current_bound_texture);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_bind(%s) - Failed to bind texture.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_unbind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_unbind", "backend_context_->texture_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_unbind", "texture_handle_")
+
+    ret = backend_context_->texture_vtable->renderer_texture_unbind(texture_handle_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_unbind(%s) - Failed to unbind texture.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_pixel_upload", "backend_context_->texture_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "texture_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "pixels_")
+
+    ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, &backend_context_->current_texture_unit, &backend_context_->current_bound_texture);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Failed to bind texture.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload(width_, height_, channel_count_, pixels_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Failed to upload texture pixels.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_) {
 #ifdef TEST_BUILD
     s_test_config_shader_vtable_get.call_count++;
@@ -736,6 +840,15 @@ static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_
     }
 }
 
+static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_) {
+    switch(target_api_) {
+    case GRAPHICS_API_GL33:
+        return gl33_texture_vtable_get();
+    default:
+        return NULL;
+    }
+}
+
 static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
 #ifdef TEST_BUILD
     s_test_config_graphics_api_valid_check.call_count++;
@@ -752,6 +865,22 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
         break;
     default:
         ret = false;
+        break;
+    }
+    return ret;
+}
+
+static bool texture_type_valid_check(texture_type_t texture_type_) {
+    bool ret = false;
+    switch(texture_type_) {
+    case TEXTURE_TYPE_DIFFUSE:
+        ret = true;
+        break;
+    case TEXTURE_TYPE_NORMAL:
+        ret = true;
+        break;
+    case TEXTURE_TYPE_SPECULAR:
+        ret = true;
         break;
     }
     return ret;
