@@ -79,6 +79,32 @@ bool is_equal_float(float a_, float b_) {
     }
 }
 
+void vec2f_initialize(float x_, float y_, vec2f_t* out_vec2f_) {
+    if(NULL == out_vec2f_) {
+        ERROR_MESSAGE("vec2f_initialize(INVALID_ARGUMENT) - Argument out_vec2f_ requires a valid pointer.");
+        return;
+    }
+    out_vec2f_->elem[0] = x_;
+    out_vec2f_->elem[1] = y_;
+}
+
+void vec2f_add(const vec2f_t* vec1_, const vec2f_t* vec2_, vec2f_t* out_vec2f_) {
+    if(NULL == vec1_) {
+        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
+        return;
+    }
+    if(NULL == vec2_) {
+        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument vec2_ requires a valid pointer.");
+        return;
+    }
+    if(NULL == out_vec2f_) {
+        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument out_vec2f_ requires a valid pointer.");
+        return;
+    }
+    out_vec2f_->elem[0] = vec1_->elem[0] + vec2_->elem[0];
+    out_vec2f_->elem[1] = vec1_->elem[1] + vec2_->elem[1];
+}
+
 void vec3f_initialize(float x_, float y_, float z_, vec3f_t* out_vec3f_) {
     if(NULL == out_vec3f_) {
         ERROR_MESSAGE("vec3f_initialize(INVALID_ARGUMENT) - Argument out_vec3f_ requires a valid pointer.");
