@@ -122,7 +122,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    render_mem_free((void*)texture_handle_, sizeof(renderer_backend_texture_t));
+    render_mem_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t));
 
     *texture_handle_ = NULL;
 }

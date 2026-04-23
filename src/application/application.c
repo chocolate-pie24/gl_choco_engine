@@ -59,11 +59,14 @@
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
 #include "engine/camera_system/camera_manager/camera_manager.h"
 
 #include "engine/camera_system/camera_core/camera_types.h"
 #include "engine/camera_system/camera/camera.h"
+
+#include "engine/geometry/vertex.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -101,6 +104,8 @@ typedef struct app_state {
     ui_shader_t* ui_shader;
     renderer_backend_vao_t* ui_vao;
     renderer_backend_vbo_t* ui_vbo;
+    renderer_backend_texture_t* ui_texture;
+    uint8_t* sample_texture_pixel;
 
     camera_manager_t* camera_manager;
     camera_t* active_camera;
@@ -288,6 +293,25 @@ application_result_t application_create(void) {
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
+    ret_renderer = renderer_backend_texture_create(tmp->renderer_backend_context, 0, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp->ui_texture);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui texture.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_mem_sys = memory_system_allocate(512 * 512 * 3, MEMORY_TAG_RENDERER, (void**)&tmp->sample_texture_pixel);   // TODO: 一時的にRENDERER、将来的にはMEMORY_TAG_TEXTUREにする
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
+        ret = app_rslt_convert_mem_sys(ret_mem_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for sample pixels.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    for(size_t i = 0, ii = 0; i != (512 * 512 * 3); ++i, ii += 3) {
+        tmp->sample_texture_pixel[ii] = 0;
+        tmp->sample_texture_pixel[ii + 1] = 255;
+        tmp->sample_texture_pixel[ii + 2] = 0;
+    }
+
     // camera create.
     ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
     if(APPLICATION_SUCCESS != ret) {
@@ -326,6 +350,14 @@ cleanup:
                 camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
+                if(NULL != tmp->sample_texture_pixel) {
+                    memory_system_free(s_app_state->sample_texture_pixel, 512 * 512 * 3, MEMORY_TAG_RENDERER);
+                    s_app_state->sample_texture_pixel = NULL;
+                }
+                if(NULL != tmp->ui_texture) {
+                    renderer_backend_texture_destroy(tmp->renderer_backend_context, &tmp->ui_texture);
+                    tmp->ui_texture = NULL;
+                }
                 if(NULL != tmp->ui_vbo) {
                     renderer_backend_vertex_buffer_destroy(tmp->renderer_backend_context, &tmp->ui_vbo);
                     tmp->ui_vbo = NULL;
@@ -381,6 +413,14 @@ void application_destroy(void) {
         camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
+        if(NULL != s_app_state->sample_texture_pixel) {
+            memory_system_free(s_app_state->sample_texture_pixel, 512 * 512 * 3, MEMORY_TAG_RENDERER);
+            s_app_state->sample_texture_pixel = NULL;
+        }
+        if(NULL != s_app_state->ui_texture) {
+            renderer_backend_texture_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_texture);
+            s_app_state->ui_texture = NULL;
+        }
         if(NULL != s_app_state->ui_vbo) {
             renderer_backend_vertex_buffer_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vbo);
             s_app_state->ui_vbo = NULL;
@@ -433,7 +473,8 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     struct timespec  req = {0, 1000000};
-    static vec3f_t vertex_buffer_data[6] = { 0 };
+
+    static ui_vertex_t ui_vertex[6] = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -444,17 +485,27 @@ application_result_t application_run(void) {
     // begin temporary
     renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
-    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
-    vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
-    vec3f_initialize(1.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
+    vec2f_initialize(-1.0f, -1.0f, &ui_vertex[0].position);
+    vec2f_initialize(1.0f, -1.0f, &ui_vertex[1].position);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex[2].position);
 
-    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[3]);
-    vec3f_initialize(1.0f, 1.0f, -1.0f, &vertex_buffer_data[4]);
-    vec3f_initialize(-1.0f, 1.0f, -1.0f, &vertex_buffer_data[5]);
+    vec2f_initialize(-1.0f, -1.0f, &ui_vertex[3].position);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex[4].position);
+    vec2f_initialize(-1.0f, 1.0f, &ui_vertex[5].position);
+
+    vec2f_initialize(0.0f, 0.0f, &ui_vertex[0].tex_coord);
+    vec2f_initialize(1.0f, 0.0f, &ui_vertex[1].tex_coord);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex[2].tex_coord);
+
+    vec2f_initialize(0.0f, 0.0f, &ui_vertex[3].tex_coord);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex[4].tex_coord);
+    vec2f_initialize(0.0f, 1.0f, &ui_vertex[5].tex_coord);
 
     renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
-    renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
-    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
+    renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex), (void*)ui_vertex, BUFFER_USAGE_STATIC);
+
+    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, 0);  // 頂点座標(layout = 0)
+    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, sizeof(GLfloat) * 2);    // テクスチャuv座標(layout = 1)
 
     renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
     renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
@@ -470,6 +521,8 @@ application_result_t application_run(void) {
     ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+
+    renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture, 512, 512, 3, s_app_state->sample_texture_pixel);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));

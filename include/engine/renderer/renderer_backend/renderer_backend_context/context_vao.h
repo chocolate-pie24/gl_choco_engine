@@ -111,7 +111,7 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
  * @param backend_context_ アトリビュート設定用vtable保有構造体インスタンスへのポインタ
  * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
  * @param layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
- * @param size_ 頂点情報に含まれるデータの数([x, y, z]の3次元座標のみであれば3)
+ * @param size_ 頂点情報(layoutごと)に含まれるデータの数([x, y, z, u, v]のうち、3次元座標のみであれば3、テクスチャ座標であれば2)
  * @param type_ バッファに格納されているデータの型 @ref renderer_type_t
  * @param normalized_ 与えられた頂点データを正規化するかどうかを指定
  * @param stride_ 頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定)
