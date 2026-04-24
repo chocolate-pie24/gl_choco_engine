@@ -63,10 +63,12 @@ static test_call_control_no_op_t s_test_config_gl33_vbo_destroy;        /**< gl3
 static test_call_control_t s_test_config_gl33_vbo_bind;                 /**< gl33_vbo_bind()テスト設定 */
 static test_call_control_t s_test_config_gl33_vbo_unbind;               /**< gl33_vbo_unbind()テスト設定 */
 static test_call_control_t s_test_config_gl33_vbo_vertex_load;          /**< gl33_vbo_vertex_load()テスト設定 */
+static test_call_control_t s_test_config_gl33_vbo_vertex_subload;       /**< gl33_vbo_vertex_subload()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glGenBuffers;       /**< mock_glGenBuffers()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glBindBuffer;       /**< mock_glBindBuffer()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glDeleteBuffers;    /**< mock_glDeleteBuffers()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glBufferData;       /**< mock_glBufferData()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glBufferSubData;    /**< mock_glBufferSubData()テスト設定 */
 
 // 全テスト関数プロトタイプ宣言
 static void test_gl33_vbo_create(void);
@@ -91,11 +93,13 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_);
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_);
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
+static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
 
 static void mock_glGenBuffers(GLsizei n_, GLuint* buffer_);
 static void mock_glBindBuffer(GLenum target_, GLuint buffer_);
 static void mock_glDeleteBuffers(GLsizei n_, const GLuint* buffer_);
 static void mock_glBufferData(GLenum target_, GLsizeiptr size_, const void* data_, GLenum usage_);
+static void mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_);
 
 static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vertex_buffer_create = gl33_vbo_create,
@@ -103,6 +107,7 @@ static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vertex_buffer_bind = gl33_vbo_bind,
     .vertex_buffer_unbind = gl33_vbo_unbind,
     .vertex_buffer_vertex_load = gl33_vbo_vertex_load,
+    .vertex_buffer_vertex_subload = gl33_vbo_vertex_subload,
 };
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
@@ -291,7 +296,6 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
-    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_vertex_load", "vertex_buffer_->vbo_handle")
 
@@ -307,6 +311,30 @@ static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vert
         ret = RENDERER_RUNTIME_ERROR;
         goto cleanup;
     }
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vbo_vertex_subload.call_count++;
+    if(s_test_config_gl33_vbo_vertex_subload.fail_on_call != 0) {
+        if(s_test_config_gl33_vbo_vertex_subload.call_count == s_test_config_gl33_vbo_vertex_subload.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vbo_vertex_subload.forced_result;
+        }
+    }
+#endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "vertex_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_data_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_vertex_load", "vertex_buffer_->vbo_handle")
+
+    mock_glBufferSubData(GL_ARRAY_BUFFER, (GLintptr)offset_, (GLsizeiptr)size_, load_data_);
 
     ret = RENDERER_SUCCESS;
 
@@ -362,6 +390,18 @@ static void NO_COVERAGE mock_glBufferData(GLenum target_, GLsizeiptr size_, cons
     glBufferData(target_, size_, data_, usage_);
 }
 
+static void NO_COVERAGE mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_) {
+#ifdef TEST_BUILD
+    s_test_config_mock_glBufferSubData.call_count++;
+    if(s_test_config_mock_glBufferSubData.fail_on_call != 0) {
+        if(s_test_config_mock_glBufferSubData.call_count == s_test_config_mock_glBufferSubData.fail_on_call) {
+            return;
+        }
+    }
+#endif
+    glBufferSubData(target, offset_, size_, data_);
+}
+
 #ifdef TEST_BUILD
 void test_concrete_vbo_config_reset(void) {
     test_call_control_reset(&s_test_config_gl33_vbo_create);
@@ -369,10 +409,12 @@ void test_concrete_vbo_config_reset(void) {
     test_call_control_reset(&s_test_config_gl33_vbo_bind);
     test_call_control_reset(&s_test_config_gl33_vbo_unbind);
     test_call_control_reset(&s_test_config_gl33_vbo_vertex_load);
+    test_call_control_reset(&s_test_config_gl33_vbo_vertex_subload);
     test_call_control_no_op_reset(&s_test_config_mock_glGenBuffers);
     test_call_control_no_op_reset(&s_test_config_mock_glBindBuffer);
     test_call_control_no_op_reset(&s_test_config_mock_glDeleteBuffers);
     test_call_control_no_op_reset(&s_test_config_mock_glBufferData);
+    test_call_control_no_op_reset(&s_test_config_mock_glBufferSubData);
 }
 
 void test_concrete_vbo(void) {
@@ -898,21 +940,6 @@ static void NO_COVERAGE test_gl33_vbo_vertex_load(void) {
         test_concrete_vbo_config_reset();
 
         ret = gl33_vbo_vertex_load(NULL, sizeof(vertex_data), vertex_data, BUFFER_USAGE_STATIC);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(0U == s_test_config_mock_glBufferData.call_count);
-
-        test_concrete_vbo_config_reset();
-    }
-    {
-        // load_data_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vbo_t vbo = { 0 };
-
-        test_concrete_vbo_config_reset();
-
-        vbo.vbo_handle = 123U;
-
-        ret = gl33_vbo_vertex_load(&vbo, sizeof(float) * 6U, NULL, BUFFER_USAGE_STATIC);
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(0U == s_test_config_mock_glBufferData.call_count);
 
