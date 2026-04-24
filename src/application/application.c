@@ -102,8 +102,6 @@ typedef struct app_state {
     renderer_backend_context_t* renderer_backend_context;
 
     ui_shader_t* ui_shader;
-    renderer_backend_vao_t* ui_vao;
-    renderer_backend_vbo_t* ui_vbo;
     renderer_backend_texture_t* ui_texture1;
     renderer_backend_texture_t* ui_texture2;
     uint8_t* sample_texture_pixel1;
@@ -281,16 +279,10 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = renderer_backend_vertex_array_create(tmp->renderer_backend_context, &tmp->ui_vao);
+    ret_renderer = ui_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_shader, BUFFER_USAGE_STATIC, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_renderer = renderer_backend_vertex_buffer_create(tmp->renderer_backend_context, &tmp->ui_vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
         goto cleanup;
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
@@ -371,12 +363,12 @@ cleanup:
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->sample_texture_pixel2) {
-                    memory_system_free(s_app_state->sample_texture_pixel2, 512 * 512 * 3, MEMORY_TAG_RENDERER);
-                    s_app_state->sample_texture_pixel2 = NULL;
+                    memory_system_free(tmp->sample_texture_pixel2, 512 * 512 * 3, MEMORY_TAG_RENDERER);
+                    tmp->sample_texture_pixel2 = NULL;
                 }
                 if(NULL != tmp->sample_texture_pixel1) {
-                    memory_system_free(s_app_state->sample_texture_pixel1, 512 * 512 * 3, MEMORY_TAG_RENDERER);
-                    s_app_state->sample_texture_pixel1 = NULL;
+                    memory_system_free(tmp->sample_texture_pixel1, 512 * 512 * 3, MEMORY_TAG_RENDERER);
+                    tmp->sample_texture_pixel1 = NULL;
                 }
                 if(NULL != tmp->ui_texture2) {
                     renderer_backend_texture_destroy(tmp->renderer_backend_context, &tmp->ui_texture2);
@@ -385,14 +377,6 @@ cleanup:
                 if(NULL != tmp->ui_texture1) {
                     renderer_backend_texture_destroy(tmp->renderer_backend_context, &tmp->ui_texture1);
                     tmp->ui_texture1 = NULL;
-                }
-                if(NULL != tmp->ui_vbo) {
-                    renderer_backend_vertex_buffer_destroy(tmp->renderer_backend_context, &tmp->ui_vbo);
-                    tmp->ui_vbo = NULL;
-                }
-                if(NULL != tmp->ui_vao) {
-                    renderer_backend_vertex_array_destroy(tmp->renderer_backend_context, &tmp->ui_vao);
-                    tmp->ui_vao = NULL;
                 }
                 if(NULL != tmp->ui_shader) {
                     ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
@@ -457,14 +441,6 @@ void application_destroy(void) {
             renderer_backend_texture_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_texture1);
             s_app_state->ui_texture1 = NULL;
         }
-        if(NULL != s_app_state->ui_vbo) {
-            renderer_backend_vertex_buffer_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vbo);
-            s_app_state->ui_vbo = NULL;
-        }
-        if(NULL != s_app_state->ui_vao) {
-            renderer_backend_vertex_array_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vao);
-            s_app_state->ui_vao = NULL;
-        }
         if(NULL != s_app_state->ui_shader) {
             ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
         }
@@ -520,7 +496,6 @@ application_result_t application_run(void) {
     }
 
     // begin temporary
-    renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
     vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[0].position);
     vec2f_initialize(1.0f, -1.0f, &ui_vertex1[1].position);
@@ -555,17 +530,8 @@ application_result_t application_run(void) {
     vec2f_initialize(1.0f, 1.0f, &ui_vertex2[4].tex_coord);
     vec2f_initialize(0.0f, 1.0f, &ui_vertex2[5].tex_coord);
 
-    renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
-
-    renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex1) + sizeof(ui_vertex2), 0, BUFFER_USAGE_STATIC);    // バッファ作成
-    renderer_backend_vertex_buffer_vertex_subload(s_app_state->renderer_backend_context, s_app_state->ui_vbo, 0, sizeof(ui_vertex1), (void*)ui_vertex1);
-    renderer_backend_vertex_buffer_vertex_subload(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex1), sizeof(ui_vertex2), (void*)ui_vertex2);
-
-    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, 0);  // 頂点座標(layout = 0)
-    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, sizeof(GLfloat) * 2);    // テクスチャuv座標(layout = 1)
-
-    renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
-    renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
+    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
@@ -607,7 +573,7 @@ application_result_t application_run(void) {
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
-        renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+        ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, s_app_state->ui_texture1);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -616,8 +582,6 @@ application_result_t application_run(void) {
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, s_app_state->ui_texture2);
         glDrawArrays(GL_TRIANGLES, 6, 6);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, s_app_state->ui_texture2);
-
-        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
