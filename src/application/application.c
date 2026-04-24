@@ -559,7 +559,7 @@ application_result_t application_run(void) {
 
     renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex1) + sizeof(ui_vertex2), 0, BUFFER_USAGE_STATIC);    // バッファ作成
     renderer_backend_vertex_buffer_vertex_subload(s_app_state->renderer_backend_context, s_app_state->ui_vbo, 0, sizeof(ui_vertex1), (void*)ui_vertex1);
-    renderer_backend_vertex_buffer_vertex_subload(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex2), sizeof(ui_vertex2), (void*)ui_vertex2);
+    renderer_backend_vertex_buffer_vertex_subload(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(ui_vertex1), sizeof(ui_vertex2), (void*)ui_vertex2);
 
     renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, 0);  // 頂点座標(layout = 0)
     renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 4, sizeof(GLfloat) * 2);    // テクスチャuv座標(layout = 1)
