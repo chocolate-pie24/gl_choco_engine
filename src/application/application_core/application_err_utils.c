@@ -217,6 +217,10 @@ application_result_t app_rslt_convert_texture(texture_result_t rslt_) {
         return APPLICATION_OVERFLOW;
     case TEXTURE_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
+    case TEXTURE_FILE_OPEN_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case TEXTURE_FILE_READ_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
     case TEXTURE_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:

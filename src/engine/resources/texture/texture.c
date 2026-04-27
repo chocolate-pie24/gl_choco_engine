@@ -8,6 +8,9 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/filesystem/filesystem.h"
+
+#include "engine/io_utils/fs_utils/fs_utils.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -29,11 +32,16 @@ static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";        /**< 実
 static const char* s_rslt_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用、未初期化 */
 static const char* s_rslt_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算過程でオーバーフロー発生 */
 static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲上限超過 */
+static const char* s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
+static const char* s_rslt_str_file_read_error = "FILE_READ_ERROR";      /**< 実行結果コード文字列: ファイル読み込みエラー */
 static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 未定義エラー */
 
+static texture_result_t bmp_load(texture_t* texture_, const char* filepath_, const char* extension_);
 static const char* rslt_to_str(texture_result_t rslt_);
 static texture_result_t choco_string_result_convert(choco_string_result_t result_);
 static texture_result_t memory_system_result_convert(memory_system_result_t result_);
+static texture_result_t filesystem_result_convert(filesystem_result_t result_);
+static texture_result_t fs_utils_result_convert(fs_utils_result_t result_);
 
 texture_result_t texture_create(const char* name_, texture_t** texture_) {
     texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
@@ -127,9 +135,17 @@ texture_result_t texture_pixel_load(texture_t* texture_, const char* filepath_, 
         test_color = 2;
         use_test_texture = true;
     } else {
-        ret = TEXTURE_BAD_OPERATION;
-        ERROR_MESSAGE("texture_pixel_load(%s) - Not implemented yet.", rslt_to_str(ret));
-        goto cleanup;
+        if(choco_string_equal(".bmp", extension_)) {
+            ret = bmp_load(texture_, filepath_, extension_);
+            if(TEXTURE_SUCCESS != ret) {
+                ERROR_MESSAGE("texture_pixel_load(%s) - Failed to load bmp texture.", rslt_to_str(ret));
+                goto cleanup;
+            }
+        } else {
+            ret = TEXTURE_BAD_OPERATION;
+            ERROR_MESSAGE("texture_pixel_load(%s) - Not implemented yet.", rslt_to_str(ret));
+            goto cleanup;
+        }
     }
 
     if(use_test_texture) {
@@ -148,12 +164,12 @@ texture_result_t texture_pixel_load(texture_t* texture_, const char* filepath_, 
             tmp_pixels[ii + 2] = 0;
             tmp_pixels[ii + (size_t)test_color] = 255;
         }
+        texture_->pixels = tmp_pixels;
+        texture_->height = tmp_height;
+        texture_->width = tmp_width;
+        texture_->channel_count = tmp_channel_count;
     }
 
-    texture_->pixels = tmp_pixels;
-    texture_->height = tmp_height;
-    texture_->width = tmp_width;
-    texture_->channel_count = tmp_channel_count;
     ret = TEXTURE_SUCCESS;
 
 cleanup:
@@ -237,6 +253,151 @@ const char* texture_name_get(const texture_t* texture_) {
     return choco_string_c_str(texture_->name);
 }
 
+// 仮実装
+// TODO: buffer_utilsを作ってchar -> 整数変換
+// TODO: 上下反転チェック
+// TODO: 読み込みサイズエラーチェック
+// TODO: 各種値のキャスト前チェック
+// TODO: bits per pixelを読む
+static texture_result_t bmp_load(texture_t* texture_, const char* filepath_, const char* extension_) {
+    texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
+    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    filesystem_t* filesystem = NULL;
+    fs_utils_t* fs_utils = NULL;
+    choco_string_t* fullpath = NULL;
+
+    size_t read_size = 0;
+    char header[54] = { 0 };
+    int32_t image_size = 0;
+    int32_t width = 0;
+    int32_t height = 0;
+    int16_t channel_count = 0;
+    uint8_t* tmp_pixels = NULL;
+    char* tmp_image_size = NULL;
+    char* tmp_width = NULL;
+    char* tmp_height = NULL;
+
+    ret_fs_utils = fs_utils_create(filepath_, choco_string_c_str(texture_->name), extension_, FILESYSTEM_MODE_READ, &fs_utils);
+    if(FS_UTILS_SUCCESS != ret_fs_utils) {
+        ret = fs_utils_result_convert(ret_fs_utils);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to create fs_utils.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_string = choco_string_default_create(&fullpath);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = choco_string_result_convert(ret_string);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to create fullpath.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_fs_utils = fs_utils_fullpath_get(fs_utils, fullpath);
+    if(FS_UTILS_SUCCESS != ret_fs_utils) {
+        ret = fs_utils_result_convert(ret_fs_utils);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to create fullpath.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs = filesystem_create(&filesystem);
+    if(FILESYSTEM_SUCCESS != ret_fs) {
+        ret = filesystem_result_convert(ret_fs);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to create filesystem.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_fs = filesystem_open(choco_string_c_str(fullpath), FILESYSTEM_MODE_READ, filesystem);
+    if(FILESYSTEM_SUCCESS != ret_fs) {
+        ret = filesystem_result_convert(ret_fs);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to open file(%s).", rslt_to_str(ret), choco_string_c_str(fullpath));
+        goto cleanup;
+    }
+
+    ret_fs = filesystem_byte_read(54, filesystem, &read_size, header);
+    if(FILESYSTEM_SUCCESS != ret_fs) {
+        ret = filesystem_result_convert(ret_fs);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to load bmp header.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if(header[0]!='B' || header[1]!='M'){
+        ret = TEXTURE_DATA_CORRUPTED;
+        ERROR_MESSAGE("bmp_load(%s) - Invalid bmp file format.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_image_size = (char*)&image_size;
+    tmp_image_size[0] = header[34];
+    tmp_image_size[1] = header[35];
+    tmp_image_size[2] = header[36];
+    tmp_image_size[3] = header[37];
+
+    tmp_width = (char*)&width;
+    tmp_width[0] = header[18];
+    tmp_width[1] = header[19];
+    tmp_width[2] = header[20];
+    tmp_width[3] = header[21];
+
+    tmp_height = (char*)&height;
+    tmp_height[0] = header[22];
+    tmp_height[1] = header[23];
+    tmp_height[2] = header[24];
+    tmp_height[3] = header[25];
+
+    if(image_size == (width * height * 3)) {
+        channel_count = 3;
+    } else if(image_size == (width * height * 4)) {
+        channel_count = 4;
+    } else {
+        ret = TEXTURE_DATA_CORRUPTED;
+        ERROR_MESSAGE("bmp_load(%s) - Invalid bmp file format(size broken).", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_mem = memory_system_allocate((size_t)width * (size_t)height * (size_t)channel_count, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = memory_system_result_convert(ret_mem);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to allocate memory for pixels.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs = filesystem_byte_read(image_size, filesystem, &read_size, (char*)tmp_pixels);
+    if(FILESYSTEM_SUCCESS != ret_fs) {
+        ret = filesystem_result_convert(ret_fs);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to load bmp file.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    // BMPファイルはBGRの順で格納されているので、RGBに変換
+    for(size_t i = 0, ii = 0; i != (image_size / channel_count); ++i, ii += channel_count) {
+        uint8_t tmp_r = tmp_pixels[ii + 2]; // Rコピー
+        tmp_pixels[ii + 2] = tmp_pixels[ii];
+        tmp_pixels[ii] = tmp_r;
+    }
+
+    choco_string_destroy(&fullpath);
+    filesystem_destroy(&filesystem);
+    fs_utils_destroy(&fs_utils);
+
+    texture_->pixels = tmp_pixels;
+    texture_->width = width;
+    texture_->height = height;
+    texture_->channel_count = channel_count;
+    ret = TEXTURE_SUCCESS;
+
+cleanup:
+    if(TEXTURE_SUCCESS != ret) {
+        choco_string_destroy(&fullpath);
+        filesystem_destroy(&filesystem);
+        fs_utils_destroy(&fs_utils);
+        if(NULL != tmp_pixels) {
+            memory_system_free(tmp_pixels, image_size, MEMORY_TAG_TEXTURE);
+            tmp_pixels = NULL;
+        }
+    }
+    return ret;
+}
+
 static const char* rslt_to_str(texture_result_t rslt_) {
     switch(rslt_) {
     case TEXTURE_SUCCESS:
@@ -255,6 +416,10 @@ static const char* rslt_to_str(texture_result_t rslt_) {
         return s_rslt_str_overflow;
     case TEXTURE_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
+    case TEXTURE_FILE_OPEN_ERROR:
+        return s_rslt_str_file_open_error;
+    case TEXTURE_FILE_READ_ERROR:
+        return s_rslt_str_file_read_error;
     case TEXTURE_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -301,6 +466,58 @@ static texture_result_t memory_system_result_convert(memory_system_result_t resu
         return TEXTURE_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return TEXTURE_NO_MEMORY;
+    default:
+        return TEXTURE_UNDEFINED_ERROR;
+    }
+}
+
+static texture_result_t filesystem_result_convert(filesystem_result_t result_) {
+    switch(result_) {
+    case FILESYSTEM_SUCCESS:
+        return TEXTURE_SUCCESS;
+    case FILESYSTEM_INVALID_ARGUMENT:
+        return TEXTURE_INVALID_ARGUMENT;
+    case FILESYSTEM_RUNTIME_ERROR:
+        return TEXTURE_RUNTIME_ERROR;
+    case FILESYSTEM_NO_MEMORY:
+        return TEXTURE_NO_MEMORY;
+    case FILESYSTEM_FILE_OPEN_ERROR:
+        return TEXTURE_FILE_OPEN_ERROR;
+    case FILESYSTEM_FILE_CLOSE_ERROR:
+        return TEXTURE_UNDEFINED_ERROR;
+    case FILESYSTEM_UNDEFINED_ERROR:
+        return TEXTURE_UNDEFINED_ERROR;
+    case FILESYSTEM_LIMIT_EXCEEDED:
+        return TEXTURE_LIMIT_EXCEEDED;
+    case FILESYSTEM_BAD_OPERATION:
+        return TEXTURE_BAD_OPERATION;
+    case FILESYSTEM_EOF:
+        return TEXTURE_FILE_READ_ERROR;
+    }
+}
+
+static texture_result_t fs_utils_result_convert(fs_utils_result_t result_) {
+    switch(result_) {
+    case FS_UTILS_SUCCESS:
+        return TEXTURE_SUCCESS;
+    case FS_UTILS_INVALID_ARGUMENT:
+        return TEXTURE_INVALID_ARGUMENT;
+    case FS_UTILS_BAD_OPERATION:
+        return TEXTURE_BAD_OPERATION;
+    case FS_UTILS_DATA_CORRUPTED:
+        return TEXTURE_DATA_CORRUPTED;
+    case FS_UTILS_NO_MEMORY:
+        return TEXTURE_NO_MEMORY;
+    case FS_UTILS_LIMIT_EXCEEDED:
+        return TEXTURE_LIMIT_EXCEEDED;
+    case FS_UTILS_OVERFLOW:
+        return TEXTURE_OVERFLOW;
+    case FS_UTILS_FILE_OPEN_ERROR:
+        return TEXTURE_FILE_OPEN_ERROR;
+    case FS_UTILS_RUNTIME_ERROR:
+        return TEXTURE_RUNTIME_ERROR;
+    case FS_UTILS_UNDEFINED_ERROR:
+        return TEXTURE_UNDEFINED_ERROR;
     default:
         return TEXTURE_UNDEFINED_ERROR;
     }

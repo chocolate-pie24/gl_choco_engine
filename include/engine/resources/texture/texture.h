@@ -19,6 +19,8 @@ typedef enum {
     TEXTURE_BAD_OPERATION,      /**< API誤用 */
     TEXTURE_OVERFLOW,           /**< 計算過程でオーバーフロー発生 */
     TEXTURE_LIMIT_EXCEEDED,     /**< システム使用可能範囲上限超過 */
+    TEXTURE_FILE_OPEN_ERROR,    /**< ファイルオープン失敗 */
+    TEXTURE_FILE_READ_ERROR,    /**< ファイル読み込み失敗 */
     TEXTURE_UNDEFINED_ERROR,    /**< 未定義エラー */
 } texture_result_t;
 

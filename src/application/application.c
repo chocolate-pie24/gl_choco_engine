@@ -290,7 +290,7 @@ application_result_t application_create(void) {
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
-    ret_texture = texture_create("test_texture_red", &tmp->ui_texture_cpu1);
+    ret_texture = texture_create("rabbit_512", &tmp->ui_texture_cpu1);
     if(TEXTURE_SUCCESS != ret_texture) {
         ret = app_rslt_convert_texture(ret_texture);
         ERROR_MESSAGE("application_create(%s) - Failed to create test texture(cpu resource1).", app_rslt_to_str(ret));
@@ -545,7 +545,7 @@ application_result_t application_run(void) {
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
-    ret_texture = texture_pixel_load(s_app_state->ui_texture_cpu1, NULL, NULL);
+    ret_texture = texture_pixel_load(s_app_state->ui_texture_cpu1, "assets/textures/", ".bmp");
     ret_texture = texture_pixel_get(s_app_state->ui_texture_cpu1, &texture_pixels1);
     ret_texture = texture_pixel_size_get(s_app_state->ui_texture_cpu1, &texture_width1, &texture_height1, &texture_channel_count1);
     renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture1, texture_width1, texture_height1, texture_channel_count1, texture_pixels1);
