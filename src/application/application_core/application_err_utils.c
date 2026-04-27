@@ -198,3 +198,28 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t app_rslt_convert_texture(texture_result_t rslt_) {
+    switch(rslt_) {
+    case TEXTURE_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case TEXTURE_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case TEXTURE_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case TEXTURE_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case TEXTURE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case TEXTURE_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case TEXTURE_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case TEXTURE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case TEXTURE_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
