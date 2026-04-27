@@ -9,6 +9,7 @@
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
+#include "engine/core/buffer_utils/buffer_utils.h"
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
@@ -254,11 +255,9 @@ const char* texture_name_get(const texture_t* texture_) {
 }
 
 // 仮実装
-// TODO: buffer_utilsを作ってchar -> 整数変換
 // TODO: 上下反転チェック
 // TODO: 読み込みサイズエラーチェック
 // TODO: 各種値のキャスト前チェック
-// TODO: bits per pixelを読む
 static texture_result_t bmp_load(texture_t* texture_, const char* filepath_, const char* extension_) {
     texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
@@ -277,9 +276,6 @@ static texture_result_t bmp_load(texture_t* texture_, const char* filepath_, con
     int32_t height = 0;
     int16_t channel_count = 0;
     uint8_t* tmp_pixels = NULL;
-    char* tmp_image_size = NULL;
-    char* tmp_width = NULL;
-    char* tmp_height = NULL;
 
     ret_fs_utils = fs_utils_create(filepath_, choco_string_c_str(texture_->name), extension_, FILESYSTEM_MODE_READ, &fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
@@ -327,31 +323,17 @@ static texture_result_t bmp_load(texture_t* texture_, const char* filepath_, con
         goto cleanup;
     }
 
-    tmp_image_size = (char*)&image_size;
-    tmp_image_size[0] = header[34];
-    tmp_image_size[1] = header[35];
-    tmp_image_size[2] = header[36];
-    tmp_image_size[3] = header[37];
-
-    tmp_width = (char*)&width;
-    tmp_width[0] = header[18];
-    tmp_width[1] = header[19];
-    tmp_width[2] = header[20];
-    tmp_width[3] = header[21];
-
-    tmp_height = (char*)&height;
-    tmp_height[0] = header[22];
-    tmp_height[1] = header[23];
-    tmp_height[2] = header[24];
-    tmp_height[3] = header[25];
-
-    if(image_size == (width * height * 3)) {
+    image_size = buffer_utils_le_int32_t_get(&header[34]);
+    width = buffer_utils_le_int32_t_get(&header[18]);
+    height = buffer_utils_le_int32_t_get(&header[22]);
+    channel_count = (uint8_t)(buffer_utils_le_uint16_t_get(&header[28]));
+    if(24 == channel_count) {
         channel_count = 3;
-    } else if(image_size == (width * height * 4)) {
+    } else if(32 == channel_count) {
         channel_count = 4;
     } else {
-        ret = TEXTURE_DATA_CORRUPTED;
-        ERROR_MESSAGE("bmp_load(%s) - Invalid bmp file format(size broken).", rslt_to_str(ret));
+        ret = TEXTURE_RUNTIME_ERROR;
+        ERROR_MESSAGE("bmp_load(%s) - Unsupported bmp file format.", rslt_to_str(ret));
         goto cleanup;
     }
 
