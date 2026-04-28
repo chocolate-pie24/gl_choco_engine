@@ -68,7 +68,7 @@
 
 #include "engine/geometry/geometry_core/vertex.h"
 
-#include "engine/resources/texture/texture.h"
+#include "engine/resource/texture/texture.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -142,7 +142,7 @@ application_result_t application_create(void) {
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-    texture_result_t ret_texture = TEXTURE_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -290,16 +290,16 @@ application_result_t application_create(void) {
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
-    ret_texture = texture_create("rabbit_512", &tmp->ui_texture_cpu1);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = app_rslt_convert_texture(ret_texture);
+    ret_resource = texture_create("rabbit_512", &tmp->ui_texture_cpu1);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_texture(ret_resource);
         ERROR_MESSAGE("application_create(%s) - Failed to create test texture(cpu resource1).", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_texture = texture_create("test_texture_green", &tmp->ui_texture_cpu2);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = app_rslt_convert_texture(ret_texture);
+    ret_resource = texture_create("test_texture_green", &tmp->ui_texture_cpu2);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_texture(ret_resource);
         ERROR_MESSAGE("application_create(%s) - Failed to create test texture(cpu resource2).", app_rslt_to_str(ret));
         goto cleanup;
     }
@@ -474,7 +474,7 @@ cleanup:
 
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
-    texture_result_t ret_texture = TEXTURE_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     uint8_t* texture_pixels1 = NULL;
     uint8_t texture_channel_count1 = 0;
     uint16_t texture_width1 = 0;
@@ -545,15 +545,15 @@ application_result_t application_run(void) {
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
-    ret_texture = texture_pixel_load(s_app_state->ui_texture_cpu1, "assets/textures/", ".bmp");
-    ret_texture = texture_pixel_get(s_app_state->ui_texture_cpu1, &texture_pixels1);
-    ret_texture = texture_pixel_size_get(s_app_state->ui_texture_cpu1, &texture_width1, &texture_height1, &texture_channel_count1);
+    ret_resource = texture_pixel_load(s_app_state->ui_texture_cpu1, "assets/textures/", ".bmp");
+    ret_resource = texture_pixel_get(s_app_state->ui_texture_cpu1, &texture_pixels1);
+    ret_resource = texture_pixel_size_get(s_app_state->ui_texture_cpu1, &texture_width1, &texture_height1, &texture_channel_count1);
     renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture1, texture_width1, texture_height1, texture_channel_count1, texture_pixels1);
     texture_pixel_unload(s_app_state->ui_texture_cpu1);
 
-    ret_texture = texture_pixel_load(s_app_state->ui_texture_cpu2, NULL, NULL);
-    ret_texture = texture_pixel_get(s_app_state->ui_texture_cpu2, &texture_pixels2);
-    ret_texture = texture_pixel_size_get(s_app_state->ui_texture_cpu2, &texture_width2, &texture_height2, &texture_channel_count2);
+    ret_resource = texture_pixel_load(s_app_state->ui_texture_cpu2, NULL, NULL);
+    ret_resource = texture_pixel_get(s_app_state->ui_texture_cpu2, &texture_pixels2);
+    ret_resource = texture_pixel_size_get(s_app_state->ui_texture_cpu2, &texture_width2, &texture_height2, &texture_channel_count2);
     renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture2, texture_width2, texture_height2, texture_channel_count2, texture_pixels2);
     texture_pixel_unload(s_app_state->ui_texture_cpu2);
     // TODO: window NULLチェック

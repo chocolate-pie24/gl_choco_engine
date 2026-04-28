@@ -199,29 +199,29 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_texture(texture_result_t rslt_) {
+application_result_t app_rslt_convert_texture(resource_result_t rslt_) {
     switch(rslt_) {
-    case TEXTURE_SUCCESS:
+    case RESOURCE_SUCCESS:
         return APPLICATION_SUCCESS;
-    case TEXTURE_NO_MEMORY:
+    case RESOURCE_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case TEXTURE_RUNTIME_ERROR:
+    case RESOURCE_RUNTIME_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case TEXTURE_INVALID_ARGUMENT:
+    case RESOURCE_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
-    case TEXTURE_DATA_CORRUPTED:
+    case RESOURCE_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
-    case TEXTURE_BAD_OPERATION:
+    case RESOURCE_BAD_OPERATION:
         return APPLICATION_BAD_OPERATION;
-    case TEXTURE_OVERFLOW:
+    case RESOURCE_OVERFLOW:
         return APPLICATION_OVERFLOW;
-    case TEXTURE_LIMIT_EXCEEDED:
+    case RESOURCE_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case TEXTURE_FILE_OPEN_ERROR:
+    case RESOURCE_FILE_OPEN_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case TEXTURE_FILE_READ_ERROR:
+    case RESOURCE_FILE_READ_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case TEXTURE_UNDEFINED_ERROR:
+    case RESOURCE_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
