@@ -17,11 +17,13 @@
 #include "engine/resource/resource_core/resource_err_utils.h"
 
 // TODO:
-// - [] resource_core/resource_types.hの実行結果コードをresource_result_tにしてレイヤーで共通利用する。
-// - [] bgr_to_rgbでパディングを考慮する
+// - [x] resource_core/resource_types.hの実行結果コードをresource_result_tにしてレイヤーで共通利用する。
+// - [x] bgr_to_rgbでパディングを考慮する
 // - [] flip実装
 // - [] load処理にbgr_to_rgb、flip、パディング除去追加
 // - [] texture.cにloaderを反映する
+// - [x] biSizeImage == 0の場合があるため、0の場合はwidth, height, channel_countで計算するように変更(load処理)
+// - [] 計算各所のoverflowチェック追加
 
 /**
  * @brief BITMAPファイルヘッダー(14byte固定)
@@ -63,10 +65,16 @@ struct bmp_loader {
     uint8_t* pixels;
 };
 
+static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_);
+static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_);
+static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_);
+
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_);
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, const info_header_t* info_header_, uint8_t** out_pixels_);
+
 static resource_result_t file_header_parse(char header_[54], file_header_t* file_header_);
 static resource_result_t info_header_parse(char header_[54], info_header_t* info_header_);
+
 static void file_header_copy(const file_header_t* src_, file_header_t* dst_);
 static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
 
@@ -232,16 +240,30 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) 
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_")
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->pixels")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != bmp_loader_->info_header.bi_bit_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->info_header.bi_bit_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < bmp_loader_->info_header.bi_width, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->info_header.bi_width")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != bmp_loader_->info_header.bi_height, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->info_header.bi_height")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < bmp_loader_->info_header.bi_bit_count, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->info_header.bi_bit_count")
 
     if(24 == bmp_loader_->info_header.bi_bit_count || 32 == bmp_loader_->info_header.bi_bit_count) {
-        const size_t count = (24 == bmp_loader_->info_header.bi_bit_count) ? 3 : 4;
-        for(size_t i = 0, ii = 0; i != (size_t)(bmp_loader_->info_header.bi_width * bmp_loader_->info_header.bi_height); ++i, ii += count) {
-            const uint8_t tmp = bmp_loader_->pixels[ii];
-            bmp_loader_->pixels[ii] = bmp_loader_->pixels[ii + 2];
-            bmp_loader_->pixels[ii + 2] = tmp;
+        const size_t width = (size_t)(bmp_loader_->info_header.bi_width);
+        const size_t bit_count = (size_t)(bmp_loader_->info_header.bi_bit_count);
+        const size_t channel_count = (24 == bit_count) ? 3 : 4;
+        const size_t stride = ((bit_count * width + 31) / 32) * 4;
+        const size_t padding = stride - (bit_count * width / 8);
+        const size_t height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
+        size_t ii = 0;
+        for(size_t i = 0; i != height; ++i) {
+            for(size_t j = 0; j != width; ++j) {
+                const uint8_t tmp = bmp_loader_->pixels[ii];
+                bmp_loader_->pixels[ii] = bmp_loader_->pixels[ii + 2];
+                bmp_loader_->pixels[ii + 2] = tmp;
+                ii += channel_count;
+            }
+            ii += padding;
         }
     } else {
         ret = RESOURCE_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("bmp_loader_pixel_bgr_to_rgb(%s) - Provided bmp file is not supported.", resource_rslt_to_str(ret));
         goto cleanup;
     }
     ret = RESOURCE_SUCCESS;
@@ -250,11 +272,76 @@ cleanup:
     return ret;
 }
 
-static resource_result_t bmp_loader_pixel_flip(void) {
+static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     //　後で実装
 
+    return ret;
+}
+
+static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    uint8_t* new_pixel = NULL;
+    size_t new_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "bmp_loader_")
+    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "bmp_loader_->pixels")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != bmp_loader_->info_header.bi_bit_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "bmp_loader_->info_header.bi_bit_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < bmp_loader_->info_header.bi_width, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_padding_remove", "bmp_loader_->info_header.bi_width")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != bmp_loader_->info_header.bi_height, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_padding_remove", "bmp_loader_->info_header.bi_height")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < bmp_loader_->info_header.bi_bit_count, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "bmp_loader_padding_remove", "bmp_loader_->info_header.bi_bit_count")
+
+    if(24 == bmp_loader_->info_header.bi_bit_count || 32 == bmp_loader_->info_header.bi_bit_count) {
+        const size_t width = (size_t)(bmp_loader_->info_header.bi_width);
+        const size_t bit_count = (size_t)(bmp_loader_->info_header.bi_bit_count);
+        const size_t channel_count = (24 == bit_count) ? 3 : 4;
+        const size_t stride = ((bit_count * width + 31) / 32) * 4;
+        const size_t padding = stride - (bit_count * width / 8);
+        const size_t height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
+
+        new_size = width * height * channel_count;
+        ret_mem = memory_system_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
+        if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+            ret = resource_rslt_convert_choco_memory(ret_mem);
+            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to allocate memory for new_pixel.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+
+        size_t ii = 0;
+        size_t ii_new = 0;
+        for(size_t i = 0; i != height; ++i) {
+            for(size_t j = 0; j != width; ++j) {
+                for(size_t k = 0; k != channel_count; ++k) {
+                    new_pixel[ii_new + k] = bmp_loader_->pixels[ii + k];
+                }
+                ii_new += channel_count;
+                ii += channel_count;
+            }
+            ii += padding;
+        }
+    } else {
+        ret = RESOURCE_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Provided bmp file is not supported.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    memory_system_free(bmp_loader_->pixels, bmp_loader_->info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+    bmp_loader_->pixels = NULL;
+    bmp_loader_->pixels = new_pixel;
+    bmp_loader_->info_header.bi_size_image = new_size;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != new_pixel) {
+            memory_system_free(new_pixel, new_size, MEMORY_TAG_TEXTURE);
+            new_pixel = NULL;
+        }
+    }
     return ret;
 }
 
