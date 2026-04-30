@@ -33,6 +33,8 @@ extern "C" {
 
 #include "engine/renderer/renderer_core/renderer_types.h"
 
+#include "engine/resource/texture/texture.h"
+
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
  *
@@ -95,6 +97,8 @@ application_result_t app_rslt_convert_renderer(renderer_result_t rslt_);
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t app_rslt_convert_camera(camera_result_t rslt_);
+
+application_result_t app_rslt_convert_texture(resource_result_t rslt_);
 
 #ifdef __cplusplus
 }

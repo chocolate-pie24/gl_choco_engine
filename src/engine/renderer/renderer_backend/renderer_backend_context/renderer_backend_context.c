@@ -142,6 +142,7 @@ static test_call_control_t s_test_config_renderer_backend_vertex_buffer_create; 
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_bind;           /**< renderer_backend_vertex_buffer_bind()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_unbind;         /**< renderer_backend_vertex_buffer_unbind()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_vertex_load;    /**< renderer_backend_vertex_buffer_vertex_load()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_vertex_buffer_vertex_subload; /**< renderer_backend_vertex_buffer_vertex_subload()テスト設定 */
 
 // プライベート関数テスト設定
 static test_call_control_renderer_shader_vtable_t_t s_test_config_shader_vtable_get;    /**< shader_vtable_get()テスト設定 */
@@ -702,6 +703,37 @@ cleanup:
     return ret;
 }
 
+renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count++;
+    if(s_test_config_renderer_backend_vertex_buffer_vertex_subload.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count == s_test_config_renderer_backend_vertex_buffer_vertex_subload.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_vertex_buffer_vertex_subload.forced_result;
+        }
+    }
+#endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "vertex_buffer_")
+
+    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_subload(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = backend_context_->vbo_vtable->vertex_buffer_vertex_subload(vertex_buffer_, offset_, size_, load_data_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_subload(%s) - Failed to load vertex.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
 renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
@@ -1161,6 +1193,7 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_bind);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_unbind);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_load);
+    test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_subload);
     s_test_config_shader_vtable_get.forced_result = shader_vtable_get(GRAPHICS_API_GL33);
     s_test_config_shader_vtable_get.call_count = 0;
     s_test_config_shader_vtable_get.fail_on_call = 0;

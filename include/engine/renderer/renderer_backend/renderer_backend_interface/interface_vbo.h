@@ -94,13 +94,14 @@ typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - vertex_buffer_ == NULL
- * - load_data_ == NULL
  * - load_size_ == 0
  * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
  * @retval RENDERER_SUCCESS データの転送に成功し、正常終了
  * @retval 上記以外 グラフィックスAPIごとの実装依存
  */
 typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
+
+typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
 
 /**
  * @brief VBO機能仮想関数テーブル
@@ -112,6 +113,7 @@ typedef struct renderer_vbo_vtable {
     pfn_vertex_buffer_bind vertex_buffer_bind;                  /**< 関数ポインタ @ref pfn_vertex_buffer_bind 参照 */
     pfn_vertex_buffer_unbind vertex_buffer_unbind;              /**< 関数ポインタ @ref pfn_vertex_buffer_unbind 参照 */
     pfn_vertex_buffer_vertex_load vertex_buffer_vertex_load;    /**< 関数ポインタ @ref pfn_vertex_buffer_vertex_load 参照 */
+    pfn_vertex_buffer_vertex_subload vertex_buffer_vertex_subload;  /**< 関数ポインタ @ref pfn_vertex_buffer_vertex_subload 参照 */
 } renderer_vbo_vtable_t;
 
 #ifdef __cplusplus
