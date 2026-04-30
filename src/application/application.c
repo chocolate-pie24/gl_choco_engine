@@ -47,24 +47,24 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
-#include "engine/platform/platform_core/platform_types.h"
-#include "engine/platform/platform_context.h"
+#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/platform_context.h"
 
-#include "engine/renderer/renderer_resources/ui_shader.h"
+#include "engine/systems/renderer/renderer_resources/ui_shader.h"
 
-#include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
-#include "engine/camera_system/camera_manager/camera_manager.h"
+#include "engine/systems/camera_system/camera_manager/camera_manager.h"
 
-#include "engine/camera_system/camera_core/camera_types.h"
-#include "engine/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include "engine/systems/camera_system/camera/camera.h"
 
 #include "engine/geometry/geometry_core/vertex.h"
 

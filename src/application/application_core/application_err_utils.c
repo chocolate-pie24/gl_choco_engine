@@ -22,11 +22,9 @@
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/camera_system/camera_core/camera_types.h"
-
-#include "engine/platform/platform_core/platform_types.h"
-
-#include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */

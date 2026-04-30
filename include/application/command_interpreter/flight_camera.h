@@ -37,8 +37,8 @@ extern "C" {
 
 #include "engine/core/event/keyboard_event.h"
 
-#include "engine/camera_system/camera/camera.h"
-#include "engine/camera_system/camera_controller/flight_camera_controller.h"
+#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
 #include "application/application_core/application_types.h"
 

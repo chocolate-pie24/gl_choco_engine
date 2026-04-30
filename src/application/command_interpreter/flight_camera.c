@@ -26,8 +26,8 @@
 
 #include "engine/core/event/keyboard_event.h"
 
-#include "engine/camera_system/camera/camera.h"
-#include "engine/camera_system/camera_controller/flight_camera_controller.h"
+#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
 // #define TEST_BUILD
 
@@ -40,8 +40,8 @@
 
 #include "test_controller.h"
 
-#include "engine/camera_system/camera/test_camera.h"
-#include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
+#include "engine/systems/camera_system/camera/test_camera.h"
+#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
 
 #include "application/command_interpreter/test_flight_camera.h"
 
