@@ -189,6 +189,10 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     uint8_t* tmp_pixels = NULL;
+    size_t width = 0;
+    size_t bit_count = 0;
+    size_t stride = 0;
+    size_t padding = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "bmp_loader_")
@@ -215,10 +219,10 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
         goto cleanup;
     }
 
-    const size_t width = (size_t)(tmp_info_header.bi_width);
-    const size_t bit_count = (size_t)(tmp_info_header.bi_bit_count);
-    const size_t stride = ((bit_count * width + 31) / 32) * 4;
-    const size_t padding = stride - (bit_count * width / 8);
+    width = (size_t)(tmp_info_header.bi_width);
+    bit_count = (size_t)(tmp_info_header.bi_bit_count);
+    stride = ((bit_count * width + 31) / 32) * 4;
+    padding = stride - (bit_count * width / 8);
     ret = pixel_load(fullpath_, &tmp_file_header, &tmp_info_header, stride, &tmp_pixels);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to load BMP pixel data.", resource_rslt_to_str(ret));
@@ -332,6 +336,9 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) 
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
     size_t channel_count = 0;
+    size_t width = 0;
+    size_t height = 0;
+    size_t ii = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_")
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->pixels")
@@ -362,9 +369,8 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) 
         goto cleanup;
     }
 
-    const size_t width = (size_t)(bmp_loader_->info_header.bi_width);
-    const size_t height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
-    size_t ii = 0;
+    width = (size_t)(bmp_loader_->info_header.bi_width);
+    height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
     for(size_t i = 0; i != height; ++i) {
         for(size_t j = 0; j != width; ++j) {
             const uint8_t tmp = bmp_loader_->pixels[ii];
