@@ -66,7 +66,7 @@
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/camera_system/camera/camera.h"
 
-#include "engine/geometry/geometry_core/vertex.h"
+#include "engine/core/geometry_premitive/vertex.h"
 
 #include "engine/resource/texture/texture.h"
 
