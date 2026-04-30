@@ -17,10 +17,13 @@ tree .
 │   │   └── test_shader
 │   │       ├── ui_shader.frag
 │   │       └── ui_shader.vert
-│   └── test
-│       └── filesystem
-│           ├── test_file.txt
-│           └── test_file_w.txt
+│   ├── test
+│   │   └── filesystem
+│   │       ├── test_file_w.txt
+│   │       └── test_file.txt
+│   └── textures
+│       ├── NOTICE.md
+│       └── rabbit_512.bmp
 ├── auto_zip.sh
 ├── books
 │   ├── 2d_rendering_step1
@@ -55,24 +58,38 @@ tree .
 │   │   ├── step3_3_event_pump_refactoring.md
 │   │   ├── step3_4_mouse_event.md
 │   │   └── step3_5_keyboard_event.md
-│   └── 2d_rendering_step4
-│       ├── appendix_buffer_explanation.md
-│       ├── appendix_opengl_coordinates.md
+│   ├── 2d_rendering_step4
+│   │   ├── appendix_buffer_explanation.md
+│   │   ├── appendix_opengl_coordinates.md
+│   │   ├── config.yaml
+│   │   ├── cover.jpg
+│   │   ├── cover.png
+│   │   ├── step4_0_introduction.md
+│   │   ├── step4_1_platform_layer.md
+│   │   ├── step4_2_first_triangle.md
+│   │   ├── step4_3_filesystem.md
+│   │   ├── step4_4_renderer_backend.md
+│   │   ├── step4_5_renderer_core.md
+│   │   ├── step4_6_renderer_backend_interface.md
+│   │   └── step4_7_renderer_backend_context.md
+│   └── 2d_rendering_step5
 │       ├── config.yaml
 │       ├── cover.jpg
 │       ├── cover.png
-│       ├── step4_0_introduction.md
-│       ├── step4_1_platform_layer.md
-│       ├── step4_2_first_triangle.md
-│       ├── step4_3_filesystem.md
-│       ├── step4_4_renderer_backend.md
-│       ├── step4_5_renderer_core.md
-│       ├── step4_6_renderer_backend_interface.md
-│       └── step4_7_renderer_backend_context.md
+│       ├── step5_0_introduction.md
+│       ├── step5_1_mvp_matrix.md
+│       ├── step5_2_camera_system_architecture.md
+│       ├── step5_3_camera_module.md
+│       ├── step5_4_camera_control_module.md
+│       ├── step5_5_camera_system.md
+│       └── step5_6_control_command_interpreter.md
 ├── build.sh
 ├── coverage.sh
 ├── docs
 │   ├── architecture
+│   │   ├── camera_system
+│   │   │   ├── architecture_en.md
+│   │   │   └── architecture_ja.md
 │   │   ├── platform_system
 │   │   │   ├── architecture_en.md
 │   │   │   ├── architecture_ja.md
@@ -104,6 +121,10 @@ tree .
 │   │   │   ├── dataflow.png
 │   │   │   ├── event_en.md
 │   │   │   └── event_ja.md
+│   │   ├── glce_style
+│   │   │   └── test
+│   │   │       ├── unit_test_en.md
+│   │   │       └── unit_test_ja.md
 │   │   ├── platform_system
 │   │   │   ├── adding_concretes_en.md
 │   │   │   └── adding_concretes_ja.md
@@ -132,7 +153,12 @@ tree .
 │   └── world_coordinate.png
 ├── include
 │   ├── application
-│   │   └── application.h
+│   │   ├── application_core
+│   │   │   ├── application_err_utils.h
+│   │   │   └── application_types.h
+│   │   ├── application.h
+│   │   └── command_interpreter
+│   │       └── flight_camera.h
 │   └── engine
 │       ├── base
 │       │   ├── choco_macros.h
@@ -140,12 +166,12 @@ tree .
 │       │   │   ├── choco_math.h
 │       │   │   └── math_types.h
 │       │   └── choco_message.h
-│       ├── camera
-│       │   └── camera.h
 │       ├── containers
 │       │   ├── choco_string.h
 │       │   └── ring_queue.h
 │       ├── core
+│       │   ├── buffer_utils
+│       │   │   └── buffer_utils.h
 │       │   ├── event
 │       │   │   ├── keyboard_event.h
 │       │   │   ├── mouse_event.h
@@ -155,61 +181,90 @@ tree .
 │       │   └── memory
 │       │       ├── choco_memory.h
 │       │       └── linear_allocator.h
+│       ├── geometry
+│       │   └── geometry_core
+│       │       └── vertex.h
 │       ├── io_utils
 │       │   └── fs_utils
 │       │       └── fs_utils.h
-│       ├── platform
-│       │   ├── platform_concretes
-│       │   │   └── platform_glfw.h
-│       │   ├── platform_context.h
-│       │   ├── platform_core
-│       │   │   ├── platform_err_utils.h
-│       │   │   └── platform_types.h
-│       │   └── platform_interface.h
-│       └── renderer
-│           ├── renderer_backend
-│           │   ├── renderer_backend_concretes
-│           │   │   └── gl33
-│           │   │       ├── concrete_shader.h
-│           │   │       ├── concrete_vao.h
-│           │   │       └── concrete_vbo.h
-│           │   ├── renderer_backend_context
-│           │   │   ├── context.h
-│           │   │   ├── context_shader.h
-│           │   │   ├── context_vao.h
-│           │   │   └── context_vbo.h
-│           │   ├── renderer_backend_interface
-│           │   │   ├── interface_shader.h
-│           │   │   ├── interface_vao.h
-│           │   │   └── interface_vbo.h
-│           │   └── renderer_backend_types.h
-│           ├── renderer_core
-│           │   ├── renderer_err_utils.h
-│           │   ├── renderer_memory.h
-│           │   └── renderer_types.h
-│           └── renderer_resources
-│               └── ui_shader.h
+│       ├── resource
+│       │   ├── loaders
+│       │   │   └── bmp_loader.h
+│       │   ├── resource_core
+│       │   │   ├── resource_err_utils.h
+│       │   │   └── resource_types.h
+│       │   └── texture
+│       │       └── texture.h
+│       └── systems
+│           ├── camera_system
+│           │   ├── camera
+│           │   │   └── camera.h
+│           │   ├── camera_controller
+│           │   │   └── flight_camera_controller.h
+│           │   ├── camera_core
+│           │   │   ├── camera_err_utils.h
+│           │   │   ├── camera_memory.h
+│           │   │   └── camera_types.h
+│           │   └── camera_manager
+│           │       └── camera_manager.h
+│           ├── platform
+│           │   ├── platform_concretes
+│           │   │   └── platform_glfw.h
+│           │   ├── platform_context.h
+│           │   ├── platform_core
+│           │   │   ├── platform_err_utils.h
+│           │   │   └── platform_types.h
+│           │   └── platform_interface.h
+│           └── renderer
+│               ├── renderer_backend
+│               │   ├── renderer_backend_concretes
+│               │   │   └── gl33
+│               │   │       ├── concrete_shader.h
+│               │   │       ├── concrete_texture.h
+│               │   │       ├── concrete_vao.h
+│               │   │       └── concrete_vbo.h
+│               │   ├── renderer_backend_context
+│               │   │   ├── context_shader.h
+│               │   │   ├── context_texture.h
+│               │   │   ├── context_vao.h
+│               │   │   ├── context_vbo.h
+│               │   │   └── renderer_backend_context.h
+│               │   ├── renderer_backend_interface
+│               │   │   ├── interface_shader.h
+│               │   │   ├── interface_texture.h
+│               │   │   ├── interface_vao.h
+│               │   │   └── interface_vbo.h
+│               │   └── renderer_backend_types.h
+│               ├── renderer_core
+│               │   ├── renderer_err_utils.h
+│               │   ├── renderer_memory.h
+│               │   └── renderer_types.h
+│               └── renderer_resources
+│                   └── ui_shader.h
 ├── LICENSE
 ├── makefile_linux.mak
 ├── makefile_macos.mak
-├── memo.md
 ├── README.md
 ├── REVIEW_FILES.md
 ├── sanitizer.sh
 ├── src
 │   ├── application
-│   │   └── application.c
+│   │   ├── application_core
+│   │   │   └── application_err_utils.c
+│   │   ├── application.c
+│   │   └── command_interpreter
+│   │       └── flight_camera.c
 │   ├── engine
 │   │   ├── base
 │   │   │   ├── choco_math
 │   │   │   │   └── choco_math.c
 │   │   │   └── choco_message.c
-│   │   ├── camera
-│   │   │   └── camera.c
 │   │   ├── containers
 │   │   │   ├── choco_string.c
 │   │   │   └── ring_queue.c
 │   │   ├── core
+│   │   │   ├── buffer_utils
+│   │   │   │   └── buffer_utils.c
 │   │   │   ├── filesystem
 │   │   │   │   └── filesystem.c
 │   │   │   └── memory
@@ -218,49 +273,100 @@ tree .
 │   │   ├── io_utils
 │   │   │   └── fs_utils
 │   │   │       └── fs_utils.c
-│   │   ├── platform
-│   │   │   ├── platform_concretes
-│   │   │   │   └── platform_glfw.c
-│   │   │   ├── platform_context.c
-│   │   │   └── platform_core
-│   │   │       └── platform_err_utils.c
-│   │   └── renderer
-│   │       ├── renderer_backend
-│   │       │   ├── renderer_backend_concretes
-│   │       │   │   └── gl33
-│   │       │   │       ├── concrete_shader.c
-│   │       │   │       ├── concrete_vao.c
-│   │       │   │       └── concrete_vbo.c
-│   │       │   └── renderer_backend_context
-│   │       │       └── context.c
-│   │       ├── renderer_core
-│   │       │   ├── renderer_err_utils.c
-│   │       │   └── renderer_memory.c
-│   │       └── renderer_resources
-│   │           └── ui_shader.c
+│   │   ├── resource
+│   │   │   ├── loaders
+│   │   │   │   └── bmp_loader.c
+│   │   │   ├── resource_core
+│   │   │   │   └── resource_err_utils.c
+│   │   │   └── texture
+│   │   │       └── texture.c
+│   │   └── systems
+│   │       ├── camera_system
+│   │       │   ├── camera
+│   │       │   │   └── camera.c
+│   │       │   ├── camera_controller
+│   │       │   │   └── flight_camera_controller.c
+│   │       │   ├── camera_core
+│   │       │   │   ├── camera_err_utils.c
+│   │       │   │   └── camera_memory.c
+│   │       │   └── camera_manager
+│   │       │       └── camera_manager.c
+│   │       ├── platform
+│   │       │   ├── platform_concretes
+│   │       │   │   └── platform_glfw.c
+│   │       │   ├── platform_context.c
+│   │       │   └── platform_core
+│   │       │       └── platform_err_utils.c
+│   │       └── renderer
+│   │           ├── renderer_backend
+│   │           │   ├── renderer_backend_concretes
+│   │           │   │   └── gl33
+│   │           │   │       ├── concrete_shader.c
+│   │           │   │       ├── concrete_texture.c
+│   │           │   │       ├── concrete_vao.c
+│   │           │   │       └── concrete_vbo.c
+│   │           │   └── renderer_backend_context
+│   │           │       └── renderer_backend_context.c
+│   │           ├── renderer_core
+│   │           │   ├── renderer_err_utils.c
+│   │           │   └── renderer_memory.c
+│   │           └── renderer_resources
+│   │               └── ui_shader.c
 │   └── entry.c
 ├── test
 │   ├── include
-│   │   ├── platform
-│   │   │   ├── test_platform_context.h
-│   │   │   ├── test_platform_err_utils.h
-│   │   │   └── test_platform_glfw.h
-│   │   ├── renderer
-│   │   │   ├── test_gl33_shader.h
-│   │   │   ├── test_gl33_vao.h
-│   │   │   ├── test_gl33_vbo.h
-│   │   │   ├── test_renderer_backend_context.h
-│   │   │   ├── test_renderer_err_utils.h
-│   │   │   └── test_renderer_memory.h
-│   │   ├── test_camera.h
-│   │   ├── test_choco_math.h
-│   │   ├── test_choco_string.h
-│   │   ├── test_controller.h
-│   │   ├── test_filesystem.h
-│   │   ├── test_fs_utils.h
-│   │   ├── test_linear_allocator.h
-│   │   ├── test_memory_system.h
-│   │   └── test_ring_queue.h
-│   └── test_controller.c
-├── todo.md
+│   │   ├── application
+│   │   │   └── command_interpreter
+│   │   │       └── test_flight_camera.h
+│   │   ├── engine
+│   │   │   ├── base
+│   │   │   │   └── choco_math
+│   │   │   │       └── test_choco_math.h
+│   │   │   ├── containers
+│   │   │   │   ├── test_choco_string.h
+│   │   │   │   └── test_ring_queue.h
+│   │   │   ├── core
+│   │   │   │   ├── filesystem
+│   │   │   │   │   └── test_filesystem.h
+│   │   │   │   └── memory
+│   │   │   │       ├── test_choco_memory.h
+│   │   │   │       └── test_linear_allocator.h
+│   │   │   ├── io_utils
+│   │   │   │   └── fs_utils
+│   │   │   │       └── test_fs_utils.h
+│   │   │   └── systems
+│   │   │       ├── camera_system
+│   │   │       │   ├── camera
+│   │   │       │   │   └── test_camera.h
+│   │   │       │   ├── camera_controller
+│   │   │       │   │   └── test_flight_camera_controller.h
+│   │   │       │   ├── camera_core
+│   │   │       │   │   ├── test_camera_err_utils.h
+│   │   │       │   │   └── test_camera_memory.h
+│   │   │       │   └── camera_manager
+│   │   │       │       └── test_camera_manager.h
+│   │   │       ├── platform
+│   │   │       │   ├── platform_concretes
+│   │   │       │   │   └── test_platform_glfw.h
+│   │   │       │   ├── platform_core
+│   │   │       │   │   └── test_platform_err_utils.h
+│   │   │       │   └── test_platform_context.h
+│   │   │       └── renderer
+│   │   │           ├── renderer_backend
+│   │   │           │   ├── renderer_backend_concretes
+│   │   │           │   │   └── gl33
+│   │   │           │   │       ├── test_concrete_shader.h
+│   │   │           │   │       ├── test_concrete_vao.h
+│   │   │           │   │       └── test_concrete_vbo.h
+│   │   │           │   └── renderer_backend_context
+│   │   │           │       ├── test_context_shader.h
+│   │   │           │       ├── test_context_vao.h
+│   │   │           │       ├── test_context_vbo.h
+│   │   │           │       └── test_renderer_backend_context.h
+│   │   │           └── renderer_core
+│   │   │               ├── test_renderer_err_utils.h
+│   │   │               └── test_renderer_memory.h
+│   │   └── test_controller.h
+│   └── src
+│       └── test_controller.c
 └── valgrind.sh
