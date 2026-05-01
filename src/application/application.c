@@ -62,9 +62,10 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
 #include "engine/systems/camera_system/camera_manager/camera_manager.h"
-
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/camera_system/camera/camera.h"
+
+#include "engine/systems/texture_system/texture_manager.h"
 
 #include "engine/core/geometry_premitive/vertex.h"
 
@@ -104,15 +105,13 @@ typedef struct app_state {
     renderer_backend_context_t* renderer_backend_context;
 
     ui_shader_t* ui_shader;
-    texture_t* ui_texture_cpu1; // テクスチャ1CPU側リソース
-    texture_t* ui_texture_cpu2; // テクスチャ2CPU側リソース
-    renderer_backend_texture_t* ui_texture1;    // テクスチャ1GPU側リソース
-    renderer_backend_texture_t* ui_texture2;    // テクスチャ2GPU側リソース
 
     camera_manager_t* camera_manager;
     camera_t* active_camera;
     int16_t active_camera_id;
     command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
+
+    texture_manager_t* texture_manager;
     // end
 
     bool view_dirty;
@@ -143,6 +142,7 @@ application_result_t application_create(void) {
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -186,7 +186,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    tmp->linear_alloc_pool_size = 1 * KIB;
+    tmp->linear_alloc_pool_size = 128 * KIB;
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
@@ -254,6 +254,15 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("camera manager initialized successfully.");
+
+    // texture system.
+    ret_tex_sys = texture_manager_initialize(128, tmp->linear_alloc, &tmp->texture_manager);
+    if(TEXTURE_SYSTEM_SUCCESS != ret_tex_sys) {
+        ret = app_rslt_convert_texture_system(ret_tex_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to create texture system.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("texture manager initialized successfully.");
     // end Simulation -> launch all systems.
 
     // end Simulation
@@ -289,34 +298,6 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
-
-    ret_resource = texture_create("rabbit_512", &tmp->ui_texture_cpu1);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_texture(ret_resource);
-        ERROR_MESSAGE("application_create(%s) - Failed to create test texture(cpu resource1).", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_resource = texture_create("test_texture_green", &tmp->ui_texture_cpu2);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_texture(ret_resource);
-        ERROR_MESSAGE("application_create(%s) - Failed to create test texture(cpu resource2).", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_renderer = renderer_backend_texture_create(tmp->renderer_backend_context, 0, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp->ui_texture1);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui texture1.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_renderer = renderer_backend_texture_create(tmp->renderer_backend_context, 0, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp->ui_texture2);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui texture2.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // camera create.
     ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
@@ -356,20 +337,6 @@ cleanup:
                 camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
-                if(NULL != tmp->ui_texture2) {
-                    renderer_backend_texture_destroy(tmp->renderer_backend_context, &tmp->ui_texture2);
-                    tmp->ui_texture2 = NULL;
-                }
-                if(NULL != tmp->ui_texture1) {
-                    renderer_backend_texture_destroy(tmp->renderer_backend_context, &tmp->ui_texture1);
-                    tmp->ui_texture1 = NULL;
-                }
-                if(NULL != tmp->ui_texture_cpu1) {
-                    texture_destroy(&tmp->ui_texture_cpu1);
-                }
-                if(NULL != tmp->ui_texture_cpu2) {
-                    texture_destroy(&tmp->ui_texture_cpu2);
-                }
                 if(NULL != tmp->ui_shader) {
                     ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
                 }
@@ -413,24 +380,13 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->texture_manager) {
+        texture_manager_deinitialize(s_app_state->renderer_backend_context, s_app_state->texture_manager);
+    }
     if(NULL != s_app_state->camera_manager) {
         camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
-        if(NULL != s_app_state->ui_texture2) {
-            renderer_backend_texture_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_texture2);
-            s_app_state->ui_texture2 = NULL;
-        }
-        if(NULL != s_app_state->ui_texture1) {
-            renderer_backend_texture_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_texture1);
-            s_app_state->ui_texture1 = NULL;
-        }
-        if(NULL != s_app_state->ui_texture_cpu2) {
-            texture_destroy(&s_app_state->ui_texture_cpu2);
-        }
-        if(NULL != s_app_state->ui_texture_cpu1) {
-            texture_destroy(&s_app_state->ui_texture_cpu1);
-        }
         if(NULL != s_app_state->ui_shader) {
             ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
         }
@@ -474,15 +430,9 @@ cleanup:
 
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    uint8_t* texture_pixels1 = NULL;
-    uint8_t texture_channel_count1 = 0;
-    uint16_t texture_width1 = 0;
-    uint16_t texture_height1 = 0;
-    uint8_t* texture_pixels2 = NULL;
-    uint8_t texture_channel_count2 = 0;
-    uint16_t texture_width2 = 0;
-    uint16_t texture_height2 = 0;
+    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    int16_t tex_id = 0;
+    renderer_backend_texture_t* tex_gpu_resource = NULL;
 
     struct timespec  req = {0, 1000000};
 
@@ -545,17 +495,7 @@ application_result_t application_run(void) {
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
-    ret_resource = texture_pixel_load(s_app_state->ui_texture_cpu1, "assets/textures/", ".bmp");
-    ret_resource = texture_pixel_get(s_app_state->ui_texture_cpu1, &texture_pixels1);
-    ret_resource = texture_pixel_size_get(s_app_state->ui_texture_cpu1, &texture_width1, &texture_height1, &texture_channel_count1);
-    renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture1, texture_width1, texture_height1, texture_channel_count1, texture_pixels1);
-    texture_pixel_unload(s_app_state->ui_texture_cpu1);
-
-    ret_resource = texture_pixel_load(s_app_state->ui_texture_cpu2, NULL, NULL);
-    ret_resource = texture_pixel_get(s_app_state->ui_texture_cpu2, &texture_pixels2);
-    ret_resource = texture_pixel_size_get(s_app_state->ui_texture_cpu2, &texture_width2, &texture_height2, &texture_channel_count2);
-    renderer_backend_texture_pixel_upload(s_app_state->renderer_backend_context, s_app_state->ui_texture2, texture_width2, texture_height2, texture_channel_count2, texture_pixels2);
-    texture_pixel_unload(s_app_state->ui_texture_cpu2);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
@@ -584,13 +524,12 @@ application_result_t application_run(void) {
 
         ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
-        renderer_backend_texture_bind(s_app_state->renderer_backend_context, s_app_state->ui_texture1);
+        texture_manager_gpu_resource_get(tex_id, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, s_app_state->ui_texture1);
 
-        renderer_backend_texture_bind(s_app_state->renderer_backend_context, s_app_state->ui_texture2);
         glDrawArrays(GL_TRIANGLES, 6, 6);
-        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, s_app_state->ui_texture2);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary

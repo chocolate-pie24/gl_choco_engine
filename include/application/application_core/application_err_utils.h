@@ -30,6 +30,7 @@ extern "C" {
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/texture_system/texture_manager.h"
 
 #include "engine/resource/texture/texture.h"
 
@@ -96,7 +97,7 @@ application_result_t app_rslt_convert_renderer(renderer_result_t rslt_);
  */
 application_result_t app_rslt_convert_camera(camera_result_t rslt_);
 
-application_result_t app_rslt_convert_texture(resource_result_t rslt_);
+application_result_t app_rslt_convert_texture_system(texture_system_result_t rslt_);
 
 #ifdef __cplusplus
 }
