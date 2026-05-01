@@ -431,7 +431,8 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
-    int16_t tex_id = 0;
+    int16_t tex_id_rabbit = 0;
+    int16_t tex_id_frog = 0;
     renderer_backend_texture_t* tex_gpu_resource = NULL;
 
     struct timespec  req = {0, 1000000};
@@ -495,7 +496,8 @@ application_result_t application_run(void) {
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
@@ -524,10 +526,13 @@ application_result_t application_run(void) {
 
         ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
-        texture_manager_gpu_resource_get(tex_id, s_app_state->texture_manager, &tex_gpu_resource);
+        texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
+        texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, 6, 6);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
