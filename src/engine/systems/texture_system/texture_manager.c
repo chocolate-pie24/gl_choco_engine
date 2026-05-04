@@ -121,7 +121,6 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
     texture_manager_->gpu_resources = NULL;
 }
 
-// TODO: test_textureに対応させる
 texture_system_result_t texture_manager_register(renderer_backend_context_t* backend_context_, int32_t gpu_unit_num_, const char* texture_name_, texture_manager_t* texture_manager_, int16_t* out_texture_id_) {
     texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;

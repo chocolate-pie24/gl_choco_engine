@@ -497,7 +497,7 @@ application_result_t application_run(void) {
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_frog);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
