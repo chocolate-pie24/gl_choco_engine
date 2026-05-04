@@ -789,6 +789,8 @@ renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* ba
         ERROR_MESSAGE("renderer_backend_texture_unbind(%s) - Failed to unbind texture.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+    backend_context_->current_texture_unit = 0;
+    backend_context_->current_bound_texture = 0;
 
 cleanup:
     return ret;

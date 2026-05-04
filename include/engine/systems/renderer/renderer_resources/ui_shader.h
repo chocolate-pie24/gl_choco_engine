@@ -88,15 +88,11 @@ renderer_result_t ui_shader_vertex_buffer_create(renderer_backend_context_t* bac
 
 void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
-// TODO: この中のunbindはsubload内で行うように修正する
 renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, void* write_data_);
-
-// TODO: これはまだ未実装
-renderer_result_t ui_shader_vertex_buffer_resize(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t buffer_size_);
 
 renderer_result_t ui_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
-// TODO: ui_shader_vertex_array_unbind
+renderer_result_t ui_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
 /**
  * @brief UIシェーダープログラムの使用開始をグラフィックスAPIに伝える

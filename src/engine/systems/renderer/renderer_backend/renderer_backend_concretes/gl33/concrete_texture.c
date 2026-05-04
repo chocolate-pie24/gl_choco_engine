@@ -165,6 +165,7 @@ static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t hei
 
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "pixels_")
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
     if(3 == channel_count_) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
     } else if(4 == channel_count_) {
@@ -178,6 +179,7 @@ static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t hei
     ret = RENDERER_SUCCESS;
 
 cleanup:
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     return ret;
 }
 

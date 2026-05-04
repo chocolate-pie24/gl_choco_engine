@@ -221,6 +221,24 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
 
     width = (size_t)(tmp_info_header.bi_width);
     bit_count = (size_t)(tmp_info_header.bi_bit_count);
+
+    // 現状ではINT16_MAXがサイズの上限なので不要だが、将来的な拡張のためにチェックをいれる
+    if((SIZE_MAX / width) < bit_count) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: bit_count * width would overflow. width=%zu, bit_count=%zu", resource_rslt_to_str(ret), width, bit_count);
+        goto cleanup;
+    }
+    if((SIZE_MAX - 31) < (bit_count * width)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: row bit count alignment overflow. row_bits=%zu", resource_rslt_to_str(ret), bit_count * width);
+        goto cleanup;
+    }
+    if((SIZE_MAX / 4) < ((bit_count * width + 31) / 32)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: aligned stride byte count overflow. aligned_units=%zu", resource_rslt_to_str(ret), (bit_count * width + 31) / 32);
+        goto cleanup;
+    }
+
     stride = ((bit_count * width + 31) / 32) * 4;
     padding = stride - (bit_count * width / 8);
     ret = pixel_load(fullpath_, &tmp_file_header, &tmp_info_header, stride, &tmp_pixels);
@@ -494,10 +512,22 @@ static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
         const size_t channel_count = (24 == bit_count) ? 3 : 4;
         const size_t height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
 
+        // NOTE: 現状はサイズがint16_tなのでオーバーフローにはならないが、将来の拡張のために入れておく
+        if((SIZE_MAX / height) < width) {
+            ret = RESOURCE_OVERFLOW;
+            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output pixel count: width * height would overflow. width=%zu, height=%zu", resource_rslt_to_str(ret), width, height);
+            goto cleanup;
+        }
+        if((SIZE_MAX / channel_count) < (width * height)) {
+            ret = RESOURCE_OVERFLOW;
+            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output image size: pixel_count * channel_count would overflow. pixel_count=%zu, channel_count=%zu", resource_rslt_to_str(ret), width * height, channel_count);
+            goto cleanup;
+        }
+
         new_size = width * height * channel_count;
         if(new_size > UINT32_MAX) {
             ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - new_size overflow.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - BMP output image size exceeds uint32_t range. output_size=%zu, limit=%u", resource_rslt_to_str(ret), new_size, UINT32_MAX);
             goto cleanup;
         }
         ret_mem = memory_system_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
@@ -615,7 +645,7 @@ cleanup:
     return ret;
 }
 
-// bi_size_imageが0の場合に値を更新するため、info_header_は非const
+// bi_size_imageは自前で計算するため非const
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -666,18 +696,32 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    if(0 == info_header_->bi_size_image) {
-        size_t height = (0 < info_header_->bi_height) ? (size_t)(info_header_->bi_height) : (size_t)(-1 * (int64_t)info_header_->bi_height);
-        pixel_buffer_size = stride_ * height;
-        if(pixel_buffer_size > UINT32_MAX) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("pixel_load(%s) - pixel buffer size overflow.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-        info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
-    } else {
-        pixel_buffer_size = info_header_->bi_size_image;
+    // NOTE: info_header_->bi_size_imageはツールによっては信用できない値が入るので、strideとheightから自前で計算する
+    size_t height = (0 < info_header_->bi_height) ? (size_t)(info_header_->bi_height) : (size_t)(-1 * (int64_t)info_header_->bi_height);
+    if(SIZE_MAX / height < stride_) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("pixel_load(%s) - Failed to calculate BMP source pixel buffer size: stride * height would overflow. stride=%zu, height=%zu", resource_rslt_to_str(ret), stride_, height);
+        goto cleanup;
     }
+    pixel_buffer_size = stride_ * height;
+    if(pixel_buffer_size > UINT32_MAX) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("pixel_load(%s) - BMP source pixel buffer size exceeds uint32_t range. pixel_buffer_size=%zu, limit=%u", resource_rslt_to_str(ret), pixel_buffer_size, UINT32_MAX);
+        goto cleanup;
+    }
+    info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
+
+    if((SIZE_MAX - pixel_buffer_size) < file_header_->bf_off_bits) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("pixel_load(%s) - BMP pixel data range overflow: bfOffBits + pixel_buffer_size would overflow. bfOffBits=%u, pixel_buffer_size=%zu", resource_rslt_to_str(ret), file_header_->bf_off_bits, pixel_buffer_size);
+        goto cleanup;
+    }
+    if((file_header_->bf_off_bits + pixel_buffer_size) > file_header_->bf_size) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("pixel_load(%s) - Invalid BMP pixel data range: pixel data extends beyond file size. bfOffBits=%u, pixel_buffer_size=%zu, bfSize=%u", resource_rslt_to_str(ret), file_header_->bf_off_bits, pixel_buffer_size, file_header_->bf_size);
+        goto cleanup;
+    }
+
     ret_mem = memory_system_allocate(pixel_buffer_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
@@ -787,42 +831,46 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_) {
 
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_) {
     if(NULL == file_header_ || NULL == info_header_) {
+        DEBUG_MESSAGE("BMP validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", file_header_, info_header_);
         return BMP_FILE_UNDEFINED;
     }
 
     bmp_invalid_reason_t ret = BMP_FILE_VALID;
     if(0x4D42 != file_header_->bf_type) {
-        DEBUG_MESSAGE("is_bmp_supported - file_header_->bf_type is not valid(%d).", file_header_->bf_type);
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP signature: expected=0x4D42('BM'), actual=0x%04X", file_header_->bf_type);
         ret = BMP_FILE_INVALID_BF_TYPE;
     } else if(0 != file_header_->bf_reserved1 || 0 != file_header_->bf_reserved2) {
-        DEBUG_MESSAGE("is_bmp_supported - file_header_->bf_reserved1,2 is not valid(%d, %d).", file_header_->bf_reserved1, file_header_->bf_reserved2);
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP reserved fields: expected bfReserved1=0 and bfReserved2=0, actual bfReserved1=%u, bfReserved2=%u", file_header_->bf_reserved1, file_header_->bf_reserved2);
         ret = BMP_FILE_INVALID_BF_RESERVED;
     } else if(54 >= file_header_->bf_size) {
-        DEBUG_MESSAGE("is_bmp_supported - file_header_->bf_size is not valid(%d).", file_header_->bf_size);
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP file size: bfSize must be greater than BMP header size. bfSize=%u", file_header_->bf_size);
         ret = BMP_FILE_INVALID_BF_SIZE;
     } else if(54 > file_header_->bf_off_bits) {
-        DEBUG_MESSAGE("is_bmp_supported - file_header_->bf_off_bits is not valid(%d).", file_header_->bf_off_bits);
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP pixel data offset: bfOffBits must be at least 54 for BITMAPINFOHEADER. bfOffBits=%u, minimum=54", file_header_->bf_off_bits);
+        ret = BMP_FILE_INVALID_BF_OFF_BITS;
+    } else if(file_header_->bf_size <= file_header_->bf_off_bits) {
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP pixel data offset: bfOffBits must be smaller than bfSize. bfOffBits=%u, bfSize=%u", file_header_->bf_off_bits, file_header_->bf_size);
         ret = BMP_FILE_INVALID_BF_OFF_BITS;
     } else if(40 != info_header_->bi_size) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_size is not valid(%d).", info_header_->bi_size);
+        DEBUG_MESSAGE("is_bmp_supported - Unsupported DIB header size: only BITMAPINFOHEADER(40 bytes) is supported. biSize=%u", info_header_->bi_size);
         ret = BMP_FILE_INVALID_BI_SIZE;
     } else if(1 != info_header_->bi_planes) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_planes is not valid(%d).", info_header_->bi_planes);
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP plane count: biPlanes must be 1. biPlanes=%u", info_header_->bi_planes);
         ret = BMP_FILE_INVALID_BI_PLANES;
     } else if(0 != info_header_->bi_compression) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_compression is not valid(%d).", info_header_->bi_compression);
+        DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP compression: only BI_RGB(0) is supported. biCompression=%u", info_header_->bi_compression);
         ret = BMP_FILE_INVALID_COMPRESSION;
     } else if(0 == info_header_->bi_bit_count || 0 == info_header_->bi_height || 0 == info_header_->bi_width) {
-        DEBUG_MESSAGE("is_bmp_supported - Provided BMP is not initialized.");
+        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP dimensions or bit count: width, height, and bit_count must be non-zero. width=%d, height=%d, bit_count=%u", info_header_->bi_width, info_header_->bi_height, info_header_->bi_bit_count);
         ret = BMP_FILE_NOT_INITIALIZED;
     } else if(INT16_MIN > info_header_->bi_height || INT16_MAX < info_header_->bi_height) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_height is not valid(%d).", info_header_->bi_height);
+        DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP height: height must be within int16_t-compatible range. height=%d, min=%d, max=%d", info_header_->bi_height, INT16_MIN, INT16_MAX);
         ret = BMP_FILE_INVALID_HEIGHT;
     } else if(info_header_->bi_width < 0 || INT16_MAX < info_header_->bi_width) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_width is not valid(%d).", info_header_->bi_width);
+        DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP width: width must be positive and within int16_t-compatible range. width=%d, max=%d", info_header_->bi_width, INT16_MAX);
         ret = BMP_FILE_INVALID_WIDTH;
     } else if(24 != info_header_->bi_bit_count && 32 != info_header_->bi_bit_count) {
-        DEBUG_MESSAGE("is_bmp_supported - info_header_->bi_bit_count is not valid(%d).", info_header_->bi_bit_count);
+        DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP bit count: only 24-bit and 32-bit BMP files are supported. biBitCount=%u", info_header_->bi_bit_count);
         ret = BMP_FILE_INVALID_CHANNEL_COUNT;
     } else {
         ret = BMP_FILE_VALID;
