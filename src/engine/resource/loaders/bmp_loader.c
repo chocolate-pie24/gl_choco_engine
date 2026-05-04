@@ -615,7 +615,7 @@ cleanup:
     return ret;
 }
 
-// bi_size_imageが0の場合に値を更新するため、info_header_は非const
+// bi_size_imageは自前で計算するため非const
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -666,18 +666,15 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    if(0 == info_header_->bi_size_image) {
-        size_t height = (0 < info_header_->bi_height) ? (size_t)(info_header_->bi_height) : (size_t)(-1 * (int64_t)info_header_->bi_height);
-        pixel_buffer_size = stride_ * height;
-        if(pixel_buffer_size > UINT32_MAX) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("pixel_load(%s) - pixel buffer size overflow.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-        info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
-    } else {
-        pixel_buffer_size = info_header_->bi_size_image;
+    // NOTE: info_header_->bi_size_imageはツールによっては信用できない値が入るので、strideとheightから自前で計算する
+    size_t height = (0 < info_header_->bi_height) ? (size_t)(info_header_->bi_height) : (size_t)(-1 * (int64_t)info_header_->bi_height);
+    pixel_buffer_size = stride_ * height;
+    if(pixel_buffer_size > UINT32_MAX) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("pixel_load(%s) - pixel buffer size overflow.", resource_rslt_to_str(ret));
+        goto cleanup;
     }
+    info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
     ret_mem = memory_system_allocate(pixel_buffer_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
