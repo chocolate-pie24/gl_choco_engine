@@ -20,10 +20,6 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
-/**
- * @brief カメラ管理システム内部状態管理構造体
- *
- */
 struct texture_manager {
     int16_t max_texture_count;
     texture_t** cpu_resources;
@@ -109,14 +105,20 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
     if(NULL == texture_manager_) {
         return;
     }
-    if(0 == texture_manager_->max_texture_count) {
+    if(0 >= texture_manager_->max_texture_count) {
+        return;
+    }
+    if(NULL == texture_manager_->gpu_resources || NULL == texture_manager_->cpu_resources) {
         return;
     }
     for(int16_t i = 0; i != texture_manager_->max_texture_count; ++i) {
+        // NOTE: texture_destroy, renderer_backend_texture_destroyはNULLを渡されたら何もしないのでチェック不要
         texture_destroy(&texture_manager_->cpu_resources[i]);
         renderer_backend_texture_destroy(backend_context_, &texture_manager_->gpu_resources[i]);
     }
     texture_manager_->max_texture_count = 0;
+    texture_manager_->cpu_resources = NULL;
+    texture_manager_->gpu_resources = NULL;
 }
 
 // TODO: test_textureに対応させる
@@ -141,14 +143,30 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
     IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_register", "texture_manager_->gpu_resources")
 
     for(int16_t i = 0; i != texture_manager_->max_texture_count; ++i) {
-        if(NULL == texture_manager_->cpu_resources[i] && NULL == texture_manager_->gpu_resources[i]) {
+        if(NULL == texture_manager_->cpu_resources[i] && NULL != texture_manager_->gpu_resources[i]) {
+            ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+            ERROR_MESSAGE("texture_manager_register(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+            goto cleanup;
+        } else if(NULL != texture_manager_->cpu_resources[i] && NULL == texture_manager_->gpu_resources[i]) {
+            ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+            ERROR_MESSAGE("texture_manager_register(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+            goto cleanup;
+        } else if(NULL == texture_manager_->cpu_resources[i] && NULL == texture_manager_->gpu_resources[i]) {
             if(INVALID_TEXTURE_ID == free_slot) {
                 free_slot = i;
             }
-        } else if(choco_string_equal(texture_name_, texture_name_get(texture_manager_->cpu_resources[i]))) {
-            ret = TEXTURE_SYSTEM_BAD_OPERATION;
-            ERROR_MESSAGE("texture_manager_register(%s) - Provided texture name '%s' is already registered.", tex_sys_rslt_to_str(ret), texture_name_);
-            goto cleanup;
+        } else {
+            const char* name = texture_name_get(texture_manager_->cpu_resources[i]);
+            if(NULL == name) {
+                // NOTE: cpu_resources[i] != NULL && gpu_resources[i] != NULLでname == NULLは破損
+                ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+                ERROR_MESSAGE("texture_manager_register(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+                goto cleanup;
+            } else if(choco_string_equal(texture_name_, name)) {
+                ret = TEXTURE_SYSTEM_BAD_OPERATION;
+                ERROR_MESSAGE("texture_manager_register(%s) - Provided texture name '%s' is already registered.", tex_sys_rslt_to_str(ret), texture_name_);
+                goto cleanup;
+            }
         }
     }
     if(INVALID_TEXTURE_ID == free_slot) {
@@ -159,49 +177,49 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
         ret_resource = texture_create(texture_name_, &tmp_cpu_resource);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to create texture cpu resource. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to create texture cpu resource. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_renderer = renderer_backend_texture_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp_gpu_resource);
         if(RENDERER_SUCCESS != ret_renderer) {
             ret = tex_sys_rslt_convert_renderer(ret_renderer);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to create texture gpu resource. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to create texture gpu resource. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_resource = texture_pixel_load(tmp_cpu_resource, "assets/textures/", ".bmp");
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to load BMP file. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to load BMP file. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_resource = texture_pixel_get(tmp_cpu_resource, &texture_pixels);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to get texture pixels. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to get texture pixels. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_resource = texture_pixel_size_get(tmp_cpu_resource, &width, &height, &channel_count);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to get pixel size. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to get pixel size. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_renderer = renderer_backend_texture_pixel_upload(backend_context_, tmp_gpu_resource, width, height, channel_count, texture_pixels);
         if(RENDERER_SUCCESS != ret_renderer) {
-            ret = tex_sys_rslt_convert_resource(ret_renderer);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to upload texture pixels. texture name = '%s'.", ret, texture_name_);
+            ret = tex_sys_rslt_convert_renderer(ret_renderer);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to upload texture pixels. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
         ret_resource = texture_pixel_unload(tmp_cpu_resource);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to unload texture pixels. texture name = '%s'.", ret, texture_name_);
+            ERROR_MESSAGE("texture_manager_register(%s) - Failed to unload texture pixels. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
@@ -213,11 +231,113 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
     ret = TEXTURE_SYSTEM_SUCCESS;
 
 cleanup:
-    if(TEXTURE_SYSTEM_SUCCESS != ret) {
+    if(TEXTURE_SYSTEM_SUCCESS != ret && NULL != backend_context_) {
         texture_destroy(&tmp_cpu_resource);
         renderer_backend_texture_destroy(backend_context_, &tmp_gpu_resource);
     }
     return ret;
+}
+
+texture_system_result_t texture_manager_unregister(renderer_backend_context_t* backend_context_, int16_t texture_id_, texture_manager_t* texture_manager_) {
+    texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister", "texture_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_manager_->max_texture_count > 0, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister", "texture_manager_->max_texture_count")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->cpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister", "texture_manager_->cpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister", "texture_manager_->gpu_resources")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_id_ < texture_manager_->max_texture_count, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister", "texture_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_id_ >= 0, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister", "texture_id_")
+
+    if(NULL == texture_manager_->cpu_resources[texture_id_] && NULL != texture_manager_->gpu_resources[texture_id_]) {
+        ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_manager_unregister(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+        goto cleanup;
+    } else if(NULL != texture_manager_->cpu_resources[texture_id_] && NULL == texture_manager_->gpu_resources[texture_id_]) {
+        ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_manager_unregister(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+        goto cleanup;
+    } else if(NULL == texture_manager_->gpu_resources[texture_id_] || NULL == texture_manager_->cpu_resources[texture_id_]) {
+        ret = TEXTURE_SYSTEM_BAD_OPERATION;
+        ERROR_MESSAGE("texture_manager_unregister(%s) - Provided texture id '%d' is not registered.", tex_sys_rslt_to_str(ret), texture_id_);
+        goto cleanup;
+    }
+    renderer_backend_texture_destroy(backend_context_, &texture_manager_->gpu_resources[texture_id_]);
+    texture_destroy(&texture_manager_->cpu_resources[texture_id_]);
+
+    ret = TEXTURE_SYSTEM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+texture_system_result_t texture_manager_unregister_by_name(renderer_backend_context_t* backend_context_, const char* name_, texture_manager_t* texture_manager_) {
+    texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    int16_t id = INVALID_TEXTURE_ID;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister_by_name", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister_by_name", "texture_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_manager_->max_texture_count > 0, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister_by_name", "texture_manager_->max_texture_count")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->cpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister_by_name", "texture_manager_->cpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_unregister_by_name", "texture_manager_->gpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_unregister_by_name", "name_")
+
+    id = texture_manager_texture_id_get(name_, texture_manager_);
+    if(INVALID_TEXTURE_ID == id) {
+        ret = TEXTURE_SYSTEM_BAD_OPERATION;
+        ERROR_MESSAGE("texture_manager_unregister_by_name(%s) - Provided texture name '%s' not found.", tex_sys_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+
+    ret = texture_manager_unregister(backend_context_, id, texture_manager_);
+    if(TEXTURE_SYSTEM_SUCCESS != ret) {
+        ERROR_MESSAGE("texture_manager_unregister_by_name(%s) - Failed to unregister texture. texture name = '%s'.", tex_sys_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+
+    ret = TEXTURE_SYSTEM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+int16_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_) {
+    texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    int16_t ret_id = INVALID_TEXTURE_ID;
+    bool found = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_texture_id_get", "texture_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_manager_->max_texture_count > 0, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_texture_id_get", "texture_manager_->max_texture_count")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->cpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_texture_id_get", "texture_manager_->cpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_texture_id_get", "texture_manager_->gpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_texture_id_get", "name_")
+
+    for(int16_t i = 0; i != texture_manager_->max_texture_count; ++i) {
+        if(NULL == texture_manager_->cpu_resources[i] && NULL != texture_manager_->gpu_resources[i]) {
+            ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+            ERROR_MESSAGE("texture_manager_texture_id_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+            goto cleanup;
+        } else if(NULL != texture_manager_->cpu_resources[i] && NULL == texture_manager_->gpu_resources[i]) {
+            ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+            ERROR_MESSAGE("texture_manager_texture_id_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+            goto cleanup;
+        } else if(NULL != texture_manager_->cpu_resources[i]) {
+            const char* name = texture_name_get(texture_manager_->cpu_resources[i]);
+            if(NULL != name && choco_string_equal(name_, name)) {
+                ret_id = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    if(!found) {
+        ret = TEXTURE_SYSTEM_BAD_OPERATION;
+        WARN_MESSAGE("texture_manager_texture_id_get(%s) - Provided texture name '%s' not found.", tex_sys_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+
+cleanup:
+    return ret_id;
 }
 
 texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_) {
@@ -231,12 +351,50 @@ texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, co
     IF_ARG_FALSE_GOTO_CLEANUP(texture_id_ < texture_manager_->max_texture_count, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_gpu_resource_get", "texture_id_")
     IF_ARG_FALSE_GOTO_CLEANUP(texture_id_ >= 0, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_gpu_resource_get", "texture_id_")
 
-    if(NULL == texture_manager_->gpu_resources[texture_id_]) {
+    if(NULL == texture_manager_->cpu_resources[texture_id_] && NULL != texture_manager_->gpu_resources[texture_id_]) {
+        ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_manager_gpu_resource_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+        goto cleanup;
+    } else if(NULL != texture_manager_->cpu_resources[texture_id_] && NULL == texture_manager_->gpu_resources[texture_id_]) {
+        ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_manager_gpu_resource_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+        goto cleanup;
+    } else if(NULL == texture_manager_->gpu_resources[texture_id_]) {
         ret = TEXTURE_SYSTEM_BAD_OPERATION;
         ERROR_MESSAGE("texture_manager_gpu_resource_get(%s) - Provided texture id '%d' not found.", tex_sys_rslt_to_str(ret), texture_id_);
         goto cleanup;
     }
     *out_gpu_resource_ = texture_manager_->gpu_resources[texture_id_];
+
+    ret = TEXTURE_SYSTEM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+texture_system_result_t texture_manager_gpu_resource_get_by_name(const char* name_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_) {
+    texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    int16_t id = INVALID_TEXTURE_ID;
+
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_gpu_resource_get_by_name", "texture_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_manager_->max_texture_count > 0, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_gpu_resource_get_by_name", "texture_manager_->max_texture_count")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->cpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_gpu_resource_get_by_name", "texture_manager_->cpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_gpu_resource_get_by_name", "texture_manager_->gpu_resources")
+    IF_ARG_NULL_GOTO_CLEANUP(out_gpu_resource_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_gpu_resource_get_by_name", "out_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_gpu_resource_get_by_name", "name_")
+
+    id = texture_manager_texture_id_get(name_, texture_manager_);
+    if(INVALID_TEXTURE_ID == id) {
+        ret = TEXTURE_SYSTEM_BAD_OPERATION;
+        ERROR_MESSAGE("texture_manager_gpu_resource_get_by_name(%s) - Provided texture name '%s' not found.", tex_sys_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+
+    ret = texture_manager_gpu_resource_get(id, texture_manager_, out_gpu_resource_);
+    if(TEXTURE_SYSTEM_SUCCESS != ret) {
+        ERROR_MESSAGE("texture_manager_gpu_resource_get_by_name(%s) - Failed to get texture gpu resource. texture name = '%s'.", tex_sys_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
 
     ret = TEXTURE_SYSTEM_SUCCESS;
 
@@ -283,6 +441,8 @@ static texture_system_result_t tex_sys_rslt_convert_linear_alloc(linear_allocato
         return TEXTURE_SYSTEM_NO_MEMORY;
     case LINEAR_ALLOC_INVALID_ARGUMENT:
         return TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    default:
+        return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     }
 }
 

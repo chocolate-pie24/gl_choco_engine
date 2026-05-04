@@ -7,15 +7,10 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/texture/texture.h"
-
-#include "engine/core/memory/linear_allocator.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
-
+typedef struct linear_alloc linear_alloc_t;
 typedef struct texture_manager texture_manager_t;
+typedef struct renderer_backend_context renderer_backend_context_t;
+typedef struct renderer_backend_texture renderer_backend_texture_t;
 
 #define INVALID_TEXTURE_ID (-1)
 
@@ -41,15 +36,15 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
 
 texture_system_result_t texture_manager_register(renderer_backend_context_t* backend_context_, int32_t gpu_unit_num_, const char* texture_name_, texture_manager_t* texture_manager_, int16_t* out_texture_id_);
 
-// texture_system_result_t texture_manager_unregister(int16_t texture_id_, texture_manager_t* texture_manager_);
+texture_system_result_t texture_manager_unregister(renderer_backend_context_t* backend_context_, int16_t texture_id_, texture_manager_t* texture_manager_);
 
-// texture_system_result_t texture_manager_unregister_by_name(const char* name_, texture_manager_t* texture_manager_);
+texture_system_result_t texture_manager_unregister_by_name(renderer_backend_context_t* backend_context_, const char* name_, texture_manager_t* texture_manager_);
 
-// int16_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_);
+int16_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_);
 
 texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
 
-// texture_system_result_t texture_manager_texture_get_by_name(const char* name_, const texture_manager_t* texture_manager_, texture_t** out_texture_);
+texture_system_result_t texture_manager_gpu_resource_get_by_name(const char* name_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
 
 #ifdef __cplusplus
 }
