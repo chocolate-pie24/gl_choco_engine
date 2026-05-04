@@ -380,10 +380,6 @@ cleanup:
     return ret;
 }
 
-renderer_result_t ui_shader_vertex_buffer_resize(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t buffer_size_) {
-    return RENDERER_INVALID_ARGUMENT;
-}
-
 renderer_result_t ui_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
@@ -405,6 +401,25 @@ cleanup:
             renderer_backend_vertex_array_unbind(backend_context_, ui_shader_->ui_vao);
         }
     }
+    return ret;
+}
+
+renderer_result_t ui_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_array_unbind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_array_unbind", "ui_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_->ui_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_array_unbind", "ui_vao")
+
+    ret = renderer_backend_vertex_array_unbind(backend_context_, ui_shader_->ui_vao);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_vertex_array_unbind(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
     return ret;
 }
 

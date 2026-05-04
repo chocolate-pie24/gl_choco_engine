@@ -536,6 +536,8 @@ application_result_t application_run(void) {
         glDrawArrays(GL_TRIANGLES, 6, 6);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
+        ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
 
