@@ -35,6 +35,7 @@ static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**<
 static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
+static const char* const s_rslt_str_unsupported_fle = "UNSUPPORTED_FILE";   /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 const char* app_rslt_to_str(application_result_t rslt_) {
@@ -55,6 +56,8 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_overflow;
     case APPLICATION_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
+    case APPLICATION_UNSUPPORTED_FILE:
+        return s_rslt_str_unsupported_fle;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -221,7 +224,7 @@ application_result_t app_rslt_convert_texture_system(texture_system_result_t rsl
     case TEXTURE_SYSTEM_FILE_READ_ERROR:
         return APPLICATION_RUNTIME_ERROR;
     case TEXTURE_SYSTEM_UNSUPPORTED_FILE:
-        return APPLICATION_RUNTIME_ERROR;   // TODO: APPLICATION_UNSUPPORTED_FILEを追加する
+        return APPLICATION_UNSUPPORTED_FILE;
     case TEXTURE_SYSTEM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:

@@ -37,6 +37,7 @@ typedef enum {
     APPLICATION_BAD_OPERATION,      /**< API誤用 */
     APPLICATION_OVERFLOW,           /**< 計算過程でオーバーフロー発生 */
     APPLICATION_LIMIT_EXCEEDED,     /**< システム使用可能範囲上限超過 */
+    APPLICATION_UNSUPPORTED_FILE,   /**< 未対応のファイル形式 */
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;
 
