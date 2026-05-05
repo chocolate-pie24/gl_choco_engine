@@ -239,7 +239,6 @@ const char* choco_string_c_str(const choco_string_t* string_);
  * @retval true 2つの文字列が等しい
  * @retval false 以下のいずれか
  * - str1_またはstr2_がNULL
- * - str1_とstr2_がNULL
  * - 2つの文字列が等しくない
  */
 bool choco_string_equal(const char* str1_, const char* str2_);
