@@ -42,6 +42,9 @@
 // test: engine/io_utils
 #include "engine/io_utils/fs_utils/test_fs_utils.h"
 
+// test: engine/resource
+#include "engine/resource/resource_core/test_resource_err_utils.h"
+
 // test: engine/systems/platform
 #include "engine/systems/platform/platform_core/test_platform_err_utils.h"
 #include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
@@ -110,6 +113,9 @@ int main(int argc_, char** argv_) {
 
         // engine/io_utils
         test_fs_utils();
+
+        // engine/resource
+        test_resource_err_utils();
 
         // engine/camera
         test_camera_err_utils();
