@@ -12,13 +12,51 @@
 #include "engine/core/buffer_utils/buffer_utils.h"
 #include "engine/core/filesystem/filesystem.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/resource_core/resource_err_utils.h"
 
+// #define TEST_BUILD
+
 #ifdef TEST_BUILD
 #include <assert.h>
+
+#include "engine/resource/loaders/test_bmp_loader.h"
+
+// bmp_loader用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_bmp_loader_create;         /**< bmp_loader_create()テスト設定 */
+static test_call_control_t s_test_config_bmp_loader_load;           /**< bmp_loader_load()テスト設定 */
+static test_call_control_t s_test_config_bmp_loader_pixel_move;     /**< bmp_loader_pixel_move()テスト設定 */
+static test_call_control_t s_test_config_bmp_loader_bmp_size_get;   /**< bmp_loader_bmp_size_get()テスト設定 */
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_bmp_loader_pixel_bgr_to_rgb;   /**< bmp_loader_pixel_bgr_to_rgb()テスト設定 */
+static test_call_control_t s_test_config_bmp_loader_pixel_flip;         /**< bmp_loader_pixel_flip()テスト設定 */
+static test_call_control_t s_test_config_bmp_loader_padding_remove;     /**< bmp_loader_padding_remove()テスト設定 */
+static test_call_control_t s_test_config_header_load;                   /**< header_load()テスト設定 */
+static test_call_control_t s_test_config_pixel_load;                    /**< pixel_load()テスト設定 */
+static test_call_control_t s_test_config_file_header_parse;             /**< file_header_parse()テスト設定 */
+static test_call_control_t s_test_config_info_header_parse;             /**< info_header_parse()テスト設定 */
+static test_call_control_t s_test_config_is_bmp_supported;              /**< is_bmp_supported()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_bmp_loader_create(void);
+static void test_bmp_loader_destroy(void);
+static void test_bmp_loader_load(void);
+static void test_bmp_loader_pixel_move(void);
+static void test_bmp_loader_bmp_size_get(void);
+static void test_bmp_loader_pixel_bgr_to_rgb(void);
+static void test_bmp_loader_pixel_flip(void);
+static void test_bmp_loader_padding_remove(void);
+static void test_header_load(void);
+static void test_pixel_load(void);
+static void test_file_header_parse(void);
+static void test_info_header_parse(void);
+static void test_file_header_copy(void);
+static void test_info_header_copy(void);
+static void test_is_bmp_supported(void);
+static void test_invalid_reason_to_str(void);
 #endif
 
 typedef enum {
@@ -87,8 +125,8 @@ static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_);
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_);
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_);
 
-static resource_result_t file_header_parse(char header_[54], file_header_t* file_header_);
-static resource_result_t info_header_parse(char header_[54], info_header_t* info_header_);
+static resource_result_t file_header_parse(const char header_[54], file_header_t* file_header_);
+static resource_result_t info_header_parse(const char header_[54], info_header_t* info_header_);
 
 static void file_header_copy(const file_header_t* src_, file_header_t* dst_);
 static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
@@ -96,21 +134,29 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_);
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 
-static const char* invalid_bmp_file_reason_valid = "valid BMP file";
-static const char* invalid_bmp_file_reason_bf_type = "invalid bfType";
-static const char* invalid_bmp_file_reason_bf_reserved = "invalid bfReserved field";
-static const char* invalid_bmp_file_reason_bf_size = "invalid bfSize";
-static const char* invalid_bmp_file_reason_bf_off_bits = "invalid bfOffBits";
-static const char* invalid_bmp_file_reason_bi_size = "invalid biSize";
-static const char* invalid_bmp_file_reason_bi_planes = "invalid biPlanes";
-static const char* invalid_bmp_file_reason_compression = "invalid biCompression";
-static const char* invalid_bmp_file_reason_height = "invalid biHeight";
-static const char* invalid_bmp_file_reason_width = "invalid biWidth";
-static const char* invalid_bmp_file_reason_channel_count = "unsupported biBitCount";
-static const char* invalid_bmp_file_reason_not_initialized = "not initialized";
-static const char* invalid_bmp_file_reason_undefined = "undefined";
+static const char* const invalid_bmp_file_reason_valid = "valid BMP file";
+static const char* const invalid_bmp_file_reason_bf_type = "invalid bfType";
+static const char* const invalid_bmp_file_reason_bf_reserved = "invalid bfReserved field";
+static const char* const invalid_bmp_file_reason_bf_size = "invalid bfSize";
+static const char* const invalid_bmp_file_reason_bf_off_bits = "invalid bfOffBits";
+static const char* const invalid_bmp_file_reason_bi_size = "invalid biSize";
+static const char* const invalid_bmp_file_reason_bi_planes = "invalid biPlanes";
+static const char* const invalid_bmp_file_reason_compression = "invalid biCompression";
+static const char* const invalid_bmp_file_reason_height = "invalid biHeight";
+static const char* const invalid_bmp_file_reason_width = "invalid biWidth";
+static const char* const invalid_bmp_file_reason_channel_count = "unsupported biBitCount";
+static const char* const invalid_bmp_file_reason_not_initialized = "not initialized";
+static const char* const invalid_bmp_file_reason_undefined = "undefined";
 
 resource_result_t bmp_loader_create(bmp_loader_t** bmp_loader_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_create.call_count++;
+    if(s_test_config_bmp_loader_create.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_create.call_count == s_test_config_bmp_loader_create.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_create.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
@@ -183,6 +229,14 @@ void bmp_loader_destroy(bmp_loader_t** bmp_loader_) {
 
 // pixelロード処理以降でエラーが発生した場合にはbmp_loader_の値は不変とはならない
 resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loader_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_load.call_count++;
+    if(s_test_config_bmp_loader_load.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_load.call_count == s_test_config_bmp_loader_load.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_load.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
@@ -280,6 +334,14 @@ cleanup:
 
 // bmp_loader_->pixelsの管理権限をout_pixels_へ移譲
 resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_pixel_move.call_count++;
+    if(s_test_config_bmp_loader_pixel_move.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_pixel_move.call_count == s_test_config_bmp_loader_pixel_move.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_pixel_move.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "bmp_loader_")
@@ -298,6 +360,14 @@ cleanup:
 
 // GLCEの画像は左上原点を基準とするためheightは基本的に負の値となるが、絶対値を取って返す
 resource_result_t bmp_loader_bmp_size_get(const bmp_loader_t* bmp_loader_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_bmp_size_get.call_count++;
+    if(s_test_config_bmp_loader_bmp_size_get.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_bmp_size_get.call_count == s_test_config_bmp_loader_bmp_size_get.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_bmp_size_get.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
@@ -350,6 +420,14 @@ cleanup:
 
 // この関数はpadding除去後に実行する
 static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_pixel_bgr_to_rgb.call_count++;
+    if(s_test_config_bmp_loader_pixel_bgr_to_rgb.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_pixel_bgr_to_rgb.call_count == s_test_config_bmp_loader_pixel_bgr_to_rgb.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_pixel_bgr_to_rgb.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
@@ -407,6 +485,14 @@ cleanup:
 // 左下原点の画像を左上原点に直す(GLCEは左上原点の画像を基準にする)
 // この関数は必ずpadding除去後に行うこと！！
 static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_pixel_flip.call_count++;
+    if(s_test_config_bmp_loader_pixel_flip.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_pixel_flip.call_count == s_test_config_bmp_loader_pixel_flip.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_pixel_flip.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
@@ -480,6 +566,14 @@ cleanup:
 }
 
 static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_loader_padding_remove.call_count++;
+    if(s_test_config_bmp_loader_padding_remove.fail_on_call != 0) {
+        if(s_test_config_bmp_loader_padding_remove.call_count == s_test_config_bmp_loader_padding_remove.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_loader_padding_remove.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
@@ -574,6 +668,14 @@ cleanup:
 }
 
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_) {
+#ifdef TEST_BUILD
+    s_test_config_header_load.call_count++;
+    if(s_test_config_header_load.fail_on_call != 0) {
+        if(s_test_config_header_load.call_count == s_test_config_header_load.fail_on_call) {
+            return (resource_result_t)s_test_config_header_load.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
 
@@ -647,6 +749,14 @@ cleanup:
 
 // bi_size_imageは自前で計算するため非const
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_) {
+#ifdef TEST_BUILD
+    s_test_config_pixel_load.call_count++;
+    if(s_test_config_pixel_load.fail_on_call != 0) {
+        if(s_test_config_pixel_load.call_count == s_test_config_pixel_load.fail_on_call) {
+            return (resource_result_t)s_test_config_pixel_load.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
@@ -755,10 +865,19 @@ cleanup:
     return ret;
 }
 
-static resource_result_t file_header_parse(char header_[54], file_header_t* file_header_) {
+static resource_result_t file_header_parse(const char header_[54], file_header_t* file_header_) {
+#ifdef TEST_BUILD
+    s_test_config_file_header_parse.call_count++;
+    if(s_test_config_file_header_parse.fail_on_call != 0) {
+        if(s_test_config_file_header_parse.call_count == s_test_config_file_header_parse.fail_on_call) {
+            return (resource_result_t)s_test_config_file_header_parse.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     file_header_t tmp_header = { 0 };
 
+    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "file_header_parse", "header_")
     IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "file_header_parse", "file_header_")
 
     tmp_header.bf_type = buffer_utils_le_uint16_t_get(header_);
@@ -775,10 +894,19 @@ cleanup:
     return ret;
 }
 
-static resource_result_t info_header_parse(char header_[54], info_header_t* info_header_) {
+static resource_result_t info_header_parse(const char header_[54], info_header_t* info_header_) {
+#ifdef TEST_BUILD
+    s_test_config_info_header_parse.call_count++;
+    if(s_test_config_info_header_parse.fail_on_call != 0) {
+        if(s_test_config_info_header_parse.call_count == s_test_config_info_header_parse.fail_on_call) {
+            return (resource_result_t)s_test_config_info_header_parse.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     info_header_t tmp_header = { 0 };
 
+    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "info_header_parse", "header_")
     IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "info_header_parse", "info_header_")
 
     tmp_header.bi_size = buffer_utils_le_uint32_t_get(header_ + 14);
@@ -830,6 +958,14 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_) {
 }
 
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_) {
+#ifdef TEST_BUILD
+    s_test_config_is_bmp_supported.call_count++;
+    if(s_test_config_is_bmp_supported.fail_on_call != 0) {
+        if(s_test_config_is_bmp_supported.call_count == s_test_config_is_bmp_supported.fail_on_call) {
+            return (bmp_invalid_reason_t)s_test_config_is_bmp_supported.forced_result;
+        }
+    }
+#endif
     if(NULL == file_header_ || NULL == info_header_) {
         DEBUG_MESSAGE("BMP validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", file_header_, info_header_);
         return BMP_FILE_UNDEFINED;
@@ -911,3 +1047,156 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
         return invalid_bmp_file_reason_undefined;
     }
 }
+
+#ifdef TEST_BUILD
+void NO_COVERAGE test_bmp_loader_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_bmp_loader_create.fail_on_call = config_->fail_on_call;
+    s_test_config_bmp_loader_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_bmp_loader_load_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_bmp_loader_load.fail_on_call = config_->fail_on_call;
+    s_test_config_bmp_loader_load.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_bmp_loader_pixel_move_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_bmp_loader_pixel_move.fail_on_call = config_->fail_on_call;
+    s_test_config_bmp_loader_pixel_move.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_bmp_loader_bmp_size_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_bmp_loader_bmp_size_get.fail_on_call = config_->fail_on_call;
+    s_test_config_bmp_loader_bmp_size_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_bmp_loader_config_reset(void) {
+    test_call_control_reset(&s_test_config_bmp_loader_create);
+    test_call_control_reset(&s_test_config_bmp_loader_load);
+    test_call_control_reset(&s_test_config_bmp_loader_pixel_move);
+    test_call_control_reset(&s_test_config_bmp_loader_bmp_size_get);
+
+    test_call_control_reset(&s_test_config_bmp_loader_pixel_bgr_to_rgb);
+    test_call_control_reset(&s_test_config_bmp_loader_pixel_flip);
+    test_call_control_reset(&s_test_config_bmp_loader_padding_remove);
+    test_call_control_reset(&s_test_config_header_load);
+    test_call_control_reset(&s_test_config_pixel_load);
+    test_call_control_reset(&s_test_config_file_header_parse);
+    test_call_control_reset(&s_test_config_info_header_parse);
+    test_call_control_reset(&s_test_config_is_bmp_supported);
+}
+
+void NO_COVERAGE test_bmp_loader(void) {
+    test_bmp_loader_create();
+    test_bmp_loader_destroy();
+    test_bmp_loader_load();
+    test_bmp_loader_pixel_move();
+    test_bmp_loader_bmp_size_get();
+    test_bmp_loader_pixel_bgr_to_rgb();
+    test_bmp_loader_pixel_flip();
+    test_bmp_loader_padding_remove();
+    test_header_load();
+    test_pixel_load();
+    test_file_header_parse();
+    test_info_header_parse();
+    test_file_header_copy();
+    test_info_header_copy();
+    test_is_bmp_supported();
+    test_invalid_reason_to_str();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_create(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_destroy(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_load(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_pixel_move(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_bmp_size_get(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_pixel_bgr_to_rgb(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_pixel_flip(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_bmp_loader_padding_remove(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_header_load(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_pixel_load(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_file_header_parse(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_info_header_parse(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_file_header_copy(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_info_header_copy(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_is_bmp_supported(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_invalid_reason_to_str(void) {
+
+}
+#endif

@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "engine/resource/resource_core/resource_types.h"
 
 typedef struct bmp_loader bmp_loader_t;

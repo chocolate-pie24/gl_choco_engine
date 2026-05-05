@@ -44,6 +44,7 @@
 
 // test: engine/resource
 #include "engine/resource/resource_core/test_resource_err_utils.h"
+#include "engine/resource/loaders/test_bmp_loader.h"
 
 // test: engine/systems/platform
 #include "engine/systems/platform/platform_core/test_platform_err_utils.h"
@@ -116,6 +117,7 @@ int main(int argc_, char** argv_) {
 
         // engine/resource
         test_resource_err_utils();
+        test_bmp_loader();
 
         // engine/camera
         test_camera_err_utils();
