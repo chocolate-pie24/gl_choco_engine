@@ -260,6 +260,9 @@ static void NO_COVERAGE test_camera_rslt_convert_choco_memory(void) {
     actual = camera_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY);
     assert(actual == CAMERA_NO_MEMORY);
 
+    actual = camera_rslt_convert_choco_memory(MEMORY_SYSTEM_BAD_OPERATION);
+    assert(actual == CAMERA_BAD_OPERATION);
+
     /* 未定義の入力は UNDEFINED_ERROR にフォールバックすること */
     actual = camera_rslt_convert_choco_memory((memory_system_result_t)(-1));
     assert(actual == CAMERA_UNDEFINED_ERROR);
