@@ -33,6 +33,7 @@
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
+#include "engine/core/buffer_utils/test_buffer_utils.h"
 
 // test: engine/containers
 #include "engine/containers/test_choco_string.h"
@@ -101,6 +102,7 @@ int main(int argc_, char** argv_) {
         test_linear_allocator();
         test_choco_memory();
         test_filesystem();
+        test_buffer_utils();
 
         // engine/containers
         test_choco_string();
