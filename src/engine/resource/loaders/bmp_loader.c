@@ -76,9 +76,9 @@ struct bmp_loader {
     uint8_t* pixels;
 };
 
-static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_);
-static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_);
-static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_);
+static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_);
+static resource_result_t bmp_loader_pixel_flip(const info_header_t* info_header_, uint8_t* pixels_);
+static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_);
 
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_);
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_);
@@ -239,7 +239,6 @@ void bmp_loader_destroy(bmp_loader_t** bmp_loader_) {
     *bmp_loader_ = NULL;
 }
 
-// pixelロード処理以降でエラーが発生した場合にはbmp_loader_の値は不変とはならない
 resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loader_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_load.call_count++;
@@ -255,6 +254,8 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     uint8_t* tmp_pixels = NULL;
+    uint8_t* formatted_pixels = NULL;
+    size_t formatted_size = 0;
     size_t width = 0;
     size_t bit_count = 0;
     size_t stride = 0;
@@ -307,46 +308,59 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
 
     stride = ((bit_count * width + 31) / 32) * 4;
     padding = stride - (bit_count * width / 8);
-    ret = pixel_load(fullpath_, &tmp_file_header, &tmp_info_header, stride, &tmp_pixels);
+    ret = pixel_load(fullpath_, &tmp_file_header, &tmp_info_header, stride, &tmp_pixels);   // 内部でtmp_pixelsのメモリが確保されるが、失敗時には解放される
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to load BMP pixel data.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    file_header_copy(&tmp_file_header, &bmp_loader_->file_header);
-    info_header_copy(&tmp_info_header, &bmp_loader_->info_header);
-    bmp_loader_->pixels = tmp_pixels;
-
-    bmp_loader_->padding = padding;
-    bmp_loader_->stride = stride;
-
-    // TODO: パディング計算用不要判定をremove内で行うように変更する
-    if(0 < bmp_loader_->padding) {
-        ret = bmp_loader_padding_remove(bmp_loader_);
+    if(0 < padding) {
+        ret = bmp_loader_padding_remove(&tmp_info_header, stride, padding, tmp_pixels, &formatted_pixels, &formatted_size); // 内部でformatted_pixelsのメモリが確保されるが、失敗時には解放される
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("bmp_loader_load(%s) - Failed to remove BMP row padding.", resource_rslt_to_str(ret));
             goto cleanup;
         }
-        bmp_loader_->stride = bmp_loader_->stride - bmp_loader_->padding;
-        bmp_loader_->padding = 0;
+        memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+        tmp_pixels = NULL;
+        tmp_pixels = formatted_pixels;
+        formatted_pixels = NULL;
+        tmp_info_header.bi_size_image = formatted_size;
     }
-    bmp_loader_->padding_removed = true;
 
-    ret = bmp_loader_pixel_bgr_to_rgb(bmp_loader_);
+    ret = bmp_loader_pixel_bgr_to_rgb(&tmp_info_header, tmp_pixels);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to convert BGR to RGB.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = bmp_loader_pixel_flip(bmp_loader_);
+    ret = bmp_loader_pixel_flip(&tmp_info_header, tmp_pixels);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to flip BMP pixel data vertically.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
+    file_header_copy(&tmp_file_header, &bmp_loader_->file_header);
+    info_header_copy(&tmp_info_header, &bmp_loader_->info_header);
+    bmp_loader_->padding = 0;
+    bmp_loader_->stride = stride - padding;
+    bmp_loader_->padding_removed = true;
+    bmp_loader_->pixels = tmp_pixels;
+
+    tmp_pixels = NULL;
+
     ret = RESOURCE_SUCCESS;
 
 cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != formatted_pixels && 0 != formatted_size) {
+            memory_system_free(formatted_pixels, formatted_size, MEMORY_TAG_TEXTURE);
+            formatted_pixels = NULL;
+        }
+        if(NULL != tmp_pixels) {
+            memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+            tmp_pixels = NULL;
+        }
+    }
     return ret;
 }
 
@@ -437,7 +451,8 @@ cleanup:
 }
 
 // この関数はpadding除去後に実行する
-static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) {
+// is_bmp_supportedを通過したinfo_header_を与えること
+static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_pixel_bgr_to_rgb.call_count++;
     if(s_test_config_bmp_loader_pixel_bgr_to_rgb.fail_on_call != 0) {
@@ -447,35 +462,20 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) 
     }
 #endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
     size_t channel_count = 0;
     size_t width = 0;
     size_t height = 0;
     size_t ii = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(bmp_loader_->padding_removed, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "bmp_loader_->padding_removed")
+    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_bgr_to_rgb", "info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_bgr_to_rgb", "pixels_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "info_header_->bi_width")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_bgr_to_rgb", "info_header_->bi_height")
 
-    valid_bmp = is_bmp_supported(&bmp_loader_->file_header, &bmp_loader_->info_header);
-    if(BMP_FILE_NOT_INITIALIZED == valid_bmp) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_pixel_bgr_to_rgb(%s) - bmp_loader is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_UNDEFINED == valid_bmp) {
-        ret = RESOURCE_UNDEFINED_ERROR;
-        ERROR_MESSAGE("bmp_loader_pixel_bgr_to_rgb(%s) - Undefined error.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_VALID != valid_bmp) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_pixel_bgr_to_rgb(%s) - Unsupported BMP file. reason = '%s'", resource_rslt_to_str(ret), invalid_reason_to_str(valid_bmp));
-        goto cleanup;
-    }
-
-    if(24 == bmp_loader_->info_header.bi_bit_count) {
+    if(24 == info_header_->bi_bit_count) {
         channel_count = 3;
-    } else if(32 == bmp_loader_->info_header.bi_bit_count) {
+    } else if(32 == info_header_->bi_bit_count) {
         channel_count = 4;
     } else {
         ret = RESOURCE_UNSUPPORTED_FILE;
@@ -483,13 +483,13 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(bmp_loader_t* bmp_loader_) 
         goto cleanup;
     }
 
-    width = (size_t)(bmp_loader_->info_header.bi_width);
-    height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
+    width = (size_t)(info_header_->bi_width);
+    height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
     for(size_t i = 0; i != height; ++i) {
         for(size_t j = 0; j != width; ++j) {
-            const uint8_t tmp = bmp_loader_->pixels[ii];
-            bmp_loader_->pixels[ii] = bmp_loader_->pixels[ii + 2];
-            bmp_loader_->pixels[ii + 2] = tmp;
+            const uint8_t tmp = pixels_[ii];
+            pixels_[ii] = pixels_[ii + 2];
+            pixels_[ii + 2] = tmp;
             ii += channel_count;
         }
     }
@@ -502,7 +502,7 @@ cleanup:
 
 // 左下原点の画像を左上原点に直す(GLCEは左上原点の画像を基準にする)
 // この関数は必ずpadding除去後に行うこと！！
-static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_) {
+static resource_result_t bmp_loader_pixel_flip(const info_header_t* info_header_, uint8_t* pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_pixel_flip.call_count++;
     if(s_test_config_bmp_loader_pixel_flip.fail_on_call != 0) {
@@ -512,56 +512,41 @@ static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_) {
     }
 #endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
     size_t channel_count = 0;
     size_t width = 0;
     size_t height = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_flip", "bmp_loader_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_flip", "bmp_loader_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(bmp_loader_->padding_removed, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_flip", "bmp_loader_->padding_removed")
+    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_flip", "info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_flip", "pixels_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_flip", "info_header_->bi_width")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_flip", "info_header_->bi_height")
 
-    valid_bmp = is_bmp_supported(&bmp_loader_->file_header, &bmp_loader_->info_header);
-    if(BMP_FILE_NOT_INITIALIZED == valid_bmp) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_pixel_flip(%s) - bmp_loader is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_UNDEFINED == valid_bmp) {
-        ret = RESOURCE_UNDEFINED_ERROR;
-        ERROR_MESSAGE("bmp_loader_pixel_flip(%s) - Undefined error.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_VALID != valid_bmp) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_pixel_flip(%s) - Unsupported BMP file. reason = '%s'", resource_rslt_to_str(ret), invalid_reason_to_str(valid_bmp));
-        goto cleanup;
-    }
-
-    if(24 == bmp_loader_->info_header.bi_bit_count) {
+    if(24 == info_header_->bi_bit_count) {
         channel_count = 3;
-    } else if(32 == bmp_loader_->info_header.bi_bit_count) {
+    } else if(32 == info_header_->bi_bit_count) {
         channel_count = 4;
     } else {
         ret = RESOURCE_UNSUPPORTED_FILE;
         ERROR_MESSAGE("bmp_loader_pixel_flip(%s) - Unsupported BMP bit count.", resource_rslt_to_str(ret));
         goto cleanup;
     }
-    if(0 > bmp_loader_->info_header.bi_height) {
+    if(0 > info_header_->bi_height) {
         ret = RESOURCE_SUCCESS;
         goto cleanup;
     }
 
-    width = (size_t)(bmp_loader_->info_header.bi_width);
-    height = (size_t)(bmp_loader_->info_header.bi_height);
+    width = (size_t)(info_header_->bi_width);
+    height = (size_t)(info_header_->bi_height);
 
     if(1 == height) {
         // flip不要なので何もしない
     } else if(2 == height) {
         const size_t width_count = width * channel_count;
         for(size_t i = 0; i != width_count; ++i) {
-            uint8_t tmp = bmp_loader_->pixels[i];
-            bmp_loader_->pixels[i] = bmp_loader_->pixels[width_count + i];
-            bmp_loader_->pixels[width_count + i] = tmp;
+            uint8_t tmp = pixels_[i];
+            pixels_[i] = pixels_[width_count + i];
+            pixels_[width_count + i] = tmp;
         }
     } else {
         size_t back = height - 1;
@@ -569,9 +554,9 @@ static resource_result_t bmp_loader_pixel_flip(bmp_loader_t* bmp_loader_) {
         const size_t width_count = width * channel_count;
         for(size_t i = 0; i != to; ++i) {
             for(size_t j = 0; j != width_count; ++j) {
-                uint8_t tmp = bmp_loader_->pixels[i * width_count + j];
-                bmp_loader_->pixels[i * width_count + j] = bmp_loader_->pixels[back * width_count + j];
-                bmp_loader_->pixels[back * width_count + j] = tmp;
+                uint8_t tmp = pixels_[i * width_count + j];
+                pixels_[i * width_count + j] = pixels_[back * width_count + j];
+                pixels_[back * width_count + j] = tmp;
             }
             back = back - 1;
         }
@@ -583,7 +568,9 @@ cleanup:
     return ret;
 }
 
-static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
+// padding_ == 0はBAD_OPERATION(許可するとdst_pixels_へのコピーをしなくてはいけないため)
+// 事前にis_bmp_supportedを通したinfo_header_, file_header_を引数に与えること
+static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_padding_remove.call_count++;
     if(s_test_config_bmp_loader_padding_remove.fail_on_call != 0) {
@@ -594,35 +581,25 @@ static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
 #endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
 
     uint8_t* new_pixel = NULL;
     size_t new_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "bmp_loader_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "bmp_loader_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != bmp_loader_->stride, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "bmp_loader_->stride")
+    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "src_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "dst_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*dst_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "*dst_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "out_new_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != stride_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "stride_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != padding_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "padding_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_width")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_height")
 
-    valid_bmp = is_bmp_supported(&bmp_loader_->file_header, &bmp_loader_->info_header);
-    if(BMP_FILE_NOT_INITIALIZED == valid_bmp) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - bmp_loader is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_UNDEFINED == valid_bmp) {
-        ret = RESOURCE_UNDEFINED_ERROR;
-        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Undefined error.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_VALID != valid_bmp) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Unsupported BMP file. reason = '%s'", resource_rslt_to_str(ret), invalid_reason_to_str(valid_bmp));
-        goto cleanup;
-    }
-
-    if(24 == bmp_loader_->info_header.bi_bit_count || 32 == bmp_loader_->info_header.bi_bit_count) {
-        const size_t width = (size_t)(bmp_loader_->info_header.bi_width);
-        const size_t bit_count = (size_t)(bmp_loader_->info_header.bi_bit_count);
+    if(24 == info_header_->bi_bit_count || 32 == info_header_->bi_bit_count) {
+        const size_t width = (size_t)(info_header_->bi_width);
+        const size_t bit_count = (size_t)(info_header_->bi_bit_count);
         const size_t channel_count = (24 == bit_count) ? 3 : 4;
-        const size_t height = (0 < bmp_loader_->info_header.bi_height) ? bmp_loader_->info_header.bi_height : (size_t)(-1 * (int64_t)(bmp_loader_->info_header.bi_height));
+        const size_t height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
 
         // NOTE: 現状はサイズがint16_tなのでオーバーフローにはならないが、将来の拡張のために入れておく
         if((SIZE_MAX / height) < width) {
@@ -654,12 +631,12 @@ static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
         for(size_t i = 0; i != height; ++i) {
             for(size_t j = 0; j != width; ++j) {
                 for(size_t k = 0; k != channel_count; ++k) {
-                    new_pixel[ii_new + k] = bmp_loader_->pixels[ii + k];
+                    new_pixel[ii_new + k] = src_pixels_[ii + k];
                 }
                 ii_new += channel_count;
                 ii += channel_count;
             }
-            ii += bmp_loader_->padding;
+            ii += padding_;
         }
     } else {
         ret = RESOURCE_UNSUPPORTED_FILE;
@@ -667,11 +644,8 @@ static resource_result_t bmp_loader_padding_remove(bmp_loader_t* bmp_loader_) {
         goto cleanup;
     }
 
-    memory_system_free(bmp_loader_->pixels, bmp_loader_->info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-    bmp_loader_->pixels = NULL;
-    bmp_loader_->pixels = new_pixel;
-    bmp_loader_->info_header.bi_size_image = (uint32_t)new_size;
-    bmp_loader_->padding_removed = true;
+    *dst_pixels_ = new_pixel;
+    *out_new_size_ = new_size;
 
     ret = RESOURCE_SUCCESS;
 
@@ -1176,493 +1150,6 @@ static void NO_COVERAGE test_bmp_loader_pixel_flip(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_bmp_loader_padding_remove(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-    {
-        // bmp_loader_padding_remove() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        s_test_config_bmp_loader_padding_remove.fail_on_call = 1U;
-        s_test_config_bmp_loader_padding_remove.forced_result = (int)RESOURCE_NO_MEMORY;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-        assert(16U == loader.info_header.bi_size_image);
-        assert(0 == memcmp(loader.pixels, src_pixels, sizeof(src_pixels)));
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // bmp_loader_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = bmp_loader_padding_remove(NULL);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // bmp_loader_->pixels == NULL -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-        loader.pixels = NULL;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_BAD_OPERATION == ret);
-        assert(NULL == loader.pixels);
-        assert(false == loader.padding_removed);
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // bmp_loader_->stride == 0 -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 0U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_BAD_OPERATION == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-        assert(0 == memcmp(loader.pixels, src_pixels, sizeof(src_pixels)));
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // is_bmp_supported() == BMP_FILE_NOT_INITIALIZED -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.info_header.bi_bit_count = 0U;
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_BAD_OPERATION == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // is_bmp_supported() == BMP_FILE_UNDEFINED -> RESOURCE_UNDEFINED_ERROR
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        s_test_config_is_bmp_supported.fail_on_call = 1U;
-        s_test_config_is_bmp_supported.forced_result = (int)BMP_FILE_UNDEFINED;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_UNDEFINED_ERROR == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // サポート外BMP -> RESOURCE_UNSUPPORTED_FILE
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.info_header.bi_bit_count = 16U;
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_UNSUPPORTED_FILE == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // new_size が UINT32_MAX を超える -> RESOURCE_OVERFLOW
-        // is_bmp_supported() を強制的に BMP_FILE_VALID にして、サイズ計算分岐だけを検証する
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-        const uint8_t src_pixels[1] = { 0 };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.info_header.bi_width = INT32_MAX;
-        loader.info_header.bi_height = 1;
-        loader.info_header.bi_bit_count = 24U;
-        loader.padding = 0U;
-        loader.stride = 1U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        s_test_config_is_bmp_supported.fail_on_call = 1U;
-        s_test_config_is_bmp_supported.forced_result = (int)BMP_FILE_VALID;
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_OVERFLOW == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // new_pixel用 memory_system_allocate() 失敗 -> RESOURCE_NO_MEMORY
-        // 元のpixelsは維持される
-        resource_result_t ret = RESOURCE_SUCCESS;
-        bmp_loader_t loader = { 0 };
-        uint8_t* old_pixels = NULL;
-        test_call_control_t config = { 0 };
-
-        const uint8_t src_pixels[16] = {
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-        old_pixels = loader.pixels;
-
-        test_choco_memory_config_reset();
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
-        test_memory_system_allocate_config_set(&config);
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(old_pixels == loader.pixels);
-        assert(false == loader.padding_removed);
-        assert(16U == loader.info_header.bi_size_image);
-        assert(0 == memcmp(loader.pixels, src_pixels, sizeof(src_pixels)));
-
-        memory_system_free(loader.pixels, sizeof(src_pixels), MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: 2x2 / 24bit / bottom-up / paddingあり
-        // padding 2byte/row を除去し、生のBGRピクセル順序は維持する
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        bmp_loader_t loader = { 0 };
-
-        const uint8_t src_pixels[16] = {
-            // bottom row
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00,
-
-            // top row
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00
-        };
-
-        const uint8_t expected_pixels[12] = {
-            // bottom row
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-
-            // top row
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != loader.pixels);
-        assert(12U == loader.info_header.bi_size_image);
-        assert(true == loader.padding_removed);
-        assert(0 == memcmp(loader.pixels, expected_pixels, sizeof(expected_pixels)));
-
-        memory_system_free(loader.pixels, loader.info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: 2x2 / 24bit / top-down / paddingあり
-        // padding除去のみを行い、行順は変更しない
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        bmp_loader_t loader = { 0 };
-
-        const uint8_t src_pixels[16] = {
-            // top row
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-            0x00, 0x00,
-
-            // bottom row
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF,
-            0x00, 0x00
-        };
-
-        const uint8_t expected_pixels[12] = {
-            // top row
-            0x00, 0x00, 0xFF,
-            0x00, 0xFF, 0x00,
-
-            // bottom row
-            0xFF, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.info_header.bi_height = -2;
-        loader.padding = 2U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != loader.pixels);
-        assert(12U == loader.info_header.bi_size_image);
-        assert(true == loader.padding_removed);
-        assert(0 == memcmp(loader.pixels, expected_pixels, sizeof(expected_pixels)));
-
-        memory_system_free(loader.pixels, loader.info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: 2x2 / 32bit / bottom-up / paddingなし
-        // paddingなしでも新しいバッファへコピーされ、サイズは16byteのまま
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        bmp_loader_t loader = { 0 };
-
-        const uint8_t src_pixels[16] = {
-            // bottom row
-            0xFF, 0x00, 0x00, 0xFF,
-            0xFF, 0xFF, 0xFF, 0xFF,
-
-            // top row
-            0x00, 0x00, 0xFF, 0xFF,
-            0x00, 0xFF, 0x00, 0xFF
-        };
-
-        const uint8_t expected_pixels[16] = {
-            // bottom row
-            0xFF, 0x00, 0x00, 0xFF,
-            0xFF, 0xFF, 0xFF, 0xFF,
-
-            // top row
-            0x00, 0x00, 0xFF, 0xFF,
-            0x00, 0xFF, 0x00, 0xFF
-        };
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-
-        test_bmp_loader_valid_header_make(&loader.file_header, &loader.info_header);
-        loader.info_header.bi_bit_count = 32U;
-        loader.info_header.bi_size_image = 16U;
-        loader.padding = 0U;
-        loader.stride = 8U;
-        loader.padding_removed = false;
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_allocate(sizeof(src_pixels), MEMORY_TAG_TEXTURE, (void**)&loader.pixels));
-        memcpy(loader.pixels, src_pixels, sizeof(src_pixels));
-
-        ret = bmp_loader_padding_remove(&loader);
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != loader.pixels);
-        assert(16U == loader.info_header.bi_size_image);
-        assert(true == loader.padding_removed);
-        assert(0 == memcmp(loader.pixels, expected_pixels, sizeof(expected_pixels)));
-
-        memory_system_free(loader.pixels, loader.info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-        loader.pixels = NULL;
-
-        test_bmp_loader_config_reset();
-        test_choco_memory_config_reset();
-    }
-
-    memory_system_destroy();
 }
 
 // Generated by ChatGPT
