@@ -594,54 +594,49 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
     IF_ARG_FALSE_GOTO_CLEANUP(0 != padding_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "padding_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_width")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != info_header_->bi_height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_height")
+    // 32bit BMPでは通常padding = 0なので、BAD_OPERATION(24, 32以外はnot supportedでis_bmp_supportedで弾かれる)
+    IF_ARG_FALSE_GOTO_CLEANUP(24 == info_header_->bi_bit_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_bit_count")
 
-    if(24 == info_header_->bi_bit_count || 32 == info_header_->bi_bit_count) {
-        const size_t width = (size_t)(info_header_->bi_width);
-        const size_t bit_count = (size_t)(info_header_->bi_bit_count);
-        const size_t channel_count = (24 == bit_count) ? 3 : 4;
-        const size_t height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
+    const size_t width = (size_t)(info_header_->bi_width);
+    const size_t channel_count = 3;
+    const size_t height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
 
-        // NOTE: 現状はサイズがint16_tなのでオーバーフローにはならないが、将来の拡張のために入れておく
-        if((SIZE_MAX / height) < width) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output pixel count: width * height would overflow. width=%zu, height=%zu", resource_rslt_to_str(ret), width, height);
-            goto cleanup;
-        }
-        if((SIZE_MAX / channel_count) < (width * height)) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output image size: pixel_count * channel_count would overflow. pixel_count=%zu, channel_count=%zu", resource_rslt_to_str(ret), width * height, channel_count);
-            goto cleanup;
-        }
-
-        new_size = width * height * channel_count;
-        if(new_size > UINT32_MAX) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - BMP output image size exceeds uint32_t range. output_size=%zu, limit=%u", resource_rslt_to_str(ret), new_size, UINT32_MAX);
-            goto cleanup;
-        }
-        ret_mem = memory_system_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
-        if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-            ret = resource_rslt_convert_choco_memory(ret_mem);
-            ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to allocate memory for new_pixel.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        size_t ii = 0;
-        size_t ii_new = 0;
-        for(size_t i = 0; i != height; ++i) {
-            for(size_t j = 0; j != width; ++j) {
-                for(size_t k = 0; k != channel_count; ++k) {
-                    new_pixel[ii_new + k] = src_pixels_[ii + k];
-                }
-                ii_new += channel_count;
-                ii += channel_count;
-            }
-            ii += padding_;
-        }
-    } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Provided BMP file is not supported.", resource_rslt_to_str(ret));
+    // NOTE: 現状はサイズがint16_tなのでオーバーフローにはならないが、将来の拡張のために入れておく
+    if((SIZE_MAX / height) < width) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output pixel count: width * height would overflow. width=%zu, height=%zu", resource_rslt_to_str(ret), width, height);
         goto cleanup;
+    }
+    if((SIZE_MAX / channel_count) < (width * height)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to calculate BMP output image size: pixel_count * channel_count would overflow. pixel_count=%zu, channel_count=%zu", resource_rslt_to_str(ret), width * height, channel_count);
+        goto cleanup;
+    }
+
+    new_size = width * height * channel_count;
+    if(new_size > UINT32_MAX) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - BMP output image size exceeds uint32_t range. output_size=%zu, limit=%u", resource_rslt_to_str(ret), new_size, UINT32_MAX);
+        goto cleanup;
+    }
+    ret_mem = memory_system_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = resource_rslt_convert_choco_memory(ret_mem);
+        ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to allocate memory for new_pixel.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    size_t ii = 0;
+    size_t ii_new = 0;
+    for(size_t i = 0; i != height; ++i) {
+        for(size_t j = 0; j != width; ++j) {
+            for(size_t k = 0; k != channel_count; ++k) {
+                new_pixel[ii_new + k] = src_pixels_[ii + k];
+            }
+            ii_new += channel_count;
+            ii += channel_count;
+        }
+        ii += padding_;
     }
 
     *dst_pixels_ = new_pixel;
@@ -1150,6 +1145,429 @@ static void NO_COVERAGE test_bmp_loader_pixel_flip(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_bmp_loader_padding_remove(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // bmp_loader_padding_remove() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+
+        const uint8_t src_pixels[16] = {
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF,
+            0x00, 0x00,
+
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00,
+            0x00, 0x00
+        };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        s_test_config_bmp_loader_padding_remove.fail_on_call = 1U;
+        s_test_config_bmp_loader_padding_remove.forced_result = (int)RESOURCE_NO_MEMORY;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // info_header_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = bmp_loader_padding_remove(NULL, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // src_pixels_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, NULL, &dst_pixels, &out_new_size);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // dst_pixels_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, NULL, &out_new_size);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *dst_pixels_ != NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t dummy = 0U;
+        uint8_t* dst_pixels = &dummy;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(&dummy == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // out_new_size_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == dst_pixels);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // stride_ == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 0U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // padding_ == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 0U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // info_header_->bi_width == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_width = 0;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // info_header_->bi_height == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_height = 0;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // info_header_->bi_bit_count != 24 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[16] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_bit_count = 32U;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // width * height が size_t を超過 -> RESOURCE_OVERFLOW
+        // 防御的分岐の確認。通常は is_bmp_supported() 済みのinfo_headerでは到達しない。
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[1] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_width = -1;
+        info_header.bi_height = 2;
+        info_header.bi_bit_count = 24U;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_OVERFLOW == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // new_size が UINT32_MAX を超過 -> RESOURCE_OVERFLOW
+        // 防御的分岐の確認。通常は is_bmp_supported() 済みのinfo_headerでは到達しない。
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        const uint8_t src_pixels[1] = { 0 };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_width = INT32_MAX;
+        info_header.bi_height = 1;
+        info_header.bi_bit_count = 24U;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_OVERFLOW == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // new_pixel用 memory_system_allocate() 失敗 -> RESOURCE_NO_MEMORY
+        resource_result_t ret = RESOURCE_SUCCESS;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 123U;
+        test_call_control_t config = { 0 };
+
+        const uint8_t src_pixels[16] = {
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF,
+            0x00, 0x00,
+
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00,
+            0x00, 0x00
+        };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == dst_pixels);
+        assert(123U == out_new_size);
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: 2x2 / 24bit / bottom-up / paddingあり
+        // padding 2byte/row を除去し、生のBGRピクセル順序は維持する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 0U;
+
+        const uint8_t src_pixels[16] = {
+            // bottom row
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF,
+            0x00, 0x00,
+
+            // top row
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00,
+            0x00, 0x00
+        };
+
+        const uint8_t expected_pixels[12] = {
+            // bottom row
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF,
+
+            // top row
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00
+        };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != dst_pixels);
+        assert(12U == out_new_size);
+        assert(0 == memcmp(dst_pixels, expected_pixels, sizeof(expected_pixels)));
+
+        memory_system_free(dst_pixels, out_new_size, MEMORY_TAG_TEXTURE);
+        dst_pixels = NULL;
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: 2x2 / 24bit / top-down / paddingあり
+        // padding除去のみを行い、行順は変更しない
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        info_header_t info_header = { 0 };
+        uint8_t* dst_pixels = NULL;
+        size_t out_new_size = 0U;
+
+        const uint8_t src_pixels[16] = {
+            // top row
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00,
+            0x00, 0x00,
+
+            // bottom row
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF,
+            0x00, 0x00
+        };
+
+        const uint8_t expected_pixels[12] = {
+            // top row
+            0x00, 0x00, 0xFF,
+            0x00, 0xFF, 0x00,
+
+            // bottom row
+            0xFF, 0x00, 0x00,
+            0xFF, 0xFF, 0xFF
+        };
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+
+        test_bmp_loader_valid_header_make(&(file_header_t){0}, &info_header);
+        info_header.bi_height = -2;
+
+        ret = bmp_loader_padding_remove(&info_header, 8U, 2U, src_pixels, &dst_pixels, &out_new_size);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != dst_pixels);
+        assert(12U == out_new_size);
+        assert(0 == memcmp(dst_pixels, expected_pixels, sizeof(expected_pixels)));
+
+        memory_system_free(dst_pixels, out_new_size, MEMORY_TAG_TEXTURE);
+        dst_pixels = NULL;
+
+        test_bmp_loader_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
 }
 
 // Generated by ChatGPT
