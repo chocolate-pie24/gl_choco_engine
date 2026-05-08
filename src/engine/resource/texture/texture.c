@@ -38,9 +38,54 @@ struct texture {
 
 static resource_result_t bmp_load(texture_t* texture_, const char* filepath_, const char* extension_);
 
-static resource_result_t test_texture_create(test_texture_t test_texture_color_, texture_t* texture_);
+static resource_result_t test_texture_generate(test_texture_t test_texture_color_, texture_t* texture_);
+
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+#include <assert.h>
+
+#include "test_controller.h"
+
+#include "engine/resource/texture/test_texture.h"
+
+// texture用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_texture_create;            /**< texture_create()テスト設定 */
+static test_call_control_t s_test_config_texture_pixel_load;        /**< texture_pixel_load()テスト設定 */
+static test_call_control_t s_test_config_texture_pixel_unload;      /**< texture_pixel_unload()テスト設定 */
+static test_call_control_t s_test_config_texture_pixel_get;         /**< texture_pixel_get()テスト設定 */
+static test_call_control_t s_test_config_texture_pixel_size_get;    /**< texture_pixel_size_get()テスト設定 */
+
+// プライベート関数テスト設定
+static test_call_control_t s_test_config_bmp_load;                  /**< bmp_load()テスト設定 */
+static test_call_control_t s_test_config_test_texture_generage;     /**< test_texture_generate()テスト設定 */
+
+// 全テスト関数プロトタイプ宣言
+static void test_texture_create(void);
+static void test_texture_destroy(void);
+static void test_texture_pixel_load(void);
+static void test_texture_pixel_unload(void);
+static void test_texture_pixel_get(void);
+static void test_texture_pixel_size_get(void);
+static void test_texture_name_get(void);
+static void test_bmp_load(void);
+static void test_test_texture_generate(void);
+
+// テスト用ヘルパー関数
+
+#endif
 
 resource_result_t texture_create(const char* name_, texture_t** texture_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_create.call_count++;
+    if(s_test_config_texture_create.fail_on_call != 0) {
+        if(s_test_config_texture_create.call_count == s_test_config_texture_create.fail_on_call) {
+            return (resource_result_t)s_test_config_texture_create.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -104,6 +149,14 @@ void texture_destroy(texture_t** texture_) {
 }
 
 resource_result_t texture_pixel_load(texture_t* texture_, const char* filepath_, const char* extension_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_pixel_load.call_count++;
+    if(s_test_config_texture_pixel_load.fail_on_call != 0) {
+        if(s_test_config_texture_pixel_load.call_count == s_test_config_texture_pixel_load.fail_on_call) {
+            return (resource_result_t)s_test_config_texture_pixel_load.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     uint8_t* tmp_pixels = NULL;
@@ -119,19 +172,19 @@ resource_result_t texture_pixel_load(texture_t* texture_, const char* filepath_,
     IF_ARG_FALSE_GOTO_CLEANUP(0 == texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_load", "0 != texture_->height")
 
     if(choco_string_equal("test_texture_red", choco_string_c_str(texture_->name))) {
-        ret = test_texture_create(TEST_TEXTURE_RED, texture_);
+        ret = test_texture_generate(TEST_TEXTURE_RED, texture_);
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create red test texture.", resource_rslt_to_str(ret));
             goto cleanup;
         }
     } else if(choco_string_equal("test_texture_green", choco_string_c_str(texture_->name))) {
-        ret = test_texture_create(TEST_TEXTURE_GREEN, texture_);
+        ret = test_texture_generate(TEST_TEXTURE_GREEN, texture_);
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create green test texture.", resource_rslt_to_str(ret));
             goto cleanup;
         }
     } else if(choco_string_equal("test_texture_blue", choco_string_c_str(texture_->name))) {
-        ret = test_texture_create(TEST_TEXTURE_BLUE, texture_);
+        ret = test_texture_generate(TEST_TEXTURE_BLUE, texture_);
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create blue test texture.", resource_rslt_to_str(ret));
             goto cleanup;
@@ -161,6 +214,14 @@ cleanup:
 }
 
 resource_result_t texture_pixel_unload(texture_t* texture_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_pixel_unload.call_count++;
+    if(s_test_config_texture_pixel_unload.fail_on_call != 0) {
+        if(s_test_config_texture_pixel_unload.call_count == s_test_config_texture_pixel_unload.fail_on_call) {
+            return (resource_result_t)s_test_config_texture_pixel_unload.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_unload", "texture_")
@@ -183,6 +244,14 @@ cleanup:
 }
 
 resource_result_t texture_pixel_get(texture_t* texture_, uint8_t** out_pixels_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_pixel_get.call_count++;
+    if(s_test_config_texture_pixel_get.fail_on_call != 0) {
+        if(s_test_config_texture_pixel_get.call_count == s_test_config_texture_pixel_get.fail_on_call) {
+            return (resource_result_t)s_test_config_texture_pixel_get.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_get", "texture_")
@@ -202,6 +271,14 @@ cleanup:
 }
 
 resource_result_t texture_pixel_size_get(texture_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_pixel_size_get.call_count++;
+    if(s_test_config_texture_pixel_size_get.fail_on_call != 0) {
+        if(s_test_config_texture_pixel_size_get.call_count == s_test_config_texture_pixel_size_get.fail_on_call) {
+            return (resource_result_t)s_test_config_texture_pixel_size_get.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_size_get", "texture_")
@@ -232,6 +309,14 @@ const char* texture_name_get(const texture_t* texture_) {
 }
 
 static resource_result_t bmp_load(texture_t* texture_, const char* filepath_, const char* extension_) {
+#ifdef TEST_BUILD
+    s_test_config_bmp_load.call_count++;
+    if(s_test_config_bmp_load.fail_on_call != 0) {
+        if(s_test_config_bmp_load.call_count == s_test_config_bmp_load.fail_on_call) {
+            return (resource_result_t)s_test_config_bmp_load.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -319,7 +404,15 @@ cleanup:
     return ret;
 }
 
-static resource_result_t test_texture_create(test_texture_t test_texture_color_, texture_t* texture_) {
+static resource_result_t test_texture_generate(test_texture_t test_texture_color_, texture_t* texture_) {
+#ifdef TEST_BUILD
+    s_test_config_test_texture_generage.call_count++;
+    if(s_test_config_test_texture_generage.fail_on_call != 0) {
+        if(s_test_config_test_texture_generage.call_count == s_test_config_test_texture_generage.fail_on_call) {
+            return (resource_result_t)s_test_config_test_texture_generage.forced_result;
+        }
+    }
+#endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
@@ -377,3 +470,110 @@ cleanup:
     }
     return ret;
 }
+
+#ifdef TEST_BUILD
+
+void NO_COVERAGE test_texture_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_texture_create.fail_on_call = config_->fail_on_call;
+    s_test_config_texture_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_texture_pixel_load_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_texture_pixel_load.fail_on_call = config_->fail_on_call;
+    s_test_config_texture_pixel_load.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_texture_pixel_unload_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_texture_pixel_unload.fail_on_call = config_->fail_on_call;
+    s_test_config_texture_pixel_unload.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_texture_pixel_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_texture_pixel_get.fail_on_call = config_->fail_on_call;
+    s_test_config_texture_pixel_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_texture_pixel_size_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_texture_pixel_size_get.fail_on_call = config_->fail_on_call;
+    s_test_config_texture_pixel_size_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_texture_config_reset(void) {
+    test_call_control_reset(&s_test_config_texture_create);
+    test_call_control_reset(&s_test_config_texture_pixel_load);
+    test_call_control_reset(&s_test_config_texture_pixel_unload);
+    test_call_control_reset(&s_test_config_texture_pixel_get);
+    test_call_control_reset(&s_test_config_texture_pixel_size_get);
+
+    test_call_control_reset(&s_test_config_bmp_load);
+    test_call_control_reset(&s_test_config_test_texture_generage);
+}
+
+void NO_COVERAGE test_texture(void) {
+    test_texture_create();
+    test_texture_destroy();
+    test_texture_pixel_load();
+    test_texture_pixel_unload();
+    test_texture_pixel_get();
+    test_texture_pixel_size_get();
+    test_texture_name_get();
+    test_bmp_load();
+    test_test_texture_generate();
+}
+
+static void NO_COVERAGE test_texture_create(void) {
+
+}
+
+static void NO_COVERAGE test_texture_destroy(void) {
+
+}
+
+static void NO_COVERAGE test_texture_pixel_load(void) {
+
+}
+
+static void NO_COVERAGE test_texture_pixel_unload(void) {
+
+}
+
+static void NO_COVERAGE test_texture_pixel_get(void) {
+
+}
+
+static void NO_COVERAGE test_texture_pixel_size_get(void) {
+
+}
+
+static void NO_COVERAGE test_texture_name_get(void) {
+
+}
+
+static void NO_COVERAGE test_bmp_load(void) {
+
+}
+
+static void NO_COVERAGE test_test_texture_generate(void) {
+
+}
+#endif
