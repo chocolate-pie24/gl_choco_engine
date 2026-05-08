@@ -1483,7 +1483,74 @@ static void NO_COVERAGE test_texture_pixel_load(void) {
         test_fs_utils_config_reset();
         test_bmp_loader_config_reset();
     }
+    {
+        // test_texture_generate() 失敗: green -> エラーを返し、texture状態は未ロードのまま
+        resource_result_t ret = RESOURCE_SUCCESS;
+        texture_t* texture = NULL;
 
+        test_texture_config_reset();
+        test_choco_memory_config_reset();
+        test_choco_string_config_reset();
+        test_fs_utils_config_reset();
+        test_bmp_loader_config_reset();
+
+        ret = texture_create("test_texture_green", &texture);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != texture);
+
+        s_test_config_test_texture_generate.fail_on_call = 1U;
+        s_test_config_test_texture_generate.forced_result = (int)RESOURCE_NO_MEMORY;
+
+        ret = texture_pixel_load(texture, NULL, NULL);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == texture->pixels);
+        assert(0U == texture->width);
+        assert(0U == texture->height);
+        assert(0U == texture->channel_count);
+
+        texture_destroy(&texture);
+        assert(NULL == texture);
+
+        test_texture_config_reset();
+        test_choco_memory_config_reset();
+        test_choco_string_config_reset();
+        test_fs_utils_config_reset();
+        test_bmp_loader_config_reset();
+    }
+    {
+        // test_texture_generate() 失敗: blue -> エラーを返し、texture状態は未ロードのまま
+        resource_result_t ret = RESOURCE_SUCCESS;
+        texture_t* texture = NULL;
+
+        test_texture_config_reset();
+        test_choco_memory_config_reset();
+        test_choco_string_config_reset();
+        test_fs_utils_config_reset();
+        test_bmp_loader_config_reset();
+
+        ret = texture_create("test_texture_blue", &texture);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != texture);
+
+        s_test_config_test_texture_generate.fail_on_call = 1U;
+        s_test_config_test_texture_generate.forced_result = (int)RESOURCE_NO_MEMORY;
+
+        ret = texture_pixel_load(texture, NULL, NULL);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == texture->pixels);
+        assert(0U == texture->width);
+        assert(0U == texture->height);
+        assert(0U == texture->channel_count);
+
+        texture_destroy(&texture);
+        assert(NULL == texture);
+
+        test_texture_config_reset();
+        test_choco_memory_config_reset();
+        test_choco_string_config_reset();
+        test_fs_utils_config_reset();
+        test_bmp_loader_config_reset();
+    }
     memory_system_destroy();
 }
 
