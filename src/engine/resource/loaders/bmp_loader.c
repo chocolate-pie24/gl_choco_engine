@@ -111,6 +111,8 @@ static const char* const invalid_bmp_file_reason_undefined = "undefined";
 #include <string.h>
 #include <stdio.h>
 
+#include "test_controller.h"
+
 #include "engine/resource/loaders/test_bmp_loader.h"
 
 #include "engine/core/filesystem/test_filesystem.h"
