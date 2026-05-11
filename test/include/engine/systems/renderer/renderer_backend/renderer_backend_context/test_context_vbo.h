@@ -60,6 +60,15 @@ void test_renderer_backend_vertex_buffer_unbind_config_set(const test_call_contr
  */
 void test_renderer_backend_vertex_buffer_vertex_load_config_set(const test_call_control_t* config_);
 
+/**
+ * @brief renderer_backend_vertex_buffer_vertex_subload()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、renderer_backend_context.c内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_renderer_backend_vertex_buffer_vertex_subload_config_set(const test_call_control_t* config_);
+
 // NOTE: test_module_name_reset(), test_module_name()はtest_renderer_backend_context.hで定義
 
 #endif

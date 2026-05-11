@@ -30,6 +30,34 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief RendererBackend内部状態管理構造体
+ *
+ */
+struct renderer_backend_context {
+    target_graphics_api_t target_api;                   /**< 使用グラフィックスAPI */
+
+    const renderer_shader_vtable_t* shader_vtable;      /**< シェーダー機能提供vtable */
+    const renderer_vao_vtable_t* vao_vtable;            /**< VAO機能提供vtable */
+    const renderer_vbo_vtable_t* vbo_vtable;            /**< VBO機能提供vtable */
+    const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
+
+    uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
+    uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
+    uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
+
+    int32_t current_texture_unit;
+    int32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
+};
+
+static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
+static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
+static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
+static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
+
+static bool graphics_api_valid_check(target_graphics_api_t target_api_);
+static bool texture_type_valid_check(texture_type_t texture_type_);
+
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
@@ -41,6 +69,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_texture.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 // renderer_backend_context用モジュール専用テスト制御構造体定義
@@ -69,6 +98,14 @@ static void test_vertex_buffer_destroy(renderer_backend_vbo_t** vertex_buffer_);
 static renderer_result_t test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
 static renderer_result_t test_vertex_buffer_unbind(const renderer_backend_vbo_t* vertex_buffer_);
 static renderer_result_t test_vertex_buffer_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
+static renderer_result_t test_vertex_buffer_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
+
+// texture vtable関数
+static renderer_result_t test_renderer_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
+static void test_renderer_texture_destroy(renderer_backend_texture_t** texture_handle_);
+static renderer_result_t test_renderer_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_);
+static renderer_result_t test_renderer_texture_unbind(const renderer_backend_texture_t* texture_handle_);
+static renderer_result_t test_renderer_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 static const renderer_shader_vtable_t s_test_shader_vtable = {
     .renderer_shader_create = test_renderer_shader_create,
@@ -94,7 +131,16 @@ static const renderer_vbo_vtable_t s_test_vbo_vtable = {
     .vertex_buffer_bind = test_vertex_buffer_bind,
     .vertex_buffer_unbind = test_vertex_buffer_unbind,
     .vertex_buffer_vertex_load = test_vertex_buffer_vertex_load,
+    .vertex_buffer_vertex_subload = test_vertex_buffer_vertex_subload,
 };  /**< テスト用vbo_vtable */
+
+static const renderer_texture_vtable_t s_test_texture_vtable = {
+    .renderer_texture_create = test_renderer_texture_create,
+    .renderer_texture_destroy = test_renderer_texture_destroy,
+    .renderer_texture_bind = test_renderer_texture_bind,
+    .renderer_texture_unbind = test_renderer_texture_unbind,
+    .renderer_texture_pixel_upload = test_renderer_texture_pixel_upload,
+};  /**< テスト用texture_vtable */
 
 /**
  * @brief renderer_shader_vtable_t*型の関数の失敗注入設定構造体
@@ -126,6 +172,16 @@ typedef struct test_call_control_renderer_vbo_vtable_t {
     const renderer_vbo_vtable_t* forced_result;       /**< 関数を強制的に失敗させる際の戻り値 */
 } test_call_control_renderer_vbo_vtable_t_t;
 
+/**
+ * @brief renderer_texture_vtable_t*型の関数の失敗注入設定構造体
+ *
+ */
+typedef struct test_call_control_renderer_texture_vtable_t {
+    uint32_t call_count;                              /**< 関数呼び出し回数 */
+    uint32_t fail_on_call;                            /**< 関数を何回目の呼び出しでエラーにさせるかの設定(0なら無効で通常処理、1以上の場合はforced_resultを出力させる) */
+    const renderer_texture_vtable_t* forced_result;   /**< 関数を強制的に失敗させる際の戻り値 */
+} test_call_control_renderer_texture_vtable_t_t;
+
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_renderer_backend_initialize;                   /**< renderer_backend_initialize()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_shader_create;                /**< renderer_backend_shader_create()テスト設定 */
@@ -143,12 +199,18 @@ static test_call_control_t s_test_config_renderer_backend_vertex_buffer_bind;   
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_unbind;         /**< renderer_backend_vertex_buffer_unbind()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_vertex_load;    /**< renderer_backend_vertex_buffer_vertex_load()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_buffer_vertex_subload; /**< renderer_backend_vertex_buffer_vertex_subload()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_texture_create;               /**< renderer_backend_texture_create()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_texture_bind;                 /**< renderer_backend_texture_bind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_texture_unbind;               /**< renderer_backend_texture_unbind()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_texture_pixel_upload;         /**< renderer_backend_texture_pixel_upload()テスト設定 */
 
 // プライベート関数テスト設定
 static test_call_control_renderer_shader_vtable_t_t s_test_config_shader_vtable_get;    /**< shader_vtable_get()テスト設定 */
 static test_call_control_renderer_vao_vtable_t_t s_test_config_vao_vtable_get;          /**< vao_vtable_get()テスト設定 */
 static test_call_control_renderer_vbo_vtable_t_t s_test_config_vbo_vtable_get;          /**< vbo_vtable_get()テスト設定 */
+static test_call_control_renderer_texture_vtable_t_t s_test_config_texture_vtable_get;  /**< texture_vtable_get()テスト設定 */
 static test_call_control_bool_t s_test_config_graphics_api_valid_check;                 /**< graphics_api_valid_check()テスト設定 */
+static test_call_control_bool_t s_test_config_texture_type_valid_check;                 /**< texture_type_valid_check()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_create;                     /**< test_renderer_shader_create()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_compile;                    /**< test_renderer_shader_compile()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_link;                       /**< test_renderer_shader_link()テスト設定 */
@@ -163,6 +225,11 @@ static renderer_result_t s_test_config_test_vertex_buffer_create;               
 static renderer_result_t s_test_config_test_vertex_buffer_bind;                         /**< test_vertex_buffer_bind()テスト設定 */
 static renderer_result_t s_test_config_test_vertex_buffer_unbind;                       /**< test_vertex_buffer_unbind()テスト設定 */
 static renderer_result_t s_test_config_test_vertex_buffer_vertex_load;                  /**< test_vertex_buffer_vertex_load()テスト設定 */
+static renderer_result_t s_test_config_test_vertex_buffer_vertex_subload;               /**< test_vertex_buffer_vertex_subload()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_texture_create;                    /**< test_renderer_texture_create()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_texture_bind;                      /**< test_renderer_texture_bind()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_texture_unbind;                    /**< test_renderer_texture_unbind()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_texture_pixel_upload;              /**< test_renderer_texture_pixel_upload()テスト設定 */
 
 // 全テスト関数プロトタイプ宣言
 static void test_renderer_backend_initialize(void);
@@ -184,39 +251,19 @@ static void test_renderer_backend_vertex_buffer_destroy(void);
 static void test_renderer_backend_vertex_buffer_bind(void);
 static void test_renderer_backend_vertex_buffer_unbind(void);
 static void test_renderer_backend_vertex_buffer_vertex_load(void);
+static void test_renderer_backend_vertex_buffer_vertex_subload(void);
+static void test_renderer_backend_texture_create(void);
+static void test_renderer_backend_texture_destroy(void);
+static void test_renderer_backend_texture_bind(void);
+static void test_renderer_backend_texture_unbind(void);
+static void test_renderer_backend_texture_pixel_upload(void);
 static void test_shader_vtable_get(void);
 static void test_vao_vtable_get(void);
 static void test_vbo_vtable_get(void);
+static void test_texture_vtable_get(void);
 static void test_graphics_api_valid_check(void);
+static void test_texture_type_valid_check(void);
 #endif
-
-/**
- * @brief RendererBackend内部状態管理構造体
- *
- */
-struct renderer_backend_context {
-    target_graphics_api_t target_api;                   /**< 使用グラフィックスAPI */
-
-    const renderer_shader_vtable_t* shader_vtable;      /**< シェーダー機能提供vtable */
-    const renderer_vao_vtable_t* vao_vtable;            /**< VAO機能提供vtable */
-    const renderer_vbo_vtable_t* vbo_vtable;            /**< VBO機能提供vtable */
-    const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
-
-    uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
-    uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
-    uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
-
-    int32_t current_texture_unit;
-    int32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
-};
-
-static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
-static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
-
-static bool graphics_api_valid_check(target_graphics_api_t target_api_);
-static bool texture_type_valid_check(texture_type_t texture_type_);
 
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
 #ifdef TEST_BUILD
@@ -735,6 +782,14 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_texture_create.call_count++;
+    if(s_test_config_renderer_backend_texture_create.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_texture_create.call_count == s_test_config_renderer_backend_texture_create.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_texture_create.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_create", "backend_context_")
@@ -761,6 +816,14 @@ void renderer_backend_texture_destroy(renderer_backend_context_t* backend_contex
 }
 
 renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_texture_bind.call_count++;
+    if(s_test_config_renderer_backend_texture_bind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_texture_bind.call_count == s_test_config_renderer_backend_texture_bind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_texture_bind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_bind", "backend_context_")
@@ -778,6 +841,14 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_texture_unbind.call_count++;
+    if(s_test_config_renderer_backend_texture_unbind.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_texture_unbind.call_count == s_test_config_renderer_backend_texture_unbind.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_texture_unbind.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_unbind", "backend_context_")
@@ -797,6 +868,14 @@ cleanup:
 }
 
 renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_texture_pixel_upload.call_count++;
+    if(s_test_config_renderer_backend_texture_pixel_upload.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_texture_pixel_upload.call_count == s_test_config_renderer_backend_texture_pixel_upload.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_texture_pixel_upload.forced_result;
+        }
+    }
+#endif
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "backend_context_")
@@ -875,6 +954,15 @@ static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_
 }
 
 static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_vtable_get.call_count++;
+    if(s_test_config_texture_vtable_get.fail_on_call != 0) {
+        if(s_test_config_texture_vtable_get.call_count == s_test_config_texture_vtable_get.fail_on_call) {
+            return s_test_config_texture_vtable_get.forced_result;
+        }
+    }
+#endif
+
     switch(target_api_) {
     case GRAPHICS_API_GL33:
         return gl33_texture_vtable_get();
@@ -905,6 +993,14 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
 }
 
 static bool texture_type_valid_check(texture_type_t texture_type_) {
+#ifdef TEST_BUILD
+    s_test_config_texture_type_valid_check.call_count++;
+    if(s_test_config_texture_type_valid_check.fail_on_call != 0) {
+        if(s_test_config_texture_type_valid_check.call_count == s_test_config_texture_type_valid_check.fail_on_call) {
+            return s_test_config_texture_type_valid_check.forced_result;
+        }
+    }
+#endif
     bool ret = false;
     switch(texture_type_) {
     case TEXTURE_TYPE_DIFFUSE:
@@ -1044,6 +1140,55 @@ static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(const render
     return s_test_config_test_vertex_buffer_vertex_load;
 }
 
+static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
+    (void)vertex_buffer_;
+    (void)offset_;
+    (void)size_;
+    (void)load_data_;
+
+    return s_test_config_test_vertex_buffer_vertex_subload;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
+    (void)unit_num_;
+    (void)min_filter_config_;
+    (void)mag_filter_config_;
+    (void)wrap_config_s_axis_;
+    (void)wrap_config_t_axis_;
+    (void)texture_handle_;
+
+    return s_test_config_test_renderer_texture_create;
+}
+
+static void NO_COVERAGE test_renderer_texture_destroy(renderer_backend_texture_t** texture_handle_) {
+    (void)texture_handle_;
+
+    return;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_) {
+    (void)texture_handle_;
+    (void)out_texture_unit_;
+    (void)out_texture_internal_handle_;
+
+    return s_test_config_test_renderer_texture_bind;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_texture_unbind(const renderer_backend_texture_t* texture_handle_) {
+    (void)texture_handle_;
+
+    return s_test_config_test_renderer_texture_unbind;
+}
+
+static renderer_result_t NO_COVERAGE test_renderer_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+    (void)width_;
+    (void)height_;
+    (void)channel_count_;
+    (void)pixels_;
+
+    return s_test_config_test_renderer_texture_pixel_upload;
+}
+
 void NO_COVERAGE test_renderer_backend_shader_create_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -1170,6 +1315,51 @@ void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load_config_set(cons
     s_test_config_renderer_backend_vertex_buffer_vertex_load.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_vertex_buffer_vertex_subload.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_vertex_buffer_vertex_subload.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_texture_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_texture_create.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_texture_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_texture_bind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_texture_bind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_texture_bind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_texture_unbind_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_texture_unbind.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_texture_unbind.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_renderer_backend_texture_pixel_upload_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_texture_pixel_upload.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_texture_pixel_upload.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_renderer_backend_initialize_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -1196,6 +1386,11 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_unbind);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_load);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_buffer_vertex_subload);
+    test_call_control_reset(&s_test_config_renderer_backend_texture_create);
+    test_call_control_reset(&s_test_config_renderer_backend_texture_bind);
+    test_call_control_reset(&s_test_config_renderer_backend_texture_unbind);
+    test_call_control_reset(&s_test_config_renderer_backend_texture_pixel_upload);
+
     s_test_config_shader_vtable_get.forced_result = shader_vtable_get(GRAPHICS_API_GL33);
     s_test_config_shader_vtable_get.call_count = 0;
     s_test_config_shader_vtable_get.fail_on_call = 0;
@@ -1205,7 +1400,11 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     s_test_config_vbo_vtable_get.forced_result = vbo_vtable_get(GRAPHICS_API_GL33);
     s_test_config_vbo_vtable_get.call_count = 0;
     s_test_config_vbo_vtable_get.fail_on_call = 0;
+    s_test_config_texture_vtable_get.forced_result = texture_vtable_get(GRAPHICS_API_GL33);
+    s_test_config_texture_vtable_get.call_count = 0;
+    s_test_config_texture_vtable_get.fail_on_call = 0;
     test_call_control_bool_reset(&s_test_config_graphics_api_valid_check);
+    test_call_control_bool_reset(&s_test_config_texture_type_valid_check);
     s_test_config_test_renderer_shader_create = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_compile = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_link = RENDERER_SUCCESS;
@@ -1220,6 +1419,11 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     s_test_config_test_vertex_buffer_bind = RENDERER_SUCCESS;
     s_test_config_test_vertex_buffer_unbind = RENDERER_SUCCESS;
     s_test_config_test_vertex_buffer_vertex_load = RENDERER_SUCCESS;
+    s_test_config_test_vertex_buffer_vertex_subload = RENDERER_SUCCESS;
+    s_test_config_test_renderer_texture_create = RENDERER_SUCCESS;
+    s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+    s_test_config_test_renderer_texture_unbind = RENDERER_SUCCESS;
+    s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
 }
 
 void NO_COVERAGE test_renderer_backend_context(void) {
@@ -1242,10 +1446,18 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_vertex_buffer_bind();
     test_renderer_backend_vertex_buffer_unbind();
     test_renderer_backend_vertex_buffer_vertex_load();
+    test_renderer_backend_vertex_buffer_vertex_subload();
+    test_renderer_backend_texture_create();
+    test_renderer_backend_texture_destroy();
+    test_renderer_backend_texture_bind();
+    test_renderer_backend_texture_unbind();
+    test_renderer_backend_texture_pixel_upload();
     test_shader_vtable_get();
     test_vao_vtable_get();
     test_vbo_vtable_get();
+    test_texture_vtable_get();
     test_graphics_api_valid_check();
+    test_texture_type_valid_check();
 }
 
 // Generated by ChatGPT
@@ -4547,6 +4759,36 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 }
 
 // Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_texture_create(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_texture_destroy(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_texture_bind(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_texture_unbind(void) {
+
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_texture_pixel_upload(void) {
+
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_shader_vtable_get(void) {
     {
         // shader_vtable_get() 冒頭で強制的に NULL を返させる
@@ -4709,6 +4951,11 @@ static void NO_COVERAGE test_vbo_vtable_get(void) {
 }
 
 // Generated by ChatGPT
+static void NO_COVERAGE test_texture_vtable_get(void) {
+
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_graphics_api_valid_check(void) {
     {
         // graphics_api_valid_check() 冒頭で強制的に false を返させる
@@ -4758,5 +5005,10 @@ static void NO_COVERAGE test_graphics_api_valid_check(void) {
 
         test_renderer_backend_context_config_reset();
     }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_texture_type_valid_check(void) {
+
 }
 #endif
