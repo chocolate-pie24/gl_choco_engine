@@ -65,6 +65,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_texture.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
@@ -139,6 +140,7 @@ int main(int argc_, char** argv_) {
         test_concrete_shader();
         test_concrete_vao();
         test_concrete_vbo();
+        test_concrete_texture();
         test_renderer_backend_context();
     }
 #endif
