@@ -72,6 +72,9 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_texture.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
+// test: engine/systems/texture_system
+#include "engine/systems/texture_system/test_texture_manager.h"
+
 #endif
 
 /**
@@ -143,6 +146,9 @@ int main(int argc_, char** argv_) {
         test_concrete_vbo();
         test_concrete_texture();
         test_renderer_backend_context();
+
+        // engine/texture_system
+        test_texture_manager();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
