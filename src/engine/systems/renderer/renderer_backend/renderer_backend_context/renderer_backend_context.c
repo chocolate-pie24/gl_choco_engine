@@ -56,7 +56,6 @@ static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_
 static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
 
 static bool graphics_api_valid_check(target_graphics_api_t target_api_);
-static bool texture_type_valid_check(texture_type_t texture_type_);
 
 // #define TEST_BUILD
 
@@ -210,7 +209,6 @@ static test_call_control_renderer_vao_vtable_t_t s_test_config_vao_vtable_get;  
 static test_call_control_renderer_vbo_vtable_t_t s_test_config_vbo_vtable_get;          /**< vbo_vtable_get()テスト設定 */
 static test_call_control_renderer_texture_vtable_t_t s_test_config_texture_vtable_get;  /**< texture_vtable_get()テスト設定 */
 static test_call_control_bool_t s_test_config_graphics_api_valid_check;                 /**< graphics_api_valid_check()テスト設定 */
-static test_call_control_bool_t s_test_config_texture_type_valid_check;                 /**< texture_type_valid_check()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_create;                     /**< test_renderer_shader_create()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_compile;                    /**< test_renderer_shader_compile()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_link;                       /**< test_renderer_shader_link()テスト設定 */
@@ -262,7 +260,6 @@ static void test_vao_vtable_get(void);
 static void test_vbo_vtable_get(void);
 static void test_texture_vtable_get(void);
 static void test_graphics_api_valid_check(void);
-static void test_texture_type_valid_check(void);
 #endif
 
 renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
@@ -764,6 +761,8 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "vertex_buffer_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "load_data_")
 
     ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
     if(RENDERER_SUCCESS != ret) {
@@ -809,9 +808,13 @@ cleanup:
 
 void renderer_backend_texture_destroy(renderer_backend_context_t* backend_context_, renderer_backend_texture_t** texture_handle_) {
     if(NULL == backend_context_ || NULL == backend_context_->texture_vtable) {
+        WARN_MESSAGE("renderer_backend_texture_destroy - Provided backend_context_ or backend_context_->texture_vtable is not valid.");
         return;
     }
-    // NOTE: texture_handle_のNULLチェックは下位に任せる
+    if(NULL == texture_handle_ || NULL == *texture_handle_) {
+        WARN_MESSAGE("renderer_backend_texture_destroy - Provided texture_handle_ or *texture_handle_ is not valid.");
+        return;
+    }
     backend_context_->texture_vtable->renderer_texture_destroy(texture_handle_);
 }
 
@@ -882,6 +885,14 @@ renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_texture_pixel_upload", "backend_context_->texture_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "texture_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "pixels_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != width_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != height_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "height_")
+
+    if(3 != channel_count_ && 4 != channel_count_) {
+        ret = RENDERER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Invalid channel_count_. expected = 3(RGB) or 4(RGBA), actual = %d", renderer_rslt_to_str(ret), channel_count_);
+        goto cleanup;
+    }
 
     ret = backend_context_->texture_vtable->renderer_texture_bind(texture_handle_, &backend_context_->current_texture_unit, &backend_context_->current_bound_texture);
     if(RENDERER_SUCCESS != ret) {
@@ -987,30 +998,6 @@ static bool graphics_api_valid_check(target_graphics_api_t target_api_) {
         break;
     default:
         ret = false;
-        break;
-    }
-    return ret;
-}
-
-static bool texture_type_valid_check(texture_type_t texture_type_) {
-#ifdef TEST_BUILD
-    s_test_config_texture_type_valid_check.call_count++;
-    if(s_test_config_texture_type_valid_check.fail_on_call != 0) {
-        if(s_test_config_texture_type_valid_check.call_count == s_test_config_texture_type_valid_check.fail_on_call) {
-            return s_test_config_texture_type_valid_check.forced_result;
-        }
-    }
-#endif
-    bool ret = false;
-    switch(texture_type_) {
-    case TEXTURE_TYPE_DIFFUSE:
-        ret = true;
-        break;
-    case TEXTURE_TYPE_NORMAL:
-        ret = true;
-        break;
-    case TEXTURE_TYPE_SPECULAR:
-        ret = true;
         break;
     }
     return ret;
@@ -1404,7 +1391,6 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     s_test_config_texture_vtable_get.call_count = 0;
     s_test_config_texture_vtable_get.fail_on_call = 0;
     test_call_control_bool_reset(&s_test_config_graphics_api_valid_check);
-    test_call_control_bool_reset(&s_test_config_texture_type_valid_check);
     s_test_config_test_renderer_shader_create = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_compile = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_link = RENDERER_SUCCESS;
@@ -1457,7 +1443,6 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_vbo_vtable_get();
     test_texture_vtable_get();
     test_graphics_api_valid_check();
-    test_texture_type_valid_check();
 }
 
 // Generated by ChatGPT
@@ -4760,32 +4745,1691 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void) {
+    {
+        // renderer_backend_vertex_buffer_vertex_subload() 冒頭で強制的に
+        // RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+        test_call_control_t config = {0};
 
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_vertex_buffer_vertex_subload_config_set(&config);
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            sizeof(float) * 3U,
+            sizeof(float) * 6U,
+            vertex_data
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(123U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            NULL,
+            vertex_buffer,
+            0U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = NULL;
+        context.current_bound_vbo = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            0U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(123U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        float vertex_data[9] = {0.0f};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            NULL,
+            0U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(123U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // size_ == 0 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            0U,
+            0U,
+            vertex_data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(123U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // load_data_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            0U,
+            sizeof(float) * 9U,
+            NULL
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(123U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vertex_buffer_bind が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 111U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
+        s_test_config_test_vertex_buffer_vertex_subload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            0U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(111U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // bind 成功後に下位 vertex_subload が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
+        // current_bound_vbo は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[9] = {0.0f};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 222U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_test_config_test_vertex_buffer_vertex_subload = RENDERER_RUNTIME_ERROR;
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            sizeof(float) * 3U,
+            sizeof(float) * 6U,
+            vertex_data
+        );
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(222U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // bind 成功後に下位 vertex_subload が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
+        // current_bound_vbo は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[6] = {
+            0.0f, 0.0f, 0.0f,
+            1.0f, 1.0f, 0.0f
+        };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 333U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_test_config_test_vertex_buffer_vertex_subload = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            0U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(333U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系
+        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
+        // current_bound_vbo は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_vbo_t* vertex_buffer =
+            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
+        float vertex_data[6] = {
+            0.0f, 0.0f, 0.0f,
+            1.0f, 1.0f, 0.0f
+        };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.vbo_vtable = &s_test_vbo_vtable;
+        context.current_bound_vbo = 444U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_vertex_buffer_bind = RENDERER_SUCCESS;
+        s_test_config_test_vertex_buffer_vertex_subload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_vertex_buffer_vertex_subload(
+            &context,
+            vertex_buffer,
+            sizeof(float) * 3U,
+            sizeof(vertex_data),
+            vertex_data
+        );
+        assert(RENDERER_SUCCESS == ret);
+        assert(444U == context.current_bound_vbo);
+        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_texture_create(void) {
+    {
+        // renderer_backend_texture_create() 冒頭で強制的に
+        // RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+        test_call_control_t config = {0};
 
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_texture_create_config_set(&config);
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_texture_t* texture = NULL;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_create(
+            NULL,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->texture_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = NULL;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // texture_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            NULL
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // *texture_handle_ != NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert((renderer_backend_texture_t*)(uintptr_t)0x1U == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_create = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_texture_create(
+            &context,
+            -1,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_NO_MEMORY を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_create = RENDERER_NO_MEMORY;
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_NO_MEMORY == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_LIMIT_EXCEEDED を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_create = RENDERER_LIMIT_EXCEEDED;
+
+        ret = renderer_backend_texture_create(
+            &context,
+            0,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_NEAREST,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            &texture
+        );
+        assert(RENDERER_LIMIT_EXCEEDED == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_create = RENDERER_RUNTIME_ERROR;
+
+        ret = renderer_backend_texture_create(
+            &context,
+            1,
+            TEXTURE_MIN_FILTER_CONFIG_LINEAR,
+            TEXTURE_MAG_FILTER_CONFIG_LINEAR,
+            TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE,
+            TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE,
+            &texture
+        );
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系: wrapper としては SUCCESS を返す
+        // NOTE: 現在の test_renderer_texture_create() は texture_handle_ を更新しないため、
+        // texture は NULL のまま
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 0;
+        context.current_bound_texture = 0;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_create = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_create(
+            &context,
+            2,
+            TEXTURE_MIN_FILTER_CONFIG_NEAREST,
+            TEXTURE_MAG_FILTER_CONFIG_LINEAR,
+            TEXTURE_WRAP_CONFIG_REPEAT,
+            TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE,
+            &texture
+        );
+        assert(RENDERER_SUCCESS == ret);
+        assert(NULL == texture);
+        assert(1U == s_test_config_renderer_backend_texture_create.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_texture_destroy(void) {
+    {
+        // backend_context_ == NULL, texture_handle_ == NULL -> no-op
+        test_renderer_backend_context_config_reset();
 
+        renderer_backend_texture_destroy(NULL, NULL);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> no-op
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        test_renderer_backend_context_config_reset();
+
+        renderer_backend_texture_destroy(NULL, &texture);
+
+        assert((renderer_backend_texture_t*)(uintptr_t)0x1U == texture);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->texture_vtable == NULL -> no-op
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = NULL;
+        context.current_texture_unit = 3;
+        context.current_bound_texture = 123;
+
+        test_renderer_backend_context_config_reset();
+
+        renderer_backend_texture_destroy(&context, &texture);
+
+        assert((renderer_backend_texture_t*)(uintptr_t)0x1U == texture);
+        assert(3 == context.current_texture_unit);
+        assert(123 == context.current_bound_texture);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 正常系: 下位 destroy に委譲する
+        // NOTE: 現在の test_renderer_texture_destroy() は no-op なので、
+        // texture は変化しない
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 6;
+        context.current_bound_texture = 999;
+
+        test_renderer_backend_context_config_reset();
+
+        renderer_backend_texture_destroy(&context, &texture);
+
+        assert((renderer_backend_texture_t*)(uintptr_t)0x1U == texture);
+        assert(6 == context.current_texture_unit);
+        assert(999 == context.current_bound_texture);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // texture_handle_ == NULL -> upper layer no-op
+        renderer_backend_context_t context = {0};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 4;
+        context.current_bound_texture = 456;
+
+        test_renderer_backend_context_config_reset();
+
+        renderer_backend_texture_destroy(&context, NULL);
+
+        assert(4 == context.current_texture_unit);
+        assert(456 == context.current_bound_texture);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // *texture_handle_ == NULL -> upper layer no-op
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture = NULL;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 5;
+        context.current_bound_texture = 789;
+
+        test_renderer_backend_context_config_reset();
+
+        renderer_backend_texture_destroy(&context, &texture);
+
+        assert(NULL == texture);
+        assert(5 == context.current_texture_unit);
+        assert(789 == context.current_bound_texture);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_texture_bind(void) {
+    {
+        // renderer_backend_texture_bind() 冒頭で強制的に
+        // RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        test_call_control_t config = {0};
 
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 3;
+        context.current_bound_texture = 123;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_texture_bind_config_set(&config);
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(3 == context.current_texture_unit);
+        assert(123 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_bind(NULL, texture);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->texture_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = NULL;
+        context.current_texture_unit = 4;
+        context.current_bound_texture = 456;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(4 == context.current_texture_unit);
+        assert(456 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // texture_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 5;
+        context.current_bound_texture = 789;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_bind(&context, NULL);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(5 == context.current_texture_unit);
+        assert(789 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 6;
+        context.current_bound_texture = 111;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(6 == context.current_texture_unit);
+        assert(111 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 7;
+        context.current_bound_texture = 222;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_DATA_CORRUPTED;
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(7 == context.current_texture_unit);
+        assert(222 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 8;
+        context.current_bound_texture = 333;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_RUNTIME_ERROR;
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(8 == context.current_texture_unit);
+        assert(333 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系
+        // NOTE: 現在の test_renderer_texture_bind() は out_texture_unit_ /
+        // out_texture_internal_handle_ を更新しないため、context の bind 状態は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 9;
+        context.current_bound_texture = 444;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_bind(&context, texture);
+
+        assert(RENDERER_SUCCESS == ret);
+        assert(9 == context.current_texture_unit);
+        assert(444 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_bind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_texture_unbind(void) {
+    {
+        // renderer_backend_texture_unbind() 冒頭で強制的に
+        // RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        test_call_control_t config = {0};
 
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 3;
+        context.current_bound_texture = 123;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_texture_unbind_config_set(&config);
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(3 == context.current_texture_unit);
+        assert(123 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_unbind(NULL, texture);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->texture_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = NULL;
+        context.current_texture_unit = 4;
+        context.current_bound_texture = 456;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(4 == context.current_texture_unit);
+        assert(456 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // texture_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 5;
+        context.current_bound_texture = 789;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_unbind(&context, NULL);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(5 == context.current_texture_unit);
+        assert(789 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_unbind が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        // 失敗時は current_texture_unit / current_bound_texture を変更しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 6;
+        context.current_bound_texture = 111;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_unbind = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(6 == context.current_texture_unit);
+        assert(111 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_unbind が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
+        // 失敗時は current_texture_unit / current_bound_texture を変更しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 7;
+        context.current_bound_texture = 222;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_unbind = RENDERER_DATA_CORRUPTED;
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(7 == context.current_texture_unit);
+        assert(222 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_unbind が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        // 失敗時は current_texture_unit / current_bound_texture を変更しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 8;
+        context.current_bound_texture = 333;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_unbind = RENDERER_RUNTIME_ERROR;
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(8 == context.current_texture_unit);
+        assert(333 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系: 下位 unbind 成功後、context の texture bind 状態をリセットする
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 9;
+        context.current_bound_texture = 444;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_unbind = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_unbind(&context, texture);
+
+        assert(RENDERER_SUCCESS == ret);
+        assert(0 == context.current_texture_unit);
+        assert(0 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_unbind.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_texture_pixel_upload(void) {
+    {
+        // renderer_backend_texture_pixel_upload() 冒頭で強制的に
+        // RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+        test_call_control_t config = {0};
 
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 3;
+        context.current_bound_texture = 123;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_texture_pixel_upload_config_set(&config);
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(3 == context.current_texture_unit);
+        assert(123 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            NULL,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->texture_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = NULL;
+        context.current_texture_unit = 4;
+        context.current_bound_texture = 456;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(4 == context.current_texture_unit);
+        assert(456 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // texture_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 5;
+        context.current_bound_texture = 789;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            NULL,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(5 == context.current_texture_unit);
+        assert(789 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // pixels_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 6;
+        context.current_bound_texture = 111;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            NULL
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(6 == context.current_texture_unit);
+        assert(111 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // width_ == 0 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 7;
+        context.current_bound_texture = 222;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            0U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(7 == context.current_texture_unit);
+        assert(222 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // height_ == 0 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 8;
+        context.current_bound_texture = 333;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            0U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(8 == context.current_texture_unit);
+        assert(333 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // channel_count_ == 0 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 9;
+        context.current_bound_texture = 444;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            0U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(9 == context.current_texture_unit);
+        assert(444 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // channel_count_ == 1 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 10;
+        context.current_bound_texture = 555;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            1U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(10 == context.current_texture_unit);
+        assert(555 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // channel_count_ == 2 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 11;
+        context.current_bound_texture = 666;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            2U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(11 == context.current_texture_unit);
+        assert(666 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // channel_count_ == 5 -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[20] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 12;
+        context.current_bound_texture = 777;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            5U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(12 == context.current_texture_unit);
+        assert(777 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        // 下位 pixel_upload には到達しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 13;
+        context.current_bound_texture = 888;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_INVALID_ARGUMENT;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(13 == context.current_texture_unit);
+        assert(888 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
+        // 下位 pixel_upload には到達しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 14;
+        context.current_bound_texture = 999;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_DATA_CORRUPTED;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(14 == context.current_texture_unit);
+        assert(999 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 renderer_texture_bind が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        // 下位 pixel_upload には到達しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 15;
+        context.current_bound_texture = 1000;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_RUNTIME_ERROR;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(15 == context.current_texture_unit);
+        assert(1000 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // bind 成功後、下位 renderer_texture_pixel_upload が
+        // RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        // NOTE: 上位チェックを通過させるため、有効な width/height/channel_count/pixels を渡す
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 16;
+        context.current_bound_texture = 1001;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(16 == context.current_texture_unit);
+        assert(1001 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // bind 成功後、下位 renderer_texture_pixel_upload が
+        // RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {0U};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 17;
+        context.current_bound_texture = 1002;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_RUNTIME_ERROR;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(17 == context.current_texture_unit);
+        assert(1002 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系: RGB
+        // NOTE: 現在の test_renderer_texture_bind() は out_texture_unit_ /
+        // out_texture_internal_handle_ を更新しないため、context の bind 状態は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[12] = {
+            255U, 0U,   0U,
+            0U,   255U, 0U,
+            0U,   0U,   255U,
+            255U, 255U, 255U
+        };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 18;
+        context.current_bound_texture = 1003;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            3U,
+            pixels
+        );
+
+        assert(RENDERER_SUCCESS == ret);
+        assert(18 == context.current_texture_unit);
+        assert(1003 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系: RGBA
+        // NOTE: 現在の test_renderer_texture_bind() は out_texture_unit_ /
+        // out_texture_internal_handle_ を更新しないため、context の bind 状態は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_texture_t* texture =
+            (renderer_backend_texture_t*)(uintptr_t)0x1U;
+        uint8_t pixels[16] = {
+            255U, 0U,   0U,   255U,
+            0U,   255U, 0U,   255U,
+            0U,   0U,   255U, 255U,
+            255U, 255U, 255U, 255U
+        };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.texture_vtable = &s_test_texture_vtable;
+        context.current_texture_unit = 19;
+        context.current_bound_texture = 1004;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_texture_bind = RENDERER_SUCCESS;
+        s_test_config_test_renderer_texture_pixel_upload = RENDERER_SUCCESS;
+
+        ret = renderer_backend_texture_pixel_upload(
+            &context,
+            texture,
+            2U,
+            2U,
+            4U,
+            pixels
+        );
+
+        assert(RENDERER_SUCCESS == ret);
+        assert(19 == context.current_texture_unit);
+        assert(1004 == context.current_bound_texture);
+        assert(1U == s_test_config_renderer_backend_texture_pixel_upload.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
@@ -4952,7 +6596,56 @@ static void NO_COVERAGE test_vbo_vtable_get(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_texture_vtable_get(void) {
+    {
+        // texture_vtable_get() 冒頭で強制的に NULL を返させる
+        const renderer_texture_vtable_t* vtable = (const renderer_texture_vtable_t*)0x1;
+        const renderer_texture_vtable_t* forced_result = NULL;
 
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_texture_vtable_get.call_count = 0U;
+        s_test_config_texture_vtable_get.fail_on_call = 1U;
+        s_test_config_texture_vtable_get.forced_result = forced_result;
+
+        vtable = texture_vtable_get(GRAPHICS_API_GL33);
+        assert(NULL == vtable);
+        assert(1U == s_test_config_texture_vtable_get.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // GRAPHICS_API_GL33 -> gl33_texture_vtable_get() を返す
+        const renderer_texture_vtable_t* vtable = NULL;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_texture_vtable_get.call_count = 0U;
+        s_test_config_texture_vtable_get.fail_on_call = 0U;
+        s_test_config_texture_vtable_get.forced_result = NULL;
+
+        vtable = texture_vtable_get(GRAPHICS_API_GL33);
+        assert(NULL != vtable);
+        assert(gl33_texture_vtable_get() == vtable);
+        assert(1U == s_test_config_texture_vtable_get.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 既定値外の target_api_ -> NULL
+        const renderer_texture_vtable_t* vtable = (const renderer_texture_vtable_t*)0x1;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_texture_vtable_get.call_count = 0U;
+        s_test_config_texture_vtable_get.fail_on_call = 0U;
+        s_test_config_texture_vtable_get.forced_result = NULL;
+
+        vtable = texture_vtable_get((target_graphics_api_t)99999);
+        assert(NULL == vtable);
+        assert(1U == s_test_config_texture_vtable_get.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
 }
 
 // Generated by ChatGPT
@@ -5005,10 +6698,5 @@ static void NO_COVERAGE test_graphics_api_valid_check(void) {
 
         test_renderer_backend_context_config_reset();
     }
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_texture_type_valid_check(void) {
-
 }
 #endif
