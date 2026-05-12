@@ -24,6 +24,7 @@ typedef enum {
     TEXTURE_SYSTEM_OVERFLOW,           /**< 計算過程でオーバーフロー発生 */
     TEXTURE_SYSTEM_LIMIT_EXCEEDED,     /**< システム使用可能範囲上限超過 */
     TEXTURE_SYSTEM_FILE_OPEN_ERROR,    /**< ファイルオープン失敗 */
+    TEXTURE_SYSTEM_FILE_CLOSE_ERROR,   /**< ファイルクローズ失敗 */
     TEXTURE_SYSTEM_FILE_READ_ERROR,    /**< ファイル読み込み失敗 */
     TEXTURE_SYSTEM_UNSUPPORTED_FILE,   /**< 未対応ファイル形式 */
     TEXTURE_SYSTEM_UNDEFINED_ERROR,    /**< 未定義エラー */
@@ -40,7 +41,7 @@ texture_system_result_t texture_manager_unregister(renderer_backend_context_t* b
 
 texture_system_result_t texture_manager_unregister_by_name(renderer_backend_context_t* backend_context_, const char* name_, texture_manager_t* texture_manager_);
 
-int16_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_);
+texture_system_result_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_, int16_t* out_texture_id_);
 
 texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
 

@@ -105,17 +105,6 @@ typedef enum {
     TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
 } texture_wrap_config_t;
 
-/**
- * @brief テクスチャ種別リスト定義
- * @todo TODO: engine/resources/texture.hに移すかも
- *
- */
-typedef enum {
-    TEXTURE_TYPE_DIFFUSE,   /**< テクスチャ種別: ディヒューズテクスチャ */
-    TEXTURE_TYPE_SPECULAR,  /**< テクスチャ種別: スペキュラーテクスチャ */
-    TEXTURE_TYPE_NORMAL,    /**< テクスチャ種別: ノーマルテクスチャ */
-} texture_type_t;
-
 #ifdef __cplusplus
 }
 #endif

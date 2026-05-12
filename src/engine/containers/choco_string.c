@@ -44,13 +44,15 @@ static test_call_control_t s_test_config_choco_string_copy_from_c_string;       
 static test_call_control_t s_test_config_choco_string_concat;                   /**< choco_string_concat()テスト設定 */
 static test_call_control_t s_test_config_choco_string_concat_from_c_string;     /**< choco_string_concat_from_c_string()テスト設定 */
 static test_call_control_size_t_t s_test_config_choco_string_length;            /**< choco_string_length()テスト設定 */
+static test_call_control_bool_t s_test_config_choco_string_equal;               /**< choco_string_equal()テスト設定 */
 
 // プライベート関数テスト設定
 static test_call_control_t s_test_config_choco_string_mem_allocate; /**< choco_string_mem_allocate()テスト設定 */
 static test_call_control_t s_test_config_buffer_reserve;            /**< buffer_reserve()テスト設定 */
 static test_call_control_t s_test_config_buffer_resize;             /**< buffer_resize()テスト設定 */
 static test_call_control_bool_t s_test_config_is_string_valid;      /**< is_string_valid()テスト設定 */
-static test_call_control_size_t_t s_test_config_mock_strlen;        /**< mock_str_len()テスト設定 */
+static test_call_control_size_t_t s_test_config_mock_strlen;        /**< mock_strlen()テスト設定 */
+static test_call_control_t s_test_config_mock_strcmp;               /**< mock_strcmp()テスト設定 */
 
 // 全テスト関数プロトタイプ宣言
 static void test_choco_string_default_create(void);
@@ -62,6 +64,7 @@ static void test_choco_string_concat(void);
 static void test_choco_string_concat_from_c_string(void);
 static void test_choco_string_length(void);
 static void test_choco_string_c_str(void);
+static void test_choco_string_equal(void);
 static void test_rslt_to_str(void);
 static void test_choco_string_mem_allocate(void);
 static void test_buffer_reserve(void);
@@ -95,6 +98,7 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
 static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_);
 static bool is_string_valid(const choco_string_t* string_);
 static size_t mock_strlen(const char* str_);
+static int mock_strcmp(const char *s1_, const char *s2_); 
 
 choco_string_result_t choco_string_default_create(choco_string_t** string_) {
 #ifdef TEST_BUILD
@@ -481,6 +485,21 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
+bool choco_string_equal(const char* str1_, const char* str2_) {
+#ifdef TEST_BUILD
+    s_test_config_choco_string_equal.call_count++;
+    if(s_test_config_choco_string_equal.fail_on_call != 0) {
+        if(s_test_config_choco_string_equal.call_count == s_test_config_choco_string_equal.fail_on_call) {
+            return s_test_config_choco_string_equal.forced_result;
+        }
+    }
+#endif
+    if(NULL == str1_ || NULL == str2_) {
+        return false;
+    }
+    return (0 == mock_strcmp(str1_, str2_) ? true : false);
+}
+
 /**
  * @brief 実行結果コードを文字列に変換する
  *
@@ -719,11 +738,16 @@ static size_t NO_COVERAGE mock_strlen(const char* str_) {
     return strlen(str_);
 }
 
-bool choco_string_equal(const char* str1_, const char* str2_) {
-    if(NULL == str1_ || NULL == str2_) {
-        return false;
+static int NO_COVERAGE mock_strcmp(const char *s1_, const char *s2_) {
+#ifdef TEST_BUILD
+    s_test_config_mock_strcmp.call_count++;
+    if(s_test_config_mock_strcmp.fail_on_call != 0) {
+        if(s_test_config_mock_strcmp.call_count == s_test_config_mock_strcmp.fail_on_call) {
+            return s_test_config_mock_strcmp.forced_result;
+        }
     }
-    return (0 == strcmp(str1_, str2_) ? true : false);
+#endif
+    return strcmp(s1_, s2_);
 }
 
 #ifdef TEST_BUILD
@@ -762,6 +786,11 @@ void test_choco_string_length_config_set(const test_call_control_size_t_t* confi
     s_test_config_choco_string_length.forced_result = config_->forced_result;
 }
 
+void test_choco_string_equal_config_set(const test_call_control_bool_t* config_) {
+    s_test_config_choco_string_equal.fail_on_call = config_->fail_on_call;
+    s_test_config_choco_string_equal.forced_result = config_->forced_result;
+}
+
 void test_choco_string_config_reset(void) {
     test_call_control_reset(&s_test_config_choco_string_default_create);
     test_call_control_reset(&s_test_config_choco_string_create_from_c_string);
@@ -770,12 +799,14 @@ void test_choco_string_config_reset(void) {
     test_call_control_reset(&s_test_config_choco_string_concat);
     test_call_control_reset(&s_test_config_choco_string_concat_from_c_string);
     test_call_control_size_t_reset(&s_test_config_choco_string_length);
+    test_call_control_bool_reset(&s_test_config_choco_string_equal);
 
     test_call_control_reset(&s_test_config_choco_string_mem_allocate);
     test_call_control_reset(&s_test_config_buffer_reserve);
     test_call_control_reset(&s_test_config_buffer_resize);
     test_call_control_bool_reset(&s_test_config_is_string_valid);
     test_call_control_size_t_reset(&s_test_config_mock_strlen);
+    test_call_control_reset(&s_test_config_mock_strcmp);
 }
 
 void test_choco_string(void) {
@@ -790,6 +821,7 @@ void test_choco_string(void) {
     test_choco_string_concat_from_c_string();
     test_choco_string_length();
     test_choco_string_c_str();
+    test_choco_string_equal();
     test_rslt_to_str();
     test_choco_string_mem_allocate();
     test_buffer_reserve();
@@ -2475,6 +2507,164 @@ static void NO_COVERAGE test_choco_string_c_str(void) {
         test_choco_string_config_reset();
     }
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void test_choco_string_equal(void) {
+    {
+        // choco_string_equal() 冒頭で強制的に true を返させる
+        bool ret = false;
+        test_call_control_bool_t config = {0};
+
+        test_choco_string_config_reset();
+
+        config.fail_on_call = 1U;
+        config.forced_result = true;
+        test_choco_string_equal_config_set(&config);
+
+        ret = choco_string_equal(NULL, NULL);
+        assert(true == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // choco_string_equal() 冒頭で2回目だけ強制的に false を返させる
+        bool ret = false;
+        test_call_control_bool_t config = {0};
+
+        test_choco_string_config_reset();
+
+        config.fail_on_call = 2U;
+        config.forced_result = false;
+        test_choco_string_equal_config_set(&config);
+
+        ret = choco_string_equal("abc", "abc");
+        assert(true == ret);
+
+        ret = choco_string_equal("abc", "abc");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // str1_ == NULL -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal(NULL, "abc");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // str2_ == NULL -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal("abc", NULL);
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // str1_ == NULL && str2_ == NULL -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal(NULL, NULL);
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // 同一文字列 -> true
+        bool ret = false;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal("abc", "abc");
+        assert(true == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // 異なる文字列 -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal("abc", "abd");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // 空文字列同士 -> true
+        bool ret = false;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal("", "");
+        assert(true == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // 空文字列と非空文字列 -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_equal("", "abc");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // mock_strcmp() が正の値を返す場合 -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        s_test_config_mock_strcmp.fail_on_call = 1U;
+        s_test_config_mock_strcmp.forced_result = 1;
+
+        ret = choco_string_equal("abc", "abc");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // mock_strcmp() が負の値を返す場合 -> false
+        bool ret = true;
+
+        test_choco_string_config_reset();
+
+        s_test_config_mock_strcmp.fail_on_call = 1U;
+        s_test_config_mock_strcmp.forced_result = -1;
+
+        ret = choco_string_equal("abc", "abc");
+        assert(false == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // mock_strcmp() が0を返す場合 -> true
+        bool ret = false;
+
+        test_choco_string_config_reset();
+
+        s_test_config_mock_strcmp.fail_on_call = 1U;
+        s_test_config_mock_strcmp.forced_result = 0;
+
+        ret = choco_string_equal("abc", "abd");
+        assert(true == ret);
+
+        test_choco_string_config_reset();
+    }
 }
 
 // Generated by ChatGPT 5.4 Thinking
