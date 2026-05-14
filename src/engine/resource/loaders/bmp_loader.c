@@ -405,7 +405,27 @@ cleanup:
     return ret;
 }
 
-// GLCEの画像は左上原点を基準とするためheightは基本的に負の値となるが、絶対値を取って返す
+/**
+ * @brief BMPファイルのサイズ情報を取得する
+ *
+ * @note 処理に失敗した場合はout引数の状態は不変
+ * @note 画像原点が左上でheightが負の場合は絶対値を返す
+ *
+ * @param[in] bmp_loader_ BMPローダー構造体インスタンスへのポインタ
+ * @param[out] width_ 画像の幅情報格納先
+ * @param[out] height_ 画像の高さ情報格納先
+ * @param[out] channel_count_ 画像のチャンネルカウント(RGB or RGBA)格納先
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - bmp_loader_ == NULL
+ * - width_ == NULL
+ * - height_ == NULL
+ * - channel_count_ == NULL
+ * @retval RESOURCE_BAD_OPERATION 画像が未ロード状態
+ * @retval RESOURCE_UNDEFINED_ERROR 不明なエラーが発生
+ * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される)
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 resource_result_t bmp_loader_bmp_size_get(const bmp_loader_t* bmp_loader_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_bmp_size_get.call_count++;
@@ -465,8 +485,26 @@ cleanup:
     return ret;
 }
 
-// この関数はpadding除去後に実行する
-// is_bmp_supportedを通過したinfo_header_を与えること
+/**
+ * @brief BMPのピクセルデータをBGRからRGBに変換する
+ *
+ * @warning この関数は必ずpadding除去後に実行すること
+ * @note 処理に失敗した場合は、pixels_の状態は不変
+ *
+ * @param[in] info_header_ INFOHEADER構造体インスタンスへのポインタ
+ * @param[in,out] pixels_ 変換対象ピクセルデータ配列
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - info_header_ == NULL
+ * - pixels_ == NULL
+ * @retval RESOURCE_BAD_OPERATION 以下のいずれか
+ * - info_header_->bi_width == 0
+ * - info_header_->bi_height == 0
+ * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ *
+ * @todo TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する
+ */
 static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_pixel_bgr_to_rgb.call_count++;
@@ -515,8 +553,27 @@ cleanup:
     return ret;
 }
 
-// 左下原点の画像を左上原点に直す(GLCEは左上原点の画像を基準にする)
-// この関数は必ずpadding除去後に行うこと！！
+/**
+ * @brief GLCEの画像は左上原点とするため、左下原点の画像を左上原点に直す
+ *
+ * @warning この関数は必ずpadding除去後に実行すること
+ * @note 既に左上原点の場合は何もしないでRESOURCE_SUCCESSを返す
+ * @note 処理に失敗した場合は、pixels_の状態は不変
+ *
+ * @param[in] info_header_ INFOHEADER構造体インスタンスへのポインタ
+ * @param[in,out] pixels_ 座標原点変換対象ピクセル配列
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - info_header_ == NULL
+ * - pixels_ == NULL
+ * @retval RESOURCE_BAD_OPERATION 以下のいずれか
+ * - info_header_->bi_width == 0
+ * - info_header_->bi_height == 0
+ * @retval RESOURCE_UNSUPPORTED_FILE RGB、RGBA以外のBMPファイル
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ *
+ * @todo TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する
+ */
 static resource_result_t bmp_loader_pixel_flip(const info_header_t* info_header_, uint8_t* pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_pixel_flip.call_count++;
@@ -583,8 +640,36 @@ cleanup:
     return ret;
 }
 
-// padding_ > 0 の 24bit BMP行データ専用
-// 32bit BMPでは通常paddingが発生しないため、この関数の呼び出し対象外
+/**
+ * @brief 読み込んだピクセルデータからpaddingを除去する
+ *
+ * @warning 24bit BMPデータ専用, 32bitではpaddingが発生しないため、呼び出し対象外で、RESOURCE_BAD_OPERATIONを返す
+ * @note 処理に失敗した場合、out引数は不変
+ *
+ * @param[in] info_header_ INFOHEADER構造体インスタンスへのポインタ
+ * @param[in] stride_ BMPファイルの各行のサイズ(byte)
+ * @param[in] padding_ パディングサイズ
+ * @param[in] src_pixels_ padding除去前のピクセルデータ
+ * @param[out] dst_pixels_ padding除去後のピクセルデータ
+ * @param[out] out_new_size_ padding除去後のピクセルデータサイズ(byte)
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - info_header_ == NULL
+ * - src_pixels_ == NULL
+ * - dst_pixels_ == NULL
+ * - out_new_size_ == NULL
+ * @retval RESOURCE_BAD_OPERATION 以下のいずれか
+ * - stride_ == 0
+ * - padding_ == 0
+ * - info_header_->bi_width == 0
+ * - info_header_->bi_height == 0
+ * - info_header_->bi_bit_count != 24
+ * - メモリシステム未初期化
+ * @retval RESOURCE_OVERFLOW 計算過程でオーバーフローが発生
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_SUCCESS 処理に失敗し、正常終了
+ */
 static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_padding_remove.call_count++;
@@ -669,6 +754,28 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief BMPファイルのヘッダ情報を読み込む
+ *
+ * @note 処理に失敗した場合、out引数は不変
+ *
+ * @param[in] fullpath_ BMPファイルのフルパス
+ * @param[out] file_header_ FILEHEADER情報格納先
+ * @param[out] info_header_ INFOHEADER情報格納先
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - fullpath_ == NULL
+ * - file_header_ == NULL
+ * - info_header_ == NULL
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_FILE_OPEN_ERROR ファイルオープン失敗
+ * @retval RESOURCE_FILE_CLOSE_ERROR ファイルクローズ失敗
+ * @retval RESOURCE_UNDEFINED_ERROR 未定義エラーが発生
+ * @retval RESOURCE_FILE_READ_ERROR ヘッダ読み込み失敗
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_) {
 #ifdef TEST_BUILD
     s_test_config_header_load.call_count++;
@@ -749,7 +856,35 @@ cleanup:
     return ret;
 }
 
-// bi_size_imageは自前で計算するため非const
+/**
+ * @brief BMPファイルのヘッダ以降のピクセルデータを読み込む
+ *
+ * @note 引数info_header_はbi_size_imageを更新するため非const
+ * @note 処理に失敗した場合、out引数は不変
+ *
+ * @param[in] fullpath_ BMPファイルのフルパス
+ * @param[in] file_header_ FILEHEADER構造体インスタンスへのポインタ
+ * @param[in,out] info_header_ INFOHEADER構造体インスタンスへのポインタ
+ * @param[in] stride_ BMPファイルの各行のサイズ(byte)
+ * @param[out] out_pixels_ 読み込んだピクセルデータの格納先(メモリは本関数内で確保する)
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - fullpath_ == NULL
+ * - file_header_ == NULL
+ * - info_header_ == NULL
+ * - out_pixels_ == NULL
+ * - *out_pixels_ != NULL
+ * - stride_ == 0
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_FILE_OPEN_ERROR ファイルオープン失敗
+ * @retval RESOURCE_UNDEFINED_ERROR 未定義エラーが発生
+ * @retval RESOURCE_FILE_READ_ERROR ピクセル読み込み失敗
+ * @retval RESOURCE_DATA_CORRUPTED ピクセル読み込みサイズ異常
+ * @retval RESOURCE_OVERFLOW 計算過程でオーバーフロー発生
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_) {
 #ifdef TEST_BUILD
     s_test_config_pixel_load.call_count++;
