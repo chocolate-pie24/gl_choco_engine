@@ -1,3 +1,18 @@
+/** @ingroup resource
+ *
+ * @file texture.c
+ * @author chocolate-pie24
+ * @brief テクスチャCPU側リソース管理モジュールAPI実装
+ *
+ * @version 0.1
+ * @date 2026-05-14
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -20,20 +35,28 @@
 
 #include "engine/resource/loaders/bmp_loader.h"
 
+/**
+ * @brief テスト用テクスチャ名称リスト
+ *
+ */
 typedef enum {
-    TEST_TEXTURE_RED,
-    TEST_TEXTURE_GREEN,
-    TEST_TEXTURE_BLUE,
+    TEST_TEXTURE_RED,       /**< テスト用テクスチャピクセルデータ: 赤色 */
+    TEST_TEXTURE_GREEN,     /**< テスト用テクスチャピクセルデータ: 緑色 */
+    TEST_TEXTURE_BLUE,      /**< テスト用テクスチャピクセルデータ: 青色 */
 } test_texture_t;
 
+/**
+ * @brief テクスチャCPU側リソース構造体
+ *
+ */
 struct texture {
     choco_string_t* name;   /**< テクスチャCPU側リソース名称 */
 
-    uint16_t width;
-    uint16_t height;
-    uint8_t channel_count;
+    uint16_t width;         /**< テクスチャ幅 */
+    uint16_t height;        /**< テクスチャ高さ(左上原点の画像を基準にする) */
+    uint8_t channel_count;  /**< チャンネルカウント(RGB or RGBAのみサポート) */
 
-    uint8_t* pixels;
+    uint8_t* pixels;        /**< テクスチャピクセルデータ */
 };
 
 static resource_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
@@ -281,7 +304,7 @@ resource_result_t texture_pixel_unload(texture_t* texture_) {
     IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->channel_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->channel_count")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->height")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->width")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->pixels")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->pixels")
 
     memory_system_free(texture_->pixels, (size_t)texture_->width * (size_t)texture_->height * (size_t)texture_->channel_count, MEMORY_TAG_TEXTURE);
     texture_->pixels = NULL;
@@ -295,8 +318,7 @@ cleanup:
     return ret;
 }
 
-// getではなく、moveにして所有権を委譲しても良いかもしれないが、GPUへのアップロードが終わった以降に使う可能性があるかもしれないので、当面はgetにする
-resource_result_t texture_pixel_get(texture_t* texture_, uint8_t** out_pixels_) {
+resource_result_t texture_pixel_get(const texture_t* texture_, uint8_t** out_pixels_) {
 #ifdef TEST_BUILD
     s_test_config_texture_pixel_get.call_count++;
     if(s_test_config_texture_pixel_get.fail_on_call != 0) {
@@ -323,7 +345,7 @@ cleanup:
     return ret;
 }
 
-resource_result_t texture_pixel_size_get(texture_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
+resource_result_t texture_pixel_size_get(const texture_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
 #ifdef TEST_BUILD
     s_test_config_texture_pixel_size_get.call_count++;
     if(s_test_config_texture_pixel_size_get.fail_on_call != 0) {
@@ -365,6 +387,41 @@ const char* texture_name_get(const texture_t* texture_) {
     return choco_string_c_str(texture_->name);
 }
 
+/**
+ * @brief BMPファイルを読み込む
+ *
+ * @note 読み込んだBMPファイルのピクセルデータは以下の形式となる
+ * - 原点は左上
+ * - チャンネルカウントRGBのピクセルデータについてもpaddingは除去される
+ * - BGRではなく、RGBの順でピクセルが格納される
+ * - 高さの値は常に正
+ * @note 処理に失敗した場合、out引数の状態は全て不変
+ *
+ * @param[in] fullpath_ BMPファイルのフルパス情報
+ * @param[out] out_width_ 読み込んだBMPファイルの幅格納先
+ * @param[out] out_height_ 読み込んだBMPファイルの高さ(元画像の原点が左下だった場合、左上に変換される)格納先
+ * @param[out] out_channel_count_ BMPファイルのチャンネルカウント(RGB or RGBAのみをサポート)格納先
+ * @param[out] out_pixels_ ピクセルデータ格納先
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - fullpath_ == NULL
+ * - out_width_ == NULL
+ * - out_height_ == NULL
+ * - out_channel_count_ == NULL
+ * - out_pixels_ == NULL
+ * - *out_pixels_ == NULL
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_FILE_OPEN_ERROR ファイルオープン失敗
+ * @retval RESOURCE_FILE_CLOSE_ERROR ファイルクローズ失敗
+ * @retval RESOURCE_UNDEFINED_ERROR 未定義エラーが発生
+ * @retval RESOURCE_FILE_READ_ERROR ヘッダまたはピクセル情報の読み込みに失敗
+ * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される)
+ * @retval RESOURCE_OVERFLOW 計算過程でオーバーフロー発生
+ * @retval RESOURCE_DATA_CORRUPTED ピクセル読み込みサイズ異常
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_load.call_count++;
@@ -430,6 +487,29 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief テスト用テクスチャピクセルデータを生成する
+ *
+ * @note 処理に失敗した場合、out_width_ / out_height_ / out_channel_count_ / out_pixels_の値は不変
+ *
+ * @param[in] test_texture_color_ 生成するテスト用テクスチャ選択値
+ * @param[out] out_width_ 生成したテクスチャの幅
+ * @param[out] out_height_ 生成したテクスチャの高さ(原点は左上)
+ * @param[out] out_channel_count_ チャンネルカウント(当面はテストテクスチャはRGBのみ)
+ * @param[out] out_pixels_ 生成したピクセルデータ格納先(メモリは本関数内で確保する)
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - out_width_ == NULL
+ * - out_height_ == NULL
+ * - out_channel_count_ == NULL
+ * - out_pixels_ == NULL
+ * - *out_pixels_ != NULL
+ * - test_texture_color_が規定値外
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ割り当て失敗
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t test_texture_generate(test_texture_t test_texture_color_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_) {
 #ifdef TEST_BUILD
     s_test_config_test_texture_generate.call_count++;
