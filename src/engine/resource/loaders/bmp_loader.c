@@ -1,7 +1,26 @@
-// TODO: 計算各所のoverflowチェック追加
-
-// @details 以下の形式のBMPファイルをサポートする
-// biCompressionがBI_RGB(非圧縮)以外
+/** @ingroup resource
+ *
+ * @file bmp_loader.c
+ * @author chocolate-pie24
+ * @brief BMPファイルのロード処理を行うAPIの実装
+ *
+ * @details GLCEでは以下のBMPファイルをサポートする
+ * - 非圧縮BMPファイル
+ * - ピクセルのチャンネルカウントはRGB or RGBAのみ
+ * - 画像の高さがint16_tに収まること
+ * - 画像の幅がが0より大きく、かつint16_tに収まること
+ *
+ * @version 0.1
+ * @date 2026-05-14
+ *
+ * @todo 計算各所のオーバーフローチェック漏れ修正
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,8 +41,6 @@
 
 /**
  * @brief 無効なBMPファイルの原因リスト
- *
- * @note 異常となる条件は @ref is_bmp_supported を参照
  *
  */
 typedef enum {
@@ -379,7 +396,6 @@ cleanup:
     return ret;
 }
 
-// bmp_loader_->pixelsの管理権限をout_pixels_へ移譲
 resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_pixel_move.call_count++;
@@ -405,27 +421,6 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief BMPファイルのサイズ情報を取得する
- *
- * @note 処理に失敗した場合はout引数の状態は不変
- * @note 画像原点が左上でheightが負の場合は絶対値を返す
- *
- * @param[in] bmp_loader_ BMPローダー構造体インスタンスへのポインタ
- * @param[out] width_ 画像の幅情報格納先
- * @param[out] height_ 画像の高さ情報格納先
- * @param[out] channel_count_ 画像のチャンネルカウント(RGB or RGBA)格納先
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - bmp_loader_ == NULL
- * - width_ == NULL
- * - height_ == NULL
- * - channel_count_ == NULL
- * @retval RESOURCE_BAD_OPERATION 画像が未ロード状態
- * @retval RESOURCE_UNDEFINED_ERROR 不明なエラーが発生
- * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される)
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
 resource_result_t bmp_loader_bmp_size_get(const bmp_loader_t* bmp_loader_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
 #ifdef TEST_BUILD
     s_test_config_bmp_loader_bmp_size_get.call_count++;
@@ -859,7 +854,7 @@ cleanup:
 /**
  * @brief BMPファイルのヘッダ以降のピクセルデータを読み込む
  *
- * @note 引数info_header_はbi_size_imageを更新するため非const
+ * @note 引数info_header_はbi_size_imageを更新するため非const(画像変換ツールによっては正しく情報が設定されていない場合があるため)
  * @note 処理に失敗した場合、out引数は不変
  *
  * @param[in] fullpath_ BMPファイルのフルパス

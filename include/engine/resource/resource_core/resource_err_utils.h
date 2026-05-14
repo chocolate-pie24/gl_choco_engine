@@ -76,11 +76,12 @@ resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t rslt
  * @retval RESOURCE_NO_MEMORY file_system実行結果コード:FILESYSTEM_NO_MEMORY
  * @retval RESOURCE_FILE_OPEN_ERROR file_system実行結果コード:FILESYSTEM_FILE_OPEN_ERROR
  * @retval RESOURCE_FILE_CLOSE_ERROR file_system実行結果コード:FILESYSTEM_FILE_CLOSE_ERROR
- * @retval RESOURCE_UNDEFINED_ERROR file_system実行結果コード:FILESYSTEM_UNDEFINED_ERROR
  * @retval RESOURCE_LIMIT_EXCEEDED file_system実行結果コード:FILESYSTEM_LIMIT_EXCEEDED
  * @retval RESOURCE_BAD_OPERATION file_system実行結果コード:FILESYSTEM_BAD_OPERATION
  * @retval RESOURCE_FILE_READ_ERROR file_system実行結果コード:FILESYSTEM_EOF
- * @retval RESOURCE_UNDEFINED_ERROR 未定義のfile_system実行結果コード
+ * @retval RESOURCE_UNDEFINED_ERROR 以下のいずれか
+ * - file_system実行結果コード:FILESYSTEM_UNDEFINED_ERROR
+ * - 未定義のfile_system実行結果コード
  */
 resource_result_t resource_rslt_convert_filesystem(filesystem_result_t rslt_);
 
