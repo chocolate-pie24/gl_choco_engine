@@ -1,4 +1,7 @@
 // TODO: 計算各所のoverflowチェック追加
+
+// @details 以下の形式のBMPファイルをサポートする
+// biCompressionがBI_RGB(非圧縮)以外
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -17,24 +20,30 @@
 
 // #define TEST_BUILD
 
+/**
+ * @brief 無効なBMPファイルの原因リスト
+ *
+ * @note 異常となる条件は @ref is_bmp_supported を参照
+ *
+ */
 typedef enum {
-    BMP_FILE_VALID,
-    BMP_FILE_INVALID_BF_TYPE,
-    BMP_FILE_INVALID_BF_RESERVED,
-    BMP_FILE_INVALID_BF_SIZE,
-    BMP_FILE_INVALID_BF_OFF_BITS,
-    BMP_FILE_INVALID_BI_SIZE,
-    BMP_FILE_INVALID_BI_PLANES,
-    BMP_FILE_INVALID_COMPRESSION,
-    BMP_FILE_INVALID_HEIGHT,
-    BMP_FILE_INVALID_WIDTH,
-    BMP_FILE_INVALID_CHANNEL_COUNT,
-    BMP_FILE_NOT_INITIALIZED,
-    BMP_FILE_UNDEFINED,
+    BMP_FILE_VALID,                 /**< BMPファイル有効 */
+    BMP_FILE_INVALID_BF_TYPE,       /**< bfType異常 */
+    BMP_FILE_INVALID_BF_RESERVED,   /**< bfReserved1(or2)異常 */
+    BMP_FILE_INVALID_BF_SIZE,       /**< bfSize異常 */
+    BMP_FILE_INVALID_BF_OFF_BITS,   /**< bfOffBits異常 */
+    BMP_FILE_INVALID_BI_SIZE,       /**< biSize異常  */
+    BMP_FILE_INVALID_BI_PLANES,     /**< biPlanes異常 */
+    BMP_FILE_INVALID_COMPRESSION,   /**< biCompression異常 */
+    BMP_FILE_INVALID_HEIGHT,        /**< biHeight異常 */
+    BMP_FILE_INVALID_WIDTH,         /**< biWidth異常 */
+    BMP_FILE_INVALID_CHANNEL_COUNT, /**< チャンネルカウント異常 */
+    BMP_FILE_NOT_INITIALIZED,       /**< 未初期化 */
+    BMP_FILE_UNDEFINED,             /**< 未定義エラー */
 } bmp_invalid_reason_t;
 
 /**
- * @brief BITMAPファイルヘッダー(14byte固定)
+ * @brief BMP FILEHEADER(14byte固定)
  * @note 参考: https://qiita.com/ImagingSolAkira/items/30fd3727afa3076b8050
  *
  */
@@ -48,12 +57,12 @@ typedef struct file_header {
 } file_header_t;
 
 /**
- * @brief BITMAP情報ヘッダー(40byte固定)
+ * @brief BMP INFOHEADER(40byte固定)
  * @note 参考: https://qiita.com/ImagingSolAkira/items/30fd3727afa3076b8050
  *
  */
 typedef struct info_header {
-    uint32_t bi_size;               /**< biSize: この情報ヘッダーのサイズ(バイト)。通常40(0x28), offset = 14  */
+    uint32_t bi_size;               /**< biSize: このヘッダーのサイズ(バイト)。通常40(0x28), offset = 14  */
     int32_t bi_width;               /**< biWidth: 画像の幅(ピクセル), offset = 18 */
     int32_t bi_height;              /**< biHeight: 画像の高さ(ピクセル), 正の値: ボトムアップ形式(左下原点), 負の値: トップダウン形式(左上原点)  offset = 22 */
     uint32_t bi_compression;        /**< biCompression: 圧縮形式, offset = 30 */
@@ -67,13 +76,17 @@ typedef struct info_header {
     uint16_t bi_bit_count;          /**< biBitCount: 1ピクセルあたりのビット数(色深度)。1, 4, 8, 16, 24, 32 など, offset = 28 */
 } info_header_t;
 
+/**
+ * @brief BMPファイルローダー内部情報管理構造体
+ *
+ */
 struct bmp_loader {
-    file_header_t file_header;
-    info_header_t info_header;
-    size_t padding;
-    size_t stride;
-    bool padding_removed;
-    uint8_t* pixels;
+    file_header_t file_header;  /**< BMP FILEHEADER情報 */
+    info_header_t info_header;  /**< BMP INFOHEADER情報 */
+    size_t padding;             /**< ピクセル各行に含まれるパディングサイズ(byte) */
+    size_t stride;              /**< ピクセル各行のサイズ(byte)(width * channel_count + padding) */
+    bool padding_removed;       /**< パディング除去済みフラグ */
+    uint8_t* pixels;            /**< ピクセルデータ */
 };
 
 static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_);
@@ -92,19 +105,19 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_);
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 
-static const char* const invalid_bmp_file_reason_valid = "valid BMP file";
-static const char* const invalid_bmp_file_reason_bf_type = "invalid bfType";
-static const char* const invalid_bmp_file_reason_bf_reserved = "invalid bfReserved field";
-static const char* const invalid_bmp_file_reason_bf_size = "invalid bfSize";
-static const char* const invalid_bmp_file_reason_bf_off_bits = "invalid bfOffBits";
-static const char* const invalid_bmp_file_reason_bi_size = "invalid biSize";
-static const char* const invalid_bmp_file_reason_bi_planes = "invalid biPlanes";
-static const char* const invalid_bmp_file_reason_compression = "invalid biCompression";
-static const char* const invalid_bmp_file_reason_height = "invalid biHeight";
-static const char* const invalid_bmp_file_reason_width = "invalid biWidth";
-static const char* const invalid_bmp_file_reason_channel_count = "unsupported biBitCount";
-static const char* const invalid_bmp_file_reason_not_initialized = "not initialized";
-static const char* const invalid_bmp_file_reason_undefined = "undefined";
+static const char* const invalid_bmp_file_reason_valid = "valid BMP file";                      /**< 無効なBMPファイルの原因文字列(BMPファイル有効) */
+static const char* const invalid_bmp_file_reason_bf_type = "invalid bfType";                    /**< 無効なBMPファイルの原因文字列(bfType異常) */
+static const char* const invalid_bmp_file_reason_bf_reserved = "invalid bfReserved field";      /**< 無効なBMPファイルの原因文字列(bfReserved異常) */
+static const char* const invalid_bmp_file_reason_bf_size = "invalid bfSize";                    /**< 無効なBMPファイルの原因文字列(bfSize異常) */
+static const char* const invalid_bmp_file_reason_bf_off_bits = "invalid bfOffBits";             /**< 無効なBMPファイルの原因文字列(bfOffBits異常) */
+static const char* const invalid_bmp_file_reason_bi_size = "invalid biSize";                    /**< 無効なBMPファイルの原因文字列(biSize異常) */
+static const char* const invalid_bmp_file_reason_bi_planes = "invalid biPlanes";                /**< 無効なBMPファイルの原因文字列(biPlanes異常) */
+static const char* const invalid_bmp_file_reason_compression = "invalid biCompression";         /**< 無効なBMPファイルの原因文字列(biCompression異常) */
+static const char* const invalid_bmp_file_reason_height = "invalid biHeight";                   /**< 無効なBMPファイルの原因文字列(biHeight異常) */
+static const char* const invalid_bmp_file_reason_width = "invalid biWidth";                     /**< 無効なBMPファイルの原因文字列(biWidth異常) */
+static const char* const invalid_bmp_file_reason_channel_count = "unsupported biBitCount";      /**< 無効なBMPファイルの原因文字列(biBitCount異常) */
+static const char* const invalid_bmp_file_reason_not_initialized = "not initialized";           /**< 無効なBMPファイルの原因文字列(未初期化) */
+static const char* const invalid_bmp_file_reason_undefined = "undefined";                       /**< 無効なBMPファイルの原因文字列(不明な異常) */
 
 #ifdef TEST_BUILD
 #include <assert.h>
@@ -855,6 +868,17 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief FILEHEADER情報文字列をパースし、構造体にパラメータを格納する
+ *
+ * @param[in] header_ ヘッダ情報文字列(FILEHEADER + INFOHEADER)
+ * @param[out] file_header_ FILEHEADER情報格納先構造体インスタンスへのポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - header_ == NULL
+ * - file_header_ == NULL
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t file_header_parse(const char header_[54], file_header_t* file_header_) {
 #ifdef TEST_BUILD
     s_test_config_file_header_parse.call_count++;
@@ -884,6 +908,17 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief INFOHEADER情報文字列をパースし、構造体にパラメータを格納する
+ *
+ * @param[in] header_ ヘッダ情報文字列(FILEHEADER + INFOHEADER)
+ * @param[out] info_header_ INFOHEADER情報格納先構造体インスタンスへのポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - header_ == NULL
+ * - info_header_ == NULL
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t info_header_parse(const char header_[54], info_header_t* info_header_) {
 #ifdef TEST_BUILD
     s_test_config_info_header_parse.call_count++;
@@ -919,6 +954,14 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief FILEHEADER情報をコピーする
+ *
+ * @note src_ == NULL or dst_ == NULLの場合は何もしない
+ *
+ * @param[in] src_ コピー元ヘッダ
+ * @param[out] dst_ コピー先ヘッダ
+ */
 static void file_header_copy(const file_header_t* src_, file_header_t* dst_) {
     if(NULL == src_ || NULL == dst_) {
         return;
@@ -930,6 +973,14 @@ static void file_header_copy(const file_header_t* src_, file_header_t* dst_) {
     dst_->bf_type = src_->bf_type;
 }
 
+/**
+ * @brief INFOHEADER情報をコピーする
+ *
+ * @note src_ == NULL or dst_ == NULLの場合は何もしない
+ *
+ * @param[in] src_ コピー元ヘッダ
+ * @param[out] dst_ コピー先ヘッダ
+ */
 static void info_header_copy(const info_header_t* src_, info_header_t* dst_) {
     if(NULL == src_ || NULL == dst_) {
         return;
@@ -947,6 +998,27 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_) {
     dst_->bi_y_pels_per_meter = src_->bi_y_pels_per_meter;
 }
 
+/**
+ * @brief BMP FILEHADER, INFOHEADERを見て正常なBMPファイルかを判定する
+ *
+ * @note 異常がある場合は原因をメッセージ出力する(DEBUG_BUILD or TEST_BUILD時のみ)
+ *
+ * @param[in] file_header_ BMP FILEHEADER情報
+ * @param[in] info_header_ BMP INFOHEADER情報
+ *
+ * @retval BMP_FILE_INVALID_BF_TYPE bfTypeが'BM'ではない
+ * @retval BMP_FILE_INVALID_BF_RESERVED bfReserved1(or2)が0ではない
+ * @retval BMP_FILE_INVALID_BF_SIZE bfSizeが54byte以下
+ * @retval BMP_FILE_INVALID_BF_OFF_BITS bfOffBitsが54byte未満もしくはbfSize以上
+ * @retval BMP_FILE_INVALID_BI_SIZE biSizeが40(byte)ではない
+ * @retval BMP_FILE_INVALID_BI_PLANES biPlanesが1以外
+ * @retval BMP_FILE_INVALID_COMPRESSION biCompressionがBI_RGB(非圧縮)以外
+ * @retval BMP_FILE_NOT_INITIALIZED biBitCount, biHeight, biWidthのいずれかが0で未初期化
+ * @retval BMP_FILE_INVALID_HEIGHT biHeightがint16_tの範囲外
+ * @retval BMP_FILE_INVALID_WIDTH biWidthが0未満もしくはint16_tの範囲外
+ * @retval BMP_FILE_INVALID_CHANNEL_COUNT biBitCountが24 or 32以外(チャンネルカウントRGB or RGBAのみをサポート)
+ * @retval BMP_FILE_VALID BMPヘッダ情報が正常
+ */
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_) {
 #ifdef TEST_BUILD
     s_test_config_is_bmp_supported.call_count++;
@@ -1005,6 +1077,25 @@ static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, 
     return ret;
 }
 
+/**
+ * @brief BMPファイルの有効 / 無効判定結果の原因を文字列で取得する
+ *
+ * @param[in] reason_ BMPファイルの有効 / 無効判定結果の原因
+ *
+ * @retval "valid BMP file" BMPファイル有効
+ * @retval "invalid bfType" 無効なBMPファイルの原因: bfType異常
+ * @retval "invalid bfReserved field" 無効なBMPファイルの原因: bfReserved異常
+ * @retval "invalid bfSize" 無効なBMPファイルの原因: bfSize異常
+ * @retval "invalid bfOffBits" 無効なBMPファイルの原因: bfOffBits異常
+ * @retval "invalid biSize" 無効なBMPファイルの原因: biSize異常
+ * @retval "invalid biPlanes" 無効なBMPファイルの原因: biPlanes異常
+ * @retval "invalid biCompression" 無効なBMPファイルの原因: biCompression異常
+ * @retval "invalid biHeight" 無効なBMPファイルの原因: biHeight異常
+ * @retval "invalid biWidth" 無効なBMPファイルの原因: biWidth異常
+ * @retval "unsupported biBitCount" 無効なBMPファイルの原因: biBitCount異常
+ * @retval "not initialized" 無効なBMPファイルの原因: 未初期化
+ * @retval "undefined" 無効なBMPファイルの原因: 不明な異常
+ */
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
     switch(reason_) {
     case BMP_FILE_VALID:
