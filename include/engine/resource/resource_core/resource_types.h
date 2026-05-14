@@ -1,3 +1,18 @@
+/** @ingroup resource
+ *
+ * @file resource_types.h
+ * @author chocolate-pie24
+ * @brief Resourceレイヤー内で共通して使用するデータ型を提供する
+ *
+ * @version 0.1
+ * @date 2026-05-14
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_TYPES_H
 #define GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_TYPES_H
 
@@ -5,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Resourceレイヤー実行結果コード定義
+ *
+ */
 typedef enum {
     RESOURCE_SUCCESS = 0,        /**< 処理成功 */
     RESOURCE_NO_MEMORY,          /**< メモリ不足 */
