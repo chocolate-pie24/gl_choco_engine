@@ -2,7 +2,7 @@
  *
  * @file texture.c
  * @author chocolate-pie24
- * @brief テクスチャCPU側リソース管理モジュールAPI実装
+ * @brief テクスチャCPU側リソースを操作するモジュールAPIの実装
  *
  * @version 0.1
  * @date 2026-05-14
