@@ -1,3 +1,18 @@
+/** @ingroup gl33
+ *
+ * @file concrete_texture.c
+ * @author chocolate-pie24
+ * @brief OpenGL3.3用のテクスチャ操作関数の実装
+ *
+ * @version 0.1
+ * @date 2026-05-15
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,14 +30,18 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief テクスチャGPU側リソース内部状態管理構造体
+ *
+ */
 struct renderer_backend_texture {
-    GLuint handle;
-    int32_t unit_number;
+    GLuint handle;          /**< テクスチャGPU側リソースハンドル */
+    int32_t unit_number;    /**< シェーダーが参照するテクスチャ用スロット番号(GL_TEXTURE0などのenum値ではなく、GL_TEXTURE0 + unit_num_として使用される0始まりのtexture unit index) */
 
-    texture_min_filter_config_t min_filter_config;
-    texture_mag_filter_config_t mag_filter_config;
-    texture_wrap_config_t wrap_config_s_axis;
-    texture_wrap_config_t wrap_config_t_axis;
+    texture_min_filter_config_t min_filter_config;  /**< テクスチャを縮小表示する際のピクセルの補間設定 */
+    texture_mag_filter_config_t mag_filter_config;  /**< テクスチャを拡大表示する際のピクセルの補間設定 */
+    texture_wrap_config_t wrap_config_s_axis;       /**< テクスチャがラップする箇所のピクセル設定(s軸) */
+    texture_wrap_config_t wrap_config_t_axis;       /**< テクスチャがラップする箇所のピクセル設定(t軸) */
 };
 
 static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
@@ -31,9 +50,9 @@ static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* tex
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
 static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
-static bool resolv_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
-static bool resolv_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
-static bool resolv_wrap_config(texture_wrap_config_t src_, GLint* dst_);
+static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
+static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
+static bool resolve_wrap_config(texture_wrap_config_t src_, GLint* dst_);
 
 // OpenGLモック関数プロトタイプ宣言
 static void mock_glGetIntegerv(GLenum pname_, GLint* data_);
@@ -51,7 +70,7 @@ static const renderer_texture_vtable_t s_gl33_texture_vtable = {
     .renderer_texture_bind = gl33_texture_bind,
     .renderer_texture_unbind = gl33_texture_unbind,
     .renderer_texture_pixel_upload = gl33_texture_pixel_upload,
-};
+};  /**< OpenGL3.3用テクスチャ操作仮想関数テーブル */
 
 // #define TEST_BUILD
 
@@ -84,9 +103,9 @@ static test_call_control_no_op_t s_test_config_gl33_texture_destroy;        /**<
 static test_call_control_t s_test_config_gl33_texture_bind;                 /**< gl33_texture_bind()テスト設定 */
 static test_call_control_t s_test_config_gl33_texture_unbind;               /**< gl33_texture_unbind()テスト設定 */
 static test_call_control_t s_test_config_gl33_texture_pixel_upload;         /**< gl33_texture_pixel_upload()テスト設定 */
-static test_call_control_bool_t s_test_config_resolv_min_filter_config;     /**< resolv_min_filter_config()テスト設定 */
-static test_call_control_bool_t s_test_config_resolv_mag_filter_config;     /**< resolv_mag_filter_config()テスト設定 */
-static test_call_control_bool_t s_test_config_resolv_wrap_config;           /**< resolv_wrap_config()テスト設定 */
+static test_call_control_bool_t s_test_config_resolve_min_filter_config;     /**< resolve_min_filter_config()テスト設定 */
+static test_call_control_bool_t s_test_config_resolve_mag_filter_config;     /**< resolve_mag_filter_config()テスト設定 */
+static test_call_control_bool_t s_test_config_resolve_wrap_config;           /**< resolve_wrap_config()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glGetIntegerv;          /**< mock_glGetIntegerv()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glGenTextures;          /**< mock_glGenTextures()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glActiveTexture;        /**< mock_glActiveTexture()テスト設定 */
@@ -102,9 +121,9 @@ static void test_gl33_texture_destroy(void);
 static void test_gl33_texture_bind(void);
 static void test_gl33_texture_unbind(void);
 static void test_gl33_texture_pixel_upload(void);
-static void test_resolv_min_filter_config(void);
-static void test_resolv_mag_filter_config(void);
-static void test_resolv_wrap_config(void);
+static void test_resolve_min_filter_config(void);
+static void test_resolve_mag_filter_config(void);
+static void test_resolve_wrap_config(void);
 
 // テスト用ヘルパー関数
 static void test_call_control_no_op_reset(test_call_control_no_op_t* config_);
@@ -115,6 +134,29 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
     return &s_gl33_texture_vtable;
 }
 
+/**
+ * @brief テクスチャGPU側リソース構造体インスタンスのメモリを確保し、OpenGLテクスチャ設定を行い初期化する
+ *
+ * @param[in] unit_num_ シェーダーが参照するテクスチャ用スロット番号
+ * @param[in] min_filter_config_ テクスチャ縮小表示の際の設定値
+ * @param[in] mag_filter_config_ テクスチャ拡大表示の際の設定値
+ * @param[in] wrap_config_s_axis_ テクスチャがラップする部分の表示設定値(s軸)
+ * @param[in] wrap_config_t_axis_ テクスチャがラップする部分の表示設定値(t軸)
+ * @param[out] texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - texture_handle_ == NULL
+ * - *texture_handle_ != NULL
+ * - min_filter_config_が規定値外
+ * - mag_filter_config_が規定値外
+ * - wrap_config_s_axis_が規定値外
+ * - wrap_config_t_axis_が規定値外
+ * - unit_num_ < 0
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
+ * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_texture_create.call_count++;
@@ -134,10 +176,10 @@ static renderer_result_t gl33_texture_create(int32_t unit_num_, texture_min_filt
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "texture_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "*texture_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolv_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolv_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolv_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolv_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
     IF_ARG_FALSE_GOTO_CLEANUP(unit_num_ >= 0, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_texture_create", "unit_num_")
 
     ret = renderer_mem_allocate(sizeof(renderer_backend_texture_t), (void**)&tmp);
@@ -184,6 +226,14 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する
+ *
+ * @note 本関数実行後、texture_handle_はNULLに初期化される
+ * @note 2重destroy許可
+ *
+ * @param[in,out] texture_handle_ リソース解放対象構造体インスタンスへのダブルポインタ
+ */
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_texture_destroy.call_count++;
@@ -208,6 +258,24 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     *texture_handle_ = NULL;
 }
 
+/**
+ * @brief テクスチャをactiveにし、bindする
+ *
+ * @note 呼び出し側が保持している現在のtexture unit / texture handleキャッシュとtexture_handle_が保持するunit / handleと等しい場合はactive化 / bindを行わない
+ *
+ * @param[in] texture_handle_ bind対象テクスチャハンドル保有構造体インスタンスへのポインタ
+ * @param[in,out] out_texture_unit_ 現在activeになっているテクスチャユニット番号
+ * @param[in,out] out_texture_internal_handle_ 現在Bindされているテクスチャハンドル
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - texture_handle_ == NULL
+ * - out_texture_unit_ == NULL
+ * - out_texture_internal_handle_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+ * - texture_handle_->handle == 0
+ * - texture_handle_->unit_number < 0
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_, int32_t* out_texture_unit_, int32_t* out_texture_internal_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_texture_bind.call_count++;
@@ -238,6 +306,17 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief テクスチャをactiveにし、unbindする
+ *
+ * @param[in] texture_handle_ unbind対象テクスチャGPUリソース構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT texture_handle_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+ * - texture_handle_->handle == 0
+ * - texture_handle_->unit_number < 0
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_texture_unbind.call_count++;
@@ -262,6 +341,21 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 現在active / bindされているGL_TEXTURE_2Dに対してピクセルデータをGPUへ転送する
+ *
+ * @param width_ 転送ピクセルデータの幅
+ * @param height_ 転送ピクセルデータの高さ
+ * @param channel_count_ 転送ピクセルデータのチャンネルカウント(RGB or RGBAのみ許可)
+ * @param pixels_ 転送ピクセルデータ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - pixels_ == NULL
+ * - width_ == 0
+ * - height_ == 0
+ * - channel_count_が3, 4以外
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_texture_pixel_upload.call_count++;
@@ -298,12 +392,21 @@ cleanup:
     return ret;
 }
 
-static bool resolv_min_filter_config(texture_min_filter_config_t src_, GLint* dst_) {
+/**
+ * @brief テクスチャ縮小表示時の表示設定値をGLCE設定値からOpenGL設定値に変換する
+ *
+ * @param src_ 変換元GLCE設定値
+ * @param dst_ 変換先OpenGL設定値
+ *
+ * @retval true 変換成功
+ * @retval false 変換失敗
+ */
+static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_) {
 #ifdef TEST_BUILD
-    s_test_config_resolv_min_filter_config.call_count++;
-    if(s_test_config_resolv_min_filter_config.fail_on_call != 0) {
-        if(s_test_config_resolv_min_filter_config.call_count == s_test_config_resolv_min_filter_config.fail_on_call) {
-            return s_test_config_resolv_min_filter_config.forced_result;
+    s_test_config_resolve_min_filter_config.call_count++;
+    if(s_test_config_resolve_min_filter_config.fail_on_call != 0) {
+        if(s_test_config_resolve_min_filter_config.call_count == s_test_config_resolve_min_filter_config.fail_on_call) {
+            return s_test_config_resolve_min_filter_config.forced_result;
         }
     }
 #endif
@@ -345,12 +448,21 @@ static bool resolv_min_filter_config(texture_min_filter_config_t src_, GLint* ds
     return ret;
 }
 
-static bool resolv_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_) {
+/**
+ * @brief テクスチャ拡大表示時の表示設定値をGLCE設定値からOpenGL設定値に変換する
+ *
+ * @param src_ 変換元GLCE設定値
+ * @param dst_ 変換先OpenGL設定値
+ *
+ * @retval true 変換成功
+ * @retval false 変換失敗
+ */
+static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_) {
 #ifdef TEST_BUILD
-    s_test_config_resolv_mag_filter_config.call_count++;
-    if(s_test_config_resolv_mag_filter_config.fail_on_call != 0) {
-        if(s_test_config_resolv_mag_filter_config.call_count == s_test_config_resolv_mag_filter_config.fail_on_call) {
-            return s_test_config_resolv_mag_filter_config.forced_result;
+    s_test_config_resolve_mag_filter_config.call_count++;
+    if(s_test_config_resolve_mag_filter_config.fail_on_call != 0) {
+        if(s_test_config_resolve_mag_filter_config.call_count == s_test_config_resolve_mag_filter_config.fail_on_call) {
+            return s_test_config_resolve_mag_filter_config.forced_result;
         }
     }
 #endif
@@ -376,12 +488,21 @@ static bool resolv_mag_filter_config(texture_mag_filter_config_t src_, GLint* ds
     return ret;
 }
 
-static bool resolv_wrap_config(texture_wrap_config_t src_, GLint* dst_) {
+/**
+ * @brief テクスチャがラップする部分の表示設定値をGLCE設定値からOpenGL設定値に変換する
+ *
+ * @param src_ 変換元GLCE設定値
+ * @param dst_ 変換先OpenGL設定値
+ *
+ * @retval true 変換成功
+ * @retval false 変換失敗
+ */
+static bool resolve_wrap_config(texture_wrap_config_t src_, GLint* dst_) {
 #ifdef TEST_BUILD
-    s_test_config_resolv_wrap_config.call_count++;
-    if(s_test_config_resolv_wrap_config.fail_on_call != 0) {
-        if(s_test_config_resolv_wrap_config.call_count == s_test_config_resolv_wrap_config.fail_on_call) {
-            return s_test_config_resolv_wrap_config.forced_result;
+    s_test_config_resolve_wrap_config.call_count++;
+    if(s_test_config_resolve_wrap_config.fail_on_call != 0) {
+        if(s_test_config_resolve_wrap_config.call_count == s_test_config_resolve_wrap_config.fail_on_call) {
+            return s_test_config_resolve_wrap_config.forced_result;
         }
     }
 #endif
@@ -518,9 +639,9 @@ void test_concrete_texture_config_reset(void) {
     test_call_control_reset(&s_test_config_gl33_texture_bind);
     test_call_control_reset(&s_test_config_gl33_texture_unbind);
     test_call_control_reset(&s_test_config_gl33_texture_pixel_upload);
-    test_call_control_bool_reset(&s_test_config_resolv_min_filter_config);
-    test_call_control_bool_reset(&s_test_config_resolv_mag_filter_config);
-    test_call_control_bool_reset(&s_test_config_resolv_wrap_config);
+    test_call_control_bool_reset(&s_test_config_resolve_min_filter_config);
+    test_call_control_bool_reset(&s_test_config_resolve_mag_filter_config);
+    test_call_control_bool_reset(&s_test_config_resolve_wrap_config);
     test_call_control_no_op_reset(&s_test_config_mock_glGetIntegerv);
     test_call_control_no_op_reset(&s_test_config_mock_glGenTextures);
     test_call_control_no_op_reset(&s_test_config_mock_glActiveTexture);
@@ -537,9 +658,9 @@ void test_concrete_texture(void) {
     test_gl33_texture_bind();
     test_gl33_texture_unbind();
     test_gl33_texture_pixel_upload();
-    test_resolv_min_filter_config();
-    test_resolv_mag_filter_config();
-    test_resolv_wrap_config();
+    test_resolve_min_filter_config();
+    test_resolve_mag_filter_config();
+    test_resolve_wrap_config();
 }
 
 // Generated by ChatGPT
@@ -568,9 +689,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(0U == s_test_config_resolv_min_filter_config.call_count);
-        assert(0U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(0U == s_test_config_resolv_wrap_config.call_count);
+        assert(0U == s_test_config_resolve_min_filter_config.call_count);
+        assert(0U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(0U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -599,9 +720,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
 
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(0U == s_test_config_resolv_min_filter_config.call_count);
-        assert(0U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(0U == s_test_config_resolv_wrap_config.call_count);
+        assert(0U == s_test_config_resolve_min_filter_config.call_count);
+        assert(0U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(0U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -633,9 +754,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(&dummy == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(0U == s_test_config_resolv_min_filter_config.call_count);
-        assert(0U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(0U == s_test_config_resolv_wrap_config.call_count);
+        assert(0U == s_test_config_resolve_min_filter_config.call_count);
+        assert(0U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(0U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -646,7 +767,7 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // resolv_min_filter_config() が false -> RENDERER_INVALID_ARGUMENT
+        // resolve_min_filter_config() が false -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_texture_t* texture = NULL;
 
@@ -654,8 +775,8 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_min_filter_config.fail_on_call = 1U;
-        s_test_config_resolv_min_filter_config.forced_result = false;
+        s_test_config_resolve_min_filter_config.fail_on_call = 1U;
+        s_test_config_resolve_min_filter_config.forced_result = false;
 
         ret = gl33_texture_create(
             0,
@@ -669,9 +790,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(0U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(0U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(0U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(0U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -682,7 +803,7 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // resolv_mag_filter_config() が false -> RENDERER_INVALID_ARGUMENT
+        // resolve_mag_filter_config() が false -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_texture_t* texture = NULL;
 
@@ -690,8 +811,8 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_mag_filter_config.fail_on_call = 1U;
-        s_test_config_resolv_mag_filter_config.forced_result = false;
+        s_test_config_resolve_mag_filter_config.fail_on_call = 1U;
+        s_test_config_resolve_mag_filter_config.forced_result = false;
 
         ret = gl33_texture_create(
             0,
@@ -705,9 +826,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(0U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(0U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -718,7 +839,7 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // s軸の resolv_wrap_config() が false -> RENDERER_INVALID_ARGUMENT
+        // s軸の resolve_wrap_config() が false -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_texture_t* texture = NULL;
 
@@ -726,8 +847,8 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_wrap_config.fail_on_call = 1U;
-        s_test_config_resolv_wrap_config.forced_result = false;
+        s_test_config_resolve_wrap_config.fail_on_call = 1U;
+        s_test_config_resolve_wrap_config.forced_result = false;
 
         ret = gl33_texture_create(
             0,
@@ -741,9 +862,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -754,7 +875,7 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
     }
     {
-        // t軸の resolv_wrap_config() が false -> RENDERER_INVALID_ARGUMENT
+        // t軸の resolve_wrap_config() が false -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_texture_t* texture = NULL;
 
@@ -762,8 +883,8 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_wrap_config.fail_on_call = 2U;
-        s_test_config_resolv_wrap_config.forced_result = false;
+        s_test_config_resolve_wrap_config.fail_on_call = 2U;
+        s_test_config_resolve_wrap_config.forced_result = false;
 
         ret = gl33_texture_create(
             0,
@@ -777,9 +898,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -810,9 +931,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -843,9 +964,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_BAD_OPERATION == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -886,9 +1007,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_NO_MEMORY == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -930,9 +1051,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(RENDERER_UNDEFINED_ERROR == ret);
         assert(NULL == texture);
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
         assert(0U == s_test_config_mock_glGetIntegerv.call_count);
         assert(0U == s_test_config_mock_glGenTextures.call_count);
         assert(0U == s_test_config_mock_glActiveTexture.call_count);
@@ -976,9 +1097,9 @@ static void NO_COVERAGE test_gl33_texture_create(void) {
         assert(NULL != texture);
 
         assert(1U == s_test_config_gl33_texture_create.call_count);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
-        assert(2U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
+        assert(2U == s_test_config_resolve_wrap_config.call_count);
 
         assert(1U == s_test_config_mock_glGetIntegerv.call_count);
         assert(1U == s_test_config_mock_glGenTextures.call_count);
@@ -1731,9 +1852,9 @@ static void NO_COVERAGE test_gl33_texture_pixel_upload(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_resolv_min_filter_config(void) {
+static void NO_COVERAGE test_resolve_min_filter_config(void) {
     {
-        // resolv_min_filter_config() 冒頭で強制的に false を返させる
+        // resolve_min_filter_config() 冒頭で強制的に false を返させる
         bool ret = true;
         GLint dst = -1;
 
@@ -1741,14 +1862,14 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_min_filter_config.fail_on_call = 1U;
-        s_test_config_resolv_min_filter_config.forced_result = false;
+        s_test_config_resolve_min_filter_config.fail_on_call = 1U;
+        s_test_config_resolve_min_filter_config.forced_result = false;
 
-        ret = resolv_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, &dst);
+        ret = resolve_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1761,10 +1882,10 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, NULL);
+        ret = resolve_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, NULL);
 
         assert(false == ret);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1778,11 +1899,11 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, &dst);
+        ret = resolve_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_NEAREST, &dst);
 
         assert(true == ret);
         assert(GL_NEAREST == dst);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1796,11 +1917,11 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_LINEAR, &dst);
+        ret = resolve_min_filter_config(TEXTURE_MIN_FILTER_CONFIG_LINEAR, &dst);
 
         assert(true == ret);
         assert(GL_LINEAR == dst);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1814,11 +1935,11 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_min_filter_config((texture_min_filter_config_t)99999, &dst);
+        ret = resolve_min_filter_config((texture_min_filter_config_t)99999, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_min_filter_config.call_count);
+        assert(1U == s_test_config_resolve_min_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1826,9 +1947,9 @@ static void NO_COVERAGE test_resolv_min_filter_config(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_resolv_mag_filter_config(void) {
+static void NO_COVERAGE test_resolve_mag_filter_config(void) {
     {
-        // resolv_mag_filter_config() 冒頭で強制的に false を返させる
+        // resolve_mag_filter_config() 冒頭で強制的に false を返させる
         bool ret = true;
         GLint dst = -1;
 
@@ -1836,14 +1957,14 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_mag_filter_config.fail_on_call = 1U;
-        s_test_config_resolv_mag_filter_config.forced_result = false;
+        s_test_config_resolve_mag_filter_config.fail_on_call = 1U;
+        s_test_config_resolve_mag_filter_config.forced_result = false;
 
-        ret = resolv_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, &dst);
+        ret = resolve_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1856,10 +1977,10 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, NULL);
+        ret = resolve_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, NULL);
 
         assert(false == ret);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1873,11 +1994,11 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, &dst);
+        ret = resolve_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_NEAREST, &dst);
 
         assert(true == ret);
         assert(GL_NEAREST == dst);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1891,11 +2012,11 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_LINEAR, &dst);
+        ret = resolve_mag_filter_config(TEXTURE_MAG_FILTER_CONFIG_LINEAR, &dst);
 
         assert(true == ret);
         assert(GL_LINEAR == dst);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1909,11 +2030,11 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_mag_filter_config((texture_mag_filter_config_t)99999, &dst);
+        ret = resolve_mag_filter_config((texture_mag_filter_config_t)99999, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_mag_filter_config.call_count);
+        assert(1U == s_test_config_resolve_mag_filter_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1921,9 +2042,9 @@ static void NO_COVERAGE test_resolv_mag_filter_config(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_resolv_wrap_config(void) {
+static void NO_COVERAGE test_resolve_wrap_config(void) {
     {
-        // resolv_wrap_config() 冒頭で強制的に false を返させる
+        // resolve_wrap_config() 冒頭で強制的に false を返させる
         bool ret = true;
         GLint dst = -1;
 
@@ -1931,14 +2052,14 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        s_test_config_resolv_wrap_config.fail_on_call = 1U;
-        s_test_config_resolv_wrap_config.forced_result = false;
+        s_test_config_resolve_wrap_config.fail_on_call = 1U;
+        s_test_config_resolve_wrap_config.forced_result = false;
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, &dst);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1951,10 +2072,10 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, NULL);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, NULL);
 
         assert(false == ret);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1968,11 +2089,11 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, &dst);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_REPEAT, &dst);
 
         assert(true == ret);
         assert(GL_REPEAT == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -1986,11 +2107,11 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &dst);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &dst);
 
         assert(true == ret);
         assert(GL_CLAMP_TO_EDGE == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -2004,11 +2125,11 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT, &dst);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT, &dst);
 
         assert(true == ret);
         assert(GL_MIRRORED_REPEAT == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -2022,11 +2143,11 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config((texture_wrap_config_t)99999, &dst);
+        ret = resolve_wrap_config((texture_wrap_config_t)99999, &dst);
 
         assert(false == ret);
         assert(-1 == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
@@ -2040,11 +2161,11 @@ static void NO_COVERAGE test_resolv_wrap_config(void) {
         test_choco_memory_config_reset();
         memory_system_destroy();
 
-        ret = resolv_wrap_config(TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER, &dst);
+        ret = resolve_wrap_config(TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER, &dst);
 
         assert(true == ret);
         assert(GL_CLAMP_TO_BORDER == dst);
-        assert(1U == s_test_config_resolv_wrap_config.call_count);
+        assert(1U == s_test_config_resolve_wrap_config.call_count);
 
         test_concrete_texture_config_reset();
         test_choco_memory_config_reset();
