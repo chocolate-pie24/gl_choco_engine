@@ -1,7 +1,36 @@
+/** @ingroup buffer_utils
+ *
+ * @file buffer_utils.c
+ * @author chocolate-pie24
+ * @brief データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの実装
+ *
+ * @version 0.1
+ * @date 2026-05-14
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 #include <stddef.h>
 
 #include "engine/core/buffer_utils/buffer_utils.h"
+
+/**
+ * @brief メモリアライメントを考慮しデータを取り出すための一時バッファ共用体
+ *
+ */
+typedef union buffer_utils {
+    char buff_char[8];          /**< char型バッファ */
+    int16_t buff_int16_t[4];    /**< int16_t型バッファ */
+    int32_t buff_int32_t[2];    /**< int32_t型バッファ */
+    int64_t buff_int64_t;       /**< int64_t型バッファ */
+    uint16_t buff_uint16_t[4];  /**< uint16_t型バッファ */
+    uint32_t buff_uint32_t[2];  /**< uint32_t型バッファ */
+    uint64_t buff_uint64_t;     /**< uint64_t型バッファ */
+} buff_utils_t;
 
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
 #include <assert.h>
@@ -19,16 +48,6 @@ static void test_buffer_utils_le_uint16_t_get(void);
 static void test_buffer_utils_le_uint32_t_get(void);
 static void test_buffer_utils_le_uint64_t_get(void);
 #endif
-
-typedef union buffer_utils {
-    char buff_char[8];
-    int16_t buff_int16_t[4];
-    int32_t buff_int32_t[2];
-    int64_t buff_int64_t;
-    uint16_t buff_uint16_t[4];
-    uint32_t buff_uint32_t[2];
-    uint64_t buff_uint64_t;
-} buff_utils_t;
 
 int16_t buffer_utils_le_int16_t_get(const char* buff_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
