@@ -135,7 +135,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - filesystem_がNULL
  * - fullpath_がNULL
- * - mode_が未定義の値
+ * - mode_が未定義の値またはFILESYSTEM_MODE_NONE
  * @retval FILESYSTEM_RUNTIME_ERROR 既にオープン済のファイルハンドルが渡された
  * @retval FILESYSTEM_FILE_OPEN_ERROR ファイルオープン失敗
  * @retval FILESYSTEM_SUCCESS ファイルオープンに成功し、正常終了

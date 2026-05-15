@@ -73,7 +73,7 @@ typedef enum {
  * - filename_ == NULL
  * - fs_utils_ == NULL
  * - *fs_utils_ != NULL
- * - open_mode_ == FILESYSTEM_MODE_NONE
+ * - open_mode_ == FILESYSTEM_MODE_NONEまたは規定値外の値
  * @retval FS_UTILS_LIMIT_EXCEEDED メモリシステムのシステム使用可能範囲上限を超過
  * @retval FS_UTILS_NO_MEMORY メモリ割り当て失敗
  * @retval FS_UTILS_OVERFLOW 文字列が長すぎてオーバーフロー
@@ -114,19 +114,6 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
  * @warning 内部ではchoco_string_concat_from_c_stringを使用して文字列を連結する。各文字列処理には終端文字による判定処理が存在する。
  * ここで、バイナリファイルには終端文字(0)が普通に含まれるため、バイナリファイルの読み込みには使用してはいけない。
  *
- * @code{.c}
- * fs_utils_t* fs_utils = NULL;
- * fs_utils_result_t ret = fs_utils_create("path/to/", "filename", ".txt", FILESYSTEM_MODE_READ, &fs_utils);    // path/to/filename.txtがオープンされる
- * // エラー処理
- *
- * choco_string_t* string = NULL;
- * choco_string_result_t ret_str = choco_string_default_create(&string);
- * // エラー処理
- *
- * ret = fs_utils_text_file_read(fs_utils, string); // path/to/filename.txtの中身が全て読み込まれ、stringに格納される
- * // エラー処理
- * @endcode
- *
  * @param fs_utils_ fs_utils_t構造体インスタンスへのポインタ
  * @param out_string_ 読み込んだ文字列の格納先
  *
@@ -135,7 +122,7 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
  * - out_string_ == NULL
  * @retval FS_UTILS_DATA_CORRUPTED データメモリ破損,API誤用,初期化漏れ
  * @retval FS_UTILS_BAD_OPERATION 以下のいずれか
- * - 読み込み用ではないファイルオープンモードが渡された
+ * - FILESYSTEM_MODE_READ, FILESYSTEM_MODE_READ_PLUS以外のファイルオープンモードが渡された
  * - メモリシステム未初期化
  * @retval FS_UTILS_RUNTIME_ERROR ファイル読み込み中にエラーが発生
  * @retval FS_UTILS_NO_MEMORY メモリ確保に失敗

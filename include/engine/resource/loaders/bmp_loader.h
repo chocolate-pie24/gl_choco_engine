@@ -85,7 +85,7 @@ void bmp_loader_destroy(bmp_loader_t** bmp_loader_);
  * @retval RESOURCE_FILE_READ_ERROR ヘッダまたはピクセル情報の読み込みに失敗
  * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される)
  * @retval RESOURCE_OVERFLOW 計算過程でオーバーフロー発生
- * @retval RESOURCE_DATA_CORRUPTED ピクセル読み込みサイズ異常
+ * @retval RESOURCE_DATA_CORRUPTED ピクセル読み込みサイズ異常またはヘッダ情報破損
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loader_);

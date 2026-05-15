@@ -115,14 +115,21 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
     fs_utils_t* tmp_fs_utils = NULL;
     choco_string_t* tmp_fullpath = NULL;
+    const char* open_mode_str = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(filepath_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filepath_")
     IF_ARG_NULL_GOTO_CLEANUP(filename_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filename_")
     IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "fs_utils_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "*fs_utils_")
-    IF_ARG_FALSE_GOTO_CLEANUP(open_mode_ != FILESYSTEM_MODE_NONE, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "open_mode_")
     // extensionはない場合があるのでNULLを許可
+
+    open_mode_str = filesystem_open_mode_c_str(open_mode_);
+    if(NULL == open_mode_str) {
+        ret = FS_UTILS_INVALID_ARGUMENT;
+        ERROR_MESSAGE("fs_utils_create(%s) - Provided file open mode is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // Simulation.
     ret_mem = memory_system_allocate(sizeof(fs_utils_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_utils);
@@ -182,7 +189,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     ret_fs = filesystem_open(choco_string_c_str(tmp_fullpath), open_mode_, tmp_fs_utils->filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = filesystem_result_convert(ret_fs);
-        ERROR_MESSAGE("fs_utils_create(%s) - Failed to open file. File open mode = '%s'.", rslt_to_str(ret), filesystem_open_mode_c_str(open_mode_));
+        ERROR_MESSAGE("fs_utils_create(%s) - Failed to open file. File open mode = '%s'.", rslt_to_str(ret), open_mode_str);
         goto cleanup;
     }
     choco_string_destroy(&tmp_fullpath);
@@ -255,6 +262,10 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
             goto cleanup;
         } else if(FILESYSTEM_RUNTIME_ERROR == ret_fs) {
+            ret = FS_UTILS_RUNTIME_ERROR;
+            ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
+            goto cleanup;
+        } else if(FILESYSTEM_UNDEFINED_ERROR == ret_fs) {
             ret = FS_UTILS_RUNTIME_ERROR;
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
             goto cleanup;

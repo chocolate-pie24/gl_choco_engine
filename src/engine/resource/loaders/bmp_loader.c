@@ -663,7 +663,7 @@ cleanup:
  * @retval RESOURCE_OVERFLOW 計算過程でオーバーフローが発生
  * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
  * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_SUCCESS 処理に失敗し、正常終了
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_) {
 #ifdef TEST_BUILD
@@ -769,6 +769,7 @@ cleanup:
  * @retval RESOURCE_FILE_CLOSE_ERROR ファイルクローズ失敗
  * @retval RESOURCE_UNDEFINED_ERROR 未定義エラーが発生
  * @retval RESOURCE_FILE_READ_ERROR ヘッダ読み込み失敗
+ * @retval RESOURCE_DATA_CORRUPTED ヘッダ情報破損
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_) {
@@ -801,7 +802,7 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ, filesystem);
+    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("header_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
@@ -920,7 +921,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ, filesystem);
+    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("pixel_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
@@ -951,7 +952,6 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         ERROR_MESSAGE("pixel_load(%s) - BMP source pixel buffer size exceeds uint32_t range. pixel_buffer_size=%zu, limit=%u", resource_rslt_to_str(ret), pixel_buffer_size, UINT32_MAX);
         goto cleanup;
     }
-    info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
 
     if((SIZE_MAX - pixel_buffer_size) < file_header_->bf_off_bits) {
         // NOTE: bf_off_bitsとpixel_buffer_sizeはuint32_tに収まるようになっているため、ここは通らないためカバレッジは100にならない。許容する。
@@ -980,6 +980,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
     memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
     tmp_buffer = NULL;
 
+    info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
     *out_pixels_ = tmp_pixels;
     ret = RESOURCE_SUCCESS;
 
