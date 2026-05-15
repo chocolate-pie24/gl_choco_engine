@@ -1,4 +1,4 @@
-/** @ingroup geometry_premitive
+/** @ingroup geometry_primitive
  *
  * @file vertex.h
  * @author chocolate-pie24
@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_CORE_GEOMETRY_PREMITIVE_VERTEX_H
-#define GLCE_ENGINE_CORE_GEOMETRY_PREMITIVE_VERTEX_H
+#ifndef GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_VERTEX_H
+#define GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_VERTEX_H
 
 #ifdef __cplusplus
 extern "C" {

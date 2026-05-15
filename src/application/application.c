@@ -67,7 +67,7 @@
 
 #include "engine/systems/texture_system/texture_manager.h"
 
-#include "engine/core/geometry_premitive/vertex.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/texture/texture.h"
 
