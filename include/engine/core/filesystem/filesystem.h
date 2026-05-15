@@ -207,7 +207,9 @@ filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* files
 /**
  * @brief ファイルオープンモードを文字列に変換する
  *
- * @note 不明なモードが入力された場合は文字列"undefined"が返される
+ * @note 以下の場合はNULLが返される
+ * - mode_ == FILESYSTEM_MODE_NONE
+ * - mode_が規定値外
  *
  * @param mode_ ファイルオープンモード
  * @return const char* オープンモード文字列
