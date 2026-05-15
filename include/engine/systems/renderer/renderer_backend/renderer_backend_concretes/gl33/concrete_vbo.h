@@ -3,7 +3,7 @@
  *
  * @file concrete_vbo.h
  * @author chocolate-pie24
- * @brief gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する
+ * @brief renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する
  *
  * @version 0.1
  * @date 2026-01-03

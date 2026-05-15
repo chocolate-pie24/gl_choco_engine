@@ -3,7 +3,7 @@
  *
  * @file concrete_shader.h
  * @author chocolate-pie24
- * @brief gl33_shaderは、renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する
+ * @brief renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する
  *
  * @version 0.1
  * @date 2026-01-03
