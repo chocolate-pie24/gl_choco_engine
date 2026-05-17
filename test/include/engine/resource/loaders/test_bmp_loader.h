@@ -1,3 +1,17 @@
+/**
+ * @file test_bmp_loader.h
+ * @author chocolate-pie24
+ * @brief test_bmp_loaderモジュール用テストAPI定義
+ *
+ * @version 0.1
+ * @date 2026-05-18
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef GLCE_TEST_ENGINE_RESOURCE_LOADERS_TEST_BMP_LOADER_H
 #define GLCE_TEST_ENGINE_RESOURCE_LOADERS_TEST_BMP_LOADER_H
 
