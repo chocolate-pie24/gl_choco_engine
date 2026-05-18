@@ -217,13 +217,26 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_use = gl33_shader_use,
     .renderer_shader_uniform_location_get = gl33_uniform_location_get,
     .renderer_shader_mat4f_uniform_set = gl33_mat4f_uniform_set,
-};
+};  /**< OpenGL3.3用シェーダー操作仮想関数テーブル */
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
     // TODO: 外部からの失敗注入についてどうするか考える
     return &s_gl33_shader_vtable;
 }
 
+/**
+ * @brief OpenGL3.3用シェーダーGPUリソース内部状態管理構造体インスタンスのメモリを確保し、フィールドを0で初期化する
+ *
+ * @param[out] shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - *shader_handle_ != NULL
+ * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_shader_create.call_count++;
@@ -262,6 +275,17 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief OpenGL3.3用シェーダーGPUリソース内部状態管理構造体が管理するリソースを破棄し、自身のメモリも解放する。メモリ解放後はNULLで初期化する
+ *
+ * @note 以下のGPUリソースを破棄する
+ * - バーテックスシェーダー
+ * - フラグメントシェーダー
+ * - OpenGLシェーダープログラム
+ * @note 2重destroyを許可する
+ *
+ * @param[in,out] shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+ */
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     if(NULL == shader_handle_) {
         return;
@@ -283,6 +307,26 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     *shader_handle_ = NULL;
 }
 
+/**
+ * @brief OpenGL3.3用シェーダーオブジェクトを生成し、シェーダーソースをコンパイルする
+ *
+ * @param[in] shader_type_ シェーダー種別指定値
+ * @param[in] shader_source_ シェーダーソース
+ * @param[in,out] shader_handle_ シェーダー関連リソース管理構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_source_ == NULL
+ * - shader_handle_ == NULL
+ * - shader_type_が規定値外
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - 指定したシェーダー種別はすでにコンパイル済み
+ * - シェーダープログラムがすでにリンク済み
+ * - メモリシステム未初期化
+ * @retval RENDERER_SHADER_COMPILE_ERROR シェーダーソースコンパイルエラー
+ * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_shader_compile.call_count++;
@@ -339,7 +383,7 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
         goto cleanup;
     }
 
-    // シェーダソースをコンパイル
+    // シェーダーソースをコンパイル
     mock_glShaderSource(tmp_handle, 1, &shader_source_ , NULL);
     mock_glCompileShader(tmp_handle);
 
@@ -381,6 +425,21 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief コンパイル済みシェーダーオブジェクトをリンクし、OpenGLシェーダープログラムを生成する
+ *
+ * @param[in,out] shader_handle_ シェーダー関連リソース管理構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムがすでにリンク済み
+ * - バーテックスシェーダーが未コンパイル
+ * - フラグメントシェーダーが未コンパイル
+ * @retval RENDERER_SHADER_LINK_ERROR シェーダーリンクエラー
+ * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_shader_link.call_count++;
@@ -453,6 +512,23 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief OpenGLシェーダープログラムを切り替える
+ *
+ * @note 切り替え先シェーダープログラムがすでに使用中であれば切り替えは行わない
+ *
+ * @param[in] shader_handle_ 切り替え先シェーダープログラムを管理する内部状態管理構造体インスタンスへのポインタ
+ * @param[in,out] out_program_id_ 現在使用中のシェーダープログラム識別子
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - out_program_id_ == NULL
+ * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
+ * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+ * - program_idが設定されているにもかかわらず、バーテックスシェーダーオブジェクトハンドルが未設定
+ * - program_idが設定されているにもかかわらず、フラグメントシェーダーオブジェクトハンドルが未設定
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_shader_use.call_count++;
@@ -505,7 +581,7 @@ cleanup:
  * - shader_handle_ == NULL
  * - name_ == NULL
  * - out_location_ == NULL
- * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数の取得に失敗(変数名称誤り?)
+ * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数が存在しない、未使用として最適化された、またはLocation取得に失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
@@ -682,7 +758,7 @@ cleanup:
 /**
  * @brief シェーダーオブジェクトのコンパイル状況を取得する
  *
- * @param[in] shader_type_ 判定対象シェーダ種別を指定する
+ * @param[in] shader_type_ 判定対象シェーダー種別を指定する
  * @param[in] shader_handle_ シェーダーハンドル構造体インスタンスへのポインタ
  *
  * @retval SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE shader_handle_ == NULL
