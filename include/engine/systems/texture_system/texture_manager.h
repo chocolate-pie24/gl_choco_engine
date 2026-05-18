@@ -27,8 +27,12 @@ typedef struct texture_manager texture_manager_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct renderer_backend_texture renderer_backend_texture_t;
 
-#define INVALID_TEXTURE_ID (-1)
+#define INVALID_TEXTURE_ID (-1) /**< 無効なテクスチャ識別子 */
 
+/**
+ * @brief テクスチャ管理システムモジュール実行結果コード定義
+ *
+ */
 typedef enum {
     TEXTURE_SYSTEM_SUCCESS = 0,        /**< 処理成功 */
     TEXTURE_SYSTEM_NO_MEMORY,          /**< メモリ不足 */
@@ -98,11 +102,13 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
  * - texture_name_ == NULL
  * - texture_manager_ == NULL
  * - out_texture_id_ == NULL
+ * - gpu_unit_num_ < 0
  * @retval TEXTURE_SYSTEM_BAD_OPERATION 以下のいずれか
  * - テクスチャ管理システム(texture_manager_)が未初期化
  * - Renderer Backend未初期化
  * - メモリシステム未初期化
  * - テクスチャサイズ異常
+ * - 指定したテクスチャ名称がすでにシステムに登録済み
  * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 以下のいずれか
  * - テクスチャ管理システムのリソース管理配列データ不整合
  * - テクスチャリソース内部データ破損
@@ -119,14 +125,101 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
  */
 texture_system_result_t texture_manager_register(renderer_backend_context_t* backend_context_, int32_t gpu_unit_num_, const char* texture_name_, texture_manager_t* texture_manager_, int16_t* out_texture_id_);
 
+/**
+ * @brief テクスチャリソース管理システムからテクスチャリソースを破棄する
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] texture_id_ 破棄対象テクスチャ識別子(リソース配列のインデックス)
+ * @param[in,out] texture_manager_ テクスチャリソース管理システム構造体インスタンスへのポインタ
+ *
+ * @retval TEXTURE_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - texture_manager_ == NULL
+ * - texture_id_が不正(0未満またはシステムで管理可能な上限値を超過)
+ * @retval TEXTURE_SYSTEM_BAD_OPERATION texture_manager_が未初期化
+ * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
+ * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
+ */
 texture_system_result_t texture_manager_unregister(renderer_backend_context_t* backend_context_, int16_t texture_id_, texture_manager_t* texture_manager_);
 
+/**
+ * @brief テクスチャリソース管理システムからテクスチャ名称を指定してテクスチャリソースを破棄する
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] name_ 破棄対象テクスチャ名称
+ * @param[in,out] texture_manager_ テクスチャリソース管理システム構造体インスタンスへのポインタ
+ *
+ * @retval TEXTURE_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - texture_manager_ == NULL
+ * - name_ == NULL
+ * @retval TEXTURE_SYSTEM_BAD_OPERATION 以下のいずれか
+ * - texture_manager_が未初期化
+ * - 指定したテクスチャ名称がシステム内に見つからない
+ * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
+ * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
+ */
 texture_system_result_t texture_manager_unregister_by_name(renderer_backend_context_t* backend_context_, const char* name_, texture_manager_t* texture_manager_);
 
+/**
+ * @brief テクスチャリソース管理システムからテクスチャ名称に対応するテクスチャ識別子を取得する
+ *
+ * @param[in] name_ 識別子取得対象テクスチャ名称
+ * @param[in] texture_manager_ テクスチャリソース管理システム構造体インスタンスへのポインタ
+ * @param[out] out_texture_id_ テクスチャ識別子格納先
+ *
+ * @retval TEXTURE_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - texture_manager_ == NULL
+ * - name_ == NULL
+ * - out_texture_id_ == NULL
+ * @retval TEXTURE_SYSTEM_BAD_OPERATION 以下のいずれか
+ * - texture_manager_が未初期化
+ * - 指定したテクスチャ名称のテクスチャがシステム内に見つからない
+ * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
+ * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
+ */
 texture_system_result_t texture_manager_texture_id_get(const char* name_, const texture_manager_t* texture_manager_, int16_t* out_texture_id_);
 
+/**
+ * @brief テクスチャリソース管理システムからテクスチャ識別子を指定してGPUリソースを取得する
+ *
+ * @note 取得したGPUリソースの所有権はシステムが持つため、呼び出し側でのリソースの破棄は禁止
+ *
+ * @param[in] texture_id_ GPUリソースを取得するテクスチャ識別子
+ * @param[in] texture_manager_ テクスチャリソース管理システム構造体インスタンスへのポインタ
+ * @param[out] out_gpu_resource_ GPUリソース格納先
+ *
+ * @retval TEXTURE_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - texture_manager_ == NULL
+ * - out_gpu_resource_ == NULL
+ * - texture_id_が不正(0未満またはシステムで管理可能な上限値を超過)
+ * @retval TEXTURE_SYSTEM_BAD_OPERATION 以下のいずれか
+ * - texture_manager_が未初期化
+ * - 指定したテクスチャ識別子がシステムに未登録
+ * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
+ * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
+ */
 texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
 
+/**
+ * @brief テクスチャリソース管理システムからテクスチャ名称を指定してGPUリソースを取得する
+ *
+ * @note 取得したGPUリソースの所有権はシステムが持つため、呼び出し側でのリソースの破棄は禁止
+ *
+ * @param[in] name_ GPUリソースを取得するテクスチャ名称
+ * @param[in] texture_manager_ テクスチャリソース管理システム構造体インスタンスへのポインタ
+ * @param[out] out_gpu_resource_ GPUリソース格納先
+ *
+ * @retval TEXTURE_SYSTEM_INVALID_ARGUMENT 以下のいずれか
+ * - texture_manager_ == NULL
+ * - out_gpu_resource_ == NULL
+ * - name_ == NULL
+ * @retval TEXTURE_SYSTEM_BAD_OPERATION 以下のいずれか
+ * - texture_manager_が未初期化
+ * - 指定したテクスチャ名称がシステムに未登録
+ * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
+ * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
+ */
 texture_system_result_t texture_manager_gpu_resource_get_by_name(const char* name_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
 
 #ifdef __cplusplus

@@ -225,6 +225,7 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
     IF_ARG_FALSE_GOTO_CLEANUP(texture_manager_->max_texture_count > 0, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_register", "texture_manager_->max_texture_count")
     IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->cpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_register", "texture_manager_->cpu_resources")
     IF_ARG_NULL_GOTO_CLEANUP(texture_manager_->gpu_resources, ret, TEXTURE_SYSTEM_BAD_OPERATION, tex_sys_rslt_to_str(TEXTURE_SYSTEM_BAD_OPERATION), "texture_manager_register", "texture_manager_->gpu_resources")
+    IF_ARG_FALSE_GOTO_CLEANUP(gpu_unit_num_ >= 0, ret, TEXTURE_SYSTEM_INVALID_ARGUMENT, tex_sys_rslt_to_str(TEXTURE_SYSTEM_INVALID_ARGUMENT), "texture_manager_register", "gpu_unit_num_")
 
     for(int16_t i = 0; i != texture_manager_->max_texture_count; ++i) {
         if(NULL == texture_manager_->cpu_resources[i] && NULL != texture_manager_->gpu_resources[i]) {
@@ -2359,6 +2360,58 @@ static void NO_COVERAGE test_texture_manager_register(void) {
         assert(123 == texture_id);
         assert(NULL == cpu_resources[0]);
         assert(NULL == gpu_resources[0]);
+
+        TEST_TEXTURE_MANAGER_TEARDOWN_BACKEND_CONTEXT();
+    }
+    {
+        // gpu_unit_num_ < 0 -> TEXTURE_SYSTEM_INVALID_ARGUMENT
+        texture_system_result_t ret = TEXTURE_SYSTEM_SUCCESS;
+        memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
+        renderer_result_t ret_renderer = RENDERER_UNDEFINED_ERROR;
+
+        renderer_backend_context_t* backend_context = NULL;
+        linear_alloc_t* allocator = NULL;
+        void* allocator_pool = NULL;
+        size_t allocator_memory_requirement = 0U;
+        size_t allocator_align_requirement = 0U;
+        size_t allocator_pool_size = 4096U;
+
+        texture_manager_t manager = {0};
+        texture_t* cpu_resources[2] = {NULL};
+        renderer_backend_texture_t* gpu_resources[2] = {NULL};
+        int16_t texture_id = 123;
+
+        test_texture_manager_config_reset();
+        test_texture_config_reset();
+        test_renderer_backend_context_config_reset();
+        test_linear_allocator_config_reset();
+        test_choco_memory_config_reset();
+        memory_system_destroy();
+
+        TEST_TEXTURE_MANAGER_SETUP_BACKEND_CONTEXT();
+
+        manager.max_texture_count = 2;
+        manager.cpu_resources = cpu_resources;
+        manager.gpu_resources = gpu_resources;
+
+        ret = texture_manager_register(
+            backend_context,
+            -1,
+            "test_texture_red",
+            &manager,
+            &texture_id
+        );
+
+        assert(TEXTURE_SYSTEM_INVALID_ARGUMENT == ret);
+        assert(123 == texture_id);
+
+        assert(NULL == cpu_resources[0]);
+        assert(NULL == cpu_resources[1]);
+        assert(NULL == gpu_resources[0]);
+        assert(NULL == gpu_resources[1]);
+
+        assert(1U == s_test_config_texture_manager_register.call_count);
 
         TEST_TEXTURE_MANAGER_TEARDOWN_BACKEND_CONTEXT();
     }
