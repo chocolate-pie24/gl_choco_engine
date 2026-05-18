@@ -106,7 +106,7 @@ static const renderer_vao_vtable_t s_gl33_vao_vtable = {
     .vertex_array_bind = gl33_vao_bind,
     .vertex_array_unbind = gl33_vao_unbind,
     .vertex_array_attribute_set = gl33_vao_attribute_set,
-};
+};  /**< OpenGL3.3用VAO操作仮想関数テーブル */
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
     // TODO: 外部からの失敗注入についてどうするか考える
@@ -114,16 +114,9 @@ const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
 }
 
 /**
- * @brief VAO構造体インスタンスのメモリを確保し初期化する
+ * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
  *
  * @param[out] vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vao_t* vao = NULL;
- * renderer_result_t ret = gl33_vao_create(&vao);
- * // エラー処理
- * @endcode
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - vertex_array_がNULL
@@ -174,15 +167,7 @@ cleanup:
 /**
  * @brief renderer_backend_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する
  *
- * @param[out] vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vao_t* vao = NULL;
- * renderer_result_t ret = gl33_vao_create(&vao);
- * // エラー処理
- * gl33_vao_destroy(&vao);
- * @endcode
+ * @param[in,out] vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
  */
 static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
 #ifdef TEST_BUILD
@@ -219,18 +204,10 @@ cleanup:
  * @param[in] vertex_array_ bind対象vao
  * @param[in,out] out_vao_id_ bindされたvao id格納先
  *
- * 使用例:
- * @code{.c}
- * renderer_backend_vao_t* vao = NULL;
- * renderer_result_t ret = gl33_vao_create(&vao);
- * // エラー処理
- * ret = gl33_vao_bind(vao);
- * // エラー処理
- * @endcode
- *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - vertex_array_ == NULL
  * - out_vao_id_ == NULL
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_array_が渡された
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
@@ -262,21 +239,11 @@ cleanup:
 /**
  * @brief VAOアンバインド処理
  *
- * 使用例:
- * @code{.c}
- * renderer_backend_vao_t* vao = NULL;
- * renderer_result_t ret = gl33_vao_create(&vao);
- * // エラー処理
- * ret = gl33_vao_bind(vao);
- * // エラー処理
- * gl33_vao_unbind(vao);
- * @endcode
- *
- * @param vertex_array_ VAOハンドル(OpenGL3.3では使用しない)
+ * @param[in] vertex_array_ VAOリソース管理構造体インスタンスへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
  * @retval RENDERER_BAD_OPERATION 未初期化のvertex_array_が渡された
- * @retval RENDERER_SUCCESS 現状では内部で呼び出すglBindVertexArrayに対して個別にglGetErrorを行わないため、常に成功
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vao_unbind(const renderer_backend_vao_t* vertex_array_) {
 #ifdef TEST_BUILD
@@ -300,6 +267,22 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief OpenGL3.3用VAOアトリビュート設定
+ *
+ * @param[in] vertex_array_ VAOリソース管理構造体インスタンスへのポインタ
+ * @param[in] layout_ 設定対象変数のlayoutロケーション番号
+ * @param[in] size_ 頂点属性のコンポーネントの数
+ * @param[in] type_ 頂点属性のデータ型
+ * @param[in] normalized_ true: アクセス時に固定小数点データ値を正規化する / false: 正規化しない
+ * @param[in] stride_ 連続する頂点属性間のバイトオフセット
+ * @param[in] offset_ 設定対象頂点属性が格納されているバイトオフセット
+ *
+ * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
+ * @retval RENDERER_BAD_OPERATION vao_handleが未初期化
+ * @retval RENDERER_RUNTIME_ERROR type_が規定値外
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_vao_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vao_attribute_set.call_count++;
