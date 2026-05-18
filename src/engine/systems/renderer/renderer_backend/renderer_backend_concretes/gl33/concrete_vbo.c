@@ -109,7 +109,7 @@ static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vertex_buffer_unbind = gl33_vbo_unbind,
     .vertex_buffer_vertex_load = gl33_vbo_vertex_load,
     .vertex_buffer_vertex_subload = gl33_vbo_vertex_subload,
-};
+};  /**< OpenGL3.3用VBO操作仮想関数テーブル */
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
     // TODO: 外部からの失敗注入についてどうするか考える
@@ -117,16 +117,9 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
 }
 
 /**
- * @brief VBO構造体インスタンスのメモリを確保し初期化する
+ * @brief VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する
  *
  * @param[out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vbo_t* vbo = NULL;
- * renderer_result_t ret = gl33_vbo_create(&vbo);
- * // エラー処理
- * @endcode
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - vertex_buffer_がNULL
@@ -178,15 +171,7 @@ cleanup:
 /**
  * @brief renderer_backend_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する
  *
- * @param[out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
- *
- * 使用例:
- * @code{.c}
- * renderer_backend_vbo_t* vbo = NULL;
- * renderer_result_t ret = gl33_vbo_create(&vbo);
- * // エラー処理
- * gl33_vbo_destroy(&vbo);
- * @endcode
+ * @param[in,out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
  */
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
 #ifdef TEST_BUILD
@@ -223,18 +208,10 @@ cleanup:
  * @param[in] vertex_buffer_ bind対象vbo
  * @param[in,out] out_vbo_id_ bindしたvbo id格納先
  *
- * 使用例:
- * @code{.c}
- * renderer_backend_vbo_t* vbo = NULL;
- * renderer_result_t ret = gl33_vbo_create(&vbo);
- * // エラー処理
- * ret = gl33_vbo_bind(vbo);
- * // エラー処理
- * @endcode
- *
  * @retval RENDERER_INVALID_ARGUMENT
  * - vertex_buffer_ == NULL
  * - out_vbo_id_ == NULL
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
@@ -263,6 +240,15 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief VBO unbind処理
+ *
+ * @param[in] vertex_buffer_ unbind対象VBO
+ *
+ * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_ == NULL
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vbo_unbind.call_count++;
@@ -285,6 +271,23 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief GPU側頂点情報格納領域を生成し、頂点情報を転送する
+ *
+ * @note load_data_ == NULLの場合は頂点情報格納領域の生成のみを行い、頂点情報の転送は行わない
+ *
+ * @param[in] vertex_buffer_ VBOリソース管理構造体インスタンスへのポインタ
+ * @param[in] load_size_ 頂点情報格納領域サイズ(byte)
+ * @param[in] load_data_ 転送頂点情報配列へのポインタ
+ * @param[in] usage_ バッファ使用方法種別
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_buffer_ == NULL
+ * - load_size_ == 0
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
+ * @retval RENDERER_RUNTIME_ERROR 規定値外のusage_
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vbo_vertex_load.call_count++;
@@ -319,6 +322,21 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する
+ *
+ * @param[in] vertex_buffer_ VBOリソース管理構造体インスタンスへのポインタ
+ * @param[in] offset_ 頂点情報格納領域の先頭から転送開始位置までのオフセット(byte)
+ * @param[in] size_ 頂点情報転送サイズ(byte)
+ * @param[in] load_data_ 転送する頂点情報配列へのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_buffer_ == NULL
+ * - load_data_ == NULL
+ * - size_ == 0
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vbo_vertex_subload.call_count++;
@@ -332,7 +350,7 @@ static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* v
 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "vertex_buffer_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "load_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "load_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_->vbo_handle, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "gl33_vbo_vertex_subload", "vertex_buffer_->vbo_handle")
 
     mock_glBufferSubData(GL_ARRAY_BUFFER, (GLintptr)offset_, (GLsizeiptr)size_, load_data_);
