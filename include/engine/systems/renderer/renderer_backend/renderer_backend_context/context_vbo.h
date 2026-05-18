@@ -117,9 +117,9 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
  * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
  */
-renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
+renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
 
-renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
+renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
 
 #ifdef __cplusplus
 }

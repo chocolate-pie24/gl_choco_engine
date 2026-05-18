@@ -93,8 +93,8 @@ static renderer_result_t gl33_vbo_create(renderer_backend_vbo_t** vertex_buffer_
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_);
 static renderer_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
 static renderer_result_t gl33_vbo_unbind(const renderer_backend_vbo_t* vertex_buffer_);
-static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
-static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
+static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
+static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
 
 static void mock_glGenBuffers(GLsizei n_, GLuint* buffer_);
 static void mock_glBindBuffer(GLenum target_, GLuint buffer_);
@@ -288,7 +288,7 @@ cleanup:
  * @retval RENDERER_RUNTIME_ERROR 規定値外のusage_
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+static renderer_result_t gl33_vbo_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vbo_vertex_load.call_count++;
     if(s_test_config_gl33_vbo_vertex_load.fail_on_call != 0) {
@@ -337,7 +337,7 @@ cleanup:
  * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
+static renderer_result_t gl33_vbo_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vbo_vertex_subload.call_count++;
     if(s_test_config_gl33_vbo_vertex_subload.fail_on_call != 0) {

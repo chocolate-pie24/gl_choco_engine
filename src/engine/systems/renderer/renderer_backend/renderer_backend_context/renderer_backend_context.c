@@ -716,7 +716,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
+renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_vertex_load.fail_on_call != 0) {
@@ -747,7 +747,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
+renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_vertex_subload.fail_on_call != 0) {

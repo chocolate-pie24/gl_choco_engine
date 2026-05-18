@@ -99,9 +99,9 @@ typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo
  * @retval RENDERER_SUCCESS データの転送に成功し、正常終了
  * @retval 上記以外 グラフィックスAPIごとの実装依存
  */
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
+typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
 
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
+typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
 
 /**
  * @brief VBO機能仮想関数テーブル
