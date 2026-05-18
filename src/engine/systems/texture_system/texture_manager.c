@@ -1,3 +1,18 @@
+/** @ingroup texture_system
+ *
+ * @file texture_manager.c
+ * @author chocolate-pie24
+ * @brief テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装
+ *
+ * @version 0.1
+ * @date 2026-05-18
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/systems/texture_system/texture_manager.h"
 
 #include <stddef.h>
@@ -20,25 +35,29 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
+/**
+ * @brief テクスチャリソース(CPU / GPU)リソース管理システム構造体定義
+ *
+ */
 struct texture_manager {
-    int16_t max_texture_count;
-    texture_t** cpu_resources;
-    renderer_backend_texture_t** gpu_resources;
+    int16_t max_texture_count;                      /**< システムで管理可能なテクスチャの最大値 */
+    texture_t** cpu_resources;                      /**< CPU側テクスチャリソース配列 */
+    renderer_backend_texture_t** gpu_resources;     /**< GPU側テクスチャリソース配列 */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_overflow = "OVERFLOW";
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";
-static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";
-static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_rslt_str_success = "SUCCESS";                        /**< 実行結果コード: TEXTURE_SYSTEM_SUCCESSの文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                    /**< 実行結果コード: TEXTURE_SYSTEM_NO_MEMORYの文字列 */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";            /**< 実行結果コード: TEXTURE_SYSTEM_RUNTIME_ERRORの文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード: TEXTURE_SYSTEM_INVALID_ARGUMENTの文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";          /**< 実行結果コード: TEXTURE_SYSTEM_DATA_CORRUPTEDの文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";            /**< 実行結果コード: TEXTURE_SYSTEM_BAD_OPERATIONの文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                      /**< 実行結果コード: TEXTURE_SYSTEM_OVERFLOWの文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";          /**< 実行結果コード: TEXTURE_SYSTEM_LIMIT_EXCEEDEDの文字列 */
+static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";        /**< 実行結果コード: TEXTURE_SYSTEM_FILE_OPEN_ERRORの文字列 */
+static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";      /**< 実行結果コード: TEXTURE_SYSTEM_FILE_CLOSE_ERRORの文字列 */
+static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";        /**< 実行結果コード: TEXTURE_SYSTEM_FILE_READ_ERRORの文字列 */
+static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";      /**< 実行結果コード: TEXTURE_SYSTEM_UNSUPPORTED_FILEの文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード: TEXTURE_SYSTEM_UNDEFINED_ERRORの文字列 */
 
 static const char* tex_sys_rslt_to_str(texture_system_result_t rslt_);
 static texture_system_result_t tex_sys_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
