@@ -29,83 +29,10 @@ extern "C" {
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-/**
- * @brief VAO構造体インスタンスのメモリを確保し、初期化(VAOの生成)する
- *
- * @param[in,out] vertex_array_ VAO構造体インスタンスへのダブルポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - vertex_array_ == NULL
- * - *vertex_array_ != NULL
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - メモリシステム未初期化
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- * @retval 上記以外 グラフィックスAPI実装依存
- */
 typedef renderer_result_t (*pfn_vertex_array_create)(renderer_backend_vao_t** vertex_array_);
-
-/**
- * @brief VAOを無効化し、VAO構造体インスタンスのメモリを解放する
- *
- * @note 2重destroyを許可する(*vertex_array_ == NULLで何もしない)
- *
- * @param[in,out] vertex_array_ 無効化、メモリ開放対象VAO構造体インスタンスへのダブルポインタ
- */
 typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_);
-
-/**
- * @brief VAOのbindを行う
- *
- * @note 既にbind済みのVAOの場合は何もしない
- *
- * @todo renderer_frontend作成後、外部非公開とする
- *
- * @param[in] vertex_array_ bind対象VAO構造体インスタンスへのポインタ
- * @param[in,out] out_vao_id_ bindされたVAO ID格納先
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - vertex_array_ == NULL
- * - out_vao_id_ == NULL
- * @retval RENDERER_SUCCESS bindに成功し、正常終了
- * @retval 上記以外 グラフィックスAPIごとの実装依存
- */
 typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_);
-
-/**
- * @brief VAOのunbindを行う
- *
- * @todo renderer_frontend作成後、外部非公開とする
- *
- * @param[in] vertex_array_ unbind対象VAO構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
- * @retval RENDERER_SUCCESS unbindに成功し、正常終了
- * @retval 上記以外 グラフィックスAPIごとの実装依存
- */
 typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_t* vertex_array_);
-
-/**
- * @brief VAOで管理する頂点情報のレイアウト情報を設定する
- *
- * @note 本API内でbind処理を行う(既にbind済であればbindしない)ため、実行前のbindは不要
- *
- * @param[in] vertex_array_ 設定対象VAO構造体インスタンスへのポインタ
- * @param layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
- * @param size_ 頂点情報に含まれるデータの数([x, y, z]の3次元座標のみであれば3)
- * @param type_ バッファに格納されているデータの型 @ref renderer_type_t
- * @param normalized_ 与えられた頂点データを正規化するかどうかを指定
- * @param stride_ 頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定)
- * @param offset_ 「この頂点属性の先頭が、現在GL_ARRAY_BUFFERにバインドされているバッファの先頭から何バイト目にあるか」を指定
- *
- * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
- * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- * @retval 上記以外 グラフィックスAPIごとの実装依存
- */
 typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 /**
@@ -113,11 +40,71 @@ typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backe
  *
  */
 typedef struct renderer_vao_vtable {
-    pfn_vertex_array_create vertex_array_create;                /**< 関数ポインタ @ref pfn_vertex_array_create 参照 */
-    pfn_vertex_array_destroy vertex_array_destroy;              /**< 関数ポインタ @ref pfn_vertex_array_destroy 参照 */
-    pfn_vertex_array_bind vertex_array_bind;                    /**< 関数ポインタ @ref pfn_vertex_array_bind */
-    pfn_vertex_array_unbind vertex_array_unbind;                /**< 関数ポインタ @ref pfn_vertex_array_unbind 参照 */
-    pfn_vertex_array_attribute_set vertex_array_attribute_set;  /**< 関数ポインタ @ref pfn_vertex_array_attribute_set 参照 */
+    /**
+     * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
+     *
+     * @param[out] vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+     *
+     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * - vertex_array_がNULL
+     * - *vertex_array_が非NULL
+     * @retval RENDERER_NO_MEMORY メモリ確保失敗
+     * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
+     * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+     * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
+     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     */
+    pfn_vertex_array_create vertex_array_create;
+
+    /**
+     * @brief renderer_backend_vao_t構造体インスタンスのメモリを解放し、VAOも削除する
+     *
+     * @param[in,out] vertex_array_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+     */
+    pfn_vertex_array_destroy vertex_array_destroy;
+
+    /**
+     * @brief VAOをbindする
+     *
+     * @param[in] vertex_array_ bind対象vao
+     * @param[in,out] out_vao_id_ bindされたvao id格納先
+     *
+     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * - vertex_array_ == NULL
+     * - out_vao_id_ == NULL
+     * @retval RENDERER_BAD_OPERATION 未初期化のvertex_array_が渡された
+     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     */
+    pfn_vertex_array_bind vertex_array_bind;
+
+    /**
+     * @brief VAOをunbindする
+     *
+     * @param[in] vertex_array_ VAOリソース管理構造体インスタンスへのポインタ
+     *
+     * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
+     * @retval RENDERER_BAD_OPERATION 未初期化のvertex_array_が渡された
+     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     */
+    pfn_vertex_array_unbind vertex_array_unbind;
+
+    /**
+     * @brief VAOアトリビュート設定を行う
+     *
+     * @param[in] vertex_array_ VAOリソース管理構造体インスタンスへのポインタ
+     * @param[in] layout_ 設定対象変数のlayoutロケーション番号
+     * @param[in] size_ 頂点属性のコンポーネントの数
+     * @param[in] type_ 頂点属性のデータ型
+     * @param[in] normalized_ true: アクセス時に固定小数点データ値を正規化する / false: 正規化しない
+     * @param[in] stride_ 連続する頂点属性間のバイトオフセット
+     * @param[in] offset_ 設定対象頂点属性が格納されているバイトオフセット
+     *
+     * @retval RENDERER_INVALID_ARGUMENT vertex_array_ == NULL
+     * @retval RENDERER_BAD_OPERATION vao_handleが未初期化
+     * @retval RENDERER_RUNTIME_ERROR type_が規定値外
+     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     */
+    pfn_vertex_array_attribute_set vertex_array_attribute_set;
 } renderer_vao_vtable_t;
 
 #ifdef __cplusplus

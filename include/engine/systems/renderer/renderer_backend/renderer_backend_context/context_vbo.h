@@ -119,6 +119,21 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
  */
 renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
 
+/**
+ * @brief 生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する
+ *
+ * @param[in] vertex_buffer_ VBOリソース管理構造体インスタンスへのポインタ
+ * @param[in] offset_ 頂点情報格納領域の先頭から転送開始位置までのオフセット(byte)
+ * @param[in] size_ 頂点情報転送サイズ(byte)
+ * @param[in] load_data_ 転送する頂点情報配列へのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - vertex_buffer_ == NULL
+ * - load_data_ == NULL
+ * - size_ == 0
+ * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
 
 #ifdef __cplusplus
