@@ -101,7 +101,7 @@ renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* back
 renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
 /**
- * @brief 現在active / bindされているテクスチャスロットに対してピクセルデータをGPUへ転送する
+ * @brief 指定されたテクスチャをbindし、ピクセルデータをGPUへ転送する
  *
  * @note 本API内部ではrenderer_backend_texture_bindを実行するため事前bindは不要
  *

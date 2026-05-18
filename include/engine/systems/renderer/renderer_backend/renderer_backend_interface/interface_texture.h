@@ -103,7 +103,7 @@ typedef struct renderer_texture_vtable {
     pfn_renderer_texture_unbind renderer_texture_unbind;
 
     /**
-     * @brief 現在active / bindされているGL_TEXTURE_2Dに対してピクセルデータをGPUへ転送する
+     * @brief 現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する
      *
      * @param width_ 転送ピクセルデータの幅
      * @param height_ 転送ピクセルデータの高さ
