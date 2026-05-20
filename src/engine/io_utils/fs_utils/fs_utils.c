@@ -83,16 +83,16 @@ struct fs_utils {
     filesystem_open_mode_t mode;    /**< ファイルオープンモード */
 };
 
-static const char* s_rslt_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
-static const char* s_rslt_str_invalid_argument = "INVALID_ARGUMENT";    /**< 実行結果コード文字列: 無効な引数 */
-static const char* s_rslt_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用 */
-static const char* s_rslt_str_data_corrupted = "DATA_CORRUPTED";        /**< 実行結果コード文字列: 内部データ破損or未初期化 */
-static const char* s_rslt_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
-static const char* s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲超過 */
-static const char* s_rslt_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算オーバーフロー */
-static const char* s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
-static const char* s_rslt_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
-static const char* s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
+static const char* const s_rslt_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";    /**< 実行結果コード文字列: 無効な引数 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";        /**< 実行結果コード文字列: 内部データ破損or未初期化 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲超過 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算オーバーフロー */
+static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
+static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
 
 static const char* rslt_to_str(fs_utils_result_t rslt_);
 static bool fs_utils_valid_check(const fs_utils_t* fs_utils_);
@@ -115,14 +115,21 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
     fs_utils_t* tmp_fs_utils = NULL;
     choco_string_t* tmp_fullpath = NULL;
+    const char* open_mode_str = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(filepath_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filepath_")
     IF_ARG_NULL_GOTO_CLEANUP(filename_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "filename_")
     IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "fs_utils_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "*fs_utils_")
-    IF_ARG_FALSE_GOTO_CLEANUP(open_mode_ != FILESYSTEM_MODE_NONE, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "open_mode_")
     // extensionはない場合があるのでNULLを許可
+
+    open_mode_str = filesystem_open_mode_c_str(open_mode_);
+    if(NULL == open_mode_str) {
+        ret = FS_UTILS_INVALID_ARGUMENT;
+        ERROR_MESSAGE("fs_utils_create(%s) - Provided file open mode is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // Simulation.
     ret_mem = memory_system_allocate(sizeof(fs_utils_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_utils);
@@ -182,7 +189,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     ret_fs = filesystem_open(choco_string_c_str(tmp_fullpath), open_mode_, tmp_fs_utils->filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = filesystem_result_convert(ret_fs);
-        ERROR_MESSAGE("fs_utils_create(%s) - Failed to open file. File open mode = '%s'.", rslt_to_str(ret), filesystem_open_mode_c_str(open_mode_));
+        ERROR_MESSAGE("fs_utils_create(%s) - Failed to open file. File open mode = '%s'.", rslt_to_str(ret), open_mode_str);
         goto cleanup;
     }
     choco_string_destroy(&tmp_fullpath);
@@ -255,6 +262,10 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
             goto cleanup;
         } else if(FILESYSTEM_RUNTIME_ERROR == ret_fs) {
+            ret = FS_UTILS_RUNTIME_ERROR;
+            ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
+            goto cleanup;
+        } else if(FILESYSTEM_UNDEFINED_ERROR == ret_fs) {
             ret = FS_UTILS_RUNTIME_ERROR;
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
             goto cleanup;

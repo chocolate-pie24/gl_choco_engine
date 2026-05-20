@@ -26,8 +26,8 @@
 
 #include "engine/core/event/keyboard_event.h"
 
-#include "engine/camera_system/camera/camera.h"
-#include "engine/camera_system/camera_controller/flight_camera_controller.h"
+#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
 // #define TEST_BUILD
 
@@ -40,8 +40,8 @@
 
 #include "test_controller.h"
 
-#include "engine/camera_system/camera/test_camera.h"
-#include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
+#include "engine/systems/camera_system/camera/test_camera.h"
+#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
 
 #include "application/command_interpreter/test_flight_camera.h"
 
@@ -68,17 +68,17 @@ static void test_is_valid_keybind(void);
 
 // ファイル内静的変数宣言
 
-static const char* s_command_str_move_forward = "FLIGHT CAMERA: Move(Forward)";             /**< フライトカメラ制御コマンド文字列: 前方移動 */
-static const char* s_command_str_move_backward = "FLIGHT CAMERA: Move(Backward)";           /**< フライトカメラ制御コマンド文字列: 後方移動 */
-static const char* s_command_str_move_right = "FLIGHT CAMERA: Move(Right)";                 /**< フライトカメラ制御コマンド文字列: 右方向移動 */
-static const char* s_command_str_move_left = "FLIGHT CAMERA: Move(Left)";                   /**< フライトカメラ制御コマンド文字列: 左方向移動 */
-static const char* s_command_str_move_up = "FLIGHT CAMERA: Move(Up)";                       /**< フライトカメラ制御コマンド文字列: 上方向移動 */
-static const char* s_command_str_move_down = "FLIGHT CAMERA: Move(Down)";                   /**< フライトカメラ制御コマンド文字列: 下方向移動 */
-static const char* s_command_str_rot_pitch_plus = "FLIGHT CAMERA: Rotation(Pitch+)";        /**< フライトカメラ制御コマンド文字列: ピッチ+方向回転 */
-static const char* s_command_str_rot_pitch_minus = "FLIGHT CAMERA: Rotation(Pitch-)";       /**< フライトカメラ制御コマンド文字列: ピッチ-方向回転 */
-static const char* s_command_str_rot_yaw_plus = "FLIGHT CAMERA: Rotation(Yaw+)";            /**< フライトカメラ制御コマンド文字列: ヨー+方向回転 */
-static const char* s_command_str_rot_yaw_minus = "FLIGHT CAMERA: Rotation(Yaw-)";           /**< フライトカメラ制御コマンド文字列: ヨー-方向回転 */
-static const char* s_command_str_undefined_command = "FLIGHT CAMERA: Undefined Command";    /**< フライトカメラ制御コマンド文字列: 不明なコマンド */
+static const char* const s_command_str_move_forward = "FLIGHT CAMERA: Move(Forward)";             /**< フライトカメラ制御コマンド文字列: 前方移動 */
+static const char* const s_command_str_move_backward = "FLIGHT CAMERA: Move(Backward)";           /**< フライトカメラ制御コマンド文字列: 後方移動 */
+static const char* const s_command_str_move_right = "FLIGHT CAMERA: Move(Right)";                 /**< フライトカメラ制御コマンド文字列: 右方向移動 */
+static const char* const s_command_str_move_left = "FLIGHT CAMERA: Move(Left)";                   /**< フライトカメラ制御コマンド文字列: 左方向移動 */
+static const char* const s_command_str_move_up = "FLIGHT CAMERA: Move(Up)";                       /**< フライトカメラ制御コマンド文字列: 上方向移動 */
+static const char* const s_command_str_move_down = "FLIGHT CAMERA: Move(Down)";                   /**< フライトカメラ制御コマンド文字列: 下方向移動 */
+static const char* const s_command_str_rot_pitch_plus = "FLIGHT CAMERA: Rotation(Pitch+)";        /**< フライトカメラ制御コマンド文字列: ピッチ+方向回転 */
+static const char* const s_command_str_rot_pitch_minus = "FLIGHT CAMERA: Rotation(Pitch-)";       /**< フライトカメラ制御コマンド文字列: ピッチ-方向回転 */
+static const char* const s_command_str_rot_yaw_plus = "FLIGHT CAMERA: Rotation(Yaw+)";            /**< フライトカメラ制御コマンド文字列: ヨー+方向回転 */
+static const char* const s_command_str_rot_yaw_minus = "FLIGHT CAMERA: Rotation(Yaw-)";           /**< フライトカメラ制御コマンド文字列: ヨー-方向回転 */
+static const char* const s_command_str_undefined_command = "FLIGHT CAMERA: Undefined Command";    /**< フライトカメラ制御コマンド文字列: 不明なコマンド */
 
 // 関数プロトタイプ宣言
 

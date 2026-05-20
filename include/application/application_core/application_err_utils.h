@@ -27,11 +27,10 @@ extern "C" {
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/camera_system/camera_core/camera_types.h"
-
-#include "engine/platform/platform_core/platform_types.h"
-
-#include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/texture_system/texture_manager.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
@@ -81,7 +80,7 @@ application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_);
 /**
  * @brief Rendererレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
  *
- * @param[in] rslt_ camera_systemレイヤー実行結果コード
+ * @param[in] rslt_ Rendererレイヤー実行結果コード
  *
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
@@ -95,6 +94,15 @@ application_result_t app_rslt_convert_renderer(renderer_result_t rslt_);
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t app_rslt_convert_camera(camera_result_t rslt_);
+
+/**
+ * @brief Texture Systemレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
+ *
+ * @param[in] rslt_ Texture Systemレイヤー実行結果コード
+ *
+ * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
+ */
+application_result_t app_rslt_convert_texture_system(texture_system_result_t rslt_);
 
 #ifdef __cplusplus
 }

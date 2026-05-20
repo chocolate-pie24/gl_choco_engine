@@ -45,6 +45,31 @@ float choco_tanf(float radian_);
 bool is_equal_float(float a_, float b_);
 
 /**
+ * @brief 2次元ベクトルxyを初期化する
+ *
+ * @note out_vec2f_ == NULLの場合はエラーメッセージを出力し、何もしない
+ *
+ * @param[in] x_ 初期化値(x)
+ * @param[in] y_ 初期化値(y)
+ * @param[out] out_vec2f_ 初期化対象ベクトル
+ */
+void vec2f_initialize(float x_, float y_, vec2f_t* out_vec2f_);
+
+/**
+ * @brief 2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する
+ *
+ * @note 以下の場合はエラーメッセージを出力し、何もしない
+ * - vec1_ == NULL
+ * - vec2_ == NULL
+ * - out_vec2f_ == NULL
+ *
+ * @param[in] vec1_ vec1_ + vec2_のvec1_
+ * @param[in] vec2_ vec1_ + vec2_のvec2_
+ * @param[out] out_vec2f_ 加算結果ベクトル
+ */
+void vec2f_add(const vec2f_t* vec1_, const vec2f_t* vec2_, vec2f_t* out_vec2f_);
+
+/**
  * @brief 3次元ベクトルxyzを初期化する
  *
  * @note out_vec3f_ == NULLの場合はエラーメッセージを出力し、何もしない

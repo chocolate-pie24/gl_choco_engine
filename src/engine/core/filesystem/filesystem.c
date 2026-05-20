@@ -134,19 +134,18 @@ static size_t mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_)
 static int mock_ferror(FILE *stream_);
 static int mock_feof(FILE *stream_);
 
-static const char* s_open_mode_read = "r";                  /**< ファイルオープンモード文字列: READ */
-static const char* s_open_mode_write = "w";                 /**< ファイルオープンモード文字列: WRITE */
-static const char* s_open_mode_append = "a";                /**< ファイルオープンモード文字列: APPEND */
-static const char* s_open_mode_read_plus = "r+";            /**< ファイルオープンモード文字列: READ+ */
-static const char* s_open_mode_write_plus = "w+";           /**< ファイルオープンモード文字列: WRITE+ */
-static const char* s_open_mode_append_plus = "a+";          /**< ファイルオープンモード文字列: APPEND+ */
-static const char* s_open_mode_read_binary = "rb";          /**< ファイルオープンモード文字列: READ(Binary) */
-static const char* s_open_mode_write_binary = "wb";         /**< ファイルオープンモード文字列: WRITE(Binary) */
-static const char* s_open_mode_append_binary = "ab";        /**< ファイルオープンモード文字列: APPEND(Binary) */
-static const char* s_open_mode_read_plus_binary = "r+b";    /**< ファイルオープンモード文字列: READ+(Binary) */
-static const char* s_open_mode_write_plus_binary = "w+b";   /**< ファイルオープンモード文字列: WRITE*(Binary) */
-static const char* s_open_mode_append_plus_binary = "a+b";  /**< ファイルオープンモード文字列: APPEND+(Binary) */
-static const char* s_open_mode_undefined = "undefined";     /**< ファイルオープンモード文字列: 不明なモード */
+static const char* const s_open_mode_read = "r";                  /**< ファイルオープンモード文字列: READ */
+static const char* const s_open_mode_write = "w";                 /**< ファイルオープンモード文字列: WRITE */
+static const char* const s_open_mode_append = "a";                /**< ファイルオープンモード文字列: APPEND */
+static const char* const s_open_mode_read_plus = "r+";            /**< ファイルオープンモード文字列: READ+ */
+static const char* const s_open_mode_write_plus = "w+";           /**< ファイルオープンモード文字列: WRITE+ */
+static const char* const s_open_mode_append_plus = "a+";          /**< ファイルオープンモード文字列: APPEND+ */
+static const char* const s_open_mode_read_binary = "rb";          /**< ファイルオープンモード文字列: READ(Binary) */
+static const char* const s_open_mode_write_binary = "wb";         /**< ファイルオープンモード文字列: WRITE(Binary) */
+static const char* const s_open_mode_append_binary = "ab";        /**< ファイルオープンモード文字列: APPEND(Binary) */
+static const char* const s_open_mode_read_plus_binary = "r+b";    /**< ファイルオープンモード文字列: READ+(Binary) */
+static const char* const s_open_mode_write_plus_binary = "w+b";   /**< ファイルオープンモード文字列: WRITE*(Binary) */
+static const char* const s_open_mode_append_plus_binary = "a+b";  /**< ファイルオープンモード文字列: APPEND+(Binary) */
 
 static const char* const s_rslt_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 成功 */
 static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 無効な引数 */
@@ -406,7 +405,7 @@ const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_) {
             ret = s_open_mode_append_plus_binary;
             break;
         default:
-            ret = s_open_mode_undefined;
+            ret = NULL;
             break;
     }
     return ret;
@@ -1713,8 +1712,7 @@ static void NO_COVERAGE test_filesystem_open_mode_c_str(void) {
     }
     {
         const char* str = filesystem_open_mode_c_str((filesystem_open_mode_t)100);
-        assert(NULL != str);
-        assert(0 == strcmp(str, s_open_mode_undefined));
+        assert(NULL == str);
     }
 }
 

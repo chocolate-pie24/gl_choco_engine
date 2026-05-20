@@ -47,23 +47,29 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
-#include "engine/platform/platform_core/platform_types.h"
-#include "engine/platform/platform_context.h"
+#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/platform_context.h"
 
-#include "engine/renderer/renderer_resources/ui_shader.h"
+#include "engine/systems/renderer/renderer_resources/ui_shader.h"
 
-#include "engine/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/renderer/renderer_backend/renderer_backend_types.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
-#include "engine/camera_system/camera_manager/camera_manager.h"
+#include "engine/systems/camera_system/camera_manager/camera_manager.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include "engine/systems/camera_system/camera/camera.h"
 
-#include "engine/camera_system/camera_core/camera_types.h"
-#include "engine/camera_system/camera/camera.h"
+#include "engine/systems/texture_system/texture_manager.h"
+
+#include "engine/core/geometry_primitive/vertex.h"
+
+#include "engine/resource/texture/texture.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -99,13 +105,13 @@ typedef struct app_state {
     renderer_backend_context_t* renderer_backend_context;
 
     ui_shader_t* ui_shader;
-    renderer_backend_vao_t* ui_vao;
-    renderer_backend_vbo_t* ui_vbo;
 
     camera_manager_t* camera_manager;
     camera_t* active_camera;
     int16_t active_camera_id;
     command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
+
+    texture_manager_t* texture_manager;
     // end
 
     bool view_dirty;
@@ -135,6 +141,8 @@ application_result_t application_create(void) {
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -178,7 +186,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    tmp->linear_alloc_pool_size = 1 * KIB;
+    tmp->linear_alloc_pool_size = 128 * KIB;
     ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
@@ -246,6 +254,15 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("camera manager initialized successfully.");
+
+    // texture system.
+    ret_tex_sys = texture_manager_initialize(128, tmp->linear_alloc, &tmp->texture_manager);
+    if(TEXTURE_SYSTEM_SUCCESS != ret_tex_sys) {
+        ret = app_rslt_convert_texture_system(ret_tex_sys);
+        ERROR_MESSAGE("application_create(%s) - Failed to create texture system.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("texture manager initialized successfully.");
     // end Simulation -> launch all systems.
 
     // end Simulation
@@ -274,16 +291,10 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = renderer_backend_vertex_array_create(tmp->renderer_backend_context, &tmp->ui_vao);
+    ret_renderer = ui_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_shader, BUFFER_USAGE_STATIC, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vao.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_renderer = renderer_backend_vertex_buffer_create(tmp->renderer_backend_context, &tmp->ui_vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vbo.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
         goto cleanup;
     }
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
@@ -326,14 +337,6 @@ cleanup:
                 camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
-                if(NULL != tmp->ui_vbo) {
-                    renderer_backend_vertex_buffer_destroy(tmp->renderer_backend_context, &tmp->ui_vbo);
-                    tmp->ui_vbo = NULL;
-                }
-                if(NULL != tmp->ui_vao) {
-                    renderer_backend_vertex_array_destroy(tmp->renderer_backend_context, &tmp->ui_vao);
-                    tmp->ui_vao = NULL;
-                }
                 if(NULL != tmp->ui_shader) {
                     ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
                 }
@@ -377,18 +380,13 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->texture_manager) {
+        texture_manager_deinitialize(s_app_state->renderer_backend_context, s_app_state->texture_manager);
+    }
     if(NULL != s_app_state->camera_manager) {
         camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
-        if(NULL != s_app_state->ui_vbo) {
-            renderer_backend_vertex_buffer_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vbo);
-            s_app_state->ui_vbo = NULL;
-        }
-        if(NULL != s_app_state->ui_vao) {
-            renderer_backend_vertex_array_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_vao);
-            s_app_state->ui_vao = NULL;
-        }
         if(NULL != s_app_state->ui_shader) {
             ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
         }
@@ -432,8 +430,15 @@ cleanup:
 
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
+    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    int16_t tex_id_rabbit = 0;
+    int16_t tex_id_frog = 0;
+    renderer_backend_texture_t* tex_gpu_resource = NULL;
+
     struct timespec  req = {0, 1000000};
-    static vec3f_t vertex_buffer_data[3] = { 0 };
+
+    static ui_vertex_t ui_vertex1[6] = { 0 };
+    static ui_vertex_t ui_vertex2[6] = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -442,18 +447,42 @@ application_result_t application_run(void) {
     }
 
     // begin temporary
-    renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
 
-    vec3f_initialize(-1.0f, -1.0f, -1.0f, &vertex_buffer_data[0]);
-    vec3f_initialize(1.0f, -1.0f, -1.0f, &vertex_buffer_data[1]);
-    vec3f_initialize(0.0f, 1.0f, -1.0f, &vertex_buffer_data[2]);
+    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[0].position);
+    vec2f_initialize(1.0f, -1.0f, &ui_vertex1[1].position);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[2].position);
 
-    renderer_backend_vertex_buffer_bind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
-    renderer_backend_vertex_buffer_vertex_load(s_app_state->renderer_backend_context, s_app_state->ui_vbo, sizeof(vertex_buffer_data), (void*)vertex_buffer_data, BUFFER_USAGE_STATIC);
-    renderer_backend_vertex_array_attribute_set(s_app_state->renderer_backend_context, s_app_state->ui_vao, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(GLfloat) * 3, 0);
+    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[3].position);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[4].position);
+    vec2f_initialize(-1.0f, 1.0f, &ui_vertex1[5].position);
 
-    renderer_backend_vertex_buffer_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vbo);
-    renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[0].tex_coord);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[1].tex_coord);
+    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[2].tex_coord);
+
+    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[3].tex_coord);
+    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[4].tex_coord);
+    vec2f_initialize(0.0f, 0.0f, &ui_vertex1[5].tex_coord);
+
+
+    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[0].position);
+    vec2f_initialize(6.5f, 0.0f, &ui_vertex2[1].position);
+    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[2].position);
+
+    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[3].position);
+    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[4].position);
+    vec2f_initialize(1.5f, 5.0f, &ui_vertex2[5].position);
+
+    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[0].tex_coord);
+    vec2f_initialize(1.0f, 1.0f, &ui_vertex2[1].tex_coord);
+    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[2].tex_coord);
+
+    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[3].tex_coord);
+    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[4].tex_coord);
+    vec2f_initialize(0.0f, 0.0f, &ui_vertex2[5].tex_coord);
+
+    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
+    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
@@ -466,6 +495,9 @@ application_result_t application_run(void) {
     ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_frog);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
@@ -492,11 +524,19 @@ application_result_t application_run(void) {
 
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
-        renderer_backend_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+        ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_vao);
+        texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        glDrawArrays(GL_TRIANGLES, 6, 6);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+
+        ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary

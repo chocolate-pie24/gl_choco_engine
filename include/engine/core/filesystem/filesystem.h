@@ -135,7 +135,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
  * - filesystem_がNULL
  * - fullpath_がNULL
- * - mode_が未定義の値
+ * - mode_が未定義の値またはFILESYSTEM_MODE_NONE
  * @retval FILESYSTEM_RUNTIME_ERROR 既にオープン済のファイルハンドルが渡された
  * @retval FILESYSTEM_FILE_OPEN_ERROR ファイルオープン失敗
  * @retval FILESYSTEM_SUCCESS ファイルオープンに成功し、正常終了
@@ -172,7 +172,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  * これは、ロールバックするためには本API内部でread_bytes_サイズの一時バッファを確保しなければならず、パフォーマンスが低下するため、
  * readの結果は引数のbuffer_に直接書き込むことにする。このため、返り値がエラーとなった場合にはbuffer_の中身を利用してはいけない。
  * なお、result_n_については、エラー発生時は値に0が代入される。
- * - ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを出力する。
+ * - ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを返す。
  * このため、呼び出し側は必ず実行結果コードと合わせて実際に読み込んだバイト数を見て処理を行うこと。
  * - 本APIを使用するためには、下記のいずれかのモードでfilesystem_openを行ったファイルハンドルを使用すること。
  *   - FILESYSTEM_MODE_READ
@@ -183,6 +183,8 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  *   - FILESYSTEM_MODE_READ_PLUS_BINARY
  *   - FILESYSTEM_MODE_WRITE_PLUS_BINARY
  *   - FILESYSTEM_MODE_APPEND_PLUS_BINARY
+ * @note 返り値FILESYSTEM_UNDEFINED_ERRORは基本的に起こり得ない。未実装の分岐をなくすため追加している
+ *
  * @param[in] read_bytes_ 読み込みバイト数
  * @param[out] result_n_ 実際に読み込みに成功したバイト数
  * @param[in,out] filesystem_ 読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ
@@ -201,13 +203,16 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  * @retval FILESYSTEM_SUCCESS 以下のいずれか
  * - 読み込んだ結果EOFとなり指定バイト数未満を読み込み
  * - 指定したバイト数の読み込みに成功し、正常終了
+ * @retval FILESYSTEM_UNDEFINED_ERROR 要求バイト数未満の読み取り結果になったにもかかわらず、EOFまたは読み取りエラーとして判定できない場合
  */
 filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_);
 
 /**
  * @brief ファイルオープンモードを文字列に変換する
  *
- * @note 不明なモードが入力された場合は文字列"undefined"が返される
+ * @note 以下の場合はNULLが返される
+ * - mode_ == FILESYSTEM_MODE_NONE
+ * - mode_が規定値外
  *
  * @param mode_ ファイルオープンモード
  * @return const char* オープンモード文字列

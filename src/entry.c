@@ -20,6 +20,9 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
+// test: application/application_core
+#include "application/application_core/test_application_err_utils.h"
+
 // test: application/command_interpreter
 #include "application/command_interpreter/test_flight_camera.h"
 
@@ -30,6 +33,7 @@
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
+#include "engine/core/buffer_utils/test_buffer_utils.h"
 
 // test: engine/containers
 #include "engine/containers/test_choco_string.h"
@@ -38,28 +42,38 @@
 // test: engine/io_utils
 #include "engine/io_utils/fs_utils/test_fs_utils.h"
 
-// test: engine/platform
-#include "engine/platform/platform_core/test_platform_err_utils.h"
-#include "engine/platform/platform_concretes/test_platform_glfw.h"
-#include "engine/platform/test_platform_context.h"
+// test: engine/resource
+#include "engine/resource/resource_core/test_resource_err_utils.h"
+#include "engine/resource/loaders/test_bmp_loader.h"
+#include "engine/resource/texture/test_texture.h"
 
-// test: engine/camera_system
-#include "engine/camera_system/camera_core/test_camera_err_utils.h"
-#include "engine/camera_system/camera_core/test_camera_memory.h"
-#include "engine/camera_system/camera/test_camera.h"
-#include "engine/camera_system/camera_controller/test_flight_camera_controller.h"
-#include "engine/camera_system/camera_manager/test_camera_manager.h"
+// test: engine/systems/platform
+#include "engine/systems/platform/platform_core/test_platform_err_utils.h"
+#include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
+#include "engine/systems/platform/test_platform_context.h"
 
-// test: engine/renderer
-#include "engine/renderer/renderer_core/test_renderer_err_utils.h"
-#include "engine/renderer/renderer_core/test_renderer_memory.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
-#include "engine/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
-#include "engine/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
+// test: engine/systems/camera_system
+#include "engine/systems/camera_system/camera_core/test_camera_err_utils.h"
+#include "engine/systems/camera_system/camera_core/test_camera_memory.h"
+#include "engine/systems/camera_system/camera/test_camera.h"
+#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
+#include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
+
+// test: engine/systems/renderer
+#include "engine/systems/renderer/renderer_core/test_renderer_err_utils.h"
+#include "engine/systems/renderer/renderer_core/test_renderer_memory.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
+
+// test: engine/systems/texture_system
+#include "engine/systems/texture_system/test_texture_manager.h"
 
 #endif
 
@@ -85,6 +99,9 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
+        // application/application_core
+        test_application_err_utils();
+
         // application/command_interpreter
         test_flight_camera();
 
@@ -95,6 +112,7 @@ int main(int argc_, char** argv_) {
         test_linear_allocator();
         test_choco_memory();
         test_filesystem();
+        test_buffer_utils();
 
         // engine/containers
         test_choco_string();
@@ -102,6 +120,11 @@ int main(int argc_, char** argv_) {
 
         // engine/io_utils
         test_fs_utils();
+
+        // engine/resource
+        test_resource_err_utils();
+        test_bmp_loader();
+        test_texture();
 
         // engine/camera
         test_camera_err_utils();
@@ -121,7 +144,11 @@ int main(int argc_, char** argv_) {
         test_concrete_shader();
         test_concrete_vao();
         test_concrete_vbo();
+        test_concrete_texture();
         test_renderer_backend_context();
+
+        // engine/texture_system
+        test_texture_manager();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;
