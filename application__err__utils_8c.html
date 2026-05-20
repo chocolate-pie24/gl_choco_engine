@@ -104,25 +104,28 @@ $(document).ready(function(){initNavTree('application__err__utils_8c.html',''); 
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="linear__allocator_8h_source.html">engine/core/memory/linear_allocator.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ring__queue_8h_source.html">engine/containers/ring_queue.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="camera__types_8h_source.html">engine/camera_system/camera_core/camera_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="platform__types_8h_source.html">engine/platform/platform_core/platform_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="camera__types_8h_source.html">engine/systems/camera_system/camera_core/camera_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="platform__types_8h_source.html">engine/systems/platform/platform_core/platform_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="texture__manager_8h_source.html">engine/systems/texture_system/texture_manager.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for application_err_utils.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="application__err__utils_8c__incl.png" border="0" usemap="#asrc_2application_2application__core_2application__err__utils_8c" alt=""/></div>
 <map name="asrc_2application_2application__core_2application__err__utils_8c" id="asrc_2application_2application__core_2application__err__utils_8c">
-<area shape="rect" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="385,5,589,45"/>
-<area shape="rect" href="application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="463,93,633,148"/>
-<area shape="rect" href="application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="43,196,231,236"/>
-<area shape="rect" href="platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="5,284,192,324"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="216,284,400,324"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="589,196,747,236"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="357,196,515,236"/>
-<area shape="rect" href="ring__queue_8h.html" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="771,196,938,236"/>
-<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="963,196,1181,236"/>
-<area shape="rect" title=" " alt="" coords="631,291,705,317"/>
-<area shape="rect" title=" " alt="" coords="813,291,896,317"/>
+<area shape="rect" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="451,5,655,45"/>
+<area shape="rect" href="application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="468,93,639,148"/>
+<area shape="rect" href="application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="42,203,230,243"/>
+<area shape="rect" href="platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="214,299,399,353"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,299,189,353"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="356,203,513,243"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="588,203,745,243"/>
+<area shape="rect" href="ring__queue_8h.html" title="ジェネリック型のリングキューモジュールを提供する" alt="" coords="770,203,937,243"/>
+<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="961,196,1180,251"/>
+<area shape="rect" href="texture__manager_8h.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI定義" alt="" coords="1205,203,1409,243"/>
+<area shape="rect" title=" " alt="" coords="629,313,704,339"/>
+<area shape="rect" title=" " alt="" coords="812,313,895,339"/>
+<area shape="rect" title=" " alt="" coords="1271,313,1342,339"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -149,6 +152,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a0f9b99d526eb1270df485dca24ee18d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application__err__utils_8c.html#a0f9b99d526eb1270df485dca24ee18d6">app_rslt_convert_camera</a> (<a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> rslt_)</td></tr>
 <tr class="memdesc:a0f9b99d526eb1270df485dca24ee18d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Camera Systemレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する  <br /></td></tr>
 <tr class="separator:a0f9b99d526eb1270df485dca24ee18d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff588ee227ec17a07f5eb8e9005a2261"><td class="memItemLeft" align="right" valign="top"><a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application__err__utils_8c.html#aff588ee227ec17a07f5eb8e9005a2261">app_rslt_convert_texture_system</a> (<a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:aff588ee227ec17a07f5eb8e9005a2261"><td class="mdescLeft">&#160;</td><td class="mdescRight">Texture Systemレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する  <br /></td></tr>
+<tr class="separator:aff588ee227ec17a07f5eb8e9005a2261"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装 </p>
@@ -285,7 +291,7 @@ Functions</h2></td></tr>
 <p>Rendererレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>camera_systemレイヤー実行結果コード</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>Rendererレイヤー実行結果コード</td></tr>
   </table>
   </dd>
 </dl>
@@ -313,6 +319,33 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>Ring Queueモジュール実行結果コード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>application_result_t 変換されたアプリケーションレイヤー実行結果コード </dd></dl>
+
+</div>
+</div>
+<a id="aff588ee227ec17a07f5eb8e9005a2261" name="aff588ee227ec17a07f5eb8e9005a2261"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff588ee227ec17a07f5eb8e9005a2261">&#9670;&#160;</a></span>app_rslt_convert_texture_system()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a> app_rslt_convert_texture_system </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Texture Systemレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>Texture Systemレイヤー実行結果コード</td></tr>
   </table>
   </dd>
 </dl>

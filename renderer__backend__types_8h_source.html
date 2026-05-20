@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_backend/renderer_backend_types.h Source File</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_backend/renderer_backend_types.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -95,8 +95,8 @@ $(document).ready(function(){initNavTree('renderer__backend__types_8h_source.htm
 </div><!--header-->
 <div class="contents">
 <a href="renderer__backend__types_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#ifndef GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_TYPES_H</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#define GLCE_ENGINE_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_TYPES_H</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_TYPES_H</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_TYPES_H</span></div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#ifdef __cplusplus</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
@@ -105,19 +105,21 @@ $(document).ready(function(){initNavTree('renderer__backend__types_8h_source.htm
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">   20</a></span><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code hl_struct" href="structrenderer__backend__shader.html">renderer_backend_shader</a> <a class="code hl_struct" href="structrenderer__backend__shader.html">renderer_backend_shader_t</a>;   </div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">   22</a></span><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code hl_struct" href="structrenderer__backend__vao.html">renderer_backend_vao</a> <a class="code hl_struct" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a>;         </div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">   24</a></span><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code hl_struct" href="structrenderer__backend__vbo.html">renderer_backend_vbo</a> <a class="code hl_struct" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a>;         </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>}</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">   26</a></span><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code hl_struct" href="structrenderer__backend__texture.html">renderer_backend_texture</a> <a class="code hl_struct" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a>; </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>}</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="astructrenderer__backend__shader_html"><div class="ttname"><a href="structrenderer__backend__shader.html">renderer_backend_shader</a></div><div class="ttdoc">シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体</div><div class="ttdef"><b>Definition:</b> concrete_shader.c:167</div></div>
+<div class="ttc" id="astructrenderer__backend__texture_html"><div class="ttname"><a href="structrenderer__backend__texture.html">renderer_backend_texture</a></div><div class="ttdoc">テクスチャGPU側リソース内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> concrete_texture.c:37</div></div>
 <div class="ttc" id="astructrenderer__backend__vao_html"><div class="ttname"><a href="structrenderer__backend__vao.html">renderer_backend_vao</a></div><div class="ttdoc">VAOモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:87</div></div>
-<div class="ttc" id="astructrenderer__backend__vbo_html"><div class="ttname"><a href="structrenderer__backend__vbo.html">renderer_backend_vbo</a></div><div class="ttdoc">VBOモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:85</div></div>
+<div class="ttc" id="astructrenderer__backend__vbo_html"><div class="ttname"><a href="structrenderer__backend__vbo.html">renderer_backend_vbo</a></div><div class="ttdoc">VBOモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:88</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_47db3dff1ede91accec67cae6ead16dd.html">renderer_backend</a></li><li class="navelem"><a class="el" href="renderer__backend__types_8h.html">renderer_backend_types.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_b2352ff5591e5c0ab360d90eb846f380.html">renderer_backend</a></li><li class="navelem"><a class="el" href="renderer__backend__types_8h.html">renderer_backend_types.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

@@ -1,0 +1,5 @@
+<map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h">
+<area shape="rect" id="node1" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="115,5,316,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
+<area shape="rect" id="node3" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="234,123,413,177"/>
+</map>

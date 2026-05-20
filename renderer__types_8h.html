@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_core/renderer_types.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_core/renderer_types.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,36 +102,41 @@ $(document).ready(function(){initNavTree('renderer__types_8h.html',''); initResi
 <div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep" id="ainclude_2engine_2renderer_2renderer__core_2renderer__types_8hdep">
-<area shape="rect" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1455,5,1631,60"/>
+<div class="center"><img src="renderer__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__types_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__types_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__types_8hdep">
+<area shape="rect" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="2158,5,2334,60"/>
 <area shape="rect" href="application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="145,233,355,287"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="784,365,988,390"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="892,365,1096,390"/>
 <area shape="rect" href="application__err__utils_8c.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="5,357,209,397"/>
-<area shape="rect" href="application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="400,115,609,170"/>
-<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="1296,225,1497,295"/>
-<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="943,115,1178,170"/>
-<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="634,115,869,170"/>
-<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1203,108,1404,177"/>
-<area shape="rect" href="ui__shader_8h.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="1045,233,1221,287"/>
-<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="1590,108,1801,177"/>
-<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1755,343,1956,412"/>
-<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="2411,115,2665,170"/>
-<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="2256,343,2457,412"/>
-<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="2875,115,3129,170"/>
-<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="2720,343,2921,412"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="2143,233,2319,287"/>
-<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="2501,350,2676,405"/>
-<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="2019,350,2193,405"/>
-<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="1893,233,2069,287"/>
+<area shape="rect" href="application__types_8h.html" title="アプリケーションレイヤー全体で使用されるデータ型を提供する" alt="" coords="409,115,619,170"/>
+<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="893,225,1095,295"/>
+<area shape="rect" href="context__texture_8h.html" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="1385,108,1587,177"/>
+<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="1171,225,1372,295"/>
+<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="1885,225,2087,295"/>
+<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1650,108,1861,177"/>
+<area shape="rect" href="ui__shader_8h.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="1650,233,1861,287"/>
+<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="2215,108,2421,177"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="2355,343,2567,412"/>
+<area shape="rect" href="interface__texture_8h.html" title="テクスチャ操作関数をまとめたvtableを定義する" alt="" coords="2551,108,2757,177"/>
+<area shape="rect" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="2691,343,2903,412"/>
+<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="3337,108,3544,177"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="3192,343,3404,412"/>
+<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="3724,108,3931,177"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="3627,343,3839,412"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="3034,233,3210,287"/>
+<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="3428,350,3603,405"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="2993,350,3168,405"/>
+<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="2834,233,3010,287"/>
 <area shape="rect" href="flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="291,357,494,397"/>
 <area shape="rect" href="application_8h.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの定義" alt="" coords="621,240,767,280"/>
 <area shape="rect" href="flight__camera_8h.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIを提供する" alt="" coords="431,233,597,287"/>
 <area shape="rect" href="entry_8c.html" title="ゲームアプリケーションエントリーポイント" alt="" coords="650,365,738,390"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1321,350,1472,405"/>
-<area shape="rect" href="concrete__shader_8h.html" title="gl33_shaderは、renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3...." alt="" coords="1573,225,1818,295"/>
-<area shape="rect" href="concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="2394,233,2682,287"/>
-<area shape="rect" href="concrete__vbo_8h.html" title="gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3...." alt="" coords="2858,233,3146,287"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1881,350,2091,405"/>
+<area shape="rect" href="texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="1397,233,1575,287"/>
+<area shape="rect" href="concrete__shader_8h.html" title="renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="2212,225,2424,295"/>
+<area shape="rect" href="concrete__texture_8h.html" title="renderer backendがテクスチャ機能をOpenGL3.3で実現できるように、renderer_texture_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="2548,225,2760,295"/>
+<area shape="rect" href="concrete__vao_8h.html" title="renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="3335,225,3547,295"/>
+<area shape="rect" href="concrete__vbo_8h.html" title="renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="3721,225,3933,295"/>
 </map>
 </div>
 </div>
@@ -174,6 +179,23 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a9510983791a7b7985e3acb3e9c7aa11c"><td class="mdescLeft">&#160;</td><td class="mdescRight">上位層でシェーダー種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、シェーダー種別リストを定義  <a href="renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11c">More...</a><br /></td></tr>
 <tr class="separator:a9510983791a7b7985e3acb3e9c7aa11c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad733323df793a74fca596a530fa86f01"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> { <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01a5ade1290bb4c086fea3c5331dc550a82">TEXTURE_MAG_FILTER_CONFIG_NEAREST</a>
+, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01a12fcf5e86e83c523719c1c16be6ab2b6">TEXTURE_MAG_FILTER_CONFIG_LINEAR</a>
+ }</td></tr>
+<tr class="memdesc:ad733323df793a74fca596a530fa86f01"><td class="mdescLeft">&#160;</td><td class="mdescRight">画像を拡大表示した際の表示設定  <a href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">More...</a><br /></td></tr>
+<tr class="separator:ad733323df793a74fca596a530fa86f01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a699d3c5fd910ef871853f0204b8666c8"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> { <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8a10fb429d1cd8ab210c495518422b39e7">TEXTURE_MIN_FILTER_CONFIG_NEAREST</a>
+, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8a77c76a02a2684e6f47d991b114d6b79d">TEXTURE_MIN_FILTER_CONFIG_LINEAR</a>
+ }</td></tr>
+<tr class="memdesc:a699d3c5fd910ef871853f0204b8666c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">画像を縮小表示した際の表示設定  <a href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">More...</a><br /></td></tr>
+<tr class="separator:a699d3c5fd910ef871853f0204b8666c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5aaf98b89847c19419dc638352ed0322"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> { <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a60b24183f21c91d6f66ad33d040858bc">TEXTURE_WRAP_CONFIG_REPEAT</a>
+, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a603abe0c5a3697ae38a11815bf16d34d">TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT</a>
+, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a090377f61a2818d637e36db68edebd0b">TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE</a>
+, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a4b7d4dbd7d82804f2c2c00de2c9d1307">TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER</a>
+ }</td></tr>
+<tr class="memdesc:a5aaf98b89847c19419dc638352ed0322"><td class="mdescLeft">&#160;</td><td class="mdescRight">uv座標が0...1の外に出た時の表示設定  <a href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">More...</a><br /></td></tr>
+<tr class="separator:a5aaf98b89847c19419dc638352ed0322"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>レンダラーレイヤー全体で使用されるデータ型を提供する </p>
@@ -305,12 +327,83 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
+<a id="ad733323df793a74fca596a530fa86f01" name="ad733323df793a74fca596a530fa86f01"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad733323df793a74fca596a530fa86f01">&#9670;&#160;</a></span>texture_mag_filter_config_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>画像を拡大表示した際の表示設定 </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad733323df793a74fca596a530fa86f01a5ade1290bb4c086fea3c5331dc550a82" name="ad733323df793a74fca596a530fa86f01a5ade1290bb4c086fea3c5331dc550a82"></a>TEXTURE_MAG_FILTER_CONFIG_NEAREST&#160;</td><td class="fielddoc"><p>GL_NEAREST相当: 一番近いtexelをそのまま使う。ドットがくっきり見える </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad733323df793a74fca596a530fa86f01a12fcf5e86e83c523719c1c16be6ab2b6" name="ad733323df793a74fca596a530fa86f01a12fcf5e86e83c523719c1c16be6ab2b6"></a>TEXTURE_MAG_FILTER_CONFIG_LINEAR&#160;</td><td class="fielddoc"><p>GL_LINEAR相当: 近くのtexelを線形補間する。なめらかになる </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a699d3c5fd910ef871853f0204b8666c8" name="a699d3c5fd910ef871853f0204b8666c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a699d3c5fd910ef871853f0204b8666c8">&#9670;&#160;</a></span>texture_min_filter_config_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>画像を縮小表示した際の表示設定 </p>
+<dl class="section note"><dt>Note</dt><dd>mipmapは当面は使用しない </dd></dl>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a699d3c5fd910ef871853f0204b8666c8a10fb429d1cd8ab210c495518422b39e7" name="a699d3c5fd910ef871853f0204b8666c8a10fb429d1cd8ab210c495518422b39e7"></a>TEXTURE_MIN_FILTER_CONFIG_NEAREST&#160;</td><td class="fielddoc"><p>GL_NEAREST相当: mipmapなし。近いtexelを1個選ぶ </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a699d3c5fd910ef871853f0204b8666c8a77c76a02a2684e6f47d991b114d6b79d" name="a699d3c5fd910ef871853f0204b8666c8a77c76a02a2684e6f47d991b114d6b79d"></a>TEXTURE_MIN_FILTER_CONFIG_LINEAR&#160;</td><td class="fielddoc"><p>GL_LINEAR相当: mipmapなし。近いtexel群を補間する </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a5aaf98b89847c19419dc638352ed0322" name="a5aaf98b89847c19419dc638352ed0322"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5aaf98b89847c19419dc638352ed0322">&#9670;&#160;</a></span>texture_wrap_config_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>uv座標が0...1の外に出た時の表示設定 </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5aaf98b89847c19419dc638352ed0322a60b24183f21c91d6f66ad33d040858bc" name="a5aaf98b89847c19419dc638352ed0322a60b24183f21c91d6f66ad33d040858bc"></a>TEXTURE_WRAP_CONFIG_REPEAT&#160;</td><td class="fielddoc"><p>GL_REPEAT相当: 小数部分だけを使って繰り返す。タイル状に敷き詰めたいときに使用 </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5aaf98b89847c19419dc638352ed0322a603abe0c5a3697ae38a11815bf16d34d" name="a5aaf98b89847c19419dc638352ed0322a603abe0c5a3697ae38a11815bf16d34d"></a>TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT&#160;</td><td class="fielddoc"><p>GL_MIRRORED_REPEAT相当: 繰り返しつつ、1枚おきに反転する </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5aaf98b89847c19419dc638352ed0322a090377f61a2818d637e36db68edebd0b" name="a5aaf98b89847c19419dc638352ed0322a090377f61a2818d637e36db68edebd0b"></a>TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE&#160;</td><td class="fielddoc"><p>GL_CLAMP_TO_EDGE相当: 端のtexelを引き延ばすように扱う。境界のにじみを避けたいときによく使用する </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5aaf98b89847c19419dc638352ed0322a4b7d4dbd7d82804f2c2c00de2c9d1307" name="a5aaf98b89847c19419dc638352ed0322a4b7d4dbd7d82804f2c2c00de2c9d1307"></a>TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER&#160;</td><td class="fielddoc"><p>GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_03ec05e64c8f6b0bd463207a3d29df77.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__types_8h.html">renderer_types.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_13f875e20adb779afe7d064fa1385933.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__types_8h.html">renderer_types.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

@@ -1,0 +1,6 @@
+<map id="src/engine/core/buffer_utils/buffer_utils.c" name="src/engine/core/buffer_utils/buffer_utils.c">
+<area shape="rect" id="node1" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの実装" alt="" coords="5,5,168,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="81,181,151,207"/>
+<area shape="rect" id="node3" title=" " alt="" coords="49,101,124,126"/>
+<area shape="rect" id="node4" href="$buffer__utils_8h.html" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの定義" alt="" coords="148,93,295,133"/>
+</map>

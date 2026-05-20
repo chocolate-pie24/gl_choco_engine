@@ -1,11 +1,21 @@
 var searchData=
 [
-  ['renderer_5fshader_5fcompile_0',['renderer_shader_compile',['../structrenderer__shader__vtable.html#a6174bf85440799c0df60364fda1c2ab9',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5fcreate_1',['renderer_shader_create',['../structrenderer__shader__vtable.html#a50abbab9b0c2244b134c49d24f29e99c',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5fdestroy_2',['renderer_shader_destroy',['../structrenderer__shader__vtable.html#afadaea9fb4d39b2fedd7feed3efb9ebe',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5flink_3',['renderer_shader_link',['../structrenderer__shader__vtable.html#a3eccf2f8842d8bcbfa7d511b29ad9a1d',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5fmat4f_5funiform_5fset_4',['renderer_shader_mat4f_uniform_set',['../structrenderer__shader__vtable.html#a4886342bacf67b2922aaf8185abdc6ed',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5funiform_5flocation_5fget_5',['renderer_shader_uniform_location_get',['../structrenderer__shader__vtable.html#a82e7ac607d3b48f18dfa0ad01e535802',1,'renderer_shader_vtable']]],
-  ['renderer_5fshader_5fuse_6',['renderer_shader_use',['../structrenderer__shader__vtable.html#aa48d157d32393e8bf43bc2ce695a6a6c',1,'renderer_shader_vtable']]],
-  ['right_5fbutton_5fpressed_7',['right_button_pressed',['../structinput__snapshot.html#ad9e980f1fd1af2458e21e4b0c11db690',1,'input_snapshot']]]
+  ['padding_0',['padding',['../structbmp__loader.html#a8c894df9d2b2d3747a07afb18550ef82',1,'bmp_loader::padding()'],['../structring__queue.html#a200bf551e0a05a2d3755abd15c83f432',1,'ring_queue::padding()']]],
+  ['padding_5fremoved_1',['padding_removed',['../structbmp__loader.html#a4fffb6c060ae111f8652d69fc9915e76',1,'bmp_loader']]],
+  ['perspective_5fmatrix_2',['perspective_matrix',['../structcamera.html#a24562c33cd724c731932edc4f60227a9',1,'camera']]],
+  ['pfn_5fcommand_5fexecutor_3',['pfn_command_executor',['../structcommand__status__flight__camera.html#ab39be1774a3cb39e93eceb769eb303fd',1,'command_status_flight_camera']]],
+  ['pixels_4',['pixels',['../structbmp__loader.html#a4efab0e2376a8f1f9fad9f0f61e59217',1,'bmp_loader::pixels()'],['../structtexture.html#ac7424ff245e56be41a6666f30623266a',1,'texture::pixels()']]],
+  ['platform_5fbackend_5fdestroy_5',['platform_backend_destroy',['../structplatform__vtable.html#a2bfb6e674266be2665be9f5b753901f2',1,'platform_vtable']]],
+  ['platform_5fbackend_5finit_6',['platform_backend_init',['../structplatform__vtable.html#ac24546ccaae4812b2d0eefd694bcc00f',1,'platform_vtable']]],
+  ['platform_5fbackend_5fpreinit_7',['platform_backend_preinit',['../structplatform__vtable.html#ab0174315cf40677841b186065d6bd0ce',1,'platform_vtable']]],
+  ['platform_5fbackend_5fpump_5fmessages_8',['platform_backend_pump_messages',['../structplatform__vtable.html#a6b8643c867e5a6c141c8127daf1cc0ad',1,'platform_vtable']]],
+  ['platform_5fbackend_5fswap_5fbuffers_9',['platform_backend_swap_buffers',['../structplatform__vtable.html#a7a4fd6f22bc8eb87228c0042c413e3a6',1,'platform_vtable']]],
+  ['platform_5fbackend_5fwindow_5fcreate_10',['platform_backend_window_create',['../structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b',1,'platform_vtable']]],
+  ['platform_5fcontext_11',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
+  ['position_12',['position',['../structui__vertex.html#a226f99e22ec7580c202a34b6634522f1',1,'ui_vertex::position()'],['../structcamera.html#a1b74c0923abb981d870c9f8abbea688c',1,'camera::position()']]],
+  ['posture_5fcache_5fdirty_13',['posture_cache_dirty',['../structcamera.html#adf8f11f2f978815e4ad6432a9680749d',1,'camera']]],
+  ['pressed_14',['pressed',['../structkeyboard__event__args.html#a52c0c67f7d8320c6040b18ee511aaae6',1,'keyboard_event_args::pressed()'],['../structmouse__event__args.html#a9495f63736e3b431af4bd02a5f6a725a',1,'mouse_event_args::pressed()']]],
+  ['prev_15',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]],
+  ['program_5fid_16',['program_id',['../structrenderer__backend__shader.html#a5be96473ac8df57873fcd583fcb8a6f1',1,'renderer_backend_shader']]],
+  ['projection_5fmatrix_5flocation_17',['projection_matrix_location',['../structui__shader.html#ac5bfd78e38627b49ce3fc8561d3e3dde',1,'ui_shader']]]
 ];

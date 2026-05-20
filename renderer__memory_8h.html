@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_core/renderer_memory.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_core/renderer_memory.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,28 +100,29 @@ $(document).ready(function(){initNavTree('renderer__memory_8h.html',''); initRes
 <p>renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for renderer_memory.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__memory_8h__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h" id="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8h">
+<div class="center"><img src="renderer__memory_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8h" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8h" id="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8h">
 <area shape="rect" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="31,5,207,60"/>
-<area shape="rect" title=" " alt="" coords="5,115,80,141"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,288,148"/>
+<area shape="rect" title=" " alt="" coords="5,123,80,148"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,288,163"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__memory_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep" id="ainclude_2engine_2renderer_2renderer__core_2renderer__memory_8hdep">
-<area shape="rect" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="469,5,645,60"/>
-<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,108,207,177"/>
-<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,108,432,177"/>
-<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,108,657,177"/>
-<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="681,115,856,170"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="880,115,1031,170"/>
+<div class="center"><img src="renderer__memory_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8hdep">
+<area shape="rect" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="613,5,789,60"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,108,217,177"/>
+<area shape="rect" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="241,108,453,177"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="477,108,689,177"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="713,108,925,177"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="949,115,1124,170"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1149,115,1359,170"/>
 </map>
 </div>
 </div>
@@ -246,7 +247,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_03ec05e64c8f6b0bd463207a3d29df77.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__memory_8h.html">renderer_memory.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_13f875e20adb779afe7d064fa1385933.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__memory_8h.html">renderer_memory.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

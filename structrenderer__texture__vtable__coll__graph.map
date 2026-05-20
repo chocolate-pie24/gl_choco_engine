@@ -1,0 +1,4 @@
+<map id="renderer_texture_vtable" name="renderer_texture_vtable">
+<area shape="rect" id="node1" title=" " alt="" coords="12,137,191,163"/>
+<area shape="rect" id="node2" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,5,197,31"/>
+</map>

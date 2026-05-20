@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['vec3f_0',['vec3f',['../structvec3f.html',1,'']]],
-  ['vec4f_1',['vec4f',['../structvec4f.html',1,'']]],
-  ['viewing_5ffrustum_2',['viewing_frustum',['../structviewing__frustum.html',1,'']]]
+  ['texture_0',['texture',['../structtexture.html',1,'']]],
+  ['texture_5fmanager_1',['texture_manager',['../structtexture__manager.html',1,'']]]
 ];

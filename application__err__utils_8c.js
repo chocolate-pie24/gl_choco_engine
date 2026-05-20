@@ -6,5 +6,6 @@ var application__err__utils_8c =
     [ "app_rslt_convert_platform", "application__err__utils_8c.html#a95768cc42a35eb5a9a5335c599486ba8", null ],
     [ "app_rslt_convert_renderer", "application__err__utils_8c.html#adb151c945f2c560df4c360e020aabd9d", null ],
     [ "app_rslt_convert_ring_queue", "application__err__utils_8c.html#ad4fb5489e1c8f1bbe3b6bd12d6344078", null ],
+    [ "app_rslt_convert_texture_system", "application__err__utils_8c.html#aff588ee227ec17a07f5eb8e9005a2261", null ],
     [ "app_rslt_to_str", "application__err__utils_8c.html#ab1867856dd7c7d667569eb69e86465ec", null ]
 ];

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_backend/renderer_backend_types.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_backend/renderer_backend_types.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,23 +102,28 @@ $(document).ready(function(){initNavTree('renderer__backend__types_8h.html','');
 <div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__backend__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__types_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__types_8hdep" id="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__types_8hdep">
-<area shape="rect" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="832,5,1033,60"/>
-<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="550,108,752,177"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="177,247,381,273"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="566,233,717,287"/>
-<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="32,115,267,170"/>
-<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="291,115,526,170"/>
-<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="827,108,1038,177"/>
-<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="924,343,1125,412"/>
-<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1130,115,1383,170"/>
-<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1337,343,1538,412"/>
-<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1543,115,1796,170"/>
-<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="1750,343,1952,412"/>
-<area shape="rect" href="concrete__shader_8h.html" title="gl33_shaderは、renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3...." alt="" coords="742,225,987,295"/>
-<area shape="rect" href="concrete__vao_8h.html" title="gl33_vaoは、renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3...." alt="" coords="1112,233,1400,287"/>
-<area shape="rect" href="concrete__vbo_8h.html" title="gl33_vboは、renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3...." alt="" coords="1526,233,1814,287"/>
+<div class="center"><img src="renderer__backend__types_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__types_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__types_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__types_8hdep">
+<area shape="rect" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="993,5,1195,60"/>
+<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="283,108,484,177"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="281,247,485,273"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="617,233,827,287"/>
+<area shape="rect" href="context__texture_8h.html" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="5,108,207,177"/>
+<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="508,108,709,177"/>
+<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="733,108,935,177"/>
+<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="1061,108,1268,177"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1007,343,1219,412"/>
+<area shape="rect" href="interface__texture_8h.html" title="テクスチャ操作関数をまとめたvtableを定義する" alt="" coords="1345,108,1552,177"/>
+<area shape="rect" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="1343,343,1555,412"/>
+<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="1681,108,1888,177"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1679,343,1891,412"/>
+<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="2017,108,2224,177"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="2015,343,2227,412"/>
+<area shape="rect" href="texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="17,233,195,287"/>
+<area shape="rect" href="concrete__shader_8h.html" title="renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="1007,225,1219,295"/>
+<area shape="rect" href="concrete__texture_8h.html" title="renderer backendがテクスチャ機能をOpenGL3.3で実現できるように、renderer_texture_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="1343,225,1555,295"/>
+<area shape="rect" href="concrete__vao_8h.html" title="renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="1679,225,1891,295"/>
+<area shape="rect" href="concrete__vbo_8h.html" title="renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="2015,225,2227,295"/>
 </map>
 </div>
 </div>
@@ -132,6 +137,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:abf6e156321ad8df166a186da839fa61b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0887a01242b109b8e245311fdf1b840"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a></td></tr>
 <tr class="separator:ac0887a01242b109b8e245311fdf1b840"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a402991623d5475006eb635ebe3107b61"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a></td></tr>
+<tr class="separator:a402991623d5475006eb635ebe3107b61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_backend内で共通して使用するデータ構造を提供する </p>
@@ -152,6 +159,21 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>シェーダーハンドル構造体(シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体)の前方宣言 </p>
+
+</div>
+</div>
+<a id="a402991623d5475006eb635ebe3107b61" name="a402991623d5475006eb635ebe3107b61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a402991623d5475006eb635ebe3107b61">&#9670;&#160;</a></span>renderer_backend_texture_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture</a> <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>テクスチャハンドル構造体の前方宣言 </p>
 
 </div>
 </div>
@@ -190,7 +212,7 @@ Typedefs</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_47db3dff1ede91accec67cae6ead16dd.html">renderer_backend</a></li><li class="navelem"><a class="el" href="renderer__backend__types_8h.html">renderer_backend_types.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_b2352ff5591e5c0ab360d90eb846f380.html">renderer_backend</a></li><li class="navelem"><a class="el" href="renderer__backend__types_8h.html">renderer_backend_types.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

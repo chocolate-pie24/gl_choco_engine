@@ -1,0 +1,19 @@
+<map id="include/engine/systems/renderer" name="include/engine/systems/renderer">
+<area shape="rect" id="node2" href="dir_b2352ff5591e5c0ab360d90eb846f380.html" title="renderer_backend" alt="" coords="39,136,177,161"/>
+<area shape="rect" id="node3" href="dir_13f875e20adb779afe7d064fa1385933.html" title="renderer_core" alt="" coords="145,209,257,235"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000062_000069.html" title="9" alt="" coords="172,184,181,199"/>
+<area shape="rect" id="node5" href="dir_7f643b58e2241519524527f42d96aecd.html" title="core" alt="" coords="87,283,137,308"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000062_000026.html" title="1" alt="" coords="115,257,124,271"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000069_000026.html" title="2" alt="" coords="141,270,151,285"/>
+<area shape="rect" id="node6" href="dir_77585296b9d3240120d2eab815cffe84.html" title="io_utils" alt="" coords="164,283,233,308"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000069_000044.html" title="1" alt="" coords="204,257,213,272"/>
+<area shape="rect" id="node7" href="dir_e87dd748593b458b60b107f4eded8184.html" title="containers" alt="" coords="257,283,348,308"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000069_000024.html" title="1" alt="" coords="271,258,281,272"/>
+<area shape="rect" id="node4" href="dir_e30dfff12da3d0a227234e949c491947.html" title="renderer_resources" alt="" coords="37,63,184,88"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000071_000062.html" title="1" alt="" coords="113,111,122,125"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000071_000069.html" title="1" alt="" coords="207,184,216,198"/>
+<area shape="rect" id="node8" href="dir_fa635d15cb46512292a6c14ec1368c07.html" title="base" alt="" coords="317,136,371,161"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000071_000005.html" title="1" alt="" coords="298,119,307,133"/>
+<area shape="rect" id="clust2" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html" alt="" coords="27,52,296,245"/>
+<area shape="rect" id="clust1" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html" title="systems" alt="" coords="16,16,307,256"/>
+</map>

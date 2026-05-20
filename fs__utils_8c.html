@@ -159,7 +159,7 @@ Functions</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-12-26</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -254,7 +254,7 @@ Functions</h2></td></tr>
 <li>filename_ == NULL</li>
 <li>fs_utils_ == NULL</li>
 <li>*fs_utils_ != NULL</li>
-<li>open_mode_ == FILESYSTEM_MODE_NONE </li>
+<li>open_mode_ == FILESYSTEM_MODE_NONEまたは規定値外の値 </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">FS_UTILS_LIMIT_EXCEEDED</td><td>メモリシステムのシステム使用可能範囲上限を超過 </td></tr>
@@ -302,7 +302,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a>(&amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>);</div>
 <div class="line"><a class="code hl_function" href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a>(&amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>); <span class="comment">// 2重デストロイ許可</span></div>
-<div class="ttc" id="afs__utils_8h_html_a102270e7966dfa05ef7e21a5a4ff4b04"><div class="ttname"><a href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a></div><div class="ttdeci">void fs_utils_destroy(fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_が管理するメモリと自身のメモリを解放し、*fs_utils_=NULLにする</div><div class="ttdef"><b>Definition:</b> fs_utils.c:202</div></div>
+<div class="ttc" id="afs__utils_8h_html_a102270e7966dfa05ef7e21a5a4ff4b04"><div class="ttname"><a href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a></div><div class="ttdeci">void fs_utils_destroy(fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_が管理するメモリと自身のメモリを解放し、*fs_utils_=NULLにする</div><div class="ttdef"><b>Definition:</b> fs_utils.c:209</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fs_utils_</td><td>メモリ解放対象構造体インスタンスへのダブルポインタ </td></tr>
@@ -420,21 +420,7 @@ Functions</h2></td></tr>
 
 <p><a class="el" href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a> で指定したファイルの中身を全て読み込む </p>
 <dl class="section warning"><dt>Warning</dt><dd>内部ではchoco_string_concat_from_c_stringを使用して文字列を連結する。各文字列処理には終端文字による判定処理が存在する。 ここで、バイナリファイルには終端文字(0)が普通に含まれるため、バイナリファイルの読み込みには使用してはいけない。</dd></dl>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structfs__utils.html">fs_utils_t</a>* <a class="code hl_struct" href="structfs__utils.html">fs_utils</a> = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a> ret = <a class="code hl_function" href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a>(<span class="stringliteral">&quot;path/to/&quot;</span>, <span class="stringliteral">&quot;filename&quot;</span>, <span class="stringliteral">&quot;.txt&quot;</span>, <a class="code hl_enumvalue" href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f">FILESYSTEM_MODE_READ</a>, &amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>);    <span class="comment">// path/to/filename.txtがオープンされる</span></div>
-<div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line"><a class="code hl_struct" href="structchoco__string.html">choco_string_t</a>* <span class="keywordtype">string</span> = NULL;</div>
-<div class="line"><a class="code hl_enumeration" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> ret_str = <a class="code hl_function" href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a>(&amp;<span class="keywordtype">string</span>);</div>
-<div class="line"><span class="comment">// エラー処理</span></div>
-<div class="line"> </div>
-<div class="line">ret = <a class="code hl_function" href="fs__utils_8h.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a>(<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>, <span class="keywordtype">string</span>); <span class="comment">// path/to/filename.txtの中身が全て読み込まれ、stringに格納される</span></div>
-<div class="line"><span class="comment">// エラー処理</span></div>
-<div class="ttc" id="achoco__string_8h_html_a6db4c5eb14de032dfed5c2d3834e19f7"><div class="ttname"><a href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a></div><div class="ttdeci">choco_string_result_t</div><div class="ttdoc">文字列API実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_string.h:41</div></div>
-<div class="ttc" id="achoco__string_8h_html_af01ca795324a4347a1ce80057f71de42"><div class="ttname"><a href="choco__string_8h.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a></div><div class="ttdeci">choco_string_result_t choco_string_default_create(choco_string_t **string_)</div><div class="ttdoc">空の文字列コンテナを生成する</div><div class="ttdef"><b>Definition:</b> choco_string.c:99</div></div>
-<div class="ttc" id="afs__utils_8h_html_affe6cb5e85b87975b0017d4e05a8a62f"><div class="ttname"><a href="fs__utils_8h.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a></div><div class="ttdeci">fs_utils_result_t fs_utils_text_file_read(fs_utils_t *fs_utils_, choco_string_t *out_string_)</div><div class="ttdoc">fs_utils_create で指定したファイルの中身を全て読み込む</div><div class="ttdef"><b>Definition:</b> fs_utils.c:218</div></div>
-<div class="ttc" id="astructchoco__string_html"><div class="ttname"><a href="structchoco__string.html">choco_string</a></div><div class="ttdoc">文字列コンテナ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> choco_string.c:76</div></div>
-</div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fs_utils_</td><td>fs_utils_t構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramname">out_string_</td><td>読み込んだ文字列の格納先</td></tr>
@@ -450,7 +436,7 @@ Functions</h2></td></tr>
 </td></tr>
     <tr><td class="paramname">FS_UTILS_DATA_CORRUPTED</td><td>データメモリ破損,API誤用,初期化漏れ </td></tr>
     <tr><td class="paramname">FS_UTILS_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>読み込み用ではないファイルオープンモードが渡された</li>
+<li>FILESYSTEM_MODE_READ, FILESYSTEM_MODE_READ_PLUS以外のファイルオープンモードが渡された</li>
 <li>メモリシステム未初期化 </li>
 </ul>
 </td></tr>

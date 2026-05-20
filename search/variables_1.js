@@ -1,6 +1,29 @@
 var searchData=
 [
   ['backend_0',['backend',['../structplatform__context.html#aaf4cd71b3a322288565326e194eb633b',1,'platform_context']]],
-  ['buffer_1',['buffer',['../structchoco__string.html#ae7e8b0d96d259de1926319240edc0e8f',1,'choco_string']]],
-  ['button_2',['button',['../structmouse__event.html#acad2969da0addf8999bec012c4be1aaf',1,'mouse_event']]]
+  ['bf_5foff_5fbits_1',['bf_off_bits',['../structfile__header.html#a741364bcf2cfcec6b2337a64e1acbd98',1,'file_header']]],
+  ['bf_5freserved1_2',['bf_reserved1',['../structfile__header.html#aff94a9669706939b80dabe9e8fe07406',1,'file_header']]],
+  ['bf_5freserved2_3',['bf_reserved2',['../structfile__header.html#a65ad0650ca63a7779344dde9b2337b0f',1,'file_header']]],
+  ['bf_5fsize_4',['bf_size',['../structfile__header.html#a86f58d9676505aeb504a498b7305546a',1,'file_header']]],
+  ['bf_5ftype_5',['bf_type',['../structfile__header.html#ad2c374954976e13b767c36efb79cf30c',1,'file_header']]],
+  ['bi_5fbit_5fcount_6',['bi_bit_count',['../structinfo__header.html#a9673a2d4418f51f55e9d603bab2bb909',1,'info_header']]],
+  ['bi_5fclr_5fimportant_7',['bi_clr_important',['../structinfo__header.html#a1a60a0a3eddec62478955a967490d935',1,'info_header']]],
+  ['bi_5fclr_5fused_8',['bi_clr_used',['../structinfo__header.html#acb8d161a20e74a2189ce868fef0063f1',1,'info_header']]],
+  ['bi_5fcompression_9',['bi_compression',['../structinfo__header.html#a5734ab1b17de939c5170c172900b474a',1,'info_header']]],
+  ['bi_5fheight_10',['bi_height',['../structinfo__header.html#af2bce27c316650e8d012ff332feeb1b6',1,'info_header']]],
+  ['bi_5fplanes_11',['bi_planes',['../structinfo__header.html#a151a840df4240dfcd7445fcf25bf3d18',1,'info_header']]],
+  ['bi_5fsize_12',['bi_size',['../structinfo__header.html#ac8244e2a6170b91f8dca628df9367dbb',1,'info_header']]],
+  ['bi_5fsize_5fimage_13',['bi_size_image',['../structinfo__header.html#abccaaf6e6990671c7be56055c71156eb',1,'info_header']]],
+  ['bi_5fwidth_14',['bi_width',['../structinfo__header.html#aefac7e4c74cf732db028b72167cc2ab1',1,'info_header']]],
+  ['bi_5fx_5fpels_5fper_5fmeter_15',['bi_x_pels_per_meter',['../structinfo__header.html#aa1128e2601328bab8d11f87ecf75b9fc',1,'info_header']]],
+  ['bi_5fy_5fpels_5fper_5fmeter_16',['bi_y_pels_per_meter',['../structinfo__header.html#abfcac1a06e59d00e30e7f52303e3c7ea',1,'info_header']]],
+  ['buff_5fchar_17',['buff_char',['../unionbuffer__utils.html#ada4f5639ccdd2d45ff18b29dcd34b7b4',1,'buffer_utils']]],
+  ['buff_5fint16_5ft_18',['buff_int16_t',['../unionbuffer__utils.html#ae625888e9cdde1c88a25fbf0f44bc18d',1,'buffer_utils']]],
+  ['buff_5fint32_5ft_19',['buff_int32_t',['../unionbuffer__utils.html#aa945c600c621fb7ecabc3a4106462b16',1,'buffer_utils']]],
+  ['buff_5fint64_5ft_20',['buff_int64_t',['../unionbuffer__utils.html#aab2eeaf450af5da6a8ddbc3597e8bcd8',1,'buffer_utils']]],
+  ['buff_5fuint16_5ft_21',['buff_uint16_t',['../unionbuffer__utils.html#af4ca3c14f0762b8d60d57d7b1a813ccf',1,'buffer_utils']]],
+  ['buff_5fuint32_5ft_22',['buff_uint32_t',['../unionbuffer__utils.html#a9a03c1fd76cbdfa26cadf60ed5b18fbb',1,'buffer_utils']]],
+  ['buff_5fuint64_5ft_23',['buff_uint64_t',['../unionbuffer__utils.html#a100276bea76602d131a0d179a951ba89',1,'buffer_utils']]],
+  ['buffer_24',['buffer',['../structchoco__string.html#ae7e8b0d96d259de1926319240edc0e8f',1,'choco_string']]],
+  ['button_25',['button',['../structmouse__event.html#acad2969da0addf8999bec012c4be1aaf',1,'mouse_event']]]
 ];

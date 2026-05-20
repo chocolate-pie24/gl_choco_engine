@@ -14,5 +14,5 @@ var searchData=
   ['shader_5ftype_5fvertex_11',['SHADER_TYPE_VERTEX',['../renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da',1,'renderer_types.h']]],
   ['shader_5fvtable_12',['shader_vtable',['../structrenderer__backend__context.html#ab532279778c8eebd1cfbe967b1f10d20',1,'renderer_backend_context']]],
   ['status_13',['status',['../structcommand__status__flight__camera.html#acb26e2ddbf338bf7dce1b4b282b40422',1,'command_status_flight_camera']]],
-  ['stride_14',['stride',['../structring__queue.html#a75535dae236624d37fc8c1aca2c51dae',1,'ring_queue']]]
+  ['stride_14',['stride',['../structring__queue.html#a75535dae236624d37fc8c1aca2c51dae',1,'ring_queue::stride()'],['../structbmp__loader.html#a966b8928fc5c65d79722b633fb40d88d',1,'bmp_loader::stride()']]]
 ];

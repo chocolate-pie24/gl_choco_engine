@@ -1,0 +1,5 @@
+<map id="include/engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_texture.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_texture.h">
+<area shape="rect" id="node1" title="テクスチャ操作関数をまとめたvtableを定義する" alt="" coords="79,5,285,75"/>
+<area shape="rect" id="node2" href="$concrete__texture_8h.html" title="renderer backendがテクスチャ機能をOpenGL3.3で実現できるように、renderer_texture_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="5,123,217,192"/>
+<area shape="rect" id="node3" href="$concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="76,240,288,309"/>
+</map>

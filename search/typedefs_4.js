@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['keyboard_5fevent_5fargs_5ft_0',['keyboard_event_args_t',['../keyboard__event_8h.html#a7a18b543fe981f04d51449a966f4c2c4',1,'keyboard_event.h']]],
-  ['keyboard_5fevent_5ft_1',['keyboard_event_t',['../keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94',1,'keyboard_event.h']]]
+  ['info_5fheader_5ft_0',['info_header_t',['../bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb',1,'bmp_loader.c']]],
+  ['input_5fsnapshot_5ft_1',['input_snapshot_t',['../platform__glfw_8c.html#a8c625983541ce84ded4e8dd859320fb5',1,'platform_glfw.c']]]
 ];

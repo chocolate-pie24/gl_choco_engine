@@ -1,0 +1,16 @@
+<map id="src/engine/resource/loaders/bmp_loader.c" name="src/engine/resource/loaders/bmp_loader.c">
+<area shape="rect" id="node1" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="525,5,690,45"/>
+<area shape="rect" id="node2" title=" " alt="" coords="88,189,159,214"/>
+<area shape="rect" id="node3" title=" " alt="" coords="167,357,250,383"/>
+<area shape="rect" id="node4" title=" " alt="" coords="701,357,775,383"/>
+<area shape="rect" id="node5" href="$bmp__loader_8h.html" title="BMPファイルのロード処理を行うAPIの定義" alt="" coords="259,93,438,133"/>
+<area shape="rect" id="node6" href="$resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="183,181,370,221"/>
+<area shape="rect" id="node7" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="935,101,1146,126"/>
+<area shape="rect" id="node8" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1073,189,1211,214"/>
+<area shape="rect" id="node9" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="653,181,810,221"/>
+<area shape="rect" id="node10" href="$buffer__utils_8h.html" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの定義" alt="" coords="38,93,185,133"/>
+<area shape="rect" id="node11" href="$filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="530,269,701,309"/>
+<area shape="rect" id="node12" href="$resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="513,93,702,133"/>
+<area shape="rect" id="node13" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="321,269,501,309"/>
+<area shape="rect" id="node14" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="445,181,578,221"/>
+</map>

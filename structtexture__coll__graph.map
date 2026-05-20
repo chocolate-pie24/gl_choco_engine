@@ -1,0 +1,4 @@
+<map id="texture" name="texture">
+<area shape="rect" id="node1" title="テクスチャCPU側リソース構造体" alt="" coords="23,93,92,119"/>
+<area shape="rect" id="node2" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,5,109,31"/>
+</map>

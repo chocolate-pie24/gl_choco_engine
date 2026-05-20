@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/renderer/renderer_core/renderer_memory.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/renderer/renderer_core/renderer_memory.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,26 +100,26 @@ $(document).ready(function(){initNavTree('renderer__memory_8c.html',''); initRes
 <p>レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__memory_8h_source.html">engine/renderer/renderer_core/renderer_memory.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__err__utils_8h_source.html">engine/renderer/renderer_core/renderer_err_utils.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__memory_8h_source.html">engine/systems/renderer/renderer_core/renderer_memory.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__err__utils_8h_source.html">engine/systems/renderer/renderer_core/renderer_err_utils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for renderer_memory.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="renderer__memory_8c__incl.png" border="0" usemap="#asrc_2engine_2renderer_2renderer__core_2renderer__memory_8c" alt=""/></div>
-<map name="asrc_2engine_2renderer_2renderer__core_2renderer__memory_8c" id="asrc_2engine_2renderer_2renderer__core_2renderer__memory_8c">
-<area shape="rect" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="437,5,612,60"/>
-<area shape="rect" title=" " alt="" coords="503,372,578,397"/>
-<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="563,108,751,148"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="522,196,706,236"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="216,108,404,148"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="341,196,498,236"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="133,196,266,236"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="5,284,185,324"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="405,284,562,324"/>
-<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="210,284,381,324"/>
-<area shape="rect" title=" " alt="" coords="54,372,137,397"/>
+<div class="center"><img src="renderer__memory_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8c" id="asrc_2engine_2systems_2renderer_2renderer__core_2renderer__memory_8c">
+<area shape="rect" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="423,5,597,60"/>
+<area shape="rect" title=" " alt="" coords="503,401,578,427"/>
+<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="547,108,731,163"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="522,211,706,265"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="238,108,422,163"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="341,218,498,258"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="133,218,266,258"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="5,313,185,353"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="405,313,562,353"/>
+<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="210,313,381,353"/>
+<area shape="rect" title=" " alt="" coords="54,401,137,427"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -242,7 +242,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_eedbc0f69b08006c72429a8d2b33a57d.html">renderer</a></li><li class="navelem"><a class="el" href="dir_344f2fb4b48e6f244c61826b7f4baba9.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__memory_8c.html">renderer_memory.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_a419be9ec377f0fffa52761931102f2f.html">renderer_core</a></li><li class="navelem"><a class="el" href="renderer__memory_8c.html">renderer_memory.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

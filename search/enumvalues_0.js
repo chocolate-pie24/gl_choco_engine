@@ -8,5 +8,6 @@ var searchData=
   ['application_5foverflow_5',['APPLICATION_OVERFLOW',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aabd291f0e90e86606895e9f53689dec58',1,'application_types.h']]],
   ['application_5fruntime_5ferror_6',['APPLICATION_RUNTIME_ERROR',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa8b4c4769f70a96dd00b33473cf8a051d',1,'application_types.h']]],
   ['application_5fsuccess_7',['APPLICATION_SUCCESS',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aac38342da648ba41c519b0c578872051c',1,'application_types.h']]],
-  ['application_5fundefined_5ferror_8',['APPLICATION_UNDEFINED_ERROR',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3',1,'application_types.h']]]
+  ['application_5fundefined_5ferror_8',['APPLICATION_UNDEFINED_ERROR',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3',1,'application_types.h']]],
+  ['application_5funsupported_5ffile_9',['APPLICATION_UNSUPPORTED_FILE',['../application__types_8h.html#a0d87614822b854251c7d55d1accaf44aae4cd05761b797c80dae682e24444fc6a',1,'application_types.h']]]
 ];

@@ -1,5 +1,5 @@
-<map id="include/engine/platform/platform_concretes/platform_glfw.h" name="include/engine/platform/platform_concretes/platform_glfw.h">
-<area shape="rect" id="node1" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="62,5,274,60"/>
-<area shape="rect" id="node2" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,108,157,163"/>
-<area shape="rect" id="node3" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="181,115,331,155"/>
+<map id="include/engine/systems/platform/platform_concretes/platform_glfw.h" name="include/engine/systems/platform/platform_concretes/platform_glfw.h">
+<area shape="rect" id="node1" title="GLFW APIで実装されたプラットフォームシステムAPIを提供する" alt="" coords="123,5,335,60"/>
+<area shape="rect" id="node2" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="5,108,217,163"/>
+<area shape="rect" id="node3" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="241,115,451,155"/>
 </map>

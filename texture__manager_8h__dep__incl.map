@@ -1,0 +1,8 @@
+<map id="include/engine/systems/texture_system/texture_manager.h" name="include/engine/systems/texture_system/texture_manager.h">
+<area shape="rect" id="node1" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI定義" alt="" coords="317,5,495,60"/>
+<area shape="rect" id="node2" href="$application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="231,108,440,163"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,218,209,243"/>
+<area shape="rect" id="node4" href="$application__err__utils_8c.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="461,211,665,251"/>
+<area shape="rect" id="node6" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="515,108,694,163"/>
+<area shape="rect" id="node5" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="234,211,437,251"/>
+</map>

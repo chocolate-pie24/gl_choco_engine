@@ -1,0 +1,11 @@
+<map id="src/engine/resource/resource_core/resource_err_utils.c" name="src/engine/resource/resource_core/resource_err_utils.c">
+<area shape="rect" id="node1" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="271,5,449,60"/>
+<area shape="rect" id="node2" href="$resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="36,196,223,236"/>
+<area shape="rect" id="node3" href="$resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="332,108,521,148"/>
+<area shape="rect" id="node4" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="247,196,404,236"/>
+<area shape="rect" id="node6" href="$filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="363,284,533,324"/>
+<area shape="rect" id="node7" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="558,284,738,324"/>
+<area shape="rect" id="node9" href="$fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="479,196,612,236"/>
+<area shape="rect" id="node5" title=" " alt="" coords="411,372,485,397"/>
+<area shape="rect" id="node8" title=" " alt="" coords="607,372,689,397"/>
+</map>

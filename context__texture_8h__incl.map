@@ -1,0 +1,7 @@
+<map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h">
+<area shape="rect" id="node1" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="120,5,321,75"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,137,76,163"/>
+<area shape="rect" id="node3" title=" " alt="" coords="101,137,183,163"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="207,123,391,177"/>
+<area shape="rect" id="node5" href="$renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="416,123,617,177"/>
+</map>

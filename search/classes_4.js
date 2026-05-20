@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['keyboard_5fevent_0',['keyboard_event',['../structkeyboard__event.html',1,'']]],
-  ['keyboard_5fevent_5fargs_1',['keyboard_event_args',['../structkeyboard__event__args.html',1,'']]]
+  ['info_5fheader_0',['info_header',['../structinfo__header.html',1,'']]],
+  ['input_5fsnapshot_1',['input_snapshot',['../structinput__snapshot.html',1,'']]]
 ];

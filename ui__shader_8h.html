@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_resources/ui_shader.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_resources/ui_shader.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,30 +102,30 @@ $(document).ready(function(){initNavTree('ui__shader_8h.html',''); initResizable
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for ui_shader.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="ui__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8h" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8h" id="ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8h">
-<area shape="rect" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="180,5,356,60"/>
+<div class="center"><img src="ui__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8h" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8h" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8h">
+<area shape="rect" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="163,5,373,60"/>
 <area shape="rect" title=" " alt="" coords="5,130,88,155"/>
 <area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="112,123,296,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="241,225,425,265"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="241,225,425,280"/>
 <area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="371,108,573,177"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="449,225,607,265"/>
-<area shape="rect" title=" " alt="" coords="491,313,565,339"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="449,233,607,273"/>
+<area shape="rect" title=" " alt="" coords="491,328,565,353"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="ui__shader_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8hdep" id="ainclude_2engine_2renderer_2renderer__resources_2ui__shader_8hdep">
-<area shape="rect" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="119,5,295,60"/>
+<div class="center"><img src="ui__shader_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2ui__shader_8hdep">
+<area shape="rect" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="118,5,329,60"/>
 <area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,123,209,148"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="233,108,384,163"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="234,108,445,163"/>
 </map>
 </div>
 </div>
@@ -144,6 +144,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a3d80c907d2302eeabb50ff3cba5c038c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__shader_8h.html#a3d80c907d2302eeabb50ff3cba5c038c">ui_shader_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> **ui_shader_)</td></tr>
 <tr class="memdesc:a3d80c907d2302eeabb50ff3cba5c038c"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーリソースインスタンスが保持するリソースと、自身のメモリを開放する  <br /></td></tr>
 <tr class="separator:a3d80c907d2302eeabb50ff3cba5c038c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a313474e120e36e972988d7365568a111"><td class="memItemLeft" align="right" valign="top"><a id="a313474e120e36e972988d7365568a111" name="a313474e120e36e972988d7365568a111"></a>
+<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader_vertex_buffer_create</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> buffer_usage_, size_t buffer_size_)</td></tr>
+<tr class="separator:a313474e120e36e972988d7365568a111"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ee4a1417794b8e7bb18ca8ba81c6d5a"><td class="memItemLeft" align="right" valign="top"><a id="a9ee4a1417794b8e7bb18ca8ba81c6d5a" name="a9ee4a1417794b8e7bb18ca8ba81c6d5a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader_vertex_buffer_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_)</td></tr>
+<tr class="separator:a9ee4a1417794b8e7bb18ca8ba81c6d5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2fc6a6adab28651a8d95731df4faaaf"><td class="memItemLeft" align="right" valign="top"><a id="ab2fc6a6adab28651a8d95731df4faaaf" name="ab2fc6a6adab28651a8d95731df4faaaf"></a>
+<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader_vertex_buffer_write</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_, size_t size_, void *write_data_)</td></tr>
+<tr class="separator:ab2fc6a6adab28651a8d95731df4faaaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a208bdac70cfe7c2e92b3c05cd1505fa2"><td class="memItemLeft" align="right" valign="top"><a id="a208bdac70cfe7c2e92b3c05cd1505fa2" name="a208bdac70cfe7c2e92b3c05cd1505fa2"></a>
+<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader_vertex_array_bind</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_)</td></tr>
+<tr class="separator:a208bdac70cfe7c2e92b3c05cd1505fa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa145bab6dab5ccfc1079037b23ee54a4"><td class="memItemLeft" align="right" valign="top"><a id="aa145bab6dab5ccfc1079037b23ee54a4" name="aa145bab6dab5ccfc1079037b23ee54a4"></a>
+<a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ui_shader_vertex_array_unbind</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_)</td></tr>
+<tr class="separator:aa145bab6dab5ccfc1079037b23ee54a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebe23ce1c7a385a89dacdebae5a0c336"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__shader_8h.html#aebe23ce1c7a385a89dacdebae5a0c336">ui_shader_use</a> (const <a class="el" href="ui__shader_8h.html#a501e27a73758d2b9cbfc74454e3221f7">ui_shader_t</a> *ui_shader_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
 <tr class="memdesc:aebe23ce1c7a385a89dacdebae5a0c336"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
 <tr class="separator:aebe23ce1c7a385a89dacdebae5a0c336"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -592,7 +607,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_ca90b011381d10d19204dcc6efb7a3ce.html">renderer_resources</a></li><li class="navelem"><a class="el" href="ui__shader_8h.html">ui_shader.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e30dfff12da3d0a227234e949c491947.html">renderer_resources</a></li><li class="navelem"><a class="el" href="ui__shader_8h.html">ui_shader.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

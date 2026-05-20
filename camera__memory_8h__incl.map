@@ -1,5 +1,5 @@
-<map id="include/engine/camera_system/camera_core/camera_memory.h" name="include/engine/camera_system/camera_core/camera_memory.h">
-<area shape="rect" id="node1" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="19,5,237,60"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,115,80,141"/>
-<area shape="rect" id="node3" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,323,148"/>
+<map id="include/engine/systems/camera_system/camera_core/camera_memory.h" name="include/engine/systems/camera_system/camera_core/camera_memory.h">
+<area shape="rect" id="node1" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="37,5,219,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,123,80,148"/>
+<area shape="rect" id="node3" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="104,108,323,163"/>
 </map>

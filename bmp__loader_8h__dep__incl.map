@@ -1,0 +1,5 @@
+<map id="include/engine/resource/loaders/bmp_loader.h" name="include/engine/resource/loaders/bmp_loader.h">
+<area shape="rect" id="node1" title="BMPファイルのロード処理を行うAPIの定義" alt="" coords="90,5,267,45"/>
+<area shape="rect" id="node2" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="5,93,171,133"/>
+<area shape="rect" id="node3" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="195,93,344,133"/>
+</map>

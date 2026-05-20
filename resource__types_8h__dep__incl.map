@@ -1,0 +1,11 @@
+<map id="include/engine/resource/resource_core/resource_types.h" name="include/engine/resource/resource_core/resource_types.h">
+<area shape="rect" id="node1" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="307,5,485,60"/>
+<area shape="rect" id="node2" href="$bmp__loader_8h.html" title="BMPファイルのロード処理を行うAPIの定義" alt="" coords="54,115,231,155"/>
+<area shape="rect" id="node3" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="5,218,171,258"/>
+<area shape="rect" id="node4" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="195,218,344,258"/>
+<area shape="rect" id="node5" href="$resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="307,108,485,163"/>
+<area shape="rect" id="node6" href="$resource__err__utils_8c.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="369,211,546,265"/>
+<area shape="rect" id="node7" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="571,211,749,265"/>
+<area shape="rect" id="node8" href="$texture_8h.html" title="テクスチャCPU側リソースを操作するモジュールAPIの定義" alt="" coords="611,115,789,155"/>
+<area shape="rect" id="node9" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="774,225,978,251"/>
+</map>

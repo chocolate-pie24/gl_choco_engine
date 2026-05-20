@@ -137,6 +137,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a7b9642a045ca402e72c83e97cf29f0a1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8c.html#a7b9642a045ca402e72c83e97cf29f0a1">is_equal_float</a> (float a_, float b_)</td></tr>
 <tr class="memdesc:a7b9642a045ca402e72c83e97cf29f0a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">2つのfloat値が等しいかを判定する  <br /></td></tr>
 <tr class="separator:a7b9642a045ca402e72c83e97cf29f0a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af54a2140de8af377d98a406405046e96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8c.html#af54a2140de8af377d98a406405046e96">vec2f_initialize</a> (float x_, float y_, <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *out_vec2f_)</td></tr>
+<tr class="memdesc:af54a2140de8af377d98a406405046e96"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルxyを初期化する  <br /></td></tr>
+<tr class="separator:af54a2140de8af377d98a406405046e96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26636e750059548830a82c2149eaac93"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8c.html#a26636e750059548830a82c2149eaac93">vec2f_add</a> (const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *vec1_, const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *vec2_, <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *out_vec2f_)</td></tr>
+<tr class="memdesc:a26636e750059548830a82c2149eaac93"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する  <br /></td></tr>
+<tr class="separator:a26636e750059548830a82c2149eaac93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af284f3f32c75b277fa8545d83936b783"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8c.html#af284f3f32c75b277fa8545d83936b783">vec3f_initialize</a> (float x_, float y_, float z_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *out_vec3f_)</td></tr>
 <tr class="memdesc:af284f3f32c75b277fa8545d83936b783"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルxyzを初期化する  <br /></td></tr>
 <tr class="separator:af284f3f32c75b277fa8545d83936b783"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -775,6 +781,101 @@ X, Y, Zの順で回転する</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">out_mat_</td><td>要素を0にする行列 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a26636e750059548830a82c2149eaac93" name="a26636e750059548830a82c2149eaac93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26636e750059548830a82c2149eaac93">&#9670;&#160;</a></span>vec2f_add()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vec2f_add </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
+          <td class="paramname"><em>vec1_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
+          <td class="paramname"><em>vec2_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
+          <td class="paramname"><em>out_vec2f_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する </p>
+<dl class="section note"><dt>Note</dt><dd>以下の場合はエラーメッセージを出力し、何もしない<ul>
+<li>vec1_ == NULL</li>
+<li>vec2_ == NULL</li>
+<li>out_vec2f_ == NULL</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec1_ + vec2_のvec1_ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec1_ + vec2_のvec2_ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec2f_</td><td>加算結果ベクトル </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af54a2140de8af377d98a406405046e96" name="af54a2140de8af377d98a406405046e96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af54a2140de8af377d98a406405046e96">&#9670;&#160;</a></span>vec2f_initialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vec2f_initialize </td>
+          <td>(</td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>x_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>y_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
+          <td class="paramname"><em>out_vec2f_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>2次元ベクトルxyを初期化する </p>
+<dl class="section note"><dt>Note</dt><dd>out_vec2f_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec2f_</td><td>初期化対象ベクトル </td></tr>
   </table>
   </dd>
 </dl>

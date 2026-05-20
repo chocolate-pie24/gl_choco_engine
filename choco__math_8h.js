@@ -14,6 +14,8 @@ var choco__math_8h =
     [ "mat4f_transpose", "choco__math_8h.html#a0d9cce33e131189b24d80e186bfa2728", null ],
     [ "mat4f_vec4f_mul", "choco__math_8h.html#a62e7a36a759da036950f8e3d6684e9fd", null ],
     [ "mat4f_zero", "choco__math_8h.html#a341fa9c2f49c25afce7a2938ae7554b1", null ],
+    [ "vec2f_add", "choco__math_8h.html#a26636e750059548830a82c2149eaac93", null ],
+    [ "vec2f_initialize", "choco__math_8h.html#af54a2140de8af377d98a406405046e96", null ],
     [ "vec3f_add", "choco__math_8h.html#a92b43e2c87b31879ac7123ef97f72c70", null ],
     [ "vec3f_initialize", "choco__math_8h.html#af284f3f32c75b277fa8545d83936b783", null ],
     [ "vec3f_length", "choco__math_8h.html#a188703116f6c116f0e71c5ec4c5eb310", null ],

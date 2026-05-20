@@ -1,9 +1,11 @@
 <map id="renderer_backend_context" name="renderer_backend_context">
-<area shape="rect" id="node1" title="RendererBackend内部状態管理構造体" alt="" coords="207,299,401,324"/>
-<area shape="rect" id="node2" href="$structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="19,211,195,236"/>
-<area shape="rect" id="node3" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
-<area shape="rect" id="node4" href="$structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="226,211,382,236"/>
-<area shape="rect" id="node5" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="219,5,389,31"/>
-<area shape="rect" id="node6" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="413,211,569,236"/>
-<area shape="rect" id="node7" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="413,5,582,31"/>
+<area shape="rect" id="node1" title="RendererBackend内部状態管理構造体" alt="" coords="741,302,936,327"/>
+<area shape="rect" id="node2" href="$structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="416,157,592,182"/>
+<area shape="rect" id="node3" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="7,109,196,134"/>
+<area shape="rect" id="node4" href="$structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="426,253,582,278"/>
+<area shape="rect" id="node5" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="17,227,186,253"/>
+<area shape="rect" id="node6" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="426,326,582,351"/>
+<area shape="rect" id="node7" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="17,375,186,401"/>
+<area shape="rect" id="node8" href="$structrenderer__texture__vtable.html" title=" " alt="" coords="415,395,593,421"/>
+<area shape="rect" id="node9" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,465,197,490"/>
 </map>

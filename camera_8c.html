@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/camera_system/camera/camera.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/camera_system/camera/camera.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,10 +102,10 @@ $(document).ready(function(){initNavTree('camera_8c.html',''); initResizable(); 
 <p>カメラモジュール実装  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="camera_8h_source.html">engine/camera_system/camera/camera.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="camera__err__utils_8h_source.html">engine/camera_system/camera_core/camera_err_utils.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="camera__memory_8h_source.html">engine/camera_system/camera_core/camera_memory.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="camera__types_8h_source.html">engine/camera_system/camera_core/camera_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="camera_8h_source.html">engine/systems/camera_system/camera/camera.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="camera__err__utils_8h_source.html">engine/systems/camera_system/camera_core/camera_err_utils.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="camera__memory_8h_source.html">engine/systems/camera_system/camera_core/camera_memory.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="camera__types_8h_source.html">engine/systems/camera_system/camera_core/camera_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__math_8h_source.html">engine/base/choco_math/choco_math.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
@@ -114,22 +114,22 @@ $(document).ready(function(){initNavTree('camera_8c.html',''); initResizable(); 
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for camera.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="camera_8c__incl.png" border="0" usemap="#asrc_2engine_2camera__system_2camera_2camera_8c" alt=""/></div>
-<map name="asrc_2engine_2camera__system_2camera_2camera_8c" id="asrc_2engine_2camera__system_2camera_2camera_8c">
-<area shape="rect" title="カメラモジュール実装" alt="" coords="484,5,681,45"/>
-<area shape="rect" title=" " alt="" coords="84,284,167,309"/>
-<area shape="rect" href="camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="293,101,467,141"/>
-<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="383,196,601,236"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="163,196,347,236"/>
-<area shape="rect" href="camera__err__utils_8h.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="853,93,1041,148"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="677,196,857,236"/>
-<area shape="rect" href="camera__memory_8h.html" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="543,101,777,141"/>
-<area shape="rect" href="choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="33,101,217,141"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1116,108,1327,133"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1295,203,1433,229"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1063,196,1220,236"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="881,196,1039,236"/>
-<area shape="rect" title=" " alt="" coords="923,284,997,309"/>
+<div class="center"><img src="camera_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2camera__system_2camera_2camera_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2camera__system_2camera_2camera_8c" id="asrc_2engine_2systems_2camera__system_2camera_2camera_8c">
+<area shape="rect" title="カメラモジュール実装" alt="" coords="507,5,690,60"/>
+<area shape="rect" title=" " alt="" coords="85,313,168,339"/>
+<area shape="rect" href="camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="293,115,488,155"/>
+<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="401,211,620,265"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="164,218,348,258"/>
+<area shape="rect" href="camera__err__utils_8h.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="856,108,1075,163"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="695,218,875,258"/>
+<area shape="rect" href="camera__memory_8h.html" title="カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="563,108,781,163"/>
+<area shape="rect" href="choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="35,115,219,155"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1135,123,1345,148"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1313,225,1452,251"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1081,218,1239,258"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="900,218,1057,258"/>
+<area shape="rect" title=" " alt="" coords="941,313,1016,339"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -944,7 +944,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>逆行列計算をなくすため、以下を行う<ul>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>逆行列計算をなくすため、以下を行う<ul>
 <li>回転行列の逆行列 = 転置行列の性質を利用する</li>
 <li>平行移動行列の逆行列は平行移動量 x (-1)の性質を利用する </li>
 </ul>
@@ -1026,7 +1026,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_a824b639383010aa9ee1ae837dd31ed5.html">camera_system</a></li><li class="navelem"><a class="el" href="dir_72d0ab31a40b26c363831dd1d6afdb32.html">camera</a></li><li class="navelem"><a class="el" href="camera_8c.html">camera.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_80204f4d86dede2d57b4bdbad469a112.html">camera_system</a></li><li class="navelem"><a class="el" href="dir_878a1068a59db1c792db8f0641bf3e2a.html">camera</a></li><li class="navelem"><a class="el" href="camera_8c.html">camera.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

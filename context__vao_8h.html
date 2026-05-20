@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/renderer/renderer_backend/renderer_backend_context/context_vao.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -103,28 +103,29 @@ $(document).ready(function(){initNavTree('context__vao_8h.html',''); initResizab
 <div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for context_vao.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="context__vao_8h__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h" id="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h">
-<area shape="rect" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="124,5,359,60"/>
-<area shape="rect" title=" " alt="" coords="5,123,80,148"/>
-<area shape="rect" title=" " alt="" coords="105,123,175,148"/>
-<area shape="rect" title=" " alt="" coords="200,123,283,148"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="307,115,491,155"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="515,108,717,163"/>
+<div class="center"><img src="context__vao_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8h">
+<area shape="rect" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="141,5,342,75"/>
+<area shape="rect" title=" " alt="" coords="5,137,80,163"/>
+<area shape="rect" title=" " alt="" coords="105,137,175,163"/>
+<area shape="rect" title=" " alt="" coords="200,137,283,163"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="307,123,491,177"/>
+<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="515,123,717,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="context__vao_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep" id="ainclude_2engine_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep">
-<area shape="rect" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="5,5,240,60"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="21,108,225,133"/>
+<div class="center"><img src="context__vao_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep">
+<area shape="rect" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="123,5,324,75"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="234,123,445,177"/>
 </map>
 </div>
 </div>
@@ -243,14 +244,14 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>本関数内でVAOがbindされるため、事前のbindは不要</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">backend_context_</td><td>アトリビュート設定用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramname">vertex_array_</td><td>VAOハンドル(OpenGL3.3では使用しない) </td></tr>
-    <tr><td class="paramname">layout_</td><td>シェーダープログラム内のどのバッファ変数の設定値かを指定 </td></tr>
-    <tr><td class="paramname">size_</td><td>頂点情報に含まれるデータの数([x, y, z]の3次元座標のみであれば3) </td></tr>
-    <tr><td class="paramname">type_</td><td>バッファに格納されているデータの型 <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> </td></tr>
-    <tr><td class="paramname">normalized_</td><td>与えられた頂点データを正規化するかどうかを指定 </td></tr>
-    <tr><td class="paramname">stride_</td><td>頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定) </td></tr>
-    <tr><td class="paramname">offset_</td><td>「この頂点属性の先頭が、現在GL_ARRAY_BUFFERにバインドされているバッファの先頭から何バイト目にあるか」を指定</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>アトリビュート設定用vtable保有構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>VAOハンドル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">layout_</td><td>シェーダープログラム内のどのバッファ変数の設定値かを指定 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>頂点情報(layoutごと)に含まれるデータの数([x, y, z, u, v]のうち、3次元座標のみであれば3、テクスチャ座標であれば2) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type_</td><td>バッファに格納されているデータの型 <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">normalized_</td><td>与えられた頂点データを正規化するかどうかを指定 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride_</td><td>頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset_</td><td>「この頂点属性の先頭が、現在GL_ARRAY_BUFFERにバインドされているバッファの先頭から何バイト目にあるか」を指定</td></tr>
   </table>
   </dd>
 </dl>
@@ -315,14 +316,11 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>VAOをbindする </p>
-<ul>
-<li>処理に成功した場合、backend_context_が保持する現在bind中のVAO値が更新される</li>
-<li>既にbind済みのvertex_array_が渡された場合は何もしない</li>
-</ul>
+<dl class="section note"><dt>Note</dt><dd>VAOは本関数内でbindされるが、頂点属性の参照元となるVBOは事前にbindされている必要がある</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">backend_context_</td><td>bind用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramname">vertex_array_</td><td>bind対象VAOハンドル構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>bind用vtable保有構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>bind対象VAOハンドル構造体インスタンスへのポインタ</td></tr>
   </table>
   </dd>
 </dl>
@@ -387,6 +385,7 @@ Functions</h2></td></tr>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>backend_context_ == NULL</li>
 <li>vertex_array_ == NULL</li>
 <li>*vertex_array_ != NULL </li>
 </ul>
@@ -436,8 +435,8 @@ Functions</h2></td></tr>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">backend_context_</td><td>リソース破棄用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramname">vertex_array_</td><td>破棄対象インスタンスへのダブルポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>リソース破棄用vtable保有構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>破棄対象インスタンスへのダブルポインタ </td></tr>
   </table>
   </dd>
 </dl>
@@ -473,8 +472,8 @@ Functions</h2></td></tr>
 <p>VAOをunbindする </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">backend_context_</td><td>unbind用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramname">vertex_array_</td><td>unbind対象VAOハンドル構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>unbind用vtable保有構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>unbind対象VAOハンドル構造体インスタンスへのポインタ</td></tr>
   </table>
   </dd>
 </dl>
@@ -502,7 +501,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5d68752ef0a05e0368378c003c0899ae.html">renderer</a></li><li class="navelem"><a class="el" href="dir_47db3dff1ede91accec67cae6ead16dd.html">renderer_backend</a></li><li class="navelem"><a class="el" href="dir_447964838265c2fb00ba0f14c1d6d31c.html">renderer_backend_context</a></li><li class="navelem"><a class="el" href="context__vao_8h.html">context_vao.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_b2352ff5591e5c0ab360d90eb846f380.html">renderer_backend</a></li><li class="navelem"><a class="el" href="dir_65c229ad9fa5ed9550164b945586eb37.html">renderer_backend_context</a></li><li class="navelem"><a class="el" href="context__vao_8h.html">context_vao.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

@@ -1,0 +1,5 @@
+<map id="bmp_loader" name="bmp_loader">
+<area shape="rect" id="node1" title="BMPファイルローダー内部情報管理構造体" alt="" coords="63,93,162,119"/>
+<area shape="rect" id="node2" href="$structfile__header.html" title="BMP FILEHEADER(14byte固定)" alt="" coords="5,5,100,31"/>
+<area shape="rect" id="node3" href="$structinfo__header.html" title="BMP INFOHEADER(40byte固定)" alt="" coords="125,5,223,31"/>
+</map>

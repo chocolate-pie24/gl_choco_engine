@@ -5,5 +5,6 @@ var context__vbo_8h =
     [ "renderer_backend_vertex_buffer_create", "context__vbo_8h.html#a0dabfd622cab81878fba0dccffa0e184", null ],
     [ "renderer_backend_vertex_buffer_destroy", "context__vbo_8h.html#afe23e5aa082c67feae5cdaaab936b66c", null ],
     [ "renderer_backend_vertex_buffer_unbind", "context__vbo_8h.html#ae7998dee24b9d925b5f8ea53302882d7", null ],
-    [ "renderer_backend_vertex_buffer_vertex_load", "context__vbo_8h.html#a7fb631475f15b167d57c27a5ee59244b", null ]
+    [ "renderer_backend_vertex_buffer_vertex_load", "context__vbo_8h.html#aeb4faf853495373770e591d2656e1819", null ],
+    [ "renderer_backend_vertex_buffer_vertex_subload", "context__vbo_8h.html#ae9ce8b4f8dd1f0009a62663bfd2af59e", null ]
 ];

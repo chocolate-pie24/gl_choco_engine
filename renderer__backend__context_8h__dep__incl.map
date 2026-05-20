@@ -1,6 +1,7 @@
-<map id="include/engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h" name="include/engine/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h">
-<area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="120,5,321,75"/>
-<area shape="rect" id="node2" href="$ui__shader_8h.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="133,123,309,177"/>
+<map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h">
+<area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="189,5,399,75"/>
+<area shape="rect" id="node2" href="$ui__shader_8h.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="118,123,329,177"/>
 <area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,240,209,265"/>
-<area shape="rect" id="node4" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="257,225,408,280"/>
+<area shape="rect" id="node4" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="247,225,458,280"/>
+<area shape="rect" id="node5" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="403,123,582,177"/>
 </map>

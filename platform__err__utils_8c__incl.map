@@ -1,11 +1,11 @@
-<map id="src/engine/platform/platform_core/platform_err_utils.c" name="src/engine/platform/platform_core/platform_err_utils.c">
-<area shape="rect" id="node1" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="354,5,531,60"/>
-<area shape="rect" id="node2" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="63,115,273,141"/>
-<area shape="rect" id="node5" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="219,196,376,236"/>
-<area shape="rect" id="node6" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="401,196,581,236"/>
-<area shape="rect" id="node8" href="$platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="348,108,537,148"/>
-<area shape="rect" id="node9" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="605,196,792,236"/>
-<area shape="rect" id="node3" title=" " alt="" coords="260,284,335,309"/>
-<area shape="rect" id="node4" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="5,203,144,229"/>
-<area shape="rect" id="node7" title=" " alt="" coords="449,284,532,309"/>
+<map id="src/engine/systems/platform/platform_core/platform_err_utils.c" name="src/engine/systems/platform/platform_core/platform_err_utils.c">
+<area shape="rect" id="node1" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="353,5,530,60"/>
+<area shape="rect" id="node2" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="63,123,273,148"/>
+<area shape="rect" id="node5" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="219,218,376,258"/>
+<area shape="rect" id="node6" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="401,218,581,258"/>
+<area shape="rect" id="node8" href="$platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="349,108,534,163"/>
+<area shape="rect" id="node9" href="$platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="605,211,790,265"/>
+<area shape="rect" id="node3" title=" " alt="" coords="260,313,335,339"/>
+<area shape="rect" id="node4" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="5,225,144,251"/>
+<area shape="rect" id="node7" title=" " alt="" coords="449,313,532,339"/>
 </map>

@@ -96,9 +96,16 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <div class="contents">
 <div class="textblock"><dl class="reflist">
 <dt>File <a class="el" href="application_8c.html">application.c</a>  </dt>
-<dd><a class="anchor" id="_todo000010"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
+<dd><a class="anchor" id="_todo000007"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
+<dt>File <a class="el" href="bmp__loader_8c.html">bmp_loader.c</a>  </dt>
+<dd><a class="anchor" id="_todo000011"></a>計算各所のオーバーフローチェック漏れ修正 </dd>
+<dt>File <a class="el" href="buffer__utils_8h.html">buffer_utils.h</a>  </dt>
+<dd><p class="startdd"><a class="anchor" id="_todo000001"></a>float型、double型のデータ取り出しAPIは必要に応じて追加する </p>
+<p class="interdd"></p>
+<p class="enddd">バッファへのデータ書き込みAPIは必要に応じて追加する </p>
+</dd>
 <dt>Global <a class="el" href="camera_8c.html#a13d7f2cfdfcdbdf00c68f7a47dfa892a">camera_view_matrix_get</a>  (camera_t *camera_, mat4x4f_t *out_mat_)</dt>
-<dd><a class="anchor" id="_todo000001"></a>逆行列計算をなくすため、以下を行う<ul>
+<dd><a class="anchor" id="_todo000005"></a>逆行列計算をなくすため、以下を行う<ul>
 <li>回転行列の逆行列 = 転置行列の性質を利用する</li>
 <li>平行移動行列の逆行列は平行移動量 x (-1)の性質を利用する  </li>
 </ul>
@@ -108,26 +115,20 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <dt>Global <a class="el" href="filesystem_8c.html#a0e8cf1cd622e3a94e20be47b9c628062">filesystem_open</a>  (const char *fullpath_, filesystem_open_mode_t mode_, filesystem_t *filesystem_)</dt>
 <dd><a class="anchor" id="_todo000002"></a>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する  </dd>
 <dt>File <a class="el" href="fs__utils_8c.html">fs_utils.c</a>  </dt>
-<dd><a class="anchor" id="_todo000013"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
+<dd><a class="anchor" id="_todo000010"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
 <dt>Class <a class="el" href="structlinear__alloc.html">linear_alloc</a>  </dt>
-<dd><a class="anchor" id="_todo000012"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
+<dd><a class="anchor" id="_todo000009"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
 <dt>File <a class="el" href="linear__allocator_8h.html">linear_allocator.h</a>  </dt>
 <dd><a class="anchor" id="_todo000004"></a>linear_allocator_reset追加 </dd>
-<dt>Global <a class="el" href="interface__vao_8h.html#a70b5348c1c80e39ff30198d793763b45">pfn_vertex_array_bind</a>  )(const renderer_backend_vao_t *vertex_array_, uint32_t *out_vao_id_)</dt>
-<dd><a class="anchor" id="_todo000005"></a>renderer_frontend作成後、外部非公開とする </dd>
-<dt>Global <a class="el" href="interface__vao_8h.html#ad7e5179bcdb3666d68dae997bae2262b">pfn_vertex_array_unbind</a>  )(const renderer_backend_vao_t *vertex_array_)</dt>
-<dd><a class="anchor" id="_todo000006"></a>renderer_frontend作成後、外部非公開とする </dd>
-<dt>Global <a class="el" href="interface__vbo_8h.html#ae63d0575937d477fec2edafa269b0a44">pfn_vertex_buffer_bind</a>  )(const renderer_backend_vbo_t *vertex_buffer_, uint32_t *out_vbo_id_)</dt>
-<dd><a class="anchor" id="_todo000007"></a>renderer_frontend作成後、外部非公開とする </dd>
-<dt>Global <a class="el" href="interface__vbo_8h.html#a7bb15305e518a82c39b3ec5431e0d390">pfn_vertex_buffer_unbind</a>  )(const renderer_backend_vbo_t *vertex_buffer_)</dt>
-<dd><a class="anchor" id="_todo000008"></a>renderer_frontend作成後、外部非公開とする </dd>
 <dt>File <a class="el" href="platform__glfw_8c.html">platform_glfw.c</a>  </dt>
 <dd><p class="startdd"><a class="anchor" id="_todo000014"></a>glfwSetErrorCallback </p>
 <p class="interdd"></p>
 <p class="enddd">glfwSwapInterval </p>
 </dd>
 <dt>Global <a class="el" href="renderer__err__utils_8c.html#adfba520127fecd994a5db7f9bf9fcf10">renderer_rslt_convert_fs_utils</a>  (fs_utils_result_t rslt_)</dt>
-<dd><a class="anchor" id="_todo000009"></a>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する </dd>
+<dd><a class="anchor" id="_todo000006"></a>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する  </dd>
+<dt>Class <a class="el" href="structui__shader.html">ui_shader</a>  </dt>
+<dd><a class="anchor" id="_todo000015"></a>TODO: FreeListを使用したバッファ管理</dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

@@ -1,0 +1,6 @@
+<map id="texture_manager" name="texture_manager">
+<area shape="rect" id="node1" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義" alt="" coords="81,181,215,207"/>
+<area shape="rect" id="node2" href="$structtexture.html" title="テクスチャCPU側リソース構造体" alt="" coords="23,93,92,119"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,5,109,31"/>
+<area shape="rect" id="node4" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="116,93,308,119"/>
+</map>

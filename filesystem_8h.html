@@ -116,17 +116,23 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="filesystem_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2core_2filesystem_2filesystem_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2core_2filesystem_2filesystem_8hdep" id="ainclude_2engine_2core_2filesystem_2filesystem_8hdep">
-<area shape="rect" title="ファイルシステムモジュールAPIの提供" alt="" coords="1051,5,1230,45"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="935,93,1103,133"/>
-<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1068,189,1208,229"/>
-<area shape="rect" href="filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="1179,93,1372,133"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="681,181,857,236"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1079,291,1229,346"/>
-<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5,284,207,353"/>
-<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="231,284,432,353"/>
-<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="456,284,657,353"/>
-<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="681,291,856,346"/>
-<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="880,291,1055,346"/>
+<area shape="rect" title="ファイルシステムモジュールAPIの提供" alt="" coords="560,5,739,45"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="687,93,855,133"/>
+<area shape="rect" href="resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="383,181,561,236"/>
+<area shape="rect" href="bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="5,299,171,339"/>
+<area shape="rect" href="resource__err__utils_8c.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="571,291,749,346"/>
+<area shape="rect" href="texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="397,299,547,339"/>
+<area shape="rect" href="fs__utils_8c.html" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="1358,189,1498,229"/>
+<area shape="rect" href="filesystem_8c.html" title="ファイルシステムモジュールAPIの実装" alt="" coords="930,93,1123,133"/>
+<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="1107,181,1283,236"/>
+<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="2113,291,2324,346"/>
+<area shape="rect" href="texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="195,291,373,346"/>
+<area shape="rect" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="1406,284,1618,353"/>
+<area shape="rect" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="1642,284,1854,353"/>
+<area shape="rect" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="1878,284,2090,353"/>
+<area shape="rect" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="773,284,985,353"/>
+<area shape="rect" href="renderer__err__utils_8c.html" title="レンダラーレイヤー全体で使用されるエラー処理関連APIの実装" alt="" coords="1009,291,1183,346"/>
+<area shape="rect" href="renderer__memory_8c.html" title="レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装" alt="" coords="1207,291,1382,346"/>
 </map>
 </div>
 </div>
@@ -350,7 +356,7 @@ Functions</h2></td></tr>
 <p>ファイルからバイト単位でデータを読み込む </p>
 <dl class="section note"><dt>Note</dt><dd><ul>
 <li>本APIは、成功した場合のみ引数のポインタにデータを書き込むのではなく、失敗した場合でもデータが書き込まれる。 これは、ロールバックするためには本API内部でread_bytes_サイズの一時バッファを確保しなければならず、パフォーマンスが低下するため、 readの結果は引数のbuffer_に直接書き込むことにする。このため、返り値がエラーとなった場合にはbuffer_の中身を利用してはいけない。 なお、result_n_については、エラー発生時は値に0が代入される。</li>
-<li>ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを出力する。 このため、呼び出し側は必ず実行結果コードと合わせて実際に読み込んだバイト数を見て処理を行うこと。</li>
+<li>ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを返す。 このため、呼び出し側は必ず実行結果コードと合わせて実際に読み込んだバイト数を見て処理を行うこと。</li>
 <li>本APIを使用するためには、下記のいずれかのモードでfilesystem_openを行ったファイルハンドルを使用すること。<ul>
 <li>FILESYSTEM_MODE_READ</li>
 <li>FILESYSTEM_MODE_READ_PLUS</li>
@@ -363,7 +369,9 @@ Functions</h2></td></tr>
 </ul>
 </li>
 </ul>
-</dd></dl>
+</dd>
+<dd>
+返り値FILESYSTEM_UNDEFINED_ERRORは基本的に起こり得ない。未実装の分岐をなくすため追加している</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">read_bytes_</td><td>読み込みバイト数 </td></tr>
@@ -394,6 +402,7 @@ Functions</h2></td></tr>
 <li>指定したバイト数の読み込みに成功し、正常終了 </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">FILESYSTEM_UNDEFINED_ERROR</td><td>要求バイト数未満の読み取り結果になったにもかかわらず、EOFまたは読み取りエラーとして判定できない場合 </td></tr>
   </table>
   </dd>
 </dl>
@@ -469,7 +478,7 @@ Functions</h2></td></tr>
 <div class="line"><a class="code hl_enumeration" href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a> ret = <a class="code hl_function" href="filesystem_8h.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a>(&amp;<a class="code hl_struct" href="structfilesystem.html">filesystem</a>);</div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="ttc" id="afilesystem_8h_html_a9e2e60a6bb794f175b5bda17a4210796"><div class="ttname"><a href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a></div><div class="ttdeci">filesystem_result_t</div><div class="ttdoc">ファイルシステムモジュールの実行結果コード定義</div><div class="ttdef"><b>Definition:</b> filesystem.h:42</div></div>
-<div class="ttc" id="afilesystem_8h_html_af5799a36131defb3b2effc3388fa410b"><div class="ttname"><a href="filesystem_8h.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a></div><div class="ttdeci">filesystem_result_t filesystem_create(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_t構造体インスタンスを生成し、初期化する</div><div class="ttdef"><b>Definition:</b> filesystem.c:162</div></div>
+<div class="ttc" id="afilesystem_8h_html_af5799a36131defb3b2effc3388fa410b"><div class="ttname"><a href="filesystem_8h.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a></div><div class="ttdeci">filesystem_result_t filesystem_create(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_t構造体インスタンスを生成し、初期化する</div><div class="ttdef"><b>Definition:</b> filesystem.c:161</div></div>
 <div class="ttc" id="astructfilesystem_html"><div class="ttname"><a href="structfilesystem.html">filesystem</a></div><div class="ttdoc">ファイルシステムモジュール内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> filesystem.c:124</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -526,7 +535,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a>(&amp;<a class="code hl_struct" href="structfilesystem.html">filesystem</a>); <span class="comment">// filesystem == NULLになる</span></div>
 <div class="line"><a class="code hl_function" href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a>(&amp;<a class="code hl_struct" href="structfilesystem.html">filesystem</a>); <span class="comment">// 2重デストロイ許可</span></div>
-<div class="ttc" id="afilesystem_8h_html_a5378884428195551cd63e9176a920d73"><div class="ttname"><a href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a></div><div class="ttdeci">void filesystem_destroy(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_が管理しているメモリと自身のメモリを解放し、*filesystem_=NULLにする</div><div class="ttdef"><b>Definition:</b> filesystem.c:219</div></div>
+<div class="ttc" id="afilesystem_8h_html_a5378884428195551cd63e9176a920d73"><div class="ttname"><a href="filesystem_8h.html#a5378884428195551cd63e9176a920d73">filesystem_destroy</a></div><div class="ttdeci">void filesystem_destroy(filesystem_t **filesystem_)</div><div class="ttdoc">filesystem_が管理しているメモリと自身のメモリを解放し、*filesystem_=NULLにする</div><div class="ttdef"><b>Definition:</b> filesystem.c:218</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filesystem_</td><td>メモリ解放対象構造体インスタンスへのダブルポインタ </td></tr>
@@ -582,7 +591,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">FILESYSTEM_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>filesystem_がNULL</li>
 <li>fullpath_がNULL</li>
-<li>mode_が未定義の値 </li>
+<li>mode_が未定義の値またはFILESYSTEM_MODE_NONE </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">FILESYSTEM_RUNTIME_ERROR</td><td>既にオープン済のファイルハンドルが渡された </td></tr>
@@ -612,7 +621,11 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>ファイルオープンモードを文字列に変換する </p>
-<dl class="section note"><dt>Note</dt><dd>不明なモードが入力された場合は文字列"undefined"が返される</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>以下の場合はNULLが返される<ul>
+<li>mode_ == FILESYSTEM_MODE_NONE</li>
+<li>mode_が規定値外</li>
+</ul>
+</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">mode_</td><td>ファイルオープンモード </td></tr>

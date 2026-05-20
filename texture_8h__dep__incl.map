@@ -1,0 +1,6 @@
+<map id="include/engine/resource/texture/texture.h" name="include/engine/resource/texture/texture.h">
+<area shape="rect" id="node1" title="テクスチャCPU側リソースを操作するモジュールAPIの定義" alt="" coords="220,5,397,45"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
+<area shape="rect" id="node3" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="234,101,383,141"/>
+<area shape="rect" id="node4" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="407,93,586,148"/>
+</map>

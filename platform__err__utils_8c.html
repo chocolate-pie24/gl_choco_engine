@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/platform/platform_core/platform_err_utils.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/platform/platform_core/platform_err_utils.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,22 +102,22 @@ $(document).ready(function(){initNavTree('platform__err__utils_8c.html',''); ini
 <div class="textblock"><code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="linear__allocator_8h_source.html">engine/core/memory/linear_allocator.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="platform__err__utils_8h_source.html">engine/platform/platform_core/platform_err_utils.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="platform__types_8h_source.html">engine/platform/platform_core/platform_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="platform__err__utils_8h_source.html">engine/systems/platform/platform_core/platform_err_utils.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="platform__types_8h_source.html">engine/systems/platform/platform_core/platform_types.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for platform_err_utils.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="platform__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2platform_2platform__core_2platform__err__utils_8c" alt=""/></div>
-<map name="asrc_2engine_2platform_2platform__core_2platform__err__utils_8c" id="asrc_2engine_2platform_2platform__core_2platform__err__utils_8c">
-<area shape="rect" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="354,5,531,60"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="63,115,273,141"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="219,196,376,236"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="401,196,581,236"/>
-<area shape="rect" href="platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="348,108,537,148"/>
-<area shape="rect" href="platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="605,196,792,236"/>
-<area shape="rect" title=" " alt="" coords="260,284,335,309"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="5,203,144,229"/>
-<area shape="rect" title=" " alt="" coords="449,284,532,309"/>
+<div class="center"><img src="platform__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2platform_2platform__core_2platform__err__utils_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2platform_2platform__core_2platform__err__utils_8c" id="asrc_2engine_2systems_2platform_2platform__core_2platform__err__utils_8c">
+<area shape="rect" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="353,5,530,60"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="63,123,273,148"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="219,218,376,258"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="401,218,581,258"/>
+<area shape="rect" href="platform__err__utils_8h.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する" alt="" coords="349,108,534,163"/>
+<area shape="rect" href="platform__types_8h.html" title="プラットフォームシステムで共通に使用されるデータ型を提供する" alt="" coords="605,211,790,265"/>
+<area shape="rect" title=" " alt="" coords="260,313,335,339"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="5,225,144,251"/>
+<area shape="rect" title=" " alt="" coords="449,313,532,339"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -226,7 +226,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_7d59e6c38bf099caaff6b4d4e47c35b4.html">platform</a></li><li class="navelem"><a class="el" href="dir_1161853eac38fc846be72fa9796dedd2.html">platform_core</a></li><li class="navelem"><a class="el" href="platform__err__utils_8c.html">platform_err_utils.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_1742d0cbb5dc3727aa92dc27feb0d581.html">platform</a></li><li class="navelem"><a class="el" href="dir_445d662fd28a45b18bd4f575133f12f1.html">platform_core</a></li><li class="navelem"><a class="el" href="platform__err__utils_8c.html">platform_err_utils.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>
