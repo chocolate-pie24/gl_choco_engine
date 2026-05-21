@@ -431,8 +431,12 @@ texture_system_result_t texture_manager_texture_id_get(const char* name_, const 
             ERROR_MESSAGE("texture_manager_texture_id_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
             goto cleanup;
         } else if(NULL != texture_manager_->cpu_resources[i]) {
-            const char* name = texture_name_get(texture_manager_->cpu_resources[i]);
-            if(NULL != name && choco_string_equal(name_, name)) {
+            const char* tmp_texture_name = texture_name_get(texture_manager_->cpu_resources[i]);
+            if(NULL == tmp_texture_name) {
+                ret = TEXTURE_SYSTEM_DATA_CORRUPTED;
+                ERROR_MESSAGE("texture_manager_texture_id_get(%s) - Texture manager data corrupted.", tex_sys_rslt_to_str(ret));
+                goto cleanup;
+            } else if(choco_string_equal(name_, tmp_texture_name)) {
                 ret_id = i;
                 found = true;
                 break;
@@ -440,8 +444,8 @@ texture_system_result_t texture_manager_texture_id_get(const char* name_, const 
         }
     }
     if(!found) {
+        // NOTE: カメラの存在確認に使用することも考慮し、ワーニング、エラーは出さない
         ret = TEXTURE_SYSTEM_BAD_OPERATION;
-        WARN_MESSAGE("texture_manager_texture_id_get(%s) - Provided texture name '%s' not found.", tex_sys_rslt_to_str(ret), name_);
         goto cleanup;
     }
 
@@ -3453,6 +3457,27 @@ static void NO_COVERAGE test_texture_manager_texture_id_get(void) {
         test_texture_manager_config_reset();
         test_texture_config_reset();
         test_choco_memory_config_reset();
+    }
+    {
+        // texture_manager_->max_texture_count < 0 -> TEXTURE_SYSTEM_BAD_OPERATION
+        texture_system_result_t ret = TEXTURE_SYSTEM_SUCCESS;
+        texture_manager_t manager = {0};
+        texture_t* cpu_resources[2] = {NULL};
+        renderer_backend_texture_t* gpu_resources[2] = {NULL};
+        int16_t texture_id = 123;
+
+        manager.max_texture_count = -1;
+        manager.cpu_resources = cpu_resources;
+        manager.gpu_resources = gpu_resources;
+
+        test_texture_manager_config_reset();
+
+        ret = texture_manager_texture_id_get("test_texture_red", &manager, &texture_id);
+
+        assert(TEXTURE_SYSTEM_BAD_OPERATION == ret);
+        assert(123 == texture_id);
+
+        test_texture_manager_config_reset();
     }
 }
 
