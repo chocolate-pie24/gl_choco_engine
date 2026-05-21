@@ -303,7 +303,7 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
         mock_glDeleteProgram((*shader_handle_)->program_id);
     }
 
-    render_mem_free(*shader_handle_, sizeof(renderer_backend_shader_t));
+    renderer_mem_free(*shader_handle_, sizeof(renderer_backend_shader_t));
     *shader_handle_ = NULL;
 }
 
@@ -401,12 +401,12 @@ static renderer_result_t gl33_shader_compile(shader_type_t shader_type_, const c
         if(GL_TRUE != result) {
             ret = RENDERER_SHADER_COMPILE_ERROR;
             ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_rslt_to_str(ret), err_mes);
-            render_mem_free(err_mes, (size_t)info_log_length);
+            renderer_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_compile - info log: %s", err_mes);
-            render_mem_free(err_mes, (size_t)info_log_length);
+            renderer_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
         }
     } else if(GL_TRUE != result) {
@@ -487,12 +487,12 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
         if(GL_TRUE != result) {
             ret = RENDERER_SHADER_LINK_ERROR;
             ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_rslt_to_str(ret), err_mes);
-            render_mem_free(err_mes, (size_t)info_log_length);
+            renderer_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_link - info log: %s", err_mes);
-            render_mem_free(err_mes, (size_t)info_log_length);
+            renderer_mem_free(err_mes, (size_t)info_log_length);
             err_mes = NULL;
         }
     } else if(GL_TRUE != result) {
@@ -1262,7 +1262,7 @@ static void NO_COVERAGE test_gl33_shader_destroy(void) {
         assert(0U == s_test_config_mock_glDeleteProgram.call_count);
     }
     {
-        // 全ハンドル 0 の状態 -> render_mem_free() のみ行われ、delete 系は呼ばれない
+        // 全ハンドル 0 の状態 -> renderer_mem_free() のみ行われ、delete 系は呼ばれない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         memory_system_result_t ret_msys = MEMORY_SYSTEM_INVALID_ARGUMENT;
         renderer_backend_shader_t* shader_handle = NULL;

@@ -193,7 +193,7 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vertex_buffer_) {
         WARN_MESSAGE("gl33_vbo_destroy(RUNTIME_ERROR) - Failed to unbind vertex buffer.");
     }
     mock_glDeleteBuffers(1, &(*vertex_buffer_)->vbo_handle);
-    render_mem_free(*vertex_buffer_, sizeof(renderer_backend_vbo_t));
+    renderer_mem_free(*vertex_buffer_, sizeof(renderer_backend_vbo_t));
 
     *vertex_buffer_ = NULL;
 

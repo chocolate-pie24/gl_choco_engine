@@ -189,7 +189,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vertex_array_) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vertex_array_)->vao_handle);
-    render_mem_free(*vertex_array_, sizeof(renderer_backend_vao_t));
+    renderer_mem_free(*vertex_array_, sizeof(renderer_backend_vao_t));
 
     *vertex_array_ = NULL;
 

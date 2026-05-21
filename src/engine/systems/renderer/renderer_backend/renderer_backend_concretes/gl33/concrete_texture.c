@@ -253,7 +253,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
 
     mock_glDeleteTextures(1, &(*texture_handle_)->handle);
 
-    render_mem_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t));
+    renderer_mem_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t));
 
     *texture_handle_ = NULL;
 }

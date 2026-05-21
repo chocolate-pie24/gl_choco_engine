@@ -220,7 +220,7 @@ void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t
     if(NULL != (*ui_shader_)->shader) {
         renderer_backend_shader_destroy(backend_context_, &(*ui_shader_)->shader);
     }
-    render_mem_free(*ui_shader_, sizeof(ui_shader_t));
+    renderer_mem_free(*ui_shader_, sizeof(ui_shader_t));
     *ui_shader_ = NULL;
 }
 
