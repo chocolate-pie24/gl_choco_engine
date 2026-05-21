@@ -18,6 +18,7 @@ graph TD
     subgraph RENDERER_BACKEND_INTERFACE[renderer_backend_interface]
       direction TB
       INTERFACE_SHADER[interface_shader]
+      INTERFACE_TEXTURE[interface_texture]
       INTERFACE_VAO[interface_vao]
       INTERFACE_VBO[interface_vbo]
     end
@@ -27,6 +28,7 @@ graph TD
       subgraph GL33
         direction TB
         CONCRETE_SHADER[concrete_shader]
+        CONCRETE_TEXTURE[concrete_texture]
         CONCRETE_VAO[concrete_vao]
         CONCRETE_VBO[concrete_vbo]
       end
