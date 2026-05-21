@@ -159,9 +159,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ad0a935aeb1b3ff6e7869445296823c47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera__manager_8h.html#ad0a935aeb1b3ff6e7869445296823c47">camera_manager_unregister_by_name</a> (const char *name_, <a class="el" href="camera__manager_8h.html#a61bbf0c964d67f1123fa8f796313ec57">camera_manager_t</a> *camera_manager_)</td></tr>
 <tr class="memdesc:ad0a935aeb1b3ff6e7869445296823c47"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ名称を使用して対応するカメラをカメラ管理システムから削除する  <br /></td></tr>
 <tr class="separator:ad0a935aeb1b3ff6e7869445296823c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a933ab19c22e6ace7fd401931dd75e568"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera__manager_8h.html#a933ab19c22e6ace7fd401931dd75e568">camera_manager_camera_id_get</a> (const char *name_, const <a class="el" href="camera__manager_8h.html#a61bbf0c964d67f1123fa8f796313ec57">camera_manager_t</a> *camera_manager_)</td></tr>
-<tr class="memdesc:a933ab19c22e6ace7fd401931dd75e568"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ名称に対応するカメラ識別子をカメラ管理システムから取得する  <br /></td></tr>
-<tr class="separator:a933ab19c22e6ace7fd401931dd75e568"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87dcde064c2124a8ccbdc2b35af0b464"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera__manager_8h.html#a87dcde064c2124a8ccbdc2b35af0b464">camera_manager_camera_id_get</a> (const char *name_, const <a class="el" href="camera__manager_8h.html#a61bbf0c964d67f1123fa8f796313ec57">camera_manager_t</a> *camera_manager_, int16_t *out_camera_id_)</td></tr>
+<tr class="memdesc:a87dcde064c2124a8ccbdc2b35af0b464"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ名称に対応するカメラ識別子をカメラ管理システムから取得する  <br /></td></tr>
+<tr class="separator:a87dcde064c2124a8ccbdc2b35af0b464"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0791220f3ade82a18e084034c195ec22"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera__manager_8h.html#a0791220f3ade82a18e084034c195ec22">camera_manager_camera_get</a> (int16_t camera_id_, const <a class="el" href="camera__manager_8h.html#a61bbf0c964d67f1123fa8f796313ec57">camera_manager_t</a> *camera_manager_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> **out_camera_)</td></tr>
 <tr class="memdesc:a0791220f3ade82a18e084034c195ec22"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラIDを使用して対応するカメラ管理システムからカメラ構造体インスタンスへのポインタを取得する  <br /></td></tr>
 <tr class="separator:a0791220f3ade82a18e084034c195ec22"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -342,6 +342,7 @@ Functions</h2></td></tr>
 <li>name_に対応するカメラが管理システム内に見つからない </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CAMERA_DATA_CORRUPTED</td><td>カメラ管理システム内部データ破損 </td></tr>
     <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
@@ -349,14 +350,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a933ab19c22e6ace7fd401931dd75e568" name="a933ab19c22e6ace7fd401931dd75e568"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a933ab19c22e6ace7fd401931dd75e568">&#9670;&#160;</a></span>camera_manager_camera_id_get()</h2>
+<a id="a87dcde064c2124a8ccbdc2b35af0b464" name="a87dcde064c2124a8ccbdc2b35af0b464"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a87dcde064c2124a8ccbdc2b35af0b464">&#9670;&#160;</a></span>camera_manager_camera_id_get()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int16_t camera_manager_camera_id_get </td>
+          <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> camera_manager_camera_id_get </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>name_</em>, </td>
@@ -365,7 +366,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="camera__manager_8h.html#a61bbf0c964d67f1123fa8f796313ec57">camera_manager_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_manager_</em>&#160;</td>
+          <td class="paramname"><em>camera_manager_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int16_t *&#160;</td>
+          <td class="paramname"><em>out_camera_id_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -379,21 +386,26 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name_</td><td>識別子を取得するカメラの名称 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">camera_manager_</td><td>取得元カメラ管理システム構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">camera_manager_</td><td>取得元カメラ管理システム構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_camera_id_</td><td>カメラ識別子格納先</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">INVALID_CAMERA_ID以外</td><td>カメラ識別子 </td></tr>
-    <tr><td class="paramname">INVALID_CAMERA_ID</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">CAMERA_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>camera_manager_ == NULL</li>
-<li>camera_manager_-&gt;max_camera_count &lt;= 0</li>
-<li>camera_manager_-&gt;camera_array == NULL</li>
 <li>name_ == NULL</li>
-<li>カメラ名称が管理システム内に見つからない </li>
+<li>out_camera_id_ == NULL </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CAMERA_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>カメラ管理システム未初期化</li>
+<li>指定したカメラ名称がカメラ管理システム内に見つからない </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CAMERA_DATA_CORRUPTED</td><td>カメラ管理システム内部データ破損 </td></tr>
+    <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
@@ -547,6 +559,7 @@ Functions</h2></td></tr>
 <li>メモリ管理システムがメモリ使用量の上限を超過した </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CAMERA_DATA_CORRUPTED</td><td>カメラ管理システム内部データ破損 </td></tr>
     <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
@@ -656,6 +669,7 @@ Functions</h2></td></tr>
 <li>カメラ名称に対応するカメラが管理システム内に見つからない </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">CAMERA_DATA_CORRUPTED</td><td>カメラ管理システム内部データ破損 </td></tr>
     <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
