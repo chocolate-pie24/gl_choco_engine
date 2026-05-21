@@ -35,6 +35,15 @@
 
 // #define TEST_BUILD
 
+/**
+ * @brief カメラ管理システム内部状態管理構造体
+ *
+ */
+struct camera_manager {
+    int16_t max_camera_count;   /**< 管理システムに登録可能なカメラ数上限値 */
+    camera_t** camera_array;    /**< カメラ構造体インスタンス格納配列 */
+};
+
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
 #include <assert.h>
@@ -70,15 +79,6 @@ static void test_camera_manager_camera_id_get(void);
 static void test_camera_manager_camera_get(void);
 static void test_camera_manager_camera_get_by_name(void);
 #endif
-
-/**
- * @brief カメラ管理システム内部状態管理構造体
- *
- */
-struct camera_manager {
-    int16_t max_camera_count;   /**< 管理システムに登録可能なカメラ数上限値 */
-    camera_t** camera_array;    /**< カメラ構造体インスタンス格納配列 */
-};
 
 camera_result_t camera_manager_initialize(int16_t max_camera_count_, linear_alloc_t* allocator_, camera_manager_t** out_camera_manager_) {
 #ifdef TEST_BUILD
@@ -135,7 +135,7 @@ void camera_manager_deinitialize(camera_manager_t* camera_manager_) {
     if(NULL == camera_manager_) {
         return;
     }
-    if(0 == camera_manager_->max_camera_count) {
+    if(0 >= camera_manager_->max_camera_count) {
         return;
     }
     for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
@@ -168,10 +168,17 @@ camera_result_t camera_manager_register(const char* camera_name_, camera_manager
             if(INVALID_CAMERA_ID == free_slot) {
                 free_slot = i;
             }
-        } else if(choco_string_equal(camera_name_, camera_name_get(camera_manager_->camera_array[i]))) {
-            ret = CAMERA_BAD_OPERATION;
-            ERROR_MESSAGE("camera_manager_register(%s) - Provided camera name '%s' is already registered.", camera_rslt_to_str(ret), camera_name_);
-            goto cleanup;
+        } else {
+            const char* tmp_camera_name = camera_name_get(camera_manager_->camera_array[i]);
+            if(NULL == tmp_camera_name) {
+                ret = CAMERA_DATA_CORRUPTED;
+                ERROR_MESSAGE("camera_manager_register(%s) - Camera manager data corrupted.", camera_rslt_to_str(ret));
+                goto cleanup;
+            } else if(choco_string_equal(tmp_camera_name, camera_name_)) {
+                ret = CAMERA_BAD_OPERATION;
+                ERROR_MESSAGE("camera_manager_register(%s) - Provided camera name '%s' is already registered.", camera_rslt_to_str(ret), camera_name_);
+                goto cleanup;
+            }
         }
     }
     if(INVALID_CAMERA_ID == free_slot) {
@@ -234,27 +241,19 @@ camera_result_t camera_manager_unregister_by_name(const char* name_, camera_mana
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
-    bool found = false;
+    int16_t tmp_id = INVALID_CAMERA_ID;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_unregister_by_name", "camera_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_unregister_by_name", "camera_manager_->max_camera_count")
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_unregister_by_name", "camera_manager_->camera_array")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_unregister_by_name", "name_")
 
-    for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
-        if(NULL != camera_manager_->camera_array[i]) {
-            if(choco_string_equal(name_, camera_name_get(camera_manager_->camera_array[i]))) {
-                camera_destroy(&camera_manager_->camera_array[i]);
-                found = true;
-                break;
-            }
-        }
-    }
-    if(!found) {
-        ret = CAMERA_BAD_OPERATION;
-        ERROR_MESSAGE("camera_manager_unregister_by_name(%s) - Provided camera name '%s' is not registered.", camera_rslt_to_str(ret), name_);
+    ret = camera_manager_camera_id_get(name_, camera_manager_, &tmp_id);
+    if(CAMERA_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_manager_unregister_by_name(%s) - Failed to get camera id. Provided camera name = '%s'.", camera_rslt_to_str(ret), name_);
         goto cleanup;
     }
+    camera_destroy(&camera_manager_->camera_array[tmp_id]);
 
     ret = CAMERA_SUCCESS;
 
@@ -262,41 +261,51 @@ cleanup:
     return ret;
 }
 
-int16_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_) {
+camera_result_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_, int16_t* out_camera_id_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_camera_id_get.call_count++;
     if(s_test_config_camera_manager_camera_id_get.fail_on_call != 0) {
         if(s_test_config_camera_manager_camera_id_get.call_count == s_test_config_camera_manager_camera_id_get.fail_on_call) {
-            return (int16_t)s_test_config_camera_manager_camera_id_get.forced_result;
+            return (camera_result_t)s_test_config_camera_manager_camera_id_get.forced_result;
         }
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
-    int16_t ret_id = INVALID_CAMERA_ID;
+    int16_t tmp_id = INVALID_CAMERA_ID;
     bool found = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_id_get", "camera_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_id_get", "camera_manager_->max_camera_count")
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_id_get", "camera_manager_->camera_array")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_id_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_id_get", "out_camera_id_")
 
     for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
         if(NULL != camera_manager_->camera_array[i]) {
-            if(choco_string_equal(name_, camera_name_get(camera_manager_->camera_array[i]))) {
-                ret_id = i;
+            const char* tmp_name = camera_name_get(camera_manager_->camera_array[i]);
+            if(NULL == tmp_name) {
+                ret = CAMERA_DATA_CORRUPTED;
+                ERROR_MESSAGE("camera_manager_camera_id_get(%s) - Camera manager data corrupted.", camera_rslt_to_str(ret));
+                goto cleanup;
+            } else if(choco_string_equal(name_, tmp_name)) {
+                tmp_id = i;
                 found = true;
                 break;
             }
         }
     }
     if(!found) {
+        // NOTE: カメラの存在確認に使用することも考慮し、ワーニング、エラーは出さない
         ret = CAMERA_BAD_OPERATION;
-        WARN_MESSAGE("camera_manager_camera_id_get(%s) - Provided camera name '%s' not found.", camera_rslt_to_str(ret), name_);
         goto cleanup;
     }
 
+    *out_camera_id_ = tmp_id;
+
+    ret = CAMERA_SUCCESS;
+
 cleanup:
-    return ret_id;
+    return ret;
 }
 
 camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manager_t* camera_manager_, camera_t** out_camera_) {
@@ -340,7 +349,7 @@ camera_result_t camera_manager_camera_get_by_name(const char* name_, const camer
     }
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
-    bool found = false;
+    int16_t tmp_id = INVALID_CAMERA_ID;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "camera_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(camera_manager_->max_camera_count > 0, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_camera_get_by_name", "camera_manager_->max_camera_count")
@@ -348,20 +357,12 @@ camera_result_t camera_manager_camera_get_by_name(const char* name_, const camer
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "out_camera_")
 
-    for(int16_t i = 0; i != camera_manager_->max_camera_count; ++i) {
-        if(NULL != camera_manager_->camera_array[i]) {
-            if(choco_string_equal(camera_name_get(camera_manager_->camera_array[i]), name_)) {
-                *out_camera_ = camera_manager_->camera_array[i];
-                found = true;
-                break;
-            }
-        }
-    }
-    if(!found) {
-        ret = CAMERA_BAD_OPERATION;
-        ERROR_MESSAGE("camera_manager_camera_get_by_name(%s) - Provided camera name '%s' is not registered.", camera_rslt_to_str(ret), name_);
+    ret = camera_manager_camera_id_get(name_, camera_manager_, &tmp_id);
+    if(CAMERA_SUCCESS != ret) {
+        ERROR_MESSAGE("camera_manager_camera_get_by_name(%s) - Failed to get camera.", camera_rslt_to_str(ret));
         goto cleanup;
     }
+    *out_camera_ = camera_manager_->camera_array[tmp_id];
 
     ret = CAMERA_SUCCESS;
 
@@ -701,7 +702,7 @@ static void NO_COVERAGE test_camera_manager_initialize(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_camera_manager_deinitialize(void) {
     {
-        /* NULL入力は no-op であること */
+        /* camera_manager_ == NULL の場合は no-op であること */
         test_camera_manager_config_reset();
         test_camera_config_reset();
         test_choco_memory_config_reset();
@@ -710,7 +711,7 @@ static void NO_COVERAGE test_camera_manager_deinitialize(void) {
     }
     {
         /* max_camera_count == 0 の場合は no-op であること */
-        camera_manager_t manager = { 0 };
+        camera_manager_t manager = {0};
         camera_t* camera_array[2] = { NULL, NULL };
 
         test_camera_manager_config_reset();
@@ -728,8 +729,27 @@ static void NO_COVERAGE test_camera_manager_deinitialize(void) {
         assert(NULL == manager.camera_array[1]);
     }
     {
-        /* 登録カメラがない場合でも正常終了し、max_camera_count が 0 になること */
-        camera_manager_t manager = { 0 };
+        /* max_camera_count < 0 の場合は no-op であること */
+        camera_manager_t manager = {0};
+        camera_t* camera_array[2] = { (camera_t*)0x1, (camera_t*)0x2 };
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+
+        manager.max_camera_count = -1;
+        manager.camera_array = camera_array;
+
+        camera_manager_deinitialize(&manager);
+
+        assert(-1 == manager.max_camera_count);
+        assert(camera_array == manager.camera_array);
+        assert((camera_t*)0x1 == manager.camera_array[0]);
+        assert((camera_t*)0x2 == manager.camera_array[1]);
+    }
+    {
+        /* 登録カメラがない場合でも全スロットを処理し、max_camera_count が 0 になること */
+        camera_manager_t manager = {0};
         camera_t* camera_array[3] = { NULL, NULL, NULL };
 
         test_camera_manager_config_reset();
@@ -751,7 +771,7 @@ static void NO_COVERAGE test_camera_manager_deinitialize(void) {
         /* 登録済みカメラを全て破棄し、各スロットが NULL になること */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        camera_manager_t manager = { 0 };
+        camera_manager_t manager = {0};
         camera_t* camera_array[3] = { NULL, NULL, NULL };
 
         test_camera_manager_config_reset();
@@ -790,7 +810,7 @@ static void NO_COVERAGE test_camera_manager_deinitialize(void) {
         /* NULLスロットと登録済みカメラが混在していても全走査できること */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        camera_manager_t manager = { 0 };
+        camera_manager_t manager = {0};
         camera_t* camera_array[4] = { NULL, NULL, NULL, NULL };
 
         test_camera_manager_config_reset();
@@ -971,6 +991,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         ret = camera_manager_register("main_camera", &manager, &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
+
         assert(NULL == manager.camera_array[0]);
         assert(NULL != manager.camera_array[1]);
         assert(NULL == manager.camera_array[2]);
@@ -980,7 +1001,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         memory_system_destroy();
     }
     {
-        /* 空きスロットがない場合は LIMIT_EXCEEDED を返すこと */
+        /* 空きスロットがない場合は CAMERA_LIMIT_EXCEEDED を返すこと */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
@@ -1008,6 +1029,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         ret = camera_manager_register("new_camera", &manager, &camera_id);
         assert(CAMERA_LIMIT_EXCEEDED == ret);
         assert(123 == camera_id);
+
         assert(NULL != manager.camera_array[0]);
         assert(NULL != manager.camera_array[1]);
         assert(choco_string_equal("camera_0", camera_name_get(manager.camera_array[0])));
@@ -1045,6 +1067,35 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         test_camera_config_reset();
     }
     {
+        /* 正常系: 空配列なら先頭スロットに登録されること */
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_manager_t manager = {0};
+        camera_t* camera_array[2] = { NULL, NULL };
+        int16_t camera_id = INVALID_CAMERA_ID;
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_mem = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+
+        manager.max_camera_count = 2;
+        manager.camera_array = camera_array;
+
+        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        assert(CAMERA_SUCCESS == ret);
+        assert(0 == camera_id);
+
+        assert(NULL != manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
+        assert(choco_string_equal("main_camera", camera_name_get(manager.camera_array[0])));
+
+        camera_manager_deinitialize(&manager);
+        memory_system_destroy();
+    }
+    {
         /* 正常系: 複数空きがあっても最初の空きスロットに登録されること */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
@@ -1073,16 +1124,14 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         ret = camera_manager_register("new_camera", &manager, &camera_id);
         assert(CAMERA_SUCCESS == ret);
         assert(1 == camera_id);
-        assert(NULL != manager.camera_array[1]);
-        assert(choco_string_equal("new_camera", camera_name_get(manager.camera_array[1])));
 
-        /* 後ろの空きスロットは未使用のままであること */
+        assert(NULL != manager.camera_array[0]);
+        assert(NULL != manager.camera_array[1]);
+        assert(NULL != manager.camera_array[2]);
         assert(NULL == manager.camera_array[3]);
 
-        /* 既存登録済みカメラは保持されること */
-        assert(NULL != manager.camera_array[0]);
-        assert(NULL != manager.camera_array[2]);
         assert(choco_string_equal("existing_0", camera_name_get(manager.camera_array[0])));
+        assert(choco_string_equal("new_camera", camera_name_get(manager.camera_array[1])));
         assert(choco_string_equal("existing_2", camera_name_get(manager.camera_array[2])));
 
         camera_manager_deinitialize(&manager);
@@ -1379,7 +1428,51 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         assert(NULL == manager.camera_array[1]);
     }
     {
-        /* 指定名が未登録なら BAD_OPERATION を返すこと */
+        /* 下位層 camera_manager_camera_id_get() の失敗が伝播し、既存カメラが破棄されないこと */
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        test_call_control_t config = {0};
+        camera_manager_t manager = {0};
+        camera_t* camera_array[2] = { NULL, NULL };
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        ret_mem = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+
+        ret = camera_create("main_camera", &camera_array[0]);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera_array[0]);
+
+        ret = camera_create("sub_camera", &camera_array[1]);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera_array[1]);
+
+        manager.max_camera_count = 2;
+        manager.camera_array = camera_array;
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_DATA_CORRUPTED;
+        test_camera_manager_camera_id_get_config_set(&config);
+
+        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        assert(CAMERA_DATA_CORRUPTED == ret);
+
+        assert(NULL != manager.camera_array[0]);
+        assert(NULL != manager.camera_array[1]);
+        assert(choco_string_equal("main_camera", camera_name_get(manager.camera_array[0])));
+        assert(choco_string_equal("sub_camera", camera_name_get(manager.camera_array[1])));
+
+        test_camera_manager_config_reset();
+
+        camera_manager_deinitialize(&manager);
+        memory_system_destroy();
+    }
+    {
+        /* 指定名が未登録なら BAD_OPERATION を返し、既存カメラが破棄されないこと */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
@@ -1405,6 +1498,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
 
         ret = camera_manager_unregister_by_name("not_found_camera", &manager);
         assert(CAMERA_BAD_OPERATION == ret);
+
         assert(NULL != manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
         assert(NULL != manager.camera_array[2]);
@@ -1505,10 +1599,11 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
 static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
     {
         /* この関数自身の失敗注入が効くこと */
-        int16_t actual = INVALID_CAMERA_ID;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         test_call_control_t config = {0};
         camera_manager_t manager = {0};
         camera_t* camera_array[2] = { NULL, NULL };
+        int16_t camera_id = 123;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1519,30 +1614,34 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.camera_array = camera_array;
 
         config.fail_on_call = 1U;
-        config.forced_result = 123;
+        config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_camera_id_get_config_set(&config);
 
-        actual = camera_manager_camera_id_get("main_camera", &manager);
-        assert(123 == actual);
+        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
 
         test_camera_manager_config_reset();
     }
     {
         /* camera_manager_ == NULL */
-        int16_t actual = 0;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        int16_t camera_id = 123;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        actual = camera_manager_camera_id_get("main_camera", NULL);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("main_camera", NULL, &camera_id);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(123 == camera_id);
     }
     {
         /* camera_manager_->max_camera_count <= 0 */
-        int16_t actual = 0;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
         camera_t* camera_array[1] = { NULL };
+        int16_t camera_id = 123;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1551,18 +1650,23 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        actual = camera_manager_camera_id_get("main_camera", &manager);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
+        assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        actual = camera_manager_camera_id_get("main_camera", &manager);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
+        assert(NULL == manager.camera_array[0]);
     }
     {
         /* camera_manager_->camera_array == NULL */
-        int16_t actual = 0;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
+        int16_t camera_id = 123;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1571,12 +1675,33 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        actual = camera_manager_camera_id_get("main_camera", &manager);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
     }
     {
         /* name_ == NULL */
-        int16_t actual = 0;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_manager_t manager = {0};
+        camera_t* camera_array[2] = { NULL, NULL };
+        int16_t camera_id = 123;
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+
+        manager.max_camera_count = 2;
+        manager.camera_array = camera_array;
+
+        ret = camera_manager_camera_id_get(NULL, &manager, &camera_id);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(123 == camera_id);
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
+    }
+    {
+        /* out_camera_id_ == NULL */
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
         camera_t* camera_array[2] = { NULL, NULL };
 
@@ -1587,16 +1712,18 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        actual = camera_manager_camera_id_get(NULL, &manager);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("main_camera", &manager, NULL);
+        assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
     }
     {
-        /* 指定名が未登録なら INVALID_CAMERA_ID を返すこと */
+        /* 指定名が未登録なら BAD_OPERATION を返し、out_camera_id_ を変更しないこと */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        int16_t actual = 0;
         camera_manager_t manager = {0};
         camera_t* camera_array[3] = { NULL, NULL, NULL };
+        int16_t camera_id = 123;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1616,8 +1743,9 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        actual = camera_manager_camera_id_get("not_found_camera", &manager);
-        assert(INVALID_CAMERA_ID == actual);
+        ret = camera_manager_camera_id_get("not_found_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
 
         assert(NULL != manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1629,12 +1757,34 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         memory_system_destroy();
     }
     {
+        /* 空の管理配列では BAD_OPERATION を返し、out_camera_id_ を変更しないこと */
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_manager_t manager = {0};
+        camera_t* camera_array[3] = { NULL, NULL, NULL };
+        int16_t camera_id = 123;
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+
+        manager.max_camera_count = 3;
+        manager.camera_array = camera_array;
+
+        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert(123 == camera_id);
+
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
+        assert(NULL == manager.camera_array[2]);
+    }
+    {
         /* 先頭に NULL スロットがあっても後ろの一致名を探索できること */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        int16_t actual = INVALID_CAMERA_ID;
         camera_manager_t manager = {0};
         camera_t* camera_array[4] = { NULL, NULL, NULL, NULL };
+        int16_t camera_id = INVALID_CAMERA_ID;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1658,8 +1808,17 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 4;
         manager.camera_array = camera_array;
 
-        actual = camera_manager_camera_id_get("target_camera", &manager);
-        assert(2 == actual);
+        ret = camera_manager_camera_id_get("target_camera", &manager, &camera_id);
+        assert(CAMERA_SUCCESS == ret);
+        assert(2 == camera_id);
+
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL != manager.camera_array[1]);
+        assert(NULL != manager.camera_array[2]);
+        assert(NULL != manager.camera_array[3]);
+        assert(choco_string_equal("camera_1", camera_name_get(manager.camera_array[1])));
+        assert(choco_string_equal("target_camera", camera_name_get(manager.camera_array[2])));
+        assert(choco_string_equal("camera_3", camera_name_get(manager.camera_array[3])));
 
         camera_manager_deinitialize(&manager);
         memory_system_destroy();
@@ -1668,9 +1827,9 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         /* 正常系: 一致したカメラ名称のIDを返すこと */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        int16_t actual = INVALID_CAMERA_ID;
         camera_manager_t manager = {0};
         camera_t* camera_array[3] = { NULL, NULL, NULL };
+        int16_t camera_id = INVALID_CAMERA_ID;
 
         test_camera_manager_config_reset();
         test_camera_config_reset();
@@ -1694,8 +1853,9 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        actual = camera_manager_camera_id_get("target_camera", &manager);
-        assert(1 == actual);
+        ret = camera_manager_camera_id_get("target_camera", &manager, &camera_id);
+        assert(CAMERA_SUCCESS == ret);
+        assert(1 == camera_id);
 
         /* 読み取り系なので内部状態は変化しないこと */
         assert(NULL != manager.camera_array[0]);
@@ -1951,9 +2111,11 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_camera_get_by_name_config_set(&config);
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
 
         test_camera_manager_config_reset();
     }
@@ -1966,7 +2128,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_camera_get_by_name("target_camera", NULL, &out_camera);
+        ret = camera_manager_camera_get_by_name("main_camera", NULL, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -1984,15 +2146,17 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
+        assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
+        assert(NULL == manager.camera_array[0]);
     }
     {
         /* camera_manager_->camera_array == NULL */
@@ -2007,7 +2171,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -2028,6 +2192,8 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         ret = camera_manager_camera_get_by_name(NULL, &manager, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
     }
     {
         /* out_camera_ == NULL */
@@ -2042,11 +2208,59 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, NULL);
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
     }
     {
-        /* 指定名が未登録なら BAD_OPERATION を返すこと */
+        /* 下位層 camera_manager_camera_id_get() の失敗が伝播し、out_camera_ が変更されないこと */
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        test_call_control_t config = {0};
+        camera_manager_t manager = {0};
+        camera_t* camera_array[2] = { NULL, NULL };
+        camera_t* out_camera = (camera_t*)0x1;
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        ret_mem = memory_system_create();
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+
+        ret = camera_create("main_camera", &camera_array[0]);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera_array[0]);
+
+        ret = camera_create("sub_camera", &camera_array[1]);
+        assert(CAMERA_SUCCESS == ret);
+        assert(NULL != camera_array[1]);
+
+        manager.max_camera_count = 2;
+        manager.camera_array = camera_array;
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CAMERA_DATA_CORRUPTED;
+        test_camera_manager_camera_id_get_config_set(&config);
+
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        assert(CAMERA_DATA_CORRUPTED == ret);
+        assert((camera_t*)0x1 == out_camera);
+
+        assert(NULL != manager.camera_array[0]);
+        assert(NULL != manager.camera_array[1]);
+        assert(choco_string_equal("main_camera", camera_name_get(manager.camera_array[0])));
+        assert(choco_string_equal("sub_camera", camera_name_get(manager.camera_array[1])));
+
+        test_camera_manager_config_reset();
+
+        camera_manager_deinitialize(&manager);
+        memory_system_destroy();
+    }
+    {
+        /* 指定名が未登録なら BAD_OPERATION を返し、out_camera_ を変更しないこと */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
@@ -2078,12 +2292,36 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         assert(NULL != manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
         assert(NULL != manager.camera_array[2]);
+        assert(choco_string_equal("camera_0", camera_name_get(manager.camera_array[0])));
+        assert(choco_string_equal("camera_2", camera_name_get(manager.camera_array[2])));
 
         camera_manager_deinitialize(&manager);
         memory_system_destroy();
     }
     {
-        /* 先頭に NULL スロットがあっても後ろの一致名を探索できること */
+        /* 空の管理配列では BAD_OPERATION を返し、out_camera_ を変更しないこと */
+        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
+        camera_manager_t manager = {0};
+        camera_t* camera_array[3] = { NULL, NULL, NULL };
+        camera_t* out_camera = (camera_t*)0x1;
+
+        test_camera_manager_config_reset();
+        test_camera_config_reset();
+        test_choco_memory_config_reset();
+
+        manager.max_camera_count = 3;
+        manager.camera_array = camera_array;
+
+        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        assert(CAMERA_BAD_OPERATION == ret);
+        assert((camera_t*)0x1 == out_camera);
+
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL == manager.camera_array[1]);
+        assert(NULL == manager.camera_array[2]);
+    }
+    {
+        /* 先頭に NULL スロットがあっても後ろの一致名を取得できること */
         memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
         camera_result_t ret = CAMERA_UNDEFINED_ERROR;
         camera_manager_t manager = {0};
@@ -2116,6 +2354,14 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         assert(CAMERA_SUCCESS == ret);
         assert(camera_array[2] == out_camera);
         assert(choco_string_equal("target_camera", camera_name_get(out_camera)));
+
+        assert(NULL == manager.camera_array[0]);
+        assert(NULL != manager.camera_array[1]);
+        assert(NULL != manager.camera_array[2]);
+        assert(NULL != manager.camera_array[3]);
+        assert(choco_string_equal("camera_1", camera_name_get(manager.camera_array[1])));
+        assert(choco_string_equal("target_camera", camera_name_get(manager.camera_array[2])));
+        assert(choco_string_equal("camera_3", camera_name_get(manager.camera_array[3])));
 
         camera_manager_deinitialize(&manager);
         memory_system_destroy();

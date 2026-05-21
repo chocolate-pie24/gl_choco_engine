@@ -79,6 +79,7 @@ void camera_manager_deinitialize(camera_manager_t* camera_manager_);
  * @retval CAMERA_LIMIT_EXCEEDED 以下のいずれか
  * - カメラ管理システムに空き領域がない
  * - メモリ管理システムがメモリ使用量の上限を超過した
+ * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_register(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_);
@@ -114,6 +115,7 @@ camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* 
  * - camera_manager_->max_camera_count <= 0
  * - camera_manager_->camera_array == NULL
  * - カメラ名称に対応するカメラが管理システム内に見つからない
+ * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_unregister_by_name(const char* name_, camera_manager_t* camera_manager_);
@@ -123,16 +125,19 @@ camera_result_t camera_manager_unregister_by_name(const char* name_, camera_mana
  *
  * @param[in] name_ 識別子を取得するカメラの名称
  * @param[in] camera_manager_ 取得元カメラ管理システム構造体インスタンスへのポインタ
+ * @param[out] out_camera_id_ カメラ識別子格納先
  *
- * @retval INVALID_CAMERA_ID以外: カメラ識別子
- * @retval INVALID_CAMERA_ID 以下のいずれか
+ * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_manager_ == NULL
- * - camera_manager_->max_camera_count <= 0
- * - camera_manager_->camera_array == NULL
  * - name_ == NULL
- * - カメラ名称が管理システム内に見つからない
+ * - out_camera_id_ == NULL
+ * @retval CAMERA_BAD_OPERATION 以下のいずれか
+ * - カメラ管理システム未初期化
+ * - 指定したカメラ名称がカメラ管理システム内に見つからない
+ * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
+ * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-int16_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_);
+camera_result_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_, int16_t* out_camera_id_);
 
 /**
  * @brief カメラIDを使用して対応するカメラ管理システムからカメラ構造体インスタンスへのポインタを取得する
@@ -169,6 +174,7 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manag
  * - camera_manager_->max_camera_count <= 0
  * - camera_manager_->camera_array == NULL
  * - name_に対応するカメラが管理システム内に見つからない
+ * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_manager_camera_get_by_name(const char* name_, const camera_manager_t* camera_manager_, camera_t** out_camera_);
