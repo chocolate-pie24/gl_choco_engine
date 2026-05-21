@@ -5,6 +5,10 @@ classDiagram
     ShaderConcrete1 : + strategy_method()
     ShaderConcrete2 : + strategy_method()
 
+    TextureInterface : + strategy_method()
+    TextureConcrete1 : + strategy_method()
+    TextureConcrete2 : + strategy_method()
+
     VAOInterface : + strategy_method()
     VAOConcrete1 : + strategy_method()
     VAOConcrete2 : + strategy_method()
@@ -16,6 +20,10 @@ classDiagram
     Context --> ShaderInterface
     ShaderInterface <|-- ShaderConcrete1
     ShaderInterface <|-- ShaderConcrete2
+
+    Context --> TextureInterface
+    TextureInterface <|-- TextureConcrete1
+    TextureInterface <|-- TextureConcrete2
 
     Context --> VAOInterface
     VAOInterface <|-- VAOConcrete1
