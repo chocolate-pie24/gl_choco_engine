@@ -9,7 +9,7 @@ This document describes the high-level layering and module dependencies of GL CH
   - [Detailed view: Renderer System](#detailed-view-renderer-system)
   - [Detailed view: Camera System](#detailed-view-camera-system)
   - [Detailed view: Texture System](#detailed-view-texture-system)
-  - [Detailed view: Texture Resource](#detailed-view-texture-resource)
+  - [Detailed view: Resource](#detailed-view-resource)
   - [Layer Reference](#layer-reference)
     - [application](#application)
     - [engine/base](#enginebase)
@@ -50,9 +50,9 @@ This diagram shows the module dependencies at the engine level.
 
 [Texture System Architecture](./architecture/systems/texture_system/architecture_en.md)
 
-## Detailed view: Texture Resource
+## Detailed view: Resource
 
-[Texture Resource Architecture](./architecture/resource/texture/architecture_en.md)
+[Resource Architecture](./architecture/resource/architecture_en.md)
 
 ## Layer Reference
 
