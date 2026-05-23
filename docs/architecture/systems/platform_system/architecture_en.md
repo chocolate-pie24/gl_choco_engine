@@ -59,7 +59,7 @@ The usage flow is as follows.
 | Runtime (per-frame) | Pump events from the Platform layer       | Call `platform_pump_messages()` in `application_run()` (per-frame)                                                           |
 | Runtime (per-frame) | Swap buffers via double buffering         | Call `platform_swap_buffers()` in `application_run()` (per-frame) (planned to be moved after `renderer_frontend` is created) |
 
-For event pumping via `platform_pump_messages()`, refer to the [Event System Guide](../../guide/event_system/event_en.md).
+For event pumping via `platform_pump_messages()`, refer to the [Event System Guide](../../../guide/event_system/event_en.md).
 
 ## Currently Unsupported Items
 
@@ -74,4 +74,4 @@ No configuration options are available at this time.
 
 ## References
 
-When adding a supported platform, refer to the [Platform System Guide](../../guide/platform_system/adding_concretes_en.md).
+When adding a supported platform, refer to the [Platform System Guide](../../../guide/platform_system/adding_concretes_en.md).

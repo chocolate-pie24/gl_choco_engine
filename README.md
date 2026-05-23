@@ -82,23 +82,23 @@ GL CHOCO ENGINE is an independent codebase with its own architecture and design 
 
 #### Renderer System
 
-- [Renderer System(English)](docs/architecture/renderer_system/renderer_system_en.md)
-- [Renderer System(Japanese)](docs/architecture/renderer_system/renderer_system_ja.md)
+- [Renderer System(English)](docs/architecture/systems/renderer_system/renderer_system_en.md)
+- [Renderer System(Japanese)](docs/architecture/systems/renderer_system/renderer_system_ja.md)
 
 #### Renderer Backend
 
-- [Renderer Backend(English)](docs/architecture/renderer_system/renderer_backend/architecture_en.md)
-- [Renderer Backend(Japanese)](docs/architecture/renderer_system/renderer_backend/architecture_ja.md)
+- [Renderer Backend(English)](docs/architecture/systems/renderer_system/renderer_backend/architecture_en.md)
+- [Renderer Backend(Japanese)](docs/architecture/systems/renderer_system/renderer_backend/architecture_ja.md)
 
 #### Platform System
 
-- [Platform System(English)](docs/architecture/platform_system/architecture_en.md)
-- [Platform System(Japanese)](docs/architecture/platform_system/architecture_ja.md)
+- [Platform System(English)](docs/architecture/systems/platform_system/architecture_en.md)
+- [Platform System(Japanese)](docs/architecture/systems/platform_system/architecture_ja.md)
 
 #### Camera System
 
-- [Camera System(English)](docs/architecture/camera_system/architecture_en.md)
-- [Camera System(Japanese)](docs/architecture/camera_system/architecture_ja.md)
+- [Camera System(English)](docs/architecture/systems/camera_system/architecture_en.md)
+- [Camera System(Japanese)](docs/architecture/systems/camera_system/architecture_ja.md)
 
 ### Guide
 
