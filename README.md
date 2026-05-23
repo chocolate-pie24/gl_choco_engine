@@ -143,38 +143,79 @@ Forks are welcome for your own experiments and use.
 
 ```console
 .
+├── articles
+│   └── c-glfw-game-engine-introduction.md
 ├── assets
 │   ├── shaders
 │   │   └── test_shader
+│   └── textures
 ├── docs
 │   ├── architecture
-│   │   ├── platform_system
-│   │   └── renderer_system
+│   │   ├── systems
+│   │   │   ├── camera_system
+│   │   │   ├── platform
+│   │   │   ├── renderer
+│   │   │   └── texture_system
+│   │   └── resource
+│   │       └── texture
 │   ├── guide
 │   │   ├── event_system
+│   │   ├── glce_style
 │   │   ├── platform_system
 │   │   └── renderer_backend
 │   └── layer.md
 ├── include
 │   ├── application
+│   │   ├── application_core
+│   │   └── command_interpreter
 │   └── engine
 │       ├── base
 │       ├── containers
 │       ├── core
+│       │   ├── buffer_utils
+│       │   ├── event
+│       │   ├── filesystem
+│       │   ├── geometry_primitive
+│       │   └── memory
 │       ├── io_utils
-│       ├── platform
-│       └── renderer
-├── makefile_linux.mak
-├── makefile_macos.mak
+│       │   └── fs_utils
+│       ├── resource
+│       │   ├── loaders
+│       │   ├── resource_core
+│       │   └── texture
+│       └── systems
+│           ├── camera_system
+│           ├── platform
+│           ├── renderer
+│           │   ├── renderer_backend
+│           │   ├── renderer_core
+│           │   └── renderer_resources
+│           └── texture_system
 └── src
     ├── application
+    │   ├── application_core
+    │   └── command_interpreter
     ├── engine
     │   ├── base
     │   ├── containers
     │   ├── core
+    │   │   ├── buffer_utils
+    │   │   ├── filesystem
+    │   │   └── memory
     │   ├── io_utils
-    │   ├── platform
-    │   └── renderer
+    │   │   └── fs_utils
+    │   ├── resource
+    │   │   ├── loaders
+    │   │   ├── resource_core
+    │   │   └── texture
+    │   └── systems
+    │       ├── camera_system
+    │       ├── platform
+    │       ├── renderer
+    │       │   ├── renderer_backend
+    │       │   ├── renderer_core
+    │       │   └── renderer_resources
+    │       └── texture_system
     └── entry.c
 ```
 
