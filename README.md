@@ -143,8 +143,6 @@ Forks are welcome for your own experiments and use.
 
 ```console
 .
-├── articles
-│   └── c-glfw-game-engine-introduction.md
 ├── assets
 │   ├── shaders
 │   │   └── test_shader
@@ -171,6 +169,8 @@ Forks are welcome for your own experiments and use.
 │   └── engine
 │       ├── base
 │       ├── containers
+│       │   ├── choco_string.h
+│       │   └── ring_queue.h
 │       ├── core
 │       │   ├── buffer_utils
 │       │   ├── event
@@ -185,6 +185,12 @@ Forks are welcome for your own experiments and use.
 │       │   └── texture
 │       └── systems
 │           ├── camera_system
+│           │   ├── camera
+│           │   │   └── camera.h
+│           │   ├── camera_controller
+│           │   │   └── flight_camera_controller.h
+│           │   ├── camera_core
+│           │   └── camera_manager
 │           ├── platform
 │           ├── renderer
 │           │   ├── renderer_backend
@@ -198,6 +204,8 @@ Forks are welcome for your own experiments and use.
     ├── engine
     │   ├── base
     │   ├── containers
+    │   │   ├── choco_string.c
+    │   │   └── ring_queue.c
     │   ├── core
     │   │   ├── buffer_utils
     │   │   ├── filesystem
@@ -210,6 +218,13 @@ Forks are welcome for your own experiments and use.
     │   │   └── texture
     │   └── systems
     │       ├── camera_system
+    │       │   ├── camera
+    │       │   │   └── camera.c
+    │       │   ├── camera_controller
+    │       │   │   └── flight_camera_controller.c
+    │       │   ├── camera_core
+    │       │   └── camera_manager
+    │       │
     │       ├── platform
     │       ├── renderer
     │       │   ├── renderer_backend
