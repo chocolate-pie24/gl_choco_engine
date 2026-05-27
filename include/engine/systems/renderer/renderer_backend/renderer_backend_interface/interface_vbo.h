@@ -29,12 +29,12 @@ extern "C" {
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** vertex_buffer_);
-typedef void (*pfn_vertex_buffer_destroy)(renderer_backend_vbo_t** vertex_buffer_);
-typedef renderer_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
-typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo_t* vertex_buffer_);
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
+typedef renderer_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_createの前方宣言 */
+typedef void (*pfn_vertex_buffer_destroy)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_destroyの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);   /**< renderer_vbo_vtableが保持するvertex_buffer_bindの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_buffer_unbind)(const renderer_backend_vbo_t* vertex_buffer_);    /**< renderer_vbo_vtableが保持するvertex_buffer_unbindの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_); /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_loadの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);  /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_subloadの前方宣言 */
 
 /**
  * @brief VBO機能仮想関数テーブル
