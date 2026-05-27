@@ -22,8 +22,9 @@ extern "C" {
 
 #include <stdint.h>
 
+typedef struct texture_manager texture_manager_t;   /**< texture_manager_t構造体前方宣言 */
+
 typedef struct linear_alloc linear_alloc_t;
-typedef struct texture_manager texture_manager_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct renderer_backend_texture renderer_backend_texture_t;
 
