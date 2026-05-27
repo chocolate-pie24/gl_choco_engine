@@ -31,6 +31,10 @@ extern "C" {
    */
   #define NO_COVERAGE __attribute__((no_profile_instrument_function))
 #else
+  /**
+   * @brief clang使用時以外はカバレッジ計測対象外マクロは無効
+   *
+   */
   #define NO_COVERAGE
 #endif
 
