@@ -1,5 +1,6 @@
 /**
- * @ingroup renderer_backend_interface
+ * @ingroup renderer
+ *
  * @file interface_vao.h
  * @author chocolate-pie24
  * @brief VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する
@@ -29,11 +30,11 @@ extern "C" {
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_vertex_array_create)(renderer_backend_vao_t** vertex_array_);
-typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_);
-typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_);
-typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_t* vertex_array_);
-typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+typedef renderer_result_t (*pfn_vertex_array_create)(renderer_backend_vao_t** vertex_array_);   /**< renderer_vao_vtableが保持するvertex_array_createの前方宣言 */
+typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_);   /**< renderer_vao_vtableが保持するvertex_array_destroyの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_array_bind)(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_); /**< renderer_vao_vtableが保持するvertex_array_bindの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_array_unbind)(const renderer_backend_vao_t* vertex_array_);  /**< renderer_vao_vtableが保持するvertex_array_unbindの前方宣言 */
+typedef renderer_result_t (*pfn_vertex_array_attribute_set)(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_); /**< renderer_vao_vtableが保持するvertex_array_attribute_setの前方宣言 */
 
 /**
  * @brief VAO機能仮想関数テーブル

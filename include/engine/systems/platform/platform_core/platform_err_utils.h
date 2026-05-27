@@ -1,5 +1,6 @@
 /**
- * @ingroup platform_core
+ * @ingroup platform
+ *
  * @file platform_err_utils.h
  * @author chocolate-pie24
  * @brief プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理を提供する

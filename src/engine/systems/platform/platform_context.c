@@ -1,4 +1,4 @@
-/** @ingroup platform_context
+/** @ingroup platform
  *
  * @file platform_context.c
  * @author chocolate-pie24

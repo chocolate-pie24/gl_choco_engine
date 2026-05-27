@@ -1,4 +1,4 @@
-/** @ingroup renderer_core
+/** @ingroup renderer
  *
  * @file renderer_err_utils.h
  * @author chocolate-pie24

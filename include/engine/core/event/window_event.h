@@ -1,4 +1,4 @@
-/** @ingroup event_window
+/** @ingroup core
  *
  * @file window_event.h
  * @author chocolate-pie24

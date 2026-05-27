@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_context
+ * @ingroup renderer
  *
  * @file context_vbo.h
  * @author chocolate-pie24

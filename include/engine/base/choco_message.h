@@ -1,4 +1,4 @@
-/** @ingroup choco_message
+/** @ingroup base
  *
  * @file choco_message.h
  * @author chocolate-pie24

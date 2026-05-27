@@ -1,4 +1,4 @@
-/** @ingroup renderer_resources
+/** @ingroup renderer
  *
  * @file ui_shader.h
  * @author chocolate-pie24
@@ -84,14 +84,92 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
  */
 void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t** ui_shader_);
 
+/**
+ * @brief UIシェーダー用のバーテックスバッファを生成する
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] ui_shader_ バーテックスバッファ生成対象UIシェーダーリソースインスタンスへのポインタ
+ * @param[in] buffer_usage_ バッファ使用用途(DYNAMIC / STATIC)
+ * @param[in] buffer_size_ バーテックスバッファサイズ(byte)
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - ui_shader_ == NULL
+ * - buffer_size_ == 0
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - backend_context_が未初期化
+ * - ui_shader_->ui_vao == NULL
+ * - ui_shader_->ui_vbo == NULL
+ * - ui_shader_->current_buffer_offset != 0
+ * - メモリシステム未初期化
+ * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RENDERER_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t ui_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_);
 
+/**
+ * @brief UIシェーダーが保持するVAO / VBOを破棄する
+ *
+ * @note 本API使用後は、ui_shader_tの内部状態は以下の状態に初期化される
+ * - ui_vbo = NULL
+ * - ui_vao = NULL
+ * - current_buffer_offset = 0
+ * - vertex_buffer_size = 0
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] ui_shader_ VAO, VBOリソースを保持するUIシェーダー構造体インスタンスへのポインタ
+ */
 void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
+/**
+ * @brief UIシェーダーが保持するVBOに頂点情報を転送する
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] ui_shader_ 転送先VBOを保持するUIシェーダー構造体インスタンスへのポインタ
+ * @param[in] size_ 転送データサイズ
+ * @param[in] write_data_ 転送データ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - ui_shader_ == NULL
+ * - write_data_ == NULL
+ * - size == 0
+ * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - VBO未初期化
+ * - 転送後にバーテックスバッファサイズを超過
+ * - backend_context_が未初期化
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, void* write_data_);
 
+/**
+ * @brief UIシェーダーが保持するVAOをbindする
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] ui_shader_ VAOを保持するUIシェーダー構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - ui_shader_ == NULL
+ * @retval RENDERER_BAD_OPERATION VAOが未初期化
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t ui_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
+/**
+ * @brief UIシェーダーが保持するVAOをunbindする
+ *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] ui_shader_ VAOを保持するUIシェーダー構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - ui_shader_ == NULL
+ * @retval RENDERER_BAD_OPERATION VAOが未初期化
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t ui_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
 
 /**

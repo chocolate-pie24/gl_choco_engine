@@ -1,4 +1,4 @@
-/** @ingroup renderer_core
+/** @ingroup renderer
  *
  * @file renderer_memory.h
  * @author chocolate-pie24
@@ -53,7 +53,7 @@ renderer_result_t renderer_mem_allocate(size_t size_, void** out_ptr_);
  * @param ptr_ 解放対象メモリアドレス
  * @param size_ 解放サイズ
  */
-void render_mem_free(void* ptr_, size_t size_);
+void renderer_mem_free(void* ptr_, size_t size_);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-/** @ingroup linear_allocator
+/** @ingroup core
  *
  * @file linear_allocator.h
  * @author chocolate-pie24

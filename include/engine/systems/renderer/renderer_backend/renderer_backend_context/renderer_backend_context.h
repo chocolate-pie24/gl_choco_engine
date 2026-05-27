@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_context
+ * @ingroup renderer
  *
  * @file renderer_backend_context.h
  * @author chocolate-pie24
@@ -41,6 +41,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< rendere
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
  * - シェーダー用vtable取得失敗
+ * - テクスチャ用vtable取得失敗
  * - VAO用vtable取得失敗
  * - VBO用vtable取得失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了

@@ -6,36 +6,41 @@ graph TD
       PLATFORM[platform]
       RENDERER[renderer]
       CAMERA_SYSTEM[camera_system]
+      TEXTURE_SYSTEM[texture_system]
     end
 
-    subgraph IO_UTILS[io_utils]
-      FS_UTILS[fs_utils]
-    end
-
-    subgraph CONTAINERS[containers]
-      direction TB
-      CHOCO_STRING[choco_string]
-      RING_QUEUE[ring_queue]
-    end
-
+    RESOURCES[resources]
+    IO_UTILS[io_utils]
+    CONTAINERS[containers]
     CORE[core]
     BASE[base]
   end
 
   APPLICATION --> RENDERER
   APPLICATION --> PLATFORM
-  APPLICATION --> CORE
-  APPLICATION --> CONTAINERS
   APPLICATION --> CAMERA_SYSTEM
+  APPLICATION --> TEXTURE_SYSTEM
+
+  APPLICATION --> CONTAINERS
 
   PLATFORM --> CONTAINERS
   PLATFORM --> CORE
-  RENDERER --> CORE
+
   RENDERER --> IO_UTILS
   RENDERER --> CONTAINERS
+  RENDERER --> CORE
 
-  CAMERA_SYSTEM --> CORE
   CAMERA_SYSTEM --> CONTAINERS
+  CAMERA_SYSTEM --> CORE
+
+  TEXTURE_SYSTEM --> RENDERER
+  TEXTURE_SYSTEM --> RESOURCES
+  TEXTURE_SYSTEM --> CONTAINERS
+  TEXTURE_SYSTEM --> CORE
+
+  RESOURCES --> IO_UTILS
+  RESOURCES --> CONTAINERS
+  RESOURCES --> CORE
 
   IO_UTILS --> CONTAINERS
   IO_UTILS --> CORE

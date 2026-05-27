@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_interface
+ * @ingroup renderer
  *
  * @file interface_shader.h
  * @author chocolate-pie24
@@ -31,13 +31,13 @@ extern "C" {
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);
-typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);
-typedef renderer_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
-typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);
-typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
-typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
-typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+typedef renderer_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_createの前方宣言 */
+typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_destroyの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_compileの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_linkの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);   /**< renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);  /**< renderer_shader_vtableが保持するrenderer_shader_uniform_location_getの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);  /**< renderer_shader_vtableが保持するrenderer_shader_mat4f_uniform_setの前方宣言 */
 
 /**
  * @brief シェーダー機能仮想関数テーブル

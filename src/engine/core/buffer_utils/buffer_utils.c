@@ -1,4 +1,4 @@
-/** @ingroup buffer_utils
+/** @ingroup core
  *
  * @file buffer_utils.c
  * @author chocolate-pie24

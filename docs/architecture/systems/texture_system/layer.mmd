@@ -1,0 +1,43 @@
+graph TD
+  subgraph TEXTURE_SYSTEM[texture_system]
+    direction TB
+    TEXTURE_MANAGER[texture_manager]
+  end
+
+  subgraph RESOURCE_LAYER[engine/resource]
+    direction TB
+    RESOURCE_TEXTURE[texture/texture]
+    RESOURCE_TYPES[resource_core/resource_types]
+    RESOURCE_ERR_UTILS[resource_core/resource_err_utils]
+  end
+
+  subgraph RENDERER_BACKEND[engine/systems/renderer/renderer_backend]
+    direction TB
+    RENDERER_BACKEND_CONTEXT[renderer_backend_context/renderer_backend_context]
+    RENDERER_CONTEXT_TEXTURE[renderer_backend_context/context_texture]
+    RENDERER_BACKEND_TYPES[renderer_backend_types]
+  end
+
+  subgraph CONTAINERS[engine/containers]
+    direction TB
+    CHOCO_STRING[choco_string]
+  end
+
+  subgraph CORE[engine/core]
+    direction TB
+    LINEAR_ALLOCATOR[memory/linear_allocator]
+  end
+
+  BASE[engine/base]
+
+  TEXTURE_MANAGER --> RESOURCE_TEXTURE
+  TEXTURE_MANAGER --> RESOURCE_TYPES
+  TEXTURE_MANAGER --> RESOURCE_ERR_UTILS
+
+  TEXTURE_MANAGER --> RENDERER_BACKEND_CONTEXT
+  TEXTURE_MANAGER --> RENDERER_CONTEXT_TEXTURE
+  TEXTURE_MANAGER --> RENDERER_BACKEND_TYPES
+
+  TEXTURE_MANAGER --> CHOCO_STRING
+  TEXTURE_MANAGER --> LINEAR_ALLOCATOR
+  TEXTURE_MANAGER --> BASE
