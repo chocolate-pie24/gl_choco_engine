@@ -188,6 +188,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
 static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+static renderer_result_t gl33_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
@@ -217,6 +218,7 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_use = gl33_shader_use,
     .renderer_shader_uniform_location_get = gl33_uniform_location_get,
     .renderer_shader_mat4f_uniform_set = gl33_mat4f_uniform_set,
+    .renderer_shader_vec4u8_uniform_set = gl33_vec4u8_uniform_set,
 };  /**< OpenGL3.3用シェーダー操作仮想関数テーブル */
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
@@ -655,6 +657,33 @@ static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t*
     }
 
     mock_glUniformMatrix4fv(location_, 1, should_transpose_, data_);
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static renderer_result_t gl33_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    float data_f[4] = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_program_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "out_program_id_")
+
+    ret = gl33_shader_use(shader_handle_, out_program_id_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_vec4u8_uniform_set(%s) - Failed to switch shader program.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // shader側はvec4なので0...1に正規化
+    data_f[0] = (float)(data_[0]) / 255.0f;
+    data_f[1] = (float)(data_[1]) / 255.0f;
+    data_f[2] = (float)(data_[2]) / 255.0f;
+    data_f[3] = (float)(data_[3]) / 255.0f;
+    glUniform4fv(location_, 1, data_f);
 
     ret = RENDERER_SUCCESS;
 

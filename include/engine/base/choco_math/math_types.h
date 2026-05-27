@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #define CHOCO_PI 3.14159265358979f                                          /**< 円周率定義 */
 #define CHOCO_DEG_TO_RAD(deg_) (((deg_) / 360.0f) * 2.0f * CHOCO_PI)        /**< degree -> radian */
 #define CHOCO_RAD_TO_DEG(rad_) (((rad_) / 2.0f / CHOCO_PI) * 360.0f)        /**< radian -> degree */
@@ -47,6 +49,10 @@ typedef struct vec3f {
 typedef struct vec4f {
     float elem[4];  /**< ベクトル要素格納配列 */
 } vec4f_t;
+
+typedef struct vec4u8 {
+    uint8_t elem[4];
+} vec4u8_t;
 
 /**
  * @brief float型4x4行列定義

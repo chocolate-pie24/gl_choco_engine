@@ -515,6 +515,32 @@ cleanup:
     return ret;
 }
 
+renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_) {
+#ifdef TEST_BUILD
+    s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count++;
+    if(s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count == s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_mat4f_uniform_set.forced_result;
+        }
+    }
+#endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "data_")
+
+    ret = backend_context_->shader_vtable->renderer_shader_vec4u8_uniform_set(shader_handle_, location_, data_, &backend_context_->current_program_id);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_shader_vec4u8_uniform_set(%s) - Failed to set vec4u8 uniform.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
 renderer_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_array_create.call_count++;

@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -146,6 +147,8 @@ void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f
  * @param[out] out_vec4f_ 加算結果ベクトル
  */
 void vec4f_add(const vec4f_t* vec1_, const vec4f_t* vec2_, vec4f_t* out_vec4f_);
+
+void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t* out_vec4u8_);
 
 /**
  * @brief 4行4列の行列の全要素を0にする

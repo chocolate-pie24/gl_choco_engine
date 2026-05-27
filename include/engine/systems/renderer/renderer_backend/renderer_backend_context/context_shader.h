@@ -191,6 +191,8 @@ renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_ba
  */
 renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
 
+renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_);
+
 #ifdef __cplusplus
 }
 #endif
