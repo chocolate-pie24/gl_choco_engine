@@ -46,8 +46,8 @@ struct renderer_backend_context {
     uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
     uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
 
-    int32_t current_texture_unit;
-    int32_t current_bound_texture;                     /**< 現在バインド中のTextureハンドル */
+    int32_t current_texture_unit;                       /**< 現在使用中のテクスチャユニット番号 */
+    int32_t current_bound_texture;                      /**< 現在バインド中のTextureハンドル */
 };
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
