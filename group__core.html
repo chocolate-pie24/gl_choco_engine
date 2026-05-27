@@ -92,40 +92,64 @@ $(document).ready(function(){initNavTree('group__core.html',''); initResizable()
 
 <div class="header">
   <div class="summary">
-<a href="#groups">Modules</a>  </div>
+<a href="#files">Files</a>  </div>
   <div class="headertitle"><div class="title">Core<div class="ingroups"><a class="el" href="group__engine.html">Engine</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する  
+<p>エンジン全体で使用されるGLCE固有の基盤モジュール群。  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Core:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__core.png" border="0" usemap="#agroup____core" alt=""/></div>
 <map name="agroup____core" id="agroup____core">
-<area shape="rect" title="プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する" alt="" coords="120,55,172,80"/>
-<area shape="rect" href="group__event.html" title="キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する" alt="" coords="240,5,299,31"/>
-<area shape="rect" href="group__filesystem.html" title="ファイルI/Oに関する基本的なAPIを提供するモジュールで、以下の機能を保有する" alt="" coords="220,55,319,80"/>
-<area shape="rect" href="group__memory.html" title="アプリケーション、エンジン全体で使用されるメモリアロケータモジュールで、以下の機能を保有する" alt="" coords="231,104,307,129"/>
-<area shape="rect" href="group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,55,72,80"/>
+<area shape="rect" title="エンジン全体で使用されるGLCE固有の基盤モジュール群。" alt="" coords="120,5,172,31"/>
+<area shape="rect" href="group__engine.html" title="GLCEが提供するエンジンモジュール群。" alt="" coords="5,5,72,31"/>
 </map>
 </div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
-Modules</h2></td></tr>
-<tr class="memitem:group__event"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__event.html">Event</a></td></tr>
-<tr class="memdesc:group__event"><td class="mdescLeft">&#160;</td><td class="mdescRight">キーボード、マウス、ウィンドウ等で発生するイベントの型を提供する <br /></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="files" name="files"></a>
+Files</h2></td></tr>
+<tr class="memitem:buffer__utils_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="buffer__utils_8h.html">buffer_utils.h</a></td></tr>
+<tr class="memdesc:buffer__utils_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの定義 <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:group__memory"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__memory.html">Memory</a></td></tr>
-<tr class="memdesc:group__memory"><td class="mdescLeft">&#160;</td><td class="mdescRight">アプリケーション、エンジン全体で使用されるメモリアロケータモジュールで、以下の機能を保有する <br /></td></tr>
+<tr class="memitem:keyboard__event_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="keyboard__event_8h.html">keyboard_event.h</a></td></tr>
+<tr class="memdesc:keyboard__event_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">全プラットフォーム共通で使用可能なキーコード定義と、キーボードイベント構造体定義 <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:group__filesystem"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__filesystem.html">File System</a></td></tr>
-<tr class="memdesc:group__filesystem"><td class="mdescLeft">&#160;</td><td class="mdescRight">ファイルI/Oに関する基本的なAPIを提供するモジュールで、以下の機能を保有する <br /></td></tr>
+<tr class="memitem:mouse__event_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mouse__event_8h.html">mouse_event.h</a></td></tr>
+<tr class="memdesc:mouse__event_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:window__event_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="window__event_8h.html">window_event.h</a></td></tr>
+<tr class="memdesc:window__event_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">全プラットフォーム共通で使用可能なウィンドウイベント定義と、ウィンドウイベント構造体定義 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:filesystem_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8h.html">filesystem.h</a></td></tr>
+<tr class="memdesc:filesystem_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">ファイルシステムモジュールAPIの提供 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:vertex_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex_8h.html">vertex.h</a></td></tr>
+<tr class="memdesc:vertex_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">形状データを構成する基本的な幾何情報構造体定義 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:choco__memory_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8h.html">choco_memory.h</a></td></tr>
+<tr class="memdesc:choco__memory_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:linear__allocator_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8h.html">linear_allocator.h</a></td></tr>
+<tr class="memdesc:linear__allocator_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:buffer__utils_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="buffer__utils_8c.html">buffer_utils.c</a></td></tr>
+<tr class="memdesc:buffer__utils_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:filesystem_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html">filesystem.c</a></td></tr>
+<tr class="memdesc:filesystem_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">ファイルシステムモジュールAPIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:choco__memory_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__memory_8c.html">choco_memory.c</a></td></tr>
+<tr class="memdesc:choco__memory_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:linear__allocator_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linear__allocator_8c.html">linear_allocator.c</a></td></tr>
+<tr class="memdesc:linear__allocator_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装 <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>プロジェクト内のモジュールで広く使われる機能の実装を簡便にし、共通化できるよう、ユーティリティ機能を提供する </p>
+<p>エンジン全体で使用されるGLCE固有の基盤モジュール群。 </p>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

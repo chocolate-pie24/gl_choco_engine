@@ -110,6 +110,7 @@ $(document).ready(function(){initNavTree('md_README.html',''); initResizable(); 
 <li>Renderer Backend</li>
 <li>Platform System</li>
 <li>Camera System</li>
+<li><a class="el" href="group__resource.html">Resource</a></li>
 </ul>
 </li>
 <li>Guide</li>
@@ -130,14 +131,14 @@ $(document).ready(function(){initNavTree('md_README.html',''); initResizable(); 
 </ul>
 </li>
 </ul>
-<h1><a class="anchor" id="autotoc_md15"></a>
+<h1><a class="anchor" id="autotoc_md19"></a>
 GL CHOCO ENGINE</h1>
 <p>GL CHOCO ENGINE (GLCE) is a C/OpenGL engine focused on clarity, controllability, and long-term maintainability.</p>
 <p>It uses GLFW to keep the platform subsystem portable across desktop environments, while keeping dependencies intentionally small.</p>
 <p>The codebase is written with a quality-first mindset—explicit architecture, predictable low-level behavior, and a preference for testable, well-documented modules—so engineers outside the graphics domain can still understand, modify, and extend it with confidence.</p>
 <p>GLCE is written in C by design. While C++ offers many valid styles and abstractions, maintaining a consistent, uniform codebase over a long period typically requires strict and continuously enforced conventions. For a small, long-lived project that prioritizes readability and predictable low-level behavior, C’s narrower surface area helps keep the code coherent and reviewable.</p>
 <p>The goal is a practical baseline you can own end-to-end, rather than a full-featured alternative to Unity or Unreal.</p>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md20"></a>
 Motivation / Positioning</h2>
 <p>GL CHOCO ENGINE is designed as a lightweight, dependency-minimal C/OpenGL engine that you can understand and own end-to-end.</p>
 <p>In addition to “game engine” use cases, the project targets practical visualization and tooling scenarios often seen in robotics, industrial systems, and embedded-adjacent environments—where you may not want (or cannot afford) large middleware stacks or heavyweight engines.</p>
@@ -149,7 +150,7 @@ Motivation / Positioning</h2>
 <li>Lightweight tooling and debug viewers for embedded-adjacent systems</li>
 </ul>
 <p>Lower-power devices such as Raspberry Pi-class boards are a longer-term target, so the feature set is intentionally scoped.</p>
-<h3><a class="anchor" id="autotoc_md17"></a>
+<h3><a class="anchor" id="autotoc_md21"></a>
 Non-goals</h3>
 <ul>
 <li>Heavy visual effects and advanced rendering (e.g., complex post-processing, high-end lighting)</li>
@@ -158,48 +159,54 @@ Non-goals</h3>
 <li>“All-in-one” frameworks with large dependency surfaces</li>
 <li>Unicode / multibyte text support (ASCII-only)</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md18"></a>
+<h3><a class="anchor" id="autotoc_md22"></a>
 Who it’s for</h3>
 <ul>
 <li>Engineers who want a small, readable rendering/application baseline in C/OpenGL</li>
 <li>Teams who need “just enough” 2D / lightweight 3D visualization without Unity/Unreal/ROS2</li>
 <li>Developers who want to learn and control the full stack rather than rely on middleware</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<h2><a class="anchor" id="autotoc_md23"></a>
 Inspired by</h2>
 <p>This project was originally inspired by Kohi Game Engine and Travis Vroman’s work. I’m grateful for the motivation and the educational value of seeing an engine built from the ground up. GL CHOCO ENGINE is an independent codebase with its own architecture and design decisions, evolving according to its goals and constraints.</p>
-<h2><a class="anchor" id="autotoc_md20"></a>
+<h2><a class="anchor" id="autotoc_md24"></a>
 Documentation</h2>
-<h3><a class="anchor" id="autotoc_md21"></a>
+<h3><a class="anchor" id="autotoc_md25"></a>
 Architecture / Layering</h3>
 <ul>
 <li><a class="el" href="md_docs_layer.html">Overview</a></li>
 </ul>
-<h4><a class="anchor" id="autotoc_md22"></a>
+<h4><a class="anchor" id="autotoc_md26"></a>
 Renderer System</h4>
 <ul>
-<li><a class="el" href="md_docs_architecture_renderer_system_renderer_system_en.html">Renderer System(English)</a></li>
-<li><a class="el" href="md_docs_architecture_renderer_system_renderer_system_ja.html">Renderer System(Japanese)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_system_en.html">Renderer System(English)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_system_ja.html">Renderer System(Japanese)</a></li>
 </ul>
-<h4><a class="anchor" id="autotoc_md23"></a>
+<h4><a class="anchor" id="autotoc_md27"></a>
 Renderer Backend</h4>
 <ul>
-<li><a class="el" href="md_docs_architecture_renderer_system_renderer_backend_architecture_en.html">Renderer Backend(English)</a></li>
-<li><a class="el" href="md_docs_architecture_renderer_system_renderer_backend_architecture_ja.html">Renderer Backend(Japanese)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_en.html">Renderer Backend(English)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_ja.html">Renderer Backend(Japanese)</a></li>
 </ul>
-<h4><a class="anchor" id="autotoc_md24"></a>
+<h4><a class="anchor" id="autotoc_md28"></a>
 Platform System</h4>
 <ul>
-<li><a class="el" href="md_docs_architecture_platform_system_architecture_en.html">Platform System(English)</a></li>
-<li><a class="el" href="md_docs_architecture_platform_system_architecture_ja.html">Platform System(Japanese)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_platform_system_architecture_en.html">Platform System(English)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_platform_system_architecture_ja.html">Platform System(Japanese)</a></li>
 </ul>
-<h4><a class="anchor" id="autotoc_md25"></a>
+<h4><a class="anchor" id="autotoc_md29"></a>
 Camera System</h4>
 <ul>
-<li><a class="el" href="md_docs_architecture_camera_system_architecture_en.html">Camera System(English)</a></li>
-<li><a class="el" href="md_docs_architecture_camera_system_architecture_ja.html">Camera System(Japanese)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_camera_system_architecture_en.html">Camera System(English)</a></li>
+<li><a class="el" href="md_docs_architecture_systems_camera_system_architecture_ja.html">Camera System(Japanese)</a></li>
 </ul>
-<h3><a class="anchor" id="autotoc_md26"></a>
+<h4><a class="anchor" id="autotoc_md30"></a>
+Resource</h4>
+<ul>
+<li><a class="el" href="md_docs_architecture_resource_architecture_en.html">Resource(English)</a></li>
+<li><a class="el" href="md_docs_architecture_resource_architecture_ja.html">Resource(Japanese)</a></li>
+</ul>
+<h3><a class="anchor" id="autotoc_md31"></a>
 Guide</h3>
 <p>Provides guidelines for engine developers to safely use the event system.</p>
 <ul>
@@ -221,17 +228,17 @@ Guide</h3>
 <li><a class="el" href="md_docs_guide_glce_style_test_unit_test_en.html">Unit Test Implementation Guide(English)</a></li>
 <li><a class="el" href="md_docs_guide_glce_style_test_unit_test_ja.html">Unit Test Implementation Guide(Japanese)</a></li>
 </ul>
-<h3><a class="anchor" id="autotoc_md27"></a>
+<h3><a class="anchor" id="autotoc_md32"></a>
 API Reference</h3>
 <ul>
 <li><a href="https://chocolate-pie24.github.io/gl_choco_engine/">API reference (generated from Japanese Doxygen comments)</a></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md33"></a>
 Contributing</h2>
 <p>GL CHOCO ENGINE is currently maintained by a single developer, and I’m not accepting pull requests at this time.</p>
 <p>If you find a bug, have a question, or want to suggest an improvement, please open an Issue. Feedback from users is very welcome.</p>
 <p>Forks are welcome for your own experiments and use.</p>
-<h2><a class="anchor" id="autotoc_md29"></a>
+<h2><a class="anchor" id="autotoc_md34"></a>
 Directory layout</h2>
 <details >
 <summary >
@@ -241,41 +248,97 @@ Show directory tree</summary>
 <div class="line">├── assets</div>
 <div class="line">│   ├── shaders</div>
 <div class="line">│   │   └── test_shader</div>
+<div class="line">│   └── textures</div>
 <div class="line">├── docs</div>
 <div class="line">│   ├── architecture</div>
-<div class="line">│   │   ├── platform_system</div>
-<div class="line">│   │   └── renderer_system</div>
+<div class="line">│   │   ├── systems</div>
+<div class="line">│   │   │   ├── camera_system</div>
+<div class="line">│   │   │   ├── platform</div>
+<div class="line">│   │   │   ├── renderer</div>
+<div class="line">│   │   │   └── texture_system</div>
+<div class="line">│   │   └── resource</div>
+<div class="line">│   │       └── texture</div>
 <div class="line">│   ├── guide</div>
 <div class="line">│   │   ├── event_system</div>
+<div class="line">│   │   ├── glce_style</div>
 <div class="line">│   │   ├── platform_system</div>
 <div class="line">│   │   └── renderer_backend</div>
 <div class="line">│   └── layer.md</div>
 <div class="line">├── include</div>
 <div class="line">│   ├── application</div>
+<div class="line">│   │   ├── application_core</div>
+<div class="line">│   │   └── command_interpreter</div>
 <div class="line">│   └── engine</div>
 <div class="line">│       ├── base</div>
 <div class="line">│       ├── containers</div>
+<div class="line">│       │   ├── choco_string.h</div>
+<div class="line">│       │   └── ring_queue.h</div>
 <div class="line">│       ├── core</div>
+<div class="line">│       │   ├── buffer_utils</div>
+<div class="line">│       │   ├── event</div>
+<div class="line">│       │   ├── filesystem</div>
+<div class="line">│       │   ├── geometry_primitive</div>
+<div class="line">│       │   └── memory</div>
 <div class="line">│       ├── io_utils</div>
-<div class="line">│       ├── platform</div>
-<div class="line">│       └── renderer</div>
-<div class="line">├── makefile_linux.mak</div>
-<div class="line">├── makefile_macos.mak</div>
+<div class="line">│       │   └── fs_utils</div>
+<div class="line">│       ├── resource</div>
+<div class="line">│       │   ├── loaders</div>
+<div class="line">│       │   ├── resource_core</div>
+<div class="line">│       │   └── texture</div>
+<div class="line">│       └── systems</div>
+<div class="line">│           ├── camera_system</div>
+<div class="line">│           │   ├── camera</div>
+<div class="line">│           │   │   └── camera.h</div>
+<div class="line">│           │   ├── camera_controller</div>
+<div class="line">│           │   │   └── flight_camera_controller.h</div>
+<div class="line">│           │   ├── camera_core</div>
+<div class="line">│           │   └── camera_manager</div>
+<div class="line">│           ├── platform</div>
+<div class="line">│           ├── renderer</div>
+<div class="line">│           │   ├── renderer_backend</div>
+<div class="line">│           │   ├── renderer_core</div>
+<div class="line">│           │   └── renderer_resources</div>
+<div class="line">│           └── texture_system</div>
 <div class="line">└── src</div>
 <div class="line">    ├── application</div>
+<div class="line">    │   ├── application_core</div>
+<div class="line">    │   └── command_interpreter</div>
 <div class="line">    ├── engine</div>
 <div class="line">    │   ├── base</div>
 <div class="line">    │   ├── containers</div>
+<div class="line">    │   │   ├── choco_string.c</div>
+<div class="line">    │   │   └── ring_queue.c</div>
 <div class="line">    │   ├── core</div>
+<div class="line">    │   │   ├── buffer_utils</div>
+<div class="line">    │   │   ├── filesystem</div>
+<div class="line">    │   │   └── memory</div>
 <div class="line">    │   ├── io_utils</div>
-<div class="line">    │   ├── platform</div>
-<div class="line">    │   └── renderer</div>
+<div class="line">    │   │   └── fs_utils</div>
+<div class="line">    │   ├── resource</div>
+<div class="line">    │   │   ├── loaders</div>
+<div class="line">    │   │   ├── resource_core</div>
+<div class="line">    │   │   └── texture</div>
+<div class="line">    │   └── systems</div>
+<div class="line">    │       ├── camera_system</div>
+<div class="line">    │       │   ├── camera</div>
+<div class="line">    │       │   │   └── camera.c</div>
+<div class="line">    │       │   ├── camera_controller</div>
+<div class="line">    │       │   │   └── flight_camera_controller.c</div>
+<div class="line">    │       │   ├── camera_core</div>
+<div class="line">    │       │   └── camera_manager</div>
+<div class="line">    │       │</div>
+<div class="line">    │       ├── platform</div>
+<div class="line">    │       ├── renderer</div>
+<div class="line">    │       │   ├── renderer_backend</div>
+<div class="line">    │       │   ├── renderer_core</div>
+<div class="line">    │       │   └── renderer_resources</div>
+<div class="line">    │       └── texture_system</div>
 <div class="line">    └── entry.c</div>
 </div><!-- fragment --><p></p>
 </details>
-<h2><a class="anchor" id="autotoc_md30"></a>
+<h2><a class="anchor" id="autotoc_md35"></a>
 Setup</h2>
-<h3><a class="anchor" id="autotoc_md31"></a>
+<h3><a class="anchor" id="autotoc_md36"></a>
 macOS</h3>
 <p>Tested on</p>
 <div class="fragment"><div class="line">% sw_vers</div>
@@ -296,7 +359,7 @@ macOS</h3>
 </div><!-- fragment --><p>Install Dependencies</p>
 <div class="fragment"><div class="line">brew install glfw</div>
 <div class="line">brew install glew</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md32"></a>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md37"></a>
 Linux</h3>
 <p>Tested on</p>
 <div class="fragment"><div class="line">$ uname -a</div>
@@ -312,20 +375,20 @@ Linux</h3>
 </div><!-- fragment --><p>Install Dependencies</p>
 <div class="fragment"><div class="line">sudo apt install libglew-dev</div>
 <div class="line">sudo apt install libglfw3-dev</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md33"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md38"></a>
 Build</h2>
 <div class="fragment"><div class="line">chmod +x ./build.sh</div>
 <div class="line">./build.sh all DEBUG_BUILD    # Debug build</div>
 <div class="line">./build.sh all RELEASE_BUILD  # Release build</div>
 <div class="line">./build.sh all TEST_BUILD     # Test build</div>
 <div class="line">./build.sh clean              # Clean</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md34"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md39"></a>
 Run</h2>
 <div class="fragment"><div class="line">./bin/gl_choco_engine</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md35"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md40"></a>
 License</h2>
 <p>This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.</p>
-<h2><a class="anchor" id="autotoc_md36"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 Author</h2>
 <p>GitHub: <a href="https://github.com/chocolate-pie24">https://github.com/chocolate-pie24</a> </p>
 </div></div><!-- contents -->

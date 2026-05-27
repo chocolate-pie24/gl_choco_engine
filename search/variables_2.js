@@ -12,6 +12,7 @@ var searchData=
   ['current_5fbound_5fvbo_9',['current_bound_vbo',['../structrenderer__backend__context.html#aff8f94ad977ccd31dda11a88a2b89a71',1,'renderer_backend_context']]],
   ['current_5fbuffer_5foffset_10',['current_buffer_offset',['../structui__shader.html#a3fe17c4fb399fec35ff001755f053a9c',1,'ui_shader']]],
   ['current_5fprogram_5fid_11',['current_program_id',['../structrenderer__backend__context.html#a8401eab876547f6c5c9c4142db84d949',1,'renderer_backend_context']]],
-  ['cursor_5fx_12',['cursor_x',['../structinput__snapshot.html#a460b36f9c88e8026480a3fc3310e6d89',1,'input_snapshot']]],
-  ['cursor_5fy_13',['cursor_y',['../structinput__snapshot.html#a56d8f3e9b5dfe3ce00cbbb08d04ea36a',1,'input_snapshot']]]
+  ['current_5ftexture_5funit_12',['current_texture_unit',['../structrenderer__backend__context.html#a4b8137dfa11f1bd5868fc2a512aafedf',1,'renderer_backend_context']]],
+  ['cursor_5fx_13',['cursor_x',['../structinput__snapshot.html#a460b36f9c88e8026480a3fc3310e6d89',1,'input_snapshot']]],
+  ['cursor_5fy_14',['cursor_y',['../structinput__snapshot.html#a56d8f3e9b5dfe3ce00cbbb08d04ea36a',1,'input_snapshot']]]
 ];

@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('renderer__memory_8h.html',''); initRes
 <div class="header">
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">renderer_memory.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a> &raquo; <a class="el" href="group__renderer__core.html">Renderer Core</a></div></div></div>
+  <div class="headertitle"><div class="title">renderer_memory.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -133,9 +133,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a1edbb1ba2d666cdc1679083349b010a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4">renderer_mem_allocate</a> (size_t size_, void **out_ptr_)</td></tr>
 <tr class="memdesc:a1edbb1ba2d666cdc1679083349b010a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_allocateのラッパーAPI  <br /></td></tr>
 <tr class="separator:a1edbb1ba2d666cdc1679083349b010a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html#a5368d32dd8bda4af565ae039dbb0e0ae">render_mem_free</a> (void *ptr_, size_t size_)</td></tr>
-<tr class="memdesc:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_freeのラッパーAPI  <br /></td></tr>
-<tr class="separator:a5368d32dd8bda4af565ae039dbb0e0ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0baac607dfd348651a184729625323c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8">renderer_mem_free</a> (void *ptr_, size_t size_)</td></tr>
+<tr class="memdesc:a0baac607dfd348651a184729625323c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_freeのラッパーAPI  <br /></td></tr>
+<tr class="separator:a0baac607dfd348651a184729625323c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する </p>
@@ -145,46 +145,6 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a5368d32dd8bda4af565ae039dbb0e0ae" name="a5368d32dd8bda4af565ae039dbb0e0ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5368d32dd8bda4af565ae039dbb0e0ae">&#9670;&#160;</a></span>render_mem_free()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void render_mem_free </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>ptr_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>memory_system_freeのラッパーAPI </p>
-<dl class="section note"><dt>Note</dt><dd>レンダラーレイヤー専用APIのため、メモリータグはMEMORY_TAG_RENDERER固定</dd>
-<dd>
-引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。 この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ptr_</td><td>解放対象メモリアドレス </td></tr>
-    <tr><td class="paramname">size_</td><td>解放サイズ </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="a1edbb1ba2d666cdc1679083349b010a4" name="a1edbb1ba2d666cdc1679083349b010a4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1edbb1ba2d666cdc1679083349b010a4">&#9670;&#160;</a></span>renderer_mem_allocate()</h2>
 
@@ -236,6 +196,46 @@ Functions</h2></td></tr>
 <li>割り当てに成功し正常終了 </li>
 </ul>
 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0baac607dfd348651a184729625323c8" name="a0baac607dfd348651a184729625323c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0baac607dfd348651a184729625323c8">&#9670;&#160;</a></span>renderer_mem_free()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void renderer_mem_free </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>ptr_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>memory_system_freeのラッパーAPI </p>
+<dl class="section note"><dt>Note</dt><dd>レンダラーレイヤー専用APIのため、メモリータグはMEMORY_TAG_RENDERER固定</dd>
+<dd>
+引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。 この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptr_</td><td>解放対象メモリアドレス </td></tr>
+    <tr><td class="paramname">size_</td><td>解放サイズ </td></tr>
   </table>
   </dd>
 </dl>

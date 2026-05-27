@@ -7,5 +7,6 @@ var choco__macros_8h =
     [ "IF_ARG_NULL_GOTO_CLEANUP", "choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1", null ],
     [ "IS_POWER_OF_TWO", "choco__macros_8h.html#af770043678408217b3232efd66a65f7c", null ],
     [ "KIB", "choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2", null ],
-    [ "MIB", "choco__macros_8h.html#a9d11258d2beb9cc8297f7c4eff586868", null ]
+    [ "MIB", "choco__macros_8h.html#a9d11258d2beb9cc8297f7c4eff586868", null ],
+    [ "NO_COVERAGE", "choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19", null ]
 ];

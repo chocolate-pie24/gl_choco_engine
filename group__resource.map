@@ -1,0 +1,4 @@
+<map id="Resource" name="Resource">
+<area shape="rect" id="node1" href="$group__engine.html" title="GLCEが提供するエンジンモジュール群。" alt="" coords="5,5,72,31"/>
+<area shape="rect" id="node2" title="CPU側リソース表現およびリソースロード用モジュール群。" alt="" coords="120,5,203,31"/>
+</map>

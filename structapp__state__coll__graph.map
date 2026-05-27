@@ -18,7 +18,7 @@
 <area shape="rect" id="node14" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="279,435,449,461"/>
 <area shape="rect" id="node15" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="697,323,853,349"/>
 <area shape="rect" id="node16" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="279,306,449,331"/>
-<area shape="rect" id="node17" href="$structrenderer__texture__vtable.html" title=" " alt="" coords="685,771,864,797"/>
+<area shape="rect" id="node17" href="$structrenderer__texture__vtable.html" title="Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル" alt="" coords="685,771,864,797"/>
 <area shape="rect" id="node18" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="268,813,460,838"/>
 <area shape="rect" id="node26" href="$structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義" alt="" coords="707,838,842,863"/>
 <area shape="rect" id="node20" href="$structcamera__manager.html" title="カメラ管理システム内部状態管理構造体" alt="" coords="1057,917,1193,942"/>

@@ -1,6 +1,7 @@
 var texture__manager_8h =
 [
     [ "INVALID_TEXTURE_ID", "texture__manager_8h.html#a50a85bc4344cfaa21b448745e00886f7", null ],
+    [ "texture_manager_t", "texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5", null ],
     [ "texture_system_result_t", "texture__manager_8h.html#ade4f01294359491d24db840b05ccb854", [
       [ "TEXTURE_SYSTEM_SUCCESS", "texture__manager_8h.html#ade4f01294359491d24db840b05ccb854ab2443f9160fd375717c7bde998fab226", null ],
       [ "TEXTURE_SYSTEM_NO_MEMORY", "texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a8cf52d04a5483a21b10420f61cb48a9a", null ],

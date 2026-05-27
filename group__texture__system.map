@@ -1,0 +1,4 @@
+<map id="Texture System" name="Texture System">
+<area shape="rect" id="node1" href="$group__systems.html" title="platform、renderer、camera、texture管理などの実行時サブシステム群。" alt="" coords="5,5,84,31"/>
+<area shape="rect" id="node2" title="テクスチャ登録、およびCPU側/GPU側テクスチャリソース管理サブシステムの公開API群。" alt="" coords="132,5,255,31"/>
+</map>

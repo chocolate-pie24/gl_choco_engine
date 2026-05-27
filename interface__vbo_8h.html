@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('interface__vbo_8h.html',''); initResiz
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a>  </div>
-  <div class="headertitle"><div class="title">interface_vbo.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a> &raquo; <a class="el" href="group__renderer__backend.html">Renderer Backend</a> &raquo; <a class="el" href="group__renderer__backend__interface.html">Renderer Backend Interface</a></div></div></div>
+  <div class="headertitle"><div class="title">interface_vbo.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -137,23 +137,17 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:abda2caec97d674e89654e50479a8b375"><td class="memItemLeft" align="right" valign="top"><a id="abda2caec97d674e89654e50479a8b375" name="abda2caec97d674e89654e50479a8b375"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_create</b>) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
+<tr class="memitem:abda2caec97d674e89654e50479a8b375"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#abda2caec97d674e89654e50479a8b375">pfn_vertex_buffer_create</a>) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
 <tr class="separator:abda2caec97d674e89654e50479a8b375"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af06b8d4cda8cf3aa8f7a94ad6477ef0e"><td class="memItemLeft" align="right" valign="top"><a id="af06b8d4cda8cf3aa8f7a94ad6477ef0e" name="af06b8d4cda8cf3aa8f7a94ad6477ef0e"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_destroy</b>) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
+<tr class="memitem:af06b8d4cda8cf3aa8f7a94ad6477ef0e"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#af06b8d4cda8cf3aa8f7a94ad6477ef0e">pfn_vertex_buffer_destroy</a>) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
 <tr class="separator:af06b8d4cda8cf3aa8f7a94ad6477ef0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae63d0575937d477fec2edafa269b0a44"><td class="memItemLeft" align="right" valign="top"><a id="ae63d0575937d477fec2edafa269b0a44" name="ae63d0575937d477fec2edafa269b0a44"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_bind</b>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, uint32_t *out_vbo_id_)</td></tr>
+<tr class="memitem:ae63d0575937d477fec2edafa269b0a44"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#ae63d0575937d477fec2edafa269b0a44">pfn_vertex_buffer_bind</a>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, uint32_t *out_vbo_id_)</td></tr>
 <tr class="separator:ae63d0575937d477fec2edafa269b0a44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bb15305e518a82c39b3ec5431e0d390"><td class="memItemLeft" align="right" valign="top"><a id="a7bb15305e518a82c39b3ec5431e0d390" name="a7bb15305e518a82c39b3ec5431e0d390"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_unbind</b>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_)</td></tr>
+<tr class="memitem:a7bb15305e518a82c39b3ec5431e0d390"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#a7bb15305e518a82c39b3ec5431e0d390">pfn_vertex_buffer_unbind</a>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_)</td></tr>
 <tr class="separator:a7bb15305e518a82c39b3ec5431e0d390"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2306bfd16e4e841795bdccdaa55bacd5"><td class="memItemLeft" align="right" valign="top"><a id="a2306bfd16e4e841795bdccdaa55bacd5" name="a2306bfd16e4e841795bdccdaa55bacd5"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_vertex_load</b>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t load_size_, const void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td></tr>
+<tr class="memitem:a2306bfd16e4e841795bdccdaa55bacd5"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#a2306bfd16e4e841795bdccdaa55bacd5">pfn_vertex_buffer_vertex_load</a>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t load_size_, const void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td></tr>
 <tr class="separator:a2306bfd16e4e841795bdccdaa55bacd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f7a1ae53010715a96d38aa612c14247"><td class="memItemLeft" align="right" valign="top"><a id="a4f7a1ae53010715a96d38aa612c14247" name="a4f7a1ae53010715a96d38aa612c14247"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_buffer_vertex_subload</b>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t offset_, size_t size_, const void *load_data_)</td></tr>
+<tr class="memitem:a4f7a1ae53010715a96d38aa612c14247"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#a4f7a1ae53010715a96d38aa612c14247">pfn_vertex_buffer_vertex_subload</a>) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t offset_, size_t size_, const void *load_data_)</td></tr>
 <tr class="separator:a4f7a1ae53010715a96d38aa612c14247"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a916ae232d49db491bf3f9813901d63ee"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a></td></tr>
 <tr class="memdesc:a916ae232d49db491bf3f9813901d63ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">VBO機能仮想関数テーブル  <br /></td></tr>
@@ -169,6 +163,96 @@ typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f
 <dl class="section date"><dt>Date</dt><dd>2026-02-06</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="ae63d0575937d477fec2edafa269b0a44" name="ae63d0575937d477fec2edafa269b0a44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae63d0575937d477fec2edafa269b0a44">&#9670;&#160;</a></span>pfn_vertex_buffer_bind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_buffer_bind) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, uint32_t *out_vbo_id_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_bindの前方宣言 </p>
+
+</div>
+</div>
+<a id="abda2caec97d674e89654e50479a8b375" name="abda2caec97d674e89654e50479a8b375"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abda2caec97d674e89654e50479a8b375">&#9670;&#160;</a></span>pfn_vertex_buffer_create</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_buffer_create) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_createの前方宣言 </p>
+
+</div>
+</div>
+<a id="af06b8d4cda8cf3aa8f7a94ad6477ef0e" name="af06b8d4cda8cf3aa8f7a94ad6477ef0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af06b8d4cda8cf3aa8f7a94ad6477ef0e">&#9670;&#160;</a></span>pfn_vertex_buffer_destroy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* pfn_vertex_buffer_destroy) (<a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> **vertex_buffer_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_destroyの前方宣言 </p>
+
+</div>
+</div>
+<a id="a7bb15305e518a82c39b3ec5431e0d390" name="a7bb15305e518a82c39b3ec5431e0d390"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bb15305e518a82c39b3ec5431e0d390">&#9670;&#160;</a></span>pfn_vertex_buffer_unbind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_buffer_unbind) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_unbindの前方宣言 </p>
+
+</div>
+</div>
+<a id="a2306bfd16e4e841795bdccdaa55bacd5" name="a2306bfd16e4e841795bdccdaa55bacd5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2306bfd16e4e841795bdccdaa55bacd5">&#9670;&#160;</a></span>pfn_vertex_buffer_vertex_load</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_buffer_vertex_load) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t load_size_, const void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_vertex_loadの前方宣言 </p>
+
+</div>
+</div>
+<a id="a4f7a1ae53010715a96d38aa612c14247" name="a4f7a1ae53010715a96d38aa612c14247"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f7a1ae53010715a96d38aa612c14247">&#9670;&#160;</a></span>pfn_vertex_buffer_vertex_subload</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_buffer_vertex_subload) (const <a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *vertex_buffer_, size_t offset_, size_t size_, const void *load_data_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vbo_vtableが保持するvertex_buffer_vertex_subloadの前方宣言 </p>
+
+</div>
+</div>
 <a id="a916ae232d49db491bf3f9813901d63ee" name="a916ae232d49db491bf3f9813901d63ee"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a916ae232d49db491bf3f9813901d63ee">&#9670;&#160;</a></span>renderer_vbo_vtable_t</h2>
 

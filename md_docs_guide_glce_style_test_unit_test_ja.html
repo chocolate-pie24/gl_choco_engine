@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>本ドキュメントでは、モジュールが保有する外部公開APIおよびプライベート関数の単体テスト実装方法について記す。</p>
-<h1><a class="anchor" id="autotoc_md128"></a>
+<h1><a class="anchor" id="autotoc_md193"></a>
 テスト用失敗注入機能</h1>
 <p>テストの際には、テスト対象関数内で強制的に指定した返り値を出力させる機能が必要となる。 GLCEでは、この機能を全モジュールで統一感を持って使用できるよう、テストビルド時のみ、外部からの失敗注入機能を用意する。</p>
 <p>この機能は、test/include/test_controller.hで定義され、test/src/test_controller.cで実装されている。</p>
@@ -124,9 +124,9 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 <div class="line"><span class="keywordtype">void</span> test_call_control_size_t_reset(test_call_control_size_t_t* control_);</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> test_call_control_bool_reset(test_call_control_bool_t* control_);</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md129"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md194"></a>
 単体テストコード作成手順</h1>
-<h2><a class="anchor" id="autotoc_md130"></a>
+<h2><a class="anchor" id="autotoc_md195"></a>
 テスト用ヘッダファイルの作成</h2>
 <p>単体テスト作成対象モジュールのテスト用ヘッダファイルを以下のルールに基づいて作成する。</p>
 <ul>
@@ -135,7 +135,7 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 </ul>
 <p>例えばテスト対象がinclude/engine/core/memory/choco_memory.hであれば、test/include/engine/core/memory/test_choco_memory.hとする。</p>
 <p>ヘッダファイル内に記載する内容は以下の内容とする。</p>
-<h3><a class="anchor" id="autotoc_md131"></a>
+<h3><a class="anchor" id="autotoc_md196"></a>
 失敗注入API</h3>
 <p><em><b>test_controller.h</b></em> で公開している型による失敗注入が可能なモジュール保有外部公開APIに、失敗注入APIを個別に設ける。 失敗注入APIの名称は、***test_foo_config_set*** とする。fooは外部公開API名称を表す。</p>
 <p>このAPIは以下のように使用する。 なお、構造体のcall_countフィールドについては、モジュール内で管理するため、失敗を注入する側では値のセットは行わない。</p>
@@ -155,10 +155,10 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 <div class="line">    s_test_config_foo.fail_on_call = config_-&gt;fail_on_call;</div>
 <div class="line">    s_test_config_foo.forced_result = config_-&gt;forced_result;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md132"></a>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md197"></a>
 モジュールテストAPI</h3>
 <p>モジュールが保有する全外部公開APIと、プライベート関数のテストを行うAPIを定義する。 API名称は、test_xxxとする。xxxはモジュール名称を表す。</p>
-<h3><a class="anchor" id="autotoc_md133"></a>
+<h3><a class="anchor" id="autotoc_md198"></a>
 失敗注入設定のリセット</h3>
 <p>モジュールが保有する全失敗注入設定をリセットするAPIを定義する。 リセットAPIの名称は、test_module_name_config_resetとする。 なお、test_module_name_config_resetは、失敗注入設定以外にもモック関数テスト設定やテストシナリオ設定等の設定値も全てリセットされる。</p>
 <p>以上を記載したテスト用ヘッダは以下のようになる。</p>
@@ -187,10 +187,10 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 <div class="line">}</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md134"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md199"></a>
 テスト用実装の追加</h2>
 <p>テストに使用する各処理は、テスト対象モジュールの実装ファイルに記載する。 こうすることで、モジュールが使用する各種構造体のフィールドに直接アクセスできるようにし、テストコードをシンプルにする。</p>
-<h3><a class="anchor" id="autotoc_md135"></a>
+<h3><a class="anchor" id="autotoc_md200"></a>
 テスト用データ構造定義、プロトタイプ宣言部</h3>
 <p>モジュール実装ファイルの各種ヘッダinclude以下にTEST_BUILD用のコードブロックを用意し、以下を記載する。 全テスト関数で統一感を持たせるため、記載する順番は全モジュールで統一する。</p>
 <ul>
@@ -221,7 +221,7 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 <div class="line"><span class="comment">// 全テスト関数プロトタイプ宣言(モジュールテスト関数内でこれらが呼ばれる。モジュールテスト関数の名称はtest_module_name)</span></div>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> test_xxx(<span class="keywordtype">void</span>); </div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md136"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md201"></a>
 外部公開API実装時の失敗注入処理</h2>
 <p>上位レイヤーからの呼び出しに対し、返り値を制御可能にするため、共通失敗注入機構またはモジュール個別の失敗注入機構で対応する全外部公開APIには、強制的に値を指定した返り値出力機能を設ける。 強制的な出力は、あらゆるエラー処理に関わらず機能させたいため、関数の先頭に配置する。例えば以下のような形にする(memory_system_allocateの例)。</p>
 <div class="fragment"><div class="line"><a class="code hl_enumeration" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a> <a class="code hl_function" href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a>(<span class="keywordtype">size_t</span> size_, <a class="code hl_enumeration" href="choco__memory_8h.html#aaf71720bc3d7435a3a06084dc3d1395c">memory_tag_t</a> mem_tag_, <span class="keywordtype">void</span>** out_ptr_) {</div>
@@ -254,9 +254,9 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 <div class="line">cleanup:</div>
 <div class="line">    <span class="keywordflow">return</span> ret;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:118</div></div>
-<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:183</div></div>
-<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:86</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:122</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:187</div></div>
+<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:90</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:147</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:58</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1a1a67c354d8a2f8dcd4566e93641506c9"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a1a67c354d8a2f8dcd4566e93641506c9">MEMORY_SYSTEM_BAD_OPERATION</a></div><div class="ttdeci">@ MEMORY_SYSTEM_BAD_OPERATION</div><div class="ttdef"><b>Definition:</b> choco_memory.h:63</div></div>

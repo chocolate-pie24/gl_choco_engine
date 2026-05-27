@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('interface__texture_8h.html',''); initR
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a>  </div>
-  <div class="headertitle"><div class="title">interface_texture.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a> &raquo; <a class="el" href="group__renderer__backend.html">Renderer Backend</a> &raquo; <a class="el" href="group__renderer__backend__interface.html">Renderer Backend Interface</a></div></div></div>
+  <div class="headertitle"><div class="title">interface_texture.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -132,27 +132,23 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル  <a href="structrenderer__texture__vtable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:ac4fd776b051b2b1264e295b8d8450617"><td class="memItemLeft" align="right" valign="top"><a id="ac4fd776b051b2b1264e295b8d8450617" name="ac4fd776b051b2b1264e295b8d8450617"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_renderer_texture_create</b>) (int32_t unit_num_, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> min_filter_config_, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> mag_filter_config_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_s_axis_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_t_axis_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
+<tr class="memitem:ac4fd776b051b2b1264e295b8d8450617"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#ac4fd776b051b2b1264e295b8d8450617">pfn_renderer_texture_create</a>) (int32_t unit_num_, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> min_filter_config_, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> mag_filter_config_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_s_axis_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_t_axis_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
 <tr class="separator:ac4fd776b051b2b1264e295b8d8450617"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab15af0925074abda4d6407040b1db774"><td class="memItemLeft" align="right" valign="top"><a id="ab15af0925074abda4d6407040b1db774" name="ab15af0925074abda4d6407040b1db774"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_renderer_texture_destroy</b>) (<a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
+<tr class="memitem:ab15af0925074abda4d6407040b1db774"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#ab15af0925074abda4d6407040b1db774">pfn_renderer_texture_destroy</a>) (<a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
 <tr class="separator:ab15af0925074abda4d6407040b1db774"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47a9579d91ef2d4f440f111f86c809df"><td class="memItemLeft" align="right" valign="top"><a id="a47a9579d91ef2d4f440f111f86c809df" name="a47a9579d91ef2d4f440f111f86c809df"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_renderer_texture_bind</b>) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_, int32_t *out_texture_unit_, int32_t *out_texture_internal_handle_)</td></tr>
+<tr class="memitem:a47a9579d91ef2d4f440f111f86c809df"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#a47a9579d91ef2d4f440f111f86c809df">pfn_renderer_texture_bind</a>) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_, int32_t *out_texture_unit_, int32_t *out_texture_internal_handle_)</td></tr>
 <tr class="separator:a47a9579d91ef2d4f440f111f86c809df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17b6042a6a104e3de7a9eda5b9cb8dd9"><td class="memItemLeft" align="right" valign="top"><a id="a17b6042a6a104e3de7a9eda5b9cb8dd9" name="a17b6042a6a104e3de7a9eda5b9cb8dd9"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_renderer_texture_unbind</b>) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
+<tr class="memitem:a17b6042a6a104e3de7a9eda5b9cb8dd9"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#a17b6042a6a104e3de7a9eda5b9cb8dd9">pfn_renderer_texture_unbind</a>) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
 <tr class="separator:a17b6042a6a104e3de7a9eda5b9cb8dd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25f3a0e1ba17304f484a1c0044c05f27"><td class="memItemLeft" align="right" valign="top"><a id="a25f3a0e1ba17304f484a1c0044c05f27" name="a25f3a0e1ba17304f484a1c0044c05f27"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_renderer_texture_pixel_upload</b>) (uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t *pixels_)</td></tr>
+<tr class="memitem:a25f3a0e1ba17304f484a1c0044c05f27"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#a25f3a0e1ba17304f484a1c0044c05f27">pfn_renderer_texture_pixel_upload</a>) (uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t *pixels_)</td></tr>
 <tr class="separator:a25f3a0e1ba17304f484a1c0044c05f27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa36ddeb541b425aef9f4f0cb92022399"><td class="memItemLeft" align="right" valign="top"><a id="aa36ddeb541b425aef9f4f0cb92022399" name="aa36ddeb541b425aef9f4f0cb92022399"></a>
-typedef struct <a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>renderer_texture_vtable_t</b></td></tr>
+<tr class="memitem:aa36ddeb541b425aef9f4f0cb92022399"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html#aa36ddeb541b425aef9f4f0cb92022399">renderer_texture_vtable_t</a></td></tr>
+<tr class="memdesc:aa36ddeb541b425aef9f4f0cb92022399"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル  <br /></td></tr>
 <tr class="separator:aa36ddeb541b425aef9f4f0cb92022399"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -162,7 +158,99 @@ typedef struct <a class="el" href="structrenderer__texture__vtable.html">rendere
 <dl class="section date"><dt>Date</dt><dd>2026-05-18</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="a47a9579d91ef2d4f440f111f86c809df" name="a47a9579d91ef2d4f440f111f86c809df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47a9579d91ef2d4f440f111f86c809df">&#9670;&#160;</a></span>pfn_renderer_texture_bind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_texture_bind) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_, int32_t *out_texture_unit_, int32_t *out_texture_internal_handle_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 </p>
+
+</div>
+</div>
+<a id="ac4fd776b051b2b1264e295b8d8450617" name="ac4fd776b051b2b1264e295b8d8450617"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4fd776b051b2b1264e295b8d8450617">&#9670;&#160;</a></span>pfn_renderer_texture_create</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_texture_create) (int32_t unit_num_, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> min_filter_config_, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> mag_filter_config_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_s_axis_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_t_axis_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 </p>
+
+</div>
+</div>
+<a id="ab15af0925074abda4d6407040b1db774" name="ab15af0925074abda4d6407040b1db774"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab15af0925074abda4d6407040b1db774">&#9670;&#160;</a></span>pfn_renderer_texture_destroy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* pfn_renderer_texture_destroy) (<a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 </p>
+
+</div>
+</div>
+<a id="a25f3a0e1ba17304f484a1c0044c05f27" name="a25f3a0e1ba17304f484a1c0044c05f27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25f3a0e1ba17304f484a1c0044c05f27">&#9670;&#160;</a></span>pfn_renderer_texture_pixel_upload</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_texture_pixel_upload) (uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t *pixels_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_texture_vtableが保持するrenderer_texture_pixel_uploadの前方宣言 </p>
+
+</div>
+</div>
+<a id="a17b6042a6a104e3de7a9eda5b9cb8dd9" name="a17b6042a6a104e3de7a9eda5b9cb8dd9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17b6042a6a104e3de7a9eda5b9cb8dd9">&#9670;&#160;</a></span>pfn_renderer_texture_unbind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_texture_unbind) (const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 </p>
+
+</div>
+</div>
+<a id="aa36ddeb541b425aef9f4f0cb92022399" name="aa36ddeb541b425aef9f4f0cb92022399"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa36ddeb541b425aef9f4f0cb92022399">&#9670;&#160;</a></span>renderer_texture_vtable_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable</a> <a class="el" href="interface__texture_8h.html#aa36ddeb541b425aef9f4f0cb92022399">renderer_texture_vtable_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -1,6 +1,5 @@
 <map id="include/engine/core/buffer_utils/buffer_utils.h" name="include/engine/core/buffer_utils/buffer_utils.h">
-<area shape="rect" id="node1" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの定義" alt="" coords="200,5,349,60"/>
+<area shape="rect" id="node1" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの定義" alt="" coords="105,5,255,60"/>
 <area shape="rect" id="node2" href="$buffer__utils_8c.html" title="データが密にパックされたバッファへのデータの書き込みと、バッファからのデータの取り出しAPIの実装" alt="" coords="5,108,168,148"/>
 <area shape="rect" id="node3" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="192,108,357,148"/>
-<area shape="rect" id="node4" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="381,108,531,148"/>
 </map>

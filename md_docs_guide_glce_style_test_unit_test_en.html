@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('md_docs_guide_glce_style_test_unit_tes
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>This document describes how to implement unit tests for a module’s public APIs and private functions.</p>
-<h1><a class="anchor" id="autotoc_md118"></a>
+<h1><a class="anchor" id="autotoc_md183"></a>
 Failure Injection Mechanism for Testing</h1>
 <p>During testing, it is necessary to have a mechanism that forces the function under test to return a specified value.</p>
 <p>In GLCE, this mechanism is provided only in test builds so that all modules can use failure injection in a consistent manner.</p>
@@ -126,9 +126,9 @@ Failure Injection Mechanism for Testing</h1>
 <div class="line"><span class="keywordtype">void</span> test_call_control_size_t_reset(test_call_control_size_t_t* control_);</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> test_call_control_bool_reset(test_call_control_bool_t* control_);</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md119"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md184"></a>
 Procedure for Creating Unit Test Code</h1>
-<h2><a class="anchor" id="autotoc_md120"></a>
+<h2><a class="anchor" id="autotoc_md185"></a>
 Creating a Test Header File</h2>
 <p>Create the test header file for the target module according to the following rules.</p>
 <ul>
@@ -137,7 +137,7 @@ Creating a Test Header File</h2>
 </ul>
 <p>For example, if the target is <a class="el" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義">include/engine/core/memory/choco_memory.h</a>, then the test header file should be test/include/engine/core/memory/test_choco_memory.h.</p>
 <p>The test header file must contain the following.</p>
-<h3><a class="anchor" id="autotoc_md121"></a>
+<h3><a class="anchor" id="autotoc_md186"></a>
 Failure Injection APIs</h3>
 <p>For each public API in the module that can use failure injection with the types provided by test_controller.h, define a dedicated failure injection API.</p>
 <p>The naming convention for a failure injection API is test_foo_config_set, where foo represents the public API name.</p>
@@ -158,11 +158,11 @@ Failure Injection APIs</h3>
 <div class="line">    s_test_config_foo.fail_on_call = config_-&gt;fail_on_call;</div>
 <div class="line">    s_test_config_foo.forced_result = config_-&gt;forced_result;</div>
 <div class="line">}</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md122"></a>
+</div><!-- fragment --><h3><a class="anchor" id="autotoc_md187"></a>
 Module Test API</h3>
 <p>Define an API that tests all public APIs and private functions owned by the module.</p>
 <p>The naming convention is test_xxx, where xxx represents the module name.</p>
-<h3><a class="anchor" id="autotoc_md123"></a>
+<h3><a class="anchor" id="autotoc_md188"></a>
 Resetting Failure Injection Settings</h3>
 <p>Define an API that resets all failure injection settings owned by the module.</p>
 <p>The naming convention is test_module_name_config_reset.</p>
@@ -195,11 +195,11 @@ Resetting Failure Injection Settings</h3>
 <div class="line">}</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md124"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md189"></a>
 Adding Test Implementations</h2>
 <p>All test-related processing is written in the implementation file of the module under test.</p>
 <p>This allows direct access to fields of the various structures used by the module, keeping the test code simple.</p>
-<h3><a class="anchor" id="autotoc_md125"></a>
+<h3><a class="anchor" id="autotoc_md190"></a>
 Test Data Structure Definitions and Function Prototype Section</h3>
 <p>Below the include directives in the module implementation file, prepare a TEST_BUILD code block and write the following.</p>
 <p>To keep all test functions consistent, the order must be unified across all modules.</p>
@@ -233,7 +233,7 @@ Test Data Structure Definitions and Function Prototype Section</h3>
 <div class="line"><span class="comment">// (these are called from the module test function; the module test function is named test_module_name)</span></div>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> test_xxx(<span class="keywordtype">void</span>); </div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md126"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md191"></a>
 Failure Injection Processing in Public API Implementations</h2>
 <p>To make return values controllable from upper-layer calls, all public APIs that are handled by the common failure injection mechanism or a module-specific failure injection mechanism must provide functionality to force a specified return value.</p>
 <p>Because forced return behavior must take effect regardless of normal error handling, it must be placed at the beginning of the function.</p>
@@ -268,9 +268,9 @@ Failure Injection Processing in Public API Implementations</h2>
 <div class="line">cleanup:</div>
 <div class="line">    <span class="keywordflow">return</span> ret;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:118</div></div>
-<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:183</div></div>
-<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:86</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:122</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:187</div></div>
+<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:90</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a0874ee6816154203790c2c3630530557"><div class="ttname"><a href="choco__memory_8h.html#a0874ee6816154203790c2c3630530557">memory_system_allocate</a></div><div class="ttdeci">memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void **out_ptr_)</div><div class="ttdoc">容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する</div><div class="ttdef"><b>Definition:</b> choco_memory.c:147</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a></div><div class="ttdeci">memory_system_result_t</div><div class="ttdoc">メモリシステム実行結果コードリスト</div><div class="ttdef"><b>Definition:</b> choco_memory.h:58</div></div>
 <div class="ttc" id="achoco__memory_8h_html_a3ce0c36376919f6dbef796dd30d2a8a1a1a67c354d8a2f8dcd4566e93641506c9"><div class="ttname"><a href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a1a67c354d8a2f8dcd4566e93641506c9">MEMORY_SYSTEM_BAD_OPERATION</a></div><div class="ttdeci">@ MEMORY_SYSTEM_BAD_OPERATION</div><div class="ttdef"><b>Definition:</b> choco_memory.h:63</div></div>

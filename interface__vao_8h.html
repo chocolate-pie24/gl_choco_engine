@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('interface__vao_8h.html',''); initResiz
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a>  </div>
-  <div class="headertitle"><div class="title">interface_vao.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a> &raquo; <a class="el" href="group__renderer__backend.html">Renderer Backend</a> &raquo; <a class="el" href="group__renderer__backend__interface.html">Renderer Backend Interface</a></div></div></div>
+  <div class="headertitle"><div class="title">interface_vao.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -139,20 +139,15 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:afc26989168e8aa7702920ebf213f1738"><td class="memItemLeft" align="right" valign="top"><a id="afc26989168e8aa7702920ebf213f1738" name="afc26989168e8aa7702920ebf213f1738"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_array_create</b>) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memitem:afc26989168e8aa7702920ebf213f1738"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#afc26989168e8aa7702920ebf213f1738">pfn_vertex_array_create</a>) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
 <tr class="separator:afc26989168e8aa7702920ebf213f1738"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0f5b918ab42d8199b30a2d2ae7ea834"><td class="memItemLeft" align="right" valign="top"><a id="af0f5b918ab42d8199b30a2d2ae7ea834" name="af0f5b918ab42d8199b30a2d2ae7ea834"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_array_destroy</b>) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memitem:af0f5b918ab42d8199b30a2d2ae7ea834"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#af0f5b918ab42d8199b30a2d2ae7ea834">pfn_vertex_array_destroy</a>) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
 <tr class="separator:af0f5b918ab42d8199b30a2d2ae7ea834"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70b5348c1c80e39ff30198d793763b45"><td class="memItemLeft" align="right" valign="top"><a id="a70b5348c1c80e39ff30198d793763b45" name="a70b5348c1c80e39ff30198d793763b45"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_array_bind</b>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t *out_vao_id_)</td></tr>
+<tr class="memitem:a70b5348c1c80e39ff30198d793763b45"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#a70b5348c1c80e39ff30198d793763b45">pfn_vertex_array_bind</a>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t *out_vao_id_)</td></tr>
 <tr class="separator:a70b5348c1c80e39ff30198d793763b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7e5179bcdb3666d68dae997bae2262b"><td class="memItemLeft" align="right" valign="top"><a id="ad7e5179bcdb3666d68dae997bae2262b" name="ad7e5179bcdb3666d68dae997bae2262b"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_array_unbind</b>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
+<tr class="memitem:ad7e5179bcdb3666d68dae997bae2262b"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#ad7e5179bcdb3666d68dae997bae2262b">pfn_vertex_array_unbind</a>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
 <tr class="separator:ad7e5179bcdb3666d68dae997bae2262b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac75feab8b9e89b23d03e2ddfa8458910"><td class="memItemLeft" align="right" valign="top"><a id="ac75feab8b9e89b23d03e2ddfa8458910" name="ac75feab8b9e89b23d03e2ddfa8458910"></a>
-typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>pfn_vertex_array_attribute_set</b>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
+<tr class="memitem:ac75feab8b9e89b23d03e2ddfa8458910"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#ac75feab8b9e89b23d03e2ddfa8458910">pfn_vertex_array_attribute_set</a>) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
 <tr class="separator:ac75feab8b9e89b23d03e2ddfa8458910"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e84f90b1944196db35490c1b0c7fd33"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">renderer_vao_vtable_t</a></td></tr>
 <tr class="memdesc:a5e84f90b1944196db35490c1b0c7fd33"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO機能仮想関数テーブル  <br /></td></tr>
@@ -168,6 +163,81 @@ typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f
 <dl class="section date"><dt>Date</dt><dd>2026-02-06</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="ac75feab8b9e89b23d03e2ddfa8458910" name="ac75feab8b9e89b23d03e2ddfa8458910"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac75feab8b9e89b23d03e2ddfa8458910">&#9670;&#160;</a></span>pfn_vertex_array_attribute_set</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_array_attribute_set) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vao_vtableが保持するvertex_array_attribute_setの前方宣言 </p>
+
+</div>
+</div>
+<a id="a70b5348c1c80e39ff30198d793763b45" name="a70b5348c1c80e39ff30198d793763b45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70b5348c1c80e39ff30198d793763b45">&#9670;&#160;</a></span>pfn_vertex_array_bind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_array_bind) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t *out_vao_id_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vao_vtableが保持するvertex_array_bindの前方宣言 </p>
+
+</div>
+</div>
+<a id="afc26989168e8aa7702920ebf213f1738" name="afc26989168e8aa7702920ebf213f1738"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc26989168e8aa7702920ebf213f1738">&#9670;&#160;</a></span>pfn_vertex_array_create</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_array_create) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vao_vtableが保持するvertex_array_createの前方宣言 </p>
+
+</div>
+</div>
+<a id="af0f5b918ab42d8199b30a2d2ae7ea834" name="af0f5b918ab42d8199b30a2d2ae7ea834"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0f5b918ab42d8199b30a2d2ae7ea834">&#9670;&#160;</a></span>pfn_vertex_array_destroy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* pfn_vertex_array_destroy) (<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vao_vtableが保持するvertex_array_destroyの前方宣言 </p>
+
+</div>
+</div>
+<a id="ad7e5179bcdb3666d68dae997bae2262b" name="ad7e5179bcdb3666d68dae997bae2262b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7e5179bcdb3666d68dae997bae2262b">&#9670;&#160;</a></span>pfn_vertex_array_unbind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_vertex_array_unbind) (const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_vao_vtableが保持するvertex_array_unbindの前方宣言 </p>
+
+</div>
+</div>
 <a id="a5e84f90b1944196db35490c1b0c7fd33" name="a5e84f90b1944196db35490c1b0c7fd33"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5e84f90b1944196db35490c1b0c7fd33">&#9670;&#160;</a></span>renderer_vao_vtable_t</h2>
 

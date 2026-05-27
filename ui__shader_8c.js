@@ -6,5 +6,10 @@ var ui__shader_8c =
     [ "ui_shader_model_matrix_set", "ui__shader_8c.html#a783d90393d85b073f06a9f09f5406275", null ],
     [ "ui_shader_projection_matrix_set", "ui__shader_8c.html#a918a1696c6e133c9f1beea079224d15f", null ],
     [ "ui_shader_use", "ui__shader_8c.html#aebe23ce1c7a385a89dacdebae5a0c336", null ],
+    [ "ui_shader_vertex_array_bind", "ui__shader_8c.html#a208bdac70cfe7c2e92b3c05cd1505fa2", null ],
+    [ "ui_shader_vertex_array_unbind", "ui__shader_8c.html#aa145bab6dab5ccfc1079037b23ee54a4", null ],
+    [ "ui_shader_vertex_buffer_create", "ui__shader_8c.html#a313474e120e36e972988d7365568a111", null ],
+    [ "ui_shader_vertex_buffer_destroy", "ui__shader_8c.html#a9ee4a1417794b8e7bb18ca8ba81c6d5a", null ],
+    [ "ui_shader_vertex_buffer_write", "ui__shader_8c.html#ab2fc6a6adab28651a8d95731df4faaaf", null ],
     [ "ui_shader_view_matrix_set", "ui__shader_8c.html#acffc4ef6b8b0ab904583b87f6b7c1ee6", null ]
 ];

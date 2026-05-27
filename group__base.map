@@ -1,4 +1,4 @@
 <map id="Base" name="Base">
-<area shape="rect" id="node1" title="最下層の“横断ユーティリティ”。全レイヤーが使える小道具を提供" alt="" coords="120,5,175,31"/>
-<area shape="rect" id="node2" href="$group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,5,72,31"/>
+<area shape="rect" id="node1" title="GLCE全体で共有される低レベルユーティリティ。" alt="" coords="120,5,175,31"/>
+<area shape="rect" id="node2" href="$group__engine.html" title="GLCEが提供するエンジンモジュール群。" alt="" coords="5,5,72,31"/>
 </map>

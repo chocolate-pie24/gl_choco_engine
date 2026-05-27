@@ -1,0 +1,4 @@
+<map id="Camera System" name="Camera System">
+<area shape="rect" id="node1" title="カメラ状態管理およびカメラ制御サブシステムの公開API群。" alt="" coords="132,5,259,31"/>
+<area shape="rect" id="node2" href="$group__systems.html" title="platform、renderer、camera、texture管理などの実行時サブシステム群。" alt="" coords="5,5,84,31"/>
+</map>

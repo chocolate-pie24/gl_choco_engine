@@ -1,6 +1,28 @@
 var group__renderer =
 [
-    [ "Renderer Backend", "group__renderer__backend.html", "group__renderer__backend" ],
-    [ "Renderer Core", "group__renderer__core.html", "group__renderer__core" ],
-    [ "Renderer Resources", "group__renderer__resources.html", "group__renderer__resources" ]
+    [ "concrete_shader.h", "concrete__shader_8h.html", null ],
+    [ "concrete_texture.h", "concrete__texture_8h.html", null ],
+    [ "concrete_vao.h", "concrete__vao_8h.html", null ],
+    [ "concrete_vbo.h", "concrete__vbo_8h.html", null ],
+    [ "context_shader.h", "context__shader_8h.html", null ],
+    [ "context_texture.h", "context__texture_8h.html", null ],
+    [ "context_vao.h", "context__vao_8h.html", null ],
+    [ "context_vbo.h", "context__vbo_8h.html", null ],
+    [ "renderer_backend_context.h", "renderer__backend__context_8h.html", null ],
+    [ "interface_shader.h", "interface__shader_8h.html", null ],
+    [ "interface_texture.h", "interface__texture_8h.html", null ],
+    [ "interface_vao.h", "interface__vao_8h.html", null ],
+    [ "interface_vbo.h", "interface__vbo_8h.html", null ],
+    [ "renderer_backend_types.h", "renderer__backend__types_8h.html", null ],
+    [ "renderer_err_utils.h", "renderer__err__utils_8h.html", null ],
+    [ "renderer_memory.h", "renderer__memory_8h.html", null ],
+    [ "renderer_types.h", "renderer__types_8h.html", null ],
+    [ "ui_shader.h", "ui__shader_8h.html", null ],
+    [ "concrete_shader.c", "concrete__shader_8c.html", null ],
+    [ "concrete_texture.c", "concrete__texture_8c.html", null ],
+    [ "concrete_vao.c", "concrete__vao_8c.html", null ],
+    [ "concrete_vbo.c", "concrete__vbo_8c.html", null ],
+    [ "renderer_err_utils.c", "renderer__err__utils_8c.html", null ],
+    [ "renderer_memory.c", "renderer__memory_8c.html", null ],
+    [ "ui_shader.c", "ui__shader_8c.html", null ]
 ];

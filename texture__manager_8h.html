@@ -96,7 +96,7 @@ $(document).ready(function(){initNavTree('texture__manager_8h.html',''); initRes
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">texture_manager.h File Reference</div></div>
+  <div class="headertitle"><div class="title">texture_manager.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__texture__system.html">Texture System</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -135,12 +135,11 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:a12fd0af4283249643448cff6442e2cf5"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structtexture__manager.html">texture_manager</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a></td></tr>
+<tr class="separator:a12fd0af4283249643448cff6442e2cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa4e1278ebfe77080fc395b27f1b38ec"><td class="memItemLeft" align="right" valign="top"><a id="afa4e1278ebfe77080fc395b27f1b38ec" name="afa4e1278ebfe77080fc395b27f1b38ec"></a>
 typedef struct <a class="el" href="structlinear__alloc.html">linear_alloc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>linear_alloc_t</b></td></tr>
 <tr class="separator:afa4e1278ebfe77080fc395b27f1b38ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12fd0af4283249643448cff6442e2cf5"><td class="memItemLeft" align="right" valign="top"><a id="a12fd0af4283249643448cff6442e2cf5" name="a12fd0af4283249643448cff6442e2cf5"></a>
-typedef struct <a class="el" href="structtexture__manager.html">texture_manager</a>&#160;</td><td class="memItemRight" valign="bottom"><b>texture_manager_t</b></td></tr>
-<tr class="separator:a12fd0af4283249643448cff6442e2cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabce7f662bbd82e374beb11c9414c1f8"><td class="memItemLeft" align="right" valign="top"><a id="aabce7f662bbd82e374beb11c9414c1f8" name="aabce7f662bbd82e374beb11c9414c1f8"></a>
 typedef struct <a class="el" href="structrenderer__backend__context.html">renderer_backend_context</a>&#160;</td><td class="memItemRight" valign="bottom"><b>renderer_backend_context_t</b></td></tr>
 <tr class="separator:aabce7f662bbd82e374beb11c9414c1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,28 +173,28 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#af15d5a309afbf65d0ca63ba86cbe1fa5">texture_manager_initialize</a> (int16_t max_texture_count_, <a class="el" href="linear__allocator_8h.html#afa4e1278ebfe77080fc395b27f1b38ec">linear_alloc_t</a> *allocator_, <a class="el" href="structtexture__manager.html">texture_manager_t</a> **out_texture_manager_)</td></tr>
+<tr class="memitem:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#af15d5a309afbf65d0ca63ba86cbe1fa5">texture_manager_initialize</a> (int16_t max_texture_count_, <a class="el" href="linear__allocator_8h.html#afa4e1278ebfe77080fc395b27f1b38ec">linear_alloc_t</a> *allocator_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> **out_texture_manager_)</td></tr>
 <tr class="memdesc:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャ管理システムのメモリを確保し、テクスチャリソース(CPU / GPU)配列の要素を全てNULLで初期化する  <br /></td></tr>
 <tr class="separator:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae33d4bcaba31cd6fd419bec2d1495d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#aae33d4bcaba31cd6fd419bec2d1495d8">texture_manager_deinitialize</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_)</td></tr>
+<tr class="memitem:aae33d4bcaba31cd6fd419bec2d1495d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#aae33d4bcaba31cd6fd419bec2d1495d8">texture_manager_deinitialize</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_)</td></tr>
 <tr class="memdesc:aae33d4bcaba31cd6fd419bec2d1495d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース(CPU / GPU)管理システムが管理するすべてのリソースを解放し、リソース配列の要素をすべてNULLで初期化する  <br /></td></tr>
 <tr class="separator:aae33d4bcaba31cd6fd419bec2d1495d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab90eb9eb4aeaba391db74540f2b44fac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#ab90eb9eb4aeaba391db74540f2b44fac">texture_manager_register</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t gpu_unit_num_, const char *texture_name_, <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_, int16_t *out_texture_id_)</td></tr>
+<tr class="memitem:ab90eb9eb4aeaba391db74540f2b44fac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#ab90eb9eb4aeaba391db74540f2b44fac">texture_manager_register</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t gpu_unit_num_, const char *texture_name_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, int16_t *out_texture_id_)</td></tr>
 <tr class="memdesc:ab90eb9eb4aeaba391db74540f2b44fac"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムにテクスチャリソースを登録し、リソースの読み込み、GPUへのアップロードを行う  <br /></td></tr>
 <tr class="separator:ab90eb9eb4aeaba391db74540f2b44fac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e2974d0f97d40ef5894056204f65b51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a1e2974d0f97d40ef5894056204f65b51">texture_manager_unregister</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int16_t texture_id_, <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_)</td></tr>
+<tr class="memitem:a1e2974d0f97d40ef5894056204f65b51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a1e2974d0f97d40ef5894056204f65b51">texture_manager_unregister</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int16_t texture_id_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_)</td></tr>
 <tr class="memdesc:a1e2974d0f97d40ef5894056204f65b51"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャリソースを破棄する  <br /></td></tr>
 <tr class="separator:a1e2974d0f97d40ef5894056204f65b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b6a5618f956a59b94a070d3cbee0a5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a7b6a5618f956a59b94a070d3cbee0a5f">texture_manager_unregister_by_name</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const char *name_, <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_)</td></tr>
+<tr class="memitem:a7b6a5618f956a59b94a070d3cbee0a5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a7b6a5618f956a59b94a070d3cbee0a5f">texture_manager_unregister_by_name</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const char *name_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_)</td></tr>
 <tr class="memdesc:a7b6a5618f956a59b94a070d3cbee0a5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ名称を指定してテクスチャリソースを破棄する  <br /></td></tr>
 <tr class="separator:a7b6a5618f956a59b94a070d3cbee0a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a3b56ba0ddd6508d9df41345270ae11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a1a3b56ba0ddd6508d9df41345270ae11">texture_manager_texture_id_get</a> (const char *name_, const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_, int16_t *out_texture_id_)</td></tr>
+<tr class="memitem:a1a3b56ba0ddd6508d9df41345270ae11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a1a3b56ba0ddd6508d9df41345270ae11">texture_manager_texture_id_get</a> (const char *name_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, int16_t *out_texture_id_)</td></tr>
 <tr class="memdesc:a1a3b56ba0ddd6508d9df41345270ae11"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ名称に対応するテクスチャ識別子を取得する  <br /></td></tr>
 <tr class="separator:a1a3b56ba0ddd6508d9df41345270ae11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a14cdb9945399cc8feb0cc221045f1fe2">texture_manager_gpu_resource_get</a> (int16_t texture_id_, const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
+<tr class="memitem:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a14cdb9945399cc8feb0cc221045f1fe2">texture_manager_gpu_resource_get</a> (int16_t texture_id_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
 <tr class="memdesc:a14cdb9945399cc8feb0cc221045f1fe2"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ識別子を指定してGPUリソースを取得する  <br /></td></tr>
 <tr class="separator:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a06ad4ac2582bf71eebfd874ee8fec198">texture_manager_gpu_resource_get_by_name</a> (const char *name_, const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
+<tr class="memitem:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8h.html#a06ad4ac2582bf71eebfd874ee8fec198">texture_manager_gpu_resource_get_by_name</a> (const char *name_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
 <tr class="memdesc:a06ad4ac2582bf71eebfd874ee8fec198"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ名称を指定してGPUリソースを取得する  <br /></td></tr>
 <tr class="separator:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -219,6 +218,22 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>無効なテクスチャ識別子 </p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="a12fd0af4283249643448cff6442e2cf5" name="a12fd0af4283249643448cff6442e2cf5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a12fd0af4283249643448cff6442e2cf5">&#9670;&#160;</a></span>texture_manager_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structtexture__manager.html">texture_manager</a> <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>texture_manager_t構造体前方宣言 </p>
 
 </div>
 </div>
@@ -283,7 +298,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>&#160;</td>
         </tr>
         <tr>
@@ -328,7 +343,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>, </td>
         </tr>
         <tr>
@@ -391,7 +406,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>, </td>
         </tr>
         <tr>
@@ -460,7 +475,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structtexture__manager.html">texture_manager_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> **&#160;</td>
           <td class="paramname"><em>out_texture_manager_</em>&#160;</td>
         </tr>
         <tr>
@@ -525,7 +540,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>, </td>
         </tr>
         <tr>
@@ -617,7 +632,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>, </td>
         </tr>
         <tr>
@@ -685,7 +700,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>&#160;</td>
         </tr>
         <tr>
@@ -743,7 +758,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structtexture__manager.html">texture_manager_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *&#160;</td>
           <td class="paramname"><em>texture_manager_</em>&#160;</td>
         </tr>
         <tr>

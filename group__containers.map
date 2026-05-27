@@ -1,4 +1,4 @@
 <map id="Containers" name="Containers">
-<area shape="rect" id="node1" title="文字列やリングキューといったデータ構造を使用する開発者が、リソース管理責務を担わないで良くするために、ジェネリック型でリソース管理機能を有するコンテナモジュール群" alt="" coords="120,5,212,31"/>
-<area shape="rect" id="node2" href="$group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,5,72,31"/>
+<area shape="rect" id="node1" title="複数のGLCEレイヤーおよびサブシステムで使用される汎用コンテナモジュール群。" alt="" coords="120,5,212,31"/>
+<area shape="rect" id="node2" href="$group__engine.html" title="GLCEが提供するエンジンモジュール群。" alt="" coords="5,5,72,31"/>
 </map>

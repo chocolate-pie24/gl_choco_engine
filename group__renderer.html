@@ -92,42 +92,103 @@ $(document).ready(function(){initNavTree('group__renderer.html',''); initResizab
 
 <div class="header">
   <div class="summary">
-<a href="#groups">Modules</a>  </div>
-  <div class="headertitle"><div class="title">Renderer<div class="ingroups"><a class="el" href="group__engine.html">Engine</a></div></div></div>
+<a href="#files">Files</a>  </div>
+  <div class="headertitle"><div class="title">Renderer<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する  
+<p>Rendererサブシステムの公開API群。  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Renderer:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__renderer.png" border="0" usemap="#agroup____renderer" alt=""/></div>
 <map name="agroup____renderer" id="agroup____renderer">
-<area shape="rect" href="group__engine.html" title="グラフィックスアプリケーション開発者がアプリケーション固有の機能の実装に集中できるよう、描画、リソース管理、プラットフォーム、I/Oの基盤機能を提供するサブシステム群" alt="" coords="5,55,72,80"/>
-<area shape="rect" title="レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する" alt="" coords="120,55,201,80"/>
-<area shape="rect" href="group__renderer__backend.html" title="使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する" alt="" coords="255,5,395,31"/>
-<area shape="rect" href="group__renderer__core.html" title="レンダラーサブシステム全体から使用されるモジュールを提供する" alt="" coords="268,55,383,80"/>
-<area shape="rect" href="group__renderer__resources.html" title="上位レイヤーが使用するための、レンダラー層の描画リソースモジュールを提供する(現状ではUIシェーダーモジュールを提供)" alt="" coords="249,104,401,129"/>
+<area shape="rect" title="Rendererサブシステムの公開API群。" alt="" coords="132,5,213,31"/>
+<area shape="rect" href="group__systems.html" title="platform、renderer、camera、texture管理などの実行時サブシステム群。" alt="" coords="5,5,84,31"/>
 </map>
 </div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
-Modules</h2></td></tr>
-<tr class="memitem:group__renderer__backend"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__renderer__backend.html">Renderer Backend</a></td></tr>
-<tr class="memdesc:group__renderer__backend"><td class="mdescLeft">&#160;</td><td class="mdescRight">使用するグラフィックスAPIに応じた描画機能をレンダラーシステムに提供する <br /></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="files" name="files"></a>
+Files</h2></td></tr>
+<tr class="memitem:concrete__shader_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__shader_8h.html">concrete_shader.h</a></td></tr>
+<tr class="memdesc:concrete__shader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:group__renderer__core"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__renderer__core.html">Renderer Core</a></td></tr>
-<tr class="memdesc:group__renderer__core"><td class="mdescLeft">&#160;</td><td class="mdescRight">レンダラーサブシステム全体から使用されるモジュールを提供する <br /></td></tr>
+<tr class="memitem:concrete__texture_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__texture_8h.html">concrete_texture.h</a></td></tr>
+<tr class="memdesc:concrete__texture_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer backendがテクスチャ機能をOpenGL3.3で実現できるように、renderer_texture_vtable_tのOpenGL3.3具体実装を提供する <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:group__renderer__resources"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__renderer__resources.html">Renderer Resources</a></td></tr>
-<tr class="memdesc:group__renderer__resources"><td class="mdescLeft">&#160;</td><td class="mdescRight">上位レイヤーが使用するための、レンダラー層の描画リソースモジュールを提供する(現状ではUIシェーダーモジュールを提供) <br /></td></tr>
+<tr class="memitem:concrete__vao_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8h.html">concrete_vao.h</a></td></tr>
+<tr class="memdesc:concrete__vao_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3.3具体実装を提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:concrete__vbo_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8h.html">concrete_vbo.h</a></td></tr>
+<tr class="memdesc:concrete__vbo_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:context__shader_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html">context_shader.h</a></td></tr>
+<tr class="memdesc:context__shader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:context__texture_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html">context_texture.h</a></td></tr>
+<tr class="memdesc:context__texture_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:context__vao_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html">context_vao.h</a></td></tr>
+<tr class="memdesc:context__vao_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backendが保有するVAO機能の窓口を上位層に提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:context__vbo_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vbo_8h.html">context_vbo.h</a></td></tr>
+<tr class="memdesc:context__vbo_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backendが保有するVBO機能の窓口を上位層に提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__backend__context_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__backend__context_8h.html">renderer_backend_context.h</a></td></tr>
+<tr class="memdesc:renderer__backend__context_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backend内部情報管理構造体のリソース管理APIを提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:interface__shader_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html">interface_shader.h</a></td></tr>
+<tr class="memdesc:interface__shader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:interface__texture_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__texture_8h.html">interface_texture.h</a></td></tr>
+<tr class="memdesc:interface__texture_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャ操作関数をまとめたvtableを定義する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:interface__vao_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vao_8h.html">interface_vao.h</a></td></tr>
+<tr class="memdesc:interface__vao_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:interface__vbo_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__vbo_8h.html">interface_vbo.h</a></td></tr>
+<tr class="memdesc:interface__vbo_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__backend__types_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__backend__types_8h.html">renderer_backend_types.h</a></td></tr>
+<tr class="memdesc:renderer__backend__types_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backend内で共通して使用するデータ構造を提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__err__utils_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__err__utils_8h.html">renderer_err_utils.h</a></td></tr>
+<tr class="memdesc:renderer__err__utils_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__memory_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8h.html">renderer_memory.h</a></td></tr>
+<tr class="memdesc:renderer__memory_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__types_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__types_8h.html">renderer_types.h</a></td></tr>
+<tr class="memdesc:renderer__types_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">レンダラーレイヤー全体で使用されるデータ型を提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ui__shader_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__shader_8h.html">ui_shader.h</a></td></tr>
+<tr class="memdesc:ui__shader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:concrete__shader_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__shader_8c.html">concrete_shader.c</a></td></tr>
+<tr class="memdesc:concrete__shader_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:concrete__texture_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__texture_8c.html">concrete_texture.c</a></td></tr>
+<tr class="memdesc:concrete__texture_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用のテクスチャ操作関数の実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:concrete__vao_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html">concrete_vao.c</a></td></tr>
+<tr class="memdesc:concrete__vao_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:concrete__vbo_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html">concrete_vbo.c</a></td></tr>
+<tr class="memdesc:concrete__vbo_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__err__utils_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__err__utils_8c.html">renderer_err_utils.c</a></td></tr>
+<tr class="memdesc:renderer__err__utils_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">レンダラーレイヤー全体で使用されるエラー処理関連APIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:renderer__memory_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="renderer__memory_8c.html">renderer_memory.c</a></td></tr>
+<tr class="memdesc:renderer__memory_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">レンダラーレイヤーでのメモリ確保、メモリ解放処理のテストのため、memory_system内のallocate, free関数のラッパーAPIの実装 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ui__shader_8c"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__shader_8c.html">ui_shader.c</a></td></tr>
+<tr class="memdesc:ui__shader_8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装 <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>レンダラーサブシステムでグラフィックスAPI固有の実装を差し替え可能な仕組みを提供する </p>
-<p>Architecture: <a class="el" href="md_docs_architecture_renderer_system_renderer_backend_architecture_ja.html#arch_renderer_backend_ja">arch_renderer_backend_ja</a></p>
-<p>Guide: <a class="el" href="md_docs_guide_renderer_backend_adding_concretes_ja.html#guide_renderer_backend_ja">guide_renderer_backend_ja</a> </p>
+<p>Rendererサブシステムの公開API群。 </p>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

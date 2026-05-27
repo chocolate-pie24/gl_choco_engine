@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('choco__macros_8h.html',''); initResiza
 <div class="header">
   <div class="summary">
 <a href="#define-members">Macros</a>  </div>
-  <div class="headertitle"><div class="title">choco_macros.h File Reference</div></div>
+  <div class="headertitle"><div class="title">choco_macros.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__base.html">Base</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -147,8 +147,8 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memItemLeft" align="right" valign="top"><a id="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19" name="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>NO_COVERAGE</b></td></tr>
+<tr class="memitem:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a></td></tr>
+<tr class="memdesc:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="mdescLeft">&#160;</td><td class="mdescRight">clang使用時以外はカバレッジ計測対象外マクロは無効  <br /></td></tr>
 <tr class="separator:a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2a4eeaf35bdc29b9d8427912da0fcc2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__macros_8h.html#ab2a4eeaf35bdc29b9d8427912da0fcc2">KIB</a>&#160;&#160;&#160;((size_t)(1ULL &lt;&lt; 10))</td></tr>
 <tr class="memdesc:ab2a4eeaf35bdc29b9d8427912da0fcc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">KiB定義(=1024)  <br /></td></tr>
@@ -272,7 +272,7 @@ Macros</h2></td></tr>
 <div class="line">cleanup:</div>
 <div class="line">     return result;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_aad6602f43637c19696a46538bb834dbf"><div class="ttname"><a href="choco__macros_8h.html#aad6602f43637c19696a46538bb834dbf">IF_ALLOC_FAIL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:151</div></div>
+<div class="ttc" id="achoco__macros_8h_html_aad6602f43637c19696a46538bb834dbf"><div class="ttname"><a href="choco__macros_8h.html#aad6602f43637c19696a46538bb834dbf">IF_ALLOC_FAIL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:155</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -355,7 +355,7 @@ Macros</h2></td></tr>
 <div class="line">cleanup:</div>
 <div class="line">     return result;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:183</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a5f40ebda94dfc62a1ca624e41fd4d8a3"><div class="ttname"><a href="choco__macros_8h.html#a5f40ebda94dfc62a1ca624e41fd4d8a3">IF_ARG_FALSE_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:187</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -438,7 +438,7 @@ Macros</h2></td></tr>
 <div class="line">cleanup:</div>
 <div class="line">     return result;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:118</div></div>
+<div class="ttc" id="achoco__macros_8h_html_a45e7996ebfd5d58b3ec5927d7e6f2507"><div class="ttname"><a href="choco__macros_8h.html#a45e7996ebfd5d58b3ec5927d7e6f2507">IF_ARG_NOT_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:122</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -521,7 +521,7 @@ Macros</h2></td></tr>
 <div class="line">cleanup:</div>
 <div class="line">     return result;</div>
 <div class="line">}</div>
-<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:86</div></div>
+<div class="ttc" id="achoco__macros_8h_html_af2791b30f0168c594d1a1705976e21a1"><div class="ttname"><a href="choco__macros_8h.html#af2791b30f0168c594d1a1705976e21a1">IF_ARG_NULL_GOTO_CLEANUP</a></div><div class="ttdeci">#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_)</div><div class="ttdoc">引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする</div><div class="ttdef"><b>Definition:</b> choco_macros.h:90</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -581,6 +581,22 @@ Macros</h2></td></tr>
 </div><div class="memdoc">
 
 <p>MiB定義(=1024 * 1024) </p>
+
+</div>
+</div>
+<a id="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19" name="a9bf0dfbd2b73fb252e7e2b3fc5e2ea19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">&#9670;&#160;</a></span>NO_COVERAGE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define NO_COVERAGE</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>clang使用時以外はカバレッジ計測対象外マクロは無効 </p>
 
 </div>
 </div>
