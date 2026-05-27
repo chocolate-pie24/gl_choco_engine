@@ -1,5 +1,6 @@
 /**
- * @ingroup renderer_backend
+ * @ingroup renderer
+ *
  * @file renderer_backend_types.h
  * @author chocolate-pie24
  * @brief renderer_backend内で共通して使用するデータ構造を提供する

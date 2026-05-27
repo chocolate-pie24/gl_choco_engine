@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_interface
+ * @ingroup renderer
  *
  * @file interface_texture.h
  * @author chocolate-pie24

@@ -1,4 +1,4 @@
-/** @ingroup platform_interface
+/** @ingroup platform
  *
  * @file platform_interface.h
  * @author chocolate-pie24

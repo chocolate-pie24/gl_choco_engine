@@ -1,4 +1,4 @@
-/** @ingroup event_mouse
+/** @ingroup core
  *
  * @file mouse_event.h
  * @author chocolate-pie24

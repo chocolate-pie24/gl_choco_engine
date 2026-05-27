@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_context
+ * @ingroup renderer
  *
  * @file context_texture.h
  * @author chocolate-pie24

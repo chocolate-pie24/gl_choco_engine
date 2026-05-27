@@ -1,4 +1,4 @@
-/** @ingroup fs_utils
+/** @ingroup io_utils
  *
  * @file fs_utils.c
  * @author chocolate-pie24

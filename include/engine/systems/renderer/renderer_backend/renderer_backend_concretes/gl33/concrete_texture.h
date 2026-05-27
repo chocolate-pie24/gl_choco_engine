@@ -1,5 +1,5 @@
 /**
- * @ingroup gl33
+ * @ingroup renderer
  *
  * @file concrete_texture.h
  * @author chocolate-pie24

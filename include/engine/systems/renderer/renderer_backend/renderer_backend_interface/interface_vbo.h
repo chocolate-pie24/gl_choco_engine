@@ -1,5 +1,6 @@
 /**
- * @ingroup renderer_backend_interface
+ * @ingroup renderer
+ *
  * @file interface_vbo.h
  * @author chocolate-pie24
  * @brief VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する

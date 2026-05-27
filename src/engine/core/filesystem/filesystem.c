@@ -1,4 +1,4 @@
-/** @ingroup filesystem
+/** @ingroup core
  *
  * @file filesystem.c
  * @author chocolate-pie24

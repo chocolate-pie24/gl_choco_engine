@@ -1,4 +1,4 @@
-/** @ingroup choco_string
+/** @ingroup containers
  *
  * @file choco_string.c
  * @author chocolate-pie24

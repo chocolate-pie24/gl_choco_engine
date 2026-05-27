@@ -1,4 +1,4 @@
-/** @ingroup choco_macros
+/** @ingroup base
  *
  * @file choco_macros.h
  * @author chocolate-pie24

@@ -1,4 +1,4 @@
-/** @ingroup geometry_primitive
+/** @ingroup core
  *
  * @file vertex.h
  * @author chocolate-pie24

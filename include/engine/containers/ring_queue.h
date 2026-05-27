@@ -1,4 +1,4 @@
-/** @ingroup ring_queue
+/** @ingroup containers
  *
  * @file ring_queue.h
  * @author chocolate-pie24

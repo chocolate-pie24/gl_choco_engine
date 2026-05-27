@@ -1,4 +1,4 @@
-/** @ingroup renderer_core
+/** @ingroup renderer
  *
  * @file renderer_memory.h
  * @author chocolate-pie24

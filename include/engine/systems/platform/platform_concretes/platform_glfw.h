@@ -1,4 +1,4 @@
-/** @ingroup platform_glfw
+/** @ingroup platform
  *
  * @file platform_glfw.h
  * @author chocolate-pie24

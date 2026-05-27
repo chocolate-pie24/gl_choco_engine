@@ -1,4 +1,4 @@
-/** @ingroup choco_memory
+/** @ingroup core
  *
  * @file choco_memory.c
  * @author chocolate-pie24

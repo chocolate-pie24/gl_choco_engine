@@ -1,5 +1,5 @@
 /**
- * @ingroup gl33
+ * @ingroup renderer
  *
  * @file concrete_vbo.h
  * @author chocolate-pie24

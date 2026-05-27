@@ -1,4 +1,4 @@
-/** @ingroup gl33
+/** @ingroup renderer
  *
  * @file concrete_vao.c
  * @author chocolate-pie24

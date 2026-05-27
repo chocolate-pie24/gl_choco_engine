@@ -1,4 +1,4 @@
-/** @ingroup gl33
+/** @ingroup renderer
  *
  * @file concrete_shader.c
  * @author chocolate-pie24

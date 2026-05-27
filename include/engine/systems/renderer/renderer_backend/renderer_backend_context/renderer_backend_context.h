@@ -1,5 +1,5 @@
 /**
- * @ingroup renderer_backend_context
+ * @ingroup renderer
  *
  * @file renderer_backend_context.h
  * @author chocolate-pie24

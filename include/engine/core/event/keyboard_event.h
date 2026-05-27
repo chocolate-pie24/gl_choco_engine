@@ -1,4 +1,4 @@
-/** @ingroup event_keyboard
+/** @ingroup core
  *
  * @file keyboard_event.h
  * @author chocolate-pie24

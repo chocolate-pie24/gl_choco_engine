@@ -1,4 +1,4 @@
-/** @ingroup renderer_resources
+/** @ingroup renderer
  *
  * @file ui_shader.c
  * @author chocolate-pie24
