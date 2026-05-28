@@ -38,7 +38,7 @@ typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t*
 typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);   /**< renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 */
 typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);  /**< renderer_shader_vtableが保持するrenderer_shader_uniform_location_getの前方宣言 */
 typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);  /**< renderer_shader_vtableが保持するrenderer_shader_mat4f_uniform_setの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_shader_vec4u8_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);
+typedef renderer_result_t (*pfn_renderer_shader_vec4u8_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);   /**< renderer_shader_vtableが保持するrenderer_shader_vec4u8_uniform_setの前方宣言 */
 
 /**
  * @brief シェーダー機能仮想関数テーブル
@@ -166,6 +166,22 @@ typedef struct renderer_shader_vtable {
      */
     pfn_renderer_shader_mat4f_uniform_set renderer_shader_mat4f_uniform_set;
 
+    /**
+     * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
+     *
+     * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+     * @param[in] location_ ユニフォーム変数のLocation
+     * @param[in] data_ 送信データへのポインタ
+     * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
+     *
+     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * - shader_handle_ == NULL
+     * - data_ == NULL
+     * - out_program_id_ == NULL
+     * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+     * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
+     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     */
     pfn_renderer_shader_vec4u8_uniform_set renderer_shader_vec4u8_uniform_set;
 } renderer_shader_vtable_t;
 

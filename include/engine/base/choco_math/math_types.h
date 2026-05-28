@@ -50,8 +50,12 @@ typedef struct vec4f {
     float elem[4];  /**< ベクトル要素格納配列 */
 } vec4f_t;
 
+/**
+ * @brief uint8_t型4次元ベクトル定義
+ *
+ */
 typedef struct vec4u8 {
-    uint8_t elem[4];
+    uint8_t elem[4];    /**< ベクトル要素格納配列 */
 } vec4u8_t;
 
 /**

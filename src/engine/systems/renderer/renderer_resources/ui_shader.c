@@ -2,7 +2,7 @@
  *
  * @file ui_shader.c
  * @author chocolate-pie24
- * @brief UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装
+ * @brief UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
  *
  * @version 0.1
  * @date 2026-03-11
@@ -14,6 +14,7 @@
  *
  */
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_resources/ui_shader.h"
 
@@ -40,6 +41,7 @@
 
 /**
  * @brief UIシェーダーリソース構造体
+ * @note 本構造体はshader programだけでなく、UI描画用のVAO/VBOとバッファ書き込み状態も保持する
  * @todo TODO: FreeListを使用したバッファ管理
  *
  */
@@ -208,12 +210,15 @@ cleanup:
 
 void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t** ui_shader_) {
     if(NULL == ui_shader_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided ui_shader_ is not valid.");
         return;
     }
     if(NULL == *ui_shader_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided *ui_shader_ is not valid.");
         return;
     }
     if(NULL == backend_context_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
     ui_shader_vertex_buffer_destroy(backend_context_, *ui_shader_);
@@ -327,9 +332,11 @@ cleanup:
 
 void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
     if(NULL == backend_context_) {
+        WARN_MESSAGE("ui_shader_vertex_buffer_destroy - Provided backend_context_ is not valid.");
         return;
     }
     if(NULL == ui_shader_) {
+        WARN_MESSAGE("ui_shader_vertex_buffer_destroy - Provided ui_shader_ is not valid.");
         return;
     }
     if(NULL != ui_shader_->ui_vbo) {
@@ -470,7 +477,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "projection_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "backend_context_")

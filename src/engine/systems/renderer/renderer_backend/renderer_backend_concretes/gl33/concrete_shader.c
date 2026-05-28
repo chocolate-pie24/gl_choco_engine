@@ -670,6 +670,24 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
+ *
+ * @note OpenGL 3.3実装
+ *
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] data_ 送信データへのポインタ
+ * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - data_ == NULL
+ * - out_program_id_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+ * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 static renderer_result_t gl33_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_) {
 #ifdef TEST_BUILD
     s_test_config_gl33_vec4u8_uniform_set.call_count++;

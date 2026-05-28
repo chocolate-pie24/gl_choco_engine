@@ -1,3 +1,18 @@
+/** @ingroup renderer
+ *
+ * @file line_shader.c
+ * @author chocolate-pie24
+ * @brief 線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
+ *
+ * @version 0.1
+ * @date 2026-05-28
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 
 #include "engine/systems/renderer/renderer_resources/line_shader.h"
@@ -23,6 +38,12 @@
 
 // TODO: テスト(line_shaderは今後も拡張されるため、テストはまだ行わない)
 
+/**
+ * @brief 線分描画用シェーダーリソース構造体
+ * @note 本構造体はshader programだけでなく、line描画用のVAO/VBOとバッファ書き込み状態も保持する
+ * @todo TODO: FreeListを使用したバッファ管理
+ *
+ */
 struct line_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
@@ -197,12 +218,15 @@ cleanup:
 
 void line_shader_destroy(renderer_backend_context_t* backend_context_, line_shader_t** line_shader_) {
     if(NULL == line_shader_) {
+        WARN_MESSAGE("line_shader_destroy - Provided line_shader_ is not valid.");
         return;
     }
     if(NULL == *line_shader_) {
+        WARN_MESSAGE("line_shader_destroy - Provided *line_shader_ is not valid.");
         return;
     }
     if(NULL == backend_context_) {
+        WARN_MESSAGE("line_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
     line_shader_vertex_buffer_destroy(backend_context_, *line_shader_);
@@ -310,9 +334,11 @@ cleanup:
 
 void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_) {
     if(NULL == backend_context_) {
+        WARN_MESSAGE("line_shader_vertex_buffer_destroy - Provided backend_context_ is not valid.");
         return;
     }
     if(NULL == line_shader_) {
+        WARN_MESSAGE("line_shader_vertex_buffer_destroy - Provided line_shader_ is not valid.");
         return;
     }
     if(NULL != line_shader_->line_vbo) {

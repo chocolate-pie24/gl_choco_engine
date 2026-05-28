@@ -191,6 +191,28 @@ renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_ba
  */
 renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
 
+/**
+ * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
+ *
+ * @note
+ * - OpenGL 3.3実装
+ * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] data_ 送信データへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - shader_handle_ == NULL
+ * - data_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク状態
+ * - backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
 renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_);
 
 #ifdef __cplusplus
