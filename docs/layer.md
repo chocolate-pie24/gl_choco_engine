@@ -163,7 +163,9 @@ This will be removed once the frontend is introduced.
   - renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.
   - renderer_core/renderer_memory: Wrapper APIs over **engine/core/choco_memory** tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.
   - renderer_core/renderer_types: Common data types shared across the renderer subsystem.
-  - renderer_resources: Provides renderer-level resource modules used by higher layers. Currently, this layer contains ui_shader, which encapsulates a shader program together with cached uniform locations and shader-specific operations.
+  - renderer_resources: Provides renderer-level resource modules used by higher layers before the renderer frontend is introduced. A renderer resource groups a shader program with its cached uniform locations, shader-specific VAO/VBO resources, and GPU data upload operations.
+    - ui_shader: Provides shader resources for textured UI quad rendering. It manages a UI shader program, MVP uniform locations, and a VAO/VBO configured for position and texture-coordinate vertex attributes.
+    - line_shader: Provides shader resources for single-color 3D line rendering. It manages a line shader program, MVP and color uniform locations, and a VAO/VBO configured for position-only line vertices. It is intended for simple line primitives such as debug lines, AABB edges, and grid lines.
 
 ### engine/systems/camera_system
 

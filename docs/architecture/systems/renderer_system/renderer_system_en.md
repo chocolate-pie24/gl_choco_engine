@@ -1,14 +1,14 @@
-@page arch_renderer_system_en Renderer System Architecture(English)
+@page arch_renderer_system_en Renderer System Architecture
 
 # Renderer System Architecture
 
-`Renderer System` is a subsystem that provides rendering functionality to higher layers, and is composed of the following sublayers.
+The `Renderer System` provides rendering functionality to upper layers. It consists of the following sublayers:
 
-- `Renderer Backend`, which provides graphics-API-independent interface APIs and allows the graphics API backend implementation to be replaced
-- `Renderer Core`, which provides modules used throughout the entire `Renderer System`
-- `Renderer Resources`, which provides renderer-layer rendering resource modules intended for use by higher layers
+* `Renderer Backend`, which provides graphics API-independent interface APIs and allows the underlying graphics API to be replaced.
+* `Renderer Core`, which provides modules used across the entire `Renderer System`.
+* `Renderer Resources`, which provides renderer-layer rendering resource modules used by upper layers.
 
-In addition, `Renderer Frontend` is also planned to be added, but it is currently not implemented.
+`Renderer Frontend` is planned to be added in the future, but it has not been implemented yet.
 
 ![Layer Diagram](layer.png)
 
@@ -22,16 +22,22 @@ In addition, `Renderer Frontend` is also planned to be added, but it is currentl
 
 `Renderer Core` provides the following modules.
 
-| Module Name        | Role |
-| ------------------ | ---- |
-| renderer_err_utils | Used throughout the entire `Renderer System`, and provides functionality for converting lower-layer result codes and converting result codes into strings |
-| renderer_memory    | Provides wrapper APIs over `core/choco_memory` to prevent misuse of memory tags within the `Renderer System` and reduce unnecessary result-code conversion handling |
-| renderer_types     | Provides graphics-API-independent data types used within the `Renderer System` |
+| Module Name        | Role                                                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| renderer_err_utils | Provides utilities used across the entire `Renderer System` for converting result codes from lower-layer modules and converting renderer result codes into strings. |
+| renderer_memory    | Provides wrapper APIs over `core/choco_memory` to prevent misuse of memory tags within the `Renderer System` and reduce unnecessary result-code conversion logic.   |
+| renderer_types     | Provides graphics API-independent types used within the `Renderer System`.                                                                                          |
 
 ### Renderer Resources
 
-`Renderer Resources` currently provides the following module.
+`Renderer Resources` provides renderer-layer rendering resource modules used by upper layers.
 
-| Module Name | Role |
-| ----------- | ---- |
-| ui_shader   | Provides creation, usage, and related uniform operations for UI rendering shader resources |
+Since `Renderer Frontend` has not been implemented yet, `Renderer Resources` currently functions as an intermediate resource layer between upper layers and `Renderer Backend`.
+Each resource groups a shader program, cached uniform locations, shader-specific VAO/VBO resources, and GPU data upload operations.
+
+`Renderer Resources` currently provides the following modules.
+
+| Module Name | Role                                                                                                                                                                                                                                                                                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ui_shader   | Provides shader resources for textured UI quad rendering. It manages a UI shader program, MVP matrix uniform locations, and VAO/VBO resources configured for vertex position and texture-coordinate vertex attributes.                                                                               |
+| line_shader | Provides shader resources for single-color 3D line rendering. It manages a line shader program, MVP matrix and color uniform locations, and VAO/VBO resources configured for position-only line vertices. It is intended for simple line primitives such as debug lines, AABB edges, and grid lines. |
