@@ -189,9 +189,13 @@ void texture_manager_deinitialize(renderer_backend_context_t* backend_context_, 
         return;
     }
     for(int16_t i = 0; i != texture_manager_->max_texture_count; ++i) {
-        // NOTE: texture_destroy, renderer_backend_texture_destroyはNULLを渡されたら何もしないのでチェック不要
-        texture_destroy(&texture_manager_->cpu_resources[i]);
-        renderer_backend_texture_destroy(backend_context_, &texture_manager_->gpu_resources[i]);
+        // NOTE: 各destroy内でのWARNING出力抑制用にNULLチェックを行う
+        if(NULL != texture_manager_->cpu_resources[i]) {
+            texture_destroy(&texture_manager_->cpu_resources[i]);
+        }
+        if(NULL != texture_manager_->gpu_resources[i]) {
+            renderer_backend_texture_destroy(backend_context_, &texture_manager_->gpu_resources[i]);
+        }
     }
     texture_manager_->max_texture_count = 0;
     texture_manager_->cpu_resources = NULL;
