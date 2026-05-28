@@ -40,6 +40,14 @@ typedef struct line_vertex {
     vec3f_t position;   /**< 線分の頂点座標 */
 } line_vertex_t;
 
+/**
+ * @brief ポイント描画用頂点情報構造体
+ *
+ */
+typedef struct point_vertex {
+    vec3f_t position;   /**< 頂点座標 */
+} point_vertex_t;
+
 #ifdef __cplusplus
 }
 #endif

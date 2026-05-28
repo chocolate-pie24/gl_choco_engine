@@ -44,6 +44,8 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
@@ -52,6 +54,7 @@
 
 #include "engine/systems/renderer/renderer_resources/ui_shader.h"
 #include "engine/systems/renderer/renderer_resources/line_shader.h"
+#include "engine/systems/renderer/renderer_resources/point_shader.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
@@ -107,6 +110,7 @@ typedef struct app_state {
 
     ui_shader_t* ui_shader;
     line_shader_t* line_shader;
+    point_shader_t* point_shader;
 
     camera_manager_t* camera_manager;
     camera_t* active_camera;
@@ -316,6 +320,20 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    // Point Shader
+    ret_renderer = point_shader_create("assets/shaders/test_shader/", "point_shader", tmp->renderer_backend_context, &tmp->point_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = point_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->point_shader, BUFFER_USAGE_DYNAMIC, BUFFER_USAGE_DYNAMIC, 1024, 1024);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create point vertex buffer.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
     // camera create.
@@ -356,6 +374,9 @@ cleanup:
                 camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
+                if(NULL != tmp->point_shader) {
+                    point_shader_destroy(tmp->renderer_backend_context, &tmp->point_shader);
+                }
                 if(NULL != tmp->line_shader) {
                     line_shader_destroy(tmp->renderer_backend_context, &tmp->line_shader);
                 }
@@ -409,6 +430,9 @@ void application_destroy(void) {
         camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
+        if(NULL != s_app_state->point_shader) {
+            point_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_shader);
+        }
         if(NULL != s_app_state->line_shader) {
             line_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_shader);
         }
@@ -467,7 +491,10 @@ application_result_t application_run(void) {
 
     static line_vertex_t line_vertex1 = { 0 };
     static line_vertex_t line_vertex2 = { 0 };
-    static uint8_t line_color[4] = { 255, 0, 0, 255 };
+    static vec4u8_t line_color = { 0 };
+
+    static point_vertex_t point_vertices[8] = { 0 };
+    static vec4u8_t point_colors[8] = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -477,6 +504,9 @@ application_result_t application_run(void) {
 
     // begin temporary
 
+    glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
+
+    // UI Vertex
     vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[0].position);
     vec2f_initialize(1.0f, -1.0f, &ui_vertex1[1].position);
     vec2f_initialize(1.0f, 1.0f, &ui_vertex1[2].position);
@@ -513,12 +543,35 @@ application_result_t application_run(void) {
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
+    // Line Vertex
     vec3f_initialize(1.0f, 2.0f, -3.0f, &line_vertex1.position);
     vec3f_initialize(4.0f, 5.0f, -6.0f, &line_vertex2.position);
+    vec4u8_initialize(255, 0, 0, 255, &line_color);
 
     line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex1), (void*)&line_vertex1);
     line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex2), (void*)&line_vertex2);
 
+    // Point Vertex
+    vec3f_initialize(-0.5, -0.5f, -3.0f, &point_vertices[0].position);
+    vec3f_initialize(-0.4f, -0.4f, -3.0f, &point_vertices[1].position);
+    vec3f_initialize(-0.3f, -0.3f, -3.0f, &point_vertices[2].position);
+    vec3f_initialize(-0.2f, -0.2f, -3.0f, &point_vertices[3].position);
+    vec3f_initialize(-0.1f, -0.1f, -3.0f, &point_vertices[4].position);
+    vec3f_initialize(0.1f, 0.1f, -3.0f, &point_vertices[5].position);
+    vec3f_initialize(0.2f, 0.2f, -3.0f, &point_vertices[6].position);
+    vec3f_initialize(0.3f, 0.3f, -3.0f, &point_vertices[7].position);
+
+    vec4u8_initialize(255, 0, 0, 255, &point_colors[0]);
+    vec4u8_initialize(255, 255, 0, 255, &point_colors[1]);
+    vec4u8_initialize(255, 0, 255, 255, &point_colors[2]);
+    vec4u8_initialize(0, 255, 0, 255, &point_colors[3]);
+    vec4u8_initialize(255, 255, 0, 255, &point_colors[4]);
+    vec4u8_initialize(255, 255, 0, 255, &point_colors[5]);
+    vec4u8_initialize(255, 255, 0, 255, &point_colors[6]);
+    vec4u8_initialize(255, 255, 0, 255, &point_colors[7]);
+
+    point_shader_vertex_buffer_point_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_vertices), (void*)&point_vertices[0]);
+    point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
 
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
@@ -535,7 +588,11 @@ application_result_t application_run(void) {
     line_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
     line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
     line_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
-    line_shader_color_set(line_color, s_app_state->line_shader, s_app_state->renderer_backend_context);
+    line_shader_color_set(line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
+
+    point_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+    point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+    point_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
 
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_frog);
@@ -562,6 +619,7 @@ application_result_t application_run(void) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
+        // UI描画
         ui_shader_use(s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
         ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
@@ -578,12 +636,19 @@ application_result_t application_run(void) {
 
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
+        // 線分描画
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         glDrawArrays(GL_LINES, 0, 2);
-
         line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+
+        // ポイント描画
+        point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
+        point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
+
+        glDrawArrays(GL_POINTS, 0, 8);
+        point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
@@ -805,6 +870,12 @@ static void app_state_dispatch(void) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
+
+            ret_renderer = point_shader_projection_matrix_set(&tmp_projection, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+            if(RENDERER_SUCCESS != ret_renderer) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
+                goto cleanup;
+            }
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
@@ -818,6 +889,7 @@ static void app_state_dispatch(void) {
         camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
         ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
         line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
+        point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);    // TODO: エラー処理
         s_app_state->view_dirty = false;
     }
 cleanup:
