@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -23,7 +24,9 @@ renderer_result_t line_shader_vertex_buffer_create(renderer_backend_context_t* b
 
 void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
 
-renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, void* write_data_);
+// TODO: void* -> line_vertex_t*, size_のチェック(line_vertex_tのサイズ x 2 x n)
+// TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
+renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const void* write_data_);
 
 renderer_result_t line_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
 
@@ -35,9 +38,9 @@ renderer_result_t line_shader_model_matrix_set(const mat4x4f_t* model_matrix_, b
 
 renderer_result_t line_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
 
-renderer_result_t line_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
 
-renderer_result_t line_shader_color_set(const uint8_t color_[4], line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_color_set(const uint8_t color_[4], const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
 
 #ifdef __cplusplus
 }

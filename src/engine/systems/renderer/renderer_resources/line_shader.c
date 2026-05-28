@@ -325,7 +325,7 @@ void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_conte
     line_shader_->vertex_buffer_size = 0;
 }
 
-renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, void* write_data_) {
+renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const void* write_data_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_shader_vertex_buffer_write", "backend_context_")
@@ -453,7 +453,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t line_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, line_shader_t* line_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t line_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_shader_projection_matrix_set", "projection_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_shader_projection_matrix_set", "backend_context_")
@@ -469,7 +469,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t line_shader_color_set(const uint8_t color_[4], line_shader_t* line_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t line_shader_color_set(const uint8_t color_[4], const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(color_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_shader_color_set", "color_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_shader_color_set", "backend_context_")

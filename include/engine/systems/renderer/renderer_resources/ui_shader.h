@@ -142,7 +142,7 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, void* write_data_);
+renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const void* write_data_);
 
 /**
  * @brief UIシェーダーが保持するVAOをbindする

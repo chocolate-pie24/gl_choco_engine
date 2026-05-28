@@ -342,7 +342,7 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
     ui_shader_->vertex_buffer_size = 0;
 }
 
-renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, void* write_data_) {
+renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const void* write_data_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "backend_context_")

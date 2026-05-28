@@ -83,6 +83,7 @@ static renderer_result_t test_renderer_shader_link(renderer_backend_shader_t* sh
 static renderer_result_t test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 static renderer_result_t test_renderer_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 static renderer_result_t test_renderer_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+static renderer_result_t test_renderer_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);
 
 // vao vtable関数
 static renderer_result_t test_vertex_array_create(renderer_backend_vao_t** vertex_array_);
@@ -113,6 +114,7 @@ static const renderer_shader_vtable_t s_test_shader_vtable = {
     .renderer_shader_link = test_renderer_shader_link,
     .renderer_shader_use = test_renderer_shader_use,
     .renderer_shader_mat4f_uniform_set = test_renderer_mat4f_uniform_set,
+    .renderer_shader_vec4u8_uniform_set = test_renderer_vec4u8_uniform_set,
     .renderer_shader_uniform_location_get = test_renderer_uniform_location_get,
 };  /**< テスト用shader_vtable */
 
@@ -189,6 +191,7 @@ static test_call_control_t s_test_config_renderer_backend_shader_link;          
 static test_call_control_t s_test_config_renderer_backend_shader_use;                   /**< renderer_backend_shader_use()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_shader_uniform_location_get;  /**< renderer_backend_shader_uniform_location_get()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_shader_mat4f_uniform_set;     /**< renderer_backend_shader_mat4f_uniform_set()テスト設定 */
+static test_call_control_t s_test_config_renderer_backend_shader_vec4u8_uniform_set;    /**< renderer_backend_shader_vec4u8_uniform_set()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_array_create;          /**< renderer_backend_vertex_array_create()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_array_bind;            /**< renderer_backend_vertex_array_bind()テスト設定 */
 static test_call_control_t s_test_config_renderer_backend_vertex_array_unbind;          /**< renderer_backend_vertex_array_unbind()テスト設定 */
@@ -215,6 +218,7 @@ static renderer_result_t s_test_config_test_renderer_shader_link;               
 static renderer_result_t s_test_config_test_renderer_shader_use;                        /**< test_renderer_shader_use()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_uniform_location_get;       /**< test_renderer_shader_uniform_location_get()テスト設定 */
 static renderer_result_t s_test_config_test_renderer_shader_mat4f_uniform_set;          /**< test_renderer_shader_mat4f_uniform_set()テスト設定 */
+static renderer_result_t s_test_config_test_renderer_shader_vec4u8_uniform_set;         /**< test_renderer_shader_vec4u8_uniform_set()テスト設定 */
 static renderer_result_t s_test_config_test_vertex_array_create;                        /**< test_vertex_array_create()テスト設定 */
 static renderer_result_t s_test_config_test_vertex_array_bind;                          /**< test_vertex_array_bind()テスト設定 */
 static renderer_result_t s_test_config_test_vertex_array_unbind;                        /**< test_vertex_array_unbind()テスト設定 */
@@ -239,6 +243,7 @@ static void test_renderer_backend_shader_link(void);
 static void test_renderer_backend_shader_use(void);
 static void test_renderer_backend_shader_uniform_location_get(void);
 static void test_renderer_backend_shader_mat4f_uniform_set(void);
+static void test_renderer_backend_shader_vec4u8_uniform_set(void);
 static void test_renderer_backend_vertex_array_create(void);
 static void test_renderer_backend_vertex_array_destroy(void);
 static void test_renderer_backend_vertex_array_bind(void);
@@ -517,10 +522,10 @@ cleanup:
 
 renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_) {
 #ifdef TEST_BUILD
-    s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count++;
-    if(s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call != 0) {
-        if(s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count == s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call) {
-            return (renderer_result_t)s_test_config_renderer_backend_shader_mat4f_uniform_set.forced_result;
+    s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count++;
+    if(s_test_config_renderer_backend_shader_vec4u8_uniform_set.fail_on_call != 0) {
+        if(s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count == s_test_config_renderer_backend_shader_vec4u8_uniform_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_renderer_backend_shader_vec4u8_uniform_set.forced_result;
         }
     }
 #endif
@@ -1082,6 +1087,15 @@ static renderer_result_t NO_COVERAGE test_renderer_mat4f_uniform_set(const rende
     return s_test_config_test_renderer_shader_mat4f_uniform_set;
 }
 
+static renderer_result_t NO_COVERAGE test_renderer_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_) {
+    (void)shader_handle_;
+    (void)location_;
+    (void)data_;
+    (void)out_program_id_;
+
+    return s_test_config_test_renderer_shader_vec4u8_uniform_set;
+}
+
 static renderer_result_t NO_COVERAGE test_vertex_array_create(renderer_backend_vao_t** vertex_array_) {
     (void)vertex_array_;
 
@@ -1256,6 +1270,15 @@ void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set_config_set(const
     s_test_config_renderer_backend_shader_mat4f_uniform_set.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_renderer_backend_shader_vec4u8_uniform_set.fail_on_call = config_->fail_on_call;
+    s_test_config_renderer_backend_shader_vec4u8_uniform_set.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_renderer_backend_vertex_array_create_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -1390,6 +1413,7 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     test_call_control_reset(&s_test_config_renderer_backend_shader_use);
     test_call_control_reset(&s_test_config_renderer_backend_shader_uniform_location_get);
     test_call_control_reset(&s_test_config_renderer_backend_shader_mat4f_uniform_set);
+    test_call_control_reset(&s_test_config_renderer_backend_shader_vec4u8_uniform_set);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_array_create);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_array_bind);
     test_call_control_reset(&s_test_config_renderer_backend_vertex_array_unbind);
@@ -1423,6 +1447,7 @@ void NO_COVERAGE test_renderer_backend_context_config_reset(void) {
     s_test_config_test_renderer_shader_use = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_uniform_location_get = RENDERER_SUCCESS;
     s_test_config_test_renderer_shader_mat4f_uniform_set = RENDERER_SUCCESS;
+    s_test_config_test_renderer_shader_vec4u8_uniform_set = RENDERER_SUCCESS;
     s_test_config_test_vertex_array_create = RENDERER_SUCCESS;
     s_test_config_test_vertex_array_bind = RENDERER_SUCCESS;
     s_test_config_test_vertex_array_unbind = RENDERER_SUCCESS;
@@ -1448,6 +1473,7 @@ void NO_COVERAGE test_renderer_backend_context(void) {
     test_renderer_backend_shader_use();
     test_renderer_backend_shader_uniform_location_get();
     test_renderer_backend_shader_mat4f_uniform_set();
+    test_renderer_backend_shader_vec4u8_uniform_set();
     test_renderer_backend_vertex_array_create();
     test_renderer_backend_vertex_array_destroy();
     test_renderer_backend_vertex_array_bind();
@@ -3251,6 +3277,251 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         assert(RENDERER_SUCCESS == ret);
         assert(333U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
+    {
+        // renderer_backend_shader_vec4u8_uniform_set() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        test_call_control_t config = {0};
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 123U;
+
+        test_renderer_backend_context_config_reset();
+
+        test_call_control_reset(&config);
+        config.fail_on_call = 1U;
+        config.forced_result = (int)RENDERER_BAD_OPERATION;
+        test_renderer_backend_shader_vec4u8_uniform_set_config_set(&config);
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(123U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            NULL,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = NULL;
+        context.current_program_id = 456U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(456U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 789U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            NULL,
+            7,
+            data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(789U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // data_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 999U;
+
+        test_renderer_backend_context_config_reset();
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            NULL
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(999U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 111U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_shader_vec4u8_uniform_set = RENDERER_INVALID_ARGUMENT;
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(111U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 222U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_shader_vec4u8_uniform_set = RENDERER_BAD_OPERATION;
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(222U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 下位 vtable が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 333U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_shader_vec4u8_uniform_set = RENDERER_DATA_CORRUPTED;
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(333U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
+
+        test_renderer_backend_context_config_reset();
+    }
+    {
+        // 成功系
+        // NOTE: 現在の test_renderer_vec4u8_uniform_set() は out_program_id_ を更新しないため、
+        // current_program_id は変化しない
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_context_t context = {0};
+        renderer_backend_shader_t* shader_handle =
+            (renderer_backend_shader_t*)(uintptr_t)0x1U;
+        uint8_t data[4] = { 0, 64, 128, 255 };
+
+        context.target_api = GRAPHICS_API_GL33;
+        context.shader_vtable = &s_test_shader_vtable;
+        context.current_program_id = 444U;
+
+        test_renderer_backend_context_config_reset();
+
+        s_test_config_test_renderer_shader_vec4u8_uniform_set = RENDERER_SUCCESS;
+
+        ret = renderer_backend_shader_vec4u8_uniform_set(
+            &context,
+            shader_handle,
+            7,
+            data
+        );
+        assert(RENDERER_SUCCESS == ret);
+        assert(444U == context.current_program_id);
+        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
     }
