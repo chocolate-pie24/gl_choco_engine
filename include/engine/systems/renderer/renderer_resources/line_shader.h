@@ -20,6 +20,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -82,8 +83,8 @@ renderer_result_t line_shader_create(const char* file_path_, const char* name_, 
  * - 2重デストロイ許可
  * - GPU側のシェーダープログラムリソースも破棄される
  *
- * @param backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param line_shader_ 破棄対象線分描画用シェーダーリソースインスタンスへのダブルポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] line_shader_ 破棄対象線分描画用シェーダーリソースインスタンスへのダブルポインタ
  */
 void line_shader_destroy(renderer_backend_context_t* backend_context_, line_shader_t** line_shader_);
 

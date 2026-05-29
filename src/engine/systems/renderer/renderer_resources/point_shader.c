@@ -1,4 +1,21 @@
+/** @ingroup renderer
+ *
+ * @file point_shader.c
+ * @author chocolate-pie24
+ * @brief ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
+ *
+ * @version 0.1
+ * @date 2026-05-29
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
+#include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_resources/point_shader.h"
 
@@ -22,7 +39,15 @@
 #include "engine/base/choco_message.h"
 
 // TODO: テスト(point_shaderは今後も拡張されるため、テストはまだ行わない)
+// TODO: DYNAMIC / STATICでそれぞれVBOを作る
+// TODO: vbo_config_t
 
+/**
+ * @brief ポイント描画用シェーダーリソース構造体
+ * @note 本構造体はshader programだけでなく、ポイント描画用のVAO/VBOとバッファ書き込み状態も保持する
+ * @todo TODO: FreeListを使用したバッファ管理
+ *
+ */
 struct point_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
@@ -30,15 +55,15 @@ struct point_shader {
 
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 
-    renderer_backend_vao_t* point_vao;
-    renderer_backend_vbo_t* point_vbo;
-    renderer_backend_vbo_t* color_vbo;
+    renderer_backend_vao_t* point_vao;      /**< ポイント描画シェーダーVAO */
+    renderer_backend_vbo_t* point_vbo;      /**< ポイント描画シェーダー頂点情報VBO */
+    renderer_backend_vbo_t* color_vbo;      /**< ポイント描画シェーダー色情報VBO */
 
-    size_t point_vertex_buffer_size;
-    size_t point_current_buffer_offset;
+    size_t point_vertex_buffer_size;        /**< 頂点情報バーテックスバッファサイズ */
+    size_t point_current_buffer_offset;     /**< 現在頂点情報バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
 
-    size_t color_vertex_buffer_size;
-    size_t color_current_buffer_offset;
+    size_t color_vertex_buffer_size;        /**< 色情報バーテックスバッファサイズ */
+    size_t color_current_buffer_offset;     /**< 現在色情報バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
 };
 
 renderer_result_t point_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, point_shader_t** out_point_shader_) {

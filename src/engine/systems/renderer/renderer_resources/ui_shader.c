@@ -13,6 +13,7 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -38,6 +39,8 @@
 #include "engine/base/choco_message.h"
 
 // TODO: テスト(ui_shaderは今後も拡張されるため、テストはまだ行わない)
+// TODO: DYNAMIC / STATICでそれぞれVBOを作る
+// TODO: vbo_config_t
 
 /**
  * @brief UIシェーダーリソース構造体
@@ -55,7 +58,7 @@ struct ui_shader {
     renderer_backend_vbo_t* ui_vbo;         /**< UIシェーダー用VBO */
 
     size_t vertex_buffer_size;              /**< バーテックスバッファのサイズ */
-    size_t current_buffer_offset;           /**< 現在バーテックスバッファ転送されているサイズ(=次転送する際のオフセット) */
+    size_t current_buffer_offset;           /**< 現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
 };
 
 renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {

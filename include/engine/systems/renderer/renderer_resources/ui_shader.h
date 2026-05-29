@@ -81,8 +81,8 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
  * - 2重デストロイ許可
  * - GPU側のシェーダープログラムリソースも破棄される
  *
- * @param backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param ui_shader_ 破棄対象UIシェーダーリソースインスタンスへのダブルポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in,out] ui_shader_ 破棄対象UIシェーダーリソースインスタンスへのダブルポインタ
  */
 void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t** ui_shader_);
 

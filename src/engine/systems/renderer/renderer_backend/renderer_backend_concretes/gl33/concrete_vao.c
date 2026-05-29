@@ -969,7 +969,7 @@ static void NO_COVERAGE test_gl33_vao_attribute_set(void) {
         test_concrete_vao_config_reset();
     }
     {
-        // 正常系: normalized_ == true
+        // 正常系: normalized_ == true, type = RENDERER_TYPE_FLOAT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_vao_t vao = { 0 };
 
@@ -980,6 +980,24 @@ static void NO_COVERAGE test_gl33_vao_attribute_set(void) {
         s_test_config_mock_glEnableVertexAttribArray.fail_on_call = 1U;  // 実 OpenGL 呼び出しを避ける
 
         ret = gl33_vao_attribute_set(&vao, 1U, 4, RENDERER_TYPE_FLOAT, true, sizeof(float) * 8U, sizeof(float) * 4U);
+        assert(RENDERER_SUCCESS == ret);
+        assert(1U == s_test_config_mock_glVertexAttribPointer.call_count);
+        assert(1U == s_test_config_mock_glEnableVertexAttribArray.call_count);
+
+        test_concrete_vao_config_reset();
+    }
+    {
+        // 正常系: normalized_ == true, type = RENDERER_TYPE_UNSIGNED_BYTE
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_vao_t vao = { 0 };
+
+        test_concrete_vao_config_reset();
+
+        vao.vao_handle = 987U;
+        s_test_config_mock_glVertexAttribPointer.fail_on_call = 1U;      // 実 OpenGL 呼び出しを避ける
+        s_test_config_mock_glEnableVertexAttribArray.fail_on_call = 1U;  // 実 OpenGL 呼び出しを避ける
+
+        ret = gl33_vao_attribute_set(&vao, 1U, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(float) * 8U, sizeof(float) * 4U);
         assert(RENDERER_SUCCESS == ret);
         assert(1U == s_test_config_mock_glVertexAttribPointer.call_count);
         assert(1U == s_test_config_mock_glEnableVertexAttribArray.call_count);
