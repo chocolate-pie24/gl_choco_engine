@@ -209,6 +209,17 @@ void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t*
     out_vec4u8_->elem[3] = a_;
 }
 
+void vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_, vec4i8_t* out_vec4i8_) {
+    if(NULL == out_vec4i8_) {
+        ERROR_MESSAGE("vec4i8_initialize(INVALID_ARGUMENT) - Argument out_vec4i8_ requires a valid pointer.");
+        return;
+    }
+    out_vec4i8_->elem[0] = x_;
+    out_vec4i8_->elem[1] = y_;
+    out_vec4i8_->elem[2] = z_;
+    out_vec4i8_->elem[3] = w_;
+}
+
 void mat4f_zero(mat4x4f_t* out_mat_) {
     if(NULL == out_mat_) {
         ERROR_MESSAGE("mat4f_zero(INVALID_ARGUMENT) - Argument out_mat_ requires a valid pointer.");
