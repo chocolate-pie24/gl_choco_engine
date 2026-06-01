@@ -48,6 +48,7 @@ typedef enum {
     MEMORY_TAG_FILE_IO,     /**< メモリタグ: ファイルI/O */
     MEMORY_TAG_CAMERA,      /**< メモリタグ: カメラシステム */
     MEMORY_TAG_TEXTURE,     /**< メモリタグ: テクスチャ */
+    MEMORY_TAG_GEOMETRY,    /**< メモリタグ: ジオメトリ */
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
