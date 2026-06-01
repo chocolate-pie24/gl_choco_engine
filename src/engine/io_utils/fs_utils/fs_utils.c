@@ -18,6 +18,7 @@
 #include <string.h> // for memset
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
@@ -30,6 +31,7 @@
 #include "engine/base/choco_message.h"
 
 #define FS_READ_UNIT_SIZE 512  /**< ファイル読み込みの際に一度に読み込むバイト数(メモリの動的確保回数を減らすため,固定値にした) */
+#define FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE 1024    /**< 改行コードを除く1行本文の最大長は1023bytes(改行コードがCRLFの場合は1022bytesとなる) */
 
 // #define TEST_BUILD
 
@@ -37,6 +39,7 @@
 // テスト時のみ使用するヘッダのinclude
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "test_controller.h"
 
@@ -54,6 +57,7 @@
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_fs_utils_create;           /**< fs_utils_create()テスト設定 */
 static test_call_control_t s_test_config_fs_utils_text_file_read;   /**< fs_utils_text_file_read()テスト設定 */
+static test_call_control_t s_test_config_fs_utils_text_file_line_read;  /**< fs_utils_text_file_line_read()テスト設定 */
 static test_call_control_t s_test_config_fs_utils_fullpath_get;     /**< fs_utils_fullpath_get()テスト設定 */
 
 // プライベート関数テスト設定
@@ -63,6 +67,7 @@ static test_call_control_bool_t s_test_config_fs_utils_valid_check; /**< fs_util
 static void test_fs_utils_create(void);
 static void test_fs_utils_destroy(void);
 static void test_fs_utils_text_file_read(void);
+static void test_fs_utils_text_file_line_read(void);
 static void test_fs_utils_fullpath_get(void);
 static void test_rslt_to_str(void);
 static void test_fs_utils_valid_check(void);
@@ -93,6 +98,7 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                    /*
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
+static const char* const s_rslt_str_eof = "EOF";                              /**< 実行結果コード文字列: EOF */
 
 static const char* rslt_to_str(fs_utils_result_t rslt_);
 static bool fs_utils_valid_check(const fs_utils_t* fs_utils_);
@@ -290,6 +296,84 @@ cleanup:
     return ret;
 }
 
+fs_utils_result_t fs_utils_text_file_line_read(fs_utils_t* fs_utils_, choco_string_t* out_string_) {
+#ifdef TEST_BUILD
+    s_test_config_fs_utils_text_file_line_read.call_count++;
+    if(s_test_config_fs_utils_text_file_line_read.fail_on_call != 0) {
+        if(s_test_config_fs_utils_text_file_line_read.call_count == s_test_config_fs_utils_text_file_line_read.fail_on_call) {
+            return (fs_utils_result_t)s_test_config_fs_utils_text_file_line_read.forced_result;
+        }
+    }
+#endif
+    fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
+    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
+    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
+    bool complete = false;
+    size_t read_byte = 0;
+    char tmp_buffer[FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE] = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_text_file_line_read", "fs_utils_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_text_file_line_read", "out_string_")
+
+    if(!fs_utils_valid_check(fs_utils_)) {
+        // fs_utilsはfs_utils_createを経由して生成されたものであればvalidであることが保証されるため,ここを通るということはデータが壊れているかデータが未初期化
+        ret = FS_UTILS_DATA_CORRUPTED;
+        ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - The provided fs_utils_ is corrupted or uninitialized.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // APPEND_PLUSはオープンした際のファイル位置がEOFになるため、想定した動作を行うことができないため禁止
+    if(fs_utils_->mode != FILESYSTEM_MODE_READ && fs_utils_->mode != FILESYSTEM_MODE_READ_PLUS ) {
+        ret = FS_UTILS_BAD_OPERATION;
+        ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - text line read requires READ or READ_PLUS, but current mode is '%s'.", rslt_to_str(ret), filesystem_open_mode_c_str(fs_utils_->mode));
+        goto cleanup;
+    }
+
+    while(!complete) {
+        char tmp = 0;   // 改行コードは文字数カウントに含めないため、一時的にtmpにコピーし、改行コード以外だったらtmp_bufferにコピー
+        size_t result = 0;
+        ret_fs = filesystem_byte_read(1, fs_utils_->filesystem, &result, &tmp);
+        if(FILESYSTEM_EOF == ret_fs) {
+            complete = true;
+            if(0 == read_byte) {
+                ret = FS_UTILS_EOF;
+                goto cleanup;
+            }
+        } else if(FILESYSTEM_SUCCESS == ret_fs) {
+            if('\n' == tmp) {
+                complete = true;
+            } else {
+                tmp_buffer[read_byte] = tmp;
+                read_byte++;
+            }
+            if(read_byte == FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE) {
+                ret = FS_UTILS_LIMIT_EXCEEDED;
+                ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - Line length exceeded. Max body length is 1023 bytes for LF/EOF lines, or 1022 bytes for CRLF lines.", rslt_to_str(ret));
+                goto cleanup;
+            }
+        } else {
+            ret = filesystem_result_convert(ret_fs);
+            ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - Failed to read 1 byte while reading a text line.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    if(read_byte != 0 && '\r' == tmp_buffer[read_byte - 1]) {
+        tmp_buffer[read_byte - 1] = '\0';
+    }
+
+    ret_str = choco_string_copy_from_c_string(tmp_buffer, out_string_);
+    if(CHOCO_STRING_SUCCESS != ret_str) {
+        ret = choco_string_result_convert(ret_str);
+        ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - Failed to copy the read line to out_string_.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = FS_UTILS_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 fs_utils_result_t fs_utils_fullpath_get(fs_utils_t* fs_utils_, choco_string_t* out_fullpath_) {
 #ifdef TEST_BUILD
     s_test_config_fs_utils_fullpath_get.call_count++;
@@ -370,6 +454,8 @@ static const char* rslt_to_str(fs_utils_result_t rslt_) {
         return s_rslt_str_runtime_error;
     case FS_UTILS_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
+    case FS_UTILS_EOF:
+        return s_rslt_str_eof;
     default:
         return s_rslt_str_undefined_error;
     }
@@ -433,7 +519,7 @@ static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_) 
     case FILESYSTEM_BAD_OPERATION:
         return FS_UTILS_BAD_OPERATION;
     case FILESYSTEM_EOF:
-        return FS_UTILS_UNDEFINED_ERROR;    // EOFを出力するAPIを使う場所では本関数ではなく、直接実行結果コードを見る必要があるため、本関数ではUNDEFINEDとする
+        return FS_UTILS_EOF;
     case FILESYSTEM_FILE_CLOSE_ERROR:
         return FS_UTILS_UNDEFINED_ERROR;    // fs_utilsではdestoryでファイルクローズを行うため、クローズエラーは発生しないはず
     default:
@@ -517,6 +603,15 @@ void NO_COVERAGE test_fs_utils_text_file_read_config_set(const test_call_control
     s_test_config_fs_utils_text_file_read.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_fs_utils_text_file_line_read_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_fs_utils_text_file_line_read.fail_on_call = config_->fail_on_call;
+    s_test_config_fs_utils_text_file_line_read.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_fs_utils_fullpath_get_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -529,6 +624,7 @@ void NO_COVERAGE test_fs_utils_fullpath_get_config_set(const test_call_control_t
 void NO_COVERAGE test_fs_utils_config_reset(void) {
     test_call_control_reset(&s_test_config_fs_utils_create);
     test_call_control_reset(&s_test_config_fs_utils_text_file_read);
+    test_call_control_reset(&s_test_config_fs_utils_text_file_line_read);
     test_call_control_reset(&s_test_config_fs_utils_fullpath_get);
 
     test_call_control_bool_reset(&s_test_config_fs_utils_valid_check);
@@ -540,6 +636,7 @@ void NO_COVERAGE test_fs_utils(void) {
     test_fs_utils_create();
     test_fs_utils_destroy();
     test_fs_utils_text_file_read();
+    test_fs_utils_text_file_line_read();
     test_fs_utils_fullpath_get();
     test_rslt_to_str();
     test_fs_utils_valid_check();
@@ -1182,6 +1279,631 @@ static void NO_COVERAGE test_fs_utils_text_file_read(void) {
 }
 
 // Generated by ChatGPT
+// NOTE: WindowsのテキストモードでCRLFがLFに変換される実装だと、この境界挙動は変わる可能性がある
+static void NO_COVERAGE test_fs_utils_text_file_line_read(void) {
+    {
+        // テスト用ファイル生成
+        FILE* fp = NULL;
+        char line_1022[1023] = { 0 };
+        char line_1023[1024] = { 0 };
+        char line_1024[1025] = { 0 };
+
+        memset(line_1022, 'a', 1022);
+        line_1022[1022] = '\0';
+
+        memset(line_1023, 'b', 1023);
+        line_1023[1023] = '\0';
+
+        memset(line_1024, 'c', 1024);
+        line_1024[1024] = '\0';
+
+        fp = fopen("assets/test/filesystem/test_file_line_lf.txt", "wb");
+        assert(NULL != fp);
+        assert(EOF != fputs("aaa\nbbbb\n", fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_crlf.txt", "wb");
+        assert(NULL != fp);
+        assert(EOF != fputs("aaa\r\nbbbb\r\n", fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_no_lf.txt", "wb");
+        assert(NULL != fp);
+        assert(EOF != fputs("aaa", fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_empty_file.txt", "wb");
+        assert(NULL != fp);
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_empty_lf.txt", "wb");
+        assert(NULL != fp);
+        assert(EOF != fputs("\nnext\n", fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_empty_crlf.txt", "wb");
+        assert(NULL != fp);
+        assert(EOF != fputs("\r\nnext\r\n", fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_1023_lf.txt", "wb");
+        assert(NULL != fp);
+        assert(1023U == fwrite(line_1023, 1U, 1023U, fp));
+        assert(1U == fwrite("\n", 1U, 1U, fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_1023_eof.txt", "wb");
+        assert(NULL != fp);
+        assert(1023U == fwrite(line_1023, 1U, 1023U, fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_1022_crlf.txt", "wb");
+        assert(NULL != fp);
+        assert(1022U == fwrite(line_1022, 1U, 1022U, fp));
+        assert(2U == fwrite("\r\n", 1U, 2U, fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_1024_lf.txt", "wb");
+        assert(NULL != fp);
+        assert(1024U == fwrite(line_1024, 1U, 1024U, fp));
+        assert(1U == fwrite("\n", 1U, 1U, fp));
+        assert(0 == fclose(fp));
+
+        fp = fopen("assets/test/filesystem/test_file_line_1023_crlf.txt", "wb");
+        assert(NULL != fp);
+        assert(1023U == fwrite(line_1023, 1U, 1023U, fp));
+        assert(2U == fwrite("\r\n", 1U, 2U, fp));
+        assert(0 == fclose(fp));
+    }
+    {
+        // fs_utils_text_file_line_read() 自体の失敗注入
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FS_UTILS_RUNTIME_ERROR;
+        test_fs_utils_text_file_line_read_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // fs_utils_ == NULL
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_line_read(NULL, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // out_string_ == NULL
+        fs_utils_t fs_utils = { 0 };
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_line_read(&fs_utils, NULL));
+    }
+    {
+        // fs_utils_valid_check() が false
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        s_test_config_fs_utils_valid_check.fail_on_call = 1;
+        s_test_config_fs_utils_valid_check.forced_result = false;
+
+        assert(FS_UTILS_DATA_CORRUPTED == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // mode が読み込み系ではない
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_WRITE;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_BAD_OPERATION == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // filesystem_byte_read() が INVALID_ARGUMENT
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_INVALID_ARGUMENT;
+        test_filesystem_byte_read_config_set(&config);
+
+        assert(FS_UTILS_INVALID_ARGUMENT == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // filesystem_byte_read() が RUNTIME_ERROR
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_RUNTIME_ERROR;
+        test_filesystem_byte_read_config_set(&config);
+
+        assert(FS_UTILS_RUNTIME_ERROR == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // filesystem_byte_read() が UNDEFINED_ERROR
+        test_call_control_t config = { 0 };
+        fs_utils_t fs_utils = { 0 };
+        choco_string_t* out_string = NULL;
+
+        fs_utils.filepath = (choco_string_t*)1;
+        fs_utils.filename = (choco_string_t*)1;
+        fs_utils.extension = NULL;
+        fs_utils.filesystem = (filesystem_t*)1;
+        fs_utils.mode = FILESYSTEM_MODE_READ;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)FILESYSTEM_UNDEFINED_ERROR;
+        test_filesystem_byte_read_config_set(&config);
+
+        assert(FS_UTILS_UNDEFINED_ERROR == fs_utils_text_file_line_read(&fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        assert(NULL == out_string);
+    }
+    {
+        // choco_string_copy_from_c_string() が失敗
+        test_call_control_t config = { 0 };
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        config.fail_on_call = 1;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_copy_from_c_string_config_set(&config);
+
+        assert(FS_UTILS_NO_MEMORY == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: LF区切りを1行ずつ読み込む。同じout_stringを使い回しても前回結果が残らない
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "aaa"));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "bbbb"));
+
+        assert(FS_UTILS_EOF == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: CRLF区切りを1行ずつ読み込む。返却文字列にCR/LFを含めない
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_crlf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "aaa"));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "bbbb"));
+
+        assert(FS_UTILS_EOF == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: 最終行にLFがなくても、1byte以上読めていればSUCCESS
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_no_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "aaa"));
+
+        assert(FS_UTILS_EOF == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: 空ファイルはEOF
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_empty_file", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_EOF == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: LFの空行を空文字列として読む
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_empty_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), ""));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "next"));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: CRLFの空行を空文字列として読む
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_empty_crlf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), ""));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "next"));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 正常系: READ_PLUSでも読み込み可能
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_lf", ".txt", FILESYSTEM_MODE_READ_PLUS, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(0 == strcmp(choco_string_c_str(out_string), "aaa"));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 境界値: LF終端では本文1023bytesまで成功
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+        char expected[1024] = { 0 };
+
+        memset(expected, 'b', 1023);
+        expected[1023] = '\0';
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_1023_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(1023U == strlen(choco_string_c_str(out_string)));
+        assert(0 == strcmp(choco_string_c_str(out_string), expected));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 境界値: EOF終端では本文1023bytesまで成功
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+        char expected[1024] = { 0 };
+
+        memset(expected, 'b', 1023);
+        expected[1023] = '\0';
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_1023_eof", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(1023U == strlen(choco_string_c_str(out_string)));
+        assert(0 == strcmp(choco_string_c_str(out_string), expected));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 境界値: CRLF終端では本文1022bytesまで成功
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+        char expected[1023] = { 0 };
+
+        memset(expected, 'a', 1022);
+        expected[1022] = '\0';
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_1022_crlf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_SUCCESS == fs_utils_text_file_line_read(fs_utils, out_string));
+        assert(1022U == strlen(choco_string_c_str(out_string)));
+        assert(0 == strcmp(choco_string_c_str(out_string), expected));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 境界値: LF終端で本文1024bytesはLIMIT_EXCEEDED
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_1024_lf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_LIMIT_EXCEEDED == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // 境界値: CRLF終端で本文1023bytesはLIMIT_EXCEEDED
+        fs_utils_t* fs_utils = NULL;
+        choco_string_t* out_string = NULL;
+
+        test_fs_utils_config_reset();
+        test_filesystem_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        assert(FS_UTILS_SUCCESS == fs_utils_create("assets/test/filesystem/", "test_file_line_1023_crlf", ".txt", FILESYSTEM_MODE_READ, &fs_utils));
+        assert(NULL != fs_utils);
+
+        assert(CHOCO_STRING_SUCCESS == choco_string_default_create(&out_string));
+
+        assert(FS_UTILS_LIMIT_EXCEEDED == fs_utils_text_file_line_read(fs_utils, out_string));
+
+        choco_string_destroy(&out_string);
+        fs_utils_destroy(&fs_utils);
+        assert(NULL == out_string);
+        assert(NULL == fs_utils);
+    }
+    {
+        // テスト用ファイル削除
+        assert(0 == remove("assets/test/filesystem/test_file_line_lf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_crlf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_no_lf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_empty_file.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_empty_lf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_empty_crlf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_1023_lf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_1023_eof.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_1022_crlf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_1024_lf.txt"));
+        assert(0 == remove("assets/test/filesystem/test_file_line_1023_crlf.txt"));
+    }
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_fs_utils_fullpath_get(void) {
     {
         // fs_utils_fullpath_get() 自体の失敗注入
@@ -1431,6 +2153,7 @@ static void NO_COVERAGE test_rslt_to_str(void) {
         assert(0 == strcmp(rslt_to_str(FS_UTILS_OVERFLOW), "OVERFLOW"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_RUNTIME_ERROR), "RUNTIME_ERROR"));
+        assert(0 == strcmp(rslt_to_str(FS_UTILS_EOF), "EOF"));
         assert(0 == strcmp(rslt_to_str(FS_UTILS_UNDEFINED_ERROR), "UNDEFINED_ERROR"));
     }
     {
@@ -1559,7 +2282,7 @@ static void NO_COVERAGE test_filesystem_result_convert(void) {
     }
     {
         // fs_utilsでは直接扱わない結果コードは UNDEFINED_ERROR に変換される
-        assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_EOF));
+        assert(FS_UTILS_EOF == filesystem_result_convert(FILESYSTEM_EOF));
         assert(FS_UTILS_UNDEFINED_ERROR == filesystem_result_convert(FILESYSTEM_FILE_CLOSE_ERROR));
     }
     {
