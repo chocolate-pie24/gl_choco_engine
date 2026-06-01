@@ -95,6 +95,15 @@ void test_choco_string_length_config_set(const test_call_control_size_t_t* confi
 void test_choco_string_equal_config_set(const test_call_control_bool_t* config_);
 
 /**
+ * @brief choco_string_substring_exists()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、Choco String内で管理している値が保持される
+ *
+ * @param config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_choco_string_substring_exists_config_set(const test_call_control_bool_t* config_);
+
+/**
  * @brief Choco Stringが内部で管理するテスト設定値を全て初期化し、テスト用の出力強制制御をなくす
  *
  */
