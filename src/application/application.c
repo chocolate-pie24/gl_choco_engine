@@ -55,6 +55,7 @@
 #include "engine/systems/renderer/renderer_resources/ui_shader.h"
 #include "engine/systems/renderer/renderer_resources/line_shader.h"
 #include "engine/systems/renderer/renderer_resources/point_shader.h"
+#include "engine/systems/renderer/renderer_resources/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
@@ -74,6 +75,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/texture/texture.h"
+#include "engine/resource/loaders/stl_loader.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -111,6 +113,7 @@ typedef struct app_state {
     ui_shader_t* ui_shader;
     line_shader_t* line_shader;
     point_shader_t* point_shader;
+    lit_mesh_shader_t* lit_mesh_shader;
 
     camera_manager_t* camera_manager;
     camera_t* active_camera;
@@ -334,6 +337,20 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    // Lit Mesh Shader
+    ret_renderer = lit_mesh_shader_create("assets/shaders/test_shader/", "lit_mesh_shader", tmp->renderer_backend_context, &tmp->lit_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = lit_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->lit_mesh_shader, BUFFER_USAGE_STATIC, 1024);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh vertex buffer.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
     // camera create.
@@ -374,6 +391,9 @@ cleanup:
                 camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
+                if(NULL != tmp->lit_mesh_shader) {
+                    lit_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->lit_mesh_shader);
+                }
                 if(NULL != tmp->point_shader) {
                     point_shader_destroy(tmp->renderer_backend_context, &tmp->point_shader);
                 }
@@ -430,6 +450,9 @@ void application_destroy(void) {
         camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
+        if(NULL != s_app_state->lit_mesh_shader) {
+            lit_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->lit_mesh_shader);
+        }
         if(NULL != s_app_state->point_shader) {
             point_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_shader);
         }
@@ -480,6 +503,7 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
     renderer_backend_texture_t* tex_gpu_resource = NULL;
@@ -495,6 +519,10 @@ application_result_t application_run(void) {
 
     static point_vertex_t point_vertices[8] = { 0 };
     static vec4u8_t point_colors[8] = { 0 };
+
+    stl_loader_t* stl_loader = NULL;
+    static point_normal_vertex_t* stl_vertices = NULL;
+    static size_t stl_vertex_count = 0;
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -572,6 +600,15 @@ application_result_t application_run(void) {
 
     point_shader_vertex_buffer_point_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_vertices), (void*)&point_vertices[0]);
     point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
+
+    // STL Vertex
+    ret_resource = stl_loader_create(&stl_loader);  // TODO: エラー処理
+    ret_resource = stl_loader_ascii_load("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", stl_loader);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ERROR_MESSAGE("application_run - Failed to load stl.");
+        return APPLICATION_RUNTIME_ERROR;
+    }
+    ret_resource = stl_loader_vertices_move(stl_loader, &stl_vertices, &stl_vertex_count);
 
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
@@ -656,6 +693,7 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
+    stl_loader_destroy(&stl_loader);
     return ret;
 }
 
