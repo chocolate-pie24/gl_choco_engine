@@ -17,11 +17,11 @@ resource_result_t stl_loader_create(stl_loader_t** stl_loader_);
 
 void stl_loader_destroy(stl_loader_t** stl_loader_);
 
-resource_result_t stl_loader_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_);
+resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_);
 
-resource_result_t stl_loader_vertex_move(stl_loader_t* stl_loader_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
+resource_result_t stl_loader_vertices_move(stl_loader_t* stl_loader_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
-resource_result_t stl_loader_vertex_count_get(const stl_loader_t* stl_loader_, size_t* out_vertex_count_);
+resource_result_t stl_loader_vertices_count_get(const stl_loader_t* stl_loader_, size_t* out_vertex_count_);
 
 #ifdef __cplusplus
 }
