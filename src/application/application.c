@@ -344,7 +344,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = lit_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->lit_mesh_shader, BUFFER_USAGE_STATIC, 1024);
+    ret_renderer = lit_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->lit_mesh_shader, BUFFER_USAGE_STATIC, 1 * GIB);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh vertex buffer.", app_rslt_to_str(ret));
@@ -609,7 +609,9 @@ application_result_t application_run(void) {
         return APPLICATION_RUNTIME_ERROR;
     }
     ret_resource = stl_loader_vertices_move(stl_loader, &stl_vertices, &stl_vertex_count);
+    lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
 
+    // MVP Matrix
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
@@ -630,6 +632,10 @@ application_result_t application_run(void) {
     point_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
     point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
     point_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+
+    lit_mesh_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+    lit_mesh_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+    lit_mesh_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
 
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_frog);
@@ -687,12 +693,24 @@ application_result_t application_run(void) {
         glDrawArrays(GL_POINTS, 0, 8);
         point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
+        // STL描画
+        lit_mesh_shader_use(s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+        lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+
+        glDrawArrays(GL_TRIANGLES, 0, stl_vertex_count);
+        lit_mesh_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
 
         nanosleep(&req, NULL);
     }
 cleanup:
+    if(NULL != stl_vertices) {
+        memory_system_free(stl_vertices, sizeof(point_normal_vertex_t) * stl_vertex_count, MEMORY_TAG_GEOMETRY);
+        stl_vertices = NULL;
+        stl_vertex_count = 0;
+    }
     stl_loader_destroy(&stl_loader);
     return ret;
 }
@@ -914,6 +932,13 @@ static void app_state_dispatch(void) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
+
+            ret_renderer = lit_mesh_shader_projection_matrix_set(&tmp_projection, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+            if(RENDERER_SUCCESS != ret_renderer) {
+                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
+                goto cleanup;
+            }
+
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
@@ -928,6 +953,7 @@ static void app_state_dispatch(void) {
         ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
         line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
         point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);    // TODO: エラー処理
+        lit_mesh_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
         s_app_state->view_dirty = false;
     }
 cleanup:

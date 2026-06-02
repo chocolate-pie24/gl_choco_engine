@@ -59,8 +59,9 @@ typedef enum {
  *
  */
 typedef enum {
-    RENDERER_TYPE_FLOAT,    /**< データ型: GLfloat */
+    RENDERER_TYPE_FLOAT,            /**< データ型: GLfloat */
     RENDERER_TYPE_UNSIGNED_BYTE,    /**< データ型: GL_UNSIGNED_BYTE */
+    RENDERER_TYPE_BYTE,             /**< データ型: GL_BYTE */
 } renderer_type_t;
 
 /**
