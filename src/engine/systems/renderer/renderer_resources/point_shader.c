@@ -45,7 +45,9 @@
 /**
  * @brief ポイント描画用シェーダーリソース構造体
  * @note 本構造体はshader programだけでなく、ポイント描画用のVAO/VBOとバッファ書き込み状態も保持する
+ * @note colorのvboは別にする。vertexには色情報は持たせたくない。テクスチャマテリアルはvertexでは親構造体に持たせるため、それに倣って色は親に持たせる。
  * @todo TODO: FreeListを使用したバッファ管理
+ *
  *
  */
 struct point_shader {
