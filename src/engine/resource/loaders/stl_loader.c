@@ -1,3 +1,26 @@
+/** @ingroup resource
+ *
+ * @file stl_loader.c
+ * @author chocolate-pie24
+ * @brief STLファイルのロード処理を行うAPIの実装
+ *
+ * @details 以下のSTLファイルをサポートする
+ * - ASCII形式のSTL(BINARY形式は将来的にサポート予定)
+ * - ファイルに含まれる法線情報は[-1.0...1.0]の範囲に正規化されていること
+ *
+ * @todo 以下を行う
+ * - GLCEカスタムフォーマットでの出力機能
+ * - カスタムフォーマットが存在する場合はそちらで読み込み、ない場合は通常STLを読み込みカスタムフォーマットファイルを出力
+ *
+ * @version 0.1
+ * @date 2026-06-02
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -82,7 +105,6 @@ void stl_loader_destroy(stl_loader_t** stl_loader_) {
     *stl_loader_ = NULL;
 }
 
-// ロード可能なSTLデータは法線情報が-1.0...1.0に正規化されている必要がある(されていない場合はRESOURCE_DATA_CORRUPTEDを返す)
 resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
@@ -322,6 +344,32 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief STLデータのロードに先立ち、頂点数をカウントする
+ *
+ * @param[in] path_ STLファイルが格納されているパス(最後は'/'が入っていること)
+ * @param[in] name_ STLファイル名(拡張子は含まない)
+ * @param[in] extension_ STLファイル拡張子('.'で始まること)
+ * @param[out] out_vertex_count_ 頂点数格納先
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - path_ == NULL
+ * - name_ == NULL
+ * - extension_ == NULL
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_OVERFLOW 以下のいずれか
+ * - ファイルフルパス文字列が長すぎる
+ * - STLデータに格納されている頂点の数または法線の数がSIZE_MAXを超過
+ * @retval RESOURCE_DATA_CORRUPTED 以下のいずれか
+ * - 内部データ破損
+ * - STLデータ不整合(頂点数が法線数の3倍ではない)
+ * @retval RESOURCE_UNDEFINED_ERROR ファイル読み込み時に不明なエラーが発生
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_FILE_OPEN_ERROR STLファイルオープン失敗
+ * @retval RESOURCE_RUNTIME_ERROR ファイル読み込みでエラー発生
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
 static resource_result_t stl_loader_vertex_count_calc(const char* path_, const char* name_, const char* extension_, size_t* out_vertex_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
