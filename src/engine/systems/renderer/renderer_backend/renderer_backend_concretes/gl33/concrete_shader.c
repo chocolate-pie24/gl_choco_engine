@@ -102,6 +102,7 @@ static test_call_control_t s_test_config_gl33_shader_link;                      
 static test_call_control_t s_test_config_gl33_shader_use;                           /**< gl33_shader_use()テスト設定 */
 static test_call_control_t s_test_config_gl33_uniform_location_get;                 /**< gl33_uniform_location_get()テスト設定 */
 static test_call_control_t s_test_config_gl33_mat4f_uniform_set;                    /**< gl33_mat4f_uniform_set()テスト設定 */
+static test_call_control_t s_test_config_gl33_vec4u8_uniform_set;                   /**< gl33_vec4u8_uniform_set()テスト設定 */
 static test_call_control_t s_test_config_gl33_shader_handle_addr_get;               /**< gl33_shader_handle_addr_get()テスト設定 */
 static test_call_control_t s_test_config_gl33_shader_resolve_target;                /**< gl33_shader_resolve_target()テスト設定*/
 static test_call_control_t s_test_config_shader_compile_status_get;                 /**< shader_compile_status_get()テスト設定 */
@@ -113,6 +114,7 @@ static test_call_control_no_op_t s_test_config_mock_glAttachShader;             
 static test_call_control_no_op_t s_test_config_mock_glLinkProgram;                  /**< mock_glLinkProgram()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glUseProgram;                   /**< mock_glUseProgram()テスト設定 */
 static test_call_control_no_op_t s_test_config_mock_glUniformMatrix4fv;             /**< mock_glUniformMatrix4fv()テスト設定 */
+static test_call_control_no_op_t s_test_config_mock_glUniform4fv;                   /**< mock_glUniform4fv()テスト設定 */
 static test_call_control_GLuint_t s_test_config_mock_glCreateShader;                /**< mock_glCreateShader()テスト設定 */
 static test_call_control_GLuint_t s_test_config_mock_glCreateProgram;               /**< mock_glCreateProgram()テスト設定 */
 static test_call_control_GLint_t s_test_config_mock_glGetShaderiv;                  /**< mock_glGetShaderiv()テスト設定 */
@@ -130,6 +132,7 @@ static void test_gl33_shader_link(void);
 static void test_gl33_shader_use(void);
 static void test_gl33_uniform_location_get(void);
 static void test_gl33_mat4f_uniform_set(void);
+static void test_gl33_vec4u8_uniform_set(void);
 static void test_gl33_shader_handle_addr_get(void);
 static void test_gl33_shader_resolve_target(void);
 static void test_shader_compile_status_get(void);
@@ -147,6 +150,7 @@ static void test_mock_glGetProgramiv(void);
 static void test_mock_glGetProgramInfoLog(void);
 static void test_mock_glUseProgram(void);
 static void test_mock_glUniformMatrix4fv(void);
+static void test_mock_glUniform4fv(void);
 static void test_mock_glGetUniformLocation(void);
 
 // その他テスト専用関数
@@ -188,6 +192,7 @@ static renderer_result_t gl33_shader_link(renderer_backend_shader_t* shader_hand
 static renderer_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
 static renderer_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 static renderer_result_t gl33_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
+static renderer_result_t gl33_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);
 
 static renderer_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
 static renderer_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
@@ -207,7 +212,9 @@ static void mock_glGetProgramiv(GLuint program_, GLenum pname_, GLint *params_);
 static void mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_);
 static void mock_glUseProgram(GLuint program_);
 static void mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_);
+static void mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat *value_);
 static GLint mock_glGetUniformLocation(GLuint program_, const GLchar *name_);
+
 
 static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_create = gl33_shader_create,
@@ -217,6 +224,7 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_use = gl33_shader_use,
     .renderer_shader_uniform_location_get = gl33_uniform_location_get,
     .renderer_shader_mat4f_uniform_set = gl33_mat4f_uniform_set,
+    .renderer_shader_vec4u8_uniform_set = gl33_vec4u8_uniform_set,
 };  /**< OpenGL3.3用シェーダー操作仮想関数テーブル */
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
@@ -663,6 +671,59 @@ cleanup:
 }
 
 /**
+ * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
+ *
+ * @note OpenGL 3.3実装
+ *
+ * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] data_ 送信データへのポインタ
+ * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
+ *
+ * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_ == NULL
+ * - data_ == NULL
+ * - out_program_id_ == NULL
+ * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
+ * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
+ * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ */
+static renderer_result_t gl33_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_) {
+#ifdef TEST_BUILD
+    s_test_config_gl33_vec4u8_uniform_set.call_count++;
+    if(s_test_config_gl33_vec4u8_uniform_set.fail_on_call != 0) {
+        if(s_test_config_gl33_vec4u8_uniform_set.call_count == s_test_config_gl33_vec4u8_uniform_set.fail_on_call) {
+            return (renderer_result_t)s_test_config_gl33_vec4u8_uniform_set.forced_result;
+        }
+    }
+#endif
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    float data_f[4] = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_program_id_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "out_program_id_")
+
+    ret = gl33_shader_use(shader_handle_, out_program_id_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("gl33_vec4u8_uniform_set(%s) - Failed to switch shader program.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // shader側はvec4なので0...1に正規化
+    data_f[0] = (float)(data_[0]) / 255.0f;
+    data_f[1] = (float)(data_[1]) / 255.0f;
+    data_f[2] = (float)(data_[2]) / 255.0f;
+    data_f[3] = (float)(data_[3]) / 255.0f;
+    mock_glUniform4fv(location_, 1, data_f);
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/**
  * @brief シェーダーオブジェクトハンドルのアドレスを取得する
  *
  * @note *out_handle_addr_への値の上書きは許可する
@@ -981,6 +1042,18 @@ static void NO_COVERAGE mock_glUniformMatrix4fv(GLint location_, GLsizei count_,
     glUniformMatrix4fv(location_, count_, transpose_, value_);
 }
 
+static void NO_COVERAGE mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat *value_) {
+#ifdef TEST_BUILD
+    s_test_config_mock_glUniform4fv.call_count++;
+    if(s_test_config_mock_glUniform4fv.fail_on_call != 0) {
+        if(s_test_config_mock_glUniform4fv.call_count == s_test_config_mock_glUniform4fv.fail_on_call) {
+            return;
+        }
+    }
+#endif
+    glUniform4fv(location_, count_, value_);
+}
+
 static GLint NO_COVERAGE mock_glGetUniformLocation(GLuint program_, const GLchar *name_) {
 #ifdef TEST_BUILD
     s_test_config_mock_glGetUniformLocation.call_count++;
@@ -1001,6 +1074,7 @@ void NO_COVERAGE test_concrete_shader_config_reset(void) {
     test_call_control_reset(&s_test_config_gl33_shader_use);
     test_call_control_reset(&s_test_config_gl33_uniform_location_get);
     test_call_control_reset(&s_test_config_gl33_mat4f_uniform_set);
+    test_call_control_reset(&s_test_config_gl33_vec4u8_uniform_set);
     test_call_control_reset(&s_test_config_gl33_shader_handle_addr_get);
     test_call_control_reset(&s_test_config_gl33_shader_resolve_target);
     test_call_control_reset(&s_test_config_shader_compile_status_get);
@@ -1012,6 +1086,7 @@ void NO_COVERAGE test_concrete_shader_config_reset(void) {
     test_call_control_no_op_reset(&s_test_config_mock_glLinkProgram);
     test_call_control_no_op_reset(&s_test_config_mock_glUseProgram);
     test_call_control_no_op_reset(&s_test_config_mock_glUniformMatrix4fv);
+    test_call_control_no_op_reset(&s_test_config_mock_glUniform4fv);
     test_call_control_GLuint_reset(&s_test_config_mock_glCreateShader);
     test_call_control_GLuint_reset(&s_test_config_mock_glCreateProgram);
     test_call_control_GLint_reset(&s_test_config_mock_glGetShaderiv);
@@ -1030,6 +1105,7 @@ void NO_COVERAGE test_concrete_shader(void) {
     test_gl33_shader_use();
     test_gl33_uniform_location_get();
     test_gl33_mat4f_uniform_set();
+    test_gl33_vec4u8_uniform_set();
     test_gl33_shader_handle_addr_get();
     test_gl33_shader_resolve_target();
     test_shader_compile_status_get();
@@ -1047,6 +1123,7 @@ void NO_COVERAGE test_concrete_shader(void) {
     test_mock_glGetProgramInfoLog();
     test_mock_glUseProgram();
     test_mock_glUniformMatrix4fv();
+    test_mock_glUniform4fv();
     test_mock_glGetUniformLocation();
 }
 
@@ -1073,6 +1150,7 @@ static void NO_COVERAGE test_gl33_shader_vtable_get(void) {
     assert(vtable1->renderer_shader_use == gl33_shader_use);
     assert(vtable1->renderer_shader_uniform_location_get == gl33_uniform_location_get);
     assert(vtable1->renderer_shader_mat4f_uniform_set == gl33_mat4f_uniform_set);
+    assert(vtable1->renderer_shader_vec4u8_uniform_set == gl33_vec4u8_uniform_set);
 }
 
 // Generated by ChatGPT
@@ -2140,6 +2218,215 @@ static void NO_COVERAGE test_gl33_mat4f_uniform_set(void) {
 }
 
 // Generated by ChatGPT
+static void NO_COVERAGE test_gl33_vec4u8_uniform_set(void) {
+    {
+        // gl33_vec4u8_uniform_set() 冒頭で強制的に RENDERER_RUNTIME_ERROR を返させる
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        s_test_config_gl33_vec4u8_uniform_set.fail_on_call = 1U;
+        s_test_config_gl33_vec4u8_uniform_set.forced_result = (int)RENDERER_RUNTIME_ERROR;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, &out_program_id);
+        assert(RENDERER_RUNTIME_ERROR == ret);
+        assert(0U == out_program_id);
+        assert(1U == s_test_config_gl33_vec4u8_uniform_set.call_count);
+        assert(0U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        ret = gl33_vec4u8_uniform_set(NULL, 3, data, &out_program_id);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == out_program_id);
+        assert(0U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // data_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, NULL, &out_program_id);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == out_program_id);
+        assert(0U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // out_program_id_ == NULL -> RENDERER_INVALID_ARGUMENT
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+
+        test_concrete_shader_config_reset();
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, NULL);
+        assert(RENDERER_INVALID_ARGUMENT == ret);
+        assert(0U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // gl33_shader_use() が失敗 -> その戻り値を伝播
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        s_test_config_gl33_shader_use.fail_on_call = 1U;
+        s_test_config_gl33_shader_use.forced_result = (int)RENDERER_DATA_CORRUPTED;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, &out_program_id);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(0U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // program_id == 0 -> gl33_shader_use() 経由で RENDERER_BAD_OPERATION
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        shader_handle.program_id = 0U;
+        shader_handle.vertex_shader_handle = 1U;
+        shader_handle.fragment_shader_handle = 2U;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, &out_program_id);
+        assert(RENDERER_BAD_OPERATION == ret);
+        assert(0U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUseProgram.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // program_id != 0 だが vertex_shader_handle == 0 -> RENDERER_DATA_CORRUPTED
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        shader_handle.program_id = 10U;
+        shader_handle.vertex_shader_handle = 0U;
+        shader_handle.fragment_shader_handle = 2U;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, &out_program_id);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(0U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUseProgram.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // program_id != 0 だが fragment_shader_handle == 0 -> RENDERER_DATA_CORRUPTED
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 64, 32 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        shader_handle.program_id = 10U;
+        shader_handle.vertex_shader_handle = 1U;
+        shader_handle.fragment_shader_handle = 0U;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 3, data, &out_program_id);
+        assert(RENDERER_DATA_CORRUPTED == ret);
+        assert(0U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUseProgram.call_count);
+        assert(0U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // 成功系: program 切り替え後に uniform 送信成功
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 255, 128, 0, 255 };
+        uint32_t out_program_id = 0U;
+
+        test_concrete_shader_config_reset();
+
+        shader_handle.program_id = 40U;
+        shader_handle.vertex_shader_handle = 1U;
+        shader_handle.fragment_shader_handle = 2U;
+
+        // 実 OpenGL 呼び出しを避ける
+        s_test_config_mock_glUseProgram.fail_on_call = 1U;
+        s_test_config_mock_glUniform4fv.fail_on_call = 1U;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 7, data, &out_program_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(40U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(1U == s_test_config_mock_glUseProgram.call_count);
+        assert(1U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+    {
+        // 成功系: 既に同じ program_id 使用中なら glUseProgram は呼ばれず、uniform 送信のみ行う
+        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_shader_t shader_handle = { 0 };
+        uint8_t data[4] = { 0, 64, 128, 255 };
+        uint32_t out_program_id = 50U;
+
+        test_concrete_shader_config_reset();
+
+        shader_handle.program_id = 50U;
+        shader_handle.vertex_shader_handle = 0U;
+        shader_handle.fragment_shader_handle = 0U;
+
+        // gl33_shader_use() は program_id 一致時、compile 状態を見ずに成功する
+        s_test_config_mock_glUniform4fv.fail_on_call = 1U;
+
+        ret = gl33_vec4u8_uniform_set(&shader_handle, 9, data, &out_program_id);
+        assert(RENDERER_SUCCESS == ret);
+        assert(50U == out_program_id);
+        assert(1U == s_test_config_gl33_shader_use.call_count);
+        assert(0U == s_test_config_mock_glUseProgram.call_count);
+        assert(1U == s_test_config_mock_glUniform4fv.call_count);
+
+        test_concrete_shader_config_reset();
+    }
+}
+
+// Generated by ChatGPT
 static void NO_COVERAGE test_gl33_shader_handle_addr_get(void) {
     {
         // gl33_shader_handle_addr_get() 冒頭で強制的に RENDERER_RUNTIME_ERROR を返させる
@@ -2508,6 +2795,11 @@ static void NO_COVERAGE test_mock_glUseProgram(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_mock_glUniformMatrix4fv(void) {
+    // モック関数のテストは当面は不要(ほとんどが失敗注入だけのため他のテストケースで代用可能であるため)
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_mock_glUniform4fv(void) {
     // モック関数のテストは当面は不要(ほとんどが失敗注入だけのため他のテストケースで代用可能であるため)
 }
 

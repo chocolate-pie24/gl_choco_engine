@@ -30,8 +30,15 @@
 
 ### Renderer Resources
 
+`Renderer Resources`は、上位レイヤーが使用するためのレンダラー層の描画リソースモジュールを提供する。
+
+現状では`Renderer Frontend`が未実装であるため、`Renderer Resources`は上位レイヤーと`Renderer Backend`の間に位置する中間リソース層として機能する。
+各リソースは、シェーダープログラム、キャッシュ済みのuniform location、シェーダー専用のVAO/VBO、GPUへのデータ転送処理をまとめて管理する。
+
 `Renderer Resources`は現状では下記のモジュールを提供する。
 
 | モジュール名称 | 役割                                                         |
 | ------------ | ---------------------------------------------------------- |
-| ui_shader    | UI描画用シェーダーリソースの生成・使用・関連ユニフォーム操作を提供する |
+| ui_shader    | テクスチャ付きUI四角形描画用のシェーダーリソースを提供する。UI用シェーダープログラム、MVP行列のuniform location、頂点座標とテクスチャ座標のvertex attribute用に設定されたVAO/VBOを管理する。 |
+| line_shader  | 単色の3D線分描画用のシェーダーリソースを提供する。線分描画用シェーダープログラム、MVP行列と色情報のuniform location、positionのみを持つline vertex用に設定されたVAO/VBOを管理する。主にdebug line、AABBの辺、grid lineなどの単純な線分プリミティブの描画を想定している。 |
+| point_shader | 点群および点プリミティブ描画用のシェーダーリソースを提供する。ポイント描画用シェーダープログラム、MVP行列のuniform location、VAO、頂点座標用VBO、色情報用VBOを管理する。色情報は正規化された符号なし8bit整数のRGBA値として格納され、シェーダー側ではvec4として扱われる。主にdebug point、計測点、点群可視化などの点ベース可視化データの描画を想定している。 |

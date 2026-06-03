@@ -2,7 +2,7 @@
  *
  * @file ui_shader.c
  * @author chocolate-pie24
- * @brief UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装
+ * @brief UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
  *
  * @version 0.1
  * @date 2026-03-11
@@ -13,7 +13,9 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_resources/ui_shader.h"
 
@@ -37,9 +39,12 @@
 #include "engine/base/choco_message.h"
 
 // TODO: テスト(ui_shaderは今後も拡張されるため、テストはまだ行わない)
+// TODO: DYNAMIC / STATICでそれぞれVBOを作る
+// TODO: vbo_config_t
 
 /**
  * @brief UIシェーダーリソース構造体
+ * @note 本構造体はshader programだけでなく、UI描画用のVAO/VBOとバッファ書き込み状態も保持する
  * @todo TODO: FreeListを使用したバッファ管理
  *
  */
@@ -53,7 +58,7 @@ struct ui_shader {
     renderer_backend_vbo_t* ui_vbo;         /**< UIシェーダー用VBO */
 
     size_t vertex_buffer_size;              /**< バーテックスバッファのサイズ */
-    size_t current_buffer_offset;           /**< 現在バーテックスバッファ転送されているサイズ(=次転送する際のオフセット) */
+    size_t current_buffer_offset;           /**< 現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
 };
 
 renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {
@@ -208,12 +213,15 @@ cleanup:
 
 void ui_shader_destroy(renderer_backend_context_t* backend_context_, ui_shader_t** ui_shader_) {
     if(NULL == ui_shader_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided ui_shader_ is not valid.");
         return;
     }
     if(NULL == *ui_shader_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided *ui_shader_ is not valid.");
         return;
     }
     if(NULL == backend_context_) {
+        WARN_MESSAGE("ui_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
     ui_shader_vertex_buffer_destroy(backend_context_, *ui_shader_);
@@ -327,9 +335,11 @@ cleanup:
 
 void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_) {
     if(NULL == backend_context_) {
+        WARN_MESSAGE("ui_shader_vertex_buffer_destroy - Provided backend_context_ is not valid.");
         return;
     }
     if(NULL == ui_shader_) {
+        WARN_MESSAGE("ui_shader_vertex_buffer_destroy - Provided ui_shader_ is not valid.");
         return;
     }
     if(NULL != ui_shader_->ui_vbo) {
@@ -342,7 +352,7 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
     ui_shader_->vertex_buffer_size = 0;
 }
 
-renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, void* write_data_) {
+renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const void* write_data_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "backend_context_")
@@ -470,7 +480,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t ui_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const ui_shader_t* ui_shader_, renderer_backend_context_t* backend_context_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "projection_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_projection_matrix_set", "backend_context_")

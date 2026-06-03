@@ -45,6 +45,7 @@ typedef enum {
     FS_UTILS_FILE_OPEN_ERROR,   /**< 実行結果コード: ファイルオープンエラー */
     FS_UTILS_RUNTIME_ERROR,     /**< 実行結果コード: 実行時エラー */
     FS_UTILS_UNDEFINED_ERROR,   /**< 実行結果コード: 想定していないエラーが発生 */
+    FS_UTILS_EOF,               /**< 実行結果コード: ファイルを読み込んだ結果がEOF */
 } fs_utils_result_t;
 
 /**
@@ -129,8 +130,41 @@ void fs_utils_destroy(fs_utils_t** fs_utils_);
  * @retval FS_UTILS_OVERFLOW 処理過程でオーバーフローが発生
  * @retval FS_UTILS_LIMIT_EXCEEDED メモリ管理システムが管理するメモリ使用量上限超過
  * @retval FS_UTILS_SUCCESS ファイルの読み込みに成功し、正常終了
+ *
+ * @todo 失敗時にout_string_を不変にする
  */
 fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t* out_string_);
+
+/**
+ * @brief ファイルから1byteづつ読み込み、1行分をout_string_に格納する
+ *
+ * @note CRLF or LFは読み込んだ結果の文字列に含めない
+ * @note 最後の文字列コピー失敗時はout_string_が変更されている可能性がある
+ * @note fs_utils, filesystem周りのリファクタリング完了後、より効率の良い読み込み方法に変更する
+ * @note エラー発生時にはファイル位置が進んでいる可能性がある
+ *
+ * @param[in] fs_utils_ fs_utils_t構造体インスタンスへのポインタ
+ * @param[out] out_string_ 読み込んだ文字列の格納先
+ *
+ * @retval FS_UTILS_INVALID_ARGUMENT 以下のいずれか
+ * - fs_utils_ == NULL
+ * - out_string_ == NULL
+ * @retval FS_UTILS_DATA_CORRUPTED 以下のいずれか
+ * - fs_utils_内部データ破損
+ * - out_string_内部データ破損
+ * @retval FS_UTILS_BAD_OPERATION 以下のいずれか
+ * - ファイルオープンモードがFILESYSTEM_MODE_READでもFILESYSTEM_MODE_READ_PLUSでもない
+ * - メモリシステム未初期化
+ * @retval FS_UTILS_RUNTIME_ERROR ファイル読み込みでエラー発生
+ * @retval FS_UTILS_UNDEFINED_ERROR ファイル読み込みで不明なエラーが発生
+ * @retval FS_UTILS_EOF 読み込んだ結果EOF(1文字も読み込まずEOF)
+ * @retval FS_UTILS_LIMIT_EXCEEDED 以下のいずれか
+ * - 1行に含まれるbyte数が規定値(FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE)を超過
+ * - メモリ管理システムの管理変数が使用可能範囲を超過
+ * @retval FS_UTILS_NO_MEMORY メモリ確保失敗
+ * @retval FS_UTILS_SUCCESS 処理に成功し、正常終了
+ */
+fs_utils_result_t fs_utils_text_file_line_read(fs_utils_t* fs_utils_, choco_string_t* out_string_);
 
 /**
  * @brief fs_utils_が保持するファイルパス,ファイル名,拡張子の文字列からフルパス文字列を生成する

@@ -43,6 +43,15 @@ void test_fs_utils_create_config_set(const test_call_control_t* config_);
 void test_fs_utils_text_file_read_config_set(const test_call_control_t* config_);
 
 /**
+ * @brief fs_utils_text_file_line_read()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、fs_utils内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_fs_utils_text_file_line_read_config_set(const test_call_control_t* config_);
+
+/**
  * @brief fs_utils_fullpath_get()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、fs_utils内で管理している値が保持される
