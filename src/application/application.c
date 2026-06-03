@@ -75,7 +75,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/texture/texture.h"
-#include "engine/resource/loaders/stl_loader.h"
+#include "engine/resource/geometry/lit_mesh_geometry.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -520,7 +520,7 @@ application_result_t application_run(void) {
     static point_vertex_t point_vertices[8] = { 0 };
     static vec4u8_t point_colors[8] = { 0 };
 
-    stl_loader_t* stl_loader = NULL;
+    lit_mesh_geometry_t* lit_mesh_geometry = NULL;
     static point_normal_vertex_t* stl_vertices = NULL;
     static size_t stl_vertex_count = 0;
 
@@ -602,13 +602,30 @@ application_result_t application_run(void) {
     point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
 
     // STL Vertex
-    ret_resource = stl_loader_create(&stl_loader);  // TODO: エラー処理
-    ret_resource = stl_loader_ascii_load("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", stl_loader);
+    ret_resource = lit_mesh_geometry_create(&lit_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ERROR_MESSAGE("application_run - Failed to load stl.");
-        return APPLICATION_RUNTIME_ERROR;
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(%s) - Failed to create lit_mesh_geometry_t instance.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        goto cleanup;
     }
-    ret_resource = stl_loader_vertices_move(stl_loader, &stl_vertices, &stl_vertex_count);
+    ret_resource = lit_mesh_geometry_initialize_from_file("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", lit_mesh_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(%s) - Failed to initialize lit_mesh_geometry_t instance.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        goto cleanup;
+    }
+    ret_resource = lit_mesh_geometry_vertices_get(lit_mesh_geometry, &stl_vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(%s) - Failed to get vertices.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        goto cleanup;
+    }
+    ret_resource = lit_mesh_geometry_vertex_count_get(lit_mesh_geometry, &stl_vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run(%s) - Failed to get vertex count.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        goto cleanup;
+    }
     lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
 
     // MVP Matrix
@@ -706,12 +723,9 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
-    if(NULL != stl_vertices) {
-        memory_system_free(stl_vertices, sizeof(point_normal_vertex_t) * stl_vertex_count, MEMORY_TAG_GEOMETRY);
-        stl_vertices = NULL;
-        stl_vertex_count = 0;
+    if(NULL != lit_mesh_geometry) {
+        lit_mesh_geometry_destroy(&lit_mesh_geometry);
     }
-    stl_loader_destroy(&stl_loader);
     return ret;
 }
 
