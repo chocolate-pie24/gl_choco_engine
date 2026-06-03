@@ -1,3 +1,20 @@
+/** @ingroup renderer
+ *
+ * @file lit_mesh_shader.c
+ * @author chocolate-pie24
+ * @brief 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
+ *
+ * @note ライティング等がまだ未実装なので、当面は単色描画となる
+ *
+ * @version 0.1
+ * @date 2026-06-03
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -34,8 +51,8 @@ struct lit_mesh_shader {
     int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 
-    renderer_backend_vao_t* lit_mesh_vao;
-    renderer_backend_vbo_t* lit_mesh_vbo;
+    renderer_backend_vao_t* lit_mesh_vao;   /** シェーダーVAO */
+    renderer_backend_vbo_t* lit_mesh_vbo;   /**< 頂点情報VBO(point_normal_vertex_t) */
 
     size_t vertex_buffer_size;              /**< バーテックスバッファのサイズ */
     size_t current_buffer_offset;           /**< 現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
