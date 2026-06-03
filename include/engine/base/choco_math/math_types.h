@@ -59,6 +59,14 @@ typedef struct vec4u8 {
 } vec4u8_t;
 
 /**
+ * @brief int8_t型4次元ベクトル定義
+ *
+ */
+typedef struct vec4i8 {
+    int8_t elem[4]; /**< ベクトル要素格納配列 */
+} vec4i8_t;
+
+/**
  * @brief float型4x4行列定義
  * @warning 配列要素は行優先で格納すること
  *

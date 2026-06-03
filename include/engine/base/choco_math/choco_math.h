@@ -162,6 +162,19 @@ void vec4f_add(const vec4f_t* vec1_, const vec4f_t* vec2_, vec4f_t* out_vec4f_);
 void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t* out_vec4u8_);
 
 /**
+ * @brief 4次元ベクトルxyzwを初期化する
+ *
+ * @note out_vec4i8_ == NULLの場合はエラーメッセージを出力し、何もしない
+ *
+ * @param[in] x_ 初期化値(x)
+ * @param[in] y_ 初期化値(y)
+ * @param[in] z_ 初期化値(z)
+ * @param[in] w_ 初期化値(w)
+ * @param[out] out_vec4i8_ 初期化対象ベクトル
+ */
+void vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_, vec4i8_t* out_vec4i8_);
+
+/**
  * @brief 4行4列の行列の全要素を0にする
  *
  * @note out_mat_ == NULLの場合はエラーメッセージを出力し、何もしない

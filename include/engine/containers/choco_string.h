@@ -243,6 +243,19 @@ const char* choco_string_c_str(const choco_string_t* string_);
  */
 bool choco_string_equal(const char* str1_, const char* str2_);
 
+/**
+ * @brief str_内に部分文字列target_が存在するかを判定する
+ *
+ * @param[in] str_ 部分文字列target_を検索する文字列
+ * @param[in] target_ 検索する部分文字列
+ *
+ * @retval true 部分文字列target_が見つかった、もしくはtarget_が空文字列
+ * @retval false 以下のいずれか
+ * - str_ == NULL or target_ == NULL
+ * - 部分文字列が見つからなかった
+ */
+bool choco_string_substring_exists(const char* str_, const char* target_);
+
 #ifdef __cplusplus
 }
 #endif

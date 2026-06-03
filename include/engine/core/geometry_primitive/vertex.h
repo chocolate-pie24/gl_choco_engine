@@ -48,6 +48,15 @@ typedef struct point_vertex {
     vec3f_t position;   /**< 頂点座標 */
 } point_vertex_t;
 
+/**
+ * @brief 頂点座標と法線を持つ頂点情報構造体
+ *
+ */
+typedef struct point_normal_vertex {
+    vec3f_t position;   /**< 頂点座標 */
+    vec4i8_t normal;    /**< [Nx, Ny, Nz] + padding(4byte境界に揃えるため) */
+} point_normal_vertex_t;
+
 #ifdef __cplusplus
 }
 #endif

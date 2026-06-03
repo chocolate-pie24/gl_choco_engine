@@ -109,6 +109,7 @@ memory_system_result_t memory_system_create(void) {
     tmp->mem_tag_str[MEMORY_TAG_FILE_IO] = "file_io";
     tmp->mem_tag_str[MEMORY_TAG_CAMERA] = "camera";
     tmp->mem_tag_str[MEMORY_TAG_TEXTURE] = "texture";
+    tmp->mem_tag_str[MEMORY_TAG_GEOMETRY] = "geometry";
 
     // commit
     s_mem_sys_ptr = tmp;
@@ -403,6 +404,7 @@ static void NO_COVERAGE test_memory_system_create(void) {
         assert(0 == strcmp("file_io", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_FILE_IO]));
         assert(0 == strcmp("camera", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_CAMERA]));
         assert(0 == strcmp("texture", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_TEXTURE]));
+        assert(0 == strcmp("geometry", s_mem_sys_ptr->mem_tag_str[MEMORY_TAG_GEOMETRY]));
 
         memory_system_destroy();
         assert(NULL == s_mem_sys_ptr);

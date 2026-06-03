@@ -1,7 +1,7 @@
 /**
  * @file test_bmp_loader.h
  * @author chocolate-pie24
- * @brief test_bmp_loaderモジュール用テストAPI定義
+ * @brief bmp_loaderモジュール用テストAPI定義
  *
  * @version 0.1
  * @date 2026-05-18
