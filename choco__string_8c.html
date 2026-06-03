@@ -163,6 +163,9 @@ Functions</h2></td></tr>
 <tr class="memitem:af6b4b0a652dacd79d19fc0ef8a7fc8a8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#af6b4b0a652dacd79d19fc0ef8a7fc8a8">choco_string_equal</a> (const char *str1_, const char *str2_)</td></tr>
 <tr class="memdesc:af6b4b0a652dacd79d19fc0ef8a7fc8a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">2つの文字列が等しいかを判定する  <br /></td></tr>
 <tr class="separator:af6b4b0a652dacd79d19fc0ef8a7fc8a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a7d19a1c91dae5c7c1d961169b6f9d577">choco_string_substring_exists</a> (const char *str_, const char *target_)</td></tr>
+<tr class="memdesc:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="mdescLeft">&#160;</td><td class="mdescRight">str_内に部分文字列target_が存在するかを判定する  <br /></td></tr>
+<tr class="separator:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>文字列を格納するコンテナモジュールAPIの実装 </p>
@@ -666,6 +669,54 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>size_t 文字列長さ </dd></dl>
+
+</div>
+</div>
+<a id="a7d19a1c91dae5c7c1d961169b6f9d577" name="a7d19a1c91dae5c7c1d961169b6f9d577"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d19a1c91dae5c7c1d961169b6f9d577">&#9670;&#160;</a></span>choco_string_substring_exists()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool choco_string_substring_exists </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>target_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>str_内に部分文字列target_が存在するかを判定する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">str_</td><td>部分文字列target_を検索する文字列 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">target_</td><td>検索する部分文字列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>部分文字列target_が見つかった、もしくはtarget_が空文字列 </td></tr>
+    <tr><td class="paramname">false</td><td>以下のいずれか<ul>
+<li>str_ == NULL or target_ == NULL</li>
+<li>部分文字列が見つからなかった </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

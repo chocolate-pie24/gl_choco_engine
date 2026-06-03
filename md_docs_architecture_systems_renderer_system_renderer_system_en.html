@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: Renderer System Architecture(English)</title>
+<title>GL CHOCO ENGINE: Renderer System Architecture</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,49 +91,55 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_renderer_
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Renderer System Architecture(English) </div></div>
+  <div class="headertitle"><div class="title">Renderer System Architecture </div></div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_renderer_system_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md118"></a>
+<h1><a class="anchor" id="autotoc_md124"></a>
 Renderer System Architecture</h1>
-<p><code>Renderer System</code> is a subsystem that provides rendering functionality to higher layers, and is composed of the following sublayers.</p>
+<p>The <code>Renderer System</code> provides rendering functionality to upper layers. It consists of the following sublayers:</p>
 <ul>
-<li><code>Renderer Backend</code>, which provides graphics-API-independent interface APIs and allows the graphics API backend implementation to be replaced</li>
-<li><code>Renderer Core</code>, which provides modules used throughout the entire <code>Renderer System</code></li>
-<li><code>Renderer Resources</code>, which provides renderer-layer rendering resource modules intended for use by higher layers</li>
+<li><code>Renderer Backend</code>, which provides graphics API-independent interface APIs and allows the underlying graphics API to be replaced.</li>
+<li><code>Renderer Core</code>, which provides modules used across the entire <code>Renderer System</code>.</li>
+<li><code>Renderer Resources</code>, which provides renderer-layer rendering resource modules used by upper layers.</li>
 </ul>
-<p>In addition, <code>Renderer Frontend</code> is also planned to be added, but it is currently not implemented.</p>
+<p><code>Renderer Frontend</code> is planned to be added in the future, but it has not been implemented yet.</p>
 <div class="image">
 <img src="layer.png" alt=""/>
 <div class="caption">
 Layer Diagram</div></div>
-    <h2><a class="anchor" id="autotoc_md119"></a>
+    <h2><a class="anchor" id="autotoc_md125"></a>
 Sublayer Details</h2>
-<h3><a class="anchor" id="autotoc_md120"></a>
+<h3><a class="anchor" id="autotoc_md126"></a>
 Renderer Backend</h3>
 <p><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_en.html">Renderer Backend Architecture</a></p>
-<h3><a class="anchor" id="autotoc_md121"></a>
+<h3><a class="anchor" id="autotoc_md127"></a>
 Renderer Core</h3>
 <p><code>Renderer Core</code> provides the following modules.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Module Name   </th><th class="markdownTableHeadNone">Role    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">renderer_err_utils   </td><td class="markdownTableBodyNone">Used throughout the entire <code>Renderer System</code>, and provides functionality for converting lower-layer result codes and converting result codes into strings    </td></tr>
+<td class="markdownTableBodyNone">renderer_err_utils   </td><td class="markdownTableBodyNone">Provides utilities used across the entire <code>Renderer System</code> for converting result codes from lower-layer modules and converting renderer result codes into strings.    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">renderer_memory   </td><td class="markdownTableBodyNone">Provides wrapper APIs over <code>core/choco_memory</code> to prevent misuse of memory tags within the <code>Renderer System</code> and reduce unnecessary result-code conversion handling    </td></tr>
+<td class="markdownTableBodyNone">renderer_memory   </td><td class="markdownTableBodyNone">Provides wrapper APIs over <code>core/choco_memory</code> to prevent misuse of memory tags within the <code>Renderer System</code> and reduce unnecessary result-code conversion logic.    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">renderer_types   </td><td class="markdownTableBodyNone">Provides graphics-API-independent data types used within the <code>Renderer System</code>   </td></tr>
+<td class="markdownTableBodyNone">renderer_types   </td><td class="markdownTableBodyNone">Provides graphics API-independent types used within the <code>Renderer System</code>.   </td></tr>
 </table>
-<h3><a class="anchor" id="autotoc_md122"></a>
+<h3><a class="anchor" id="autotoc_md128"></a>
 Renderer Resources</h3>
-<p><code>Renderer Resources</code> currently provides the following module.</p>
+<p><code>Renderer Resources</code> provides renderer-layer rendering resource modules used by upper layers.</p>
+<p>Since <code>Renderer Frontend</code> has not been implemented yet, <code>Renderer Resources</code> currently functions as an intermediate resource layer between upper layers and <code>Renderer Backend</code>. Each resource groups a shader program, cached uniform locations, shader-specific VAO/VBO resources, and GPU data upload operations.</p>
+<p><code>Renderer Resources</code> currently provides the following modules.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Module Name   </th><th class="markdownTableHeadNone">Role    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>   </td><td class="markdownTableBodyNone">Provides creation, usage, and related uniform operations for UI rendering shader resources   </td></tr>
+<td class="markdownTableBodyNone"><a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>   </td><td class="markdownTableBodyNone">Provides shader resources for textured UI quad rendering. It manages a UI shader program, MVP matrix uniform locations, and VAO/VBO resources configured for vertex position and texture-coordinate vertex attributes.    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="structline__shader.html" title="線分描画用シェーダーリソース構造体">line_shader</a>   </td><td class="markdownTableBodyNone">Provides shader resources for single-color 3D line rendering. It manages a line shader program, MVP matrix and color uniform locations, and VAO/VBO resources configured for position-only line vertices. It is intended for simple line primitives such as debug lines, AABB edges, and grid lines.    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="structpoint__shader.html" title="ポイント描画用シェーダーリソース構造体">point_shader</a>   </td><td class="markdownTableBodyNone">Provides shader resources for point-cloud and point primitive rendering. It manages a point shader program, MVP matrix uniform locations, a VAO, and separate VBOs for position and color vertex attributes. Color data is stored as normalized unsigned-byte RGBA values and is treated as a vec4 in the shader. It is intended for point-based visualization data such as debug points, measurement points, and point clouds.   </td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_renderer_
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_renderer_system_ja"></a> </p>
-<h1><a class="anchor" id="autotoc_md123"></a>
+<h1><a class="anchor" id="autotoc_md129"></a>
 Renderer System Architecture</h1>
 <p><code>Renderer System</code>は、上位レイヤーへ描画機能を提供するシステムで、以下のサブレイヤーで構成される。</p>
 <ul>
@@ -108,12 +108,12 @@ Renderer System Architecture</h1>
 <img src="layer.png" alt=""/>
 <div class="caption">
 レイヤー構成図</div></div>
-    <h2><a class="anchor" id="autotoc_md124"></a>
+    <h2><a class="anchor" id="autotoc_md130"></a>
 サブレイヤー詳細</h2>
-<h3><a class="anchor" id="autotoc_md125"></a>
+<h3><a class="anchor" id="autotoc_md131"></a>
 Renderer Backend</h3>
 <p><a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_ja.html">Renderer Backend Architecture</a></p>
-<h3><a class="anchor" id="autotoc_md126"></a>
+<h3><a class="anchor" id="autotoc_md132"></a>
 Renderer Core</h3>
 <p><code>Renderer Core</code>は下記のモジュールを提供する。</p>
 <table class="markdownTable">
@@ -126,14 +126,20 @@ Renderer Core</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">renderer_types   </td><td class="markdownTableBodyNone"><code>Renderer System</code>内で使用するグラフィックスAPI非依存の型を提供する   </td></tr>
 </table>
-<h3><a class="anchor" id="autotoc_md127"></a>
+<h3><a class="anchor" id="autotoc_md133"></a>
 Renderer Resources</h3>
+<p><code>Renderer Resources</code>は、上位レイヤーが使用するためのレンダラー層の描画リソースモジュールを提供する。</p>
+<p>現状では<code>Renderer Frontend</code>が未実装であるため、<code>Renderer Resources</code>は上位レイヤーと<code>Renderer Backend</code>の間に位置する中間リソース層として機能する。 各リソースは、シェーダープログラム、キャッシュ済みのuniform location、シェーダー専用のVAO/VBO、GPUへのデータ転送処理をまとめて管理する。</p>
 <p><code>Renderer Resources</code>は現状では下記のモジュールを提供する。</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">モジュール名称   </th><th class="markdownTableHeadNone">役割    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>   </td><td class="markdownTableBodyNone">UI描画用シェーダーリソースの生成・使用・関連ユニフォーム操作を提供する   </td></tr>
+<td class="markdownTableBodyNone"><a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>   </td><td class="markdownTableBodyNone">テクスチャ付きUI四角形描画用のシェーダーリソースを提供する。UI用シェーダープログラム、MVP行列のuniform location、頂点座標とテクスチャ座標のvertex attribute用に設定されたVAO/VBOを管理する。    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="structline__shader.html" title="線分描画用シェーダーリソース構造体">line_shader</a>   </td><td class="markdownTableBodyNone">単色の3D線分描画用のシェーダーリソースを提供する。線分描画用シェーダープログラム、MVP行列と色情報のuniform location、positionのみを持つline vertex用に設定されたVAO/VBOを管理する。主にdebug line、AABBの辺、grid lineなどの単純な線分プリミティブの描画を想定している。    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="structpoint__shader.html" title="ポイント描画用シェーダーリソース構造体">point_shader</a>   </td><td class="markdownTableBodyNone">点群および点プリミティブ描画用のシェーダーリソースを提供する。ポイント描画用シェーダープログラム、MVP行列のuniform location、VAO、頂点座標用VBO、色情報用VBOを管理する。色情報は正規化された符号なし8bit整数のRGBA値として格納され、シェーダー側ではvec4として扱われる。主にdebug point、計測点、点群可視化などの点ベース可視化データの描画を想定している。   </td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

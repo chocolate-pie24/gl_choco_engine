@@ -12,12 +12,14 @@ var searchData=
   ['vertex_5fbuffer_5fbind_9',['vertex_buffer_bind',['../structrenderer__vbo__vtable.html#af68af8ff528e7131163410968c0c232b',1,'renderer_vbo_vtable']]],
   ['vertex_5fbuffer_5fcreate_10',['vertex_buffer_create',['../structrenderer__vbo__vtable.html#a6152262ed994c636822bc340b96fddbe',1,'renderer_vbo_vtable']]],
   ['vertex_5fbuffer_5fdestroy_11',['vertex_buffer_destroy',['../structrenderer__vbo__vtable.html#afa43b6f156b63b7e70423768359cb37b',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fsize_12',['vertex_buffer_size',['../structui__shader.html#a25326df403e1b8fce33b93562e7e37be',1,'ui_shader']]],
+  ['vertex_5fbuffer_5fsize_12',['vertex_buffer_size',['../structlit__mesh__shader.html#ac433cd5bf4a22b06d3e2367b1e927d50',1,'lit_mesh_shader::vertex_buffer_size()'],['../structui__shader.html#a25326df403e1b8fce33b93562e7e37be',1,'ui_shader::vertex_buffer_size()'],['../structline__shader.html#a64d6de1666c2f83a5fe6c702a6773f8b',1,'line_shader::vertex_buffer_size()']]],
   ['vertex_5fbuffer_5funbind_13',['vertex_buffer_unbind',['../structrenderer__vbo__vtable.html#af7273c51b7e6eea94dc3a4ce3892b211',1,'renderer_vbo_vtable']]],
   ['vertex_5fbuffer_5fvertex_5fload_14',['vertex_buffer_vertex_load',['../structrenderer__vbo__vtable.html#ad767b9e049e1a283c38442e8e6bca87e',1,'renderer_vbo_vtable']]],
   ['vertex_5fbuffer_5fvertex_5fsubload_15',['vertex_buffer_vertex_subload',['../structrenderer__vbo__vtable.html#a22e2db04e394ad492d38d89ca1a5311a',1,'renderer_vbo_vtable']]],
-  ['vertex_5fshader_5fhandle_16',['vertex_shader_handle',['../structrenderer__backend__shader.html#af18ecb3fcebaf3cf9e70fc1537bea475',1,'renderer_backend_shader']]],
-  ['view_5fmatrix_17',['view_matrix',['../structcamera.html#ae911ff731aad9f8fdfd79fb72a3f128b',1,'camera']]],
-  ['view_5fmatrix_5flocation_18',['view_matrix_location',['../structui__shader.html#a8a3724e5874ee58bee5799393309acd2',1,'ui_shader']]],
-  ['vtable_19',['vtable',['../structplatform__context.html#a2f20108ccf2232f4ddf7d86710f7e8a7',1,'platform_context']]]
+  ['vertex_5fcount_16',['vertex_count',['../structstl__loader.html#aa6b8ebaae8e208ef4ea0da77a38882e2',1,'stl_loader']]],
+  ['vertex_5fshader_5fhandle_17',['vertex_shader_handle',['../structrenderer__backend__shader.html#af18ecb3fcebaf3cf9e70fc1537bea475',1,'renderer_backend_shader']]],
+  ['vertices_18',['vertices',['../structstl__loader.html#a840810595eecd4645af9f0b19ca6c8ac',1,'stl_loader']]],
+  ['view_5fmatrix_19',['view_matrix',['../structcamera.html#ae911ff731aad9f8fdfd79fb72a3f128b',1,'camera']]],
+  ['view_5fmatrix_5flocation_20',['view_matrix_location',['../structline__shader.html#a06288fd11b8e121288109fa797b08d32',1,'line_shader::view_matrix_location()'],['../structlit__mesh__shader.html#a30892f35c054dc5b31b8361a90871448',1,'lit_mesh_shader::view_matrix_location()'],['../structpoint__shader.html#a71a70400e198eb2a2839e51b6b054e48',1,'point_shader::view_matrix_location()'],['../structui__shader.html#a8a3724e5874ee58bee5799393309acd2',1,'ui_shader::view_matrix_location()']]],
+  ['vtable_21',['vtable',['../structplatform__context.html#a2f20108ccf2232f4ddf7d86710f7e8a7',1,'platform_context']]]
 ];

@@ -6,5 +6,6 @@ var structrenderer__shader__vtable =
     [ "renderer_shader_link", "structrenderer__shader__vtable.html#a3eccf2f8842d8bcbfa7d511b29ad9a1d", null ],
     [ "renderer_shader_mat4f_uniform_set", "structrenderer__shader__vtable.html#a4886342bacf67b2922aaf8185abdc6ed", null ],
     [ "renderer_shader_uniform_location_get", "structrenderer__shader__vtable.html#a82e7ac607d3b48f18dfa0ad01e535802", null ],
-    [ "renderer_shader_use", "structrenderer__shader__vtable.html#aa48d157d32393e8bf43bc2ce695a6a6c", null ]
+    [ "renderer_shader_use", "structrenderer__shader__vtable.html#aa48d157d32393e8bf43bc2ce695a6a6c", null ],
+    [ "renderer_shader_vec4u8_uniform_set", "structrenderer__shader__vtable.html#a5d77e76470b2b0ff5eb43dce6dec4546", null ]
 ];

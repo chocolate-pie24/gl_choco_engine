@@ -7,10 +7,11 @@ var searchData=
   ['renderer_5fshader_5fmat4f_5funiform_5fset_4',['renderer_shader_mat4f_uniform_set',['../structrenderer__shader__vtable.html#a4886342bacf67b2922aaf8185abdc6ed',1,'renderer_shader_vtable']]],
   ['renderer_5fshader_5funiform_5flocation_5fget_5',['renderer_shader_uniform_location_get',['../structrenderer__shader__vtable.html#a82e7ac607d3b48f18dfa0ad01e535802',1,'renderer_shader_vtable']]],
   ['renderer_5fshader_5fuse_6',['renderer_shader_use',['../structrenderer__shader__vtable.html#aa48d157d32393e8bf43bc2ce695a6a6c',1,'renderer_shader_vtable']]],
-  ['renderer_5ftexture_5fbind_7',['renderer_texture_bind',['../structrenderer__texture__vtable.html#ae5f6f9b49fa538b23370c189ec9a07b8',1,'renderer_texture_vtable']]],
-  ['renderer_5ftexture_5fcreate_8',['renderer_texture_create',['../structrenderer__texture__vtable.html#a82e47e05dfcc5573307da8d61433b267',1,'renderer_texture_vtable']]],
-  ['renderer_5ftexture_5fdestroy_9',['renderer_texture_destroy',['../structrenderer__texture__vtable.html#af978b6784f0a1888de8e5128cbe2630a',1,'renderer_texture_vtable']]],
-  ['renderer_5ftexture_5fpixel_5fupload_10',['renderer_texture_pixel_upload',['../structrenderer__texture__vtable.html#a75e802d0d472cd6af44afbadf482d5fd',1,'renderer_texture_vtable']]],
-  ['renderer_5ftexture_5funbind_11',['renderer_texture_unbind',['../structrenderer__texture__vtable.html#ad67e0b0dcc44933a8bfd5cf5b2514613',1,'renderer_texture_vtable']]],
-  ['right_5fbutton_5fpressed_12',['right_button_pressed',['../structinput__snapshot.html#ad9e980f1fd1af2458e21e4b0c11db690',1,'input_snapshot']]]
+  ['renderer_5fshader_5fvec4u8_5funiform_5fset_7',['renderer_shader_vec4u8_uniform_set',['../structrenderer__shader__vtable.html#a5d77e76470b2b0ff5eb43dce6dec4546',1,'renderer_shader_vtable']]],
+  ['renderer_5ftexture_5fbind_8',['renderer_texture_bind',['../structrenderer__texture__vtable.html#ae5f6f9b49fa538b23370c189ec9a07b8',1,'renderer_texture_vtable']]],
+  ['renderer_5ftexture_5fcreate_9',['renderer_texture_create',['../structrenderer__texture__vtable.html#a82e47e05dfcc5573307da8d61433b267',1,'renderer_texture_vtable']]],
+  ['renderer_5ftexture_5fdestroy_10',['renderer_texture_destroy',['../structrenderer__texture__vtable.html#af978b6784f0a1888de8e5128cbe2630a',1,'renderer_texture_vtable']]],
+  ['renderer_5ftexture_5fpixel_5fupload_11',['renderer_texture_pixel_upload',['../structrenderer__texture__vtable.html#a75e802d0d472cd6af44afbadf482d5fd',1,'renderer_texture_vtable']]],
+  ['renderer_5ftexture_5funbind_12',['renderer_texture_unbind',['../structrenderer__texture__vtable.html#ad67e0b0dcc44933a8bfd5cf5b2514613',1,'renderer_texture_vtable']]],
+  ['right_5fbutton_5fpressed_13',['right_button_pressed',['../structinput__snapshot.html#ad9e980f1fd1af2458e21e4b0c11db690',1,'input_snapshot']]]
 ];

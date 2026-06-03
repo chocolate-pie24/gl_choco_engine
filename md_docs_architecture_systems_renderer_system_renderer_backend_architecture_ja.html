@@ -95,12 +95,12 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_renderer_
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_renderer_backend_ja"></a> </p>
-<h1><a class="anchor" id="autotoc_md110"></a>
+<h1><a class="anchor" id="autotoc_md116"></a>
 Renderer Backend architecture</h1>
-<h2><a class="anchor" id="autotoc_md111"></a>
+<h2><a class="anchor" id="autotoc_md117"></a>
 目的と位置づけ</h2>
 <p><code>Renderer Backend</code>は、アプリケーション開発者がグラフィックスAPIを意識せず、グラフィックスアプリケーションを構築できるように、 差し替え可能でグラフィックスAPI非依存のインターフェイスAPIを提供するサブシステムである。</p>
-<h2><a class="anchor" id="autotoc_md112"></a>
+<h2><a class="anchor" id="autotoc_md118"></a>
 Renderer Backendコンセプト</h2>
 <p><code>Renderer Backend</code>は、目的を達成するために、オブジェクト指向のデザインパターンであるStrategyを適用した。</p>
 <p><code>Renderer Backend</code>が提供する機能を大別してVAO, VBO, Shader, Textureの4つに分類し、それぞれグラフィックスAPIの差異を吸収するためのInterfaceを設ける。 一方、アプリケーションレイヤー等の上位レイヤーが<code>Renderer Backend</code>の機能を使用するための窓口はシンプルにしたかったため、Contextは1個にした。 なお、VAO, VBO, Shader, Textureは、同一のグラフィックスAPIを使用することを前提としており、セットで選択する(混在は想定していない)。</p>
@@ -149,13 +149,13 @@ strategy</div></div>
 <td class="markdownTableBodyNone">VBOConcrete2   </td><td class="markdownTableBodyNone">Not implemented   </td><td class="markdownTableBodyNone">対応グラフィックスAPIが増えた際に追加する   </td></tr>
 </table>
 <p>*1: Contextは、外部公開API定義用ヘッダを公開APIの見通しを良くするためcontext, context_shader, context_texture, context_vao, context_vboに分割しているが、実装は全てrenderer_backend_context/context.cに記載している。</p>
-<h3><a class="anchor" id="autotoc_md113"></a>
+<h3><a class="anchor" id="autotoc_md119"></a>
 Concrete(Shader, Texture, VAO, VBO)の選択(現状)</h3>
 <p>現状では<code>Renderer Backend</code>のRenderer Backend Context初期化時にグラフィックスAPIを指定することで使用するグラフィックスAPIを選択している。</p>
-<h3><a class="anchor" id="autotoc_md114"></a>
+<h3><a class="anchor" id="autotoc_md120"></a>
 Concrete(Shader, Texture, VAO, VBO)の選択(将来)</h3>
 <p>現状の仕様では、全グラフィックスAPIの内部実装がビルド可能であることが求められるが、実現は難しい。将来的にはビルドオプションでグラフィックスAPIを指定する方式に移行する。</p>
-<h2><a class="anchor" id="autotoc_md115"></a>
+<h2><a class="anchor" id="autotoc_md121"></a>
 現状の非対応項目</h2>
 <p>現状では以下には対応していない。GLCEの機能拡張に伴い、必要に応じて対応する。</p>
 <ul>
@@ -163,10 +163,10 @@ Concrete(Shader, Texture, VAO, VBO)の選択(将来)</h3>
 <li>実行時の使用グラフィックスAPI切り替え</li>
 <li>複数のグラフィックスAPIの混在</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md116"></a>
+<h2><a class="anchor" id="autotoc_md122"></a>
 設定方法</h2>
 <p>現状では設定項目はなし。</p>
-<h2><a class="anchor" id="autotoc_md117"></a>
+<h2><a class="anchor" id="autotoc_md123"></a>
 参照</h2>
 <p>対応グラフィックスAPIを追加する際には、<a class="el" href="md_docs_guide_renderer_backend_adding_concretes_ja.html">Renderer System Guide</a>を参照のこと。 </p>
 </div></div><!-- contents -->

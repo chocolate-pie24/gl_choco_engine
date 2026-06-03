@@ -36,12 +36,13 @@ var searchData=
   ['flight_5fcamera_5fcommand_5frot_5fyaw_5fplus_33',['FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS',['../flight__camera_8h.html#a6c8436ab16da9dc8b9b7e19754a2bb1ea2d2d768196c30ed272cf7cf2ad4fca3b',1,'flight_camera.h']]],
   ['fs_5futils_5fbad_5foperation_34',['FS_UTILS_BAD_OPERATION',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7aa336d106e17bd9c53e5e43e5d69688ef',1,'fs_utils.h']]],
   ['fs_5futils_5fdata_5fcorrupted_35',['FS_UTILS_DATA_CORRUPTED',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2860cda72dd771e9ee76f261d068ab73',1,'fs_utils.h']]],
-  ['fs_5futils_5ffile_5fopen_5ferror_36',['FS_UTILS_FILE_OPEN_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7ac9204891220c299656ed0f8b1b05bcc3',1,'fs_utils.h']]],
-  ['fs_5futils_5finvalid_5fargument_37',['FS_UTILS_INVALID_ARGUMENT',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a6aec849578455ad13a3a073cf1f5f6c7',1,'fs_utils.h']]],
-  ['fs_5futils_5flimit_5fexceeded_38',['FS_UTILS_LIMIT_EXCEEDED',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7ac1dfd204212d230324bf0ad1b0b23eab',1,'fs_utils.h']]],
-  ['fs_5futils_5fno_5fmemory_39',['FS_UTILS_NO_MEMORY',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a593ea001eb90f380b0b9a8f0ad485bd3',1,'fs_utils.h']]],
-  ['fs_5futils_5foverflow_40',['FS_UTILS_OVERFLOW',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a92c75a04ec7bc9b8508b29964a8352bb',1,'fs_utils.h']]],
-  ['fs_5futils_5fruntime_5ferror_41',['FS_UTILS_RUNTIME_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7acc6b06e5ad953cab2eb0bf11ed20e31f',1,'fs_utils.h']]],
-  ['fs_5futils_5fsuccess_42',['FS_UTILS_SUCCESS',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7aa9757173623735f26a6fcfde7b02f4a4',1,'fs_utils.h']]],
-  ['fs_5futils_5fundefined_5ferror_43',['FS_UTILS_UNDEFINED_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2268e0dd4802f2ed7f51e535f4508a63',1,'fs_utils.h']]]
+  ['fs_5futils_5feof_36',['FS_UTILS_EOF',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2c2538477bbd4b878f8ee1d59c792f12',1,'fs_utils.h']]],
+  ['fs_5futils_5ffile_5fopen_5ferror_37',['FS_UTILS_FILE_OPEN_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7ac9204891220c299656ed0f8b1b05bcc3',1,'fs_utils.h']]],
+  ['fs_5futils_5finvalid_5fargument_38',['FS_UTILS_INVALID_ARGUMENT',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a6aec849578455ad13a3a073cf1f5f6c7',1,'fs_utils.h']]],
+  ['fs_5futils_5flimit_5fexceeded_39',['FS_UTILS_LIMIT_EXCEEDED',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7ac1dfd204212d230324bf0ad1b0b23eab',1,'fs_utils.h']]],
+  ['fs_5futils_5fno_5fmemory_40',['FS_UTILS_NO_MEMORY',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a593ea001eb90f380b0b9a8f0ad485bd3',1,'fs_utils.h']]],
+  ['fs_5futils_5foverflow_41',['FS_UTILS_OVERFLOW',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a92c75a04ec7bc9b8508b29964a8352bb',1,'fs_utils.h']]],
+  ['fs_5futils_5fruntime_5ferror_42',['FS_UTILS_RUNTIME_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7acc6b06e5ad953cab2eb0bf11ed20e31f',1,'fs_utils.h']]],
+  ['fs_5futils_5fsuccess_43',['FS_UTILS_SUCCESS',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7aa9757173623735f26a6fcfde7b02f4a4',1,'fs_utils.h']]],
+  ['fs_5futils_5fundefined_5ferror_44',['FS_UTILS_UNDEFINED_ERROR',['../fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2268e0dd4802f2ed7f51e535f4508a63',1,'fs_utils.h']]]
 ];

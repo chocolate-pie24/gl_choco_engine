@@ -95,12 +95,12 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_camera_sy
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_camera_system_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md68"></a>
+<h1><a class="anchor" id="autotoc_md74"></a>
 Camera System Architecture</h1>
-<h2><a class="anchor" id="autotoc_md69"></a>
+<h2><a class="anchor" id="autotoc_md75"></a>
 Purpose and Positioning</h2>
 <p>The <code>Camera System</code> is a subsystem that provides camera state management and control functionality in three-dimensional space. This system provides upper layers with a unified API for creating, retrieving, and deleting cameras, as well as for handling position, orientation, view matrices, and projection matrices. Control functionality for each camera type is also included in the responsibilities of this system. As a result, upper layers can use camera functionality without being aware of the details of individual camera implementations or internal memory management.</p>
-<h2><a class="anchor" id="autotoc_md70"></a>
+<h2><a class="anchor" id="autotoc_md76"></a>
 Dependency on External Layers</h2>
 <p>The <code>Camera System</code> internally depends on the following layers.</p>
 <div class="fragment"><div class="line">graph TD</div>
@@ -117,7 +117,7 @@ Dependency on External Layers</h2>
 <div class="line">    CONTAINERS --&gt; BASE</div>
 <div class="line"> </div>
 <div class="line">    CORE --&gt; BASE</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md71"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md77"></a>
 Internal Structure of the Camera System</h2>
 <div class="fragment"><div class="line">graph TD</div>
 <div class="line">    subgraph CAMERA_CONTROLLER[camera_controller]</div>
@@ -150,7 +150,7 @@ Internal Structure of the Camera System</h2>
 <div class="line">    CAMERA_MEMORY --&gt; CAMERA_TYPES</div>
 <div class="line"> </div>
 <div class="line">    CAMERA_ERR_UTILS --&gt; CAMERA_TYPES</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md72"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md78"></a>
 Roles and Characteristics of the Included Modules</h2>
 <p>The roles and characteristics of the modules included in the <code>Camera System</code> are as follows.</p>
 <table class="markdownTable">
@@ -170,7 +170,7 @@ Roles and Characteristics of the Included Modules</h2>
 <td class="markdownTableBodyNone">camera_types   </td><td class="markdownTableBodyNone">Provides data types, constants, and result codes used throughout the <code>Camera System</code>.   </td><td class="markdownTableBodyNone">A common foundational module for the <code>Camera System</code>.   </td></tr>
 </table>
 <p>(*) A flight camera is a camera that can move freely up, down, left, and right in three-dimensional space and can change its own orientation (Pitch / Yaw).</p>
-<h2><a class="anchor" id="autotoc_md73"></a>
+<h2><a class="anchor" id="autotoc_md79"></a>
 Details of &lt;tt&gt;camera_manager&lt;/tt&gt;</h2>
 <p><code><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a></code> is a module that centrally manages multiple camera instances and has the following constraints and characteristics.</p>
 <ul>
@@ -183,14 +183,14 @@ Details of &lt;tt&gt;camera_manager&lt;/tt&gt;</h2>
 <li><code><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a></code> itself and its management array are treated as long-lived resources and are allocated using <code>Linear Allocator</code>.</li>
 </ul>
 <p>(*1) The array size may be changed in the future to a variable-length configuration using <code>dynamic_array</code>.</p>
-<h2><a class="anchor" id="autotoc_md74"></a>
+<h2><a class="anchor" id="autotoc_md80"></a>
 Camera Coordinate System</h2>
 <p>The cameras used in GLCE follow the coordinate system described below.</p>
 <ul>
 <li>Camera forward direction: negative Z-axis</li>
 <li>Coordinate system: right-handed coordinate system</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md75"></a>
+<h2><a class="anchor" id="autotoc_md81"></a>
 Policy for Using Matrices and Vectors</h2>
 <p>In GLCE, matrices and vectors are handled as follows.</p>
 <ul>

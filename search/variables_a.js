@@ -9,6 +9,6 @@ var searchData=
   ['memory_5fpool_6',['memory_pool',['../structring__queue.html#adacee6cd010ddf98f59d3a950d9b17c1',1,'ring_queue::memory_pool()'],['../structlinear__alloc.html#a032629fd46fe38a88f3b389c5d931bb6',1,'linear_alloc::memory_pool()']]],
   ['min_5ffilter_5fconfig_7',['min_filter_config',['../structrenderer__backend__texture.html#af39dff6e3ba5f3f52e17ea0079c45844',1,'renderer_backend_texture']]],
   ['mode_8',['mode',['../structfilesystem.html#afdde9f1519c91b6c155f8997e610bfea',1,'filesystem::mode()'],['../structfs__utils.html#a41bc794bf02f202db1b4adada8c313bd',1,'fs_utils::mode()']]],
-  ['model_5fmatrix_5flocation_9',['model_matrix_location',['../structui__shader.html#a643bded41cccf412181b3cc9a1fd6d69',1,'ui_shader']]],
+  ['model_5fmatrix_5flocation_9',['model_matrix_location',['../structline__shader.html#af9d0cb4a204688d574c2c9b2f1a363ac',1,'line_shader::model_matrix_location()'],['../structlit__mesh__shader.html#ae667a2423946efe8305044a926b337e6',1,'lit_mesh_shader::model_matrix_location()'],['../structpoint__shader.html#a37dd13e12ea2cb09a2c088ba7cbb7631',1,'point_shader::model_matrix_location()'],['../structui__shader.html#a643bded41cccf412181b3cc9a1fd6d69',1,'ui_shader::model_matrix_location()']]],
   ['mouse_5fevent_5fqueue_10',['mouse_event_queue',['../structapp__state.html#a99a550e9c9760aba27852014c2fd69c1',1,'app_state']]]
 ];

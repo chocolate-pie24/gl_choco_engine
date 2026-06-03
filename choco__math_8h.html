@@ -100,6 +100,7 @@ $(document).ready(function(){initNavTree('choco__math_8h.html',''); initResizabl
 <p>GLCE以外のプロジェクトでも使用可能な数学演算定義  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
+<code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for choco_math.h:</div>
@@ -108,7 +109,8 @@ Include dependency graph for choco_math.h:</div>
 <map name="ainclude_2engine_2base_2choco__math_2choco__math_8h" id="ainclude_2engine_2base_2choco__math_2choco__math_8h">
 <area shape="rect" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="25,5,225,45"/>
 <area shape="rect" title=" " alt="" coords="5,101,88,126"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="112,93,296,133"/>
+<area shape="rect" title=" " alt="" coords="154,181,225,207"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="163,93,347,133"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -161,6 +163,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a7dbff4c06bc0e559d1e033e2dea746a2">vec4f_add</a> (const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *vec1_, const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *vec2_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *out_vec4f_)</td></tr>
 <tr class="memdesc:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する  <br /></td></tr>
 <tr class="separator:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77fde56188d5890bdc6ec3e02c449e06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a77fde56188d5890bdc6ec3e02c449e06">vec4u8_initialize</a> (uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, <a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> *out_vec4u8_)</td></tr>
+<tr class="memdesc:a77fde56188d5890bdc6ec3e02c449e06"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルrgbaを初期化する  <br /></td></tr>
+<tr class="separator:a77fde56188d5890bdc6ec3e02c449e06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae793e97336721694da9d952fb0814ad2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ae793e97336721694da9d952fb0814ad2">vec4i8_initialize</a> (int8_t x_, int8_t y_, int8_t z_, int8_t w_, <a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a> *out_vec4i8_)</td></tr>
+<tr class="memdesc:ae793e97336721694da9d952fb0814ad2"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルxyzwを初期化する  <br /></td></tr>
+<tr class="separator:ae793e97336721694da9d952fb0814ad2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a341fa9c2f49c25afce7a2938ae7554b1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a341fa9c2f49c25afce7a2938ae7554b1">mat4f_zero</a> (<a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *out_mat_)</td></tr>
 <tr class="memdesc:a341fa9c2f49c25afce7a2938ae7554b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">4行4列の行列の全要素を0にする  <br /></td></tr>
 <tr class="separator:a341fa9c2f49c25afce7a2938ae7554b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1134,6 +1142,124 @@ X, Y, Zの順で回転する</dd></dl>
     <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w) </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4f_</td><td>初期化対象ベクトル </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae793e97336721694da9d952fb0814ad2" name="ae793e97336721694da9d952fb0814ad2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae793e97336721694da9d952fb0814ad2">&#9670;&#160;</a></span>vec4i8_initialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vec4i8_initialize </td>
+          <td>(</td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>x_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>y_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>z_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>w_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a> *&#160;</td>
+          <td class="paramname"><em>out_vec4i8_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>4次元ベクトルxyzwを初期化する </p>
+<dl class="section note"><dt>Note</dt><dd>out_vec4i8_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4i8_</td><td>初期化対象ベクトル </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a77fde56188d5890bdc6ec3e02c449e06" name="a77fde56188d5890bdc6ec3e02c449e06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77fde56188d5890bdc6ec3e02c449e06">&#9670;&#160;</a></span>vec4u8_initialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vec4u8_initialize </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>r_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>g_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>b_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>a_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> *&#160;</td>
+          <td class="paramname"><em>out_vec4u8_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>4次元ベクトルrgbaを初期化する </p>
+<dl class="section note"><dt>Note</dt><dd>out_vec4u8_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">r_</td><td>初期化値(r) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">g_</td><td>初期化値(g) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_</td><td>初期化値(b) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">a_</td><td>初期化値(a) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4u8_</td><td>初期化対象ベクトル </td></tr>
   </table>
   </dd>
 </dl>

@@ -106,7 +106,7 @@ Collaboration diagram for renderer_shader_vtable:</div>
 <div class="dyncontent">
 <div class="center"><img src="structrenderer__shader__vtable__coll__graph.png" border="0" usemap="#arenderer__shader__vtable_coll__map" alt="Collaboration graph"/></div>
 <map name="arenderer__shader__vtable_coll__map" id="arenderer__shader__vtable_coll__map">
-<area shape="rect" title="シェーダー機能仮想関数テーブル" alt="" coords="12,211,188,236"/>
+<area shape="rect" title="シェーダー機能仮想関数テーブル" alt="" coords="12,240,188,265"/>
 <area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
@@ -134,6 +134,9 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a4886342bacf67b2922aaf8185abdc6ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__shader_8h.html#ae500267e3ee240a9975f1c7be9cf1399">pfn_renderer_shader_mat4f_uniform_set</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__shader__vtable.html#a4886342bacf67b2922aaf8185abdc6ed">renderer_shader_mat4f_uniform_set</a></td></tr>
 <tr class="memdesc:a4886342bacf67b2922aaf8185abdc6ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにmat4f型のユニフォーム変数を送信する  <br /></td></tr>
 <tr class="separator:a4886342bacf67b2922aaf8185abdc6ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d77e76470b2b0ff5eb43dce6dec4546"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__shader_8h.html#aad87746b87106006340f672c21a61ed4">pfn_renderer_shader_vec4u8_uniform_set</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__shader__vtable.html#a5d77e76470b2b0ff5eb43dce6dec4546">renderer_shader_vec4u8_uniform_set</a></td></tr>
+<tr class="memdesc:a5d77e76470b2b0ff5eb43dce6dec4546"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにvec4u8型のユニフォーム変数を送信する  <br /></td></tr>
+<tr class="separator:a5d77e76470b2b0ff5eb43dce6dec4546"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>シェーダー機能仮想関数テーブル </p>
@@ -398,6 +401,45 @@ Data Fields</h2></td></tr>
 <li>program_idが設定されているにもかかわらず、フラグメントシェーダーオブジェクトハンドルが未設定 </li>
 </ul>
 </td></tr>
+    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5d77e76470b2b0ff5eb43dce6dec4546" name="a5d77e76470b2b0ff5eb43dce6dec4546"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d77e76470b2b0ff5eb43dce6dec4546">&#9670;&#160;</a></span>renderer_shader_vec4u8_uniform_set</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface__shader_8h.html#aad87746b87106006340f672c21a61ed4">pfn_renderer_shader_vec4u8_uniform_set</a> renderer_shader_vtable::renderer_shader_vec4u8_uniform_set</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>シェーダープログラムにvec4u8型のユニフォーム変数を送信する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">shader_handle_</td><td>シェーダープログラムハンドルインスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">location_</td><td>ユニフォーム変数のLocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data_</td><td>送信データへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_program_id_</td><td>現在使用中のOpenGLプログラム識別子</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>shader_handle_ == NULL</li>
+<li>data_ == NULL</li>
+<li>out_program_id_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>シェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>シェーダープログラムが未リンク状態 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>

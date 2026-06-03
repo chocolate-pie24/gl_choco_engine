@@ -1,16 +1,24 @@
 <map id="include/engine/base/choco_math/math_types.h" name="include/engine/base/choco_math/math_types.h">
-<area shape="rect" id="node1" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="525,5,723,45"/>
-<area shape="rect" id="node2" href="$choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="387,101,587,141"/>
-<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="447,438,651,463"/>
-<area shape="rect" id="node5" href="$camera_8c.html" title="カメラモジュール実装" alt="" coords="529,203,711,258"/>
-<area shape="rect" id="node6" href="$flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="629,313,813,383"/>
-<area shape="rect" id="node7" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="5,321,160,375"/>
-<area shape="rect" id="node8" href="$camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="799,93,982,148"/>
-<area shape="rect" id="node13" href="$ui__shader_8h.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIを提供する" alt="" coords="1295,93,1505,148"/>
-<area shape="rect" id="node4" href="$choco__math_8c.html" title="GLCE以外のプロジェクトでも使用可能な数学演算実装" alt="" coords="286,211,453,251"/>
-<area shape="rect" id="node9" href="$flight__camera_8h.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIを提供する" alt="" coords="1017,321,1183,375"/>
-<area shape="rect" id="node10" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="1299,431,1501,471"/>
-<area shape="rect" id="node11" href="$flight__camera__controller_8h.html" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="1179,196,1363,265"/>
-<area shape="rect" id="node12" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="939,203,1154,258"/>
-<area shape="rect" id="node14" href="$ui__shader_8c.html" title="UIシェーダーリソース操作と、GPUへのMVP行列送信APIの実装" alt="" coords="1488,203,1699,258"/>
+<area shape="rect" id="node1" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="1205,5,1403,45"/>
+<area shape="rect" id="node2" href="$choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="897,101,1097,141"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="1295,438,1499,463"/>
+<area shape="rect" id="node5" href="$camera_8c.html" title="カメラモジュール実装" alt="" coords="605,203,787,258"/>
+<area shape="rect" id="node6" href="$flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="644,313,828,383"/>
+<area shape="rect" id="node7" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="1156,203,1311,258"/>
+<area shape="rect" id="node11" href="$camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="361,93,543,148"/>
+<area shape="rect" id="node16" href="$line__shader_8h.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="2191,93,2401,148"/>
+<area shape="rect" id="node18" href="$lit__mesh__shader_8h.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="1620,203,1831,258"/>
+<area shape="rect" id="node19" href="$point__shader_8h.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="1271,93,1481,148"/>
+<area shape="rect" id="node21" href="$ui__shader_8h.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="1905,93,2116,148"/>
+<area shape="rect" id="node4" href="$choco__math_8c.html" title="GLCE以外のプロジェクトでも使用可能な数学演算実装" alt="" coords="914,211,1081,251"/>
+<area shape="rect" id="node8" href="$stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="1157,328,1334,368"/>
+<area shape="rect" id="node9" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="1055,431,1207,471"/>
+<area shape="rect" id="node10" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1465,321,1676,375"/>
+<area shape="rect" id="node12" href="$flight__camera_8h.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIを提供する" alt="" coords="182,321,349,375"/>
+<area shape="rect" id="node13" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="164,431,367,471"/>
+<area shape="rect" id="node14" href="$flight__camera__controller_8h.html" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="295,196,479,265"/>
+<area shape="rect" id="node15" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="55,203,270,258"/>
+<area shape="rect" id="node17" href="$line__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="2191,203,2401,258"/>
+<area shape="rect" id="node20" href="$point__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1385,203,1596,258"/>
+<area shape="rect" id="node22" href="$ui__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1905,203,2116,258"/>
 </map>

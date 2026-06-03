@@ -1,0 +1,10 @@
+<map id="include/engine/systems/renderer/renderer_resources/lit_mesh_shader.h" name="include/engine/systems/renderer/renderer_resources/lit_mesh_shader.h">
+<area shape="rect" id="node1" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="149,5,360,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,130,88,155"/>
+<area shape="rect" id="node3" title=" " alt="" coords="315,328,389,353"/>
+<area shape="rect" id="node4" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="163,123,347,163"/>
+<area shape="rect" id="node6" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="292,225,476,280"/>
+<area shape="rect" id="node7" href="$renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="422,108,623,177"/>
+<area shape="rect" id="node5" title=" " alt="" coords="197,240,267,265"/>
+<area shape="rect" id="node8" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="500,233,657,273"/>
+</map>

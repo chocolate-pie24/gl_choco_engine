@@ -108,6 +108,7 @@ Include dependency graph for vertex.h:</div>
 <map name="ainclude_2engine_2core_2geometry__primitive_2vertex_8h" id="ainclude_2engine_2core_2geometry__primitive_2vertex_8h">
 <area shape="rect" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="20,5,175,60"/>
 <area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="5,108,189,148"/>
+<area shape="rect" title=" " alt="" coords="62,196,133,221"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -115,8 +116,11 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="vertex_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2core_2geometry__primitive_2vertex_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2core_2geometry__primitive_2vertex_8hdep" id="ainclude_2engine_2core_2geometry__primitive_2vertex_8hdep">
-<area shape="rect" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="30,5,185,60"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
+<area shape="rect" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="194,5,349,60"/>
+<area shape="rect" href="stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="120,115,297,155"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,218,209,243"/>
+<area shape="rect" href="stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="246,211,398,251"/>
+<area shape="rect" href="lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="373,108,583,163"/>
 </map>
 </div>
 </div>
@@ -127,12 +131,30 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structui__vertex.html">ui_vertex</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">ui geometry用頂点情報構造体  <a href="structui__vertex.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structline__vertex.html">line_vertex</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">線分描画用頂点情報構造体  <a href="structline__vertex.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__vertex.html">point_vertex</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">ポイント描画用頂点情報構造体  <a href="structpoint__vertex.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__normal__vertex.html">point_normal_vertex</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">頂点座標と法線を持つ頂点情報構造体  <a href="structpoint__normal__vertex.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:add691ca0ef38ce3ead3655aac8d4ba7d"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structui__vertex.html">ui_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex_8h.html#add691ca0ef38ce3ead3655aac8d4ba7d">ui_vertex_t</a></td></tr>
 <tr class="memdesc:add691ca0ef38ce3ead3655aac8d4ba7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">ui geometry用頂点情報構造体  <br /></td></tr>
 <tr class="separator:add691ca0ef38ce3ead3655aac8d4ba7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a647d61322b94715778b1c66851fa3033"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structline__vertex.html">line_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a></td></tr>
+<tr class="memdesc:a647d61322b94715778b1c66851fa3033"><td class="mdescLeft">&#160;</td><td class="mdescRight">線分描画用頂点情報構造体  <br /></td></tr>
+<tr class="separator:a647d61322b94715778b1c66851fa3033"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33c6fd00d3d9c19fd720c0b513bbc635"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpoint__vertex.html">point_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a></td></tr>
+<tr class="memdesc:a33c6fd00d3d9c19fd720c0b513bbc635"><td class="mdescLeft">&#160;</td><td class="mdescRight">ポイント描画用頂点情報構造体  <br /></td></tr>
+<tr class="separator:a33c6fd00d3d9c19fd720c0b513bbc635"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a03aa47b397500faa05fc9af3b27d92"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpoint__normal__vertex.html">point_normal_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vertex_8h.html#a1a03aa47b397500faa05fc9af3b27d92">point_normal_vertex_t</a></td></tr>
+<tr class="memdesc:a1a03aa47b397500faa05fc9af3b27d92"><td class="mdescLeft">&#160;</td><td class="mdescRight">頂点座標と法線を持つ頂点情報構造体  <br /></td></tr>
+<tr class="separator:a1a03aa47b397500faa05fc9af3b27d92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>形状データを構成する基本的な幾何情報構造体定義 </p>
@@ -142,6 +164,55 @@ Typedefs</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="a647d61322b94715778b1c66851fa3033" name="a647d61322b94715778b1c66851fa3033"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a647d61322b94715778b1c66851fa3033">&#9670;&#160;</a></span>line_vertex_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structline__vertex.html">line_vertex</a> <a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>線分描画用頂点情報構造体 </p>
+<dl class="section note"><dt>Note</dt><dd>線分のグラデーション表示は行わないので、色情報は親構造体に持たせる </dd></dl>
+
+</div>
+</div>
+<a id="a1a03aa47b397500faa05fc9af3b27d92" name="a1a03aa47b397500faa05fc9af3b27d92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a03aa47b397500faa05fc9af3b27d92">&#9670;&#160;</a></span>point_normal_vertex_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structpoint__normal__vertex.html">point_normal_vertex</a> <a class="el" href="vertex_8h.html#a1a03aa47b397500faa05fc9af3b27d92">point_normal_vertex_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>頂点座標と法線を持つ頂点情報構造体 </p>
+
+</div>
+</div>
+<a id="a33c6fd00d3d9c19fd720c0b513bbc635" name="a33c6fd00d3d9c19fd720c0b513bbc635"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33c6fd00d3d9c19fd720c0b513bbc635">&#9670;&#160;</a></span>point_vertex_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structpoint__vertex.html">point_vertex</a> <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ポイント描画用頂点情報構造体 </p>
+
+</div>
+</div>
 <a id="add691ca0ef38ce3ead3655aac8d4ba7d" name="add691ca0ef38ce3ead3655aac8d4ba7d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#add691ca0ef38ce3ead3655aac8d4ba7d">&#9670;&#160;</a></span>ui_vertex_t</h2>
 

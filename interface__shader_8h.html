@@ -151,6 +151,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:a52d7793683140b7e2072fbca584141cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae500267e3ee240a9975f1c7be9cf1399"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#ae500267e3ee240a9975f1c7be9cf1399">pfn_renderer_shader_mat4f_uniform_set</a>) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, bool should_transpose_, const float *data_, uint32_t *out_program_id_)</td></tr>
 <tr class="separator:ae500267e3ee240a9975f1c7be9cf1399"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad87746b87106006340f672c21a61ed4"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#aad87746b87106006340f672c21a61ed4">pfn_renderer_shader_vec4u8_uniform_set</a>) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, const uint8_t *data_, uint32_t *out_program_id_)</td></tr>
+<tr class="separator:aad87746b87106006340f672c21a61ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd6bb305a11c3c8fd7331150c6784be6"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a></td></tr>
 <tr class="memdesc:afd6bb305a11c3c8fd7331150c6784be6"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダー機能仮想関数テーブル  <br /></td></tr>
 <tr class="separator:afd6bb305a11c3c8fd7331150c6784be6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -270,6 +272,21 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 </p>
+
+</div>
+</div>
+<a id="aad87746b87106006340f672c21a61ed4" name="aad87746b87106006340f672c21a61ed4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad87746b87106006340f672c21a61ed4">&#9670;&#160;</a></span>pfn_renderer_shader_vec4u8_uniform_set</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>(* pfn_renderer_shader_vec4u8_uniform_set) (const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, const uint8_t *data_, uint32_t *out_program_id_)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>renderer_shader_vtableが保持するrenderer_shader_vec4u8_uniform_setの前方宣言 </p>
 
 </div>
 </div>

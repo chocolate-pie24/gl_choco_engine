@@ -11,10 +11,12 @@ var fs__utils_8h =
       [ "FS_UTILS_OVERFLOW", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a92c75a04ec7bc9b8508b29964a8352bb", null ],
       [ "FS_UTILS_FILE_OPEN_ERROR", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7ac9204891220c299656ed0f8b1b05bcc3", null ],
       [ "FS_UTILS_RUNTIME_ERROR", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7acc6b06e5ad953cab2eb0bf11ed20e31f", null ],
-      [ "FS_UTILS_UNDEFINED_ERROR", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2268e0dd4802f2ed7f51e535f4508a63", null ]
+      [ "FS_UTILS_UNDEFINED_ERROR", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2268e0dd4802f2ed7f51e535f4508a63", null ],
+      [ "FS_UTILS_EOF", "fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7a2c2538477bbd4b878f8ee1d59c792f12", null ]
     ] ],
     [ "fs_utils_create", "fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd", null ],
     [ "fs_utils_destroy", "fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04", null ],
     [ "fs_utils_fullpath_get", "fs__utils_8h.html#a2605df84fad985b55a16e50c12d5494e", null ],
+    [ "fs_utils_text_file_line_read", "fs__utils_8h.html#ace79b11ac7b402e7fe9a10f4667101f1", null ],
     [ "fs_utils_text_file_read", "fs__utils_8h.html#affe6cb5e85b87975b0017d4e05a8a62f", null ]
 ];

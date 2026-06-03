@@ -95,11 +95,11 @@ $(document).ready(function(){initNavTree('md_docs_guide_renderer_backend_adding_
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="guide_renderer_backend_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md206"></a>
+<h1><a class="anchor" id="autotoc_md212"></a>
 Guidelines for Adding Concrete Modules to the Renderer Backend</h1>
 <p>This page provides guidelines for engine developers to safely add support for additional graphics APIs. For the time being, additional graphics APIs are assumed to be versions other than OpenGL 3.3. Note that using Vulkan is expected to require some design changes.</p>
 <p>For an overview of the <code>Renderer Backend</code>, refer to ../../architecture/renderer_system/renderer_backend/architecture_en.md "Renderer Backend architecture".</p>
-<h2><a class="anchor" id="autotoc_md207"></a>
+<h2><a class="anchor" id="autotoc_md213"></a>
 Guidelines for Adding Support for a New Graphics API</h2>
 <ul>
 <li>Add the new graphics API name to <code>target_graphics_api_t</code> in <code><a class="el" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する">renderer_types.h</a></code>.</li>
@@ -124,7 +124,7 @@ Guidelines for Adding Support for a New Graphics API</h2>
 <li>Create a directory for the new graphics API under <code>src/engine/systems/renderer/renderer_backend/renderer_backend_concretes/</code>.</li>
 <li>Under the added directory, create <code><a class="el" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装">concrete_shader.c</a></code>, <code><a class="el" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装">concrete_texture.c</a></code>, <code><a class="el" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装">concrete_vao.c</a></code>, and <code><a class="el" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装">concrete_vbo.c</a></code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md208"></a>
+<h3><a class="anchor" id="autotoc_md214"></a>
 Steps to Create concrete_shader.c</h3>
 <p>In <code><a class="el" href="concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装">concrete_shader.c</a></code>, define the <code>renderer_backend_shader_t</code> struct. Its fields are specific to the graphics API being added, but for example, the OpenGL 3.3 backend stores the following:</p>
 <ul>
@@ -159,7 +159,7 @@ Steps to Create concrete_shader.c</h3>
 <ul>
 <li>Add the vtable for the new graphics API to <code>shader_vtable_get()</code> in <code>renderer_backend/renderer_backend_context/renderer_backend_context.c</code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md209"></a>
+<h3><a class="anchor" id="autotoc_md215"></a>
 Steps to Create concrete_texture.c</h3>
 <p>In <code><a class="el" href="concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装">concrete_texture.c</a></code>, define the <code>renderer_backend_texture_t</code> struct. Its fields are specific to the graphics API being added, but for example, the OpenGL 3.3 backend stores the following:</p>
 <ul>
@@ -193,7 +193,7 @@ Steps to Create concrete_texture.c</h3>
 <ul>
 <li>Add the vtable for the new graphics API to <code>texture_vtable_get()</code> in <code>renderer_backend/renderer_backend_context/renderer_backend_context.c</code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md210"></a>
+<h3><a class="anchor" id="autotoc_md216"></a>
 Steps to Create concrete_vao.c</h3>
 <p>In <code><a class="el" href="concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装">concrete_vao.c</a></code>, define the <code>renderer_backend_vao_t</code> struct. Its fields are specific to the graphics API being added, but for example, the OpenGL 3.3 backend stores the following:</p>
 <ul>
@@ -222,7 +222,7 @@ Steps to Create concrete_vao.c</h3>
 <ul>
 <li>Add the vtable for the new graphics API to <code>vao_vtable_get()</code> in <code>renderer_backend/renderer_backend_context/renderer_backend_context.c</code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md211"></a>
+<h3><a class="anchor" id="autotoc_md217"></a>
 Steps to Create concrete_vbo.c</h3>
 <p>In <code><a class="el" href="concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装">concrete_vbo.c</a></code>, define the <code>renderer_backend_vbo_t</code> struct. Its fields are specific to the graphics API being added, but for example, the OpenGL 3.3 backend stores the following:</p>
 <ul>
@@ -253,7 +253,7 @@ Steps to Create concrete_vbo.c</h3>
 <ul>
 <li>Add the vtable for the new graphics API to <code>vbo_vtable_get()</code> in <code>renderer_backend/renderer_backend_context/renderer_backend_context.c</code>.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md212"></a>
+<h3><a class="anchor" id="autotoc_md218"></a>
 Specifying the Newly Added Graphics API</h3>
 <p>To use a newly added graphics API, specify the graphics API type in <code><a class="el" href="renderer__backend__context_8h.html#a8cb4953ce74de55f80c5397ce1d38054" title="レンダラーバックエンドのメモリを確保し、初期化を行う">renderer_backend_initialize()</a></code> inside <code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code> (*1).</p>
 <p>*1: In the future, this will be changed so that the graphics API is specified via a build option. </p>

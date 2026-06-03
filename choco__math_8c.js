@@ -24,5 +24,7 @@ var choco__math_8c =
     [ "vec3f_length_squared", "choco__math_8c.html#a1fa493a5b44abc35d8bd196fabf18454", null ],
     [ "vec3f_normalize", "choco__math_8c.html#ad1662565fb8cffb597226f6f405a0581", null ],
     [ "vec4f_add", "choco__math_8c.html#a7dbff4c06bc0e559d1e033e2dea746a2", null ],
-    [ "vec4f_initialize", "choco__math_8c.html#a8d7f8a19f1d8a745592799fbf86d6b3d", null ]
+    [ "vec4f_initialize", "choco__math_8c.html#a8d7f8a19f1d8a745592799fbf86d6b3d", null ],
+    [ "vec4i8_initialize", "choco__math_8c.html#ae793e97336721694da9d952fb0814ad2", null ],
+    [ "vec4u8_initialize", "choco__math_8c.html#a77fde56188d5890bdc6ec3e02c449e06", null ]
 ];

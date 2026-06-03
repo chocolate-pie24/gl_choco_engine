@@ -99,29 +99,33 @@ $(document).ready(function(){initNavTree('md_docs_architecture_resource_architec
 Resource Layer architecture</h1>
 <h2><a class="anchor" id="autotoc_md47"></a>
 Purpose and positioning</h2>
-<p>The <code>Resource Layer</code> is a layer for converting and holding external asset data, such as images, as CPU-side resource representations that are easy to handle inside GLCE.</p>
-<p>At present, it mainly provides the following functionality:</p>
+<p>The <code>Resource Layer</code> is a layer for converting and holding external asset information, such as images and geometry, as CPU-side resource representations that are easy for GLCE to handle.</p>
+<p>At present, it mainly provides the following features.</p>
 <ul>
 <li>Loading BMP files</li>
 <li>Normalizing BMP pixel data</li>
-<li>Creating, destroying, and loading pixels into CPU-side texture resources</li>
-<li>Common result codes and error conversion utilities for the Resource Layer</li>
+<li>Loading ASCII STL files</li>
+<li>Converting STL vertex data into CPU-side vertex arrays</li>
+<li>Creating, destroying, and loading pixel data into CPU-side texture resources</li>
+<li>Common Resource-layer result codes and error conversion utilities</li>
 </ul>
-<p>The <code>Resource Layer</code> is not responsible for creating or managing GPU-side resources. Creating and managing GPU-side texture resources, as well as managing the correspondence between CPU-side texture resources and GPU-side texture resources, are the responsibilities of the <code>Texture System</code> and the <code>Renderer Backend</code>.</p>
-<p>In other words, the responsibility of the <code>Resource Layer</code> is to load external files or built-in data and prepare them as CPU-side data structures that can be used inside the engine.</p>
-<p>Here, CPU-side resource data structures refer not to handles or buffers stored directly on the GPU, but to resource representations that can be held, referenced, and processed in CPU memory by the engine. At present, this mainly corresponds to <code>texture_t</code>. <code>texture_t</code> stores texture information before GPU upload, such as texture width, height, channel count, and pixel data.</p>
+<p>The <code>Resource Layer</code> is not responsible for creating or managing GPU-side resources. Creating and managing GPU-side texture resources, GPU-side vertex buffers, GPU-side index buffers, and managing the relationship between CPU-side resources and GPU-side resources are responsibilities of the <code>Texture System</code>, the <code>Renderer Backend</code>, or higher-level systems that will be added in the future.</p>
+<p>In other words, the responsibility of the <code>Resource Layer</code> is to read external files or built-in data and prepare them as CPU-side data structures that can be used inside the engine.</p>
+<p>A CPU-side resource data structure here means a resource representation that can be held, referenced, and processed in engine CPU memory, rather than a handle or buffer held directly on the GPU. At present, this mainly refers to <code>texture_t</code> and arrays of <code>point_normal_vertex_t</code>. <code>texture_t</code> holds texture information before upload to the GPU, such as texture width, height, channel count, and pixel data. An array of <code>point_normal_vertex_t</code> holds geometry vertex information before transfer to a GPU vertex buffer.</p>
 <h3><a class="anchor" id="autotoc_md48"></a>
 Module dependencies</h3>
 <div class="fragment"><div class="line">graph TD</div>
 <div class="line">  RESOURCE_TYPES[resource_core/resource_types]</div>
 <div class="line">  RESOURCE_ERR_UTILS[resource_core/resource_err_utils]</div>
 <div class="line">  BMP_LOADER[loaders/bmp_loader]</div>
+<div class="line">  STL_LOADER[loaders/stl_loader]</div>
 <div class="line">  TEXTURE[texture/texture]</div>
 <div class="line"> </div>
 <div class="line">  BASE[engine/base]</div>
 <div class="line">  CORE_MEMORY[engine/core/memory]</div>
 <div class="line">  CORE_FILESYSTEM[engine/core/filesystem]</div>
 <div class="line">  CORE_BUFFER_UTILS[engine/core/buffer_utils]</div>
+<div class="line">  CORE_GEOMETRY[engine/core/geometry_primitive]</div>
 <div class="line">  IO_UTILS[engine/io_utils/fs_utils]</div>
 <div class="line">  CONTAINERS[engine/containers/choco_string]</div>
 <div class="line"> </div>
@@ -138,6 +142,14 @@ Module dependencies</h3>
 <div class="line">  BMP_LOADER --&gt; CORE_FILESYSTEM</div>
 <div class="line">  BMP_LOADER --&gt; CORE_BUFFER_UTILS</div>
 <div class="line"> </div>
+<div class="line">  STL_LOADER --&gt; RESOURCE_TYPES</div>
+<div class="line">  STL_LOADER --&gt; RESOURCE_ERR_UTILS</div>
+<div class="line">  STL_LOADER --&gt; BASE</div>
+<div class="line">  STL_LOADER --&gt; CORE_MEMORY</div>
+<div class="line">  STL_LOADER --&gt; CORE_GEOMETRY</div>
+<div class="line">  STL_LOADER --&gt; IO_UTILS</div>
+<div class="line">  STL_LOADER --&gt; CONTAINERS</div>
+<div class="line"> </div>
 <div class="line">  TEXTURE --&gt; RESOURCE_TYPES</div>
 <div class="line">  TEXTURE --&gt; RESOURCE_ERR_UTILS</div>
 <div class="line">  TEXTURE --&gt; BMP_LOADER</div>
@@ -153,92 +165,150 @@ Roles and characteristics of owned modules</h2>
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Module   </th><th class="markdownTableHeadNone">Role   </th><th class="markdownTableHeadNone">Characteristics    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">resource_types   </td><td class="markdownTableBodyNone">Provides common data types and result codes used across the entire <code>Resource Layer</code>.   </td><td class="markdownTableBodyNone">A common foundation module within the <code>Resource Layer</code>. Return-value types for externally exposed APIs are also defined here.    </td></tr>
+<td class="markdownTableBodyNone">resource_types   </td><td class="markdownTableBodyNone">Provides common data types and result codes used across the entire <code>Resource Layer</code>   </td><td class="markdownTableBodyNone">A common foundation module inside the <code>Resource Layer</code>. Return types for externally exposed APIs are also defined here    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">resource_err_utils   </td><td class="markdownTableBodyNone">Provides APIs for translating lower-layer and related-module result codes into <code>Resource Layer</code> result codes, and for converting result codes to strings.   </td><td class="markdownTableBodyNone">A utility module for unifying error representation within the <code>Resource Layer</code>.    </td></tr>
+<td class="markdownTableBodyNone">resource_err_utils   </td><td class="markdownTableBodyNone">Provides APIs for converting result codes from lower layers and related modules into <code>Resource Layer</code> result codes, and for converting result codes to strings   </td><td class="markdownTableBodyNone">A helper module for unifying error representation inside the <code>Resource Layer</code>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a>   </td><td class="markdownTableBodyNone">Loads BMP files and converts them into pixel data that is easy for GLCE to handle.   </td><td class="markdownTableBodyNone">A module dedicated to BMP file loading. It holds loaded pixel data and, when needed, transfers ownership of that pixel data to the caller.    </td></tr>
+<td class="markdownTableBodyNone"><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a>   </td><td class="markdownTableBodyNone">Loads BMP files and converts them into pixel data that is easy for GLCE to handle   </td><td class="markdownTableBodyNone">A module dedicated to BMP file loading. It holds loaded pixel data and transfers ownership to the caller when needed    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">texture   </td><td class="markdownTableBodyNone">Creates and destroys CPU-side texture resources, and provides APIs for loading, freeing, and referencing pixel data.   </td><td class="markdownTableBodyNone">A CPU-side resource module that holds texture name, size, channel count, and pixel data.   </td></tr>
+<td class="markdownTableBodyNone"><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a>   </td><td class="markdownTableBodyNone">Loads ASCII STL files and converts them into vertex arrays that are easy for GLCE to handle   </td><td class="markdownTableBodyNone">A module dedicated to ASCII STL file loading. It holds the loaded <code>point_normal_vertex_t</code> array and transfers ownership to the caller when needed    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">texture   </td><td class="markdownTableBodyNone">Provides APIs for creating and destroying CPU-side texture resources, loading and freeing pixel data, and referencing texture data   </td><td class="markdownTableBodyNone">A CPU-side resource module that holds texture name, size, channel count, and pixel data   </td></tr>
 </table>
 <h2><a class="anchor" id="autotoc_md50"></a>
-Responsibility boundaries of the Resource Layer</h2>
-<p>The <code>Resource Layer</code> is a layer for handling CPU-side resources. Therefore, its responsibilities include the following:</p>
+Responsibility boundary of the Resource Layer</h2>
+<p>The <code>Resource Layer</code> is a layer for handling CPU-side resources. Therefore, it includes the following responsibilities.</p>
 <ul>
-<li>Loading resource data from external files</li>
-<li>Absorbing differences between file formats</li>
-<li>Converting data into CPU-side formats that are easy for the engine to handle</li>
+<li>Reading resource information from external files</li>
+<li>Absorbing differences specific to file formats</li>
+<li>Converting external data into CPU-side data formats that are easy for the engine to handle</li>
 <li>Providing APIs for creating, destroying, and referencing CPU-side resources</li>
-<li>Unifying result codes within the Resource Layer</li>
+<li>Building CPU-side resource representations before GPU transfer, such as textures and geometry</li>
+<li>Unifying result codes inside the Resource layer</li>
 </ul>
-<p>On the other hand, the following are not responsibilities of the <code>Resource Layer</code>:</p>
+<p>On the other hand, the following are not responsibilities of the <code>Resource Layer</code>.</p>
 <ul>
 <li>Creating or destroying GPU-side resources</li>
 <li>Transferring pixel data to the GPU</li>
-<li>Managing the correspondence between CPU-side resources and GPU-side resources</li>
-<li>Registering, deleting, searching, or managing IDs for multiple textures</li>
+<li>Transferring vertex data to the GPU</li>
+<li>Creating or managing GPU-side vertex buffers, index buffers, VAOs, and similar objects</li>
+<li>Managing the relationship between CPU-side resources and GPU-side resources</li>
+<li>Registering, deleting, searching, and managing IDs for multiple textures, meshes, or models</li>
 <li>Binding, unbinding, or setting uniforms during rendering</li>
+<li>Managing the relationship between vertex attribute layouts and shader resources</li>
 </ul>
-<p>These are the responsibilities of the <code>Texture System</code>, the <code>Renderer Backend</code>, or higher layers.</p>
+<p>These are responsibilities of the <code>Texture System</code>, the <code>Renderer Backend</code>, or higher-level layers.</p>
 <h2><a class="anchor" id="autotoc_md51"></a>
 texture module details</h2>
-<p><code>texture</code> is a module that provides <code>texture_t</code>, which represents a CPU-side texture resource. Internally, <code>texture_t</code> holds the texture name, width, height, channel count, and pixel data.</p>
-<p><code>texture</code> provides the following functionality:</p>
+<p>The <code>texture</code> module provides <code>texture_t</code>, which represents a CPU-side texture resource. Internally, <code>texture_t</code> holds the texture name, width, height, channel count, and pixel data.</p>
+<p>The <code>texture</code> module provides the following features.</p>
 <ul>
 <li>Creating CPU-side texture resources with texture names</li>
 <li>Destroying CPU-side texture resources</li>
 <li>Loading texture pixel data</li>
 <li>Freeing texture pixel data</li>
-<li>Getting references to pixel data</li>
+<li>Getting a reference to pixel data</li>
 <li>Getting texture size information</li>
-<li>Getting texture names</li>
+<li>Getting the texture name</li>
 </ul>
-<p>At present, BMP files are supported as normal image files. In addition, the following built-in texture names are handled specially for testing and sample use:</p>
+<p>At present, BMP files are supported as normal image files. For tests and samples, the following built-in texture names are treated specially.</p>
 <ul>
 <li><code>test_texture_red</code></li>
 <li><code>test_texture_green</code></li>
 <li><code>test_texture_blue</code></li>
 </ul>
-<p>Ownership of the pixel data held by <code>texture</code> belongs to <code>texture_t</code>. The pixel data pointer returned by <code><a class="el" href="texture_8h.html#a75948a6b9c734f25d5ee4278f1a848be" title="texture_が保持するピクセルデータへのポインタを取得する(委譲ではない)">texture_pixel_get()</a></code> is for reference only, and the caller must not free it.</p>
+<p>The pixel data held by <code>texture</code> is owned by <code>texture_t</code>. The pixel data pointer obtained by <code><a class="el" href="texture_8h.html#a75948a6b9c734f25d5ee4278f1a848be" title="texture_が保持するピクセルデータへのポインタを取得する(委譲ではない)">texture_pixel_get()</a></code> is for reference only, and the caller must not free it.</p>
 <h2><a class="anchor" id="autotoc_md52"></a>
 bmp_loader module details</h2>
-<p><code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> is a module that loads BMP files and converts them into pixel data that is easy for GLCE to handle.</p>
-<p>At present, the supported BMP files are as follows:</p>
+<p>The <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> module loads BMP files and converts them into pixel data that is easy for GLCE to handle.</p>
+<p>At present, the supported BMP files are as follows.</p>
 <ul>
 <li>Uncompressed BMP files</li>
 <li>RGB or RGBA pixel data</li>
-<li>Images whose width is greater than 0 and fits within <code>int16_t</code></li>
-<li>Images whose height fits within <code>int16_t</code></li>
+<li>Images whose width is greater than 0 and fits in <code>int16_t</code></li>
+<li>Images whose height fits in <code>int16_t</code></li>
 </ul>
-<p>When loading BMP files, <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> performs the following normalization steps:</p>
+<p>When loading BMP files, <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> performs the following normalization steps.</p>
 <ul>
-<li>Converts BGR pixel data order to RGB order</li>
-<li>Removes row-end padding included in formats such as 24-bit BMP, and packs pixel data densely</li>
+<li>Converts pixel data from BGR order to RGB order</li>
+<li>Removes row-end padding included in formats such as 24-bit BMP and packs the pixel data tightly</li>
 <li>Converts bottom-up images into pixel arrays based on a top-left origin</li>
 </ul>
-<p>The loaded pixel data is held internally by <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code>. Using <code><a class="el" href="bmp__loader_8h.html#a8ebd557a06fe1b48926d1e3f405095f9" title="bmp_loader_が保有するピクセルデータメモリの所有権をout_pixels_に委譲し、自身のピクセルデータはNULLにする">bmp_loader_pixel_move()</a></code> transfers ownership of the held pixel data to the caller. After ownership transfer, the pixel data pointer on the <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> side becomes NULL, and the same instance is assumed not to be reused for loading again.</p>
+<p>Loaded pixel data is held inside <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code>. By using <code><a class="el" href="bmp__loader_8h.html#a8ebd557a06fe1b48926d1e3f405095f9" title="bmp_loader_が保有するピクセルデータメモリの所有権をout_pixels_に委譲し、自身のピクセルデータはNULLにする">bmp_loader_pixel_move()</a></code>, ownership of the held pixel data can be transferred to the caller. After ownership transfer, the pixel data pointer inside <code><a class="el" href="structbmp__loader.html" title="BMPファイルローダー内部情報管理構造体">bmp_loader</a></code> becomes NULL, and the same instance is treated on the assumption that it will not be reused for reloading.</p>
 <h2><a class="anchor" id="autotoc_md53"></a>
+stl_loader module details</h2>
+<p>The <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> module loads ASCII STL files and converts them into <code>point_normal_vertex_t</code> arrays that are easy for GLCE to handle.</p>
+<p>At present, the supported STL files are as follows.</p>
+<ul>
+<li>ASCII STL files</li>
+<li>Facets composed of <code>facet normal</code>, <code>outer loop</code>, three <code>vertex</code> lines, <code>endloop</code>, and <code>endfacet</code></li>
+<li>Triangle data where each facet has three vertices</li>
+<li>Data with finite vertex coordinates</li>
+<li>Data with finite normal components where each component is within the range <code>[-1.0, 1.0]</code></li>
+</ul>
+<p>When loading STL files, <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> performs the following steps.</p>
+<ul>
+<li>Reads the file once to count the number of vertices in advance</li>
+<li>Allocates a <code>point_normal_vertex_t</code> array according to the vertex count</li>
+<li>Reads the file a second time, parses <code>facet normal</code> and <code>vertex</code>, and stores the data in the vertex array</li>
+<li>Verifies that the STL structure follows the order <code>facet normal</code> → <code>outer loop</code> → <code>vertex</code> x 3 → <code>endloop</code> → <code>endfacet</code></li>
+<li>Treats normals and vertex coordinates containing <code>NaN</code> or <code>Inf</code> as invalid data</li>
+<li>Treats normal components outside the range <code>[-1.0, 1.0]</code> as invalid data</li>
+<li>Converts normals into <code>int8_t</code> representation and stores them together with vertex positions in <code>point_normal_vertex_t</code></li>
+</ul>
+<p>After loading, the vertex array is held inside <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code>. By using <code><a class="el" href="stl__loader_8h.html#a3cc18536584c9ced9ea78293c4a5a816" title="stl_loader_が保有する頂点配列情報の所有権をAPI呼び出し側へ委譲する">stl_loader_vertices_move()</a></code>, ownership of the held vertex array can be transferred to the caller. After ownership transfer, the vertex array pointer inside <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> becomes NULL and the vertex count becomes 0.</p>
+<p>At present, <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> does not verify whether normal vectors in the STL file have unit length. Normal length verification is planned for the future.</p>
+<h3><a class="anchor" id="autotoc_md54"></a>
+Load acceleration policy using a custom STL format</h3>
+<p>At present, <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> reads ASCII STL files twice. The first read counts the number of vertices in advance, and the second read stores vertex information into a <code>point_normal_vertex_t</code> array allocated with the required size. This method can estimate memory usage without introducing a dynamic array, but it is inefficient in terms of load speed because the ASCII STL file is parsed twice.</p>
+<p>In the future, GLCE plans to generate an internal custom binary format from ASCII STL and use it to accelerate subsequent loads. The custom format will be treated as an intermediate format that holds the parsed ASCII STL result in a form close to the CPU-side vertex array before GPU transfer.</p>
+<p>The custom format is expected to have roughly the following structure.</p>
+<ul>
+<li>The vertex count is stored at the beginning</li>
+<li>After that, vertex position information and normal information are stored sequentially in binary form</li>
+</ul>
+<p>The future loading policy is as follows.</p>
+<ol type="1">
+<li>Check whether a custom format file corresponding to the ASCII STL exists</li>
+<li>If it exists, load the custom format instead of the ASCII STL</li>
+<li>If it does not exist, load the ASCII STL and generate the vertex array</li>
+<li>Output the generated vertex array as the custom format</li>
+<li>Use the custom format preferentially for subsequent loads</li>
+</ol>
+<p>With this policy, the first load pays the parsing cost of the ASCII STL, while subsequent loads can avoid advance vertex counting and line-by-line parsing with <code>sscanf</code>, allowing the CPU-side vertex array to be built more quickly.</p>
+<p>However, the detailed specification and extension of the custom format are currently undecided. Therefore, at present, this is treated as a future extension item.</p>
+<h2><a class="anchor" id="autotoc_md55"></a>
 Relationship with the Texture System</h2>
-<p><code>texture</code> in the <code>Resource Layer</code> represents a single CPU-side texture resource. On the other hand, <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> in the <code>Texture System</code> manages multiple CPU-side texture resources and GPU-side texture resources, and provides registration, deletion, and retrieval APIs by texture name and texture ID.</p>
+<p>The <code>texture</code> module in the <code>Resource Layer</code> represents a single CPU-side texture resource. On the other hand, <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> in the <code>Texture System</code> manages multiple CPU-side texture resources and GPU-side texture resources, and provides APIs for registering, deleting, and retrieving textures by texture name and texture ID.</p>
 <p>For details, see <a class="el" href="md_docs_architecture_systems_texture_system_architecture_en.html">Texture System</a>.</p>
-<h2><a class="anchor" id="autotoc_md54"></a>
-Current unsupported items</h2>
-<p>At present, the following are not supported. They may be implemented as needed as GLCE evolves.</p>
+<h2><a class="anchor" id="autotoc_md56"></a>
+Relationship with the Renderer Backend</h2>
+<p>The <code><a class="el" href="structstl__loader.html" title="STLファイルローダー内部情報管理構造体">stl_loader</a></code> module in the <code>Resource Layer</code> builds CPU-side vertex arrays. On the other hand, the <code>Renderer Backend</code> is responsible for transferring those vertex arrays to GPU-side vertex buffers and VAOs, associating them with rendering state, and handling them as drawable GPU-side resources.</p>
+<p>The <code>Resource Layer</code> is responsible only for holding and transferring ownership of vertex arrays loaded from STL files. It is not responsible for generating GPU buffers, setting vertex attributes, or associating data with shader resources.</p>
+<h2><a class="anchor" id="autotoc_md57"></a>
+Currently unsupported items</h2>
+<p>The following are currently unsupported. They will be supported as needed as GLCE features are expanded.</p>
 <ul>
 <li>Providing thread-safe APIs</li>
 <li>Loading normal image file formats other than BMP</li>
 <li>Loading compressed BMP files</li>
-<li>Loading palette-based BMP files</li>
-<li>Direct management of GPU-side resources</li>
-<li>Resource cache mechanism</li>
-<li>Resource lifetime management by reference counting</li>
+<li>Loading BMP files with palettes</li>
+<li>Loading binary STL files</li>
+<li>Loading 3D model file formats other than STL, such as OBJ and MTL</li>
+<li>Verifying unit length of normal vectors in STL files</li>
+<li>Converting and outputting ASCII STL to a GLCE custom binary format</li>
+<li>Directly loading the GLCE custom binary format</li>
+<li>Registering, deleting, searching, and managing IDs for multiple meshes or models</li>
+<li>Directly managing GPU-side resources</li>
+<li>Resource cache mechanisms</li>
+<li>Resource lifetime management based on reference counting</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md55"></a>
+<h2><a class="anchor" id="autotoc_md58"></a>
 Configuration</h2>
-<p>There are no configuration options at this time.</p>
-<h2><a class="anchor" id="autotoc_md56"></a>
+<p>There are currently no configuration items.</p>
+<h2><a class="anchor" id="autotoc_md59"></a>
 References</h2>
-<p>For management of CPU-side texture resources and GPU-side texture resources, see <a class="el" href="md_docs_architecture_systems_texture_system_architecture_en.html">Texture System</a>. </p>
+<p>For management of CPU-side texture resources and GPU-side texture resources, see <a class="el" href="md_docs_architecture_systems_texture_system_architecture_en.html">Texture System</a>. For GPU-side vertex buffers and vertex attribute settings during rendering, see future <code>Renderer Backend</code> documentation. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

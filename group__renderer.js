@@ -17,6 +17,9 @@ var group__renderer =
     [ "renderer_err_utils.h", "renderer__err__utils_8h.html", null ],
     [ "renderer_memory.h", "renderer__memory_8h.html", null ],
     [ "renderer_types.h", "renderer__types_8h.html", null ],
+    [ "line_shader.h", "line__shader_8h.html", null ],
+    [ "lit_mesh_shader.h", "lit__mesh__shader_8h.html", null ],
+    [ "point_shader.h", "point__shader_8h.html", null ],
     [ "ui_shader.h", "ui__shader_8h.html", null ],
     [ "concrete_shader.c", "concrete__shader_8c.html", null ],
     [ "concrete_texture.c", "concrete__texture_8c.html", null ],
@@ -24,5 +27,8 @@ var group__renderer =
     [ "concrete_vbo.c", "concrete__vbo_8c.html", null ],
     [ "renderer_err_utils.c", "renderer__err__utils_8c.html", null ],
     [ "renderer_memory.c", "renderer__memory_8c.html", null ],
+    [ "line_shader.c", "line__shader_8c.html", null ],
+    [ "lit_mesh_shader.c", "lit__mesh__shader_8c.html", null ],
+    [ "point_shader.c", "point__shader_8c.html", null ],
     [ "ui_shader.c", "ui__shader_8c.html", null ]
 ];

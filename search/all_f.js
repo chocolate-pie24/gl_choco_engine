@@ -2,7 +2,7 @@ var searchData=
 [
   ['selected_5fgraphics_5fapi_0',['selected_graphics_api',['../structapp__build__config.html#ad01bf326882b4820d065b146b9de690c',1,'app_build_config']]],
   ['selected_5fplatform_1',['selected_platform',['../structapp__build__config.html#a1df8cde96319bd1a938e2e8ce2a06383',1,'app_build_config']]],
-  ['shader_2',['shader',['../structui__shader.html#a26a15ed151857248bbd4f77fa3e47b30',1,'ui_shader']]],
+  ['shader_2',['shader',['../structline__shader.html#a6ee0906d84e83f9d1fc7becd422615e0',1,'line_shader::shader()'],['../structlit__mesh__shader.html#a23a9da0747dc9bf7fe0f8d8fcea5e841',1,'lit_mesh_shader::shader()'],['../structpoint__shader.html#a7f2129ae8be9a7ea4814351bd38b91ce',1,'point_shader::shader()'],['../structui__shader.html#a26a15ed151857248bbd4f77fa3e47b30',1,'ui_shader::shader()']]],
   ['shader_5fcompile_5fstatus_3',['shader_compile_status',['../concrete__shader_8c.html#a9ce49a28b372fe8c52e8bdc234fa17fe',1,'concrete_shader.c']]],
   ['shader_5fcompile_5fstatus_5fcompiled_4',['SHADER_COMPILE_STATUS_COMPILED',['../concrete__shader_8c.html#a9ce49a28b372fe8c52e8bdc234fa17fea50395884f0c9048db817010505900593',1,'concrete_shader.c']]],
   ['shader_5fcompile_5fstatus_5finvalid_5fshader_5fhandle_5',['SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE',['../concrete__shader_8c.html#a9ce49a28b372fe8c52e8bdc234fa17fea4a851d36e607761ddd046e2ca2c2b59a',1,'concrete_shader.c']]],
@@ -14,6 +14,15 @@ var searchData=
   ['shader_5ftype_5fvertex_11',['SHADER_TYPE_VERTEX',['../renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da',1,'renderer_types.h']]],
   ['shader_5fvtable_12',['shader_vtable',['../structrenderer__backend__context.html#ab532279778c8eebd1cfbe967b1f10d20',1,'renderer_backend_context']]],
   ['status_13',['status',['../structcommand__status__flight__camera.html#acb26e2ddbf338bf7dce1b4b282b40422',1,'command_status_flight_camera']]],
-  ['stride_14',['stride',['../structring__queue.html#a75535dae236624d37fc8c1aca2c51dae',1,'ring_queue::stride()'],['../structbmp__loader.html#a966b8928fc5c65d79722b633fb40d88d',1,'bmp_loader::stride()']]],
-  ['systems_15',['Systems',['../group__systems.html',1,'']]]
+  ['stl_5floader_14',['stl_loader',['../structstl__loader.html',1,'']]],
+  ['stl_5floader_2ec_15',['stl_loader.c',['../stl__loader_8c.html',1,'']]],
+  ['stl_5floader_2eh_16',['stl_loader.h',['../stl__loader_8h.html',1,'']]],
+  ['stl_5floader_5fascii_5fload_17',['stl_loader_ascii_load',['../stl__loader_8h.html#a161cb830d51bdabefa81a715db60d6e1',1,'stl_loader_ascii_load(const char *path_, const char *name_, const char *extension_, stl_loader_t *stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#a161cb830d51bdabefa81a715db60d6e1',1,'stl_loader_ascii_load(const char *path_, const char *name_, const char *extension_, stl_loader_t *stl_loader_):&#160;stl_loader.c']]],
+  ['stl_5floader_5fcreate_18',['stl_loader_create',['../stl__loader_8h.html#ac6111db151893d7373fdda32b4e43737',1,'stl_loader_create(stl_loader_t **stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#ac6111db151893d7373fdda32b4e43737',1,'stl_loader_create(stl_loader_t **stl_loader_):&#160;stl_loader.c']]],
+  ['stl_5floader_5fdestroy_19',['stl_loader_destroy',['../stl__loader_8h.html#aa3e1ef8ffd623d1041fa133a2ff4c18c',1,'stl_loader_destroy(stl_loader_t **stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#aa3e1ef8ffd623d1041fa133a2ff4c18c',1,'stl_loader_destroy(stl_loader_t **stl_loader_):&#160;stl_loader.c']]],
+  ['stl_5floader_5ft_20',['stl_loader_t',['../stl__loader_8h.html#a06dab6c9d6b52e7270f73e4880966f5a',1,'stl_loader.h']]],
+  ['stl_5floader_5fvertices_5fcount_5fget_21',['stl_loader_vertices_count_get',['../stl__loader_8h.html#af8ba382e72a212608045d9f87fe9a1b6',1,'stl_loader_vertices_count_get(const stl_loader_t *stl_loader_, size_t *out_vertex_count_):&#160;stl_loader.c'],['../stl__loader_8c.html#af8ba382e72a212608045d9f87fe9a1b6',1,'stl_loader_vertices_count_get(const stl_loader_t *stl_loader_, size_t *out_vertex_count_):&#160;stl_loader.c']]],
+  ['stl_5floader_5fvertices_5fmove_22',['stl_loader_vertices_move',['../stl__loader_8h.html#a3cc18536584c9ced9ea78293c4a5a816',1,'stl_loader_vertices_move(stl_loader_t *stl_loader_, point_normal_vertex_t **out_vertices_, size_t *out_vertex_count_):&#160;stl_loader.c'],['../stl__loader_8c.html#a3cc18536584c9ced9ea78293c4a5a816',1,'stl_loader_vertices_move(stl_loader_t *stl_loader_, point_normal_vertex_t **out_vertices_, size_t *out_vertex_count_):&#160;stl_loader.c']]],
+  ['stride_23',['stride',['../structbmp__loader.html#a966b8928fc5c65d79722b633fb40d88d',1,'bmp_loader::stride()'],['../structring__queue.html#a75535dae236624d37fc8c1aca2c51dae',1,'ring_queue::stride()']]],
+  ['systems_24',['Systems',['../group__systems.html',1,'']]]
 ];

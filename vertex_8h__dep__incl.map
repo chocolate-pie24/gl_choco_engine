@@ -1,4 +1,7 @@
 <map id="include/engine/core/geometry_primitive/vertex.h" name="include/engine/core/geometry_primitive/vertex.h">
-<area shape="rect" id="node1" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="30,5,185,60"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,108,209,133"/>
+<area shape="rect" id="node1" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="194,5,349,60"/>
+<area shape="rect" id="node2" href="$stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="120,115,297,155"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,218,209,243"/>
+<area shape="rect" id="node4" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="246,211,398,251"/>
+<area shape="rect" id="node5" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="373,108,583,163"/>
 </map>

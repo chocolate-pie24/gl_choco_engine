@@ -1,0 +1,6 @@
+<map id="point_shader" name="point_shader">
+<area shape="rect" id="node1" title="ポイント描画用シェーダーリソース構造体" alt="" coords="251,108,357,133"/>
+<area shape="rect" id="node2" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
+<area shape="rect" id="node3" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="219,5,389,31"/>
+<area shape="rect" id="node4" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="413,5,582,31"/>
+</map>

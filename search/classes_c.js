@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['vec2f_0',['vec2f',['../structvec2f.html',1,'']]],
-  ['vec3f_1',['vec3f',['../structvec3f.html',1,'']]],
-  ['vec4f_2',['vec4f',['../structvec4f.html',1,'']]],
-  ['viewing_5ffrustum_3',['viewing_frustum',['../structviewing__frustum.html',1,'']]]
+  ['ui_5fshader_0',['ui_shader',['../structui__shader.html',1,'']]],
+  ['ui_5fvertex_1',['ui_vertex',['../structui__vertex.html',1,'']]]
 ];

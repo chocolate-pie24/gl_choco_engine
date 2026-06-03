@@ -95,12 +95,12 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_camera_sy
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_camera_system_ja"></a> </p>
-<h1><a class="anchor" id="autotoc_md76"></a>
+<h1><a class="anchor" id="autotoc_md82"></a>
 Camera System architecture</h1>
-<h2><a class="anchor" id="autotoc_md77"></a>
+<h2><a class="anchor" id="autotoc_md83"></a>
 目的と位置づけ</h2>
 <p><code>Camera System</code>は、3次元空間におけるカメラの状態管理と制御機能を提供するサブシステムである。 本システムは、カメラの生成・取得・削除、および位置・姿勢・ビュー行列・プロジェクション行列の取り扱いを、統一されたAPIとして上位レイヤーへ提供する。 また、カメラ種別ごとの制御機能も本システムの責務に含まれる。 これにより、上位レイヤーは個々のカメラ実装や内部メモリ管理の詳細を意識せず、カメラ機能を利用できる。</p>
-<h2><a class="anchor" id="autotoc_md78"></a>
+<h2><a class="anchor" id="autotoc_md84"></a>
 外部レイヤーとの依存関係</h2>
 <p><code>Camera System</code>は内部で以下のレイヤーに依存している。</p>
 <div class="fragment"><div class="line">graph TD</div>
@@ -117,7 +117,7 @@ Camera System architecture</h1>
 <div class="line">    CONTAINERS --&gt; BASE</div>
 <div class="line"> </div>
 <div class="line">    CORE --&gt; BASE</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md79"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md85"></a>
 Camera System内部詳細</h2>
 <div class="fragment"><div class="line">graph TD</div>
 <div class="line">    subgraph CAMERA_CONTROLLER[camera_controller]</div>
@@ -150,7 +150,7 @@ Camera System内部詳細</h2>
 <div class="line">    CAMERA_MEMORY --&gt; CAMERA_TYPES</div>
 <div class="line"> </div>
 <div class="line">    CAMERA_ERR_UTILS --&gt; CAMERA_TYPES</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md80"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md86"></a>
 保有モジュールの役割と性質</h2>
 <p><code>Camera System</code>が保有する各モジュールの役割と性質は以下の通り。</p>
 <table class="markdownTable">
@@ -170,7 +170,7 @@ Camera System内部詳細</h2>
 <td class="markdownTableBodyNone">camera_types   </td><td class="markdownTableBodyNone"><code>Camera System</code>全体で使用されるデータ型、定数、実行結果コードを提供する   </td><td class="markdownTableBodyNone"><code>Camera System</code>内の共通基盤となるモジュール   </td></tr>
 </table>
 <p>(*)フライトカメラとは、3次元空間を上下、左右に移動し、カメラ自身の姿勢（Pitch / Yaw）を変更できるカメラである。</p>
-<h2><a class="anchor" id="autotoc_md81"></a>
+<h2><a class="anchor" id="autotoc_md87"></a>
 camera_manager詳細</h2>
 <p><code><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a></code>は、複数のカメラインスタンスを一元管理するモジュールであり、以下の制約および性質を持つ。</p>
 <ul>
@@ -183,14 +183,14 @@ camera_manager詳細</h2>
 <li><code><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a></code>自身および管理用配列は長寿命リソースとして扱い、<code>Linear Allocator</code>により確保する</li>
 </ul>
 <p>(*1) 配列サイズは将来的に<code>dynamic_array</code>を用いた可変長構成へ変更する可能性がある。</p>
-<h2><a class="anchor" id="autotoc_md82"></a>
+<h2><a class="anchor" id="autotoc_md88"></a>
 カメラ座標系</h2>
 <p>GLCEで使用するカメラは、以下の座標系を使用する</p>
 <ul>
 <li>カメラ前方: Z軸マイナス方向</li>
 <li>座標系: 右手座標系</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md83"></a>
+<h2><a class="anchor" id="autotoc_md89"></a>
 各種行列、ベクトルの使用方針</h2>
 <p>GLCEにおいて行列、ベクトルの扱いは、以下のようになっている。</p>
 <ul>

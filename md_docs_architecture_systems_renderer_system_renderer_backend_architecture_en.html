@@ -95,12 +95,12 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_renderer_
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_renderer_backend_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md102"></a>
+<h1><a class="anchor" id="autotoc_md108"></a>
 Renderer Backend Architecture</h1>
-<h2><a class="anchor" id="autotoc_md103"></a>
+<h2><a class="anchor" id="autotoc_md109"></a>
 Purpose and positioning</h2>
 <p><code>Renderer Backend</code> is a subsystem that provides a swappable, graphics-API-independent interface layer so that application developers can build graphics applications without depending directly on a specific graphics API.</p>
-<h2><a class="anchor" id="autotoc_md104"></a>
+<h2><a class="anchor" id="autotoc_md110"></a>
 Renderer Backend concept</h2>
 <p>To achieve this goal, <code>Renderer Backend</code> uses the Strategy pattern from object-oriented design.</p>
 <p>The functionality provided by <code>Renderer Backend</code> is broadly categorized into four groups: Shader, Texture, VAO, and VBO. For each group, an interface is defined to absorb differences between graphics APIs. On the other hand, the upper-layer entry point for using <code>Renderer Backend</code> is kept simple, so a single conceptual Context is used. Shader, Texture, VAO, and VBO are assumed to use the same graphics API and are selected as a set. Mixing different graphics APIs is not assumed.</p>
@@ -149,13 +149,13 @@ strategy</div></div>
 <td class="markdownTableBodyNone">VBOConcrete2   </td><td class="markdownTableBodyNone">Not implemented   </td><td class="markdownTableBodyNone">Will be added when support for additional graphics APIs is introduced.   </td></tr>
 </table>
 <p>*1: The Context public API definitions are split into <code><a class="el" href="structrenderer__backend__context.html" title="RendererBackend内部状態管理構造体">renderer_backend_context</a></code>, <code>context_shader</code>, <code>context_texture</code>, <code>context_vao</code>, and <code>context_vbo</code> header files to improve readability, but all implementations are located in <code>renderer_backend_context/renderer_backend_context.c</code>.</p>
-<h3><a class="anchor" id="autotoc_md105"></a>
+<h3><a class="anchor" id="autotoc_md111"></a>
 Selecting Concretes (Shader, Texture, VAO, VBO) (Current)</h3>
 <p>Currently, the graphics API is selected when the <code>Renderer Backend</code> context is initialized. The selected target API determines the Shader, Texture, VAO, and VBO vtables stored in the context.</p>
-<h3><a class="anchor" id="autotoc_md106"></a>
+<h3><a class="anchor" id="autotoc_md112"></a>
 Selecting Concretes (Shader, Texture, VAO, VBO) (Future)</h3>
 <p>With the current design, all supported graphics API concrete implementations must be buildable so that context initialization can select the appropriate vtables at runtime. This is difficult to achieve in practice. In the future, the selection will be moved to build time by specifying the target graphics API via build options.</p>
-<h2><a class="anchor" id="autotoc_md107"></a>
+<h2><a class="anchor" id="autotoc_md113"></a>
 Current unsupported items</h2>
 <p>At present, the following items are not supported. They may be implemented as needed as GLCE evolves.</p>
 <ul>
@@ -163,10 +163,10 @@ Current unsupported items</h2>
 <li>Switching the graphics API at runtime</li>
 <li>Mixing multiple graphics APIs</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md108"></a>
+<h2><a class="anchor" id="autotoc_md114"></a>
 Configuration</h2>
 <p>There are no configuration options at this time.</p>
-<h2><a class="anchor" id="autotoc_md109"></a>
+<h2><a class="anchor" id="autotoc_md115"></a>
 References</h2>
 <p>To add support for a new graphics API, see <a class="el" href="md_docs_guide_renderer_backend_adding_concretes_en.html">Renderer System Guide</a>. </p>
 </div></div><!-- contents -->

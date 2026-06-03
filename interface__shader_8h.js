@@ -8,5 +8,6 @@ var interface__shader_8h =
     [ "pfn_renderer_shader_mat4f_uniform_set", "interface__shader_8h.html#ae500267e3ee240a9975f1c7be9cf1399", null ],
     [ "pfn_renderer_shader_uniform_location_get", "interface__shader_8h.html#a52d7793683140b7e2072fbca584141cf", null ],
     [ "pfn_renderer_shader_use", "interface__shader_8h.html#a0512efaa3e42df2dfcf2ec70a80120e1", null ],
+    [ "pfn_renderer_shader_vec4u8_uniform_set", "interface__shader_8h.html#aad87746b87106006340f672c21a61ed4", null ],
     [ "renderer_shader_vtable_t", "interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6", null ]
 ];

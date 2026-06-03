@@ -95,15 +95,15 @@ $(document).ready(function(){initNavTree('md_docs_architecture_systems_texture_s
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="arch_texture_system_en"></a> </p>
-<h1><a class="anchor" id="autotoc_md128"></a>
+<h1><a class="anchor" id="autotoc_md134"></a>
 Texture System architecture</h1>
-<h2><a class="anchor" id="autotoc_md129"></a>
+<h2><a class="anchor" id="autotoc_md135"></a>
 Purpose and positioning</h2>
 <p>The <code>Texture System</code> is a subsystem that manages the correspondence between CPU-side texture resources and GPU-side texture resources, allowing upper layers to register, retrieve, and destroy textures without being directly aware of the graphics API.</p>
 <p>The <code>texture</code> module in the <code>Resource Layer</code> provides <code>texture_t</code>, a CPU-side texture resource that holds information such as the texture name, width, height, channel count, and pixel data. It also provides APIs for creating and destroying CPU-side texture resources, loading and unloading pixel data, retrieving references to pixel data, retrieving texture size information, and retrieving texture names.</p>
 <p>On the other hand, the Texture API of the <code>Renderer Backend</code> provides operations for GPU-side texture resources, such as creating and destroying <code>renderer_backend_texture_t</code>, bind / unbind, and pixel upload.</p>
 <p>The <code>Texture System</code> bridges these two layers. Specifically, it creates and loads CPU-side texture resources through the <code>Resource Layer</code>, and uploads their pixel data to GPU-side texture resources through the <code>Renderer Backend</code>. After that, it manages the CPU-side resource and the GPU-side resource using the same texture ID, and provides upper layers with APIs for retrieving GPU-side resources.</p>
-<h2><a class="anchor" id="autotoc_md130"></a>
+<h2><a class="anchor" id="autotoc_md136"></a>
 Texture System concept</h2>
 <p>The <code>Texture System</code> centralizes the management of multiple texture resources in <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code>.</p>
 <p>Upper layers register a texture by specifying a texture name and a GPU-side texture unit number. During registration, <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> creates a CPU-side texture resource and a GPU-side texture resource, then uploads the pixel data loaded on the CPU side to the GPU-side resource. When registration succeeds, <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> stores the CPU-side resource and the GPU-side resource in the same slot, and returns that slot number to the upper layer as a <code>texture_id</code>.</p>
@@ -116,7 +116,7 @@ Texture System concept</h2>
 <p>In other words, <code>texture_id</code> is the resource array index inside <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code>, and it identifies the correspondence between a CPU-side resource and a GPU-side resource.</p>
 <p>The size of the management arrays is determined by <code>max_texture_count_</code> in <code><a class="el" href="texture__manager_8h.html#af15d5a309afbf65d0ca63ba86cbe1fa5" title="テクスチャ管理システムのメモリを確保し、テクスチャリソース(CPU / GPU)配列の要素を全てNULLで初期化する">texture_manager_initialize()</a></code>, and is fixed in the current implementation. Therefore, the number of manageable textures cannot be expanded after initialization. In the future, this may be changed to variable-size management using <code>dynamic_array</code> or a similar mechanism, so that the number of manageable textures can be expanded as needed.</p>
 <p>Note that <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> continues to hold <code>texture_t*</code> after registration, but it does not permanently retain CPU-side pixel data. In the current implementation, pixel data is temporarily loaded during registration by <code><a class="el" href="texture_8h.html#aa78b617727640281b4ff7f2b32c8282d" title="テクスチャピクセルデータをロードする">texture_pixel_load()</a></code>, uploaded to the GPU-side resource, and then freed by <code><a class="el" href="texture_8h.html#a4ed8bd31160c88625cb523b3d5e273d8" title="texture_が保持するピクセルデータのメモリを解放し、テクスチャ情報をNULL, 0で初期化する">texture_pixel_unload()</a></code>. Therefore, after registration, the retained CPU-side resource mainly functions as a resource object that represents the texture name and registration state.</p>
-<h2><a class="anchor" id="autotoc_md131"></a>
+<h2><a class="anchor" id="autotoc_md137"></a>
 Module dependencies</h2>
 <p>The <code>Texture System</code> depends on the <code>Resource Layer</code> for CPU-side resource operations, and on the <code>Renderer Backend</code> for GPU-side resource operations. It also uses <code>linear_allocator</code> to allocate management memory, and <code><a class="el" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体">choco_string</a></code> to compare texture names.</p>
 <div class="image">
@@ -124,7 +124,7 @@ Module dependencies</h2>
 <div class="caption">
 layer</div></div>
     <p>This diagram shows the major dependencies of the <code>Texture System</code>. It is not an exhaustive list of all include relationships; rather, it is an overview diagram for understanding which layers are used by <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code>.</p>
-<h2><a class="anchor" id="autotoc_md132"></a>
+<h2><a class="anchor" id="autotoc_md138"></a>
 Roles and characteristics of owned modules</h2>
 <p>At present, the <code>Texture System</code> owns only the <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> module.</p>
 <table class="markdownTable">
@@ -133,7 +133,7 @@ Roles and characteristics of owned modules</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a>   </td><td class="markdownTableBodyNone">Manages the correspondence between CPU-side texture resources and GPU-side texture resources, and provides APIs for texture registration, deletion, ID retrieval, and GPU resource retrieval.   </td><td class="markdownTableBodyNone">The central module of the <code>Texture System</code>. It stores CPU-side resources and GPU-side resources in arrays allocated by a linear allocator, and uses the same array index as the <code>texture_id</code>.   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md133"></a>
+<h2><a class="anchor" id="autotoc_md139"></a>
 Responsibility boundaries of the Texture System</h2>
 <p>The <code>Texture System</code> is a subsystem for managing the correspondence between CPU-side texture resources and GPU-side texture resources. Therefore, its responsibilities include the following:</p>
 <ul>
@@ -160,7 +160,7 @@ Responsibility boundaries of the Texture System</h2>
 <li>Managing texture lifetimes by texture cache or reference counting</li>
 </ul>
 <p>BMP file parsing and CPU-side texture representation are the responsibilities of the <code>Resource Layer</code>. The concrete creation, destruction, and upload processing of GPU-side texture resources are the responsibilities of the <code>Renderer Backend</code>. Binding / unbinding during rendering and uniform setting are the responsibilities of the upper layer that uses the Renderer Backend Texture API, or of the Renderer Frontend that may be introduced in the future.</p>
-<h2><a class="anchor" id="autotoc_md134"></a>
+<h2><a class="anchor" id="autotoc_md140"></a>
 texture_manager module details</h2>
 <p><code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> is the central module of the <code>Texture System</code>.</p>
 <p>It holds the following internal state:</p>
@@ -170,16 +170,16 @@ texture_manager module details</h2>
 <li><code>gpu_resources</code>: An array of GPU-side texture resources, <code>renderer_backend_texture_t*</code></li>
 </ul>
 <p><code>cpu_resources[i]</code> and <code>gpu_resources[i]</code> are a pair that represents the same texture. Therefore, a state where only one of them is NULL while the other is non-NULL is treated as data inconsistency.</p>
-<h3><a class="anchor" id="autotoc_md135"></a>
+<h3><a class="anchor" id="autotoc_md141"></a>
 Initialization</h3>
 <p><code><a class="el" href="texture__manager_8h.html#af15d5a309afbf65d0ca63ba86cbe1fa5" title="テクスチャ管理システムのメモリを確保し、テクスチャリソース(CPU / GPU)配列の要素を全てNULLで初期化する">texture_manager_initialize()</a></code> allocates the <code>texture_manager_t</code> object itself, the CPU-side resource array, and the GPU-side resource array from a linear allocator. After allocation, all elements of the resource arrays are initialized to NULL.</p>
 <p><code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> is assumed to remain alive from system startup to shutdown. Therefore, it is based on bulk lifetime management by the linear allocator, rather than individual memory deallocation.</p>
-<h3><a class="anchor" id="autotoc_md136"></a>
+<h3><a class="anchor" id="autotoc_md142"></a>
 Shutdown</h3>
 <p><code><a class="el" href="texture__manager_8h.html#aae33d4bcaba31cd6fd419bec2d1495d8" title="テクスチャリソース(CPU / GPU)管理システムが管理するすべてのリソースを解放し、リソース配列の要素をすべてNULLで初期化する">texture_manager_deinitialize()</a></code> destroys all managed CPU-side texture resources and GPU-side texture resources.</p>
 <p>CPU-side resources are destroyed by <code><a class="el" href="texture_8h.html#a989867345661353bf1a9aec609a3e6fa" title="texture_が保持するリソースと、自身のメモリを解放し、NULLで初期化する">texture_destroy()</a></code>. GPU-side resources are destroyed by <code><a class="el" href="context__texture_8h.html#ab58ec9d091347f345035c3d0f8456afe" title="テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する">renderer_backend_texture_destroy()</a></code>.</p>
 <p>However, because the memory for <code>texture_manager_t</code> itself is allocated by the linear allocator, this function does not free that memory individually.</p>
-<h3><a class="anchor" id="autotoc_md137"></a>
+<h3><a class="anchor" id="autotoc_md143"></a>
 Texture registration</h3>
 <p><code><a class="el" href="texture__manager_8h.html#ab90eb9eb4aeaba391db74540f2b44fac" title="テクスチャリソース管理システムにテクスチャリソースを登録し、リソースの読み込み、GPUへのアップロードを行う">texture_manager_register()</a></code> registers a CPU-side resource and a GPU-side resource by specifying a texture name.</p>
 <p>The main processing flow is as follows:</p>
@@ -197,19 +197,19 @@ Texture registration</h3>
 <li>Return the registered slot number as the <code>texture_id</code></li>
 </ol>
 <p>If registration fails, any CPU-side resource and GPU-side resource created during the process are destroyed. The resources are committed to the internal resource arrays of <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> only on success.</p>
-<h3><a class="anchor" id="autotoc_md138"></a>
+<h3><a class="anchor" id="autotoc_md144"></a>
 Texture unregistration</h3>
 <p><code><a class="el" href="texture__manager_8h.html#a1e2974d0f97d40ef5894056204f65b51" title="テクスチャリソース管理システムからテクスチャリソースを破棄する">texture_manager_unregister()</a></code> unregisters and destroys the registered CPU-side resource and GPU-side resource specified by <code>texture_id</code>.</p>
 <p><code><a class="el" href="texture__manager_8h.html#a7b6a5618f956a59b94a070d3cbee0a5f" title="テクスチャリソース管理システムからテクスチャ名称を指定してテクスチャリソースを破棄する">texture_manager_unregister_by_name()</a></code> searches for a <code>texture_id</code> from the texture name, and unregisters the resources corresponding to that <code>texture_id</code>.</p>
-<h3><a class="anchor" id="autotoc_md139"></a>
+<h3><a class="anchor" id="autotoc_md145"></a>
 Texture ID retrieval</h3>
 <p><code><a class="el" href="texture__manager_8h.html#a1a3b56ba0ddd6508d9df41345270ae11" title="テクスチャリソース管理システムからテクスチャ名称に対応するテクスチャ識別子を取得する">texture_manager_texture_id_get()</a></code> retrieves the <code>texture_id</code> corresponding to a texture name. Texture names are compared using <code><a class="el" href="choco__string_8h.html#af6b4b0a652dacd79d19fc0ef8a7fc8a8" title="2つの文字列が等しいかを判定する">choco_string_equal()</a></code>.</p>
-<h3><a class="anchor" id="autotoc_md140"></a>
+<h3><a class="anchor" id="autotoc_md146"></a>
 GPU-side resource retrieval</h3>
 <p><code><a class="el" href="texture__manager_8h.html#a14cdb9945399cc8feb0cc221045f1fe2" title="テクスチャリソース管理システムからテクスチャ識別子を指定してGPUリソースを取得する">texture_manager_gpu_resource_get()</a></code> retrieves a GPU-side texture resource by specifying a <code>texture_id</code>.</p>
 <p><code><a class="el" href="texture__manager_8h.html#a06ad4ac2582bf71eebfd874ee8fec198" title="テクスチャリソース管理システムからテクスチャ名称を指定してGPUリソースを取得する">texture_manager_gpu_resource_get_by_name()</a></code> searches for a <code>texture_id</code> from the texture name, and retrieves the GPU-side texture resource corresponding to that <code>texture_id</code>.</p>
 <p>The retrieved GPU-side resource is for reference only, and the caller must not destroy the returned <code>renderer_backend_texture_t*</code>.</p>
-<h2><a class="anchor" id="autotoc_md141"></a>
+<h2><a class="anchor" id="autotoc_md147"></a>
 Resource ownership</h2>
 <p>In the <code>Texture System</code>, ownership of CPU-side resources and GPU-side resources is held by <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code>.</p>
 <table class="markdownTable">
@@ -224,12 +224,12 @@ Resource ownership</h2>
 </table>
 <p><code><a class="el" href="texture__manager_8h.html#ab90eb9eb4aeaba391db74540f2b44fac" title="テクスチャリソース管理システムにテクスチャリソースを登録し、リソースの読み込み、GPUへのアップロードを行う">texture_manager_register()</a></code> transfers ownership of CPU-side resources and GPU-side resources to <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> only when registration succeeds. If registration fails, temporarily created resources are destroyed internally.</p>
 <p>Note that ownership of <code>texture_t*</code> being held by <code><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a></code> does not mean that CPU-side pixel data continues to be retained after registration. In the current implementation, <code><a class="el" href="texture_8h.html#a4ed8bd31160c88625cb523b3d5e273d8" title="texture_が保持するピクセルデータのメモリを解放し、テクスチャ情報をNULL, 0で初期化する">texture_pixel_unload()</a></code> is called after GPU upload to free CPU-side pixel data. Therefore, after registration, <code>texture_t*</code> is treated mainly as a CPU-side resource object that holds the texture name and registration state.</p>
-<h2><a class="anchor" id="autotoc_md142"></a>
+<h2><a class="anchor" id="autotoc_md148"></a>
 Relationship with the Resource Layer</h2>
 <p>The <code>Texture System</code> uses the <code>texture</code> API of the <code>Resource Layer</code> to create CPU-side texture resources, load pixel data, and free pixel data.</p>
 <p>The <code>Resource Layer</code> is responsible for converting external files and built-in data into CPU-side resource representations. The <code>Texture System</code> is responsible for managing multiple such CPU-side resources and associating them with GPU-side resources.</p>
 <p>For details, see <a class="el" href="md_docs_architecture_resource_architecture_en.html">Resource Layer</a>.</p>
-<h2><a class="anchor" id="autotoc_md143"></a>
+<h2><a class="anchor" id="autotoc_md149"></a>
 Relationship with the Renderer Backend</h2>
 <p>The <code>Texture System</code> uses the Texture API of the <code>Renderer Backend</code> to create, destroy, and upload pixels to GPU-side texture resources.</p>
 <p>Specifically, it uses the following APIs:</p>
@@ -240,7 +240,7 @@ Relationship with the Renderer Backend</h2>
 </ul>
 <p>The <code>Texture System</code> does not depend on the concrete implementation of GPU-side resources. Differences between concrete graphics APIs, such as OpenGL 3.3, are absorbed by the Concrete implementations of the <code>Renderer Backend</code>.</p>
 <p>For details, see <a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_en.html">Renderer Backend</a>.</p>
-<h2><a class="anchor" id="autotoc_md144"></a>
+<h2><a class="anchor" id="autotoc_md150"></a>
 Current unsupported items</h2>
 <p>At present, the following are not supported. They may be implemented as needed as GLCE evolves.</p>
 <ul>
@@ -255,7 +255,7 @@ Current unsupported items</h2>
 <li>Loading normal image file formats other than BMP</li>
 <li>Simultaneous support for multiple Renderer Backend Contexts</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md145"></a>
+<h2><a class="anchor" id="autotoc_md151"></a>
 Configuration</h2>
 <p>At present, the upper limit of the number of manageable textures is specified by <code>max_texture_count_</code> in <code><a class="el" href="texture__manager_8h.html#af15d5a309afbf65d0ca63ba86cbe1fa5" title="テクスチャ管理システムのメモリを確保し、テクスチャリソース(CPU / GPU)配列の要素を全てNULLで初期化する">texture_manager_initialize()</a></code>.</p>
 <p>The texture unit number used by the registered GPU-side texture resource is specified by <code>gpu_unit_num_</code> in <code><a class="el" href="texture__manager_8h.html#ab90eb9eb4aeaba391db74540f2b44fac" title="テクスチャリソース管理システムにテクスチャリソースを登録し、リソースの読み込み、GPUへのアップロードを行う">texture_manager_register()</a></code>.</p>
@@ -271,7 +271,7 @@ Configuration</h2>
 <li>Base path: <code>assets/textures/</code></li>
 <li>Extension: <code>.bmp</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md146"></a>
+<h2><a class="anchor" id="autotoc_md152"></a>
 References</h2>
 <ul>
 <li>For CPU-side resource representations, see <a class="el" href="md_docs_architecture_resource_architecture_en.html">Resource Layer</a>.</li>

@@ -17,7 +17,9 @@ var renderer__types_8h =
       [ "RENDERER_UNDEFINED_ERROR", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9", null ]
     ] ],
     [ "renderer_type_t", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440", [
-      [ "RENDERER_TYPE_FLOAT", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930", null ]
+      [ "RENDERER_TYPE_FLOAT", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440afa42d4c34aa5fb23530c37d2e5078930", null ],
+      [ "RENDERER_TYPE_UNSIGNED_BYTE", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440a798bc7bb2ae2352fd63f4f2613609143", null ],
+      [ "RENDERER_TYPE_BYTE", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440a7e00243cd977275908bbb36b54aa5122", null ]
     ] ],
     [ "shader_type_t", "renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11c", [
       [ "SHADER_TYPE_VERTEX", "renderer__types_8h.html#a9510983791a7b7985e3acb3e9c7aa11ca6daf33643cc9e21ebafe45f32768b0da", null ],

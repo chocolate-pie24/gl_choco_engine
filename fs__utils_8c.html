@@ -104,6 +104,7 @@ $(document).ready(function(){initNavTree('fs__utils_8c.html',''); initResizable(
 <div class="textblock"><code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
+<code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="fs__utils_8h_source.html">engine/io_utils/fs_utils/fs_utils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="filesystem_8h_source.html">engine/core/filesystem/filesystem.h</a>&quot;</code><br />
@@ -115,16 +116,17 @@ Include dependency graph for fs_utils.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="fs__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c" alt=""/></div>
 <map name="asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c" id="asrc_2engine_2io__utils_2fs__utils_2fs__utils_8c">
-<area shape="rect" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="428,5,568,45"/>
+<area shape="rect" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="391,5,531,45"/>
 <area shape="rect" title=" " alt="" coords="5,101,76,126"/>
 <area shape="rect" title=" " alt="" coords="527,269,602,295"/>
 <area shape="rect" title=" " alt="" coords="137,269,219,295"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="327,93,461,133"/>
+<area shape="rect" title=" " alt="" coords="247,101,317,126"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="342,93,475,133"/>
 <area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="152,181,332,221"/>
 <area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="357,181,527,221"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="602,181,759,221"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="655,101,866,126"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="834,189,973,214"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="821,181,978,221"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="601,101,811,126"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="657,189,795,214"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -138,6 +140,8 @@ Data Structures</h2></td></tr>
 Macros</h2></td></tr>
 <tr class="memitem:ad85efc6664f6e3290099b021593baf62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs__utils_8c.html#ad85efc6664f6e3290099b021593baf62">FS_READ_UNIT_SIZE</a>&#160;&#160;&#160;512</td></tr>
 <tr class="separator:ad85efc6664f6e3290099b021593baf62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a4fea0e9da7b4a4789ee5d9829aed9c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs__utils_8c.html#a3a4fea0e9da7b4a4789ee5d9829aed9c">FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE</a>&#160;&#160;&#160;1024</td></tr>
+<tr class="separator:a3a4fea0e9da7b4a4789ee5d9829aed9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -150,6 +154,9 @@ Functions</h2></td></tr>
 <tr class="memitem:affe6cb5e85b87975b0017d4e05a8a62f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs__utils_8c.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a> (<a class="el" href="fs__utils_8h.html#a0154872d366b933e1f80e3329ae17496">fs_utils_t</a> *fs_utils_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_string_)</td></tr>
 <tr class="memdesc:affe6cb5e85b87975b0017d4e05a8a62f"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a> で指定したファイルの中身を全て読み込む  <br /></td></tr>
 <tr class="separator:affe6cb5e85b87975b0017d4e05a8a62f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace79b11ac7b402e7fe9a10f4667101f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs__utils_8c.html#ace79b11ac7b402e7fe9a10f4667101f1">fs_utils_text_file_line_read</a> (<a class="el" href="fs__utils_8h.html#a0154872d366b933e1f80e3329ae17496">fs_utils_t</a> *fs_utils_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_string_)</td></tr>
+<tr class="memdesc:ace79b11ac7b402e7fe9a10f4667101f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">ファイルから1byteづつ読み込み、1行分をout_string_に格納する  <br /></td></tr>
+<tr class="separator:ace79b11ac7b402e7fe9a10f4667101f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2605df84fad985b55a16e50c12d5494e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs__utils_8c.html#a2605df84fad985b55a16e50c12d5494e">fs_utils_fullpath_get</a> (<a class="el" href="fs__utils_8h.html#a0154872d366b933e1f80e3329ae17496">fs_utils_t</a> *fs_utils_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_fullpath_)</td></tr>
 <tr class="memdesc:a2605df84fad985b55a16e50c12d5494e"><td class="mdescLeft">&#160;</td><td class="mdescRight">fs_utils_が保持するファイルパス,ファイル名,拡張子の文字列からフルパス文字列を生成する  <br /></td></tr>
 <tr class="separator:a2605df84fad985b55a16e50c12d5494e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,7 +166,7 @@ Functions</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-12-26</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -175,6 +182,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>ファイル読み込みの際に一度に読み込むバイト数(メモリの動的確保回数を減らすため,固定値にした) </p>
+
+</div>
+</div>
+<a id="a3a4fea0e9da7b4a4789ee5d9829aed9c" name="a3a4fea0e9da7b4a4789ee5d9829aed9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a4fea0e9da7b4a4789ee5d9829aed9c">&#9670;&#160;</a></span>FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE&#160;&#160;&#160;1024</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>改行コードを除く1行本文の最大長は1023bytes(改行コードがCRLFの場合は1022bytesとなる) </p>
 
 </div>
 </div>
@@ -234,9 +256,9 @@ Functions</h2></td></tr>
 <div class="line"><a class="code hl_enumeration" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a> ret = <a class="code hl_function" href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a>(<span class="stringliteral">&quot;path/to/&quot;</span>, <span class="stringliteral">&quot;filename&quot;</span>, <span class="stringliteral">&quot;.txt&quot;</span>, <a class="code hl_enumvalue" href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f">FILESYSTEM_MODE_READ</a>, &amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>);    <span class="comment">// path/to/filename.txtがオープンされる</span></div>
 <div class="line"><span class="comment">// エラー処理</span></div>
 <div class="ttc" id="afilesystem_8h_html_a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f"><div class="ttname"><a href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3a4947829c287a187cc59d7e9c3154b09f">FILESYSTEM_MODE_READ</a></div><div class="ttdeci">@ FILESYSTEM_MODE_READ</div><div class="ttdef"><b>Definition:</b> filesystem.h:61</div></div>
-<div class="ttc" id="afs__utils_8h_html_a061f9be8bb048820929b746267d5e0bd"><div class="ttname"><a href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a></div><div class="ttdeci">fs_utils_result_t fs_utils_create(const char *filepath_, const char *filename_, const char *extension_, filesystem_open_mode_t open_mode_, fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_t構造体インスタンスを生成し初期化する</div><div class="ttdef"><b>Definition:</b> fs_utils.c:103</div></div>
+<div class="ttc" id="afs__utils_8h_html_a061f9be8bb048820929b746267d5e0bd"><div class="ttname"><a href="fs__utils_8h.html#a061f9be8bb048820929b746267d5e0bd">fs_utils_create</a></div><div class="ttdeci">fs_utils_result_t fs_utils_create(const char *filepath_, const char *filename_, const char *extension_, filesystem_open_mode_t open_mode_, fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_t構造体インスタンスを生成し初期化する</div><div class="ttdef"><b>Definition:</b> fs_utils.c:109</div></div>
 <div class="ttc" id="afs__utils_8h_html_a4e6328e9d53a4739e16966f3177b8bb7"><div class="ttname"><a href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a></div><div class="ttdeci">fs_utils_result_t</div><div class="ttdoc">ファイルシステムユーティリティ実行結果コード定義</div><div class="ttdef"><b>Definition:</b> fs_utils.h:37</div></div>
-<div class="ttc" id="astructfs__utils_html"><div class="ttname"><a href="structfs__utils.html">fs_utils</a></div><div class="ttdoc">ファイルシステムユーティリティ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> fs_utils.c:78</div></div>
+<div class="ttc" id="astructfs__utils_html"><div class="ttname"><a href="structfs__utils.html">fs_utils</a></div><div class="ttdoc">ファイルシステムユーティリティ内部状態管理構造体</div><div class="ttdef"><b>Definition:</b> fs_utils.c:83</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filepath_</td><td>ファイルパス </td></tr>
@@ -302,7 +324,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a>(&amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>);</div>
 <div class="line"><a class="code hl_function" href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a>(&amp;<a class="code hl_struct" href="structfs__utils.html">fs_utils</a>); <span class="comment">// 2重デストロイ許可</span></div>
-<div class="ttc" id="afs__utils_8h_html_a102270e7966dfa05ef7e21a5a4ff4b04"><div class="ttname"><a href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a></div><div class="ttdeci">void fs_utils_destroy(fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_が管理するメモリと自身のメモリを解放し、*fs_utils_=NULLにする</div><div class="ttdef"><b>Definition:</b> fs_utils.c:209</div></div>
+<div class="ttc" id="afs__utils_8h_html_a102270e7966dfa05ef7e21a5a4ff4b04"><div class="ttname"><a href="fs__utils_8h.html#a102270e7966dfa05ef7e21a5a4ff4b04">fs_utils_destroy</a></div><div class="ttdeci">void fs_utils_destroy(fs_utils_t **fs_utils_)</div><div class="ttdoc">fs_utils_が管理するメモリと自身のメモリを解放し、*fs_utils_=NULLにする</div><div class="ttdef"><b>Definition:</b> fs_utils.c:215</div></div>
 </div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fs_utils_</td><td>メモリ解放対象構造体インスタンスへのダブルポインタ </td></tr>
@@ -392,6 +414,80 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ace79b11ac7b402e7fe9a10f4667101f1" name="ace79b11ac7b402e7fe9a10f4667101f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace79b11ac7b402e7fe9a10f4667101f1">&#9670;&#160;</a></span>fs_utils_text_file_line_read()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="fs__utils_8h.html#a4e6328e9d53a4739e16966f3177b8bb7">fs_utils_result_t</a> fs_utils_text_file_line_read </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="fs__utils_8h.html#a0154872d366b933e1f80e3329ae17496">fs_utils_t</a> *&#160;</td>
+          <td class="paramname"><em>fs_utils_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>out_string_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ファイルから1byteづつ読み込み、1行分をout_string_に格納する </p>
+<dl class="section note"><dt>Note</dt><dd>CRLF or LFは読み込んだ結果の文字列に含めない </dd>
+<dd>
+最後の文字列コピー失敗時はout_string_が変更されている可能性がある </dd>
+<dd>
+<a class="el" href="structfs__utils.html" title="ファイルシステムユーティリティ内部状態管理構造体">fs_utils</a>, filesystem周りのリファクタリング完了後、より効率の良い読み込み方法に変更する </dd>
+<dd>
+エラー発生時にはファイル位置が進んでいる可能性がある</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fs_utils_</td><td>fs_utils_t構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_string_</td><td>読み込んだ文字列の格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">FS_UTILS_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>fs_utils_ == NULL</li>
+<li>out_string_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">FS_UTILS_DATA_CORRUPTED</td><td>以下のいずれか<ul>
+<li>fs_utils_内部データ破損</li>
+<li>out_string_内部データ破損 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">FS_UTILS_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>ファイルオープンモードがFILESYSTEM_MODE_READでもFILESYSTEM_MODE_READ_PLUSでもない</li>
+<li>メモリシステム未初期化 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">FS_UTILS_RUNTIME_ERROR</td><td>ファイル読み込みでエラー発生 </td></tr>
+    <tr><td class="paramname">FS_UTILS_UNDEFINED_ERROR</td><td>ファイル読み込みで不明なエラーが発生 </td></tr>
+    <tr><td class="paramname">FS_UTILS_EOF</td><td>読み込んだ結果EOF(1文字も読み込まずEOF) </td></tr>
+    <tr><td class="paramname">FS_UTILS_LIMIT_EXCEEDED</td><td>以下のいずれか<ul>
+<li>1行に含まれるbyte数が規定値(FS_UTILS_TEXT_FILE_LINE_BUFFER_SIZE)を超過</li>
+<li>メモリ管理システムの管理変数が使用可能範囲を超過 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">FS_UTILS_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">FS_UTILS_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="affe6cb5e85b87975b0017d4e05a8a62f" name="affe6cb5e85b87975b0017d4e05a8a62f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#affe6cb5e85b87975b0017d4e05a8a62f">&#9670;&#160;</a></span>fs_utils_text_file_read()</h2>
 
@@ -444,10 +540,11 @@ Functions</h2></td></tr>
     <tr><td class="paramname">FS_UTILS_NO_MEMORY</td><td>メモリ確保に失敗 </td></tr>
     <tr><td class="paramname">FS_UTILS_OVERFLOW</td><td>処理過程でオーバーフローが発生 </td></tr>
     <tr><td class="paramname">FS_UTILS_LIMIT_EXCEEDED</td><td>メモリ管理システムが管理するメモリ使用量上限超過 </td></tr>
-    <tr><td class="paramname">FS_UTILS_SUCCESS</td><td>ファイルの読み込みに成功し、正常終了 </td></tr>
+    <tr><td class="paramname">FS_UTILS_SUCCESS</td><td>ファイルの読み込みに成功し、正常終了</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>失敗時にout_string_を不変にする </dd></dl>
 
 </div>
 </div>

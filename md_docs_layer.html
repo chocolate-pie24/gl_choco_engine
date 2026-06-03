@@ -109,12 +109,12 @@ $(document).ready(function(){initNavTree('md_docs_layer.html',''); initResizable
 <li>engine/base</li>
 <li>engine/core</li>
 <li>engine/containers</li>
-<li>engine/io\_utils</li>
+<li>engine/io_utils</li>
 <li>engine/resource</li>
 <li>engine/systems/platform</li>
 <li>engine/systems/renderer</li>
-<li>engine/systems/camera\_system</li>
-<li>engine/systems/texture\_system</li>
+<li>engine/systems/camera_system</li>
+<li>engine/systems/texture_system</li>
 </ul>
 </li>
 </ul>
@@ -123,7 +123,7 @@ $(document).ready(function(){initNavTree('md_docs_layer.html',''); initResizable
 <h1><a class="anchor" id="autotoc_md1"></a>
 Dependency rules</h1>
 <ul>
-<li>Dependencies must not point upward (from lower layers to higher layers).</li>
+<li>Dependencies must not point upward from lower layers to higher layers.</li>
 <li>Circular dependencies are not allowed.</li>
 <li>This document shows high-level module dependencies. Dependencies on internal submodules are folded into their parent module.</li>
 </ul>
@@ -158,21 +158,21 @@ application</h2>
 <li>Creating and destroying engine-wide runtime state.</li>
 <li>Initializing and shutting down subsystems in the required order.</li>
 <li>Owning the application main loop.</li>
-<li>Receiving platform events and storing them in application-level event queues.</li>
+<li>Receiving events from the Platform subsystem and storing them in application-level event queues.</li>
 <li>Updating application state from queued events.</li>
 <li>Dispatching updated state to subsystems such as camera, renderer, and texture management.</li>
-<li>Holding temporary sample-scene logic until the renderer frontend and higher-level scene layer are introduced.</li>
+<li>Holding temporary sample-scene logic until the renderer frontend and a higher-level scene layer are introduced.</li>
 </ul>
 </li>
 <li>Characteristics: Runs for the full lifetime of the executable, from startup to shutdown. This layer is allowed to depend on multiple engine subsystems because it acts as the composition root. However, lower engine layers must not depend on the application layer.</li>
 <li>Notes:<ul>
-<li>The application layer currently uses <code><a class="el" href="structring__queue.html" title="ring_queue_t内部データ構造">ring_queue</a></code> directly to buffer window, keyboard, and mouse events received from the platform subsystem.</li>
+<li>The application layer currently uses <code><a class="el" href="structring__queue.html" title="ring_queue_t内部データ構造">ring_queue</a></code> directly to temporarily store window, keyboard, and mouse events received from the Platform subsystem.</li>
 <li>The application currently uses some renderer backend and OpenGL/GLFW-related functionality directly as a temporary implementation detail. This dependency should be reduced when the renderer frontend is introduced.</li>
 </ul>
 </li>
 <li>Modules:<ul>
 <li>application: Public lifecycle API for creating, running, and destroying the application.</li>
-<li>application_core/application_types: Common application-layer configuration and result types.</li>
+<li>application_core/application_types: Common application-layer configuration values and result types.</li>
 <li>application_core/application_err_utils: Utilities for converting lower-layer result codes into application-layer result codes and strings.</li>
 <li>command_interpreter/flight_camera: Converts application-level keyboard input state into flight-camera control commands.</li>
 </ul>
@@ -197,9 +197,9 @@ engine/core</h2>
 <li>Characteristics: Some modules require explicit initialization.</li>
 <li>Modules:<ul>
 <li><a class="el" href="structkeyboard__event.html" title="キーボードイベント構造体">keyboard_event</a> / <a class="el" href="structmouse__event.html" title="マウスイベント構造体">mouse_event</a> / <a class="el" href="structwindow__event.html" title="ウィンドウイベント構造体">window_event</a>: Event-related data types.</li>
-<li>choco_memory: Allocation/free with memory tracking.</li>
+<li>choco_memory: Allocation/free with memory usage tracking.</li>
 <li>linear_allocator: Linear allocator for fixed-lifecycle allocations.</li>
-<li>filesystem: Basic file I/O (open/close, byte reads).</li>
+<li>filesystem: Basic file I/O, such as open/close and byte reads.</li>
 <li>buffer_utils/buffer_utils: Defines APIs for writing data to densely packed buffers and reading data back from them.</li>
 <li>geometry_primitive/vertex: Defines basic geometric data structures used to represent shape data.</li>
 </ul>
@@ -209,32 +209,33 @@ engine/core</h2>
 engine/containers</h2>
 <ul>
 <li>Purpose: Provides general-purpose container modules used by multiple GLCE layers and subsystems.</li>
-<li>Characteristics: No module-specific initialization, but requires core memory system to be initialized.</li>
+<li>Characteristics: No module-specific initialization, but requires the core memory system to be initialized.</li>
 <li>Modules:<ul>
 <li><a class="el" href="structring__queue.html" title="ring_queue_t内部データ構造">ring_queue</a>: Generic ring queue (ring buffer) container module.</li>
-<li><a class="el" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体">choco_string</a>: String container module with basic string operations.</li>
+<li><a class="el" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体">choco_string</a>: String container module that provides basic string operations.</li>
 </ul>
 </li>
 </ul>
 <h2><a class="anchor" id="autotoc_md13"></a>
 engine/io_utils</h2>
 <ul>
-<li>Purpose: Provides higher-level I/O utilities that go beyond the standard C library by building on other GLCE modules.</li>
-<li>Characteristics: No module-specific initialization, but requires core memory system to be initialized.</li>
+<li>Purpose: Provides higher-level I/O utilities beyond the standard C library by building on other GLCE modules.</li>
+<li>Characteristics: No module-specific initialization, but requires the core memory system to be initialized.</li>
 <li>Modules:<ul>
-<li><a class="el" href="structfs__utils.html" title="ファイルシステムユーティリティ内部状態管理構造体">fs_utils</a>: Higher-level file I/O utilities on top of <b>filesystem</b>, such as loading an entire text file.</li>
+<li><a class="el" href="structfs__utils.html" title="ファイルシステムユーティリティ内部状態管理構造体">fs_utils</a>: Higher-level file I/O utilities built on top of <b>filesystem</b>. It provides operations such as loading an entire text file and reading a text file one line at a time.</li>
 </ul>
 </li>
 </ul>
 <h2><a class="anchor" id="autotoc_md14"></a>
 engine/resource</h2>
 <ul>
-<li>Purpose: Provides modules that convert asset data, such as textures and geometry, into CPU-side resources that can be used by the engine.</li>
-<li>Characteristics: No module-specific initialization, but requires core memory system to be initialized.</li>
+<li>Purpose: Provides modules that convert asset data, such as textures and geometry, into CPU-side resources usable by the engine.</li>
+<li>Characteristics: No module-specific initialization, but requires the core memory system to be initialized.</li>
 <li>Modules:<ul>
-<li>loaders/bmp_loader: BMP file loader.</li>
-<li>resource_core/resource_err_utils: Resource-layer error utility module that provides result-code translation between modules and conversion of resource-layer result codes to strings.</li>
-<li>resource_core/resource_types: Provides common data types used across the resource layer.</li>
+<li>loaders/bmp_loader: BMP file loader. It reads BMP files and converts them into pixel data that is easier for GLCE to handle.</li>
+<li>loaders/stl_loader: ASCII STL file loader. It reads ASCII STL files and converts them into <code>point_normal_vertex_t</code> arrays.</li>
+<li>resource_core/resource_err_utils: Resource-layer error utility module that translates result codes between modules and converts resource-layer result codes to strings.</li>
+<li>resource_core/resource_types: Provides common data types used across the Resource layer.</li>
 <li>texture/texture: Provides APIs for operating on CPU-side texture resources.</li>
 </ul>
 </li>
@@ -242,42 +243,47 @@ engine/resource</h2>
 <h2><a class="anchor" id="autotoc_md15"></a>
 engine/systems/platform</h2>
 <ul>
-<li>Purpose: GLCE currently uses GLFW as its primary platform backend, but the platform subsystem is designed to avoid hard-coding a GLFW dependency. To keep room for future non-GLFW implementations, GLCE abstracts the platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.</li>
-<li>Characteristics: Requires explicit initialization. Once initialized, the platform subsystem remains active for the lifetime of the application (until shutdown).</li>
+<li>Purpose: GLCE currently uses GLFW as its primary platform backend. However, the Platform subsystem is designed to avoid hard-coding a GLFW dependency. To keep room for future non-GLFW implementations, GLCE abstracts the Platform subsystem using a Strategy-style interface (function table) and swappable backend implementations.</li>
+<li>Characteristics: Requires explicit initialization. Once initialized, the Platform subsystem remains active for the lifetime of the application.</li>
 <li>Modules:<ul>
-<li>platform_core/platform_types: Common data types used across the platform subsystem.</li>
-<li>platform_core/platform_err_utils: Provides utilities to translate lower-layer error codes into platform subsystem error codes, and to convert platform subsystem error codes into human-readable strings.</li>
+<li>platform_core/platform_types: Common data types used across the Platform subsystem.</li>
+<li>platform_core/platform_err_utils: Utilities for translating lower-layer error codes into Platform subsystem error codes and converting them into human-readable strings.</li>
 <li>platform_interface: Defines the platform interface as a function table (vtable-like) shared by all platform backends.</li>
 <li>platform_concretes/platform_glfw: GLFW-based backend implementation that provides the concrete function table for the platform interface.</li>
-<li><a class="el" href="structplatform__context.html" title="プラットフォームコンテキスト構造体">platform_context</a>: Strategy context and public entry point for the platform subsystem, responsible for initialization, backend selection, lifecycle management, and dispatching API calls through the interface.</li>
+<li><a class="el" href="structplatform__context.html" title="プラットフォームコンテキスト構造体">platform_context</a>: Strategy context and public entry point for the Platform subsystem. It is responsible for initialization, backend selection, lifecycle management, and API dispatch through the interface.</li>
 </ul>
 </li>
 </ul>
 <h2><a class="anchor" id="autotoc_md16"></a>
 engine/systems/renderer</h2>
-<p><em>Note</em>: A renderer frontend has not been implemented yet, so the application currently uses some backend modules directly. This will be removed once the frontend is introduced.</p>
+<p><em>Note</em>: A renderer frontend has not been implemented yet, so the application currently uses some backend modules directly. This direct dependency will be removed once the frontend is introduced.</p>
 <ul>
-<li>Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future (e.g., other OpenGL versions or Vulkan). The long-term design separates a frontend (API-agnostic layer) from backend implementations (graphics-API-specific layers).</li>
-<li>Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application (until shutdown).</li>
+<li>Purpose: Provides the rendering subsystem. GLCE currently targets an OpenGL 3.3-based implementation, but the renderer is structured to accommodate additional backends in the future, such as other OpenGL versions or Vulkan. The long-term design separates an API-agnostic frontend from graphics-API-specific backend implementations.</li>
+<li>Characteristics: Requires explicit initialization. Once initialized, the renderer subsystem remains active for the lifetime of the application.</li>
 <li>Modules:<ul>
-<li>renderer_backend/renderer_backend_context/renderer_backend_context: The primary entry point and orchestration layer for the renderer backend. It wires the selected backend implementation and dispatches calls from higher layers through the backend interfaces, while exposing a small set of facade headers (shader/texture/VAO/VBO contexts) as the public API surface.</li>
+<li>renderer_backend/renderer_backend_context/renderer_backend_context: The primary entry point and orchestration layer for the renderer backend. It wires the selected backend implementation and dispatches calls from higher layers through backend interfaces, while exposing thin facade headers for shader/texture/VAO/VBO contexts as the public API surface.</li>
 <li>renderer_backend/renderer_backend_context/context_shader: Provides a thin facade (public API surface) for shader-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.</li>
 <li>renderer_backend/renderer_backend_context/context_texture: Provides a thin facade (public API surface) for texture-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.</li>
 <li>renderer_backend/renderer_backend_context/context_vao: Provides a thin facade (public API surface) for VAO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.</li>
 <li>renderer_backend/renderer_backend_context/context_vbo: Provides a thin facade (public API surface) for VBO-related backend operations used by higher layers. The implementation is consolidated in renderer_backend_context.c.</li>
-<li>renderer_backend/renderer_backend_concretes/gl33/concrete_shader: OpenGL 3.3 shader program utilities (compile, link, and program use/bind).</li>
+<li>renderer_backend/renderer_backend_concretes/gl33/concrete_shader: OpenGL 3.3 shader program utilities, including compile, link, and program use/bind.</li>
 <li>renderer_backend/renderer_backend_concretes/gl33/concrete_texture: OpenGL 3.3 texture operation APIs, including bind, unbind, and pixel upload.</li>
-<li>renderer_backend/renderer_backend_concretes/gl33/concrete_vao: OpenGL 3.3 VAO utilities (bind/unbind and vertex attribute configuration).</li>
-<li>renderer_backend/renderer_backend_concretes/gl33/concrete_vbo: OpenGL 3.3 VBO utilities (bind/unbind and uploading data to the GPU).</li>
+<li>renderer_backend/renderer_backend_concretes/gl33/concrete_vao: OpenGL 3.3 VAO utilities responsible for bind/unbind and vertex attribute configuration.</li>
+<li>renderer_backend/renderer_backend_concretes/gl33/concrete_vbo: OpenGL 3.3 VBO utilities responsible for bind/unbind and data upload to the GPU.</li>
 <li>renderer_backend/renderer_backend_interface/interface_shader: Defines the shader interface as a function table (vtable-like) shared by all renderer backends.</li>
 <li>renderer_backend/renderer_backend_interface/interface_texture: Defines the texture interface as a function table (vtable-like) shared by all renderer backends.</li>
 <li>renderer_backend/renderer_backend_interface/interface_vao: Defines the VAO interface as a function table (vtable-like) shared by all renderer backends.</li>
 <li>renderer_backend/renderer_backend_interface/interface_vbo: Defines the VBO interface as a function table (vtable-like) shared by all renderer backends.</li>
-<li>renderer_backend/renderer_backend_types: Defines common data types shared across the entire renderer backend layer (shader, texture, VAO, and VBO modules).</li>
-<li>renderer_core/renderer_err_utils: Provides utilities to translate lower-layer error codes into renderer subsystem error codes, and to convert renderer subsystem error codes into human-readable strings.</li>
-<li>renderer_core/renderer_memory: Wrapper APIs over <b>engine/core/choco_memory</b> tailored for the renderer layer (renderer-specific result codes and automatic memory-tag assignment) to simplify allocation/free within the renderer.</li>
+<li>renderer_backend/renderer_backend_types: Defines common data types shared across the renderer backend layer, including types used by shader, texture, VAO, and VBO modules.</li>
+<li>renderer_core/renderer_err_utils: Utilities for translating lower-layer error codes into renderer subsystem error codes and converting them into strings.</li>
+<li>renderer_core/renderer_memory: Wrapper APIs over <b>engine/core/choco_memory</b> tailored for the renderer layer. It simplifies allocation/free inside the renderer by using renderer-specific result codes and automatic memory-tag assignment.</li>
 <li>renderer_core/renderer_types: Common data types shared across the renderer subsystem.</li>
-<li>renderer_resources: Provides renderer-level resource modules used by higher layers. Currently, this layer contains <a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>, which encapsulates a shader program together with cached uniform locations and shader-specific operations.</li>
+<li>renderer_resources: Renderer-level resource modules used by higher layers before the renderer frontend is introduced. A renderer resource groups a shader program, cached uniform locations, shader-specific VAO/VBO resources, and GPU data upload operations.<ul>
+<li><a class="el" href="structui__shader.html" title="UIシェーダーリソース構造体">ui_shader</a>: Shader resource for textured UI quad rendering. It manages a UI shader program, MVP uniform location, and VAO/VBO configured for position and texture-coordinate vertex attributes.</li>
+<li><a class="el" href="structline__shader.html" title="線分描画用シェーダーリソース構造体">line_shader</a>: Shader resource for single-color 3D line rendering. It manages a line shader program, MVP/color uniform locations, and a VAO/VBO configured for position-only line vertices. It is intended for simple line primitives such as debug lines, AABB edges, and grid lines.</li>
+<li><a class="el" href="structpoint__shader.html" title="ポイント描画用シェーダーリソース構造体">point_shader</a>: Shader resource for point-cloud and point primitive rendering. It manages a point shader program, MVP uniform location, a VAO, and separate VBOs for position and color vertex attributes. Position data is stored as floating-point coordinates, while color data is stored as normalized unsigned-byte RGBA values and passed to the shader as a <code>vec4</code>. This resource is intended for rendering point-based visualization data such as debug points, measurement points, and point clouds.</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -291,8 +297,8 @@ engine/systems/camera_system</h2>
 <li><a class="el" href="structcamera__manager.html" title="カメラ管理システム内部状態管理構造体">camera_manager</a>: Manages camera instances and provides registration, deletion, and retrieval APIs.</li>
 <li>camera: Holds camera state such as name, position, orientation, and projection parameters, and provides APIs for retrieving matrices and direction vectors.</li>
 <li>camera_core/camera_memory: Wrapper APIs over <code>choco_memory</code> tailored for the camera layer.</li>
-<li>camera_core/camera_err_utils: Provides utilities to translate lower-layer error codes into camera-system result codes and to convert them into strings.</li>
-<li>camera_core/camera_types: Common data types, constants, and result codes used throughout the camera system.</li>
+<li>camera_core/camera_err_utils: Utilities for translating lower-layer error codes into camera-system result codes and converting them into strings.</li>
+<li>camera_core/camera_types: Common data types, constants, and result codes used throughout the Camera system.</li>
 </ul>
 </li>
 </ul>
@@ -306,7 +312,7 @@ engine/systems/texture_system</h2>
 <li>Allocates the module's memory resources using a linear allocator during initialization.</li>
 </ul>
 </li>
-<li>Characteristics: Requires explicit initialization. Once initialized, the texture subsystem remains active for the lifetime of the application (until shutdown).</li>
+<li>Characteristics: Requires explicit initialization. Once initialized, the texture subsystem remains active for the lifetime of the application.</li>
 <li>Modules:<ul>
 <li><a class="el" href="structtexture__manager.html" title="テクスチャリソース(CPU / GPU)リソース管理システム構造体定義">texture_manager</a>: Manages the correspondence between CPU-side texture resources and GPU-side texture resources, and provides registration, deletion, and retrieval APIs by texture name and texture ID. </li>
 </ul>
