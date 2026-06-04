@@ -77,6 +77,7 @@
 #include "engine/resource/texture/texture.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 #include "engine/resource/geometry/line_mesh_geometry.h"
+#include "engine/resource/geometry/point_mesh_geometry.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -520,8 +521,11 @@ application_result_t application_run(void) {
     size_t line_mesh_geometry_vertex_count = 0;
     vec4u8_t line_color = { 0 };
 
-    static point_vertex_t point_vertices[8] = { 0 };
-    static vec4u8_t point_colors[8] = { 0 };
+    point_mesh_geometry_t* point_mesh_geometry = NULL;
+    point_vertex_t tmp_point_vertices[8] = { 0 };
+    const point_vertex_t* point_vertices = NULL;
+    vec4u8_t point_colors[8] = { 0 };
+    size_t point_mesh_geometry_vertex_count = 0;
 
     lit_mesh_geometry_t* lit_mesh_geometry = NULL;
     const point_normal_vertex_t* stl_vertices = NULL;
@@ -606,14 +610,14 @@ application_result_t application_run(void) {
     line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * line_mesh_geometry_vertex_count, (void*)line_vertices);
 
     // Point Vertex
-    vec3f_initialize(-0.5, -0.5f, -3.0f, &point_vertices[0].position);
-    vec3f_initialize(-0.4f, -0.4f, -3.0f, &point_vertices[1].position);
-    vec3f_initialize(-0.3f, -0.3f, -3.0f, &point_vertices[2].position);
-    vec3f_initialize(-0.2f, -0.2f, -3.0f, &point_vertices[3].position);
-    vec3f_initialize(-0.1f, -0.1f, -3.0f, &point_vertices[4].position);
-    vec3f_initialize(0.1f, 0.1f, -3.0f, &point_vertices[5].position);
-    vec3f_initialize(0.2f, 0.2f, -3.0f, &point_vertices[6].position);
-    vec3f_initialize(0.3f, 0.3f, -3.0f, &point_vertices[7].position);
+    vec3f_initialize(-0.5, -0.5f, -3.0f, &tmp_point_vertices[0].position);
+    vec3f_initialize(-0.4f, -0.4f, -3.0f, &tmp_point_vertices[1].position);
+    vec3f_initialize(-0.3f, -0.3f, -3.0f, &tmp_point_vertices[2].position);
+    vec3f_initialize(-0.2f, -0.2f, -3.0f, &tmp_point_vertices[3].position);
+    vec3f_initialize(-0.1f, -0.1f, -3.0f, &tmp_point_vertices[4].position);
+    vec3f_initialize(0.1f, 0.1f, -3.0f, &tmp_point_vertices[5].position);
+    vec3f_initialize(0.2f, 0.2f, -3.0f, &tmp_point_vertices[6].position);
+    vec3f_initialize(0.3f, 0.3f, -3.0f, &tmp_point_vertices[7].position);
 
     vec4u8_initialize(255, 0, 0, 255, &point_colors[0]);
     vec4u8_initialize(255, 255, 0, 255, &point_colors[1]);
@@ -623,8 +627,31 @@ application_result_t application_run(void) {
     vec4u8_initialize(255, 255, 0, 255, &point_colors[5]);
     vec4u8_initialize(255, 255, 0, 255, &point_colors[6]);
     vec4u8_initialize(255, 255, 0, 255, &point_colors[7]);
-
-    point_shader_vertex_buffer_point_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_vertices), (void*)&point_vertices[0]);
+    ret_resource = point_mesh_geometry_create(&point_mesh_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to create point_mesh_geometry_t instance.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = point_mesh_geometry_initialize_from_vertices("test_point_geometry", 8, tmp_point_vertices, point_mesh_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to initialize point_mesh_geometry_t instance.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = point_mesh_geometry_vertices_get(point_mesh_geometry, &point_vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get point mesh geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = point_mesh_geometry_vertex_count_get(point_mesh_geometry, &point_mesh_geometry_vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get point mesh geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    point_shader_vertex_buffer_point_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_vertex_t) * point_mesh_geometry_vertex_count, (void*)point_vertices);
     point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
 
     // STL Vertex
@@ -733,7 +760,7 @@ application_result_t application_run(void) {
         point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
         point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
-        glDrawArrays(GL_POINTS, 0, 8);
+        glDrawArrays(GL_POINTS, 0, point_mesh_geometry_vertex_count);
         point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         // STL描画
@@ -754,6 +781,9 @@ cleanup:
     }
     if(NULL != line_mesh_geometry) {
         line_mesh_geometry_destroy(&line_mesh_geometry);
+    }
+    if(NULL != point_mesh_geometry) {
+        point_mesh_geometry_destroy(&point_mesh_geometry);
     }
     return ret;
 }
