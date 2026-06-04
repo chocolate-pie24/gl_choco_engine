@@ -172,6 +172,7 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->name")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "vertex_count_")
 
     ret_string = choco_string_create_from_c_string(name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_string) {
@@ -318,6 +319,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count");
 
     *out_vertices_ = geometry_->vertices;
 
@@ -343,6 +345,7 @@ resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
 
     *out_vertex_count_ = geometry_->vertex_count;
 

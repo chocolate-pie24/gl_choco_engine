@@ -75,6 +75,7 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_);
  * - vertex_count_ == 0
  * - vertices_ == NULL
  * - geometry_ == NULL
+ * - vertex_count_が3の倍数ではない
  * @retval RESOURCE_BAD_OPERATION 以下のいずれか
  * - geometry_がすでに初期化済みで内部状態が0, NULL以外
  * - メモリシステムが未初期化
@@ -158,6 +159,7 @@ const char* lit_mesh_geometry_name_get(const lit_mesh_geometry_t* geometry_);
  * - out_vertices_ == NULL
  * - *out_vertices_ != NULL
  * @retval RESOURCE_BAD_OPERATION geometry_が未初期化
+ * @retval RESOURCE_DATA_CORRUPTED geometry_が保持する頂点数が3の倍数ではない
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_);
@@ -174,6 +176,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
  * - geometry_ == NULL
  * - out_vertex_count_ == NULL
  * @retval RESOURCE_BAD_OPERATION geometry_が未初期化
+ * @retval RESOURCE_DATA_CORRUPTED geometry_が保持する頂点数が3の倍数ではない
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* geometry_, size_t* out_vertex_count_);
