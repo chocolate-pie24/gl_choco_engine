@@ -604,26 +604,26 @@ application_result_t application_run(void) {
     // STL Vertex
     ret_resource = lit_mesh_geometry_create(&lit_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Failed to create lit_mesh_geometry_t instance.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to create lit_mesh_geometry_t instance.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_resource = lit_mesh_geometry_initialize_from_file("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", lit_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Failed to initialize lit_mesh_geometry_t instance.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to initialize lit_mesh_geometry_t instance.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_resource = lit_mesh_geometry_vertices_get(lit_mesh_geometry, &stl_vertices);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Failed to get vertices.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get vertices.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_resource = lit_mesh_geometry_vertex_count_get(lit_mesh_geometry, &stl_vertex_count);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run(%s) - Failed to get vertex count.");  // TODO: app_err_utilsにresourceレイヤー実行結果コード変換追加
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get vertex count.", app_rslt_to_str(ret));
         goto cleanup;
     }
     lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);

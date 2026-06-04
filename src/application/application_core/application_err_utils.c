@@ -27,6 +27,8 @@
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/texture_system/texture_manager.h"
 
+#include "engine/resource/resource_core/resource_types.h"
+
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
@@ -49,6 +51,7 @@ static test_call_control_t s_test_config_app_rslt_convert_ring_queue;       /**<
 static test_call_control_t s_test_config_app_rslt_convert_renderer;         /**< app_rslt_convert_renderer()テスト設定 */
 static test_call_control_t s_test_config_app_rslt_convert_camera;           /**< app_rslt_convert_camera()テスト設定 */
 static test_call_control_t s_test_config_app_rslt_convert_texture_system;   /**< app_rslt_convert_texture_system()テスト設定 */
+static test_call_control_t s_test_config_app_rslt_convert_resource;         /**< app_rslt_convert_resource()テスト設定 */
 
 // プライベート関数テスト設定
 
@@ -61,6 +64,7 @@ static void test_app_rslt_convert_ring_queue(void);
 static void test_app_rslt_convert_renderer(void);
 static void test_app_rslt_convert_camera(void);
 static void test_app_rslt_convert_texture_system(void);
+static void test_app_rslt_convert_resource(void);
 #endif
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
@@ -72,6 +76,9 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
+static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
+static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";  /**< アプリケーション実行結果コード(ファイルクローズエラー)に対応する文字列 */
+static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 const char* app_rslt_to_str(application_result_t rslt_) {
@@ -94,6 +101,12 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_limit_exceeded;
     case APPLICATION_UNSUPPORTED_FILE:
         return s_rslt_str_unsupported_file;
+    case APPLICATION_FILE_OPEN_ERROR:
+        return s_rslt_str_file_open_error;
+    case APPLICATION_FILE_CLOSE_ERROR:
+        return s_rslt_str_file_close_error;
+    case APPLICATION_FILE_READ_ERROR:
+        return s_rslt_str_file_read_error;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -319,12 +332,54 @@ application_result_t app_rslt_convert_texture_system(texture_system_result_t rsl
     case TEXTURE_SYSTEM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case TEXTURE_SYSTEM_FILE_OPEN_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
+        return APPLICATION_FILE_OPEN_ERROR;
     case TEXTURE_SYSTEM_FILE_READ_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
+        return APPLICATION_FILE_READ_ERROR;
     case TEXTURE_SYSTEM_UNSUPPORTED_FILE:
         return APPLICATION_UNSUPPORTED_FILE;
     case TEXTURE_SYSTEM_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t app_rslt_convert_resource(resource_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_app_rslt_convert_resource.call_count++;
+    if(s_test_config_app_rslt_convert_resource.fail_on_call != 0) {
+        if(s_test_config_app_rslt_convert_resource.call_count == s_test_config_app_rslt_convert_resource.fail_on_call) {
+            return (application_result_t)s_test_config_app_rslt_convert_resource.forced_result;
+        }
+    }
+#endif
+
+    switch(rslt_) {
+    case RESOURCE_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RESOURCE_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RESOURCE_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RESOURCE_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RESOURCE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RESOURCE_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RESOURCE_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RESOURCE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RESOURCE_FILE_OPEN_ERROR:
+        return APPLICATION_FILE_OPEN_ERROR;
+    case RESOURCE_FILE_READ_ERROR:
+        return APPLICATION_FILE_READ_ERROR;
+    case RESOURCE_FILE_CLOSE_ERROR:
+        return APPLICATION_FILE_CLOSE_ERROR;
+    case RESOURCE_UNSUPPORTED_FILE:
+        return APPLICATION_UNSUPPORTED_FILE;
+    case RESOURCE_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
@@ -395,6 +450,15 @@ void NO_COVERAGE test_app_rslt_convert_texture_system_config_set(const test_call
     s_test_config_app_rslt_convert_texture_system.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_app_rslt_convert_resource_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_app_rslt_convert_resource.fail_on_call = config_->fail_on_call;
+    s_test_config_app_rslt_convert_resource.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_application_err_utils_config_reset(void) {
     test_call_control_reset(&s_test_config_app_rslt_convert_mem_sys);
     test_call_control_reset(&s_test_config_app_rslt_convert_linear_alloc);
@@ -403,6 +467,7 @@ void NO_COVERAGE test_application_err_utils_config_reset(void) {
     test_call_control_reset(&s_test_config_app_rslt_convert_renderer);
     test_call_control_reset(&s_test_config_app_rslt_convert_camera);
     test_call_control_reset(&s_test_config_app_rslt_convert_texture_system);
+    test_call_control_reset(&s_test_config_app_rslt_convert_resource);
 }
 
 void NO_COVERAGE test_application_err_utils(void) {
@@ -414,6 +479,7 @@ void NO_COVERAGE test_application_err_utils(void) {
     test_app_rslt_convert_renderer();
     test_app_rslt_convert_camera();
     test_app_rslt_convert_texture_system();
+    test_app_rslt_convert_resource();
 }
 
 // Generated by ChatGPT
@@ -427,6 +493,9 @@ static void NO_COVERAGE test_app_rslt_to_str(void) {
     assert(0 == strcmp(app_rslt_to_str(APPLICATION_OVERFLOW), "OVERFLOW"));
     assert(0 == strcmp(app_rslt_to_str(APPLICATION_LIMIT_EXCEEDED), "LIMIT_EXCEEDED"));
     assert(0 == strcmp(app_rslt_to_str(APPLICATION_UNSUPPORTED_FILE), "UNSUPPORTED_FILE"));
+    assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
+    assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_CLOSE_ERROR), "FILE_CLOSE_ERROR"));
+    assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_READ_ERROR), "FILE_READ_ERROR"));
     assert(0 == strcmp(app_rslt_to_str(APPLICATION_UNDEFINED_ERROR), "UNDEFINED_ERROR"));
 
     assert(0 == strcmp(app_rslt_to_str((application_result_t)-1), "UNDEFINED_ERROR"));
@@ -619,8 +688,8 @@ static void NO_COVERAGE test_app_rslt_convert_texture_system(void) {
     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_texture_system(TEXTURE_SYSTEM_BAD_OPERATION));
     assert(APPLICATION_OVERFLOW == app_rslt_convert_texture_system(TEXTURE_SYSTEM_OVERFLOW));
     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_texture_system(TEXTURE_SYSTEM_LIMIT_EXCEEDED));
-    assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_OPEN_ERROR));
-    assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_READ_ERROR));
+    assert(APPLICATION_FILE_OPEN_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_OPEN_ERROR));
+    assert(APPLICATION_FILE_READ_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_READ_ERROR));
     assert(APPLICATION_UNSUPPORTED_FILE == app_rslt_convert_texture_system(TEXTURE_SYSTEM_UNSUPPORTED_FILE));
     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_UNDEFINED_ERROR));
 
@@ -634,6 +703,40 @@ static void NO_COVERAGE test_app_rslt_convert_texture_system(void) {
 
     assert(APPLICATION_SUCCESS == app_rslt_convert_texture_system(TEXTURE_SYSTEM_SUCCESS));
     assert(APPLICATION_NO_MEMORY == app_rslt_convert_texture_system(TEXTURE_SYSTEM_SUCCESS));
+
+    test_application_err_utils_config_reset();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_app_rslt_convert_resource(void) {
+    test_call_control_t config;
+
+    test_application_err_utils_config_reset();
+
+    assert(APPLICATION_SUCCESS == app_rslt_convert_resource(RESOURCE_SUCCESS));
+    assert(APPLICATION_NO_MEMORY == app_rslt_convert_resource(RESOURCE_NO_MEMORY));
+    assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_resource(RESOURCE_RUNTIME_ERROR));
+    assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_resource(RESOURCE_INVALID_ARGUMENT));
+    assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_resource(RESOURCE_DATA_CORRUPTED));
+    assert(APPLICATION_BAD_OPERATION == app_rslt_convert_resource(RESOURCE_BAD_OPERATION));
+    assert(APPLICATION_OVERFLOW == app_rslt_convert_resource(RESOURCE_OVERFLOW));
+    assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_resource(RESOURCE_LIMIT_EXCEEDED));
+    assert(APPLICATION_FILE_OPEN_ERROR == app_rslt_convert_resource(RESOURCE_FILE_OPEN_ERROR));
+    assert(APPLICATION_FILE_READ_ERROR == app_rslt_convert_resource(RESOURCE_FILE_READ_ERROR));
+    assert(APPLICATION_FILE_CLOSE_ERROR == app_rslt_convert_resource(RESOURCE_FILE_CLOSE_ERROR));
+    assert(APPLICATION_UNSUPPORTED_FILE == app_rslt_convert_resource(RESOURCE_UNSUPPORTED_FILE));
+    assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_resource(RESOURCE_UNDEFINED_ERROR));
+
+    assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_resource((resource_result_t)-1));
+
+    test_application_err_utils_config_reset();
+
+    config.fail_on_call = 2;
+    config.forced_result = APPLICATION_NO_MEMORY;
+    test_app_rslt_convert_resource_config_set(&config);
+
+    assert(APPLICATION_SUCCESS == app_rslt_convert_resource(RESOURCE_SUCCESS));
+    assert(APPLICATION_NO_MEMORY == app_rslt_convert_resource(RESOURCE_SUCCESS));
 
     test_application_err_utils_config_reset();
 }
