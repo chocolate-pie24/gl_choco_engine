@@ -194,8 +194,7 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
     }
 
     for(size_t i = 0; i != vertex_count_; ++i) {
-        vec4i8_initialize(vertices_[i].normal.elem[0], vertices_[i].normal.elem[1], vertices_[i].normal.elem[2], vertices_[i].normal.elem[3], &tmp_vertices[i].normal);
-        vec3f_initialize(vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2], &tmp_vertices[i].position);
+        tmp_vertices[i] = vertices_[i];
     }
 
     geometry_->name = tmp_name;
