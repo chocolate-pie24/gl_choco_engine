@@ -137,12 +137,15 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     if(NULL != (*geometry_)->name) {
         choco_string_destroy(&(*geometry_)->name);
     }
-    if(NULL != (*geometry_)->vertices && 0 != (*geometry_)->vertex_count) {
+
+    if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
+        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != (*geometry_)->vertices && 0 != ((*geometry_)->vertex_count % 3)) {
+        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertex_count is not a multiple of 3.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != (*geometry_)->vertices) {
         memory_system_free((*geometry_)->vertices, sizeof(point_normal_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
         (*geometry_)->vertices = NULL;
         (*geometry_)->vertex_count = 0;
-    } else if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
-        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
     }
 
     memory_system_free(*geometry_, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
