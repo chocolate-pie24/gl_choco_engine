@@ -1,3 +1,20 @@
+/** @ingroup resource
+ *
+ * @file lit_mesh_geometry.c
+ * @author chocolate-pie24
+ * @brief lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
+ * 
+ * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
+ *
+ * @version 0.1
+ * @date 2026-06-04
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
 #include <stddef.h>
@@ -132,8 +149,6 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     *geometry_ = NULL;
 }
 
-// lit_mesh_geometry_tの内部リソースはlit_mesh_geometryが所有するため、一度初期化したあと、destroyをせずに再初期化するのは禁止
-// 失敗時はgeometry_は不変
 resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_) {
 #ifdef TEST_BUILD
     s_test_config_lit_mesh_geometry_initialize_from_vertices.call_count++;
@@ -201,8 +216,6 @@ cleanup:
     return ret;
 }
 
-// lit_mesh_geometry_tの内部リソースはlit_mesh_geometryが所有するため、一度初期化したあと、destroyをせずに再初期化するのは禁止
-// 失敗時にはgeometry_は不変
 resource_result_t lit_mesh_geometry_initialize_from_file(const char* path_, const char* name_, const char* extension_, lit_mesh_geometry_t* geometry_) {
 #ifdef TEST_BUILD
     s_test_config_lit_mesh_geometry_initialize_from_file.call_count++;
