@@ -31,8 +31,6 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_math/math_types.h"
 
 /**
  * @brief lit_mesh_geometry内部状態管理構造体
@@ -60,6 +58,9 @@ struct lit_mesh_geometry {
 #include "engine/core/memory/test_choco_memory.h"
 
 #include "engine/containers/test_choco_string.h"
+
+#include "engine/base/choco_math/choco_math.h"
+#include "engine/base/choco_math/math_types.h"
 
 // texture用モジュール専用テスト制御構造体定義
 
