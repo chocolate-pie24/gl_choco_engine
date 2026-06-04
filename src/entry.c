@@ -47,6 +47,7 @@
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
 #include "engine/resource/texture/test_texture.h"
+#include "engine/resource/geometry/test_lit_mesh_geometry.h"
 
 // test: engine/systems/platform
 #include "engine/systems/platform/platform_core/test_platform_err_utils.h"
@@ -127,6 +128,7 @@ int main(int argc_, char** argv_) {
         test_bmp_loader();
         test_stl_loader();
         test_texture();
+        test_lit_mesh_geometry();
 
         // engine/camera
         test_camera_err_utils();

@@ -521,8 +521,8 @@ application_result_t application_run(void) {
     static vec4u8_t point_colors[8] = { 0 };
 
     lit_mesh_geometry_t* lit_mesh_geometry = NULL;
-    static point_normal_vertex_t* stl_vertices = NULL;
-    static size_t stl_vertex_count = 0;
+    const point_normal_vertex_t* stl_vertices = NULL;
+    size_t stl_vertex_count = 0;
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
