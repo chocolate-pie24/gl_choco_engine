@@ -1,7 +1,23 @@
+/** @ingroup resource
+ *
+ * @file line_mesh_geometry.c
+ * @author chocolate-pie24
+ * @brief line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
+ * 
+ * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGBで指定する。このため、全ての線分が指定した色で描画される
+ *
+ * @version 0.1
+ * @date 2026-06-04
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/resource/geometry/line_mesh_geometry.h"
 
 #include <stddef.h>
-#include <stdint.h>
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/resource_core/resource_err_utils.h"
@@ -13,8 +29,6 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_math/math_types.h"
 
 /**
  * @brief line_mesh_geometry内部状態管理構造体
@@ -76,7 +90,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
         ERROR_MESSAGE("line_mesh_geometry_destroy(%s) - line_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
     } else if(NULL != (*geometry_)->vertices && 0 != ((*geometry_)->vertex_count % 2)) {
         ERROR_MESSAGE("line_mesh_geometry_destroy(%s) - line_mesh_geometry internal state is inconsistent: vertex_count is not a multiple of 2.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
-    } else {
+    } else if(NULL != (*geometry_)->vertices) {
         memory_system_free((*geometry_)->vertices, sizeof(line_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
         (*geometry_)->vertices = NULL;
         (*geometry_)->vertex_count = 0;
@@ -164,7 +178,7 @@ resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* ge
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertices_get", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertices_get", "geometry_->vertex_count")
 
     *out_vertices_ = geometry_->vertices;
 
@@ -182,7 +196,7 @@ resource_result_t line_mesh_geometry_vertex_count_get(const line_mesh_geometry_t
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertex_count_get", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
 
     *out_vertex_count_ = geometry_->vertex_count;
 
