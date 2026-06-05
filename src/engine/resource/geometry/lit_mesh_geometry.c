@@ -6,6 +6,8 @@
  * 
  * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
  *
+ * @todo カバレッジ改善
+ *
  * @version 0.1
  * @date 2026-06-04
  *
@@ -259,6 +261,11 @@ resource_result_t lit_mesh_geometry_initialize_from_file(const char* path_, cons
         ret = stl_loader_vertices_move(stl_loader, &tmp_vertices, &tmp_vertex_count);
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to move vertices from STL loader.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+        if(0 != (tmp_vertex_count % 3) || 0 == tmp_vertex_count) {
+            ret = RESOURCE_DATA_CORRUPTED;
+            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Loaded STL vertex data is invalid: vertex_count must be non-zero and a multiple of 3. vertex_count = %zu.", resource_rslt_to_str(ret), tmp_vertex_count);
             goto cleanup;
         }
         ret_string = choco_string_create_from_c_string(name_, &tmp_name);
