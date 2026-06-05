@@ -64,7 +64,7 @@ struct lit_mesh_geometry {
 #include "engine/base/choco_math/choco_math.h"
 #include "engine/base/choco_math/math_types.h"
 
-// texture用モジュール専用テスト制御構造体定義
+// lit_mesh_geometry用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_lit_mesh_geometry_create;                      /**< lit_mesh_geometry_create()テスト設定 */
