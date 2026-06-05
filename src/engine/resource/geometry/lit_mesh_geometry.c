@@ -6,6 +6,8 @@
  * 
  * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
  *
+ * @todo カバレッジ改善
+ *
  * @version 0.1
  * @date 2026-06-04
  *
@@ -31,8 +33,6 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_math/math_types.h"
 
 /**
  * @brief lit_mesh_geometry内部状態管理構造体
@@ -61,7 +61,10 @@ struct lit_mesh_geometry {
 
 #include "engine/containers/test_choco_string.h"
 
-// texture用モジュール専用テスト制御構造体定義
+#include "engine/base/choco_math/choco_math.h"
+#include "engine/base/choco_math/math_types.h"
+
+// lit_mesh_geometry用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_lit_mesh_geometry_create;                      /**< lit_mesh_geometry_create()テスト設定 */
@@ -137,12 +140,15 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     if(NULL != (*geometry_)->name) {
         choco_string_destroy(&(*geometry_)->name);
     }
-    if(NULL != (*geometry_)->vertices && 0 != (*geometry_)->vertex_count) {
+
+    if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
+        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != (*geometry_)->vertices && 0 != ((*geometry_)->vertex_count % 3)) {
+        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertex_count is not a multiple of 3.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != (*geometry_)->vertices) {
         memory_system_free((*geometry_)->vertices, sizeof(point_normal_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
         (*geometry_)->vertices = NULL;
         (*geometry_)->vertex_count = 0;
-    } else if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
-        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
     }
 
     memory_system_free(*geometry_, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
@@ -172,6 +178,7 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->name")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "vertex_count_")
 
     ret_string = choco_string_create_from_c_string(name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_string) {
@@ -193,8 +200,7 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
     }
 
     for(size_t i = 0; i != vertex_count_; ++i) {
-        vec4i8_initialize(vertices_[i].normal.elem[0], vertices_[i].normal.elem[1], vertices_[i].normal.elem[2], vertices_[i].normal.elem[3], &tmp_vertices[i].normal);
-        vec3f_initialize(vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2], &tmp_vertices[i].position);
+        tmp_vertices[i] = vertices_[i];
     }
 
     geometry_->name = tmp_name;
@@ -255,6 +261,11 @@ resource_result_t lit_mesh_geometry_initialize_from_file(const char* path_, cons
         ret = stl_loader_vertices_move(stl_loader, &tmp_vertices, &tmp_vertex_count);
         if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to move vertices from STL loader.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+        if(0 != (tmp_vertex_count % 3) || 0 == tmp_vertex_count) {
+            ret = RESOURCE_DATA_CORRUPTED;
+            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Loaded STL vertex data is invalid: vertex_count must be non-zero and a multiple of 3. vertex_count = %zu.", resource_rslt_to_str(ret), tmp_vertex_count);
             goto cleanup;
         }
         ret_string = choco_string_create_from_c_string(name_, &tmp_name);
@@ -318,6 +329,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count");
 
     *out_vertices_ = geometry_->vertices;
 
@@ -343,6 +355,7 @@ resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
 
     *out_vertex_count_ = geometry_->vertex_count;
 

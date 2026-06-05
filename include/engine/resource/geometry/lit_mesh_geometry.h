@@ -66,7 +66,7 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_);
  * @note 失敗時にはgeometry_の内部状態は不変
  * 
  * @param[in] name_ ジオメトリ名称文字列
- * @param[in] vertex_count_ 頂点配列の配列要素数
+ * @param[in] vertex_count_ 頂点配列の配列要素数で、三角形の頂点の数を三角形ごとに指定する(三角形の数 = vertex_count_ / 3となる)
  * @param[in] vertices_ 頂点配列
  * @param[in,out] geometry_ lit_mesh_geometry_t構造体インスタンスへのポインタ
  *
@@ -75,6 +75,7 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_);
  * - vertex_count_ == 0
  * - vertices_ == NULL
  * - geometry_ == NULL
+ * - vertex_count_が3の倍数ではない
  * @retval RESOURCE_BAD_OPERATION 以下のいずれか
  * - geometry_がすでに初期化済みで内部状態が0, NULL以外
  * - メモリシステムが未初期化
@@ -117,6 +118,7 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
  * - 頂点情報、法線情報のパース失敗
  * - 法線情報が[-1.0, 1.0]の範囲外、またはNaN、Infが含まれる
  * - 頂点情報にNaN、Infが含まれる
+ * - 読み込んだSTLデータの頂点数が3の倍数ではない、または0
  * @retval RESOURCE_OVERFLOW 以下のいずれか
  * - ファイルフルパス文字列が長すぎる
  * - STLデータに格納されている頂点の数または法線の数がSIZE_MAXを超過
@@ -158,6 +160,7 @@ const char* lit_mesh_geometry_name_get(const lit_mesh_geometry_t* geometry_);
  * - out_vertices_ == NULL
  * - *out_vertices_ != NULL
  * @retval RESOURCE_BAD_OPERATION geometry_が未初期化
+ * @retval RESOURCE_DATA_CORRUPTED geometry_が保持する頂点数が3の倍数ではない
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_);
@@ -166,6 +169,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
  * @brief geometry_が保有する頂点数を取得する
  *
  * @note 失敗時には*out_vertex_count_は変更しない
+ * @note 頂点数は三角形の頂点ごとにカウントするため、三角形の数の3倍となる
  * 
  * @param[in] geometry_ lit_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertex_count_ 頂点数格納先
@@ -174,6 +178,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
  * - geometry_ == NULL
  * - out_vertex_count_ == NULL
  * @retval RESOURCE_BAD_OPERATION geometry_が未初期化
+ * @retval RESOURCE_DATA_CORRUPTED geometry_が保持する頂点数が3の倍数ではない
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* geometry_, size_t* out_vertex_count_);
