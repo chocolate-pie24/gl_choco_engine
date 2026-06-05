@@ -1,3 +1,23 @@
+/** @ingroup resource
+ *
+ * @file point_mesh_geometry.c
+ * @author chocolate-pie24
+ * @brief point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
+ * 
+ * @note point_mesh_shader: 複数の点を描画する
+ * @note point_mesh_geometryは点群の幾何情報のみを保持し、色情報はpoint_mesh_geometryを保持する親構造体で扱う
+ *
+ * @todo TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる
+ *
+ * @version 0.1
+ * @date 2026-06-06
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/resource/geometry/point_mesh_geometry.h"
 
 #include <stddef.h>
@@ -13,8 +33,6 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_math/math_types.h"
 
 /**
  * @brief point_mesh_geometry内部状態管理構造体
