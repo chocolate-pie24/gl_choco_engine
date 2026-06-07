@@ -18,6 +18,7 @@
 #include "engine/resource/geometry/line_mesh_geometry.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/resource_core/resource_err_utils.h"
