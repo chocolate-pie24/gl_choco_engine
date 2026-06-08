@@ -122,6 +122,36 @@ float vec3f_length(const vec3f_t* vec_);
 void vec3f_normalize(vec3f_t* vec_);
 
 /**
+ * @brief 3次元ベクトルの全要素が有限の値かをチェックする
+ * 
+ * @param[in] vec_ 判定対象構造体インスタンスへのポインタ
+ *
+ * @return true 全要素が正常
+ * @return false vec_ == NULLまたは要素にNaN, Infが含まれる
+ */
+bool vec3f_is_finite(const vec3f_t* vec_);
+
+/**
+ * @brief v1_とv2_の各要素の小さい方を格納したvec3f_tを返す
+ * 
+ * @param v1_ vec3f_t構造体インスタンス1
+ * @param v2_ vec3f_t構造体インスタンス2
+ *
+ * @return vec3f_t v1_, v2_の各要素の小さい方を格納したvec3f_t
+ */
+vec3f_t vec3f_component_min(vec3f_t v1_, vec3f_t v2_);
+
+/**
+ * @brief v1_とv2_の各要素の大きい方を格納したvec3f_tを返す
+ * 
+ * @param v1_ vec3f_t構造体インスタンス1
+ * @param v2_ vec3f_t構造体インスタンス2
+ *
+ * @return vec3f_t v1_, v2_の各要素の大きい方を格納したvec3f_t
+ */
+vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_);
+
+/**
  * @brief 4次元ベクトルxyzwを初期化する
  *
  * @note out_vec4f_ == NULLの場合はエラーメッセージを出力し、何もしない
