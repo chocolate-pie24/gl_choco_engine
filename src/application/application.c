@@ -593,8 +593,8 @@ application_result_t application_run(void) {
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
     // Line Vertex
-    vec3f_initialize(1.0f, 2.0f, -3.0f, &tmp_line_vertices[0].position);
-    vec3f_initialize(4.0f, 5.0f, -6.0f, &tmp_line_vertices[1].position);
+    tmp_line_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
+    tmp_line_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
     vec4u8_initialize(255, 0, 0, 255, &line_color);
     ret_resource = line_mesh_geometry_create(&line_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
@@ -624,14 +624,14 @@ application_result_t application_run(void) {
     line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * line_mesh_geometry_vertex_count, (void*)line_vertices);
 
     // Point Vertex
-    vec3f_initialize(-0.5, -0.5f, -3.0f, &tmp_point_vertices[0].position);
-    vec3f_initialize(-0.4f, -0.4f, -3.0f, &tmp_point_vertices[1].position);
-    vec3f_initialize(-0.3f, -0.3f, -3.0f, &tmp_point_vertices[2].position);
-    vec3f_initialize(-0.2f, -0.2f, -3.0f, &tmp_point_vertices[3].position);
-    vec3f_initialize(-0.1f, -0.1f, -3.0f, &tmp_point_vertices[4].position);
-    vec3f_initialize(0.1f, 0.1f, -3.0f, &tmp_point_vertices[5].position);
-    vec3f_initialize(0.2f, 0.2f, -3.0f, &tmp_point_vertices[6].position);
-    vec3f_initialize(0.3f, 0.3f, -3.0f, &tmp_point_vertices[7].position);
+    tmp_point_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
+    tmp_point_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
+    tmp_point_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
+    tmp_point_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
+    tmp_point_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
+    tmp_point_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
+    tmp_point_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
+    tmp_point_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
 
     vec4u8_initialize(255, 0, 0, 255, &point_colors[0]);
     vec4u8_initialize(255, 255, 0, 255, &point_colors[1]);

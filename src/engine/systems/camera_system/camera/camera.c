@@ -181,8 +181,8 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     tmp_camera->posture_cache_dirty = true;
     tmp_camera->frustum_cache_dirty = true;
 
-    vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->euler);
-    vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
+    tmp_camera->euler = vec3f_initialize(0.0f, 0.0f, 0.0f);
+    tmp_camera->position = vec3f_initialize(0.0f, 0.0f, 0.0f);
 
     *out_camera_ = tmp_camera;
 

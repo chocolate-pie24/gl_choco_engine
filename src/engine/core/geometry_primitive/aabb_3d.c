@@ -268,15 +268,15 @@ geometry_primitive_result_t aabb_3d_vertices_get(const aabb_3d_t* aabb_, vec3f_t
         goto cleanup;
     }
 
-    vec3f_initialize(aabb_->min.elem[0], aabb_->min.elem[1], aabb_->max.elem[2], &vertices_[0]);    // min_x, min_y, max_z
-    vec3f_initialize(aabb_->max.elem[0], aabb_->min.elem[1], aabb_->max.elem[2], &vertices_[1]);    // max_x, min_y, max_z
-    vec3f_initialize(aabb_->max.elem[0], aabb_->min.elem[1], aabb_->min.elem[2], &vertices_[2]);    // max_x, min_y, min_z
-    vec3f_initialize(aabb_->min.elem[0], aabb_->min.elem[1], aabb_->min.elem[2], &vertices_[3]);    // min_x, min_y, min_z
+    vertices_[0] = vec3f_initialize(aabb_->min.elem[0], aabb_->min.elem[1], aabb_->max.elem[2]);    // min_x, min_y, max_z
+    vertices_[1] = vec3f_initialize(aabb_->max.elem[0], aabb_->min.elem[1], aabb_->max.elem[2]);    // max_x, min_y, max_z
+    vertices_[2] = vec3f_initialize(aabb_->max.elem[0], aabb_->min.elem[1], aabb_->min.elem[2]);    // max_x, min_y, min_z
+    vertices_[3] = vec3f_initialize(aabb_->min.elem[0], aabb_->min.elem[1], aabb_->min.elem[2]);    // min_x, min_y, min_z
 
-    vec3f_initialize(aabb_->min.elem[0], aabb_->max.elem[1], aabb_->max.elem[2], &vertices_[4]);    // min_x, max_y, max_z
-    vec3f_initialize(aabb_->max.elem[0], aabb_->max.elem[1], aabb_->max.elem[2], &vertices_[5]);    // max_x, max_y, max_z
-    vec3f_initialize(aabb_->max.elem[0], aabb_->max.elem[1], aabb_->min.elem[2], &vertices_[6]);    // max_x, max_y, min_z
-    vec3f_initialize(aabb_->min.elem[0], aabb_->max.elem[1], aabb_->min.elem[2], &vertices_[7]);    // min_x, max_y, min_z
+    vertices_[4] = vec3f_initialize(aabb_->min.elem[0], aabb_->max.elem[1], aabb_->max.elem[2]);    // min_x, max_y, max_z
+    vertices_[5] = vec3f_initialize(aabb_->max.elem[0], aabb_->max.elem[1], aabb_->max.elem[2]);    // max_x, max_y, max_z
+    vertices_[6] = vec3f_initialize(aabb_->max.elem[0], aabb_->max.elem[1], aabb_->min.elem[2]);    // max_x, max_y, min_z
+    vertices_[7] = vec3f_initialize(aabb_->min.elem[0], aabb_->max.elem[1], aabb_->min.elem[2]);    // min_x, max_y, min_z
 
     ret = GEOMETRY_PRIMITIVE_SUCCESS;
 
@@ -392,11 +392,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &max);
+        min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_initialize_from_min_max.fail_on_call = 1U;
         s_test_config_aabb_3d_initialize_from_min_max.forced_result = (int)GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
@@ -421,8 +421,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &max);
+        min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, NULL);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -438,11 +438,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(2.0f, 0.0f, 0.0f, &min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &max);
+        min = vec3f_initialize(2.0f, 0.0f, 0.0f);
+        max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -465,11 +465,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 2.0f, 0.0f, &min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &max);
+        min = vec3f_initialize(0.0f, 2.0f, 0.0f);
+        max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -492,11 +492,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 2.0f, &min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &max);
+        min = vec3f_initialize(0.0f, 0.0f, 2.0f);
+        max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -519,12 +519,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &max);
+        min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         min.elem[0] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -547,12 +547,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &max);
+        min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         max.elem[2] = INFINITY;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -575,8 +575,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &min);
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &max);
+        min = vec3f_initialize(1.0f, 2.0f, 3.0f);
+        max = vec3f_initialize(1.0f, 2.0f, 3.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -601,8 +601,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_min_max(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &max);
+        min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = aabb_3d_initialize_from_min_max(min, max, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -630,11 +630,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_initialize_from_point_vertices.fail_on_call = 1U;
         s_test_config_aabb_3d_initialize_from_point_vertices.forced_result = (int)GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
@@ -658,8 +658,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(NULL, 1U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -680,7 +680,7 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 1U, NULL);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -695,10 +695,10 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 0U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -720,12 +720,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[0].position.elem[0] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 2U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -747,13 +747,13 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[1].position.elem[1] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -775,13 +775,13 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].position.elem[2] = INFINITY;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -803,11 +803,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
         s_test_config_aabb_3d_is_valid.forced_result = false;
@@ -832,7 +832,7 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &vertices[0].position);
+        vertices[0].position = vec3f_initialize(1.0f, 2.0f, 3.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 1U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -856,10 +856,10 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize( 2.0f,  3.0f,  4.0f, &vertices[0].position);
-        vec3f_initialize(-1.0f,  8.0f,  0.5f, &vertices[1].position);
-        vec3f_initialize( 6.0f, -2.0f,  7.0f, &vertices[2].position);
-        vec3f_initialize( 0.0f,  1.0f, -9.0f, &vertices[3].position);
+        vertices[0].position = vec3f_initialize( 2.0f,  3.0f,  4.0f);
+        vertices[1].position = vec3f_initialize(-1.0f,  8.0f,  0.5f);
+        vertices[2].position = vec3f_initialize( 6.0f, -2.0f,  7.0f);
+        vertices[3].position = vec3f_initialize( 0.0f,  1.0f, -9.0f);
 
         ret = aabb_3d_initialize_from_point_vertices(vertices, 4U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -887,11 +887,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_initialize_from_line_vertices.fail_on_call = 1U;
         s_test_config_aabb_3d_initialize_from_line_vertices.forced_result = (int)GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
@@ -915,8 +915,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(NULL, 2U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -937,8 +937,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 2U, NULL);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -953,11 +953,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 0U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -979,12 +979,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1006,12 +1006,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[0].position.elem[0] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 2U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1033,12 +1033,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[1].position.elem[1] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 2U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1060,14 +1060,14 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
-        vec3f_initialize(9.0f, 10.0f, 11.0f, &vertices[3].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+        vertices[3].position = vec3f_initialize(9.0f, 10.0f, 11.0f);
         vertices[3].position.elem[2] = INFINITY;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 4U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1089,11 +1089,11 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
         s_test_config_aabb_3d_is_valid.forced_result = false;
@@ -1118,8 +1118,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, 2.0f, -3.0f, &vertices[0].position);
-        vec3f_initialize( 4.0f, 5.0f,  6.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(-1.0f, 2.0f, -3.0f);
+        vertices[1].position = vec3f_initialize( 4.0f, 5.0f,  6.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 2U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1143,10 +1143,10 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_line_vertices(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize( 2.0f,  3.0f,  4.0f, &vertices[0].position);
-        vec3f_initialize(-1.0f,  8.0f,  0.5f, &vertices[1].position);
-        vec3f_initialize( 6.0f, -2.0f,  7.0f, &vertices[2].position);
-        vec3f_initialize( 0.0f,  1.0f, -9.0f, &vertices[3].position);
+        vertices[0].position = vec3f_initialize( 2.0f,  3.0f,  4.0f);
+        vertices[1].position = vec3f_initialize(-1.0f,  8.0f,  0.5f);
+        vertices[2].position = vec3f_initialize( 6.0f, -2.0f,  7.0f);
+        vertices[3].position = vec3f_initialize( 0.0f,  1.0f, -9.0f);
 
         ret = aabb_3d_initialize_from_line_vertices(vertices, 4U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1174,12 +1174,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_initialize_from_point_normal_vertices.fail_on_call = 1U;
         s_test_config_aabb_3d_initialize_from_point_normal_vertices.forced_result = (int)GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
@@ -1203,8 +1203,8 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(NULL, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1225,9 +1225,9 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 3U, NULL);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1242,12 +1242,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 0U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1269,13 +1269,13 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
-        vec3f_initialize(9.0f, 10.0f, 11.0f, &vertices[3].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+        vertices[3].position = vec3f_initialize(9.0f, 10.0f, 11.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 4U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1297,13 +1297,13 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[0].position.elem[0] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1325,13 +1325,13 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[1].position.elem[1] = NAN;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1353,16 +1353,16 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
-        vec3f_initialize(9.0f, 10.0f, 11.0f, &vertices[3].position);
-        vec3f_initialize(12.0f, 13.0f, 14.0f, &vertices[4].position);
-        vec3f_initialize(15.0f, 16.0f, 17.0f, &vertices[5].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+        vertices[3].position = vec3f_initialize(9.0f, 10.0f, 11.0f);
+        vertices[4].position = vec3f_initialize(12.0f, 13.0f, 14.0f);
+        vertices[5].position = vec3f_initialize(15.0f, 16.0f, 17.0f);
         vertices[5].position.elem[2] = INFINITY;
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 6U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_DATA_CORRUPTED == ret);
@@ -1384,12 +1384,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &out_aabb.min);
-        vec3f_initialize(40.0f, 50.0f, 60.0f, &out_aabb.max);
+        out_aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        out_aabb.max = vec3f_initialize(40.0f, 50.0f, 60.0f);
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
         s_test_config_aabb_3d_is_valid.forced_result = false;
@@ -1414,9 +1414,9 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, 2.0f, -3.0f, &vertices[0].position);
-        vec3f_initialize( 4.0f, 5.0f,  6.0f, &vertices[1].position);
-        vec3f_initialize( 0.5f, 8.0f,  1.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(-1.0f, 2.0f, -3.0f);
+        vertices[1].position = vec3f_initialize( 4.0f, 5.0f,  6.0f);
+        vertices[2].position = vec3f_initialize( 0.5f, 8.0f,  1.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 3U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1440,12 +1440,12 @@ static void NO_COVERAGE test_aabb_3d_initialize_from_point_normal_vertices(void)
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize( 2.0f,  3.0f,  4.0f, &vertices[0].position);
-        vec3f_initialize(-1.0f,  8.0f,  0.5f, &vertices[1].position);
-        vec3f_initialize( 6.0f, -2.0f,  7.0f, &vertices[2].position);
-        vec3f_initialize( 0.0f,  1.0f, -9.0f, &vertices[3].position);
-        vec3f_initialize( 9.0f,  4.0f,  3.0f, &vertices[4].position);
-        vec3f_initialize(-4.0f, 10.0f, 12.0f, &vertices[5].position);
+        vertices[0].position = vec3f_initialize( 2.0f,  3.0f,  4.0f);
+        vertices[1].position = vec3f_initialize(-1.0f,  8.0f,  0.5f);
+        vertices[2].position = vec3f_initialize( 6.0f, -2.0f,  7.0f);
+        vertices[3].position = vec3f_initialize( 0.0f,  1.0f, -9.0f);
+        vertices[4].position = vec3f_initialize( 9.0f,  4.0f,  3.0f);
+        vertices[5].position = vec3f_initialize(-4.0f, 10.0f, 12.0f);
 
         ret = aabb_3d_initialize_from_point_normal_vertices(vertices, 6U, &out_aabb);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1479,8 +1479,8 @@ static void NO_COVERAGE test_aabb_3d_reset(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         aabb_3d_reset(&aabb);
 
@@ -1501,8 +1501,8 @@ static void NO_COVERAGE test_aabb_3d_reset(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabb.min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabb.max);
+        aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabb.max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         assert(false == aabb_3d_is_valid(&aabb));
 
@@ -1525,8 +1525,8 @@ static void NO_COVERAGE test_aabb_3d_reset(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &aabb.min);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        aabb.max = vec3f_initialize(3.0f, 4.0f, 5.0f);
         aabb.min.elem[0] = NAN;
         aabb.max.elem[2] = INFINITY;
 
@@ -1557,11 +1557,11 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         for(size_t i = 0; i != 8U; ++i) {
-            vec3f_initialize(10.0f, 20.0f, 30.0f, &vertices[i]);
+            vertices[i] = vec3f_initialize(10.0f, 20.0f, 30.0f);
         }
 
         s_test_config_aabb_3d_vertices_get.fail_on_call = 1U;
@@ -1586,7 +1586,7 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
         test_aabb_3d_config_reset();
 
         for(size_t i = 0; i != 8U; ++i) {
-            vec3f_initialize(10.0f, 20.0f, 30.0f, &vertices[i]);
+            vertices[i] = vec3f_initialize(10.0f, 20.0f, 30.0f);
         }
 
         ret = aabb_3d_vertices_get(NULL, vertices);
@@ -1607,8 +1607,8 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = aabb_3d_vertices_get(&aabb, NULL);
         assert(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT == ret);
@@ -1623,11 +1623,11 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabb.min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabb.max);
+        aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabb.max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         for(size_t i = 0; i != 8U; ++i) {
-            vec3f_initialize(40.0f, 50.0f, 60.0f, &vertices[i]);
+            vertices[i] = vec3f_initialize(40.0f, 50.0f, 60.0f);
         }
 
         ret = aabb_3d_vertices_get(&aabb, vertices);
@@ -1649,11 +1649,11 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         for(size_t i = 0; i != 8U; ++i) {
-            vec3f_initialize(40.0f, 50.0f, 60.0f, &vertices[i]);
+            vertices[i] = vec3f_initialize(40.0f, 50.0f, 60.0f);
         }
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
@@ -1678,8 +1678,8 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = aabb_3d_vertices_get(&aabb, vertices);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1734,8 +1734,8 @@ static void NO_COVERAGE test_aabb_3d_vertices_get(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &aabb.min);
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &aabb.max);
+        aabb.min = vec3f_initialize(1.0f, 2.0f, 3.0f);
+        aabb.max = vec3f_initialize(1.0f, 2.0f, 3.0f);
 
         ret = aabb_3d_vertices_get(&aabb, vertices);
         assert(GEOMETRY_PRIMITIVE_SUCCESS == ret);
@@ -1759,8 +1759,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
         s_test_config_aabb_3d_is_valid.forced_result = false;
@@ -1777,8 +1777,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabb.min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabb.max);
+        aabb.min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabb.max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         s_test_config_aabb_3d_is_valid.fail_on_call = 1U;
         s_test_config_aabb_3d_is_valid.forced_result = true;
@@ -1806,8 +1806,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabb.max);
+        aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = aabb_3d_is_valid(&aabb);
         assert(true == ret);
@@ -1821,8 +1821,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &aabb.min);
-        vec3f_initialize(1.0f, 2.0f, 3.0f, &aabb.max);
+        aabb.min = vec3f_initialize(1.0f, 2.0f, 3.0f);
+        aabb.max = vec3f_initialize(1.0f, 2.0f, 3.0f);
 
         ret = aabb_3d_is_valid(&aabb);
         assert(true == ret);
@@ -1836,8 +1836,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(2.0f, 0.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(2.0f, 0.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
         ret = aabb_3d_is_valid(&aabb);
         assert(false == ret);
@@ -1851,8 +1851,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 2.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 2.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
         ret = aabb_3d_is_valid(&aabb);
         assert(false == ret);
@@ -1866,8 +1866,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 2.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 0.0f, 2.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
 
         ret = aabb_3d_is_valid(&aabb);
         assert(false == ret);
@@ -1881,8 +1881,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         aabb.min.elem[0] = NAN;
 
         ret = aabb_3d_is_valid(&aabb);
@@ -1897,8 +1897,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         aabb.max.elem[1] = NAN;
 
         ret = aabb_3d_is_valid(&aabb);
@@ -1913,8 +1913,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         aabb.min.elem[2] = INFINITY;
 
         ret = aabb_3d_is_valid(&aabb);
@@ -1929,8 +1929,8 @@ static void NO_COVERAGE test_aabb_3d_is_valid(void) {
 
         test_aabb_3d_config_reset();
 
-        vec3f_initialize(0.0f, 0.0f, 0.0f, &aabb.min);
-        vec3f_initialize(1.0f, 1.0f, 1.0f, &aabb.max);
+        aabb.min = vec3f_initialize(0.0f, 0.0f, 0.0f);
+        aabb.max = vec3f_initialize(1.0f, 1.0f, 1.0f);
         aabb.max.elem[2] = INFINITY;
 
         ret = aabb_3d_is_valid(&aabb);

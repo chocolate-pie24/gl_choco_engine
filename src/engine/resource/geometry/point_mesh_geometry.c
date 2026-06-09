@@ -883,9 +883,9 @@ static void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices(void) 
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
         ret = point_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -915,7 +915,7 @@ static void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices(void) 
         assert(8.0f == geometry->vertices[2].position.elem[2]);
 
         // 元配列を書き換えてもgeometry側には影響しない
-        vec3f_initialize(100.0f, 100.0f, 100.0f, &vertices[0].position);
+        vertices[0].position = vec3f_initialize(100.0f, 100.0f, 100.0f);
 
         assert(0.0f == geometry->vertices[0].position.elem[0]);
         assert(1.0f == geometry->vertices[0].position.elem[1]);
@@ -1169,9 +1169,9 @@ static void NO_COVERAGE test_point_mesh_geometry_vertices_get(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
         ret = point_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -1262,9 +1262,9 @@ static void NO_COVERAGE test_point_mesh_geometry_vertex_count_get(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
         ret = point_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -1372,9 +1372,9 @@ static void NO_COVERAGE test_point_mesh_geometry_vertex_count_get(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
-        vec3f_initialize(6.0f, 7.0f, 8.0f, &vertices[2].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
         ret = point_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
