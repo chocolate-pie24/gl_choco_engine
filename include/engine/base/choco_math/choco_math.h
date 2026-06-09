@@ -99,9 +99,10 @@ float vec3f_length_squared(vec3f_t vec_);
  * @brief 3次元ベクトルの長さを返す
  *
  * @param[in] vec_ 計算対象ベクトル
+ *
  * @return float 計算されたベクトルの長さ
  */
-float vec3f_length(const vec3f_t* vec_);
+float vec3f_length(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルを正規化する
