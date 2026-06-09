@@ -120,7 +120,7 @@ int main(int argc_, char** argv_) {
         test_filesystem();
         test_buffer_utils();
         test_aabb_3d();
-        // test_geometry_primitive_err_utils();
+        test_geometry_primitive_err_utils();
 
         // engine/containers
         test_choco_string();
