@@ -48,13 +48,12 @@ bool is_equal_float(float a_, float b_);
 /**
  * @brief 2次元ベクトルxyを初期化する
  *
- * @note out_vec2f_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
- * @param[out] out_vec2f_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec2f_t構造体インスタンス
  */
-void vec2f_initialize(float x_, float y_, vec2f_t* out_vec2f_);
+vec2f_t vec2f_initialize(float x_, float y_);
 
 /**
  * @brief 2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する

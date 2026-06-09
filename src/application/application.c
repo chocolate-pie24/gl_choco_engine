@@ -556,38 +556,38 @@ application_result_t application_run(void) {
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
     // UI Vertex
-    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[0].position);
-    vec2f_initialize(1.0f, -1.0f, &ui_vertex1[1].position);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[2].position);
+    ui_vertex1[0].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex1[1].position = vec2f_initialize(1.0f, -1.0f);
+    ui_vertex1[2].position = vec2f_initialize(1.0f, 1.0f);
 
-    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[3].position);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[4].position);
-    vec2f_initialize(-1.0f, 1.0f, &ui_vertex1[5].position);
+    ui_vertex1[3].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex1[4].position = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex1[5].position = vec2f_initialize(-1.0f, 1.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[0].tex_coord);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[1].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[2].tex_coord);
+    ui_vertex1[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex1[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex1[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[3].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[4].tex_coord);
-    vec2f_initialize(0.0f, 0.0f, &ui_vertex1[5].tex_coord);
+    ui_vertex1[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex1[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
+    ui_vertex1[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
 
-    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[0].position);
-    vec2f_initialize(6.5f, 0.0f, &ui_vertex2[1].position);
-    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[2].position);
+    ui_vertex2[0].position = vec2f_initialize(1.5f, 0.0f);
+    ui_vertex2[1].position = vec2f_initialize(6.5f, 0.0f);
+    ui_vertex2[2].position = vec2f_initialize(6.5f, 5.0f);
 
-    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[3].position);
-    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[4].position);
-    vec2f_initialize(1.5f, 5.0f, &ui_vertex2[5].position);
+    ui_vertex2[3].position = vec2f_initialize(1.5f, 0.0f);
+    ui_vertex2[4].position = vec2f_initialize(6.5f, 5.0f);
+    ui_vertex2[5].position = vec2f_initialize(1.5f, 5.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[0].tex_coord);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex2[1].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[2].tex_coord);
+    ui_vertex2[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex2[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex2[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[3].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[4].tex_coord);
-    vec2f_initialize(0.0f, 0.0f, &ui_vertex2[5].tex_coord);
+    ui_vertex2[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex2[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
+    ui_vertex2[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
