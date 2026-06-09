@@ -90,9 +90,10 @@ vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_);
  * @brief 3次元ベクトルの長さの2乗を返す
  *
  * @param[in] vec_ 計算対象ベクトル
+ *
  * @return float 長さの2乗値
  */
-float vec3f_length_squared(const vec3f_t* vec_);
+float vec3f_length_squared(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルの長さを返す
