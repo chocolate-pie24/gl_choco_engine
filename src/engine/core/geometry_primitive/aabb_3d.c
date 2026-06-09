@@ -1,3 +1,18 @@
+/** @ingroup core
+ *
+ * @file aabb_3d.c
+ * @author chocolate-pie24
+ * @brief 3次元AABB幾何情報構造体, API実装
+ *
+ * @version 0.1
+ * @date 2026-06-09
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -13,16 +28,14 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_macros.h"
 
-geometry_primitive_result_t aabb_3d_initialize_from_min_max(const vec3f_t* min_, const vec3f_t* max_, aabb_3d_t* out_aabb_) {
+geometry_primitive_result_t aabb_3d_initialize_from_min_max(vec3f_t min_, vec3f_t max_, aabb_3d_t* out_aabb_) {
     geometry_primitive_result_t ret = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     aabb_3d_t tmp_aabb = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(min_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "min_")
-    IF_ARG_NULL_GOTO_CLEANUP(max_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "max_")
     IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "out_aabb_")
 
-    tmp_aabb.min = *min_;
-    tmp_aabb.max = *max_;
+    tmp_aabb.min = min_;
+    tmp_aabb.max = max_;
 
     if(!aabb_3d_is_valid(&tmp_aabb)) {
         ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
@@ -86,6 +99,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_line_vertices(const line_ver
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "out_aabb_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
 
     min = vertices_[0].position;
     max = vertices_[0].position;
@@ -125,6 +139,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_normal_vertices(const 
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "out_aabb_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
 
     min = vertices_[0].position;
     max = vertices_[0].position;
@@ -196,11 +211,6 @@ cleanup:
     return ret;
 }
 
-/*
-// min > max -> invalid
-// nan or inf -> invalid
-// 厚み、体積を持たない退化したaabbはvalidとする
-*/
 bool aabb_3d_is_valid(const aabb_3d_t* aabb_) {
     if(NULL == aabb_) {
         return false;
