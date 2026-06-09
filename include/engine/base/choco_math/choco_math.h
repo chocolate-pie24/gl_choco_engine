@@ -56,18 +56,14 @@ bool is_equal_float(float a_, float b_);
 vec2f_t vec2f_initialize(float x_, float y_);
 
 /**
- * @brief 2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する
+ * @brief 2次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec2f_ == NULL
+ * @param[in] vec1_ vec2f_t構造体インスタンス
+ * @param[in] vec2_ vec2f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec2f_ 加算結果ベクトル
+ * @return 加算結果vec2f_t構造体インスタンス
  */
-void vec2f_add(const vec2f_t* vec1_, const vec2f_t* vec2_, vec2f_t* out_vec2f_);
+vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_);
 
 /**
  * @brief 3次元ベクトルxyzを初期化する
