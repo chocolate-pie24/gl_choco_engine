@@ -116,6 +116,13 @@ application_result_t app_rslt_convert_texture_system(texture_system_result_t rsl
  */
 application_result_t app_rslt_convert_resource(resource_result_t rslt_);
 
+/**
+ * @brief geometry_primitive保有モジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
+ *
+ * @param[in] rslt_ geometry_primitive保有モジュール実行結果コード
+ *
+ * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
+ */
 application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
 
 #ifdef __cplusplus

@@ -248,7 +248,7 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
     // AABB 1個につき12本の線分 -> AABB 1個につき頂点は24個
     if((SIZE_MAX / 24) < aabb_count_) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu", resource_rslt_to_str(ret), aabb_count_);
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu.", resource_rslt_to_str(ret), aabb_count_);
         goto cleanup;
     }
     vertex_count = aabb_count_ * 24;
@@ -269,7 +269,7 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
         ret_geometry = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
         if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
             ret = resource_rslt_convert_geometry_primitive(ret_geometry);
-            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) -line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu]. aabb_3d_vertices_get() returned %s.", resource_rslt_to_str(ret), geometry_primitive_rslt_to_str(ret_geometry));
+            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu]. aabb_3d_vertices_get() returned %s.", resource_rslt_to_str(ret), i, geometry_primitive_rslt_to_str(ret_geometry));
             goto cleanup;
         }
 
