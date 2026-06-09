@@ -24,6 +24,7 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -114,6 +115,8 @@ application_result_t app_rslt_convert_texture_system(texture_system_result_t rsl
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t app_rslt_convert_resource(resource_result_t rslt_);
+
+application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
 
 #ifdef __cplusplus
 }

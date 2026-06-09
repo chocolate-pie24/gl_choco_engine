@@ -386,6 +386,29 @@ application_result_t app_rslt_convert_resource(resource_result_t rslt_) {
     }
 }
 
+application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_) {
+    switch(rslt_) {
+    case GEOMETRY_PRIMITIVE_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case GEOMETRY_PRIMITIVE_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case GEOMETRY_PRIMITIVE_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
 #ifdef TEST_BUILD
 void NO_COVERAGE test_app_rslt_convert_mem_sys_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {

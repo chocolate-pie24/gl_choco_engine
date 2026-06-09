@@ -507,6 +507,8 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
     renderer_backend_texture_t* tex_gpu_resource = NULL;
@@ -695,9 +697,11 @@ application_result_t application_run(void) {
 
     // Debug AABB
     vec4u8_initialize(0, 0, 255, 255, &debug_aabb_color);
-    if(GEOMETRY_PRIMITIVE_SUCCESS != aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb)) {
-        // TODO: エラーコード変換
-        ERROR_MESSAGE("application_run(%s) - Failed to create aabb.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+    ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb);
+    if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
+        ret = app_rslt_convert_geometry_primitive(ret_geometry);
+        ERROR_MESSAGE("application_run(%s) - Failed to create aabb.", app_rslt_to_str(ret));
+        goto cleanup;
     }
     ret_resource = line_mesh_geometry_create(&debug_aabb_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
@@ -705,7 +709,8 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    if(RESOURCE_SUCCESS != line_mesh_geometry_initialize_from_aabbs("debug_aabb", 1, &debug_aabb, debug_aabb_geometry)) {
+    ret_resource = line_mesh_geometry_initialize_from_aabbs("debug_aabb", 1, &debug_aabb, debug_aabb_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("application_run(%s) - Failed to initialize line mesh geometry.", app_rslt_to_str(ret));
         goto cleanup;
@@ -827,6 +832,9 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
+    if(NULL != debug_aabb_geometry) {
+        line_mesh_geometry_destroy(&debug_aabb_geometry);
+    }
     if(NULL != lit_mesh_geometry) {
         lit_mesh_geometry_destroy(&lit_mesh_geometry);
     }

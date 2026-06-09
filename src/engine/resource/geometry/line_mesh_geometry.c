@@ -26,6 +26,7 @@
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/geometry_primitive_err_utils.h"
 #include "engine/core/memory/choco_memory.h"
 
 #include "engine/base/choco_macros.h"
@@ -267,9 +268,8 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
         vec3f_t aabb_vertices[8] = { 0 };
         ret_geometry = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
         if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
-            // TODO: エラーメッセージ修正した方が良い
             ret = resource_rslt_convert_geometry_primitive(ret_geometry);
-            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get aabb vertices.", resource_rslt_to_str(RESOURCE_RUNTIME_ERROR));
+            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) -line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu]. aabb_3d_vertices_get() returned %s.", resource_rslt_to_str(ret), geometry_primitive_rslt_to_str(ret_geometry));
             goto cleanup;
         }
 
