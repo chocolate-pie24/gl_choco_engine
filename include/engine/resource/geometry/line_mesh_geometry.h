@@ -28,6 +28,7 @@ extern "C" {
 #include "engine/resource/resource_core/resource_types.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometryモジュール内部状態管理構造体 */
 
@@ -88,6 +89,8 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t* geometry_);
+
+resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_);
 
 /**
  * @brief line_mesh_geometry_tが保有するジオメトリ名称文字列を取得する

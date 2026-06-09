@@ -18,6 +18,7 @@
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -224,6 +225,29 @@ resource_result_t resource_rslt_convert_choco_string(choco_string_result_t resul
         return RESOURCE_OVERFLOW;
     case CHOCO_STRING_LIMIT_EXCEEDED:
         return RESOURCE_LIMIT_EXCEEDED;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_) {
+    switch(rslt_) {
+    case GEOMETRY_PRIMITIVE_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
+        return RESOURCE_RUNTIME_ERROR;
+    case GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
+        return RESOURCE_LIMIT_EXCEEDED;
+    case GEOMETRY_PRIMITIVE_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case GEOMETRY_PRIMITIVE_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
     default:
         return RESOURCE_UNDEFINED_ERROR;
     }

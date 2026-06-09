@@ -218,6 +218,96 @@ cleanup:
     return ret;
 }
 
+resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_) {
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_name = NULL;
+    line_vertex_t* tmp_vertices = NULL;
+
+    size_t vertex_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabb_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabbs_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->name")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertex_count")
+
+    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = resource_rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to create line mesh geometry name string.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // AABB 1個につき12本の線分 -> AABB 1個につき頂点は24個
+    if((SIZE_MAX / 24) < aabb_count_) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu", resource_rslt_to_str(ret), aabb_count_);
+        goto cleanup;
+    }
+    vertex_count = aabb_count_ * 24;
+    if((SIZE_MAX / vertex_count) < sizeof(line_vertex_t)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
+        goto cleanup;
+    }
+    ret_mem = memory_system_allocate(sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = resource_rslt_convert_choco_memory(ret_mem);
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
+        goto cleanup;
+    }
+
+    for(size_t i = 0, ii = 0; i != aabb_count_; ++i, ii += 24) {
+        vec3f_t aabb_vertices[8] = { 0 };
+        ret_geometry = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
+        if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
+            // TODO: エラーメッセージ修正した方が良い
+            ret = resource_rslt_convert_geometry_primitive(ret_geometry);
+            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get aabb vertices.", resource_rslt_to_str(RESOURCE_RUNTIME_ERROR));
+            goto cleanup;
+        }
+
+        tmp_vertices[ii].position = aabb_vertices[0]; tmp_vertices[ii + 1].position = aabb_vertices[1]; // p0 - p1
+        tmp_vertices[ii + 2].position = aabb_vertices[1]; tmp_vertices[ii + 3].position = aabb_vertices[2]; // p1 - p2
+        tmp_vertices[ii + 4].position = aabb_vertices[2]; tmp_vertices[ii + 5].position = aabb_vertices[3]; // p2 - p3
+        tmp_vertices[ii + 6].position = aabb_vertices[3]; tmp_vertices[ii + 7].position = aabb_vertices[0]; // p3 - p0
+
+        tmp_vertices[ii + 8].position = aabb_vertices[0]; tmp_vertices[ii + 9].position = aabb_vertices[4]; // p0 - p4
+        tmp_vertices[ii + 10].position = aabb_vertices[1]; tmp_vertices[ii + 11].position = aabb_vertices[5]; // p1 - p5
+        tmp_vertices[ii + 12].position = aabb_vertices[2]; tmp_vertices[ii + 13].position = aabb_vertices[6]; // p2 - p6
+        tmp_vertices[ii + 14].position = aabb_vertices[3]; tmp_vertices[ii + 15].position = aabb_vertices[7]; // p3 - p7
+
+        tmp_vertices[ii + 16].position = aabb_vertices[4]; tmp_vertices[ii + 17].position = aabb_vertices[5]; // p4 - p5
+        tmp_vertices[ii + 18].position = aabb_vertices[5]; tmp_vertices[ii + 19].position = aabb_vertices[6]; // p5 - p6
+        tmp_vertices[ii + 20].position = aabb_vertices[6]; tmp_vertices[ii + 21].position = aabb_vertices[7]; // p6 - p7
+        tmp_vertices[ii + 22].position = aabb_vertices[7]; tmp_vertices[ii + 23].position = aabb_vertices[4]; // p7 - p4
+    }
+
+    geometry_->name = tmp_name;
+    geometry_->vertex_count = vertex_count;
+    geometry_->vertices = tmp_vertices;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != tmp_name) {
+            choco_string_destroy(&tmp_name);
+        }
+        if(NULL != tmp_vertices) {
+            memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
+            tmp_vertices = NULL;
+        }
+    }
+    return ret;
+}
+
 const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return NULL;

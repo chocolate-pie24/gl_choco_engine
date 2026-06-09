@@ -24,6 +24,7 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -123,6 +124,8 @@ resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t rslt_);
  * - 未定義のchoco_string実行結果コード
  */
 resource_result_t resource_rslt_convert_choco_string(choco_string_result_t rslt_);
+
+resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
 
 #ifdef __cplusplus
 }
