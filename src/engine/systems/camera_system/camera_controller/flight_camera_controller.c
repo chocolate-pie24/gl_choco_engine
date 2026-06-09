@@ -484,7 +484,7 @@ static camera_result_t camera_position_movement_apply(const vec3f_t* translation
     }
 
     // 新しいカメラ座標を計算
-    vec3f_add(translation_, &position, &new_pos);
+    new_pos = vec3f_add(*translation_, position);
 
     // カメラ座標更新
     if(CAMERA_SUCCESS != camera_position_update(&new_pos, camera_)) {

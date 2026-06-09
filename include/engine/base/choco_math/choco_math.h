@@ -77,18 +77,14 @@ vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_);
 vec3f_t vec3f_initialize(float x_, float y_, float z_);
 
 /**
- * @brief 3次元ベクトルの足し算(out_vec3f_ = vec1_ + vec2_)を実行する
+ * @brief 3次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec3f_ == NULL
+ * @param[in] vec1_ vec3f_t構造体インスタンス
+ * @param[in] vec2_ vec3f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec3f_ 加算結果ベクトル
+ * @return 加算結果のvec3f_t構造体インスタンス
  */
-void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_);
+vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_);
 
 /**
  * @brief 3次元ベクトルの長さの2乗を返す
