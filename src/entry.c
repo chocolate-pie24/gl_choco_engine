@@ -34,6 +34,8 @@
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
 #include "engine/core/buffer_utils/test_buffer_utils.h"
+#include "engine/core/geometry_primitive/test_aabb_3d.h"
+#include "engine/core/geometry_primitive/test_geometry_primitive_err_utils.h"
 
 // test: engine/containers
 #include "engine/containers/test_choco_string.h"
@@ -117,6 +119,8 @@ int main(int argc_, char** argv_) {
         test_choco_memory();
         test_filesystem();
         test_buffer_utils();
+        test_aabb_3d();
+        // test_geometry_primitive_err_utils();
 
         // engine/containers
         test_choco_string();
