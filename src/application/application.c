@@ -45,6 +45,7 @@
 #include "engine/core/event/window_event.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
@@ -506,30 +507,43 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
     texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
     renderer_backend_texture_t* tex_gpu_resource = NULL;
 
     struct timespec  req = {0, 1000000};
 
+    // UI描画
     static ui_vertex_t ui_vertex1[6] = { 0 };
     static ui_vertex_t ui_vertex2[6] = { 0 };
 
+    // 線分描画
     line_mesh_geometry_t* line_mesh_geometry = NULL;
     line_vertex_t tmp_line_vertices[2] = { 0 };
     const line_vertex_t* line_vertices = NULL;
     size_t line_mesh_geometry_vertex_count = 0;
     vec4u8_t line_color = { 0 };
 
+    // ポイント描画
     point_mesh_geometry_t* point_mesh_geometry = NULL;
     point_vertex_t tmp_point_vertices[8] = { 0 };
     const point_vertex_t* point_vertices = NULL;
     vec4u8_t point_colors[8] = { 0 };
     size_t point_mesh_geometry_vertex_count = 0;
 
+    // lit mesh描画
     lit_mesh_geometry_t* lit_mesh_geometry = NULL;
     const point_normal_vertex_t* stl_vertices = NULL;
     size_t stl_vertex_count = 0;
+
+    // debug AABB描画
+    aabb_3d_t debug_aabb = { 0 };
+    line_mesh_geometry_t* debug_aabb_geometry = NULL;
+    const line_vertex_t* debug_aabb_vertices = NULL;
+    size_t debug_aabb_geometry_vertex_count = 0;
+    vec4u8_t debug_aabb_color = { 0 };
 
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -681,6 +695,40 @@ application_result_t application_run(void) {
     }
     lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
 
+    // Debug AABB
+    vec4u8_initialize(0, 0, 255, 255, &debug_aabb_color);
+    ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb);
+    if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
+        ret = app_rslt_convert_geometry_primitive(ret_geometry);
+        ERROR_MESSAGE("application_run(%s) - Failed to create aabb.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = line_mesh_geometry_create(&debug_aabb_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = line_mesh_geometry_initialize_from_aabbs("debug_aabb", 1, &debug_aabb, debug_aabb_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to initialize line mesh geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = line_mesh_geometry_vertices_get(debug_aabb_geometry, &debug_aabb_vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = line_mesh_geometry_vertex_count_get(debug_aabb_geometry, &debug_aabb_geometry_vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * debug_aabb_geometry_vertex_count, (void*)debug_aabb_vertices);
+
     // MVP Matrix
     mat4f_identity(&s_app_state->model_matrix);
     mat4f_identity(&s_app_state->projection_matrix);
@@ -697,7 +745,6 @@ application_result_t application_run(void) {
     line_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
     line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
     line_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
-    line_shader_color_set(line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
 
     point_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
     point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
@@ -750,6 +797,7 @@ application_result_t application_run(void) {
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         // 線分描画
+        line_shader_color_set(line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
@@ -770,12 +818,23 @@ application_result_t application_run(void) {
         glDrawArrays(GL_TRIANGLES, 0, stl_vertex_count);
         lit_mesh_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
+        // Debug用STL AABB
+        line_shader_color_set(debug_aabb_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+
+        glDrawArrays(GL_LINES, line_mesh_geometry_vertex_count, debug_aabb_geometry_vertex_count);
+        line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary
 
         nanosleep(&req, NULL);
     }
 cleanup:
+    if(NULL != debug_aabb_geometry) {
+        line_mesh_geometry_destroy(&debug_aabb_geometry);
+    }
     if(NULL != lit_mesh_geometry) {
         lit_mesh_geometry_destroy(&lit_mesh_geometry);
     }

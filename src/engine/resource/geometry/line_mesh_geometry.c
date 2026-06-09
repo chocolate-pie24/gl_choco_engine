@@ -26,6 +26,7 @@
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/geometry_primitive_err_utils.h"
 #include "engine/core/memory/choco_memory.h"
 
 #include "engine/base/choco_macros.h"
@@ -66,6 +67,7 @@ struct line_mesh_geometry {
 static test_call_control_t s_test_config_line_mesh_geometry_create;                     /**< line_mesh_geometry_create()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_destroy;                    /**< line_mesh_geometry_destroy()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_initialize_from_vertices;   /**< line_mesh_geometry_initialize_from_vertices()テスト設定 */
+static test_call_control_t s_test_config_line_mesh_geometry_initialize_from_aabbs;      /**< line_mesh_geometry_initialize_from_aabbs()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_name_get;                   /**< line_mesh_geometry_name_get()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_vertices_get;               /**< line_mesh_geometry_vertices_get()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_vertex_count_get;           /**< line_mesh_geometry_vertex_count_get()テスト設定 */
@@ -76,6 +78,7 @@ static test_call_control_t s_test_config_line_mesh_geometry_vertex_count_get;   
 static void test_line_mesh_geometry_create(void);
 static void test_line_mesh_geometry_destroy(void);
 static void test_line_mesh_geometry_initialize_from_vertices(void);
+static void test_line_mesh_geometry_initialize_from_aabbs(void);
 static void test_line_mesh_geometry_name_get(void);
 static void test_line_mesh_geometry_vertices_get(void);
 static void test_line_mesh_geometry_vertex_count_get(void);
@@ -218,6 +221,103 @@ cleanup:
     return ret;
 }
 
+resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_line_mesh_geometry_initialize_from_aabbs.call_count++;
+    if(s_test_config_line_mesh_geometry_initialize_from_aabbs.fail_on_call != 0) {
+        if(s_test_config_line_mesh_geometry_initialize_from_aabbs.call_count == s_test_config_line_mesh_geometry_initialize_from_aabbs.fail_on_call) {
+            return (resource_result_t)s_test_config_line_mesh_geometry_initialize_from_aabbs.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_name = NULL;
+    line_vertex_t* tmp_vertices = NULL;
+
+    size_t vertex_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabb_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabbs_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->name")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertex_count")
+
+    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = resource_rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to create line mesh geometry name string.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // AABB 1個につき12本の線分 -> AABB 1個につき頂点は24個
+    if((SIZE_MAX / 24) < aabb_count_) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu.", resource_rslt_to_str(ret), aabb_count_);
+        goto cleanup;
+    }
+    vertex_count = aabb_count_ * 24;
+    if((SIZE_MAX / vertex_count) < sizeof(line_vertex_t)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
+        goto cleanup;
+    }
+    ret_mem = memory_system_allocate(sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = resource_rslt_convert_choco_memory(ret_mem);
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
+        goto cleanup;
+    }
+
+    for(size_t i = 0, ii = 0; i != aabb_count_; ++i, ii += 24) {
+        vec3f_t aabb_vertices[8] = { 0 };
+        ret_geometry = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
+        if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
+            ret = resource_rslt_convert_geometry_primitive(ret_geometry);
+            ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu]. aabb_3d_vertices_get() returned %s.", resource_rslt_to_str(ret), i, geometry_primitive_rslt_to_str(ret_geometry));
+            goto cleanup;
+        }
+
+        tmp_vertices[ii].position = aabb_vertices[0]; tmp_vertices[ii + 1].position = aabb_vertices[1]; // p0 - p1
+        tmp_vertices[ii + 2].position = aabb_vertices[1]; tmp_vertices[ii + 3].position = aabb_vertices[2]; // p1 - p2
+        tmp_vertices[ii + 4].position = aabb_vertices[2]; tmp_vertices[ii + 5].position = aabb_vertices[3]; // p2 - p3
+        tmp_vertices[ii + 6].position = aabb_vertices[3]; tmp_vertices[ii + 7].position = aabb_vertices[0]; // p3 - p0
+
+        tmp_vertices[ii + 8].position = aabb_vertices[0]; tmp_vertices[ii + 9].position = aabb_vertices[4]; // p0 - p4
+        tmp_vertices[ii + 10].position = aabb_vertices[1]; tmp_vertices[ii + 11].position = aabb_vertices[5]; // p1 - p5
+        tmp_vertices[ii + 12].position = aabb_vertices[2]; tmp_vertices[ii + 13].position = aabb_vertices[6]; // p2 - p6
+        tmp_vertices[ii + 14].position = aabb_vertices[3]; tmp_vertices[ii + 15].position = aabb_vertices[7]; // p3 - p7
+
+        tmp_vertices[ii + 16].position = aabb_vertices[4]; tmp_vertices[ii + 17].position = aabb_vertices[5]; // p4 - p5
+        tmp_vertices[ii + 18].position = aabb_vertices[5]; tmp_vertices[ii + 19].position = aabb_vertices[6]; // p5 - p6
+        tmp_vertices[ii + 20].position = aabb_vertices[6]; tmp_vertices[ii + 21].position = aabb_vertices[7]; // p6 - p7
+        tmp_vertices[ii + 22].position = aabb_vertices[7]; tmp_vertices[ii + 23].position = aabb_vertices[4]; // p7 - p4
+    }
+
+    geometry_->name = tmp_name;
+    geometry_->vertex_count = vertex_count;
+    geometry_->vertices = tmp_vertices;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != tmp_name) {
+            choco_string_destroy(&tmp_name);
+        }
+        if(NULL != tmp_vertices) {
+            memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
+            tmp_vertices = NULL;
+        }
+    }
+    return ret;
+}
+
 const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return NULL;
@@ -301,6 +401,15 @@ void NO_COVERAGE test_line_mesh_geometry_initialize_from_vertices_config_set(con
     s_test_config_line_mesh_geometry_initialize_from_vertices.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_line_mesh_geometry_initialize_from_aabbs_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_line_mesh_geometry_initialize_from_aabbs.fail_on_call = config_->fail_on_call;
+    s_test_config_line_mesh_geometry_initialize_from_aabbs.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_line_mesh_geometry_vertices_get_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -319,10 +428,12 @@ void NO_COVERAGE test_line_mesh_geometry_vertex_count_get_config_set(const test_
     s_test_config_line_mesh_geometry_vertex_count_get.forced_result = config_->forced_result;
 }
 
+
 void NO_COVERAGE test_line_mesh_geometry_config_reset(void) {
     test_call_control_reset(&s_test_config_line_mesh_geometry_create);
     test_call_control_reset(&s_test_config_line_mesh_geometry_destroy);
     test_call_control_reset(&s_test_config_line_mesh_geometry_initialize_from_vertices);
+    test_call_control_reset(&s_test_config_line_mesh_geometry_initialize_from_aabbs);
     test_call_control_reset(&s_test_config_line_mesh_geometry_name_get);
     test_call_control_reset(&s_test_config_line_mesh_geometry_vertices_get);
     test_call_control_reset(&s_test_config_line_mesh_geometry_vertex_count_get);
@@ -332,6 +443,7 @@ void NO_COVERAGE test_line_mesh_geometry(void) {
     test_line_mesh_geometry_create();
     test_line_mesh_geometry_destroy();
     test_line_mesh_geometry_initialize_from_vertices();
+    test_line_mesh_geometry_initialize_from_aabbs();
     test_line_mesh_geometry_name_get();
     test_line_mesh_geometry_vertices_get();
     test_line_mesh_geometry_vertex_count_get();
@@ -981,6 +1093,516 @@ static void NO_COVERAGE test_line_mesh_geometry_initialize_from_vertices(void) {
         assert(0.0f == geometry->vertices[0].position.elem[0]);
         assert(1.0f == geometry->vertices[0].position.elem[1]);
         assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        line_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void test_line_mesh_geometry_initialize_from_aabbs(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // line_mesh_geometry_initialize_from_aabbs() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        s_test_config_line_mesh_geometry_initialize_from_aabbs.fail_on_call = 1U;
+        s_test_config_line_mesh_geometry_initialize_from_aabbs.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs(NULL, 1U, aabbs, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // aabb_count_ == 0 -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 0U, aabbs, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // aabbs_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, NULL, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->name != NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        ret_string = choco_string_create_from_c_string("already_initialized", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL != geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertices != NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        line_vertex_t dummy_vertices[2] = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        geometry.vertices = dummy_vertices;
+        geometry.vertex_count = 0U;
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(dummy_vertices == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertex_count != 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        geometry.name = NULL;
+        geometry.vertices = NULL;
+        geometry.vertex_count = 24U;
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(24U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // choco_string_create_from_c_string() 失敗 -> RESOURCE_NO_MEMORY
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_create_from_c_string_config_set(&config);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // aabb_count_ * 24 の計算でoverflow -> RESOURCE_OVERFLOW
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t dummy_aabb = { 0 };
+        const size_t aabb_count = (SIZE_MAX / 24U) + 1U;
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &dummy_aabb.min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &dummy_aabb.max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", aabb_count, &dummy_aabb, &geometry);
+        assert(RESOURCE_OVERFLOW == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列確保サイズの計算でoverflow -> RESOURCE_OVERFLOW
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t dummy_aabb = { 0 };
+        const size_t aabb_count = SIZE_MAX / 24U;
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &dummy_aabb.min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &dummy_aabb.max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", aabb_count, &dummy_aabb, &geometry);
+        assert(RESOURCE_OVERFLOW == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列用memory_system_allocate() 失敗 -> RESOURCE_NO_MEMORY
+        // 1回目のallocateはchoco_string_t本体、2回目は文字列バッファ、3回目がtmp_vertices用
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        config.fail_on_call = 3U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // aabbs_[0] が不正状態 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[1] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[0].min);
+        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabbs[0].max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // aabbs_[1] が不正状態 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        line_mesh_geometry_t geometry = { 0 };
+        aabb_3d_t aabbs[2] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[1].min);
+        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabbs[1].max);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 2U, aabbs, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: 1個のAABBから24頂点のline mesh geometryを生成する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        line_mesh_geometry_t* geometry = NULL;
+        aabb_3d_t aabbs[1] = { 0 };
+        vec3f_t expected[24] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[0]);
+        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[1]);
+        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[2]);
+        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[3]);
+        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[4]);
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[5]);
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[6]);
+        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[7]);
+
+        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[8]);
+        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[9]);
+        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[10]);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[11]);
+        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[12]);
+        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[13]);
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[14]);
+        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[15]);
+
+        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[16]);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[17]);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[18]);
+        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[19]);
+        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[20]);
+        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[21]);
+        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[22]);
+        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[23]);
+
+        ret = line_mesh_geometry_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(24U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry", choco_string_c_str(geometry->name)));
+
+        for(size_t i = 0; i != 24U; ++i) {
+            assert(true == is_equal_float(expected[i].elem[0], geometry->vertices[i].position.elem[0]));
+            assert(true == is_equal_float(expected[i].elem[1], geometry->vertices[i].position.elem[1]));
+            assert(true == is_equal_float(expected[i].elem[2], geometry->vertices[i].position.elem[2]));
+        }
+
+        // 元AABBを書き換えてもgeometry側には影響しない
+        vec3f_initialize(100.0f, 100.0f, 100.0f, &aabbs[0].min);
+        vec3f_initialize(200.0f, 200.0f, 200.0f, &aabbs[0].max);
+
+        for(size_t i = 0; i != 24U; ++i) {
+            assert(true == is_equal_float(expected[i].elem[0], geometry->vertices[i].position.elem[0]));
+            assert(true == is_equal_float(expected[i].elem[1], geometry->vertices[i].position.elem[1]));
+            assert(true == is_equal_float(expected[i].elem[2], geometry->vertices[i].position.elem[2]));
+        }
+
+        line_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: 複数AABBからAABB数 * 24頂点のline mesh geometryを生成する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        line_mesh_geometry_t* geometry = NULL;
+        aabb_3d_t aabbs[2] = { 0 };
+
+        test_line_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
+        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+
+        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[1].min);
+        vec3f_initialize(11.0f, 22.0f, 33.0f, &aabbs[1].max);
+
+        ret = line_mesh_geometry_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 2U, aabbs, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(48U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry", choco_string_c_str(geometry->name)));
+
+        // 1個目AABBの先頭線分: p0 - p1
+        assert(true == is_equal_float(-1.0f, geometry->vertices[0].position.elem[0]));
+        assert(true == is_equal_float(-2.0f, geometry->vertices[0].position.elem[1]));
+        assert(true == is_equal_float( 6.0f, geometry->vertices[0].position.elem[2]));
+
+        assert(true == is_equal_float( 4.0f, geometry->vertices[1].position.elem[0]));
+        assert(true == is_equal_float(-2.0f, geometry->vertices[1].position.elem[1]));
+        assert(true == is_equal_float( 6.0f, geometry->vertices[1].position.elem[2]));
+
+        // 2個目AABBの先頭線分: offset 24, p0 - p1
+        assert(true == is_equal_float(10.0f, geometry->vertices[24].position.elem[0]));
+        assert(true == is_equal_float(20.0f, geometry->vertices[24].position.elem[1]));
+        assert(true == is_equal_float(33.0f, geometry->vertices[24].position.elem[2]));
+
+        assert(true == is_equal_float(11.0f, geometry->vertices[25].position.elem[0]));
+        assert(true == is_equal_float(20.0f, geometry->vertices[25].position.elem[1]));
+        assert(true == is_equal_float(33.0f, geometry->vertices[25].position.elem[2]));
+
+        // 2個目AABBの最後の線分: p7 - p4
+        assert(true == is_equal_float(10.0f, geometry->vertices[46].position.elem[0]));
+        assert(true == is_equal_float(22.0f, geometry->vertices[46].position.elem[1]));
+        assert(true == is_equal_float(30.0f, geometry->vertices[46].position.elem[2]));
+
+        assert(true == is_equal_float(10.0f, geometry->vertices[47].position.elem[0]));
+        assert(true == is_equal_float(22.0f, geometry->vertices[47].position.elem[1]));
+        assert(true == is_equal_float(33.0f, geometry->vertices[47].position.elem[2]));
 
         line_mesh_geometry_destroy(&geometry);
         assert(NULL == geometry);

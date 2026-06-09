@@ -28,6 +28,7 @@ extern "C" {
 #include "engine/resource/resource_core/resource_types.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometryモジュール内部状態管理構造体 */
 
@@ -88,6 +89,36 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t* geometry_);
+
+/**
+ * @brief 引数でaabb_3d_t配列を与えてline_mesh_geometry_t構造体インスタンスを初期化する
+ *
+ * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyをせずに再初期化するのは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
+ * @note geometry_にaabb_3d_tから頂点情報を生成し、geometry_に格納する。aabbs_の所有権は呼び出し側にある
+ * @note 失敗時にはgeometry_の内部状態は不変
+ * 
+ * @param[in] name_ ジオメトリ名称文字列
+ * @param[in] aabb_count_ aabbs_に含まれるaabb_3d_t構造体インスタンスの数
+ * @param[in] aabbs_ aabb_3d_t構造体インスタンス配列
+ * @param[in,out] geometry_ line_mesh_geometry_t構造体インスタンスへのポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - name_ == NULL
+ * - aabb_count_ == 0
+ * - aabbs_ == NULL
+ * - geometry_ == NULL
+ * @retval RESOURCE_BAD_OPERATION 以下のいずれか
+ * - geometry_ が初期状態ではない
+ * - メモリシステムが未初期化
+ * - aabbs_に不正なAABBが含まれる
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_OVERFLOW 以下のいずれか
+ * - ジオメトリ名称文字列処理でoverflowが発生
+ * - 頂点配列確保サイズの計算でoverflowが発生
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
+resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_);
 
 /**
  * @brief line_mesh_geometry_tが保有するジオメトリ名称文字列を取得する

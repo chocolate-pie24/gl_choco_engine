@@ -168,6 +168,36 @@ void vec3f_normalize(vec3f_t* vec_) {
     vec_->elem[2] /= length;
 }
 
+bool vec3f_is_finite(const vec3f_t* vec_) {
+    if(NULL == vec_) {
+        return false;
+    }
+    if(!isfinite(vec_->elem[0]) || !isfinite(vec_->elem[1]) || !isfinite(vec_->elem[2])) {
+        return false;
+    }
+    return true;
+}
+
+vec3f_t vec3f_component_min(vec3f_t v1_, vec3f_t v2_) {
+    vec3f_t tmp_v = { 0 };
+
+    tmp_v.elem[0] = (v1_.elem[0] > v2_.elem[0]) ? v2_.elem[0] : v1_.elem[0];
+    tmp_v.elem[1] = (v1_.elem[1] > v2_.elem[1]) ? v2_.elem[1] : v1_.elem[1];
+    tmp_v.elem[2] = (v1_.elem[2] > v2_.elem[2]) ? v2_.elem[2] : v1_.elem[2];
+
+    return tmp_v;
+}
+
+vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_) {
+    vec3f_t tmp_v = { 0 };
+
+    tmp_v.elem[0] = (v1_.elem[0] < v2_.elem[0]) ? v2_.elem[0] : v1_.elem[0];
+    tmp_v.elem[1] = (v1_.elem[1] < v2_.elem[1]) ? v2_.elem[1] : v1_.elem[1];
+    tmp_v.elem[2] = (v1_.elem[2] < v2_.elem[2]) ? v2_.elem[2] : v1_.elem[2];
+
+    return tmp_v;
+}
+
 void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f_) {
     if(NULL == out_vec4f_) {
         ERROR_MESSAGE("vec4f_initialize(INVALID_ARGUMENT) - Argument out_vec4f_ requires a valid pointer.");
