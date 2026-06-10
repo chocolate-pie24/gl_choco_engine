@@ -595,7 +595,7 @@ application_result_t application_run(void) {
     // Line Vertex
     tmp_line_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
     tmp_line_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
-    vec4u8_initialize(255, 0, 0, 255, &line_color);
+    line_color = vec4u8_initialize(255, 0, 0, 255);
     ret_resource = line_mesh_geometry_create(&line_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
@@ -633,14 +633,14 @@ application_result_t application_run(void) {
     tmp_point_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
     tmp_point_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
 
-    vec4u8_initialize(255, 0, 0, 255, &point_colors[0]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[1]);
-    vec4u8_initialize(255, 0, 255, 255, &point_colors[2]);
-    vec4u8_initialize(0, 255, 0, 255, &point_colors[3]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[4]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[5]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[6]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[7]);
+    point_colors[0] = vec4u8_initialize(255, 0, 0, 255);
+    point_colors[1] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[2] = vec4u8_initialize(255, 0, 255, 255);
+    point_colors[3] = vec4u8_initialize(0, 255, 0, 255);
+    point_colors[4] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[5] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[6] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[7] = vec4u8_initialize(255, 255, 0, 255);
     ret_resource = point_mesh_geometry_create(&point_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
@@ -696,7 +696,7 @@ application_result_t application_run(void) {
     lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
 
     // Debug AABB
-    vec4u8_initialize(0, 0, 255, 255, &debug_aabb_color);
+    debug_aabb_color = vec4u8_initialize(0, 0, 255, 255);
     ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb);
     if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
         ret = app_rslt_convert_geometry_primitive(ret_geometry);

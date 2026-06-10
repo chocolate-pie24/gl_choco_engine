@@ -170,15 +170,14 @@ vec4f_t vec4f_add(vec4f_t vec1_, vec4f_t vec2_);
 /**
  * @brief 4次元ベクトルrgbaを初期化する
  *
- * @note out_vec4u8_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] r_ 初期化値(r)
  * @param[in] g_ 初期化値(g)
  * @param[in] b_ 初期化値(b)
  * @param[in] a_ 初期化値(a)
- * @param[out] out_vec4u8_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec4u8_t構造体インスタンス
  */
-void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t* out_vec4u8_);
+vec4u8_t vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_);
 
 /**
  * @brief 4次元ベクトルxyzwを初期化する
