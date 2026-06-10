@@ -469,20 +469,16 @@ vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_) {
     return ret;
 }
 
-void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_) {
-    if(NULL == position_) {
-        ERROR_MESSAGE("mat4f_translation(INVALID_ARGUMENT) - Argument position_ requires a valid pointer.");
-        return;
-    }
+void mat4f_translation(vec3f_t position_, mat4x4f_t* mat_) {
     if(NULL == mat_) {
         ERROR_MESSAGE("mat4f_translation(INVALID_ARGUMENT) - Argument mat_ requires a valid pointer.");
         return;
     }
 
     mat4f_identity(mat_);
-    mat_->elem[3] = position_->elem[0];
-    mat_->elem[7] = position_->elem[1];
-    mat_->elem[11] = position_->elem[2];
+    mat_->elem[3] = position_.elem[0];
+    mat_->elem[7] = position_.elem[1];
+    mat_->elem[11] = position_.elem[2];
 }
 
 void mat4f_rot_x(float radian_, mat4x4f_t* mat_) {
@@ -1597,7 +1593,7 @@ static void NO_COVERAGE test_mat4f_translation(void) {
     {
         // mat_ == NULL
         vec3f_t position = { .elem = { 1.0f, 2.0f, 3.0f } };
-        mat4f_translation(&position, NULL);
+        mat4f_translation(position, NULL);
     }
     {
         // 正常系: 正の値・負の値・小数を含む平行移動
@@ -1611,7 +1607,7 @@ static void NO_COVERAGE test_mat4f_translation(void) {
             }
         };
 
-        mat4f_translation(&position, &mat);
+        mat4f_translation(position, &mat);
 
         assert(is_equal_float(mat.elem[0], 1.0f));
         assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1634,16 +1630,11 @@ static void NO_COVERAGE test_mat4f_translation(void) {
         assert(is_equal_float(mat.elem[15], 1.0f));
     }
     {
-        // position_ == NULL
-        mat4x4f_t mat = { 0 };
-        mat4f_translation(NULL, &mat);
-    }
-    {
         // 正常系: ゼロ平行移動は単位行列になる
         vec3f_t position = { .elem = { 0.0f, 0.0f, 0.0f } };
         mat4x4f_t mat = { 0 };
 
-        mat4f_translation(&position, &mat);
+        mat4f_translation(position, &mat);
 
         assert(is_equal_float(mat.elem[0], 1.0f));
         assert(is_equal_float(mat.elem[1], 0.0f));

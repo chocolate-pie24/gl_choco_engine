@@ -743,7 +743,7 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t trans = { 0 };
 
     mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
-    mat4f_translation(&camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
+    mat4f_translation(camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
 
     // 後に変換するものを左から掛ける
     mat4f_mul(&trans, &rot, &camera_->camera_to_world_matrix);
@@ -4286,7 +4286,7 @@ static void NO_COVERAGE test_camera_to_world_matrix_update(void) {
 
         camera_to_world_matrix_update(&camera);
 
-        mat4f_translation(&position, &expected);
+        mat4f_translation(position, &expected);
         for(int i = 0; i < 16; ++i) {
             assert(is_equal_float(expected.elem[i], camera.camera_to_world_matrix.elem[i]));
         }
@@ -4321,7 +4321,7 @@ static void NO_COVERAGE test_camera_to_world_matrix_update(void) {
             CHOCO_DEG_TO_RAD(z_deg),
             &rot
         );
-        mat4f_translation(&position, &trans);
+        mat4f_translation(position, &trans);
         mat4f_mul(&trans, &rot, &expected);
 
         for(int i = 0; i < 16; ++i) {
@@ -4409,7 +4409,7 @@ static void NO_COVERAGE test_view_matrix_update(void) {
 
         test_camera_config_reset();
 
-        mat4f_translation(&position, &camera.camera_to_world_matrix);
+        mat4f_translation(position, &camera.camera_to_world_matrix);
 
         const bool ret = view_matrix_update(&camera);
         assert(true == ret);

@@ -277,14 +277,12 @@ vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_);
 /**
  * @brief 平行移動行列を取得する
  *
- * @note 以下の場合は何もしない
- * - position_ == NULL
- * - mat_ == NULL
+ * @note mat_ == NULLの場合は何もしない
  *
  * @param[in] position_ 平行移動量
  * @param[out] mat_ 平行移動行列格納先
  */
-void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_);
+void mat4f_translation(vec3f_t position_, mat4x4f_t* mat_);
 
 /**
  * @brief X軸周りにradian_回転させる回転行列を取得する
