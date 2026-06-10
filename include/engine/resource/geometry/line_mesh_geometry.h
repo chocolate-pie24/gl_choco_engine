@@ -47,7 +47,62 @@ typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometr
  * @retval RESOURCE_NO_MEMORY メモリ確保失敗
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t line_mesh_geometry_create(line_mesh_geometry_t** geometry_);
+resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geometry_);
+
+/**
+ * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを引数で与えた頂点配列によって初期化する
+ *
+ * @note 失敗時には*geometry_は変更しない
+ * 
+ * @param[in] name_ ジオメトリ名称文字列
+ * @param[in] vertex_count_ 頂点配列の配列要素数で、線分の端点の数を線分ごとに指定する(線分の数 = vertex_count_ / 2となる)
+ * @param[in] vertices_ 頂点配列
+ * @param[out] geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - name_ == NULL
+ * - vertex_count_ == 0
+ * - vertices_ == NULL
+ * - geometry_ == NULL
+ * - *geometry_ != NULL
+ * - vertex_count_が2の倍数ではない
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_OVERFLOW 以下のいずれか
+ * - ジオメトリ名称文字列処理でoverflowが発生
+ * - 頂点配列確保サイズの計算でoverflowが発生
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
+resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** geometry_);
+
+/**
+ * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを引数で与えたaabb_3d_t配列によって初期化する
+ *
+ * @note 失敗時には*geometry_は変更しない
+ * 
+ * @param[in] name_ ジオメトリ名称文字列
+ * @param[in] aabb_count_ aabbs_に含まれるaabb_3d_t構造体インスタンスの数
+ * @param[in] aabbs_ aabb_3d_t構造体インスタンス配列
+ * @param[out] geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - geometry_ == NULL
+ * - *geometry_ != NULL
+ * - name_ == NULL
+ * - aabb_count_ == 0
+ * - aabbs_ == NULL
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_BAD_OPERATION 以下のいずれか
+ * - メモリシステム未初期化
+ * - aabbs_に不正なAABBが含まれる
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_OVERFLOW 以下のいずれか
+ * - ジオメトリ名称文字列処理でoverflowが発生
+ * - 頂点配列確保サイズの計算でoverflowが発生
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
+resource_result_t line_mesh_geometry_create_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** geometry_);
 
 /**
  * @brief line_mesh_geometry_tが保有するリソースと自身のメモリを解放する
@@ -63,7 +118,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
 /**
  * @brief 引数で頂点配列を与えてline_mesh_geometry_t構造体インスタンスを初期化する
  *
- * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyをせずに再初期化するのは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
+ * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyまたはdeinitializeをせずに再初期化することは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
  * @note geometry_にvertices_をdeep copyする。vertices_の所有権は呼び出し側にある
  * @note 失敗時にはgeometry_の内部状態は不変
  * 
@@ -93,7 +148,7 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
 /**
  * @brief 引数でaabb_3d_t配列を与えてline_mesh_geometry_t構造体インスタンスを初期化する
  *
- * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyをせずに再初期化するのは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
+ * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyまたはdeinitializeをせずに再初期化することは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
  * @note geometry_にaabb_3d_tから頂点情報を生成し、geometry_に格納する。aabbs_の所有権は呼び出し側にある
  * @note 失敗時にはgeometry_の内部状態は不変
  * 
@@ -119,6 +174,15 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
 resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_);
+
+/**
+ * @brief line_mesh_geometry_t構造体インスタンスが保持するリソースを解放し、初期化する
+ *
+ * @note geometry_ == NULLの場合は何もしない
+ * 
+ * @param[in,out] geometry_ 初期化対象line_mesh_geometry_t構造体インスタンスへのポインタ
+ */
+void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_);
 
 /**
  * @brief line_mesh_geometry_tが保有するジオメトリ名称文字列を取得する

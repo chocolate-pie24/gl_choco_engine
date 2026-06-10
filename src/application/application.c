@@ -596,7 +596,7 @@ application_result_t application_run(void) {
     tmp_line_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
     tmp_line_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
     line_color = vec4u8_initialize(255, 0, 0, 255);
-    ret_resource = line_mesh_geometry_create(&line_mesh_geometry);
+    ret_resource = line_mesh_geometry_default_create(&line_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
@@ -703,7 +703,7 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Failed to create aabb.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_resource = line_mesh_geometry_create(&debug_aabb_geometry);
+    ret_resource = line_mesh_geometry_default_create(&debug_aabb_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
