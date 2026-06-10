@@ -158,18 +158,14 @@ vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_);
 vec4f_t vec4f_initialize(float x_, float y_, float z_, float w_);
 
 /**
- * @brief 4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する
+ * @brief 4次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec4f_ == NULL
+ * @param[in] vec1_ vec4f_t構造体インスタンス
+ * @param[in] vec2_ vec4f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec4f_ 加算結果ベクトル
+ * @return 加算されたvec4f_t構造体インスタンス
  */
-void vec4f_add(const vec4f_t* vec1_, const vec4f_t* vec2_, vec4f_t* out_vec4f_);
+vec4f_t vec4f_add(vec4f_t vec1_, vec4f_t vec2_);
 
 /**
  * @brief 4次元ベクトルrgbaを初期化する
