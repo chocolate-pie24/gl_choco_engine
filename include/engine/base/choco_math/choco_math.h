@@ -117,7 +117,7 @@ float vec3f_length(vec3f_t vec_);
 /**
  * @brief 3次元ベクトルを正規化する
  *
- * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し何もしない
+ * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し、入力値と同じベクトルを返す
  *
  * @param[in] vec_ 正規化対象vec3f_t構造体インスタンス
  *
@@ -271,7 +271,7 @@ void mat4f_copy(const mat4x4f_t* src_, mat4x4f_t* dst_);
 bool mat4f_inverse(mat4x4f_t* mat_);
 
 /**
- * @brief out_vec_ = mat_ x vec_を計算する
+ * @brief mat_ x vec_を計算し、結果を返す
  *
  * @note 行列の要素は全て行優先で格納されていること
  *
