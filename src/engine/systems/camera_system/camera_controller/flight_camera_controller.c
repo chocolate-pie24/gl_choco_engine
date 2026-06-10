@@ -320,7 +320,7 @@ camera_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delt
 
     euler.elem[0] += (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(euler, camera_);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_plus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -354,7 +354,7 @@ camera_result_t flight_camera_controller_rot_pitch_minus(float speed_, float del
 
     euler.elem[0] -= (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(euler, camera_);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_minus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -388,7 +388,7 @@ camera_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_
 
     euler.elem[1] += (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(euler, camera_);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_plus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -422,7 +422,7 @@ camera_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta
 
     euler.elem[1] -= (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(euler, camera_);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_minus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
