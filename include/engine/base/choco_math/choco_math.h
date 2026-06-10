@@ -109,19 +109,21 @@ float vec3f_length(vec3f_t vec_);
  *
  * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し何もしない
  *
- * @param[in,out] vec_ 正規化対象ベクトル
+ * @param[in] vec_ 正規化対象vec3f_t構造体インスタンス
+ *
+ * @return 正規化されたvec3f_t構造体インスタンス
  */
-void vec3f_normalize(vec3f_t* vec_);
+vec3f_t vec3f_normalize(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルの全要素が有限の値かをチェックする
  * 
- * @param[in] vec_ 判定対象構造体インスタンスへのポインタ
+ * @param[in] vec_ 判定対象vec3f_t構造体インスタンス
  *
  * @return true 全要素が正常
- * @return false vec_ == NULLまたは要素にNaN, Infが含まれる
+ * @return false 要素にNaN, Infが含まれる
  */
-bool vec3f_is_finite(const vec3f_t* vec_);
+bool vec3f_is_finite(vec3f_t vec_);
 
 /**
  * @brief v1_とv2_の各要素の小さい方を格納したvec3f_tを返す

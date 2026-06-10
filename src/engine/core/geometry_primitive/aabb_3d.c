@@ -113,7 +113,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_vertices(const point_v
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
-        if(!vec3f_is_finite(&vertices_[i].position)) {
+        if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
             ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
@@ -161,7 +161,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_line_vertices(const line_ver
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
-        if(!vec3f_is_finite(&vertices_[i].position)) {
+        if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
             ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
@@ -209,7 +209,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_normal_vertices(const 
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
-        if(!vec3f_is_finite(&vertices_[i].position)) {
+        if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
             ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
@@ -301,7 +301,7 @@ bool aabb_3d_is_valid(const aabb_3d_t* aabb_) {
             return false;
         }
     }
-    if(!vec3f_is_finite(&aabb_->min) || !vec3f_is_finite(&aabb_->max)) {
+    if(!vec3f_is_finite(aabb_->min) || !vec3f_is_finite(aabb_->max)) {
         return false;
     }
     return true;

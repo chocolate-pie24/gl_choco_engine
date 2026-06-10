@@ -438,7 +438,7 @@ camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) 
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[10];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -474,7 +474,7 @@ camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_)
     v.elem[0] = camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = camera_->camera_to_world_matrix.elem[10];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -510,7 +510,7 @@ camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = camera_->camera_to_world_matrix.elem[8];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -546,7 +546,7 @@ camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[8];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -582,7 +582,7 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = camera_->camera_to_world_matrix.elem[9];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -618,7 +618,7 @@ camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[9];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
