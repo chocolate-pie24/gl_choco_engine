@@ -1,7 +1,7 @@
 /**
  * @file test_point_mesh_geometry.h
  * @author chocolate-pie24
- * @brief point_point_geometryモジュール用テストAPI定義
+ * @brief point_mesh_geometryモジュール用テストAPI定義
  *
  * @version 0.1
  * @date 2026-06-06
@@ -25,13 +25,22 @@ extern "C" {
 #include "test_controller.h"
 
 /**
- * @brief point_mesh_geometry_create()APIに対して失敗注入設定を行う
+ * @brief point_mesh_geometry_default_create()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、point_mesh_geometry内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_point_mesh_geometry_create_config_set(const test_call_control_t* config_);
+void test_point_mesh_geometry_default_create_config_set(const test_call_control_t* config_);
+
+/**
+ * @brief point_mesh_geometry_create_from_vertices()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、point_mesh_geometry内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_point_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_);
 
 /**
  * @brief point_mesh_geometry_initialize_from_vertices()APIに対して失敗注入設定を行う

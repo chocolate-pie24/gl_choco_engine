@@ -66,7 +66,8 @@ struct point_mesh_geometry {
 // point_mesh_geometry用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
-static test_call_control_t s_test_config_point_mesh_geometry_create;                       /**< point_mesh_geometry_create()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_default_create;               /**< point_mesh_geometry_default_create()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_create_from_vertices;         /**< point_mesh_geometry_create_from_vertices()テスト設定 */
 static test_call_control_t s_test_config_point_mesh_geometry_initialize_from_vertices;     /**< point_mesh_geometry_initialize_from_vertices()テスト設定 */
 static test_call_control_t s_test_config_point_mesh_geometry_vertices_get;                 /**< point_mesh_geometry_vertices_get()テスト設定 */
 static test_call_control_t s_test_config_point_mesh_geometry_vertex_count_get;             /**< point_mesh_geometry_vertex_count_get()テスト設定 */
@@ -74,9 +75,11 @@ static test_call_control_t s_test_config_point_mesh_geometry_vertex_count_get;  
 // プライベート関数テスト設定
 
 // 全テスト関数プロトタイプ宣言
-static void test_point_mesh_geometry_create(void);
+static void test_point_mesh_geometry_default_create(void);
+static void test_point_mesh_geometry_create_from_vertices(void);
 static void test_point_mesh_geometry_destroy(void);
 static void test_point_mesh_geometry_initialize_from_vertices(void);
+static void test_point_mesh_geometry_deinitialize(void);
 static void test_point_mesh_geometry_name_get(void);
 static void test_point_mesh_geometry_vertices_get(void);
 static void test_point_mesh_geometry_vertex_count_get(void);
@@ -85,12 +88,12 @@ static void test_point_mesh_geometry_vertex_count_get(void);
 
 #endif
 
-resource_result_t point_mesh_geometry_create(point_mesh_geometry_t** geometry_) {
+resource_result_t point_mesh_geometry_default_create(point_mesh_geometry_t** geometry_) {
 #ifdef TEST_BUILD
-    s_test_config_point_mesh_geometry_create.call_count++;
-    if(s_test_config_point_mesh_geometry_create.fail_on_call != 0) {
-        if(s_test_config_point_mesh_geometry_create.call_count == s_test_config_point_mesh_geometry_create.fail_on_call) {
-            return (resource_result_t)s_test_config_point_mesh_geometry_create.forced_result;
+    s_test_config_point_mesh_geometry_default_create.call_count++;
+    if(s_test_config_point_mesh_geometry_default_create.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_default_create.call_count == s_test_config_point_mesh_geometry_default_create.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_default_create.forced_result;
         }
     }
 #endif
@@ -99,13 +102,13 @@ resource_result_t point_mesh_geometry_create(point_mesh_geometry_t** geometry_) 
 
     point_mesh_geometry_t* tmp_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_default_create", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_default_create", "*geometry_")
 
     ret_mem = memory_system_allocate(sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
-        ERROR_MESSAGE("point_mesh_geometry_create(%s) - Failed to allocate point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_geometry_default_create(%s) - Failed to allocate point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -123,6 +126,45 @@ cleanup:
             memory_system_free(tmp_geometry, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
             tmp_geometry = NULL;
         }
+    }
+    return ret;
+}
+
+resource_result_t point_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const point_vertex_t* vertices_, point_mesh_geometry_t** geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_create_from_vertices.call_count++;
+    if(s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_create_from_vertices.call_count == s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_create_from_vertices.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    point_mesh_geometry_t* tmp_geometry = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "*geometry_")
+
+    ret = point_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Failed to create point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = point_mesh_geometry_initialize_from_vertices(name_, vertex_count_, vertices_, tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Failed to initialize point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        point_mesh_geometry_destroy(&tmp_geometry);
     }
     return ret;
 }
@@ -216,6 +258,23 @@ cleanup:
     return ret;
 }
 
+void point_mesh_geometry_deinitialize(point_mesh_geometry_t* geometry_) {
+    if(NULL == geometry_) {
+        return;
+    }
+    if(NULL != geometry_->name) {
+        choco_string_destroy(&geometry_->name);
+    }
+    
+    if(NULL != geometry_->vertices && 0 == geometry_->vertex_count) {
+        ERROR_MESSAGE("point_mesh_geometry_deinitialize(%s) - point_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != geometry_->vertices) {
+        memory_system_free(geometry_->vertices, sizeof(point_vertex_t) * geometry_->vertex_count, MEMORY_TAG_GEOMETRY);
+        geometry_->vertices = NULL;
+        geometry_->vertex_count = 0;
+    }
+}
+
 const char* point_mesh_geometry_name_get(const point_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return NULL;
@@ -279,13 +338,22 @@ cleanup:
 
 #ifdef TEST_BUILD
 
-void NO_COVERAGE test_point_mesh_geometry_create_config_set(const test_call_control_t* config_) {
+void NO_COVERAGE test_point_mesh_geometry_default_create_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
         return;
     }
-    s_test_config_point_mesh_geometry_create.fail_on_call = config_->fail_on_call;
-    s_test_config_point_mesh_geometry_create.forced_result = config_->forced_result;
+    s_test_config_point_mesh_geometry_default_create.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_default_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_create_from_vertices.forced_result = config_->forced_result;
 }
 
 void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_) {
@@ -316,14 +384,16 @@ void NO_COVERAGE test_point_mesh_geometry_vertex_count_get_config_set(const test
 }
 
 void NO_COVERAGE test_point_mesh_geometry_config_reset(void) {
-    test_call_control_reset(&s_test_config_point_mesh_geometry_create);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_default_create);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_create_from_vertices);
     test_call_control_reset(&s_test_config_point_mesh_geometry_initialize_from_vertices);
     test_call_control_reset(&s_test_config_point_mesh_geometry_vertices_get);
     test_call_control_reset(&s_test_config_point_mesh_geometry_vertex_count_get);
 }
 
 void NO_COVERAGE test_point_mesh_geometry(void) {
-    test_point_mesh_geometry_create();
+    test_point_mesh_geometry_default_create();
+    test_point_mesh_geometry_create_from_vertices();
     test_point_mesh_geometry_destroy();
     test_point_mesh_geometry_initialize_from_vertices();
     test_point_mesh_geometry_name_get();
@@ -332,21 +402,21 @@ void NO_COVERAGE test_point_mesh_geometry(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_point_mesh_geometry_create(void) {
+static void NO_COVERAGE test_point_mesh_geometry_default_create(void) {
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     {
-        // point_mesh_geometry_create() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
+        // point_mesh_geometry_default_create() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
         resource_result_t ret = RESOURCE_SUCCESS;
         point_mesh_geometry_t* geometry = NULL;
 
         test_point_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        s_test_config_point_mesh_geometry_create.fail_on_call = 1U;
-        s_test_config_point_mesh_geometry_create.forced_result = (int)RESOURCE_NO_MEMORY;
+        s_test_config_point_mesh_geometry_default_create.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -360,7 +430,7 @@ static void NO_COVERAGE test_point_mesh_geometry_create(void) {
         test_point_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(NULL);
+        ret = point_mesh_geometry_default_create(NULL);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         test_point_mesh_geometry_config_reset();
@@ -375,7 +445,7 @@ static void NO_COVERAGE test_point_mesh_geometry_create(void) {
         test_point_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(&dummy_geometry == geometry);
 
@@ -396,7 +466,7 @@ static void NO_COVERAGE test_point_mesh_geometry_create(void) {
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
         test_memory_system_allocate_config_set(&config);
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -411,7 +481,7 @@ static void NO_COVERAGE test_point_mesh_geometry_create(void) {
         test_point_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -427,6 +497,11 @@ static void NO_COVERAGE test_point_mesh_geometry_create(void) {
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_create_from_vertices(void) {
+
 }
 
 // Generated by ChatGPT
@@ -469,7 +544,7 @@ static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
         assert(NULL == geometry->name);
@@ -493,7 +568,7 @@ static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -524,7 +599,7 @@ static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -559,7 +634,7 @@ static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -593,7 +668,7 @@ static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -887,7 +962,7 @@ static void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices(void) 
         vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -930,6 +1005,11 @@ static void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices(void) 
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_deinitialize(void) {
+
 }
 
 // Generated by ChatGPT
@@ -978,7 +1058,7 @@ static void NO_COVERAGE test_point_mesh_geometry_name_get(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1173,7 +1253,7 @@ static void NO_COVERAGE test_point_mesh_geometry_vertices_get(void) {
         vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1266,7 +1346,7 @@ static void NO_COVERAGE test_point_mesh_geometry_vertex_count_get(void) {
         vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1376,7 +1456,7 @@ static void NO_COVERAGE test_point_mesh_geometry_vertex_count_get(void) {
         vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
 
-        ret = point_mesh_geometry_create(&geometry);
+        ret = point_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 

@@ -178,6 +178,7 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
 /**
  * @brief line_mesh_geometry_t構造体インスタンスが保持するリソースを解放し、初期化する
  *
+ * @warning 内部データの不整合が発生していた場合はline_mesh_geometry_tが保有する頂点配列のメモリは解放されず、エラーメッセージを出力し、リーク状態となる
  * @note geometry_ == NULLの場合は何もしない
  * 
  * @param[in,out] geometry_ 初期化対象line_mesh_geometry_t構造体インスタンスへのポインタ
@@ -203,7 +204,7 @@ const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_);
  * @note 委譲ではないため、リソースの所有権はline_mesh_geometry_tが保持する
  * @note 失敗時には*out_vertices_は変更しない
  * @note 取得した頂点配列参照は読み取り専用であり、呼び出し側で書き換え・解放してはならない
- * @note 参照の有効期間はgeometry_が破棄されるまで
+ * @note 参照の有効期間はgeometry_が破棄またはdeinitializeされるまで
  * 
  * @param[in] geometry_ line_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertices_ 頂点情報配列への参照格納先

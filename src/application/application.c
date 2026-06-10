@@ -641,7 +641,7 @@ application_result_t application_run(void) {
     point_colors[5] = vec4u8_initialize(255, 255, 0, 255);
     point_colors[6] = vec4u8_initialize(255, 255, 0, 255);
     point_colors[7] = vec4u8_initialize(255, 255, 0, 255);
-    ret_resource = point_mesh_geometry_create(&point_mesh_geometry);
+    ret_resource = point_mesh_geometry_default_create(&point_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("application_run(%s) - Failed to create point_mesh_geometry_t instance.", app_rslt_to_str(ret));
@@ -669,7 +669,7 @@ application_result_t application_run(void) {
     point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
 
     // STL Vertex
-    ret_resource = lit_mesh_geometry_create(&lit_mesh_geometry);
+    ret_resource = lit_mesh_geometry_default_create(&lit_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("application_run(%s) - Failed to create lit_mesh_geometry_t instance.", app_rslt_to_str(ret));

@@ -68,7 +68,9 @@ struct lit_mesh_geometry {
 // lit_mesh_geometry用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
-static test_call_control_t s_test_config_lit_mesh_geometry_create;                      /**< lit_mesh_geometry_create()テスト設定 */
+static test_call_control_t s_test_config_lit_mesh_geometry_default_create;              /**< lit_mesh_geometry_default_create()テスト設定 */
+static test_call_control_t s_test_config_lit_mesh_geometry_create_from_vertices;        /**< lit_mesh_geometry_create_from_vertices()テスト設定 */
+static test_call_control_t s_test_config_lit_mesh_geometry_create_from_file;            /**< lit_mesh_geometry_create_from_file()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_initialize_from_vertices;    /**< lit_mesh_geometry_initialize_from_vertices()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_initialize_from_file;        /**< lit_mesh_geometry_initialize_from_file()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_vertices_get;                /**< lit_mesh_geometry_vertices_get()テスト設定 */
@@ -77,10 +79,13 @@ static test_call_control_t s_test_config_lit_mesh_geometry_vertex_count_get;    
 // プライベート関数テスト設定
 
 // 全テスト関数プロトタイプ宣言
-static void test_lit_mesh_geometry_create(void);
+static void test_lit_mesh_geometry_default_create(void);
+static void test_lit_mesh_geometry_create_from_vertices(void);
+static void test_lit_mesh_geometry_create_from_file(void);
 static void test_lit_mesh_geometry_destroy(void);
 static void test_lit_mesh_geometry_initialize_from_vertices(void);
 static void test_lit_mesh_geometry_initialize_from_file(void);
+static void test_lit_mesh_geometry_deinitialize(void);
 static void test_lit_mesh_geometry_name_get(void);
 static void test_lit_mesh_geometry_vertices_get(void);
 static void test_lit_mesh_geometry_vertex_count_get(void);
@@ -89,12 +94,12 @@ static void test_lit_mesh_geometry_vertex_count_get(void);
 
 #endif
 
-resource_result_t lit_mesh_geometry_create(lit_mesh_geometry_t** geometry_) {
+resource_result_t lit_mesh_geometry_default_create(lit_mesh_geometry_t** geometry_) {
 #ifdef TEST_BUILD
-    s_test_config_lit_mesh_geometry_create.call_count++;
-    if(s_test_config_lit_mesh_geometry_create.fail_on_call != 0) {
-        if(s_test_config_lit_mesh_geometry_create.call_count == s_test_config_lit_mesh_geometry_create.fail_on_call) {
-            return (resource_result_t)s_test_config_lit_mesh_geometry_create.forced_result;
+    s_test_config_lit_mesh_geometry_default_create.call_count++;
+    if(s_test_config_lit_mesh_geometry_default_create.fail_on_call != 0) {
+        if(s_test_config_lit_mesh_geometry_default_create.call_count == s_test_config_lit_mesh_geometry_default_create.fail_on_call) {
+            return (resource_result_t)s_test_config_lit_mesh_geometry_default_create.forced_result;
         }
     }
 #endif
@@ -103,13 +108,13 @@ resource_result_t lit_mesh_geometry_create(lit_mesh_geometry_t** geometry_) {
 
     lit_mesh_geometry_t* tmp_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_default_create", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_default_create", "*geometry_")
 
     ret_mem = memory_system_allocate(sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
-        ERROR_MESSAGE("lit_mesh_geometry_create(%s) - Failed to allocate lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_default_create(%s) - Failed to allocate lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -127,6 +132,84 @@ cleanup:
             memory_system_free(tmp_geometry, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
             tmp_geometry = NULL;
         }
+    }
+    return ret;
+}
+
+resource_result_t lit_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_lit_mesh_geometry_create_from_vertices.call_count++;
+    if(s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call != 0) {
+        if(s_test_config_lit_mesh_geometry_create_from_vertices.call_count == s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call) {
+            return (resource_result_t)s_test_config_lit_mesh_geometry_create_from_vertices.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    lit_mesh_geometry_t* tmp_geometry = NULL;    
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "*geometry_")
+
+    ret = lit_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Failed to create lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = lit_mesh_geometry_initialize_from_vertices(name_, vertex_count_, vertices_, tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        lit_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
+}
+
+resource_result_t lit_mesh_geometry_create_from_file(const char* path_, const char* name_, const char* extension_, lit_mesh_geometry_t** geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_lit_mesh_geometry_create_from_file.call_count++;
+    if(s_test_config_lit_mesh_geometry_create_from_file.fail_on_call != 0) {
+        if(s_test_config_lit_mesh_geometry_create_from_file.call_count == s_test_config_lit_mesh_geometry_create_from_file.fail_on_call) {
+            return (resource_result_t)s_test_config_lit_mesh_geometry_create_from_file.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    lit_mesh_geometry_t* tmp_geometry = NULL;    
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "*geometry_")
+
+    ret = lit_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_file(%s) - Failed to create lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = lit_mesh_geometry_initialize_from_file(path_, name_, extension_, tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_file(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        lit_mesh_geometry_destroy(&tmp_geometry);
     }
     return ret;
 }
@@ -303,6 +386,24 @@ cleanup:
     return ret;
 }
 
+void lit_mesh_geometry_deinitialize(lit_mesh_geometry_t* geometry_) {
+    if(NULL == geometry_) {
+        return;
+    }
+    if(NULL != geometry_->name) {
+        choco_string_destroy(&geometry_->name);
+    }
+    if(NULL != geometry_->vertices && 0 == geometry_->vertex_count) {
+        ERROR_MESSAGE("lit_mesh_geometry_deinitialize(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != geometry_->vertices && 0 != (geometry_->vertex_count % 3)) {
+        ERROR_MESSAGE("lit_mesh_geometry_deinitialize(%s) - lit_mesh_geometry internal state is inconsistent: vertex_count is not a multiple of 3.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != geometry_->vertices) {
+        memory_system_free(geometry_->vertices, sizeof(point_normal_vertex_t) * geometry_->vertex_count, MEMORY_TAG_GEOMETRY);
+        geometry_->vertices = NULL;
+        geometry_->vertex_count = 0;
+    }
+}
+
 const char* lit_mesh_geometry_name_get(const lit_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return NULL;
@@ -368,13 +469,31 @@ cleanup:
 
 #ifdef TEST_BUILD
 
-void NO_COVERAGE test_lit_mesh_geometry_create_config_set(const test_call_control_t* config_) {
+void NO_COVERAGE test_lit_mesh_geometry_default_create_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
         return;
     }
-    s_test_config_lit_mesh_geometry_create.fail_on_call = config_->fail_on_call;
-    s_test_config_lit_mesh_geometry_create.forced_result = config_->forced_result;
+    s_test_config_lit_mesh_geometry_default_create.fail_on_call = config_->fail_on_call;
+    s_test_config_lit_mesh_geometry_default_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call = config_->fail_on_call;
+    s_test_config_lit_mesh_geometry_create_from_vertices.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_lit_mesh_geometry_create_from_file_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_lit_mesh_geometry_create_from_file.fail_on_call = config_->fail_on_call;
+    s_test_config_lit_mesh_geometry_create_from_file.forced_result = config_->forced_result;
 }
 
 void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_) {
@@ -414,7 +533,9 @@ void NO_COVERAGE test_lit_mesh_geometry_vertex_count_get_config_set(const test_c
 }
 
 void NO_COVERAGE test_lit_mesh_geometry_config_reset(void) {
-    test_call_control_reset(&s_test_config_lit_mesh_geometry_create);
+    test_call_control_reset(&s_test_config_lit_mesh_geometry_default_create);
+    test_call_control_reset(&s_test_config_lit_mesh_geometry_create_from_vertices);
+    test_call_control_reset(&s_test_config_lit_mesh_geometry_create_from_file);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_initialize_from_vertices);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_initialize_from_file);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_vertices_get);
@@ -422,30 +543,33 @@ void NO_COVERAGE test_lit_mesh_geometry_config_reset(void) {
 }
 
 void NO_COVERAGE test_lit_mesh_geometry(void) {
-    test_lit_mesh_geometry_create();
+    test_lit_mesh_geometry_default_create();
+    test_lit_mesh_geometry_create_from_vertices();
+    test_lit_mesh_geometry_create_from_file();
     test_lit_mesh_geometry_destroy();
     test_lit_mesh_geometry_initialize_from_vertices();
     test_lit_mesh_geometry_initialize_from_file();
+    test_lit_mesh_geometry_deinitialize();
     test_lit_mesh_geometry_name_get();
     test_lit_mesh_geometry_vertices_get();
     test_lit_mesh_geometry_vertex_count_get();
 }
 
 // Generated by ChatGPT
-static void test_lit_mesh_geometry_create(void) {
+static void test_lit_mesh_geometry_default_create(void) {
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
     {
-        // lit_mesh_geometry_create() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
+        // lit_mesh_geometry_default_create() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
         resource_result_t ret = RESOURCE_SUCCESS;
         lit_mesh_geometry_t* geometry = NULL;
 
         test_lit_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        s_test_config_lit_mesh_geometry_create.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_create.forced_result = (int)RESOURCE_NO_MEMORY;
+        s_test_config_lit_mesh_geometry_default_create.fail_on_call = 1U;
+        s_test_config_lit_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -459,7 +583,7 @@ static void test_lit_mesh_geometry_create(void) {
         test_lit_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(NULL);
+        ret = lit_mesh_geometry_default_create(NULL);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         test_lit_mesh_geometry_config_reset();
@@ -474,7 +598,7 @@ static void test_lit_mesh_geometry_create(void) {
         test_lit_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(&dummy_geometry == geometry);
 
@@ -495,7 +619,7 @@ static void test_lit_mesh_geometry_create(void) {
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
         test_memory_system_allocate_config_set(&config);
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -510,7 +634,7 @@ static void test_lit_mesh_geometry_create(void) {
         test_lit_mesh_geometry_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -526,6 +650,16 @@ static void test_lit_mesh_geometry_create(void) {
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void test_lit_mesh_geometry_create_from_vertices(void) {
+
+}
+
+// Generated by ChatGPT
+static void test_lit_mesh_geometry_create_from_file(void) {
+
 }
 
 // Generated by ChatGPT
@@ -568,7 +702,7 @@ static void test_lit_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
         assert(NULL == geometry->name);
@@ -592,7 +726,7 @@ static void test_lit_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -623,7 +757,7 @@ static void test_lit_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -658,7 +792,7 @@ static void test_lit_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -692,7 +826,7 @@ static void test_lit_mesh_geometry_destroy(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -990,7 +1124,7 @@ static void test_lit_mesh_geometry_initialize_from_vertices(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1512,7 +1646,7 @@ static void test_lit_mesh_geometry_initialize_from_file(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1566,6 +1700,11 @@ static void test_lit_mesh_geometry_initialize_from_file(void) {
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void test_lit_mesh_geometry_deinitialize(void) {
+
 }
 
 // Generated by ChatGPT
@@ -1623,7 +1762,7 @@ static void test_lit_mesh_geometry_name_get(void) {
         vertices[2].position = vec3f_initialize(0.0f, 1.0f, 0.0f);
         vertices[2].normal = vec4i8_initialize(0, 0, 127, 0);
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1844,7 +1983,7 @@ static void test_lit_mesh_geometry_vertices_get(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -2064,7 +2203,7 @@ static void test_lit_mesh_geometry_vertex_count_get(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create(&geometry);
+        ret = lit_mesh_geometry_default_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
