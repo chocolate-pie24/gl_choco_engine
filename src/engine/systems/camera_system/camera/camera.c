@@ -281,7 +281,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_) {
+camera_result_t camera_position_update(vec3f_t position_, camera_t* camera_) {
 #ifdef TEST_BUILD
     s_test_config_camera_position_update.call_count++;
     if(s_test_config_camera_position_update.fail_on_call != 0) {
@@ -292,13 +292,9 @@ camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camer
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(position_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_update", "position_")
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_update", "camera_")
 
-    camera_->position.elem[0] = position_->elem[0];
-    camera_->position.elem[1] = position_->elem[1];
-    camera_->position.elem[2] = position_->elem[2];
-
+    camera_->position = position_;
     camera_->posture_cache_dirty = true;
 
     ret = CAMERA_SUCCESS;
@@ -1581,46 +1577,8 @@ static void NO_COVERAGE test_camera_position_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_position_update_config_set(&config);
 
-        ret = camera_position_update(&position, camera);
+        ret = camera_position_update(position, camera);
         assert(CAMERA_BAD_OPERATION == ret);
-
-        camera_destroy(&camera);
-        assert(NULL == camera);
-
-        memory_system_destroy();
-
-        test_choco_string_config_reset();
-        test_camera_memory_config_reset();
-        test_camera_config_reset();
-    }
-    {
-        // position_ == NULL -> CAMERA_INVALID_ARGUMENT
-        // 状態が変更されないこと
-        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        camera_t* camera = NULL;
-
-        test_camera_config_reset();
-        test_camera_memory_config_reset();
-        test_choco_string_config_reset();
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-        ret = camera_create("main_camera", &camera);
-        assert(CAMERA_SUCCESS == ret);
-        assert(NULL != camera);
-
-        camera->position.elem[0] = 1.0f;
-        camera->position.elem[1] = 2.0f;
-        camera->position.elem[2] = 3.0f;
-        camera->posture_cache_dirty = false;
-
-        ret = camera_position_update(NULL, camera);
-        assert(CAMERA_INVALID_ARGUMENT == ret);
-
-        assert(is_equal_float(camera->position.elem[0], 1.0f));
-        assert(is_equal_float(camera->position.elem[1], 2.0f));
-        assert(is_equal_float(camera->position.elem[2], 3.0f));
-        assert(false == camera->posture_cache_dirty);
 
         camera_destroy(&camera);
         assert(NULL == camera);
@@ -1638,7 +1596,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_position_update(&position, NULL);
+        ret = camera_position_update(position, NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1667,7 +1625,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
         camera->euler.elem[2] = 300.0f;
         camera->posture_cache_dirty = false;
 
-        ret = camera_position_update(&position, camera);
+        ret = camera_position_update(position, camera);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->position.elem[0], 15.0f));

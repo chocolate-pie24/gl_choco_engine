@@ -475,7 +475,7 @@ static camera_result_t camera_position_movement_apply(const vec3f_t* translation
     new_pos = vec3f_add(*translation_, position);
 
     // カメラ座標更新
-    if(CAMERA_SUCCESS != camera_position_update(&new_pos, camera_)) {
+    if(CAMERA_SUCCESS != camera_position_update(new_pos, camera_)) {
         ret = CAMERA_RUNTIME_ERROR;
         ERROR_MESSAGE("camera_position_movement_apply(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
