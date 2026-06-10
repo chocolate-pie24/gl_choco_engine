@@ -148,15 +148,14 @@ vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_);
 /**
  * @brief 4次元ベクトルxyzwを初期化する
  *
- * @note out_vec4f_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
  * @param[in] z_ 初期化値(z)
  * @param[in] w_ 初期化値(w)
- * @param[out] out_vec4f_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec4f_t構造体インスタンス
  */
-void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f_);
+vec4f_t vec4f_initialize(float x_, float y_, float z_, float w_);
 
 /**
  * @brief 4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する
