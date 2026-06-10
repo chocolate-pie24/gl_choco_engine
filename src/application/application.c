@@ -556,46 +556,46 @@ application_result_t application_run(void) {
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
     // UI Vertex
-    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[0].position);
-    vec2f_initialize(1.0f, -1.0f, &ui_vertex1[1].position);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[2].position);
+    ui_vertex1[0].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex1[1].position = vec2f_initialize(1.0f, -1.0f);
+    ui_vertex1[2].position = vec2f_initialize(1.0f, 1.0f);
 
-    vec2f_initialize(-1.0f, -1.0f, &ui_vertex1[3].position);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[4].position);
-    vec2f_initialize(-1.0f, 1.0f, &ui_vertex1[5].position);
+    ui_vertex1[3].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex1[4].position = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex1[5].position = vec2f_initialize(-1.0f, 1.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[0].tex_coord);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex1[1].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[2].tex_coord);
+    ui_vertex1[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex1[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex1[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex1[3].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex1[4].tex_coord);
-    vec2f_initialize(0.0f, 0.0f, &ui_vertex1[5].tex_coord);
+    ui_vertex1[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex1[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
+    ui_vertex1[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
 
-    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[0].position);
-    vec2f_initialize(6.5f, 0.0f, &ui_vertex2[1].position);
-    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[2].position);
+    ui_vertex2[0].position = vec2f_initialize(1.5f, 0.0f);
+    ui_vertex2[1].position = vec2f_initialize(6.5f, 0.0f);
+    ui_vertex2[2].position = vec2f_initialize(6.5f, 5.0f);
 
-    vec2f_initialize(1.5f, 0.0f, &ui_vertex2[3].position);
-    vec2f_initialize(6.5f, 5.0f, &ui_vertex2[4].position);
-    vec2f_initialize(1.5f, 5.0f, &ui_vertex2[5].position);
+    ui_vertex2[3].position = vec2f_initialize(1.5f, 0.0f);
+    ui_vertex2[4].position = vec2f_initialize(6.5f, 5.0f);
+    ui_vertex2[5].position = vec2f_initialize(1.5f, 5.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[0].tex_coord);
-    vec2f_initialize(1.0f, 1.0f, &ui_vertex2[1].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[2].tex_coord);
+    ui_vertex2[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex2[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex2[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
 
-    vec2f_initialize(0.0f, 1.0f, &ui_vertex2[3].tex_coord);
-    vec2f_initialize(1.0f, 0.0f, &ui_vertex2[4].tex_coord);
-    vec2f_initialize(0.0f, 0.0f, &ui_vertex2[5].tex_coord);
+    ui_vertex2[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex2[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
+    ui_vertex2[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
     // Line Vertex
-    vec3f_initialize(1.0f, 2.0f, -3.0f, &tmp_line_vertices[0].position);
-    vec3f_initialize(4.0f, 5.0f, -6.0f, &tmp_line_vertices[1].position);
-    vec4u8_initialize(255, 0, 0, 255, &line_color);
+    tmp_line_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
+    tmp_line_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
+    line_color = vec4u8_initialize(255, 0, 0, 255);
     ret_resource = line_mesh_geometry_create(&line_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
@@ -624,23 +624,23 @@ application_result_t application_run(void) {
     line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * line_mesh_geometry_vertex_count, (void*)line_vertices);
 
     // Point Vertex
-    vec3f_initialize(-0.5, -0.5f, -3.0f, &tmp_point_vertices[0].position);
-    vec3f_initialize(-0.4f, -0.4f, -3.0f, &tmp_point_vertices[1].position);
-    vec3f_initialize(-0.3f, -0.3f, -3.0f, &tmp_point_vertices[2].position);
-    vec3f_initialize(-0.2f, -0.2f, -3.0f, &tmp_point_vertices[3].position);
-    vec3f_initialize(-0.1f, -0.1f, -3.0f, &tmp_point_vertices[4].position);
-    vec3f_initialize(0.1f, 0.1f, -3.0f, &tmp_point_vertices[5].position);
-    vec3f_initialize(0.2f, 0.2f, -3.0f, &tmp_point_vertices[6].position);
-    vec3f_initialize(0.3f, 0.3f, -3.0f, &tmp_point_vertices[7].position);
+    tmp_point_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
+    tmp_point_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
+    tmp_point_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
+    tmp_point_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
+    tmp_point_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
+    tmp_point_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
+    tmp_point_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
+    tmp_point_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
 
-    vec4u8_initialize(255, 0, 0, 255, &point_colors[0]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[1]);
-    vec4u8_initialize(255, 0, 255, 255, &point_colors[2]);
-    vec4u8_initialize(0, 255, 0, 255, &point_colors[3]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[4]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[5]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[6]);
-    vec4u8_initialize(255, 255, 0, 255, &point_colors[7]);
+    point_colors[0] = vec4u8_initialize(255, 0, 0, 255);
+    point_colors[1] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[2] = vec4u8_initialize(255, 0, 255, 255);
+    point_colors[3] = vec4u8_initialize(0, 255, 0, 255);
+    point_colors[4] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[5] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[6] = vec4u8_initialize(255, 255, 0, 255);
+    point_colors[7] = vec4u8_initialize(255, 255, 0, 255);
     ret_resource = point_mesh_geometry_create(&point_mesh_geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = app_rslt_convert_resource(ret_resource);
@@ -696,7 +696,7 @@ application_result_t application_run(void) {
     lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
 
     // Debug AABB
-    vec4u8_initialize(0, 0, 255, 255, &debug_aabb_color);
+    debug_aabb_color = vec4u8_initialize(0, 0, 255, 255);
     ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb);
     if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
         ret = app_rslt_convert_geometry_primitive(ret_geometry);

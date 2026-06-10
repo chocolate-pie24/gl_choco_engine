@@ -89,28 +89,24 @@ camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float 
 /**
  * @brief カメラ姿勢情報を更新する
  *
- * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンスへのポインタ
+ * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンス
  * @param[out] camera_ 姿勢更新対象カメラ構造体インスタンスへのポインタ
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - euler_ == NULL
- * - camera_ == NULL
+ * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_);
+camera_result_t camera_euler_update(vec3f_t euler_, camera_t* camera_);
 
 /**
  * @brief カメラ位置情報を更新する
  *
- * @param[in] position_ カメラ位置ベクトル構造体インスタンスへのポインタ
+ * @param[in] position_ カメラ位置ベクトル構造体インスタンス
  * @param[out] camera_ 位置更新対象カメラ構造体インスタンスへのポインタ
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - position_ == NULL
- * - camera_ == NULL
+ * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_);
+camera_result_t camera_position_update(vec3f_t position_, camera_t* camera_);
 
 /**
  * @brief カメラ姿勢情報を取得する

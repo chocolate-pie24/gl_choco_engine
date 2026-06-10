@@ -48,88 +48,92 @@ bool is_equal_float(float a_, float b_);
 /**
  * @brief 2次元ベクトルxyを初期化する
  *
- * @note out_vec2f_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
- * @param[out] out_vec2f_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec2f_t構造体インスタンス
  */
-void vec2f_initialize(float x_, float y_, vec2f_t* out_vec2f_);
+vec2f_t vec2f_initialize(float x_, float y_);
 
 /**
- * @brief 2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する
+ * @brief 2次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec2f_ == NULL
+ * @param[in] vec1_ vec2f_t構造体インスタンス
+ * @param[in] vec2_ vec2f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec2f_ 加算結果ベクトル
+ * @return 加算結果vec2f_t構造体インスタンス
  */
-void vec2f_add(const vec2f_t* vec1_, const vec2f_t* vec2_, vec2f_t* out_vec2f_);
+vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_);
 
 /**
  * @brief 3次元ベクトルxyzを初期化する
  *
- * @note out_vec3f_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
  * @param[in] z_ 初期化値(z)
- * @param[out] out_vec3f_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec3f_t構造体インスタンス
  */
-void vec3f_initialize(float x_, float y_, float z_, vec3f_t* out_vec3f_);
+vec3f_t vec3f_initialize(float x_, float y_, float z_);
 
 /**
- * @brief 3次元ベクトルの足し算(out_vec3f_ = vec1_ + vec2_)を実行する
+ * @brief 3次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec3f_ == NULL
+ * @param[in] vec1_ vec3f_t構造体インスタンス
+ * @param[in] vec2_ vec3f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec3f_ 加算結果ベクトル
+ * @return 加算結果のvec3f_t構造体インスタンス
  */
-void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_);
+vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_);
+
+/**
+ * @brief 3次元ベクトルのスカラー倍を計算する
+ * 
+ * @param[in] vec_ vec3f_t構造体インスタンス
+ * @param[in] scale_ 掛ける値
+ *
+ * @return 計算結果vec3f_t構造体インスタンス
+ */
+vec3f_t vec3f_scale(vec3f_t vec_, float scale_);
 
 /**
  * @brief 3次元ベクトルの長さの2乗を返す
  *
  * @param[in] vec_ 計算対象ベクトル
+ *
  * @return float 長さの2乗値
  */
-float vec3f_length_squared(const vec3f_t* vec_);
+float vec3f_length_squared(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルの長さを返す
  *
  * @param[in] vec_ 計算対象ベクトル
+ *
  * @return float 計算されたベクトルの長さ
  */
-float vec3f_length(const vec3f_t* vec_);
+float vec3f_length(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルを正規化する
  *
- * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し何もしない
+ * @note 与えられたベクトルの長さが0の場合はワーニングメッセージを出し、入力値と同じベクトルを返す
  *
- * @param[in,out] vec_ 正規化対象ベクトル
+ * @param[in] vec_ 正規化対象vec3f_t構造体インスタンス
+ *
+ * @return 正規化されたvec3f_t構造体インスタンス
  */
-void vec3f_normalize(vec3f_t* vec_);
+vec3f_t vec3f_normalize(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルの全要素が有限の値かをチェックする
  * 
- * @param[in] vec_ 判定対象構造体インスタンスへのポインタ
+ * @param[in] vec_ 判定対象vec3f_t構造体インスタンス
  *
  * @return true 全要素が正常
- * @return false vec_ == NULLまたは要素にNaN, Infが含まれる
+ * @return false 要素にNaN, Infが含まれる
  */
-bool vec3f_is_finite(const vec3f_t* vec_);
+bool vec3f_is_finite(vec3f_t vec_);
 
 /**
  * @brief v1_とv2_の各要素の小さい方を格納したvec3f_tを返す
@@ -154,55 +158,48 @@ vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_);
 /**
  * @brief 4次元ベクトルxyzwを初期化する
  *
- * @note out_vec4f_ == NULLの場合はエラーメッセージを出力し、何もしない
- *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
  * @param[in] z_ 初期化値(z)
  * @param[in] w_ 初期化値(w)
- * @param[out] out_vec4f_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec4f_t構造体インスタンス
  */
-void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f_);
+vec4f_t vec4f_initialize(float x_, float y_, float z_, float w_);
 
 /**
- * @brief 4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する
+ * @brief 4次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - vec1_ == NULL
- * - vec2_ == NULL
- * - out_vec4f_ == NULL
+ * @param[in] vec1_ vec4f_t構造体インスタンス
+ * @param[in] vec2_ vec4f_t構造体インスタンス
  *
- * @param[in] vec1_ vec1_ + vec2_のvec1_
- * @param[in] vec2_ vec1_ + vec2_のvec2_
- * @param[out] out_vec4f_ 加算結果ベクトル
+ * @return 加算されたvec4f_t構造体インスタンス
  */
-void vec4f_add(const vec4f_t* vec1_, const vec4f_t* vec2_, vec4f_t* out_vec4f_);
+vec4f_t vec4f_add(vec4f_t vec1_, vec4f_t vec2_);
 
 /**
  * @brief 4次元ベクトルrgbaを初期化する
- *
- * @note out_vec4u8_ == NULLの場合はエラーメッセージを出力し、何もしない
  *
  * @param[in] r_ 初期化値(r)
  * @param[in] g_ 初期化値(g)
  * @param[in] b_ 初期化値(b)
  * @param[in] a_ 初期化値(a)
- * @param[out] out_vec4u8_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec4u8_t構造体インスタンス
  */
-void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t* out_vec4u8_);
+vec4u8_t vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_);
 
 /**
  * @brief 4次元ベクトルxyzwを初期化する
- *
- * @note out_vec4i8_ == NULLの場合はエラーメッセージを出力し、何もしない
  *
  * @param[in] x_ 初期化値(x)
  * @param[in] y_ 初期化値(y)
  * @param[in] z_ 初期化値(z)
  * @param[in] w_ 初期化値(w)
- * @param[out] out_vec4i8_ 初期化対象ベクトル
+ *
+ * @return 初期化されたvec4i8_t構造体インスタンス
  */
-void vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_, vec4i8_t* out_vec4i8_);
+vec4i8_t vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_);
 
 /**
  * @brief 4行4列の行列の全要素を0にする
@@ -274,32 +271,28 @@ void mat4f_copy(const mat4x4f_t* src_, mat4x4f_t* dst_);
 bool mat4f_inverse(mat4x4f_t* mat_);
 
 /**
- * @brief out_vec_ = mat_ x vec_を計算する
+ * @brief mat_ x vec_を計算し、結果を返す
  *
  * @note 行列の要素は全て行優先で格納されていること
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - mat_ == NULL
- * - vec_ == NULL
- * - out_vec_ == NULL
+ * @warning mat_ == NULLの場合は0ベクトルを返す
  *
  * @param[in] mat_ 4行4列の行列
  * @param[in] vec_ 4次元ベクトル
- * @param[out] out_vec_ 計算結果格納先
+ *
+ * @return 計算されたvec4f_t構造体インスタンス
  */
-void mat4f_vec4f_mul(const mat4x4f_t* mat_, const vec4f_t* vec_, vec4f_t* out_vec_);
+vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_);
 
 /**
  * @brief 平行移動行列を取得する
  *
- * @note 以下の場合は何もしない
- * - position_ == NULL
- * - mat_ == NULL
+ * @note mat_ == NULLの場合は何もしない
  *
  * @param[in] position_ 平行移動量
  * @param[out] mat_ 平行移動行列格納先
  */
-void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_);
+void mat4f_translation(vec3f_t position_, mat4x4f_t* mat_);
 
 /**
  * @brief X軸周りにradian_回転させる回転行列を取得する

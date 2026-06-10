@@ -1061,8 +1061,8 @@ static void NO_COVERAGE test_line_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
         ret = line_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -1088,7 +1088,7 @@ static void NO_COVERAGE test_line_mesh_geometry_initialize_from_vertices(void) {
         assert(5.0f == geometry->vertices[1].position.elem[2]);
 
         // 元配列を書き換えてもgeometry側には影響しない
-        vec3f_initialize(100.0f, 100.0f, 100.0f, &vertices[0].position);
+        vertices[0].position = vec3f_initialize(100.0f, 100.0f, 100.0f);
 
         assert(0.0f == geometry->vertices[0].position.elem[0]);
         assert(1.0f == geometry->vertices[0].position.elem[1]);
@@ -1119,8 +1119,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         s_test_config_line_mesh_geometry_initialize_from_aabbs.fail_on_call = 1U;
         s_test_config_line_mesh_geometry_initialize_from_aabbs.forced_result = (int)RESOURCE_RUNTIME_ERROR;
@@ -1146,8 +1146,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs(NULL, 1U, aabbs, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
@@ -1170,8 +1170,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 0U, aabbs, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
@@ -1213,8 +1213,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, NULL);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
@@ -1234,8 +1234,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret_string = choco_string_create_from_c_string("already_initialized", &geometry.name);
         assert(CHOCO_STRING_SUCCESS == ret_string);
@@ -1266,8 +1266,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         geometry.vertices = dummy_vertices;
         geometry.vertex_count = 0U;
@@ -1293,8 +1293,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         geometry.name = NULL;
         geometry.vertices = NULL;
@@ -1323,8 +1323,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_memory_config_reset();
         test_call_control_reset(&config);
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         config.fail_on_call = 1U;
         config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
@@ -1352,8 +1352,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &dummy_aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &dummy_aabb.max);
+        dummy_aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        dummy_aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", aabb_count, &dummy_aabb, &geometry);
         assert(RESOURCE_OVERFLOW == ret);
@@ -1377,8 +1377,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &dummy_aabb.min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &dummy_aabb.max);
+        dummy_aabb.min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        dummy_aabb.max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", aabb_count, &dummy_aabb, &geometry);
         assert(RESOURCE_OVERFLOW == ret);
@@ -1404,8 +1404,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_memory_config_reset();
         test_call_control_reset(&config);
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
         config.fail_on_call = 3U;
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
@@ -1432,8 +1432,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[0].min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabbs[0].max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 1U, aabbs, &geometry);
         assert(RESOURCE_BAD_OPERATION == ret);
@@ -1456,11 +1456,11 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[1].min);
-        vec3f_initialize( 1.0f,  2.0f,  3.0f, &aabbs[1].max);
+        aabbs[1].min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabbs[1].max = vec3f_initialize( 1.0f,  2.0f,  3.0f);
 
         ret = line_mesh_geometry_initialize_from_aabbs("test_geometry", 2U, aabbs, &geometry);
         assert(RESOURCE_BAD_OPERATION == ret);
@@ -1484,35 +1484,35 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
-        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[0]);
-        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[1]);
-        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[2]);
-        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[3]);
-        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[4]);
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[5]);
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[6]);
-        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[7]);
+        expected[0] = vec3f_initialize(-1.0f, -2.0f,  6.0f);
+        expected[1] = vec3f_initialize( 4.0f, -2.0f,  6.0f);
+        expected[2] = vec3f_initialize( 4.0f, -2.0f,  6.0f);
+        expected[3] = vec3f_initialize( 4.0f, -2.0f, -3.0f);
+        expected[4] = vec3f_initialize( 4.0f, -2.0f, -3.0f);
+        expected[5] = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        expected[6] = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        expected[7] = vec3f_initialize(-1.0f, -2.0f,  6.0f);
 
-        vec3f_initialize(-1.0f, -2.0f,  6.0f, &expected[8]);
-        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[9]);
-        vec3f_initialize( 4.0f, -2.0f,  6.0f, &expected[10]);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[11]);
-        vec3f_initialize( 4.0f, -2.0f, -3.0f, &expected[12]);
-        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[13]);
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &expected[14]);
-        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[15]);
+        expected[8] = vec3f_initialize(-1.0f, -2.0f,  6.0f);
+        expected[9] = vec3f_initialize(-1.0f,  5.0f,  6.0f);
+        expected[10] = vec3f_initialize( 4.0f, -2.0f,  6.0f);
+        expected[11] = vec3f_initialize( 4.0f,  5.0f,  6.0f);
+        expected[12] = vec3f_initialize( 4.0f, -2.0f, -3.0f);
+        expected[13] = vec3f_initialize( 4.0f,  5.0f, -3.0f);
+        expected[14] = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        expected[15] = vec3f_initialize(-1.0f,  5.0f, -3.0f);
 
-        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[16]);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[17]);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &expected[18]);
-        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[19]);
-        vec3f_initialize( 4.0f,  5.0f, -3.0f, &expected[20]);
-        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[21]);
-        vec3f_initialize(-1.0f,  5.0f, -3.0f, &expected[22]);
-        vec3f_initialize(-1.0f,  5.0f,  6.0f, &expected[23]);
+        expected[16] = vec3f_initialize(-1.0f,  5.0f,  6.0f);
+        expected[17] = vec3f_initialize( 4.0f,  5.0f,  6.0f);
+        expected[18] = vec3f_initialize( 4.0f,  5.0f,  6.0f);
+        expected[19] = vec3f_initialize( 4.0f,  5.0f, -3.0f);
+        expected[20] = vec3f_initialize( 4.0f,  5.0f, -3.0f);
+        expected[21] = vec3f_initialize(-1.0f,  5.0f, -3.0f);
+        expected[22] = vec3f_initialize(-1.0f,  5.0f, -3.0f);
+        expected[23] = vec3f_initialize(-1.0f,  5.0f,  6.0f);
 
         ret = line_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -1533,8 +1533,8 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         }
 
         // 元AABBを書き換えてもgeometry側には影響しない
-        vec3f_initialize(100.0f, 100.0f, 100.0f, &aabbs[0].min);
-        vec3f_initialize(200.0f, 200.0f, 200.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(100.0f, 100.0f, 100.0f);
+        aabbs[0].max = vec3f_initialize(200.0f, 200.0f, 200.0f);
 
         for(size_t i = 0; i != 24U; ++i) {
             assert(true == is_equal_float(expected[i].elem[0], geometry->vertices[i].position.elem[0]));
@@ -1559,11 +1559,11 @@ static void test_line_mesh_geometry_initialize_from_aabbs(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(-1.0f, -2.0f, -3.0f, &aabbs[0].min);
-        vec3f_initialize( 4.0f,  5.0f,  6.0f, &aabbs[0].max);
+        aabbs[0].min = vec3f_initialize(-1.0f, -2.0f, -3.0f);
+        aabbs[0].max = vec3f_initialize( 4.0f,  5.0f,  6.0f);
 
-        vec3f_initialize(10.0f, 20.0f, 30.0f, &aabbs[1].min);
-        vec3f_initialize(11.0f, 22.0f, 33.0f, &aabbs[1].max);
+        aabbs[1].min = vec3f_initialize(10.0f, 20.0f, 30.0f);
+        aabbs[1].max = vec3f_initialize(11.0f, 22.0f, 33.0f);
 
         ret = line_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
@@ -1881,8 +1881,8 @@ static void NO_COVERAGE test_line_mesh_geometry_vertices_get(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        vec3f_initialize(0.0f, 1.0f, 2.0f, &vertices[0].position);
-        vec3f_initialize(3.0f, 4.0f, 5.0f, &vertices[1].position);
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
 
         ret = line_mesh_geometry_create(&geometry);
         assert(RESOURCE_SUCCESS == ret);
