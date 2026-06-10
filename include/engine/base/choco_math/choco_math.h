@@ -265,16 +265,14 @@ bool mat4f_inverse(mat4x4f_t* mat_);
  *
  * @note 行列の要素は全て行優先で格納されていること
  *
- * @note 以下の場合はエラーメッセージを出力し、何もしない
- * - mat_ == NULL
- * - vec_ == NULL
- * - out_vec_ == NULL
+ * @warning mat_ == NULLの場合は0ベクトルを返す
  *
  * @param[in] mat_ 4行4列の行列
  * @param[in] vec_ 4次元ベクトル
- * @param[out] out_vec_ 計算結果格納先
+ *
+ * @return 計算されたvec4f_t構造体インスタンス
  */
-void mat4f_vec4f_mul(const mat4x4f_t* mat_, const vec4f_t* vec_, vec4f_t* out_vec_);
+vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_);
 
 /**
  * @brief 平行移動行列を取得する

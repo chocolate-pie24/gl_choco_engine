@@ -449,28 +449,24 @@ bool mat4f_inverse(mat4x4f_t* mat_) {
     return true;
 }
 
-void mat4f_vec4f_mul(const mat4x4f_t* mat_, const vec4f_t* vec_, vec4f_t* out_vec_) {
+vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_) {
+    vec4f_t ret = { 0.0f };
+
     if(NULL == mat_) {
         ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument mat_ requires a valid pointer.");
-        return;
+        return ret;
     }
-    if(NULL == vec_) {
-        ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == out_vec_) {
-        ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument out_vec_ requires a valid pointer.");
-        return;
-    }
-    const float x = vec_->elem[0];
-    const float y = vec_->elem[1];
-    const float z = vec_->elem[2];
-    const float w = vec_->elem[3];
+    const float x = vec_.elem[0];
+    const float y = vec_.elem[1];
+    const float z = vec_.elem[2];
+    const float w = vec_.elem[3];
 
-    out_vec_->elem[0] = mat_->elem[0]  * x + mat_->elem[1]  * y + mat_->elem[2]  * z + mat_->elem[3]  * w;
-    out_vec_->elem[1] = mat_->elem[4]  * x + mat_->elem[5]  * y + mat_->elem[6]  * z + mat_->elem[7]  * w;
-    out_vec_->elem[2] = mat_->elem[8]  * x + mat_->elem[9]  * y + mat_->elem[10] * z + mat_->elem[11] * w;
-    out_vec_->elem[3] = mat_->elem[12] * x + mat_->elem[13] * y + mat_->elem[14] * z + mat_->elem[15] * w;
+    ret.elem[0] = mat_->elem[0]  * x + mat_->elem[1]  * y + mat_->elem[2]  * z + mat_->elem[3]  * w;
+    ret.elem[1] = mat_->elem[4]  * x + mat_->elem[5]  * y + mat_->elem[6]  * z + mat_->elem[7]  * w;
+    ret.elem[2] = mat_->elem[8]  * x + mat_->elem[9]  * y + mat_->elem[10] * z + mat_->elem[11] * w;
+    ret.elem[3] = mat_->elem[12] * x + mat_->elem[13] * y + mat_->elem[14] * z + mat_->elem[15] * w;
+
+    return ret;
 }
 
 void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_) {
@@ -1551,37 +1547,11 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
     {
         // mat_ == NULL
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
+        vec4f_t out = mat4f_vec4f_mul(NULL, vec);
 
-        mat4f_vec4f_mul(NULL, &vec, &out);
-    }
-    {
-        // vec_ == NULL
-        mat4x4f_t mat = {
-            .elem = {
-                 1.0f,  2.0f,  3.0f,  4.0f,
-                 5.0f,  6.0f,  7.0f,  8.0f,
-                 9.0f, 10.0f, 11.0f, 12.0f,
-                13.0f, 14.0f, 15.0f, 16.0f
-            }
-        };
-        vec4f_t out = { 0 };
-
-        mat4f_vec4f_mul(&mat, NULL, &out);
-    }
-    {
-        // out_vec_ == NULL
-        mat4x4f_t mat = {
-            .elem = {
-                 1.0f,  2.0f,  3.0f,  4.0f,
-                 5.0f,  6.0f,  7.0f,  8.0f,
-                 9.0f, 10.0f, 11.0f, 12.0f,
-                13.0f, 14.0f, 15.0f, 16.0f
-            }
-        };
-        vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-
-        mat4f_vec4f_mul(&mat, &vec, NULL);
+        assert(is_equal_float(0.0f, out.elem[0]));
+        assert(is_equal_float(0.0f, out.elem[1]));
+        assert(is_equal_float(0.0f, out.elem[2]));
     }
     {
         // 正常系
@@ -1594,9 +1564,7 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
             }
         };
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
-
-        mat4f_vec4f_mul(&mat, &vec, &out);
+        vec4f_t out = mat4f_vec4f_mul(&mat, vec);
 
         assert(is_equal_float(out.elem[0], 30.0f));
         assert(is_equal_float(out.elem[1], 70.0f));
@@ -1615,7 +1583,7 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
         };
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
 
-        mat4f_vec4f_mul(&mat, &vec, &vec);
+        vec = mat4f_vec4f_mul(&mat, vec);
 
         assert(is_equal_float(vec.elem[0], 30.0f));
         assert(is_equal_float(vec.elem[1], 70.0f));
