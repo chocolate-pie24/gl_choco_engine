@@ -120,6 +120,16 @@ vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_) {
     return ret;
 }
 
+vec3f_t vec3f_scale(vec3f_t vec_, float scale_) {
+    vec3f_t ret = { 0.0f };
+
+    ret.elem[0] = vec_.elem[0] * scale_;
+    ret.elem[1] = vec_.elem[1] * scale_;
+    ret.elem[2] = vec_.elem[2] * scale_;
+
+    return ret;
+}
+
 float vec3f_length_squared(vec3f_t vec_) {
     return (vec_.elem[0] * vec_.elem[0]) + (vec_.elem[1] * vec_.elem[1]) + (vec_.elem[2] * vec_.elem[2]);
 }

@@ -98,9 +98,7 @@ camera_result_t flight_camera_controller_move_forward(float speed_, float delta_
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    forward_vec.elem[0] *= (speed_ * delta_time_);
-    forward_vec.elem[1] *= (speed_ * delta_time_);
-    forward_vec.elem[2] *= (speed_ * delta_time_);
+    forward_vec = vec3f_scale(forward_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&forward_vec, camera_);
@@ -137,9 +135,7 @@ camera_result_t flight_camera_controller_move_backward(float speed_, float delta
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    backward_vec.elem[0] *= (speed_ * delta_time_);
-    backward_vec.elem[1] *= (speed_ * delta_time_);
-    backward_vec.elem[2] *= (speed_ * delta_time_);
+    backward_vec = vec3f_scale(backward_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&backward_vec, camera_);
@@ -176,9 +172,7 @@ camera_result_t flight_camera_controller_move_right(float speed_, float delta_ti
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    right_vec.elem[0] *= (speed_ * delta_time_);
-    right_vec.elem[1] *= (speed_ * delta_time_);
-    right_vec.elem[2] *= (speed_ * delta_time_);
+    right_vec = vec3f_scale(right_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&right_vec, camera_);
@@ -215,9 +209,7 @@ camera_result_t flight_camera_controller_move_left(float speed_, float delta_tim
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    left_vec.elem[0] *= (speed_ * delta_time_);
-    left_vec.elem[1] *= (speed_ * delta_time_);
-    left_vec.elem[2] *= (speed_ * delta_time_);
+    left_vec = vec3f_scale(left_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&left_vec, camera_);
@@ -254,9 +246,7 @@ camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    up_vec.elem[0] *= (speed_ * delta_time_);
-    up_vec.elem[1] *= (speed_ * delta_time_);
-    up_vec.elem[2] *= (speed_ * delta_time_);
+    up_vec = vec3f_scale(up_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&up_vec, camera_);
@@ -293,9 +283,7 @@ camera_result_t flight_camera_controller_move_down(float speed_, float delta_tim
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    down_vec.elem[0] *= (speed_ * delta_time_);
-    down_vec.elem[1] *= (speed_ * delta_time_);
-    down_vec.elem[2] *= (speed_ * delta_time_);
+    down_vec = vec3f_scale(down_vec, speed_ * delta_time_);
 
     // カメラ位置更新
     ret = camera_position_movement_apply(&down_vec, camera_);

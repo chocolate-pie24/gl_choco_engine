@@ -87,6 +87,16 @@ vec3f_t vec3f_initialize(float x_, float y_, float z_);
 vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_);
 
 /**
+ * @brief 3次元ベクトルのスカラー倍を計算する
+ * 
+ * @param[in] vec_ vec3f_t構造体インスタンス
+ * @param[in] scale_ 掛ける値
+ *
+ * @return 計算結果vec3f_t構造体インスタンス
+ */
+vec3f_t vec3f_scale(vec3f_t vec_, float scale_);
+
+/**
  * @brief 3次元ベクトルの長さの2乗を返す
  *
  * @param[in] vec_ 計算対象ベクトル
