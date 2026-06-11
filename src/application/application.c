@@ -144,6 +144,10 @@ typedef struct app_state {
 
     ui_mesh_geometry_t* ui_geometry;
     size_t ui_geometry_vertex_count;
+
+    mat4x4f_t rabbit_mesh_model_mat;
+    mat4x4f_t frog_mesh_model_mat;
+    mat4x4f_t green_mesh_model_mat;
     //end
 
     bool view_dirty;
@@ -590,6 +594,7 @@ application_result_t application_run(void) {
 
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
+    int16_t tex_id_green = 0;
     renderer_backend_texture_t* tex_gpu_resource = NULL;
 
     struct timespec  req = {0, 1000000};
@@ -606,14 +611,18 @@ application_result_t application_run(void) {
 
     // MVP Matrix
     mat4f_identity(&s_app_state->model_matrix);
+    mat4f_identity(&s_app_state->rabbit_mesh_model_mat);
+    mat4f_identity(&s_app_state->frog_mesh_model_mat);
+    mat4f_identity(&s_app_state->green_mesh_model_mat);
     mat4f_identity(&s_app_state->projection_matrix);
     mat4f_identity(&s_app_state->view_matrix);
+    mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_app_state->green_mesh_model_mat);
+    mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_app_state->frog_mesh_model_mat);
 
     camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->active_camera); // TODO: エラー処理
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-    ui_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
     ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
 
@@ -630,7 +639,8 @@ application_result_t application_run(void) {
     lit_mesh_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
 
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_frog);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
+    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_green);
     // TODO: window NULLチェック
 
     INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
@@ -659,15 +669,23 @@ application_result_t application_run(void) {
 
         ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
+        ui_shader_model_matrix_set(&s_app_state->rabbit_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
         texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        // texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
-        // renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        // glDrawArrays(GL_TRIANGLES, 6, 6);
-        // renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        ui_shader_model_matrix_set(&s_app_state->green_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+
+        ui_shader_model_matrix_set(&s_app_state->frog_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
+        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
+        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
