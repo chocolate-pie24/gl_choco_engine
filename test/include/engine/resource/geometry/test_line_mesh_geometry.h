@@ -25,13 +25,31 @@ extern "C" {
 #include "test_controller.h"
 
 /**
- * @brief line_mesh_geometry_create()APIに対して失敗注入設定を行う
+ * @brief line_mesh_geometry_default_create()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、line_mesh_geometry内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_line_mesh_geometry_create_config_set(const test_call_control_t* config_);
+void test_line_mesh_geometry_default_create_config_set(const test_call_control_t* config_);
+
+/**
+ * @brief line_mesh_geometry_create_from_vertices()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、line_mesh_geometry内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_line_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_);
+
+/**
+ * @brief line_mesh_geometry_create_from_aabbs()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、line_mesh_geometry内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_line_mesh_geometry_create_from_aabbs_config_set(const test_call_control_t* config_);
 
 /**
  * @brief line_mesh_geometry_initialize_from_vertices()APIに対して失敗注入設定を行う

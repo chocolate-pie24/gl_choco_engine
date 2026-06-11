@@ -126,6 +126,22 @@ typedef struct app_state {
     texture_manager_t* texture_manager;
     // end
 
+    // begin temporary TODO: remove this!!
+    line_mesh_geometry_t* test_line_geometry;
+    size_t test_line_geometry_vertex_count;
+    vec4u8_t test_line_color;
+
+    line_mesh_geometry_t* aabb_geometry;
+    size_t aabb_geometry_vertex_count;
+    vec4u8_t aabb_color;
+
+    point_mesh_geometry_t* point_geometry;
+    size_t point_geometry_vertex_count;
+
+    lit_mesh_geometry_t* stl_geometry;
+    size_t stl_geometry_vertex_count;
+    //end
+
     bool view_dirty;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
@@ -142,6 +158,16 @@ static void on_mouse(const mouse_event_t* event_);
 static void app_state_update(void);
 static void app_state_dispatch(void);
 static void app_state_clean(void);
+
+static application_result_t test_line_geometry_create(app_state_t* app_state_);    // TODO: remove this!!
+static application_result_t aabb_geometry_create(app_state_t* app_state_);         // TODO: remove this!!
+static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
+static application_result_t stl_geometry_create(app_state_t* app_state_);          // TODO: remove this!!
+
+static void test_line_geometry_destroy(app_state_t* app_state_);    // TODO: remove this!!
+static void aabb_geometry_destroy(app_state_t* app_state_);         // TODO: remove this!!
+static void point_geometry_destroy(app_state_t* app_state_);        // TODO: remove this!!
+static void stl_geometry_destroy(app_state_t* app_state_);          // TODO: remove this!!
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -378,6 +404,29 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to get camera.", app_rslt_to_str(ret));
         goto cleanup;
     }
+
+    // geometry
+    ret = test_line_geometry_create(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to create test line geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = stl_geometry_create(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to create stl geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = aabb_geometry_create(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to create aabb geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = point_geometry_create(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     // end temporary
 
     // commit
@@ -390,6 +439,18 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->point_geometry) {
+                point_mesh_geometry_destroy(&tmp->point_geometry);
+            }
+            if(NULL != tmp->stl_geometry) {
+                lit_mesh_geometry_destroy(&tmp->stl_geometry);
+            }
+            if(NULL != tmp->aabb_geometry) {
+                line_mesh_geometry_destroy(&tmp->aabb_geometry);
+            }
+            if(NULL != tmp->test_line_geometry) {
+                line_mesh_geometry_destroy(&tmp->test_line_geometry);
+            }
             if(NULL != tmp->camera_manager) {
                 camera_manager_deinitialize(tmp->camera_manager);
             }
@@ -446,6 +507,10 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    point_geometry_destroy(s_app_state);
+    aabb_geometry_destroy(s_app_state);
+    stl_geometry_destroy(s_app_state);
+    test_line_geometry_destroy(s_app_state);
     if(NULL != s_app_state->texture_manager) {
         texture_manager_deinitialize(s_app_state->renderer_backend_context, s_app_state->texture_manager);
     }
@@ -519,32 +584,6 @@ application_result_t application_run(void) {
     static ui_vertex_t ui_vertex1[6] = { 0 };
     static ui_vertex_t ui_vertex2[6] = { 0 };
 
-    // 線分描画
-    line_mesh_geometry_t* line_mesh_geometry = NULL;
-    line_vertex_t tmp_line_vertices[2] = { 0 };
-    const line_vertex_t* line_vertices = NULL;
-    size_t line_mesh_geometry_vertex_count = 0;
-    vec4u8_t line_color = { 0 };
-
-    // ポイント描画
-    point_mesh_geometry_t* point_mesh_geometry = NULL;
-    point_vertex_t tmp_point_vertices[8] = { 0 };
-    const point_vertex_t* point_vertices = NULL;
-    vec4u8_t point_colors[8] = { 0 };
-    size_t point_mesh_geometry_vertex_count = 0;
-
-    // lit mesh描画
-    lit_mesh_geometry_t* lit_mesh_geometry = NULL;
-    const point_normal_vertex_t* stl_vertices = NULL;
-    size_t stl_vertex_count = 0;
-
-    // debug AABB描画
-    aabb_3d_t debug_aabb = { 0 };
-    line_mesh_geometry_t* debug_aabb_geometry = NULL;
-    const line_vertex_t* debug_aabb_vertices = NULL;
-    size_t debug_aabb_geometry_vertex_count = 0;
-    vec4u8_t debug_aabb_color = { 0 };
-
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", app_rslt_to_str(ret));
@@ -591,143 +630,6 @@ application_result_t application_run(void) {
 
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
     ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
-
-    // Line Vertex
-    tmp_line_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
-    tmp_line_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
-    line_color = vec4u8_initialize(255, 0, 0, 255);
-    ret_resource = line_mesh_geometry_create(&line_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_initialize_from_vertices("test_line_geometry", 2, tmp_line_vertices, line_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to initialize line_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_vertices_get(line_mesh_geometry, &line_vertices);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertices.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_vertex_count_get(line_mesh_geometry, &line_mesh_geometry_vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * line_mesh_geometry_vertex_count, (void*)line_vertices);
-
-    // Point Vertex
-    tmp_point_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
-    tmp_point_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
-    tmp_point_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
-    tmp_point_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
-    tmp_point_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
-    tmp_point_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
-    tmp_point_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
-    tmp_point_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
-
-    point_colors[0] = vec4u8_initialize(255, 0, 0, 255);
-    point_colors[1] = vec4u8_initialize(255, 255, 0, 255);
-    point_colors[2] = vec4u8_initialize(255, 0, 255, 255);
-    point_colors[3] = vec4u8_initialize(0, 255, 0, 255);
-    point_colors[4] = vec4u8_initialize(255, 255, 0, 255);
-    point_colors[5] = vec4u8_initialize(255, 255, 0, 255);
-    point_colors[6] = vec4u8_initialize(255, 255, 0, 255);
-    point_colors[7] = vec4u8_initialize(255, 255, 0, 255);
-    ret_resource = point_mesh_geometry_create(&point_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to create point_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = point_mesh_geometry_initialize_from_vertices("test_point_geometry", 8, tmp_point_vertices, point_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to initialize point_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = point_mesh_geometry_vertices_get(point_mesh_geometry, &point_vertices);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get point mesh geometry vertices.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = point_mesh_geometry_vertex_count_get(point_mesh_geometry, &point_mesh_geometry_vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get point mesh geometry vertex count.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    point_shader_vertex_buffer_point_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_vertex_t) * point_mesh_geometry_vertex_count, (void*)point_vertices);
-    point_shader_vertex_buffer_color_write(s_app_state->renderer_backend_context, s_app_state->point_shader, sizeof(point_colors), &point_colors[0]);
-
-    // STL Vertex
-    ret_resource = lit_mesh_geometry_create(&lit_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to create lit_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = lit_mesh_geometry_initialize_from_file("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", lit_mesh_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to initialize lit_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = lit_mesh_geometry_vertices_get(lit_mesh_geometry, &stl_vertices);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get vertices.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = lit_mesh_geometry_vertex_count_get(lit_mesh_geometry, &stl_vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get vertex count.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    lit_mesh_shader_vertex_buffer_vertex_write(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, sizeof(point_normal_vertex_t) * stl_vertex_count, (void*)&stl_vertices[0]);
-
-    // Debug AABB
-    debug_aabb_color = vec4u8_initialize(0, 0, 255, 255);
-    ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &debug_aabb);
-    if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
-        ret = app_rslt_convert_geometry_primitive(ret_geometry);
-        ERROR_MESSAGE("application_run(%s) - Failed to create aabb.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_create(&debug_aabb_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to create line_mesh_geometry_t instance.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_initialize_from_aabbs("debug_aabb", 1, &debug_aabb, debug_aabb_geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to initialize line mesh geometry.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_vertices_get(debug_aabb_geometry, &debug_aabb_vertices);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertices.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_vertex_count_get(debug_aabb_geometry, &debug_aabb_geometry_vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = app_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    line_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->line_shader, sizeof(line_vertex_t) * debug_aabb_geometry_vertex_count, (void*)debug_aabb_vertices);
 
     // MVP Matrix
     mat4f_identity(&s_app_state->model_matrix);
@@ -797,33 +699,33 @@ application_result_t application_run(void) {
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         // 線分描画
-        line_shader_color_set(line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_color_set(s_app_state->test_line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
-        glDrawArrays(GL_LINES, 0, line_mesh_geometry_vertex_count);
+        glDrawArrays(GL_LINES, 0, s_app_state->test_line_geometry_vertex_count);
         line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         // ポイント描画
         point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
         point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
-        glDrawArrays(GL_POINTS, 0, point_mesh_geometry_vertex_count);
+        glDrawArrays(GL_POINTS, 0, s_app_state->point_geometry_vertex_count);
         point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         // STL描画
         lit_mesh_shader_use(s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
         lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
-        glDrawArrays(GL_TRIANGLES, 0, stl_vertex_count);
+        glDrawArrays(GL_TRIANGLES, 0, s_app_state->stl_geometry_vertex_count);
         lit_mesh_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
         // Debug用STL AABB
-        line_shader_color_set(debug_aabb_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_color_set(s_app_state->aabb_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
-        glDrawArrays(GL_LINES, line_mesh_geometry_vertex_count, debug_aabb_geometry_vertex_count);
+        glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count, s_app_state->aabb_geometry_vertex_count);
         line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         platform_swap_buffers(s_app_state->platform_context);
@@ -832,18 +734,6 @@ application_result_t application_run(void) {
         nanosleep(&req, NULL);
     }
 cleanup:
-    if(NULL != debug_aabb_geometry) {
-        line_mesh_geometry_destroy(&debug_aabb_geometry);
-    }
-    if(NULL != lit_mesh_geometry) {
-        lit_mesh_geometry_destroy(&lit_mesh_geometry);
-    }
-    if(NULL != line_mesh_geometry) {
-        line_mesh_geometry_destroy(&line_mesh_geometry);
-    }
-    if(NULL != point_mesh_geometry) {
-        point_mesh_geometry_destroy(&point_mesh_geometry);
-    }
     return ret;
 }
 
@@ -1105,4 +995,336 @@ static void app_state_clean(void) {
     s_app_state->window_resized = false;
 cleanup:
     return;
+}
+
+// TODO: remove this!!
+static application_result_t test_line_geometry_create(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+
+    line_mesh_geometry_t* tmp_geometry = NULL;
+    line_vertex_t tmp_vertices[2] = { 0 };
+    const line_vertex_t* vertices = NULL;
+    size_t vertex_count = 0;
+    vec4u8_t line_color = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "test_line_geometry_create", "app_state_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->test_line_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->test_line_geometry")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->test_line_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->test_line_geometry_vertex_count")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->renderer_backend_context")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->line_shader")
+
+    tmp_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
+    tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
+    ret_resource = line_mesh_geometry_create_from_vertices("test_line_geometry", 2, tmp_vertices, &tmp_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to create test line geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // NOTE:
+    // verticesはtmp_verticesと中身は全く同じなので、line_mesh_geometry_vertices_getを実行する必要はないが、
+    // line_mesh_geometry_vertices_getの使用例サンプルとして実行する
+    ret_resource = line_mesh_geometry_vertices_get(tmp_geometry, &vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to get test line geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // NOTE:
+    // vertex_countは2であることは自明であり、line_mesh_geometry_vertex_count_getを実行する必要はないが、
+    // line_mesh_geometry_vertex_count_getの使用例サンプルとして実行する
+    ret_resource = line_mesh_geometry_vertex_count_get(tmp_geometry, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to get test line geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = line_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, (void*)vertices);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    line_color = vec4u8_initialize(255, 0, 0, 255);
+
+    app_state_->test_line_geometry = tmp_geometry;
+    app_state_->test_line_color = line_color;
+    app_state_->test_line_geometry_vertex_count = vertex_count;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        line_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
+}
+
+// TODO: remove this!!
+static application_result_t aabb_geometry_create(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    aabb_3d_t aabb = { 0 };
+    line_mesh_geometry_t* tmp_geometry = NULL;
+    const line_vertex_t* vertices = NULL;
+    size_t vertex_count = 0;
+    vec4u8_t color = { 0 };
+
+    const point_normal_vertex_t* stl_vertices = NULL;
+    size_t stl_vertex_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "aabb_geometry_create", "app_state_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->aabb_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->aabb_geometry")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->aabb_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->aabb_geometry_vertex_count")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->renderer_backend_context")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->line_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->stl_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->stl_geometry")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != app_state_->stl_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->stl_geometry_vertex_count")
+
+    // AABB生成のための頂点データをSTLジオメトリデータから取得
+    ret_resource = lit_mesh_geometry_vertices_get(app_state_->stl_geometry, &stl_vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("aabb_geometry_create(%s) - Failed to get stl geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = lit_mesh_geometry_vertex_count_get(app_state_->stl_geometry, &stl_vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("aabb_geometry_create(%s) - Failed to get stl geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // AABBの生成
+    ret_geometry = aabb_3d_initialize_from_point_normal_vertices(stl_vertices, stl_vertex_count, &aabb);
+    if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry) {
+        ret = app_rslt_convert_geometry_primitive(ret_geometry);
+        ERROR_MESSAGE("aabb_geometry_create(%s) - Failed to create aabb from stl vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // AABB描画用線分ジオメトリの生成
+    ret_resource = line_mesh_geometry_create_from_aabbs("aabb", 1, &aabb, &tmp_geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("aabb_geometry_create(%s) - Failed to create line mesh geometry from aabb.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // VBO書き込み
+    ret_resource = line_mesh_geometry_vertices_get(tmp_geometry, &vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("aabb_geometry_create(%s) - Failed to get line mesh geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = line_mesh_geometry_vertex_count_get(tmp_geometry, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = line_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, (void*)vertices);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_run(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    color = vec4u8_initialize(0, 0, 255, 255);
+
+    app_state_->aabb_geometry = tmp_geometry;
+    app_state_->aabb_color = color;
+    app_state_->aabb_geometry_vertex_count = vertex_count;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        line_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
+}
+
+// TODO: remove this!!
+static application_result_t point_geometry_create(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    point_mesh_geometry_t* geometry = NULL;
+    point_vertex_t tmp_vertices[8] = { 0 };
+    const point_vertex_t* vertices = NULL;
+    vec4u8_t colors[8] = { 0 };
+    size_t vertex_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_geometry_create", "app_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->point_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_shader")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->point_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_geometry_vertex_count")
+
+    tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
+    tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
+    tmp_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
+    tmp_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
+    tmp_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
+    tmp_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
+    tmp_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
+    tmp_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
+
+    colors[0] = vec4u8_initialize(255, 0, 0, 255);
+    colors[1] = vec4u8_initialize(255, 255, 0, 255);
+    colors[2] = vec4u8_initialize(255, 0, 255, 255);
+    colors[3] = vec4u8_initialize(0, 255, 0, 255);
+    colors[4] = vec4u8_initialize(255, 255, 0, 255);
+    colors[5] = vec4u8_initialize(255, 255, 0, 255);
+    colors[6] = vec4u8_initialize(255, 255, 0, 255);
+    colors[7] = vec4u8_initialize(255, 255, 0, 255);
+
+    ret_resource = point_mesh_geometry_create_from_vertices("test_point_geometry", 8, tmp_vertices, &geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("point_geometry_create(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = point_mesh_geometry_vertices_get(geometry, &vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("point_geometry_create(%s) - Failed to get point mesh geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = point_mesh_geometry_vertex_count_get(geometry, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("point_geometry_create(%s) - Failed to get point mesh geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = point_shader_vertex_buffer_point_write(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(point_vertex_t) * vertex_count, (void*)vertices);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("point_geometry_create(%s) - Failed to append vertices to point shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = point_shader_vertex_buffer_color_write(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(colors), &colors[0]);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("point_geometry_create(%s) - Failed to append colors to point shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    app_state_->point_geometry = geometry;
+    app_state_->point_geometry_vertex_count = vertex_count;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        point_mesh_geometry_destroy(&geometry);
+    }
+    return ret;
+}
+
+// TODO: remove this!!
+static application_result_t stl_geometry_create(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    lit_mesh_geometry_t* geometry = NULL;
+    const point_normal_vertex_t* vertices = NULL;
+    size_t vertex_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "stl_geometry_create", "app_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "stl_geometry_create", "app_state_->renderer_backend_context")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->lit_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "stl_geometry_create", "app_state_->line_shader")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->stl_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "stl_geometry_create", "app_state_->stl_geometry")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->stl_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "stl_geometry_create", "app_state_->stl_geometry_vertex_count")
+
+    ret_resource = lit_mesh_geometry_create_from_file("./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl", &geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("st_geometry_create(%s) - Failed to create stl geometry. name = '%s'.", app_rslt_to_str(ret), "glce_lowpoly_penguin_ascii");
+        goto cleanup;
+    }
+    ret_resource = lit_mesh_geometry_vertices_get(geometry, &vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("st_geometry_create(%s) - Failed to get stl geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = lit_mesh_geometry_vertex_count_get(geometry, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("st_geometry_create(%s) - Failed to get stl geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = lit_mesh_shader_vertex_buffer_vertex_write(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, sizeof(point_normal_vertex_t) * vertex_count, (void*)&vertices[0]);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("st_geometry_create(%s) - Failed to append vertex to line shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    app_state_->stl_geometry = geometry;
+    app_state_->stl_geometry_vertex_count = vertex_count;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        lit_mesh_geometry_destroy(&geometry);
+    }
+    return ret;
+}
+
+// TODO: remove this!!
+static void test_line_geometry_destroy(app_state_t* app_state_) {
+    if(NULL == app_state_) {
+        ERROR_MESSAGE("test_line_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        return;
+    }
+    line_mesh_geometry_destroy(&app_state_->test_line_geometry);
+    app_state_->test_line_geometry_vertex_count = 0;
+    app_state_->test_line_color = vec4u8_initialize(0, 0, 0, 0);
+}
+
+// TODO: remove this!!
+static void aabb_geometry_destroy(app_state_t* app_state_) {
+    if(NULL == app_state_) {
+        ERROR_MESSAGE("aabb_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        return;
+    }
+    line_mesh_geometry_destroy(&app_state_->aabb_geometry);
+    app_state_->aabb_geometry_vertex_count = 0;
+}
+
+// TODO: remove this!!
+static void point_geometry_destroy(app_state_t* app_state_) {
+    if(NULL == app_state_) {
+        ERROR_MESSAGE("point_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        return;
+    }
+    point_mesh_geometry_destroy(&app_state_->point_geometry);
+    app_state_->point_geometry_vertex_count = 0;
+}
+
+// TODO: remove this!!
+static void stl_geometry_destroy(app_state_t* app_state_) {
+    if(NULL == app_state_) {
+        ERROR_MESSAGE("stl_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        return;
+    }
+    lit_mesh_geometry_destroy(&app_state_->stl_geometry);
+    app_state_->stl_geometry_vertex_count = 0;
 }
