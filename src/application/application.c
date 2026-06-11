@@ -79,6 +79,7 @@
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 #include "engine/resource/geometry/line_mesh_geometry.h"
 #include "engine/resource/geometry/point_mesh_geometry.h"
+#include "engine/resource/geometry/ui_mesh_geometry.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -140,6 +141,9 @@ typedef struct app_state {
 
     lit_mesh_geometry_t* stl_geometry;
     size_t stl_geometry_vertex_count;
+
+    ui_mesh_geometry_t* ui_geometry;
+    size_t ui_geometry_vertex_count;
     //end
 
     bool view_dirty;
@@ -163,11 +167,13 @@ static application_result_t test_line_geometry_create(app_state_t* app_state_); 
 static application_result_t aabb_geometry_create(app_state_t* app_state_);         // TODO: remove this!!
 static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
 static application_result_t stl_geometry_create(app_state_t* app_state_);          // TODO: remove this!!
+static application_result_t ui_geometry_create(app_state_t* app_state_);    // TODO: remove this!!
 
 static void test_line_geometry_destroy(app_state_t* app_state_);    // TODO: remove this!!
 static void aabb_geometry_destroy(app_state_t* app_state_);         // TODO: remove this!!
 static void point_geometry_destroy(app_state_t* app_state_);        // TODO: remove this!!
 static void stl_geometry_destroy(app_state_t* app_state_);          // TODO: remove this!!
+static void ui_geometry_destroy(app_state_t* app_state_);    // TODO: remove this!!
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -426,7 +432,11 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
         goto cleanup;
     }
-
+    ret = ui_geometry_create(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
     // end temporary
 
     // commit
@@ -439,6 +449,9 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
+            if(NULL != tmp->ui_geometry) {
+                ui_mesh_geometry_destroy(&tmp->ui_geometry);
+            }
             if(NULL != tmp->point_geometry) {
                 point_mesh_geometry_destroy(&tmp->point_geometry);
             }
@@ -507,6 +520,7 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    ui_geometry_destroy(s_app_state);
     point_geometry_destroy(s_app_state);
     aabb_geometry_destroy(s_app_state);
     stl_geometry_destroy(s_app_state);
@@ -580,10 +594,6 @@ application_result_t application_run(void) {
 
     struct timespec  req = {0, 1000000};
 
-    // UI描画
-    static ui_vertex_t ui_vertex1[6] = { 0 };
-    static ui_vertex_t ui_vertex2[6] = { 0 };
-
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", app_rslt_to_str(ret));
@@ -593,43 +603,6 @@ application_result_t application_run(void) {
     // begin temporary
 
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
-
-    // UI Vertex
-    ui_vertex1[0].position = vec2f_initialize(-1.0f, -1.0f);
-    ui_vertex1[1].position = vec2f_initialize(1.0f, -1.0f);
-    ui_vertex1[2].position = vec2f_initialize(1.0f, 1.0f);
-
-    ui_vertex1[3].position = vec2f_initialize(-1.0f, -1.0f);
-    ui_vertex1[4].position = vec2f_initialize(1.0f, 1.0f);
-    ui_vertex1[5].position = vec2f_initialize(-1.0f, 1.0f);
-
-    ui_vertex1[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
-    ui_vertex1[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
-    ui_vertex1[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
-
-    ui_vertex1[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
-    ui_vertex1[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
-    ui_vertex1[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
-
-
-    ui_vertex2[0].position = vec2f_initialize(1.5f, 0.0f);
-    ui_vertex2[1].position = vec2f_initialize(6.5f, 0.0f);
-    ui_vertex2[2].position = vec2f_initialize(6.5f, 5.0f);
-
-    ui_vertex2[3].position = vec2f_initialize(1.5f, 0.0f);
-    ui_vertex2[4].position = vec2f_initialize(6.5f, 5.0f);
-    ui_vertex2[5].position = vec2f_initialize(1.5f, 5.0f);
-
-    ui_vertex2[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
-    ui_vertex2[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
-    ui_vertex2[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
-
-    ui_vertex2[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
-    ui_vertex2[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
-    ui_vertex2[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
-
-    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex1), (void*)ui_vertex1);
-    ui_shader_vertex_buffer_write(s_app_state->renderer_backend_context, s_app_state->ui_shader, sizeof(ui_vertex2), (void*)ui_vertex2);
 
     // MVP Matrix
     mat4f_identity(&s_app_state->model_matrix);
@@ -691,10 +664,10 @@ application_result_t application_run(void) {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
-        renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        glDrawArrays(GL_TRIANGLES, 6, 6);
-        renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        // texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
+        // renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+        // glDrawArrays(GL_TRIANGLES, 6, 6);
+        // renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
@@ -1289,6 +1262,74 @@ cleanup:
 }
 
 // TODO: remove this!!
+// TODO: 共通のgeometryでウサギとテストテクスチャuiを描画する(モデル行列は変える)
+static application_result_t ui_geometry_create(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+
+    ui_mesh_geometry_t* geometry = NULL;
+    const ui_vertex_t* vertices = NULL;
+    size_t vertex_count = 0;
+    ui_vertex_t ui_vertex[6] = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_geometry_create", "app_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->renderer_backend_context")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->ui_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_shader")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->ui_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_geometry")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->ui_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_geometry_vertex_count")
+
+    ui_vertex[0].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex[1].position = vec2f_initialize(1.0f, -1.0f);
+    ui_vertex[2].position = vec2f_initialize(1.0f, 1.0f);
+
+    ui_vertex[3].position = vec2f_initialize(-1.0f, -1.0f);
+    ui_vertex[4].position = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex[5].position = vec2f_initialize(-1.0f, 1.0f);
+
+    ui_vertex[0].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex[1].tex_coord = vec2f_initialize(1.0f, 1.0f);
+    ui_vertex[2].tex_coord = vec2f_initialize(1.0f, 0.0f);
+
+    ui_vertex[3].tex_coord = vec2f_initialize(0.0f, 1.0f);
+    ui_vertex[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
+    ui_vertex[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
+
+    ret_resource = ui_mesh_geometry_create_from_vertices("ui_geometry", 6, ui_vertex, &geometry);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("ui_geometry_create(%s) - Failed to create ui geometry.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = ui_mesh_geometry_vertices_get(geometry, &vertices);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("ui_gemetry_create(%s) - Failed to get ui geometry vertices.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource = ui_mesh_geometry_vertex_count_get(geometry, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = app_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("ui_gemetry_create(%s) - Failed to get ui geometry vertex count.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ui_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->ui_shader, sizeof(ui_vertex), (void*)vertices);
+
+    app_state_->ui_geometry = geometry;
+    app_state_->ui_geometry_vertex_count = vertex_count;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_SUCCESS != ret) {
+        ui_mesh_geometry_destroy(&geometry);
+    }
+    return ret;
+}
+
+// TODO: remove this!!
 static void test_line_geometry_destroy(app_state_t* app_state_) {
     if(NULL == app_state_) {
         ERROR_MESSAGE("test_line_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
@@ -1327,4 +1368,14 @@ static void stl_geometry_destroy(app_state_t* app_state_) {
     }
     lit_mesh_geometry_destroy(&app_state_->stl_geometry);
     app_state_->stl_geometry_vertex_count = 0;
+}
+
+// TODO: remove this!!
+static void ui_geometry_destroy(app_state_t* app_state_) {
+    if(NULL == app_state_) {
+        ERROR_MESSAGE("ui_geometry_destroy(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        return;
+    }
+    ui_mesh_geometry_destroy(&app_state_->ui_geometry);
+    app_state_->ui_geometry_vertex_count = 0;
 }
