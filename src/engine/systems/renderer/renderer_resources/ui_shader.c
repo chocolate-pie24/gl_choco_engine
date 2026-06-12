@@ -34,6 +34,7 @@
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -59,6 +60,7 @@ struct ui_shader {
 
     size_t vertex_buffer_size;              /**< バーテックスバッファのサイズ */
     size_t current_buffer_offset;           /**< 現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
+    size_t current_vertex_count;            /**< 現在バーテックスバッファに転送されている頂点数 */
 };
 
 renderer_result_t ui_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_shader_t** out_ui_shader_) {
@@ -136,6 +138,7 @@ renderer_result_t ui_shader_create(const char* file_path_, const char* name_, re
     tmp_ui_shader->projection_matrix_location = 0;
     tmp_ui_shader->current_buffer_offset = 0;
     tmp_ui_shader->vertex_buffer_size = 0;
+    tmp_ui_shader->current_vertex_count = 0;
 
     // シェーダーモジュール生成
     ret = renderer_backend_shader_create(backend_context_, &tmp_ui_shader->shader);
@@ -352,30 +355,38 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
     ui_shader_->vertex_buffer_size = 0;
 }
 
-renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const void* write_data_) {
+renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const ui_vertex_t* write_data_, size_t* out_vertex_offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    size_t vertex_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "ui_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_->ui_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_write", "ui_vbo")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "write_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(ui_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "ui_shader_vertex_buffer_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP((ui_shader_->current_buffer_offset + size_) <= ui_shader_->vertex_buffer_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_write", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "ui_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_shader_->ui_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_append", "ui_vbo")
+    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "write_data_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(ui_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "ui_shader_vertex_buffer_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP((ui_shader_->current_buffer_offset + size_) <= ui_shader_->vertex_buffer_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_append", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "out_vertex_offset_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(ui_vertex_t) * 6)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "size_")
 
     // NOTE: VBOはこの中でbindされる
     ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, ui_shader_->ui_vbo, ui_shader_->current_buffer_offset, size_, write_data_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_shader_vertex_buffer_write(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    ui_shader_->current_buffer_offset += size_;
 
     ret = renderer_backend_vertex_buffer_unbind(backend_context_, ui_shader_->ui_vbo);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_shader_vertex_buffer_write(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+
+    // NOTE: vertex_countは必ずsize_よりも小さいため、ui_shader_->current_vertex_countのオーバーフローチェックは不要
+    vertex_count = size_ / sizeof(ui_vertex_t);
+    *out_vertex_offset_ = ui_shader_->current_vertex_count;
+    ui_shader_->current_buffer_offset += size_;
+    ui_shader_->current_vertex_count += vertex_count;
 
     ret = RENDERER_SUCCESS;
 

@@ -25,6 +25,8 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -144,23 +146,23 @@ void point_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_cont
  * @param[in,out] point_shader_ 転送先VBOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - point_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(point_vertex_t)の倍数ではない
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> point_vertex_t*, size_のチェック(point_vertex_tのサイズ x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t point_shader_vertex_buffer_point_write(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const void* write_data_);
+renderer_result_t point_shader_vertex_buffer_point_append(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief ポイント描画用シェーダーが保持する色情報VBOに色情報を転送する(バーテックスバッファへのappend)
@@ -181,11 +183,8 @@ renderer_result_t point_shader_vertex_buffer_point_write(renderer_backend_contex
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> vec4u8_t*, size_のチェック(vec4u8_tのサイズ x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t point_shader_vertex_buffer_color_write(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const void* write_data_);
+renderer_result_t point_shader_vertex_buffer_color_append(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const vec4u8_t* write_data_);
 
 /**
  * @brief ポイント描画用シェーダーが保持するVAOをbindする

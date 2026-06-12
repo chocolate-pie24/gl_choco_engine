@@ -130,20 +130,25 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     line_mesh_geometry_t* test_line_geometry;
     size_t test_line_geometry_vertex_count;
+    size_t test_line_geometry_vertex_count_offset;
     vec4u8_t test_line_color;
 
     line_mesh_geometry_t* aabb_geometry;
     size_t aabb_geometry_vertex_count;
+    size_t aabb_geometry_vertex_count_offset;
     vec4u8_t aabb_color;
 
     point_mesh_geometry_t* point_geometry;
     size_t point_geometry_vertex_count;
+    size_t point_geometry_vertex_count_offset;
 
     lit_mesh_geometry_t* stl_geometry;
     size_t stl_geometry_vertex_count;
+    size_t stl_geometry_vertex_count_offset;
 
     ui_mesh_geometry_t* ui_geometry;
     size_t ui_geometry_vertex_count;
+    size_t ui_geometry_vertex_count_offset;
 
     mat4x4f_t rabbit_mesh_model_mat;
     mat4x4f_t frog_mesh_model_mat;
@@ -672,19 +677,19 @@ application_result_t application_run(void) {
         ui_shader_model_matrix_set(&s_app_state->rabbit_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
         texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
+        glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         ui_shader_model_matrix_set(&s_app_state->green_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
         texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
+        glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         ui_shader_model_matrix_set(&s_app_state->frog_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
         texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
-        glDrawArrays(GL_TRIANGLES, 0, s_app_state->ui_geometry_vertex_count);
+        glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
         ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
@@ -694,21 +699,21 @@ application_result_t application_run(void) {
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
-        glDrawArrays(GL_LINES, 0, s_app_state->test_line_geometry_vertex_count);
+        glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count_offset, s_app_state->test_line_geometry_vertex_count);
         line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         // ポイント描画
         point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
         point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
-        glDrawArrays(GL_POINTS, 0, s_app_state->point_geometry_vertex_count);
+        glDrawArrays(GL_POINTS, s_app_state->point_geometry_vertex_count_offset, s_app_state->point_geometry_vertex_count);
         point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         // STL描画
         lit_mesh_shader_use(s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
         lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
-        glDrawArrays(GL_TRIANGLES, 0, s_app_state->stl_geometry_vertex_count);
+        glDrawArrays(GL_TRIANGLES, s_app_state->stl_geometry_vertex_count_offset, s_app_state->stl_geometry_vertex_count);
         lit_mesh_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
         // Debug用STL AABB
@@ -716,7 +721,7 @@ application_result_t application_run(void) {
         line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
-        glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count, s_app_state->aabb_geometry_vertex_count);
+        glDrawArrays(GL_LINES, s_app_state->aabb_geometry_vertex_count_offset, s_app_state->aabb_geometry_vertex_count);
         line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         platform_swap_buffers(s_app_state->platform_context);
@@ -1033,7 +1038,7 @@ static application_result_t test_line_geometry_create(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_renderer = line_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, (void*)vertices);
+    ret_renderer = line_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->test_line_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
@@ -1122,7 +1127,7 @@ static application_result_t aabb_geometry_create(app_state_t* app_state_) {
         ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = line_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, (void*)vertices);
+    ret_renderer = line_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->aabb_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_run(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
@@ -1199,13 +1204,13 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to get point mesh geometry vertex count.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = point_shader_vertex_buffer_point_write(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(point_vertex_t) * vertex_count, (void*)vertices);
+    ret_renderer = point_shader_vertex_buffer_point_append(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(point_vertex_t) * vertex_count, vertices, &app_state_->point_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to append vertices to point shader VBO.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = point_shader_vertex_buffer_color_write(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(colors), &colors[0]);
+    ret_renderer = point_shader_vertex_buffer_color_append(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(vec4u8_t) * vertex_count, &colors[0]);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to append colors to point shader VBO.", app_rslt_to_str(ret));
@@ -1260,10 +1265,10 @@ static application_result_t stl_geometry_create(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_renderer = lit_mesh_shader_vertex_buffer_vertex_write(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, sizeof(point_normal_vertex_t) * vertex_count, (void*)&vertices[0]);
+    ret_renderer = lit_mesh_shader_vertex_buffer_vertex_append(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, sizeof(point_normal_vertex_t) * vertex_count, &vertices[0], &app_state_->stl_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("st_geometry_create(%s) - Failed to append vertex to line shader VBO.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("st_geometry_create(%s) - Failed to append vertex to lit mesh shader VBO.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -1333,7 +1338,12 @@ static application_result_t ui_geometry_create(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ui_shader_vertex_buffer_write(app_state_->renderer_backend_context, app_state_->ui_shader, sizeof(ui_vertex), (void*)vertices);
+    ret_renderer = ui_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->ui_shader, sizeof(ui_vertex_t) * vertex_count, vertices, &app_state_->ui_geometry_vertex_count_offset);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("ui_gemetry_create(%s) - Failed to append vertex to ui shader VBO.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     app_state_->ui_geometry = geometry;
     app_state_->ui_geometry_vertex_count = vertex_count;
@@ -1356,6 +1366,7 @@ static void test_line_geometry_destroy(app_state_t* app_state_) {
     line_mesh_geometry_destroy(&app_state_->test_line_geometry);
     app_state_->test_line_geometry_vertex_count = 0;
     app_state_->test_line_color = vec4u8_initialize(0, 0, 0, 0);
+    app_state_->test_line_geometry_vertex_count_offset = 0;
 }
 
 // TODO: remove this!!
@@ -1366,6 +1377,8 @@ static void aabb_geometry_destroy(app_state_t* app_state_) {
     }
     line_mesh_geometry_destroy(&app_state_->aabb_geometry);
     app_state_->aabb_geometry_vertex_count = 0;
+    app_state_->aabb_color = vec4u8_initialize(0, 0, 0, 0);
+    app_state_->aabb_geometry_vertex_count_offset = 0;
 }
 
 // TODO: remove this!!
@@ -1376,6 +1389,7 @@ static void point_geometry_destroy(app_state_t* app_state_) {
     }
     point_mesh_geometry_destroy(&app_state_->point_geometry);
     app_state_->point_geometry_vertex_count = 0;
+    app_state_->point_geometry_vertex_count_offset = 0;
 }
 
 // TODO: remove this!!
@@ -1386,6 +1400,7 @@ static void stl_geometry_destroy(app_state_t* app_state_) {
     }
     lit_mesh_geometry_destroy(&app_state_->stl_geometry);
     app_state_->stl_geometry_vertex_count = 0;
+    app_state_->stl_geometry_vertex_count_offset = 0;
 }
 
 // TODO: remove this!!
@@ -1396,4 +1411,5 @@ static void ui_geometry_destroy(app_state_t* app_state_) {
     }
     ui_mesh_geometry_destroy(&app_state_->ui_geometry);
     app_state_->ui_geometry_vertex_count = 0;
+    app_state_->ui_geometry_vertex_count_offset = 0;
 }

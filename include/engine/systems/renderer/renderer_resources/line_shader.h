@@ -26,6 +26,8 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -134,23 +136,23 @@ void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_conte
  * @param[in,out] line_shader_ 転送先VBOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - line_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(line_vertex_t) x 2の倍数ではない
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> line_vertex_t*, size_のチェック(line_vertex_tのサイズ x 2 x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const void* write_data_);
+renderer_result_t line_shader_vertex_buffer_append(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAOをbindする

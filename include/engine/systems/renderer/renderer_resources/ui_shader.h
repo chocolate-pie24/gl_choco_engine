@@ -25,6 +25,8 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -132,12 +134,15 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
  * @param[in,out] ui_shader_ 転送先VBOを保持するUIシェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - ui_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(ui_vertex_t) x 6の倍数ではない
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
@@ -145,7 +150,7 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const void* write_data_);
+renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const ui_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief UIシェーダーが保持するVAOをbindする
