@@ -164,21 +164,7 @@ renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* bac
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
-
-/**
- * @brief UIシェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] ui_shader_ VAOを保持するUIシェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - ui_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t ui_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_);
+renderer_result_t ui_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const ui_shader_t* ui_shader_);
 
 /**
  * @brief UIシェーダープログラムの使用開始をグラフィックスAPIに伝える

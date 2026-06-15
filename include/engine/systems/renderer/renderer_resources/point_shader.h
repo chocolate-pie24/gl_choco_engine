@@ -198,21 +198,7 @@ renderer_result_t point_shader_vertex_buffer_color_append(renderer_backend_conte
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_);
-
-/**
- * @brief ポイント描画用シェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] point_shader_ VAOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - point_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t point_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_);
+renderer_result_t point_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_);
 
 /**
  * @brief ポイント描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える

@@ -692,7 +692,7 @@ application_result_t application_run(void) {
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        ui_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // 線分描画
         line_shader_color_set(s_app_state->test_line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
@@ -700,21 +700,21 @@ application_result_t application_run(void) {
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count_offset, s_app_state->test_line_geometry_vertex_count);
-        line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
         point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
         point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         glDrawArrays(GL_POINTS, s_app_state->point_geometry_vertex_count_offset, s_app_state->point_geometry_vertex_count);
-        point_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->point_shader);
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // STL描画
         lit_mesh_shader_use(s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
         lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
         glDrawArrays(GL_TRIANGLES, s_app_state->stl_geometry_vertex_count_offset, s_app_state->stl_geometry_vertex_count);
-        lit_mesh_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // Debug用STL AABB
         line_shader_color_set(s_app_state->aabb_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
@@ -722,7 +722,7 @@ application_result_t application_run(void) {
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         glDrawArrays(GL_LINES, s_app_state->aabb_geometry_vertex_count_offset, s_app_state->aabb_geometry_vertex_count);
-        line_shader_vertex_array_unbind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         platform_swap_buffers(s_app_state->platform_context);
         // end temporary

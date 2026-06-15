@@ -166,21 +166,7 @@ renderer_result_t line_shader_vertex_buffer_append(renderer_backend_context_t* b
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
-
-/**
- * @brief 線分描画用シェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] line_shader_ VAOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
+renderer_result_t line_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_);
 
 /**
  * @brief 線分描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える

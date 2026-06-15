@@ -301,7 +301,7 @@ renderer_result_t point_shader_vertex_buffer_create(renderer_backend_context_t* 
     }
     point_vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, point_shader_->point_vao, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -321,7 +321,7 @@ renderer_result_t point_shader_vertex_buffer_create(renderer_backend_context_t* 
     }
     color_vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, point_shader_->point_vao, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(uint8_t) * 4, 0);  // 色情報(layout = 1), OpenGLで正規化
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(uint8_t) * 4, 0);  // 色情報(layout = 1), OpenGLで正規化
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -333,7 +333,7 @@ renderer_result_t point_shader_vertex_buffer_create(renderer_backend_context_t* 
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_unbind(backend_context_, point_shader_->point_vao);
+    ret = renderer_backend_vertex_array_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_shader_vertex_buffer_create(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -368,7 +368,7 @@ cleanup:
         }
         if(vao_created) {
             if(vao_bound) {
-                renderer_backend_vertex_array_unbind(backend_context_, point_shader_->point_vao);
+                renderer_backend_vertex_array_unbind(backend_context_);
             }
             renderer_backend_vertex_array_destroy(backend_context_, &point_shader_->point_vao);
         }
@@ -407,6 +407,8 @@ void point_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_cont
 
     point_shader_->color_current_buffer_offset = 0;
     point_shader_->color_vertex_buffer_size = 0;
+
+    point_shader_->current_vertex_count = 0;
 }
 
 renderer_result_t point_shader_vertex_buffer_point_append(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_) {
@@ -494,7 +496,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t point_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_) {
+renderer_result_t point_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_shader_vertex_array_bind", "backend_context_")
@@ -504,30 +506,6 @@ renderer_result_t point_shader_vertex_array_bind(renderer_backend_context_t* bac
     ret = renderer_backend_vertex_array_bind(backend_context_, point_shader_->point_vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_shader_vertex_array_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_SUCCESS;
-
-cleanup:
-    if(RENDERER_SUCCESS != ret) {
-        if(NULL != backend_context_ && NULL != point_shader_ && NULL != point_shader_->point_vao) {
-            renderer_backend_vertex_array_unbind(backend_context_, point_shader_->point_vao);
-        }
-    }
-    return ret;
-}
-
-renderer_result_t point_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_shader_vertex_array_unbind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(point_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_shader_vertex_array_unbind", "point_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(point_shader_->point_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_shader_vertex_array_unbind", "point_vao")
-
-    ret = renderer_backend_vertex_array_unbind(backend_context_, point_shader_->point_vao);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("point_shader_vertex_array_unbind(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 

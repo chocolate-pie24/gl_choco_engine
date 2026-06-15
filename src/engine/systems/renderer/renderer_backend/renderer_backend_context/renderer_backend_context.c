@@ -43,7 +43,6 @@ struct renderer_backend_context {
     const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
 
     uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
-    uint32_t current_bound_vao;                         /**< 現在バインド中のVAO識別子 */
     uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
 
     int32_t current_texture_unit;                       /**< 現在使用中のテクスチャユニット番号 */
@@ -88,9 +87,9 @@ static renderer_result_t test_renderer_vec4u8_uniform_set(const renderer_backend
 // vao vtable関数
 static renderer_result_t test_vertex_array_create(renderer_backend_vao_t** vertex_array_);
 static void test_vertex_array_destroy(renderer_backend_vao_t** vertex_array_);
-static renderer_result_t test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_);
-static renderer_result_t test_vertex_array_unbind(const renderer_backend_vao_t* vertex_array_);
-static renderer_result_t test_vertex_array_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+static renderer_result_t test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_);
+static renderer_result_t test_vertex_array_unbind(void);
+static renderer_result_t test_vertex_array_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 // vbo vtable関数
 static renderer_result_t test_vertex_buffer_create(renderer_backend_vbo_t** vertex_buffer_);
@@ -332,7 +331,6 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     }
 
     tmp_context->target_api = target_api_;
-    tmp_context->current_bound_vao = 0;
     tmp_context->current_bound_vbo = 0;
     tmp_context->current_program_id = 0;
     tmp_context->current_texture_unit = 0;
@@ -580,7 +578,7 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
     backend_context_->vao_vtable->vertex_array_destroy(vertex_array_);
 }
 
-renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
+renderer_result_t renderer_backend_vertex_array_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vertex_array_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_array_bind.call_count++;
     if(s_test_config_renderer_backend_vertex_array_bind.fail_on_call != 0) {
@@ -595,7 +593,7 @@ renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t*
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_bind", "backend_context_->vao_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_bind", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_, &backend_context_->current_bound_vao);
+    ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_bind(%s) - Failed to bind vao.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -605,7 +603,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_) {
+renderer_result_t renderer_backend_vertex_array_unbind(const renderer_backend_context_t* backend_context_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_array_unbind.call_count++;
     if(s_test_config_renderer_backend_vertex_array_unbind.fail_on_call != 0) {
@@ -618,20 +616,18 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_unbind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_unbind", "backend_context_->vao_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_unbind", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_unbind(vertex_array_);
+    ret = backend_context_->vao_vtable->vertex_array_unbind();
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_unbind(%s) - Failed to unbind vao.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    backend_context_->current_bound_vao = 0;
 
 cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
+renderer_result_t renderer_backend_vertex_array_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_array_attribute_set.call_count++;
     if(s_test_config_renderer_backend_vertex_array_attribute_set.fail_on_call != 0) {
@@ -644,15 +640,8 @@ renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_c
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_attribute_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_array_attribute_set", "backend_context_->vao_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_array_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_array_attribute_set", "vertex_array_")
 
-    ret = backend_context_->vao_vtable->vertex_array_bind(vertex_array_, &backend_context_->current_bound_vao);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_array_attribute_set(%s) - Failed to bind vao.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = backend_context_->vao_vtable->vertex_array_attribute_set(vertex_array_, layout_, size_, type_, normalized_, stride_, offset_);
+    ret = backend_context_->vao_vtable->vertex_array_attribute_set(layout_, size_, type_, normalized_, stride_, offset_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_array_attribute_set(%s) - Failed to set vao attribute.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -1108,21 +1097,17 @@ static void NO_COVERAGE test_vertex_array_destroy(renderer_backend_vao_t** verte
     return;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_, uint32_t* out_vao_id_) {
+static renderer_result_t NO_COVERAGE test_vertex_array_bind(const renderer_backend_vao_t* vertex_array_) {
     (void)vertex_array_;
-    (void)out_vao_id_;
 
     return s_test_config_test_vertex_array_bind;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_array_unbind(const renderer_backend_vao_t* vertex_array_) {
-    (void)vertex_array_;
-
+static renderer_result_t NO_COVERAGE test_vertex_array_unbind(void) {
     return s_test_config_test_vertex_array_unbind;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_array_attribute_set(const renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
-    (void)vertex_array_;
+static renderer_result_t NO_COVERAGE test_vertex_array_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_) {
     (void)layout_;
     (void)size_;
     (void)type_;
@@ -1924,7 +1909,6 @@ static void NO_COVERAGE test_renderer_backend_initialize(void) {
         assert(gl33_vao_vtable_get() == out_context->vao_vtable);
         assert(gl33_vbo_vtable_get() == out_context->vbo_vtable);
         assert(0U == out_context->current_program_id);
-        assert(0U == out_context->current_bound_vao);
         assert(0U == out_context->current_bound_vbo);
 
         assert(1U == s_test_config_renderer_backend_initialize.call_count);
@@ -1958,7 +1942,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         dummy_context.vao_vtable = gl33_vao_vtable_get();
         dummy_context.vbo_vtable = gl33_vbo_vtable_get();
         dummy_context.current_program_id = 111U;
-        dummy_context.current_bound_vao = 222U;
         dummy_context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
@@ -1971,7 +1954,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         assert(gl33_vao_vtable_get() == dummy_context.vao_vtable);
         assert(gl33_vbo_vtable_get() == dummy_context.vbo_vtable);
         assert(111U == dummy_context.current_program_id);
-        assert(222U == dummy_context.current_bound_vao);
         assert(333U == dummy_context.current_bound_vbo);
 
         test_renderer_backend_context_config_reset();
@@ -3756,519 +3738,14 @@ static void NO_COVERAGE test_renderer_backend_vertex_array_destroy(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_vertex_array_bind(void) {
-    {
-        // renderer_backend_vertex_array_bind() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-        test_call_control_t config = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 123U;
-
-        test_renderer_backend_context_config_reset();
-
-        test_call_control_reset(&config);
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RENDERER_BAD_OPERATION;
-        test_renderer_backend_vertex_array_bind_config_set(&config);
-
-        ret = renderer_backend_vertex_array_bind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_bind(NULL, vertex_array);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = NULL;
-        context.current_bound_vao = 456U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_bind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_bind(&context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 111U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_BAD_OPERATION;
-
-        ret = renderer_backend_vertex_array_bind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 222U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_INVALID_ARGUMENT;
-
-        ret = renderer_backend_vertex_array_bind(&context, vertex_array);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(222U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 成功系
-        // NOTE: 現在の test_vertex_array_bind() は out_vao_id_ を更新しないため、
-        // current_bound_vao は変化しない
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 333U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_array_bind(&context, vertex_array);
-        assert(RENDERER_SUCCESS == ret);
-        assert(333U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_bind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_vertex_array_unbind(void) {
-    {
-        // renderer_backend_vertex_array_unbind() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-        test_call_control_t config = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 123U;
-
-        test_renderer_backend_context_config_reset();
-
-        test_call_control_reset(&config);
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RENDERER_BAD_OPERATION;
-        test_renderer_backend_vertex_array_unbind_config_set(&config);
-
-        ret = renderer_backend_vertex_array_unbind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_unbind(NULL, vertex_array);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = NULL;
-        context.current_bound_vao = 456U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_unbind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_unbind(&context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 111U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_unbind = RENDERER_BAD_OPERATION;
-
-        ret = renderer_backend_vertex_array_unbind(&context, vertex_array);
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 222U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_unbind = RENDERER_INVALID_ARGUMENT;
-
-        ret = renderer_backend_vertex_array_unbind(&context, vertex_array);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(222U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 成功系: wrapper 成功時は current_bound_vao を 0 に更新
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 333U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_unbind = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_array_unbind(&context, vertex_array);
-        assert(RENDERER_SUCCESS == ret);
-        assert(0U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
 }
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_renderer_backend_vertex_array_attribute_set(void) {
-    {
-        // renderer_backend_vertex_array_attribute_set() 冒頭で強制的に
-        // RENDERER_BAD_OPERATION を返させる
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-        test_call_control_t config = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 123U;
-
-        test_renderer_backend_context_config_reset();
-
-        test_call_control_reset(&config);
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RENDERER_BAD_OPERATION;
-        test_renderer_backend_vertex_array_attribute_set_config_set(&config);
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            vertex_array,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            NULL,
-            vertex_array,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // backend_context_->vao_vtable == NULL -> RENDERER_BAD_OPERATION
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = NULL;
-        context.current_bound_vao = 456U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            vertex_array,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_array_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            NULL,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 bind が RENDERER_BAD_OPERATION を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 111U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_BAD_OPERATION;
-        s_test_config_test_vertex_array_attribute_set = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            vertex_array,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // bind 成功後に下位 attribute_set が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
-        // NOTE: 現在の test_vertex_array_bind() は out_vao_id_ を更新しないため、
-        // current_bound_vao は変化しない
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 222U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_SUCCESS;
-        s_test_config_test_vertex_array_attribute_set = RENDERER_RUNTIME_ERROR;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            vertex_array,
-            1U,
-            4,
-            RENDERER_TYPE_FLOAT,
-            true,
-            sizeof(float) * 8U,
-            sizeof(float) * 4U
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(222U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 成功系
-        // NOTE: 現在の test_vertex_array_bind() は out_vao_id_ を更新しないため、
-        // current_bound_vao は変化しない
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vao_t* vertex_array =
-            (renderer_backend_vao_t*)(uintptr_t)0x1U;
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vao_vtable = &s_test_vao_vtable;
-        context.current_bound_vao = 333U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_array_bind = RENDERER_SUCCESS;
-        s_test_config_test_vertex_array_attribute_set = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_array_attribute_set(
-            &context,
-            vertex_array,
-            0U,
-            3,
-            RENDERER_TYPE_FLOAT,
-            false,
-            sizeof(float) * 3U,
-            0U
-        );
-        assert(RENDERER_SUCCESS == ret);
-        assert(333U == context.current_bound_vao);
-        assert(1U == s_test_config_renderer_backend_vertex_array_attribute_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
 }
 
 // Generated by ChatGPT

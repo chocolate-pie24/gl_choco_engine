@@ -276,13 +276,13 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
     // attribute
     // position: vec3f_t 12byte
     // normal: vec4i8_t 4byte(x, y, z, padding)
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, lit_mesh_shader_->lit_mesh_vao, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_normal_vertex_t), 0);  // 座標情報(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_normal_vertex_t), 0);  // 座標情報(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(position).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, lit_mesh_shader_->lit_mesh_vao, 1, 3, RENDERER_TYPE_BYTE, true, sizeof(point_normal_vertex_t), sizeof(float) * 3);    // 法線情報(layout = 1)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 3, RENDERER_TYPE_BYTE, true, sizeof(point_normal_vertex_t), sizeof(float) * 3);    // 法線情報(layout = 1)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(normal).", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -294,7 +294,7 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
+    ret = renderer_backend_vertex_array_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_create(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -322,7 +322,7 @@ cleanup:
         }
         if(vao_created) {
             if(vao_bound) {
-                renderer_backend_vertex_array_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
+                renderer_backend_vertex_array_unbind(backend_context_);
             }
             renderer_backend_vertex_array_destroy(backend_context_, &lit_mesh_shader_->lit_mesh_vao);
         }
@@ -352,6 +352,7 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
     }
     lit_mesh_shader_->current_buffer_offset = 0;
     lit_mesh_shader_->vertex_buffer_size = 0;
+    lit_mesh_shader_->current_vertex_count = 0;
 }
 
 renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
@@ -401,7 +402,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t lit_mesh_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_) {
+renderer_result_t lit_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_array_bind", "backend_context_")
@@ -411,30 +412,6 @@ renderer_result_t lit_mesh_shader_vertex_array_bind(renderer_backend_context_t* 
     ret = renderer_backend_vertex_array_bind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_array_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_SUCCESS;
-
-cleanup:
-    if(RENDERER_SUCCESS != ret) {
-        if(NULL != backend_context_ && NULL != lit_mesh_shader_ && NULL != lit_mesh_shader_->lit_mesh_vao) {
-            renderer_backend_vertex_array_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
-        }
-    }
-    return ret;
-}
-
-renderer_result_t lit_mesh_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_array_unbind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_array_unbind", "lit_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_array_unbind", "lit_mesh_vao")
-
-    ret = renderer_backend_vertex_array_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_shader_vertex_array_unbind(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
