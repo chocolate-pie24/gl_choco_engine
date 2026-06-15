@@ -43,7 +43,6 @@ struct renderer_backend_context {
     const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
 
     uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
-    uint32_t current_bound_vbo;                         /**< 現在バインド中のVBO識別子 */
 
     int32_t current_texture_unit;                       /**< 現在使用中のテクスチャユニット番号 */
     int32_t current_bound_texture;                      /**< 現在バインド中のTextureハンドル */
@@ -94,10 +93,10 @@ static renderer_result_t test_vertex_array_attribute_set(uint32_t layout_, int32
 // vbo vtable関数
 static renderer_result_t test_vertex_buffer_create(renderer_backend_vbo_t** vertex_buffer_);
 static void test_vertex_buffer_destroy(renderer_backend_vbo_t** vertex_buffer_);
-static renderer_result_t test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_);
-static renderer_result_t test_vertex_buffer_unbind(const renderer_backend_vbo_t* vertex_buffer_);
-static renderer_result_t test_vertex_buffer_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_);
-static renderer_result_t test_vertex_buffer_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_);
+static renderer_result_t test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_);
+static renderer_result_t test_vertex_buffer_unbind(void);
+static renderer_result_t test_vertex_buffer_vertex_load(size_t load_size_, const void* load_data_, buffer_usage_t usage_);
+static renderer_result_t test_vertex_buffer_vertex_subload(size_t offset_, size_t size_, const void* load_data_);
 
 // texture vtable関数
 static renderer_result_t test_renderer_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
@@ -331,7 +330,6 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     }
 
     tmp_context->target_api = target_api_;
-    tmp_context->current_bound_vbo = 0;
     tmp_context->current_program_id = 0;
     tmp_context->current_texture_unit = 0;
     tmp_context->current_bound_texture = 0;
@@ -685,7 +683,7 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
     backend_context_->vbo_vtable->vertex_buffer_destroy(vertex_buffer_);
 }
 
-renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
+renderer_result_t renderer_backend_vertex_buffer_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vertex_buffer_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_bind.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_bind.fail_on_call != 0) {
@@ -700,7 +698,7 @@ renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_bind", "backend_context_->vbo_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_bind", "vertex_buffer_")
 
-    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
+    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_buffer_bind(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -710,7 +708,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_) {
+renderer_result_t renderer_backend_vertex_buffer_unbind(const renderer_backend_context_t* backend_context_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_unbind.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_unbind.fail_on_call != 0) {
@@ -723,20 +721,18 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_unbind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_unbind", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_unbind", "vertex_buffer_")
 
-    ret = backend_context_->vbo_vtable->vertex_buffer_unbind(vertex_buffer_);
+    ret = backend_context_->vbo_vtable->vertex_buffer_unbind();
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind(%s) - Failed to unbind vbo.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    backend_context_->current_bound_vbo = 0;
 
 cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
+renderer_result_t renderer_backend_vertex_buffer_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_vertex_load.fail_on_call != 0) {
@@ -749,15 +745,8 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_co
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_load", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_vertex_load", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_load", "vertex_buffer_")
 
-    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = backend_context_->vbo_vtable->vertex_buffer_vertex_load(vertex_buffer_, load_size_, load_data_, usage_);
+    ret = backend_context_->vbo_vtable->vertex_buffer_vertex_load(load_size_, load_data_, usage_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_load(%s) - Failed to load vertex.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -767,7 +756,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_) {
+renderer_result_t renderer_backend_vertex_buffer_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count++;
     if(s_test_config_renderer_backend_vertex_buffer_vertex_subload.fail_on_call != 0) {
@@ -780,17 +769,10 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_vertex_buffer_vertex_subload", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "vertex_buffer_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_vertex_buffer_vertex_subload", "load_data_")
 
-    ret = backend_context_->vbo_vtable->vertex_buffer_bind(vertex_buffer_, &backend_context_->current_bound_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_subload(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = backend_context_->vbo_vtable->vertex_buffer_vertex_subload(vertex_buffer_, offset_, size_, load_data_);
+    ret = backend_context_->vbo_vtable->vertex_buffer_vertex_subload(offset_, size_, load_data_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vertex_buffer_vertex_subload(%s) - Failed to load vertex.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -1130,21 +1112,17 @@ static void NO_COVERAGE test_vertex_buffer_destroy(renderer_backend_vbo_t** vert
     return;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_, uint32_t* out_vbo_id_) {
+static renderer_result_t NO_COVERAGE test_vertex_buffer_bind(const renderer_backend_vbo_t* vertex_buffer_) {
     (void)vertex_buffer_;
-    (void)out_vbo_id_;
 
     return s_test_config_test_vertex_buffer_bind;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_buffer_unbind(const renderer_backend_vbo_t* vertex_buffer_) {
-    (void)vertex_buffer_;
-
+static renderer_result_t NO_COVERAGE test_vertex_buffer_unbind(void) {
     return s_test_config_test_vertex_buffer_unbind;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(const renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, void* load_data_, buffer_usage_t usage_) {
-    (void)vertex_buffer_;
+static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
     (void)load_size_;
     (void)load_data_;
     (void)usage_;
@@ -1152,8 +1130,7 @@ static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_load(const render
     return s_test_config_test_vertex_buffer_vertex_load;
 }
 
-static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_subload(const renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, void* load_data_) {
-    (void)vertex_buffer_;
+static renderer_result_t NO_COVERAGE test_vertex_buffer_vertex_subload(size_t offset_, size_t size_, const void* load_data_) {
     (void)offset_;
     (void)size_;
     (void)load_data_;
@@ -1909,7 +1886,6 @@ static void NO_COVERAGE test_renderer_backend_initialize(void) {
         assert(gl33_vao_vtable_get() == out_context->vao_vtable);
         assert(gl33_vbo_vtable_get() == out_context->vbo_vtable);
         assert(0U == out_context->current_program_id);
-        assert(0U == out_context->current_bound_vbo);
 
         assert(1U == s_test_config_renderer_backend_initialize.call_count);
         assert(1U == s_test_config_graphics_api_valid_check.call_count);
@@ -1942,7 +1918,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         dummy_context.vao_vtable = gl33_vao_vtable_get();
         dummy_context.vbo_vtable = gl33_vbo_vtable_get();
         dummy_context.current_program_id = 111U;
-        dummy_context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -1954,7 +1929,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         assert(gl33_vao_vtable_get() == dummy_context.vao_vtable);
         assert(gl33_vbo_vtable_get() == dummy_context.vbo_vtable);
         assert(111U == dummy_context.current_program_id);
-        assert(333U == dummy_context.current_bound_vbo);
 
         test_renderer_backend_context_config_reset();
     }
@@ -3989,7 +3963,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4000,7 +3973,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         ret = renderer_backend_vertex_buffer_bind(&context, vertex_buffer);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4028,13 +4000,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = NULL;
-        context.current_bound_vbo = 456U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_bind(&context, vertex_buffer);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4046,13 +4016,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 789U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_bind(&context, NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4066,7 +4034,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 111U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4074,7 +4041,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         ret = renderer_backend_vertex_buffer_bind(&context, vertex_buffer);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4088,7 +4054,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4096,15 +4061,12 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         ret = renderer_backend_vertex_buffer_bind(&context, vertex_buffer);
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(222U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
         renderer_backend_vbo_t* vertex_buffer =
@@ -4112,7 +4074,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4120,7 +4081,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_bind(void) {
 
         ret = renderer_backend_vertex_buffer_bind(&context, vertex_buffer);
         assert(RENDERER_SUCCESS == ret);
-        assert(333U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_bind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4134,13 +4094,10 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         // RENDERER_BAD_OPERATION を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         test_call_control_t config = {0};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4149,9 +4106,8 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         config.forced_result = (int)RENDERER_BAD_OPERATION;
         test_renderer_backend_vertex_buffer_unbind_config_set(&config);
 
-        ret = renderer_backend_vertex_buffer_unbind(&context, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(&context);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4159,12 +4115,10 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
     {
         // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         test_renderer_backend_context_config_reset();
 
-        ret = renderer_backend_vertex_buffer_unbind(NULL, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
@@ -4174,36 +4128,14 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = NULL;
-        context.current_bound_vbo = 456U;
 
         test_renderer_backend_context_config_reset();
 
-        ret = renderer_backend_vertex_buffer_unbind(&context, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(&context);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vbo);
-        assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_buffer_unbind(&context, NULL);
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4212,20 +4144,16 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 111U;
 
         test_renderer_backend_context_config_reset();
 
         s_test_config_test_vertex_buffer_unbind = RENDERER_BAD_OPERATION;
 
-        ret = renderer_backend_vertex_buffer_unbind(&context, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(&context);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4234,20 +4162,16 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 222U;
 
         test_renderer_backend_context_config_reset();
 
         s_test_config_test_vertex_buffer_unbind = RENDERER_INVALID_ARGUMENT;
 
-        ret = renderer_backend_vertex_buffer_unbind(&context, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(&context);
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(222U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4256,20 +4180,16 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_unbind(void) {
         // 成功系: wrapper 成功時は current_bound_vbo を 0 に更新
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
 
         s_test_config_test_vertex_buffer_unbind = RENDERER_SUCCESS;
 
-        ret = renderer_backend_vertex_buffer_unbind(&context, vertex_buffer);
+        ret = renderer_backend_vertex_buffer_unbind(&context);
         assert(RENDERER_SUCCESS == ret);
-        assert(0U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_unbind.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4283,14 +4203,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
         // RENDERER_BAD_OPERATION を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
         test_call_control_t config = {0};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4301,13 +4218,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             &context,
-            vertex_buffer,
             sizeof(vertex_data),
             vertex_data,
             BUFFER_USAGE_STATIC
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4315,15 +4230,12 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
     {
         // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             NULL,
-            vertex_buffer,
             sizeof(vertex_data),
             vertex_data,
             BUFFER_USAGE_STATIC
@@ -4337,97 +4249,32 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
         // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = NULL;
-        context.current_bound_vbo = 456U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             &context,
-            vertex_buffer,
             sizeof(vertex_data),
             vertex_data,
             BUFFER_USAGE_STATIC
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_bound_vbo);
-        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        float vertex_data[9] = {0.0f};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            &context,
-            NULL,
-            sizeof(vertex_data),
-            vertex_data,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_bound_vbo);
-        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 bind が RENDERER_BAD_OPERATION を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
-        float vertex_data[9] = {0.0f};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 111U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_buffer_bind = RENDERER_BAD_OPERATION;
-        s_test_config_test_vertex_buffer_vertex_load = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_buffer_vertex_load(
-            &context,
-            vertex_buffer,
-            sizeof(vertex_data),
-            vertex_data,
-            BUFFER_USAGE_STATIC
-        );
-        assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // bind 成功後に下位 vertex_load が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4436,29 +4283,22 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             &context,
-            vertex_buffer,
             sizeof(vertex_data),
             vertex_data,
             (buffer_usage_t)99999
         );
         assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(222U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // bind 成功後に下位 vertex_load が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4467,25 +4307,19 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             &context,
-            vertex_buffer,
             0U,
             NULL,
             BUFFER_USAGE_STATIC
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(333U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[12] = {
             0.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
@@ -4495,7 +4329,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 444U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4504,13 +4337,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_load(void) {
 
         ret = renderer_backend_vertex_buffer_vertex_load(
             &context,
-            vertex_buffer,
             sizeof(vertex_data),
             vertex_data,
             BUFFER_USAGE_DYNAMIC
         );
         assert(RENDERER_SUCCESS == ret);
-        assert(444U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_load.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4524,14 +4355,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
         // RENDERER_BAD_OPERATION を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
         test_call_control_t config = {0};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4542,13 +4370,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             sizeof(float) * 3U,
             sizeof(float) * 6U,
             vertex_data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4556,15 +4382,12 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
     {
         // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             NULL,
-            vertex_buffer,
             0U,
             sizeof(vertex_data),
             vertex_data
@@ -4578,50 +4401,20 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
         // backend_context_->vbo_vtable == NULL -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = NULL;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             0U,
             sizeof(vertex_data),
             vertex_data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_bound_vbo);
-        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // vertex_buffer_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        float vertex_data[9] = {0.0f};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_vertex_buffer_vertex_subload(
-            &context,
-            NULL,
-            0U,
-            sizeof(vertex_data),
-            vertex_data
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4630,25 +4423,20 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
         // size_ == 0 -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             0U,
             0U,
             vertex_data
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(123U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -4657,71 +4445,31 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
         // load_data_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 123U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             0U,
             sizeof(float) * 9U,
             NULL
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(123U == context.current_bound_vbo);
-        assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // 下位 vertex_buffer_bind が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
-        float vertex_data[9] = {0.0f};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 111U;
-
-        test_renderer_backend_context_config_reset();
-
-        s_test_config_test_vertex_buffer_bind = RENDERER_RUNTIME_ERROR;
-        s_test_config_test_vertex_buffer_vertex_subload = RENDERER_SUCCESS;
-
-        ret = renderer_backend_vertex_buffer_vertex_subload(
-            &context,
-            vertex_buffer,
-            0U,
-            sizeof(vertex_data),
-            vertex_data
-        );
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(111U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // bind 成功後に下位 vertex_subload が RENDERER_RUNTIME_ERROR を返す -> そのまま伝播
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[9] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4730,25 +4478,19 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             sizeof(float) * 3U,
             sizeof(float) * 6U,
             vertex_data
         );
         assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(222U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // bind 成功後に下位 vertex_subload が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[6] = {
             0.0f, 0.0f, 0.0f,
             1.0f, 1.0f, 0.0f
@@ -4756,7 +4498,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4765,25 +4506,19 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             0U,
             sizeof(vertex_data),
             vertex_data
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(333U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_vertex_buffer_bind() は out_vbo_id_ を更新しないため、
-        // current_bound_vbo は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_vbo_t* vertex_buffer =
-            (renderer_backend_vbo_t*)(uintptr_t)0x1U;
         float vertex_data[6] = {
             0.0f, 0.0f, 0.0f,
             1.0f, 1.0f, 0.0f
@@ -4791,7 +4526,6 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         context.target_api = GRAPHICS_API_GL33;
         context.vbo_vtable = &s_test_vbo_vtable;
-        context.current_bound_vbo = 444U;
 
         test_renderer_backend_context_config_reset();
 
@@ -4800,13 +4534,11 @@ static void NO_COVERAGE test_renderer_backend_vertex_buffer_vertex_subload(void)
 
         ret = renderer_backend_vertex_buffer_vertex_subload(
             &context,
-            vertex_buffer,
             sizeof(float) * 3U,
             sizeof(vertex_data),
             vertex_data
         );
         assert(RENDERER_SUCCESS == ret);
-        assert(444U == context.current_bound_vbo);
         assert(1U == s_test_config_renderer_backend_vertex_buffer_vertex_subload.call_count);
 
         test_renderer_backend_context_config_reset();

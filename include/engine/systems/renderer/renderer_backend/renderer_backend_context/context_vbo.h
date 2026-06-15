@@ -69,10 +69,6 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
 /**
  * @brief VBOをbindする
  *
- * @details
- * - 処理に成功した場合、backend_context_が保持する現在bind中のVBO値が更新される
- * - 既にbind済みのvertex_buffer_が渡された場合は何もしない
- *
  * @param[in] backend_context_ bind用vtable保有構造体インスタンスへのポインタ
  * @param[in] vertex_buffer_ bind対象VBOハンドル構造体インスタンスへのポインタ
  *
@@ -82,30 +78,27 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
  * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtable == NULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_bind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_);
+renderer_result_t renderer_backend_vertex_buffer_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vertex_buffer_);
 
 /**
  * @brief VBOをunbindする
  *
- * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_buffer_ unbind対象VBOハンドル構造体インスタンスへのポインタ
+ * @note 特定のVBOを指定してunbindするAPIではなく、現在のGL_ARRAY_BUFFER bindingを解除するAPIである
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - vertex_buffer_ == NULL
+ * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_INVALID_ARGUMENT backend_context_ == NULL
  * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_);
+renderer_result_t renderer_backend_vertex_buffer_unbind(const renderer_backend_context_t* backend_context_);
 
 /**
  * @brief GPUの頂点情報格納バッファに頂点情報を転送する
  *
- * @note
- * - 転送の際には本関数内でVBOのbindが行われる
+ * @warning 本APIを呼び出す前に対象のVBOをbindしておくこと
  *
  * @param[in] backend_context_ 転送用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_buffer_ 転送対象VBOハンドルを保有する構造体インスタンスへのポインタ
  * @param[in] load_size_ 転送サイズ(byte)
  * @param[in] load_data_ 転送データ配列への先頭ポインタ
  * @param[in] usage_ バッファ用途 @ref buffer_usage_t
@@ -113,35 +106,30 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(renderer_backend_context
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - load_size_ == 0
  * - backend_context_ == NULL
- * - vertex_buffer_ == NULL
- * @retval RENDERER_BAD_OPERATION
- * - backend_context_->vbo_vtableがNULLで未初期化
- * - vertex_buffer_がNULLで未初期化
+ * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
  * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_vertex_load(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
+renderer_result_t renderer_backend_vertex_buffer_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
 
 /**
  * @brief 生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する
  *
+ * @warning 本APIを呼び出す前に対象のVBOをbindしておくこと
+ *
  * @param[in] backend_context_ 転送用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_buffer_ VBOリソース管理構造体インスタンスへのポインタ
  * @param[in] offset_ 頂点情報格納領域の先頭から転送開始位置までのオフセット(byte)
  * @param[in] size_ 頂点情報転送サイズ(byte)
  * @param[in] load_data_ 転送する頂点情報配列へのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - vertex_buffer_ == NULL
  * - load_data_ == NULL
  * - size_ == 0
- * @retval RENDERER_BAD_OPERATION
- * - backend_context_->vbo_vtableがNULLで未初期化
- * - vertex_buffer_がNULLで未初期化
+ * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_vertex_subload(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t* vertex_buffer_, size_t offset_, size_t size_, const void* load_data_);
+renderer_result_t renderer_backend_vertex_buffer_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_);
 
 #ifdef __cplusplus
 }

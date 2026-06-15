@@ -243,6 +243,7 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
     IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_create", "lit_mesh_vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_create", "lit_mesh_vbo")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == lit_mesh_shader_->current_buffer_offset, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_create", "current_buffer_offset")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == lit_mesh_shader_->current_vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_create", "current_vertex_count")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_create", "buffer_size_")
 
     ret = renderer_backend_vertex_array_create(backend_context_, &lit_mesh_shader_->lit_mesh_vao);
@@ -288,7 +289,7 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, lit_mesh_shader_->lit_mesh_vbo, buffer_size_, 0, buffer_usage_);
+    ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, buffer_size_, 0, buffer_usage_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_create(%s) - Failed to create vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -301,7 +302,7 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
     }
     vao_bound = false;
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
+    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_create(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -316,7 +317,7 @@ cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(vbo_created) {
             if(vbo_bound) {
-                renderer_backend_vertex_buffer_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
+                renderer_backend_vertex_buffer_unbind(backend_context_);
             }
             renderer_backend_vertex_buffer_destroy(backend_context_, &lit_mesh_shader_->lit_mesh_vbo);
         }
@@ -355,9 +356,10 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
     lit_mesh_shader_->current_vertex_count = 0;
 }
 
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
+renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     size_t vertex_count = 0;
+    bool vbo_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "lit_mesh_shader_")
@@ -369,15 +371,20 @@ renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(renderer_backend_c
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(point_normal_vertex_t) * 3)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "size_")
 
-    // NOTE: VBOはこの中でbindされる
-    ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, lit_mesh_shader_->lit_mesh_vbo, lit_mesh_shader_->current_buffer_offset, size_, write_data_);
+    ret = renderer_backend_vertex_buffer_bind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vbo_bound = true;
+
+    ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, lit_mesh_shader_->current_buffer_offset, size_, write_data_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     
-
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
+    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -393,10 +400,8 @@ renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(renderer_backend_c
 
 cleanup:
     if(RENDERER_SUCCESS != ret) {
-        if(NULL != backend_context_ && NULL != lit_mesh_shader_) {
-            if(NULL != lit_mesh_shader_->lit_mesh_vbo) {
-                renderer_backend_vertex_buffer_unbind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
-            }
+        if(NULL != backend_context_ && vbo_bound) {
+            renderer_backend_vertex_buffer_unbind(backend_context_);
         }
     }
     return ret;

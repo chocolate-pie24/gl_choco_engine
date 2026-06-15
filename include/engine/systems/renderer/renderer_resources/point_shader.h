@@ -114,6 +114,7 @@ void point_shader_destroy(renderer_backend_context_t* backend_context_, point_sh
  * - point_shader_->color_vbo != NULL
  * - point_shader_->point_current_buffer_offset != 0
  * - point_shader_->color_current_buffer_offset != 0
+ * - point_shader_->current_vertex_count != 0
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
@@ -162,7 +163,7 @@ void point_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_cont
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_vertex_buffer_point_append(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t point_shader_vertex_buffer_point_append(const renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief ポイント描画用シェーダーが保持する色情報VBOに色情報を転送する(バーテックスバッファへのappend)
@@ -184,7 +185,7 @@ renderer_result_t point_shader_vertex_buffer_point_append(renderer_backend_conte
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_vertex_buffer_color_append(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const vec4u8_t* write_data_);
+renderer_result_t point_shader_vertex_buffer_color_append(const renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const vec4u8_t* write_data_);
 
 /**
  * @brief ポイント描画用シェーダーが保持するVAOをbindする

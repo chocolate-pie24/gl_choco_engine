@@ -107,6 +107,7 @@ void line_shader_destroy(renderer_backend_context_t* backend_context_, line_shad
  * - line_shader_->line_vao != NULL
  * - line_shader_->line_vbo != NULL
  * - line_shader_->current_buffer_offset != 0
+ * - line_shader_->current_vertex_count != 0
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
@@ -152,7 +153,7 @@ void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_conte
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_vertex_buffer_append(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t line_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAOをbindする

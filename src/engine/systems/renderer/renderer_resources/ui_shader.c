@@ -247,8 +247,9 @@ renderer_result_t ui_shader_vertex_buffer_create(renderer_backend_context_t* bac
     IF_ARG_NOT_NULL_GOTO_CLEANUP(ui_shader_->ui_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_create", "ui_vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(ui_shader_->ui_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_create", "ui_vbo")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == ui_shader_->current_buffer_offset, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_create", "current_buffer_offset")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == ui_shader_->current_vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_shader_vertex_buffer_create", "current_vertex_count")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_create", "buffer_size_")
-
+    
     ret = renderer_backend_vertex_array_create(backend_context_, &ui_shader_->ui_vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_vertex_buffer_create(%s) - Failed to create ui vao.", renderer_rslt_to_str(ret));
@@ -289,7 +290,7 @@ renderer_result_t ui_shader_vertex_buffer_create(renderer_backend_context_t* bac
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, ui_shader_->ui_vbo, buffer_size_, 0, buffer_usage_);
+    ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, buffer_size_, 0, buffer_usage_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_vertex_buffer_create(%s) - Failed to create vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -302,7 +303,7 @@ renderer_result_t ui_shader_vertex_buffer_create(renderer_backend_context_t* bac
     }
     vao_bound = false;
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_, ui_shader_->ui_vbo);
+    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_vertex_buffer_create(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -317,7 +318,7 @@ cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(vbo_created) {
             if(vbo_bound) {
-                renderer_backend_vertex_buffer_unbind(backend_context_, ui_shader_->ui_vbo);
+                renderer_backend_vertex_buffer_unbind(backend_context_);
             }
             renderer_backend_vertex_buffer_destroy(backend_context_, &ui_shader_->ui_vbo);
         }
@@ -356,9 +357,10 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
     ui_shader_->current_vertex_count = 0;
 }
 
-renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const ui_vertex_t* write_data_, size_t* out_vertex_offset_) {
+renderer_result_t ui_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, ui_shader_t* ui_shader_, size_t size_, const ui_vertex_t* write_data_, size_t* out_vertex_offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     size_t vertex_count = 0;
+    bool vbo_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(ui_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "ui_shader_")
@@ -370,14 +372,20 @@ renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* bac
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "out_vertex_offset_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(ui_vertex_t) * 6)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_shader_vertex_buffer_append", "size_")
 
-    // NOTE: VBOはこの中でbindされる
-    ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, ui_shader_->ui_vbo, ui_shader_->current_buffer_offset, size_, write_data_);
+    ret = renderer_backend_vertex_buffer_bind(backend_context_, ui_shader_->ui_vbo);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_shader_vertex_buffer_append(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vbo_bound = true;
+
+    ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, ui_shader_->current_buffer_offset, size_, write_data_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_, ui_shader_->ui_vbo);
+    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -393,10 +401,8 @@ renderer_result_t ui_shader_vertex_buffer_append(renderer_backend_context_t* bac
 
 cleanup:
     if(RENDERER_SUCCESS != ret) {
-        if(NULL != backend_context_ && NULL != ui_shader_) {
-            if(NULL != ui_shader_->ui_vbo) {
-                renderer_backend_vertex_buffer_unbind(backend_context_, ui_shader_->ui_vbo);
-            }
+        if(vbo_bound && NULL != backend_context_) {
+            renderer_backend_vertex_buffer_unbind(backend_context_);
         }
     }
     return ret;
