@@ -131,8 +131,6 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
 /**
  * @brief シェーダープログラムの使用開始をグラフィックスAPIに伝える
  *
- * @note 処理に成功した場合、現在使用中のプログラム識別子がbackend_context_が保持するフィールドに記憶される
- *
  * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  *
@@ -145,7 +143,7 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_);
+renderer_result_t renderer_backend_shader_use(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
@@ -169,51 +167,39 @@ renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_ba
 /**
  * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
  *
- * @note
- * - OpenGL 3.3実装
- * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ * @note OpenGL 3.3実装
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
  * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
- * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
  * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
  * @param[in] data_ 送信データへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - shader_handle_ == NULL
  * - data_ == NULL
- * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
- * - backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_);
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_);
 
 /**
  * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
  *
- * @note
- * - OpenGL 3.3実装
- * - 現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる
+ * @note OpenGL 3.3実装
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
  * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
- * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
  * @param[in] location_ ユニフォーム変数のLocation
  * @param[in] data_ 送信データへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - shader_handle_ == NULL
  * - data_ == NULL
- * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
- * - backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_);
+renderer_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_);
 
 #ifdef __cplusplus
 }

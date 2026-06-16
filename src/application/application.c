@@ -628,20 +628,24 @@ application_result_t application_run(void) {
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-    ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
-    ui_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+    ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+    ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);
+    ui_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->projection_matrix, true);
 
-    line_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
-    line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
-    line_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
+    line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
+    line_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->model_matrix, true);
+    line_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->view_matrix, true);
+    line_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->projection_matrix, true);
 
-    point_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
-    point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
-    point_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+    point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
+    point_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->model_matrix, true);
+    point_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->view_matrix, true);
+    point_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->projection_matrix, true);
 
-    lit_mesh_shader_model_matrix_set(&s_app_state->model_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
-    lit_mesh_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
-    lit_mesh_shader_projection_matrix_set(&s_app_state->projection_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+    lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+    lit_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->model_matrix, true);
+    lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
+    lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
 
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
@@ -670,23 +674,23 @@ application_result_t application_run(void) {
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
         // UI描画
-        ui_shader_use(s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
         ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
 
-        ui_shader_model_matrix_set(&s_app_state->rabbit_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->rabbit_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        ui_shader_model_matrix_set(&s_app_state->green_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->green_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        ui_shader_model_matrix_set(&s_app_state->frog_mesh_model_mat, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->frog_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
@@ -695,30 +699,30 @@ application_result_t application_run(void) {
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // 線分描画
-        line_shader_color_set(s_app_state->test_line_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
-        line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        line_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_shader, s_app_state->test_line_color.elem);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count_offset, s_app_state->test_line_geometry_vertex_count);
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
-        point_shader_use(s_app_state->point_shader, s_app_state->renderer_backend_context);
+        point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
         point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
 
         glDrawArrays(GL_POINTS, s_app_state->point_geometry_vertex_count_offset, s_app_state->point_geometry_vertex_count);
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // STL描画
-        lit_mesh_shader_use(s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+        lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
         lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
         glDrawArrays(GL_TRIANGLES, s_app_state->stl_geometry_vertex_count_offset, s_app_state->stl_geometry_vertex_count);
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // Debug用STL AABB
-        line_shader_color_set(s_app_state->aabb_color.elem, s_app_state->line_shader, s_app_state->renderer_backend_context);
-        line_shader_use(s_app_state->line_shader, s_app_state->renderer_backend_context);
+        line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        line_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_shader, s_app_state->aabb_color.elem);
         line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
 
         glDrawArrays(GL_LINES, s_app_state->aabb_geometry_vertex_count_offset, s_app_state->aabb_geometry_vertex_count);
@@ -933,25 +937,29 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(&tmp_projection, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);
+            ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
 
-            ret_renderer = line_shader_projection_matrix_set(&tmp_projection, true, s_app_state->line_shader, s_app_state->renderer_backend_context);
+            line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
+            ret_renderer = line_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
 
-            ret_renderer = point_shader_projection_matrix_set(&tmp_projection, true, s_app_state->point_shader, s_app_state->renderer_backend_context);
+            point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
+            ret_renderer = point_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
             }
 
-            ret_renderer = lit_mesh_shader_projection_matrix_set(&tmp_projection, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);
+            lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+            ret_renderer = lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
@@ -968,10 +976,18 @@ static void app_state_dispatch(void) {
 
     if(s_app_state->view_dirty) {
         camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
-        ui_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->ui_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
-        line_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->line_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
-        point_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->point_shader, s_app_state->renderer_backend_context);    // TODO: エラー処理
-        lit_mesh_shader_view_matrix_set(&s_app_state->view_matrix, true, s_app_state->lit_mesh_shader, s_app_state->renderer_backend_context);  // TODO: エラー処理
+
+        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
+
+        line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        line_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
+
+        point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
+        point_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->view_matrix, true);    // TODO: エラー処理
+
+        lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+        lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
         s_app_state->view_dirty = false;
     }
 cleanup:

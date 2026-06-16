@@ -426,10 +426,12 @@ cleanup:
     return ret;
 }
 
-renderer_result_t lit_mesh_shader_use(const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t lit_mesh_shader_use(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_use", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_use", "lit_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_use", "lit_mesh_shader_->shader")
 
     ret = renderer_backend_shader_use(backend_context_, lit_mesh_shader_->shader);
     if(RENDERER_SUCCESS != ret) {
@@ -441,13 +443,15 @@ cleanup:
     return ret;
 }
 
-renderer_result_t lit_mesh_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t lit_mesh_shader_model_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "model_matrix_")
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "lit_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_model_matrix_set", "lit_mesh_shader_->shader")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "model_matrix_")
 
-    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->shader, lit_mesh_shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_model_matrix_set(%s) - Failed to set model matrix.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -457,13 +461,15 @@ cleanup:
     return ret;
 }
 
-renderer_result_t lit_mesh_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t lit_mesh_shader_view_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "view_matrix_")
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "lit_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_view_matrix_set", "lit_mesh_shader_->shader")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "view_matrix_")
 
-    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->shader, lit_mesh_shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_view_matrix_set(%s) - Failed to set view matrix.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -473,13 +479,15 @@ cleanup:
     return ret;
 }
 
-renderer_result_t lit_mesh_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_) {
+renderer_result_t lit_mesh_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "projection_matrix_")
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "lit_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_projection_matrix_set", "lit_mesh_shader_->shader")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "projection_matrix_")
 
-    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->shader, lit_mesh_shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
+    ret = renderer_backend_shader_mat4f_uniform_set(backend_context_, lit_mesh_shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", renderer_rslt_to_str(ret));
         goto cleanup;

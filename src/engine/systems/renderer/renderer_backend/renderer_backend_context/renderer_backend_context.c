@@ -42,8 +42,6 @@ struct renderer_backend_context {
     const renderer_vbo_vtable_t* vbo_vtable;            /**< VBO機能提供vtable */
     const renderer_texture_vtable_t* texture_vtable;    /**< Texture機能提供vtable */
 
-    uint32_t current_program_id;                        /**< 現在使用中のリンクされたシェーダープログラムID */
-
     int32_t current_texture_unit;                       /**< 現在使用中のテクスチャユニット番号 */
     int32_t current_bound_texture;                      /**< 現在バインド中のTextureハンドル */
 };
@@ -78,10 +76,10 @@ static renderer_result_t test_renderer_shader_create(renderer_backend_shader_t**
 static void test_renderer_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_result_t test_renderer_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_result_t test_renderer_shader_link(renderer_backend_shader_t* shader_handle_);
-static renderer_result_t test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);
+static renderer_result_t test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_);
 static renderer_result_t test_renderer_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
-static renderer_result_t test_renderer_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);
-static renderer_result_t test_renderer_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);
+static renderer_result_t test_renderer_mat4f_uniform_set(int32_t location_, bool should_transpose_, const float* data_);
+static renderer_result_t test_renderer_vec4u8_uniform_set(int32_t location_, const uint8_t* data_);
 
 // vao vtable関数
 static renderer_result_t test_vertex_array_create(renderer_backend_vao_t** vertex_array_);
@@ -330,7 +328,6 @@ renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target
     }
 
     tmp_context->target_api = target_api_;
-    tmp_context->current_program_id = 0;
     tmp_context->current_texture_unit = 0;
     tmp_context->current_bound_texture = 0;
 
@@ -438,7 +435,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_) {
+renderer_result_t renderer_backend_shader_use(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_shader_use.call_count++;
     if(s_test_config_renderer_backend_shader_use.fail_on_call != 0) {
@@ -453,7 +450,7 @@ renderer_result_t renderer_backend_shader_use(renderer_backend_context_t* backen
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_use", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_use", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_, &backend_context_->current_program_id);
+    ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_use(%s) - Failed to use shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -490,7 +487,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_) {
+renderer_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count++;
     if(s_test_config_renderer_backend_shader_mat4f_uniform_set.fail_on_call != 0) {
@@ -503,10 +500,9 @@ renderer_result_t renderer_backend_shader_mat4f_uniform_set(renderer_backend_con
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_mat4f_uniform_set", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "data_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(shader_handle_, location_, should_transpose_, data_, &backend_context_->current_program_id);
+    ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(location_, should_transpose_, data_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_mat4f_uniform_set(%s) - Failed to set mat4f uniform.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -516,7 +512,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_) {
+renderer_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_) {
 #ifdef TEST_BUILD
     s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count++;
     if(s_test_config_renderer_backend_shader_vec4u8_uniform_set.fail_on_call != 0) {
@@ -529,10 +525,9 @@ renderer_result_t renderer_backend_shader_vec4u8_uniform_set(renderer_backend_co
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "data_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_vec4u8_uniform_set(shader_handle_, location_, data_, &backend_context_->current_program_id);
+    ret = backend_context_->shader_vtable->renderer_shader_vec4u8_uniform_set(location_, data_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_vec4u8_uniform_set(%s) - Failed to set vec4u8 uniform.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -1033,9 +1028,8 @@ static renderer_result_t NO_COVERAGE test_renderer_shader_link(renderer_backend_
     return s_test_config_test_renderer_shader_link;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_) {
+static renderer_result_t NO_COVERAGE test_renderer_shader_use(const renderer_backend_shader_t* shader_handle_) {
     (void)shader_handle_;
-    (void)out_program_id_;
 
     return s_test_config_test_renderer_shader_use;
 }
@@ -1048,21 +1042,17 @@ static renderer_result_t NO_COVERAGE test_renderer_uniform_location_get(const re
     return s_test_config_test_renderer_shader_uniform_location_get;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_mat4f_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_) {
-    (void)shader_handle_;
+static renderer_result_t NO_COVERAGE test_renderer_mat4f_uniform_set(int32_t location_, bool should_transpose_, const float* data_) {
     (void)location_;
     (void)should_transpose_;
     (void)data_;
-    (void)out_program_id_;
 
     return s_test_config_test_renderer_shader_mat4f_uniform_set;
 }
 
-static renderer_result_t NO_COVERAGE test_renderer_vec4u8_uniform_set(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_) {
-    (void)shader_handle_;
+static renderer_result_t NO_COVERAGE test_renderer_vec4u8_uniform_set(int32_t location_, const uint8_t* data_) {
     (void)location_;
     (void)data_;
-    (void)out_program_id_;
 
     return s_test_config_test_renderer_shader_vec4u8_uniform_set;
 }
@@ -1885,7 +1875,6 @@ static void NO_COVERAGE test_renderer_backend_initialize(void) {
         assert(gl33_shader_vtable_get() == out_context->shader_vtable);
         assert(gl33_vao_vtable_get() == out_context->vao_vtable);
         assert(gl33_vbo_vtable_get() == out_context->vbo_vtable);
-        assert(0U == out_context->current_program_id);
 
         assert(1U == s_test_config_renderer_backend_initialize.call_count);
         assert(1U == s_test_config_graphics_api_valid_check.call_count);
@@ -1917,7 +1906,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         dummy_context.shader_vtable = gl33_shader_vtable_get();
         dummy_context.vao_vtable = gl33_vao_vtable_get();
         dummy_context.vbo_vtable = gl33_vbo_vtable_get();
-        dummy_context.current_program_id = 111U;
 
         test_renderer_backend_context_config_reset();
 
@@ -1928,7 +1916,6 @@ static void NO_COVERAGE test_renderer_backend_destroy(void) {
         assert(gl33_shader_vtable_get() == dummy_context.shader_vtable);
         assert(gl33_vao_vtable_get() == dummy_context.vao_vtable);
         assert(gl33_vbo_vtable_get() == dummy_context.vbo_vtable);
-        assert(111U == dummy_context.current_program_id);
 
         test_renderer_backend_context_config_reset();
     }
@@ -2627,7 +2614,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -2638,7 +2624,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         ret = renderer_backend_shader_use(&context, shader_handle);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -2666,13 +2651,11 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = NULL;
-        context.current_program_id = 456U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_use(&context, shader_handle);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -2684,13 +2667,11 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 789U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_use(&context, NULL);
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -2704,7 +2685,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 111U;
 
         test_renderer_backend_context_config_reset();
 
@@ -2712,7 +2692,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         ret = renderer_backend_shader_use(&context, shader_handle);
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -2726,7 +2705,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -2734,15 +2712,12 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         ret = renderer_backend_shader_use(&context, shader_handle);
         assert(RENDERER_DATA_CORRUPTED == ret);
-        assert(222U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_renderer_shader_use() は out_program_id_ を更新しないため、
-        // current_program_id は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
         renderer_backend_shader_t* shader_handle =
@@ -2750,7 +2725,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -2758,7 +2732,6 @@ static void NO_COVERAGE test_renderer_backend_shader_use(void) {
 
         ret = renderer_backend_shader_use(&context, shader_handle);
         assert(RENDERER_SUCCESS == ret);
-        assert(333U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_use.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3014,14 +2987,11 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         // renderer_backend_shader_mat4f_uniform_set() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {0.0f};
         test_call_control_t config = {0};
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3032,13 +3002,11 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             false,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3046,15 +3014,12 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
     {
         // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {0.0f};
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             NULL,
-            shader_handle,
             7,
             false,
             data
@@ -3068,50 +3033,20 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = NULL;
-        context.current_program_id = 456U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             false,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_program_id);
-        assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        float data[16] = {0.0f};
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_shader_mat4f_uniform_set(
-            &context,
-            NULL,
-            7,
-            false,
-            data
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3120,24 +3055,19 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         // data_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 999U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             false,
             NULL
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(999U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3146,13 +3076,10 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 111U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3160,13 +3087,11 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             false,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(111U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3175,13 +3100,10 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
         // 下位 vtable が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {0.0f};
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3189,25 +3111,19 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             true,
             data
         );
         assert(RENDERER_DATA_CORRUPTED == ret);
-        assert(222U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_renderer_mat4f_uniform_set() は out_program_id_ を更新しないため、
-        // current_program_id は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         float data[16] = {
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -3217,7 +3133,6 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3225,13 +3140,11 @@ static void NO_COVERAGE test_renderer_backend_shader_mat4f_uniform_set(void) {
 
         ret = renderer_backend_shader_mat4f_uniform_set(
             &context,
-            shader_handle,
             7,
             false,
             data
         );
         assert(RENDERER_SUCCESS == ret);
-        assert(333U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_mat4f_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3244,14 +3157,11 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // renderer_backend_shader_vec4u8_uniform_set() 冒頭で強制的に RENDERER_BAD_OPERATION を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
         test_call_control_t config = {0};
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 123U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3262,12 +3172,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(123U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3275,15 +3183,12 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
     {
         // backend_context_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             NULL,
-            shader_handle,
             7,
             data
         );
@@ -3296,48 +3201,19 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // backend_context_->shader_vtable == NULL -> RENDERER_BAD_OPERATION
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = NULL;
-        context.current_program_id = 456U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(456U == context.current_program_id);
-        assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
-
-        test_renderer_backend_context_config_reset();
-    }
-    {
-        // shader_handle_ == NULL -> RENDERER_INVALID_ARGUMENT
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        renderer_backend_context_t context = {0};
-        uint8_t data[4] = { 255, 128, 64, 32 };
-
-        context.target_api = GRAPHICS_API_GL33;
-        context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 789U;
-
-        test_renderer_backend_context_config_reset();
-
-        ret = renderer_backend_shader_vec4u8_uniform_set(
-            &context,
-            NULL,
-            7,
-            data
-        );
-        assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(789U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3346,23 +3222,18 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // data_ == NULL -> RENDERER_INVALID_ARGUMENT
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 999U;
 
         test_renderer_backend_context_config_reset();
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             NULL
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(999U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3371,13 +3242,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // 下位 vtable が RENDERER_INVALID_ARGUMENT を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 111U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3385,12 +3253,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_INVALID_ARGUMENT == ret);
-        assert(111U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3399,13 +3265,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // 下位 vtable が RENDERER_BAD_OPERATION を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 222U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3413,12 +3276,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_BAD_OPERATION == ret);
-        assert(222U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
@@ -3427,13 +3288,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
         // 下位 vtable が RENDERER_DATA_CORRUPTED を返す -> そのまま伝播
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 255, 128, 64, 32 };
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 333U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3441,29 +3299,22 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_DATA_CORRUPTED == ret);
-        assert(333U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
     }
     {
         // 成功系
-        // NOTE: 現在の test_renderer_vec4u8_uniform_set() は out_program_id_ を更新しないため、
-        // current_program_id は変化しない
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
         renderer_backend_context_t context = {0};
-        renderer_backend_shader_t* shader_handle =
-            (renderer_backend_shader_t*)(uintptr_t)0x1U;
         uint8_t data[4] = { 0, 64, 128, 255 };
 
         context.target_api = GRAPHICS_API_GL33;
         context.shader_vtable = &s_test_shader_vtable;
-        context.current_program_id = 444U;
 
         test_renderer_backend_context_config_reset();
 
@@ -3471,12 +3322,10 @@ static void NO_COVERAGE test_renderer_backend_shader_vec4u8_uniform_set(void) {
 
         ret = renderer_backend_shader_vec4u8_uniform_set(
             &context,
-            shader_handle,
             7,
             data
         );
         assert(RENDERER_SUCCESS == ret);
-        assert(444U == context.current_program_id);
         assert(1U == s_test_config_renderer_backend_shader_vec4u8_uniform_set.call_count);
 
         test_renderer_backend_context_config_reset();
