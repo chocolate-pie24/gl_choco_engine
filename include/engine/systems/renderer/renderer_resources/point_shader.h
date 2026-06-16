@@ -25,6 +25,8 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -112,6 +114,7 @@ void point_shader_destroy(renderer_backend_context_t* backend_context_, point_sh
  * - point_shader_->color_vbo != NULL
  * - point_shader_->point_current_buffer_offset != 0
  * - point_shader_->color_current_buffer_offset != 0
+ * - point_shader_->current_vertex_count != 0
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
@@ -144,23 +147,23 @@ void point_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_cont
  * @param[in,out] point_shader_ 転送先VBOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - point_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(point_vertex_t)の倍数ではない
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> point_vertex_t*, size_のチェック(point_vertex_tのサイズ x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t point_shader_vertex_buffer_point_write(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const void* write_data_);
+renderer_result_t point_shader_vertex_buffer_point_append(const renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief ポイント描画用シェーダーが保持する色情報VBOに色情報を転送する(バーテックスバッファへのappend)
@@ -181,11 +184,8 @@ renderer_result_t point_shader_vertex_buffer_point_write(renderer_backend_contex
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> vec4u8_t*, size_のチェック(vec4u8_tのサイズ x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t point_shader_vertex_buffer_color_write(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const void* write_data_);
+renderer_result_t point_shader_vertex_buffer_color_append(const renderer_backend_context_t* backend_context_, point_shader_t* point_shader_, size_t size_, const vec4u8_t* write_data_);
 
 /**
  * @brief ポイント描画用シェーダーが保持するVAOをbindする
@@ -199,110 +199,91 @@ renderer_result_t point_shader_vertex_buffer_color_write(renderer_backend_contex
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_);
-
-/**
- * @brief ポイント描画用シェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] point_shader_ VAOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - point_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t point_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, point_shader_t* point_shader_);
+renderer_result_t point_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_);
 
 /**
  * @brief ポイント描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子がポイント描画用シェーダープログラムに切り替わる
  *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] point_shader_ ポイント描画用シェーダーリソースインスタンスへのポインタ
- * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - point_shader_ == NULL
- * - ポイント描画用シェーダーリソースが保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク
+ * - point_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
- * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
- * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
+ * - バーテックスシェーダーオブジェクトが未コンパイル
+ * - フラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_use(const point_shader_t* point_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t point_shader_use(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_);
 
 /**
  * @brief GPUにモデル行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
  * @param[in] model_matrix_ 送信するモデル行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - model_matrix_ == NULL
  * - backend_context_ == NULL
  * - point_shader_ == NULL
- * - point_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED point_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - point_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, const point_shader_t* point_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t point_shader_model_matrix_set(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにビュー行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
  * @param[in] view_matrix_ 送信するビュー行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - view_matrix_ == NULL
  * - backend_context_ == NULL
  * - point_shader_ == NULL
- * - point_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED point_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - point_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const point_shader_t* point_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t point_shader_view_matrix_set(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにプロジェクション行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
  * @param[in] projection_matrix_ 送信するプロジェクション行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] point_shader_ ポイント描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - projection_matrix_ == NULL
  * - backend_context_ == NULL
  * - point_shader_ == NULL
- * - point_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED point_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - point_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t point_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const point_shader_t* point_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t point_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const point_shader_t* point_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 #ifdef __cplusplus
 }

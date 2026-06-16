@@ -26,6 +26,8 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -105,6 +107,7 @@ void line_shader_destroy(renderer_backend_context_t* backend_context_, line_shad
  * - line_shader_->line_vao != NULL
  * - line_shader_->line_vbo != NULL
  * - line_shader_->current_buffer_offset != 0
+ * - line_shader_->current_vertex_count != 0
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
@@ -134,23 +137,23 @@ void line_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_conte
  * @param[in,out] line_shader_ 転送先VBOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - line_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(line_vertex_t) x 2の倍数ではない
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
  * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- *
- * @todo TODO: void* -> line_vertex_t*, size_のチェック(line_vertex_tのサイズ x 2 x n)
- * @todo TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -> appendに変更する
  */
-renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const void* write_data_);
+renderer_result_t line_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_shader_t* line_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAOをbindする
@@ -164,132 +167,111 @@ renderer_result_t line_shader_vertex_buffer_write(renderer_backend_context_t* ba
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
-
-/**
- * @brief 線分描画用シェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] line_shader_ VAOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, line_shader_t* line_shader_);
+renderer_result_t line_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_);
 
 /**
  * @brief 線分描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子が線分描画用シェーダープログラムに切り替わる
  *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] line_shader_ 線分描画用シェーダーリソースインスタンスへのポインタ
- * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - line_shader_ == NULL
- * - 線分描画用シェーダーリソースが保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク
+ * - line_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
- * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
- * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
+ * - バーテックスシェーダーオブジェクトが未コンパイル
+ * - フラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_use(const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_use(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_);
 
 /**
  * @brief GPUにモデル行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
  * @param[in] model_matrix_ 送信するモデル行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - model_matrix_ == NULL
  * - backend_context_ == NULL
  * - line_shader_ == NULL
- * - line_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED line_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - line_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_model_matrix_set(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにビュー行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
  * @param[in] view_matrix_ 送信するビュー行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - view_matrix_ == NULL
  * - backend_context_ == NULL
  * - line_shader_ == NULL
- * - line_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED line_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - line_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_view_matrix_set(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにプロジェクション行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
  * @param[in] projection_matrix_ 送信するプロジェクション行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - projection_matrix_ == NULL
  * - backend_context_ == NULL
  * - line_shader_ == NULL
- * - line_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED line_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - line_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUに色情報を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
- * @param[in] color_ 送信する色情報配列(格納順: RGBA / 各要素の値: 0...255 / backend側でshader uniform vec4用に0.0〜1.0に正規化される)
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] color_ 送信する色情報配列(格納順: RGBA / 各要素の値: 0...255 / backend側でshader uniform vec4用に0.0〜1.0に正規化される)
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - color_ == NULL
  * - backend_context_ == NULL
  * - line_shader_ == NULL
- * - line_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED line_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - line_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_shader_color_set(const uint8_t color_[4], const line_shader_t* line_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t line_shader_color_set(const renderer_backend_context_t* backend_context_, const line_shader_t* line_shader_, const uint8_t color_[4]);
 
 #ifdef __cplusplus
 }

@@ -83,7 +83,7 @@ void renderer_backend_texture_destroy(renderer_backend_context_t* backend_contex
  * @retval RENDERER_DATA_CORRUPTED texture_handle_内部データ破損
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
+renderer_result_t renderer_backend_texture_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
 /**
  * @brief テクスチャをunbindする
@@ -98,12 +98,12 @@ renderer_result_t renderer_backend_texture_bind(renderer_backend_context_t* back
  * @retval RENDERER_DATA_CORRUPTED texture_handle_内部データ破損
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
+renderer_result_t renderer_backend_texture_unbind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
 /**
- * @brief 指定されたテクスチャをbindし、ピクセルデータをGPUへ転送する
+ * @brief 現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する
  *
- * @note 本API内部ではrenderer_backend_texture_bindを実行するため事前bindは不要
+ * @warning 本APIを呼び出す前にrenderer_backend_texture_bindによって対象テクスチャユニットのactive化とbindを行っておくこと
  *
  * @param backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param texture_handle_ テクスチャハンドル保有構造体インスタンスへのポインタ
@@ -114,16 +114,14 @@ renderer_result_t renderer_backend_texture_unbind(renderer_backend_context_t* ba
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - texture_handle_ == NULL
  * - pixels_ == NULL
  * - width_ == 0
  * - height_ == 0
  * - channel_count_が3or4以外
  * @retval RENDERER_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
- * @retval RENDERER_DATA_CORRUPTED texture_handle_内部データ破損
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_pixel_upload(renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+renderer_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 #ifdef __cplusplus
 }
