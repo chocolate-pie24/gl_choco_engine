@@ -64,6 +64,7 @@ resource_result_t point_mesh_geometry_default_create(point_mesh_geometry_t** geo
  * - geometry_ == NULL
  * - *geometry_ != NULL
  * - name_ == NULL
+ * - name_が空文字列
  * - vertex_count_ == 0
  * - vertices_ == NULL
  * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
@@ -101,6 +102,7 @@ void point_mesh_geometry_destroy(point_mesh_geometry_t** geometry_);
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
  * - name_ == NULL
+ * - name_が空文字列
  * - vertex_count_ == 0
  * - vertices_ == NULL
  * - geometry_ == NULL
@@ -125,6 +127,27 @@ resource_result_t point_mesh_geometry_initialize_from_vertices(const char* name_
  * @param[in,out] geometry_ point_mesh_geometry_t構造体インスタンスへのポインタ
  */
 void point_mesh_geometry_deinitialize(point_mesh_geometry_t* geometry_);
+
+/**
+ * @brief src_のクローンを生成し、*out_geometry_に格納する
+ *
+ * @note point_mesh_geometry_default_createで生成された空のsrc_が与えられた場合もクローンする
+ * @note 処理に失敗した場合、*out_geometry_の内部状態は不変
+ * 
+ * @param[in] src_ クローン生成元point_mesh_geometry_t構造体インスタンスへのポインタ
+ * @param[out] out_geometry_ point_mesh_geometry_t構造体インスタンスへのダブルポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - src_ == NULL
+ * - out_geometry_ == NULL
+ * - *out_geometry_ != NULL
+ * @retval RESOURCE_DATA_CORRUPTED src_の内部データ不整合
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
+resource_result_t point_mesh_geometry_clone(const point_mesh_geometry_t* src_, point_mesh_geometry_t** out_geometry_);
 
 /**
  * @brief point_mesh_geometry_tが保有するジオメトリ名称文字列を取得する

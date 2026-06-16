@@ -52,6 +52,15 @@ void test_ui_mesh_geometry_create_from_vertices_config_set(const test_call_contr
 void test_ui_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_);
 
 /**
+ * @brief ui_mesh_geometry_clone()APIに対して失敗注入設定を行う
+ *
+ * @note API呼び出し回数についてはコピーされず、ui_mesh_geometry内で管理している値が保持される
+ *
+ * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
+ */
+void test_ui_mesh_geometry_clone_config_set(const test_call_control_t* config_);
+
+/**
  * @brief ui_mesh_geometry_vertices_get()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、ui_mesh_geometry内で管理している値が保持される

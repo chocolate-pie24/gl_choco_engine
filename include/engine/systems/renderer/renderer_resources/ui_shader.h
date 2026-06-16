@@ -143,7 +143,7 @@ void ui_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context
  * - write_data_ == NULL
  * - size_ == 0
  * - out_vertex_offset_ == NULL
- * - size_がsizeof(ui_vertex_t) x 6の倍数ではない
+ * - size_ != sizeof(ui_vertex_t) x 6
  * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
