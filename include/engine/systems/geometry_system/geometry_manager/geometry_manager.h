@@ -10,9 +10,11 @@ extern "C" {
 
 #include "engine/systems/geometry_system/geometry_system_core/geometry_system_types.h"
 
+#include "engine/core/memory/linear_allocator.h"
+
 typedef struct geometry_system geometry_system_t;
 
-geometry_system_result_t geometry_system_initialize(const geometry_system_config_t* config_, geometry_system_t** out_geometry_system_);
+geometry_system_result_t geometry_system_initialize(const geometry_system_config_t* config_, linear_alloc_t* allocator_, geometry_system_t** out_geometry_system_);
 
 void geometry_system_deinitialize(geometry_system_t* geometry_system_);
 
