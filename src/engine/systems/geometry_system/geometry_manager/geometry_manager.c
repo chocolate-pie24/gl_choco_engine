@@ -179,16 +179,21 @@ void geometry_system_deinitialize(geometry_system_t* geometry_system_) {
     }
 }
 
+// 失敗時out引数不変
+// TODO: application->renderer_frontend->renderer_backendまでの流れを考える
+// TODO: scene, model, mesh(point, stl, obj)を元にgeometry_systemの役割を整理
+// TODO: gpuアップロードのタイミングを考える
+// TODO: このAPIは必要か？運用を考える
+// TODO: テクスチャはGPUアップロード後にピクセルをリリースする、一方でジオメトリはリリースしない。これの整合性を取る
 geometry_system_result_t geometry_system_draw_range_get_by_name(geometry_type_t geometry_type_, const char* name_, const geometry_system_t* geometry_system_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
     geometry_system_result_t ret = GEOMETRY_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     const char* tmp_name = NULL;
-
-    size_t slot = 0;
     size_t tmp_vertex_offset = 0;
     size_t tmp_vertex_count = 0;
+    size_t slot = 0;
     bool found = false;
 
     IF_ARG_FALSE_GOTO_CLEANUP(geometry_type_valid_check(geometry_type_), ret, GEOMETRY_SYSTEM_INVALID_ARGUMENT, geometry_system_rslt_to_str(GEOMETRY_SYSTEM_INVALID_ARGUMENT), "geometry_system_draw_range_get_by_name", "geometry_type_")
@@ -199,22 +204,73 @@ geometry_system_result_t geometry_system_draw_range_get_by_name(geometry_type_t 
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_SYSTEM_INVALID_ARGUMENT, geometry_system_rslt_to_str(GEOMETRY_SYSTEM_INVALID_ARGUMENT), "geometry_system_draw_range_get_by_name", "out_vertex_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(geometry_system_internal_state_check(geometry_system_), ret, GEOMETRY_SYSTEM_DATA_CORRUPTED, geometry_system_rslt_to_str(GEOMETRY_SYSTEM_DATA_CORRUPTED), "geometry_system_draw_range_get_by_name", "geometry_system_")
 
-    // TODO: 明日やること
-    // resource実行結果コード変換
     if(GEOMETRY_TYPE_LIT_MESH_GEOMETRY == geometry_type_) {
         if(!lit_mesh_geometry_find(name_, geometry_system_, &slot)) {
+            // TODO: ここでロードするかを考える
             ret = GEOMETRY_SYSTEM_BAD_OPERATION;
-            ERROR_MESSAGE("");
+            ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Provided geometry name not found.", geometry_system_rslt_to_str(ret));
             goto cleanup;
         } else {
             ret_resource = lit_mesh_geometry_vertex_count_get(geometry_system_->lit_mesh_geometries[slot], &tmp_vertex_count);
             if(RESOURCE_SUCCESS != ret_resource) {
+                ret = geometry_system_rslt_convert_resource(ret_resource);
+                ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Failed to get vertex count from geometry. geometry name = '%s'.", geometry_system_rslt_to_str(ret), name_);
+                goto cleanup;
             }
             tmp_vertex_offset = geometry_system_->lit_mesh_geometry_vertex_offset[slot];
         }
     } else if(GEOMETRY_TYPE_LINE_MESH_GEOMETRY == geometry_type_) {
-
+        if(!line_mesh_geometry_find(name_, geometry_system_, &slot)) {
+            ret = GEOMETRY_SYSTEM_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Provided geometry name not found.", geometry_system_rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            ret_resource = line_mesh_geometry_vertex_count_get(geometry_system_->line_mesh_geometries[slot], &tmp_vertex_count);
+            if(RESOURCE_SUCCESS != ret_resource) {
+                ret = geometry_system_rslt_convert_resource(ret_resource);
+                ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Failed to get vertex count from geometry. geometry name = '%s'.", geometry_system_rslt_to_str(ret), name_);
+                goto cleanup;
+            }
+            tmp_vertex_offset = geometry_system_->line_mesh_geometry_vertex_offset[slot];
+        }
+    } else if(GEOMETRY_TYPE_POINT_MESH_GEOMETRY == geometry_type_) {
+        if(!point_mesh_geometry_find(name_, geometry_system_, &slot)) {
+            ret = GEOMETRY_SYSTEM_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Provided geometry name not found.", geometry_system_rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            ret_resource = point_mesh_geometry_vertex_count_get(geometry_system_->point_mesh_geometries[slot], &tmp_vertex_count);
+            if(RESOURCE_SUCCESS != ret_resource) {
+                ret = geometry_system_rslt_convert_resource(ret_resource);
+                ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Failed to get vertex count from geometry. geometry name = '%s'.", geometry_system_rslt_to_str(ret), name_);
+                goto cleanup;
+            }
+            tmp_vertex_offset = geometry_system_->point_mesh_geometry_vertex_offset[slot];
+        }
+    } else if(GEOMETRY_TYPE_UI_MESH_GEOMETRY == geometry_type_) {
+        if(!ui_mesh_geometry_find(name_, geometry_system_, &slot)) {
+            ret = GEOMETRY_SYSTEM_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Provided geometry name not found.", geometry_system_rslt_to_str(ret));
+            goto cleanup;
+        } else {
+            ret_resource = ui_mesh_geometry_vertex_count_get(geometry_system_->ui_mesh_geometries[slot], &tmp_vertex_count);
+            if(RESOURCE_SUCCESS != ret_resource) {
+                ret = geometry_system_rslt_convert_resource(ret_resource);
+                ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - Failed to get vertex count from geometry. geometry name = '%s'.", geometry_system_rslt_to_str(ret), name_);
+                goto cleanup;
+            }
+            tmp_vertex_offset = geometry_system_->ui_mesh_geometry_vertex_offset[slot];
+        }
+    } else {
+        ret = GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
+        ERROR_MESSAGE("geometry_system_draw_range_get_by_name(%s) - implementation error.", geometry_system_rslt_to_str(ret));
+        goto cleanup;
     }
+
+    *out_vertex_count_ = tmp_vertex_count;
+    *out_vertex_offset_ = tmp_vertex_offset;
+
+    ret = GEOMETRY_SYSTEM_SUCCESS;
 
 cleanup:
     return ret;
