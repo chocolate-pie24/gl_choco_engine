@@ -42,7 +42,7 @@ resource_registry_result_t geometry_registry_geometry_id_get(geometry_type_t geo
 resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geometry_type_, int16_t geometry_id_, const geometry_registry_t* geometry_registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
 
 // geometry_をgeometry_registry_へdeep copy
-resource_registry_result_t geometry_registry_geometry_register(geometry_type_t geometry_type_, const void* geometry_, geometry_registry_t* geometry_registry_, int16_t* out_geometry_id_);
+resource_registry_result_t geometry_registry_geometry_register(geometry_type_t geometry_type_, const void* geometry_, size_t vertex_offset_, geometry_registry_t* geometry_registry_, int16_t* out_geometry_id_);
 
 resource_registry_result_t geometry_registry_geometry_unregister(geometry_type_t geometry_type_, int16_t geometry_id_, geometry_registry_t* geometry_registry_);
 

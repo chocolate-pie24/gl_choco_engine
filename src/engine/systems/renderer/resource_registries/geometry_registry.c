@@ -141,6 +141,18 @@ resource_registry_result_t geometry_registry_initialize(const geometry_registry_
     }
 
     tmp_registry->geometry_registry_config = *config_;
+    for(size_t i = 0; i != config_->max_line_mesh_geometry_count; ++i) {
+        tmp_registry->line_mesh_geometries[i] = NULL;
+    }
+    for(size_t i = 0; i != config_->max_lit_mesh_geometry_count; ++i) {
+        tmp_registry->lit_mesh_geometries[i] = NULL;
+    }
+    for(size_t i = 0; i != config_->max_point_mesh_geometry_count; ++i) {
+        tmp_registry->point_mesh_geometries[i] = NULL;
+    }
+    for(size_t i = 0; i != config_->max_ui_mesh_geometry_count; ++i) {
+        tmp_registry->ui_mesh_geometries[i] = NULL;
+    }
 
     tmp_registry->line_mesh_geometries = tmp_line_mesh_geometries;
     tmp_registry->lit_mesh_geometries = tmp_lit_mesh_geometries;
@@ -246,7 +258,7 @@ resource_registry_result_t geometry_registry_geometry_id_get(geometry_type_t geo
         goto cleanup;
     } else {
         ret = RESOURCE_REGISTRY_RUNTIME_ERROR;
-        ERROR_MESSAGE("geometry_registry_geometry_find - missed implementing...");
+        ERROR_MESSAGE("geometry_registry_geometry_id_get - missed implementing...");
         goto cleanup;
     }
 
@@ -275,7 +287,7 @@ resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geom
     if(geometry_type_ == GEOMETRY_TYPE_LINE_MESH_GEOMETRY) {
         if(NULL == geometry_registry_->line_mesh_geometries[geometry_id_]) {
             ret = RESOURCE_REGISTRY_BAD_OPERATION;
-            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided line geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided line mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
             goto cleanup;
         }
         ret_resource = line_mesh_geometry_vertex_count_get(geometry_registry_->line_mesh_geometries[geometry_id_], &tmp_count);
@@ -288,7 +300,7 @@ resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geom
     } else if(geometry_type_ == GEOMETRY_TYPE_LIT_MESH_GEOMETRY) {
         if(NULL == geometry_registry_->lit_mesh_geometries[geometry_id_]) {
             ret = RESOURCE_REGISTRY_BAD_OPERATION;
-            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided lit geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided lit mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
             goto cleanup;
         }
         ret_resource = lit_mesh_geometry_vertex_count_get(geometry_registry_->lit_mesh_geometries[geometry_id_], &tmp_count);
@@ -301,7 +313,7 @@ resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geom
     } else if(geometry_type_ == GEOMETRY_TYPE_POINT_MESH_GEOMETRY) {
         if(NULL == geometry_registry_->point_mesh_geometries[geometry_id_]) {
             ret = RESOURCE_REGISTRY_BAD_OPERATION;
-            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided point geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided point mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
             goto cleanup;
         }
         ret_resource = point_mesh_geometry_vertex_count_get(geometry_registry_->point_mesh_geometries[geometry_id_], &tmp_count);
@@ -314,7 +326,7 @@ resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geom
     } else if(geometry_type_ == GEOMETRY_TYPE_UI_MESH_GEOMETRY) {
         if(NULL == geometry_registry_->ui_mesh_geometries[geometry_id_]) {
             ret = RESOURCE_REGISTRY_BAD_OPERATION;
-            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided ui geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            ERROR_MESSAGE("geometry_registry_draw_range_get(%s) - Provided ui mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
             goto cleanup;
         }
         ret_resource = ui_mesh_geometry_vertex_count_get(geometry_registry_->ui_mesh_geometries[geometry_id_], &tmp_count);
@@ -326,7 +338,122 @@ resource_registry_result_t geometry_registry_draw_range_get(geometry_type_t geom
         tmp_offset = geometry_registry_->ui_mesh_geometry_vertex_offset[geometry_id_];
     } else {
         ret = RESOURCE_REGISTRY_RUNTIME_ERROR;
-        ERROR_MESSAGE("geometry_registry_geometry_find - missed implementing...");
+        ERROR_MESSAGE("geometry_registry_draw_range_get - missed implementing...");
+        goto cleanup;
+    }
+
+    *out_vertex_count_ = tmp_count;
+    *out_vertex_offset_ = tmp_offset;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// geometry_をgeometry_registry_へdeep copy
+// TODO: 重複nameの登録禁止
+resource_registry_result_t geometry_registry_geometry_register(geometry_type_t geometry_type_, const void* geometry_, size_t vertex_offset_, geometry_registry_t* geometry_registry_, int16_t* out_geometry_id_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    bool found_free_slot = false;
+
+    line_mesh_geometry_t* src_line_mesh_geometry = NULL;
+    line_mesh_geometry_t* new_line_mesh_geometry = NULL;
+
+    lit_mesh_geometry_t* src_lit_mesh_geometry = NULL;
+    lit_mesh_geometry_t* new_lit_mesh_geometry = NULL;
+
+    point_mesh_geometry_t* src_point_mesh_geometry = NULL;
+    point_mesh_geometry_t* new_point_mesh_geometry = NULL;
+
+    ui_mesh_geometry_t* src_ui_mesh_geometry = NULL;
+    ui_mesh_geometry_t* new_ui_mesh_geometry = NULL;
+
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_type_valid_check(geometry_type_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_register", "geometry_type_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_register", "geometry_registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(geometry_registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "geometry_registry_geometry_register", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_register", "out_geometry_id_")
+
+    if(GEOMETRY_TYPE_LINE_MESH_GEOMETRY == geometry_type_) {
+        src_line_mesh_geometry = (line_mesh_geometry_t*)geometry_;
+        for(size_t i = 0; i != geometry_registry_->geometry_registry_config.max_line_mesh_geometry_count; ++i) {
+            if(NULL == geometry_registry_->line_mesh_geometries[i]) {
+                ret_resource = line_mesh_geometry_clone(src_line_mesh_geometry, &new_line_mesh_geometry);
+                if(RESOURCE_SUCCESS != ret_resource) {
+                    ret = resource_registry_rslt_convert_resource(ret_resource);
+                    ERROR_MESSAGE("geometry_registry_geometry_register(%s) - Failed to clone line mesh geometry.", resource_registry_rslt_to_str(ret));
+                    goto cleanup;
+                }
+                found_free_slot = true;
+                geometry_registry_->line_mesh_geometry_vertex_offset[i] = vertex_offset_;
+                geometry_registry_->line_mesh_geometries[i] = new_line_mesh_geometry;
+                *out_geometry_id_ = i;
+                break;
+            }
+        }
+    } else if(GEOMETRY_TYPE_LIT_MESH_GEOMETRY == geometry_type_) {
+        src_lit_mesh_geometry = (lit_mesh_geometry_t*)geometry_;
+        for(size_t i = 0; i != geometry_registry_->geometry_registry_config.max_lit_mesh_geometry_count; ++i) {
+            if(NULL == geometry_registry_->lit_mesh_geometries[i]) {
+                ret_resource = lit_mesh_geometry_clone(src_lit_mesh_geometry, &new_lit_mesh_geometry);
+                if(RESOURCE_SUCCESS != ret_resource) {
+                    ret = resource_registry_rslt_convert_resource(ret_resource);
+                    ERROR_MESSAGE("geometry_registry_geometry_register(%s) - Failed to clone lit mesh geometry.", resource_registry_rslt_to_str(ret));
+                    goto cleanup;
+                }
+                found_free_slot = true;
+                geometry_registry_->lit_mesh_geometry_vertex_offset[i] = vertex_offset_;
+                geometry_registry_->lit_mesh_geometries[i] = new_lit_mesh_geometry;
+                *out_geometry_id_ = i;
+                break;
+            }
+        }
+    } else if(GEOMETRY_TYPE_POINT_MESH_GEOMETRY == geometry_type_) {
+        src_point_mesh_geometry = (point_mesh_geometry_t*)geometry_;
+        for(size_t i = 0; i != geometry_registry_->geometry_registry_config.max_point_mesh_geometry_count; ++i) {
+            if(NULL == geometry_registry_->point_mesh_geometries[i]) {
+                ret_resource = point_mesh_geometry_clone(src_point_mesh_geometry, &new_point_mesh_geometry);
+                if(RESOURCE_SUCCESS != ret_resource) {
+                    ret = resource_registry_rslt_convert_resource(ret_resource);
+                    ERROR_MESSAGE("geometry_registry_geometry_register(%s) - Failed to clone point mesh geometry.", resource_registry_rslt_to_str(ret));
+                    goto cleanup;
+                }
+                found_free_slot = true;
+                geometry_registry_->point_mesh_geometry_vertex_offset[i] = vertex_offset_;
+                geometry_registry_->point_mesh_geometries[i] = new_point_mesh_geometry;
+                *out_geometry_id_ = i;
+                break;
+            }
+        }
+    } else if(GEOMETRY_TYPE_UI_MESH_GEOMETRY == geometry_type_) {
+        src_ui_mesh_geometry = (ui_mesh_geometry_t*)geometry_;
+        for(size_t i = 0; i != geometry_registry_->geometry_registry_config.max_ui_mesh_geometry_count; ++i) {
+            if(NULL == geometry_registry_->ui_mesh_geometries[i]) {
+                ret_resource = ui_mesh_geometry_clone(src_ui_mesh_geometry, &new_ui_mesh_geometry);
+                if(RESOURCE_SUCCESS != ret_resource) {
+                    ret = resource_registry_rslt_convert_resource(ret_resource);
+                    ERROR_MESSAGE("geometry_registry_geometry_register(%s) - Failed to clone ui mesh geometry.", resource_registry_rslt_to_str(ret));
+                    goto cleanup;
+                }
+                found_free_slot = true;
+                geometry_registry_->ui_mesh_geometry_vertex_offset[i] = vertex_offset_;
+                geometry_registry_->ui_mesh_geometries[i] = new_ui_mesh_geometry;
+                *out_geometry_id_ = i;
+                break;
+            }
+        }
+    } else {
+        ret = RESOURCE_REGISTRY_RUNTIME_ERROR;
+        ERROR_MESSAGE("geometry_registry_geometry_register - missed implementing...");
+        goto cleanup;
+    }
+
+    if(!found_free_slot) {
+        ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("geometry_registry_geometry_register(%s) - geometry registry free slot not found.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -336,13 +463,57 @@ cleanup:
     return ret;
 }
 
-// geometry_をgeometry_registry_へdeep copy
-resource_registry_result_t geometry_registry_geometry_register(geometry_type_t geometry_type_, const void* geometry_, geometry_registry_t* geometry_registry_, int16_t* out_geometry_id_) {
-    return RESOURCE_REGISTRY_SUCCESS;
-}
-
 resource_registry_result_t geometry_registry_geometry_unregister(geometry_type_t geometry_type_, int16_t geometry_id_, geometry_registry_t* geometry_registry_) {
-    return RESOURCE_REGISTRY_SUCCESS;
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_type_valid_check(geometry_type_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_unregister", "geometry_type_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_unregister", "geometry_registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(geometry_registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "geometry_registry_geometry_unregister", "geometry_registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_valid_check(geometry_type_, geometry_id_, geometry_registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "geometry_registry_geometry_unregister", "geometry_id_")
+
+    if(GEOMETRY_TYPE_LINE_MESH_GEOMETRY == geometry_type_) {
+        if(NULL == geometry_registry_->line_mesh_geometries[geometry_id_]) {
+            ret = RESOURCE_REGISTRY_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_registry_geometry_unregister(%s) - Provided line mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            goto cleanup;
+        }
+        line_mesh_geometry_destroy(&geometry_registry_->line_mesh_geometries[geometry_id_]);
+        geometry_registry_->line_mesh_geometry_vertex_offset[geometry_id_] = 0;
+    } else if(GEOMETRY_TYPE_LIT_MESH_GEOMETRY == geometry_type_) {
+        if(NULL == geometry_registry_->lit_mesh_geometries[geometry_id_]) {
+            ret = RESOURCE_REGISTRY_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_registry_geometry_unregister(%s) - Provided lit mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            goto cleanup;
+        }
+        lit_mesh_geometry_destroy(&geometry_registry_->lit_mesh_geometries[geometry_id_]);
+        geometry_registry_->lit_mesh_geometry_vertex_offset[geometry_id_] = 0;
+    } else if(GEOMETRY_TYPE_POINT_MESH_GEOMETRY == geometry_type_) {
+        if(NULL == geometry_registry_->point_mesh_geometries[geometry_id_]) {
+            ret = RESOURCE_REGISTRY_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_registry_geometry_unregister(%s) - Provided point mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            goto cleanup;
+        }
+        point_mesh_geometry_destroy(&geometry_registry_->point_mesh_geometries[geometry_id_]);
+        geometry_registry_->point_mesh_geometry_vertex_offset[geometry_id_] = 0;
+    } else if(GEOMETRY_TYPE_UI_MESH_GEOMETRY == geometry_type_) {
+        if(NULL == geometry_registry_->ui_mesh_geometries[geometry_id_]) {
+            ret = RESOURCE_REGISTRY_BAD_OPERATION;
+            ERROR_MESSAGE("geometry_registry_geometry_unregister(%s) - Provided ui mesh geometry id is not registered.", resource_registry_rslt_to_str(ret));
+            goto cleanup;
+        }
+        ui_mesh_geometry_destroy(&geometry_registry_->ui_mesh_geometries[geometry_id_]);
+        geometry_registry_->ui_mesh_geometry_vertex_offset[geometry_id_] = 0;
+    } else {
+        ret = RESOURCE_REGISTRY_RUNTIME_ERROR;
+        ERROR_MESSAGE("geometry_registry_geometry_unregister - missed implementing...");
+        goto cleanup;
+    }
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 static bool geometry_type_valid_check(geometry_type_t geometry_type_) {
