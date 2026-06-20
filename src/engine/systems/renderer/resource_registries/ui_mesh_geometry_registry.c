@@ -1,3 +1,18 @@
+/** @ingroup renderer
+ *
+ * @file ui_mesh_geometry_registry.h
+ * @author chocolate-pie24
+ * @brief UIを描画するための、ui_mesh_geometry幾何情報のCPUリソースとGPUリソースをIDを用いて管理するシステムの実装
+ *
+ * @version 0.1
+ * @date 2026-06-20
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 #include <stddef.h>
 #include <stdalign.h>
@@ -19,14 +34,18 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief ui_mesh_geometry_t管理システム構造体
+ *
+ */
 struct ui_mesh_geometry_registry {
-    size_t max_geometry_count;  // 0は許可しない. 仮にそのgeometryを使わなくても1以上にする(ちょっと無駄だけどエラー処理がわかりやすいため)
+    size_t max_geometry_count;          /**< registryが管理可能な最大geometry数(0は許可しない. 仮にそのgeometryを使わなくても1以上にする) */
 
     // CPU resources
-    ui_mesh_geometry_t** geometries;
+    ui_mesh_geometry_t** geometries;    /**< geometry CPUリソース構造体へのポインタ配列(リソース所有権はregistry) */
 
     // GPU resources
-    size_t* vertex_offsets;
+    size_t* vertex_offsets;             /**< geometry GPUリソース(VBOの頂点オフセット) */
 };
 
 static bool geometry_id_valid_check(int16_t geometry_id_, const ui_mesh_geometry_registry_t* registry_);
@@ -99,7 +118,6 @@ cleanup:
     return ret;
 }
 
-// リニアアロケータ経由なので、geometriesとvertex_offsetsはNULLにしない、メモリは残しておく
 void ui_mesh_geometry_registry_deinitialize(ui_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return;
@@ -129,7 +147,6 @@ bool ui_mesh_geometry_registry_geometry_find(const char* name_, const ui_mesh_ge
     return ui_mesh_geometry_find(name_, registry_, &tmp_id);
 }
 
-// 失敗時にout_geometry_id_は不変
 resource_registry_result_t ui_mesh_geometry_registry_geometry_id_get(const char* name_, const ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
@@ -154,7 +171,6 @@ cleanup:
     return ret;
 }
 
-// 失敗時にout_vertex_offset_, out_vertex_count_は不変
 resource_registry_result_t ui_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const ui_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -192,8 +208,6 @@ cleanup:
     return ret;
 }
 
-// geometry_をgeometry_registry_へdeep copy
-// 失敗時にregistry_, out_geometry_id_は不変
 resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_mesh_geometry_t* geometry_, size_t vertex_offset_, ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -274,6 +288,18 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief geometry_id_が有効な値かを判定する
+ *
+ * @param[in] geometry_id_ 判定対象ジオメトリid
+ * @param[in] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ *
+ * @retval true geometry_id_は正常
+ * @retval false 以下のいずれか
+ * - registry_内部データ不整合が発生している
+ * - geometry_id_が0未満
+ * - geometry_id_がregistry_->max_geometry_count以上
+ */
 static bool geometry_id_valid_check(int16_t geometry_id_, const ui_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
@@ -287,6 +313,19 @@ static bool geometry_id_valid_check(int16_t geometry_id_, const ui_mesh_geometry
     return true;
 }
 
+/**
+ * @brief registry_の内部データが正常かを判定する
+ *
+ * @param[in] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ *
+ * @retval true 内部データ正常
+ * @retval false 以下のいずれか
+ * - registry_ == NULL
+ * - registry_->max_geometry_countが未初期化で0
+ * - registry_->max_geometry_countがint16_tの最大値を超過
+ * - registry_->geometriesが未初期化でNULL
+ * - registry_->vertex_offsetsが未初期化でNULL
+ */
 static bool geometry_registry_internal_state_check(const ui_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
@@ -300,6 +339,23 @@ static bool geometry_registry_internal_state_check(const ui_mesh_geometry_regist
     return true;
 }
 
+/**
+ * @brief registry_に名称がname_のジオメトリが格納されているかを判定し、格納されている場合はidをout_index_に格納する
+ *
+ * @note 返り値がfalseの場合はout_index_の値は不変
+ *
+ * @param[in] name_ 判定対象geometry_名称文字列
+ * @param[in] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[out] out_index_ ジオメトリid格納先
+ *
+ * @retval true registry_内に名称name_のジオメトリが見つかった
+ * @retval false 以下のいずれか
+ * - name_ == NULL
+ * - registry_ == NULL
+ * - out_index_ == NULL
+ * - registry_内部データ不整合が発生している
+ * - registry_にname_のジオメトリが見つからない
+ */
 static bool ui_mesh_geometry_find(const char* name_, const ui_mesh_geometry_registry_t* registry_, size_t* out_index_) {
     const char* tmp_name = NULL;
     size_t tmp_slot = 0;
