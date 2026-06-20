@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#define INVALID_GEOMETRY_ID (-1)
+
 typedef enum {
     RESOURCE_REGISTRY_SUCCESS = 0,        /**< 処理成功 */
     RESOURCE_REGISTRY_NO_MEMORY,          /**< メモリ不足 */
