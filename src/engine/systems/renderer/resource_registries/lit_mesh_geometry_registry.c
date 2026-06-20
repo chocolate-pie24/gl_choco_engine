@@ -1,0 +1,329 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdalign.h>
+#include <string.h> // for memset
+#include <stdbool.h>
+
+#include "engine/systems/renderer/resource_registries/lit_mesh_geometry_registry.h"
+
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
+
+#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/geometry/lit_mesh_geometry.h"
+
+#include "engine/containers/choco_string.h"
+
+#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+struct lit_mesh_geometry_registry {
+    size_t max_geometry_count;  // 0は許可しない. 仮にそのgeometryを使わなくても1以上にする(ちょっと無駄だけどエラー処理がわかりやすいため)
+
+    // CPU resources
+    lit_mesh_geometry_t** geometries;
+
+    // GPU resources
+    size_t* vertex_offsets;
+};
+
+static bool geometry_id_valid_check(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_);
+static bool geometry_registry_internal_state_check(const lit_mesh_geometry_registry_t* registry_);
+static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_);
+
+resource_registry_result_t lit_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, lit_mesh_geometry_registry_t** out_registry_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+
+    lit_mesh_geometry_registry_t* tmp_registry = NULL;
+    lit_mesh_geometry_t** tmp_geometry_array = NULL;
+
+    size_t* tmp_vertex_offset = NULL;
+
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_initialize", "max_geometry_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(INT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_initialize", "max_geometry_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_initialize", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_initialize", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_initialize", "*out_registry_")
+
+    // geometry_registry_tメモリ確保
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(lit_mesh_geometry_registry_t), alignof(lit_mesh_geometry_registry_t), (void**)&tmp_registry);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("lit_mesh_geometry_registry_initialize(%s) - Failed to allocate registry instance. target=lit_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_rslt_to_str(ret), sizeof(lit_mesh_geometry_registry_t), alignof(lit_mesh_geometry_registry_t), max_geometry_count_);
+        goto cleanup;
+    }
+    memset(tmp_registry, 0, sizeof(lit_mesh_geometry_registry_t));
+
+    if((SIZE_MAX / max_geometry_count_) < sizeof(lit_mesh_geometry_t*)) {
+        ret = RESOURCE_REGISTRY_OVERFLOW;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating geometry pointer array size. target=geometries, elem_type=lit_mesh_geometry_t*, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(lit_mesh_geometry_t*), SIZE_MAX);
+        goto cleanup;
+    }
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(lit_mesh_geometry_t*) * max_geometry_count_, alignof(lit_mesh_geometry_t*), (void**)&tmp_geometry_array);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("lit_mesh_geometry_registry_initialize(%s) - Failed to allocate geometry pointer array. target=geometries, elem_type=lit_mesh_geometry_t*, elem_count=%zu, elem_size=%zu, bytes=%zu, align=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(lit_mesh_geometry_t*), sizeof(lit_mesh_geometry_t*) * max_geometry_count_, alignof(lit_mesh_geometry_t*));
+        goto cleanup;
+    }
+
+    if((SIZE_MAX / max_geometry_count_) < sizeof(size_t)) {
+        ret = RESOURCE_REGISTRY_OVERFLOW;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), SIZE_MAX);
+        goto cleanup;
+    }
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(size_t) * max_geometry_count_, alignof(size_t), (void**)&tmp_vertex_offset);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("lit_mesh_geometry_registry_initialize(%s) - Failed to allocate vertex offset array. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, bytes=%zu, align=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), sizeof(size_t) * max_geometry_count_, alignof(size_t));
+        goto cleanup;
+    }
+
+    tmp_registry->max_geometry_count = max_geometry_count_;
+    for(size_t i = 0; i != max_geometry_count_; ++i) {
+        tmp_geometry_array[i] = NULL;
+        tmp_vertex_offset[i] = 0;
+    }
+
+    tmp_registry->geometries = tmp_geometry_array;
+    tmp_registry->vertex_offsets = tmp_vertex_offset;
+
+    *out_registry_ = tmp_registry;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    // リニアアロケータで確保したメモリは個別解放不可であるためクリーンナップ処理はなし
+    return ret;
+}
+
+// リニアアロケータ経由なので、geometriesとvertex_offsetsはNULLにしない、メモリは残しておく
+void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* registry_) {
+    if(NULL == registry_) {
+        return;
+    }
+    for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
+        lit_mesh_geometry_destroy(&registry_->geometries[i]);  // registry_->geometries[i] == NULLになる
+        registry_->vertex_offsets[i] = 0;
+    }
+}
+
+bool lit_mesh_geometry_registry_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_) {
+    size_t tmp_id = 0;
+
+    if(NULL == name_) {
+        // これは場合によっては起こりうる(かも)ので、メッセージは出さない
+        return false;
+    }
+    if(NULL == registry_) {
+        // これは場合によっては起こりうる(かも)ので、メッセージは出さない
+        return false;
+    }
+    if(!geometry_registry_internal_state_check(registry_)) {
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_find(%s) - Registry internal state check failed. operation=find, target=lit_mesh_geometry_registry_t, query_name='%s'", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), name_);
+        return false;
+    }
+
+    return lit_mesh_geometry_find(name_, registry_, &tmp_id);
+}
+
+// 失敗時にout_geometry_id_は不変
+resource_registry_result_t lit_mesh_geometry_registry_geometry_id_get(const char* name_, const lit_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    size_t tmp_id = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "out_geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_id_get", "registry_")
+
+    if(!lit_mesh_geometry_find(name_, registry_, &tmp_id)) {
+        ret = RESOURCE_REGISTRY_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_id_get(%s) - Failed to get lit mesh geometry id. reason=not_registered, query_name='%s'", resource_registry_rslt_to_str(ret), name_);
+        goto cleanup;
+    }
+
+    *out_geometry_id_ = (int16_t)tmp_id;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// 失敗時にout_vertex_offset_, out_vertex_count_は不変
+resource_registry_result_t lit_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    size_t tmp_count = 0;
+    size_t tmp_offset = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "out_vertex_offset_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "out_vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_draw_range_get", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_valid_check(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "geometry_id_")
+
+    if(NULL == registry_->geometries[geometry_id_]) {
+        ret = RESOURCE_REGISTRY_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_draw_range_get(%s) - Failed to get lit mesh geometry draw range. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        goto cleanup;
+    }
+
+    ret_resource = lit_mesh_geometry_vertex_count_get(registry_->geometries[geometry_id_], &tmp_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_registry_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("lit_mesh_geometry_registry_draw_range_get(%s) - Failed to get lit mesh geometry draw range. reason=vertex_count_get_failed, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        goto cleanup;
+    }
+
+    tmp_offset = registry_->vertex_offsets[geometry_id_];
+
+    *out_vertex_count_ = tmp_count;
+    *out_vertex_offset_ = tmp_offset;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// geometry_をgeometry_registry_へdeep copy
+// 失敗時にregistry_, out_geometry_id_は不変
+resource_registry_result_t lit_mesh_geometry_registry_geometry_register(const lit_mesh_geometry_t* geometry_, size_t vertex_offset_, lit_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    size_t rubbish = 0;
+    size_t free_slot = 0;
+    bool found_free_slot = false;
+    const char* name = NULL;
+    lit_mesh_geometry_t* new_lit_mesh_geometry = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "out_geometry_id_")
+
+    // 重複チェック
+    name = lit_mesh_geometry_name_get(geometry_);
+    if(NULL == name) {
+        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_register(%s) - Failed to register lit mesh geometry. reason=name_get_failed", resource_registry_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(lit_mesh_geometry_find(name, registry_, &rubbish)) {
+        ret = RESOURCE_REGISTRY_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_register(%s) - Failed to register lit mesh geometry. reason=already_registered, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
+        if(NULL == registry_->geometries[i]) {
+            ret_resource = lit_mesh_geometry_clone(geometry_, &new_lit_mesh_geometry);
+            if(RESOURCE_SUCCESS != ret_resource) {
+                ret = resource_registry_rslt_convert_resource(ret_resource);
+                ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_register(%s) - Failed to register lit mesh geometry. reason=clone_failed, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
+                goto cleanup;
+            }
+            found_free_slot = true;
+            free_slot = i;
+            break;
+        }
+    }
+
+    if(!found_free_slot) {
+        ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_register(%s) - Failed to register lit mesh geometry. reason=registry_full, geometry_name='%s', max_geometry_count=%zu", resource_registry_rslt_to_str(ret), name, registry_->max_geometry_count);
+        goto cleanup;
+    }
+
+    registry_->vertex_offsets[free_slot] = vertex_offset_;
+    registry_->geometries[free_slot] = new_lit_mesh_geometry;
+    *out_geometry_id_ = (int16_t)free_slot;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+resource_registry_result_t lit_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, lit_mesh_geometry_registry_t* registry_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_valid_check(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_unregister", "geometry_id_")
+
+    if(NULL == registry_->geometries[geometry_id_]) {
+        ret = RESOURCE_REGISTRY_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_unregister(%s) - Failed to unregister lit mesh geometry. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        goto cleanup;
+    }
+
+    lit_mesh_geometry_destroy(&registry_->geometries[geometry_id_]);
+    registry_->vertex_offsets[geometry_id_] = 0;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static bool geometry_id_valid_check(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_) {
+    if(NULL == registry_) {
+        return false;
+    }
+    if(!geometry_registry_internal_state_check(registry_)) {
+        return false;
+    }
+    if(geometry_id_ < 0 || registry_->max_geometry_count <= (size_t)geometry_id_) {
+        return false;
+    }
+    return true;
+}
+
+static bool geometry_registry_internal_state_check(const lit_mesh_geometry_registry_t* registry_) {
+    if(NULL == registry_) {
+        return false;
+    }
+    if(0 == registry_->max_geometry_count || INT16_MAX < registry_->max_geometry_count) {
+        return false;
+    }
+    if(NULL == registry_->geometries || NULL == registry_->vertex_offsets) {
+        return false;
+    }
+    return true;
+}
+
+static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_) {
+    const char* tmp_name = NULL;
+    size_t tmp_slot = 0;
+    bool found = false;
+
+    if(NULL == name_ || NULL == registry_ || NULL == out_index_) {
+        return false;
+    }
+    if(!geometry_registry_internal_state_check(registry_)) {
+        return false;
+    }
+
+    for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
+        if(NULL != registry_->geometries[i]) {
+            tmp_name = lit_mesh_geometry_name_get(registry_->geometries[i]);
+            if(NULL != tmp_name && choco_string_equal(tmp_name, name_)) {
+                tmp_slot = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    if(found) {
+        *out_index_ = tmp_slot;
+    }
+    return found;
+}
