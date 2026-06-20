@@ -20,16 +20,15 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 
+// GLCEはcolorは幾何情報ではないのでgeometryでは扱わない(material側で管理する)
 struct point_mesh_geometry_registry {
     size_t max_geometry_count;  // 0は許可しない. 仮にそのgeometryを使わなくても1以上にする(ちょっと無駄だけどエラー処理がわかりやすいため)
 
     // CPU resources
     point_mesh_geometry_t** geometries;
-    vec4u8_t** colors;
 
     // GPU resources
     size_t* vertex_offsets;
-    size_t* color_offsets;
 };
 
 static bool geometry_id_valid_check(int16_t geometry_id_, const point_mesh_geometry_registry_t* registry_);
