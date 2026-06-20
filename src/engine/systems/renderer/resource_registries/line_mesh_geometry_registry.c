@@ -208,8 +208,6 @@ cleanup:
     return ret;
 }
 
-// geometry_をgeometry_registry_へdeep copy
-// 失敗時にregistry_, out_geometry_id_は不変
 resource_registry_result_t line_mesh_geometry_registry_geometry_register(const line_mesh_geometry_t* geometry_, size_t vertex_offset_, line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -290,6 +288,18 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief geometry_id_が有効な値かを判定する
+ *
+ * @param[in] geometry_id_ 判定対象ジオメトリid
+ * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ *
+ * @retval true geometry_id_は正常
+ * @retval false 以下のいずれか
+ * - registry_内部データ不整合が発生している
+ * - geometry_id_が0未満
+ * - geometry_id_がregistry_->max_geometry_count以上
+ */
 static bool geometry_id_valid_check(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
@@ -303,6 +313,19 @@ static bool geometry_id_valid_check(int16_t geometry_id_, const line_mesh_geomet
     return true;
 }
 
+/**
+ * @brief registry_の内部データが正常かを判定する
+ *
+ * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ *
+ * @retval true 内部データ正常
+ * @retval false 以下のいずれか
+ * - registry_ == NULL
+ * - registry_->max_geometry_countが未初期化で0
+ * - registry_->max_geometry_countがint16_tの最大値を超過
+ * - registry_->geometriesが未初期化でNULL
+ * - registry_->vertex_offsetsが未初期化でNULL
+ */
 static bool geometry_registry_internal_state_check(const line_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
@@ -316,6 +339,21 @@ static bool geometry_registry_internal_state_check(const line_mesh_geometry_regi
     return true;
 }
 
+/**
+ * @brief registry_に名称がname_のジオメトリが格納されているかを判定し、格納されている場合はidをout_index_に格納する
+ *
+ * @param[in] name_ 判定対象geometry_名称文字列
+ * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[out] out_index_ ジオメトリid格納先
+ *
+ * @retval true registry_内に名称name_のジオメトリが見つかった
+ * @retval false 以下のいずれか
+ * - name_ == NULL
+ * - registry_ == NULL
+ * - out_index_ == NULL
+ * - registry_内部データ不整合が発生している
+ * - registry_にname_のジオメトリが見つからない
+ */
 static bool line_mesh_geometry_find(const char* name_, const line_mesh_geometry_registry_t* registry_, size_t* out_index_) {
     const char* tmp_name = NULL;
     size_t tmp_slot = 0;

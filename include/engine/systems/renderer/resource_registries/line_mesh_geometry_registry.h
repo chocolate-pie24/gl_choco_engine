@@ -39,7 +39,7 @@ typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;
  * @brief line_mesh_geometry_registry_t管理システムのリソースを確保し初期化する
  *
  * @note 失敗した場合out_registry_は不変
- * 
+ *
  * @param[in] max_geometry_count_ 管理システムで管理可能なジオメトリ数
  * @param[in,out] allocator_ リニアアロケータ
  * @param[out] out_registry_ 管理システム構造体インスタンスへのダブルポインタ
@@ -64,14 +64,14 @@ resource_registry_result_t line_mesh_geometry_registry_initialize(size_t max_geo
  * - 構造体フィールドの全てNULLまたは0で初期化されている
  *
  * @note registry_が保持するリソースのメモリは解放しない
- * 
+ *
  * @param[in,out] registry_ 初期化対象line_mesh_geometry_registry_t構造体インスタンスへのポインタ
  */
 void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* registry_);
 
 /**
  * @brief 線分描画ジオメトリ管理システムにジオメトリ名称がname_のジオメトリが存在しているかを判定する
- * 
+ *
  * @param[in] name_ 検索ジオメトリ名称文字列
  * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
  *
@@ -90,7 +90,7 @@ bool line_mesh_geometry_registry_geometry_find(const char* name_, const line_mes
  * @note idはregistry_が保持するジオメトリ配列のインデックスで0以上の値
  *
  * @note 失敗時にout_geometry_id_は不変
- * 
+ *
  * @param[in] name_ id取得対象ジオメトリ名称文字列
  * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
  * @param[out] out_geometry_id_ ジオメトリid格納先
@@ -109,7 +109,7 @@ resource_registry_result_t line_mesh_geometry_registry_geometry_id_get(const cha
  * @brief ジオメトリ管理システムからid = geometry_id_のジオメトリを描画するために必要な、頂点数とVBO頂点オフセットを取得する
  *
  * @note 失敗時にout_vertex_offset_, out_vertex_count_は不変
- * 
+ *
  * @param[in] geometry_id_ 取得対象ジオメトリのid
  * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
  * @param[out] out_vertex_offset_ 頂点VBOオフセット格納先
@@ -128,9 +128,51 @@ resource_registry_result_t line_mesh_geometry_registry_geometry_id_get(const cha
  */
 resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
 
-// geometry_をgeometry_registry_へdeep copy
+/**
+ * @brief geometry_をregistry_に登録し、geometry_idをout_geometry_id_に格納する
+ *
+ * @note geometry_をgeometry_registry_へdeep copyする。geometry_の所有権は呼び出し側にある
+ * @note 失敗時にregistry_, out_geometry_id_は不変
+ *
+ * @param[in] geometry_ 登録するline_mesh_geometry_t構造体インスタンスへのポインタ
+ * @param[in] vertex_offset_ 登録ジオメトリのGPU側リソース(VBO頂点オフセット)
+ * @param[in,out] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[out] out_geometry_id_ ジオメトリid格納先
+ *
+ * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
+ * - registry_ == NULL
+ * - geometry_ == NULL
+ * - out_geometry_id_ == NULL
+ * - geometry_が未初期化でジオメトリ名称が取得できない
+ * @retval RESOURCE_REGISTRY_DATA_CORRUPTED 以下のいずれか
+ * - registry_の内部データ不整合が発生している
+ * - geometry_の内部データ不整合が発生している
+ * @retval RESOURCE_REGISTRY_BAD_OPERATION 以下のいずれか
+ * - geometry_のジオメトリ名称が既にregistry_に登録されている
+ * - メモリシステム未初期化
+ * @retval RESOURCE_REGISTRY_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_REGISTRY_LIMIT_EXCEEDED 以下のいずれか
+ * - メモリシステム使用可能範囲上限超過
+ * - registry_に空きスロットが見つからない
+ * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
+ */
 resource_registry_result_t line_mesh_geometry_registry_geometry_register(const line_mesh_geometry_t* geometry_, size_t vertex_offset_, line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
+/**
+ * @brief registry_からgeometry_id_のジオメトリを削除する
+ *
+ * @note 失敗した場合、registry_は不変
+ *
+ * @param[in] geometry_id_ 削除対象ジオメトリid
+ * @param[in,out] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ *
+ * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
+ * - registry_ == NULL
+ * - geometry_id_の値が異常
+ * @retval RESOURCE_REGISTRY_DATA_CORRUPTED registry_の内部データ不整合が発生している
+ * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが見つからない
+ * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
+ */
 resource_registry_result_t line_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, line_mesh_geometry_registry_t* registry_);
 
 #ifdef __cplusplus
