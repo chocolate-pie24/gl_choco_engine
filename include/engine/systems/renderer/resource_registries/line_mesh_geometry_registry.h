@@ -33,7 +33,7 @@ extern "C" {
 
 #include "engine/core/memory/linear_allocator.h"
 
-typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;
+typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**< line_mesh_geometry_registry_t前方宣言 */
 
 /**
  * @brief line_mesh_geometry_registry_t管理システムのリソースを確保し初期化する
@@ -129,7 +129,7 @@ resource_registry_result_t line_mesh_geometry_registry_geometry_id_get(const cha
 resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
 
 /**
- * @brief geometry_をregistry_に登録し、geometry_idをout_geometry_id_に格納する
+ * @brief geometry_とgeometry_のGPU側リソース(vertex_offset_)をregistry_に登録し、geometry_idをout_geometry_id_に格納する
  *
  * @note geometry_をgeometry_registry_へdeep copyする。geometry_の所有権は呼び出し側にある
  * @note 失敗時にregistry_, out_geometry_id_は不変

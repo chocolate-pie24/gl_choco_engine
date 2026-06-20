@@ -36,7 +36,7 @@
 
 /**
  * @brief line_mesh_geometry_t管理システム構造体
- * 
+ *
  */
 struct line_mesh_geometry_registry {
     size_t max_geometry_count;          /**< registryが管理可能な最大geometry数(0は許可しない. 仮にそのgeometryを使わなくても1以上にする) */
@@ -341,6 +341,8 @@ static bool geometry_registry_internal_state_check(const line_mesh_geometry_regi
 
 /**
  * @brief registry_に名称がname_のジオメトリが格納されているかを判定し、格納されている場合はidをout_index_に格納する
+ *
+ * @note 返り値がfalseの場合はout_index_の値は不変
  *
  * @param[in] name_ 判定対象geometry_名称文字列
  * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
