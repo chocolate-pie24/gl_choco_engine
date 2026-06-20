@@ -1,3 +1,18 @@
+/** @ingroup renderer
+ *
+ * @file line_mesh_geometry_registry.c
+ * @author chocolate-pie24
+ * @brief 線分描画幾何情報のCPUリソースとGPUリソースをIDを用いて管理するシステムの実装
+ *
+ * @version 0.1
+ * @date 2026-06-20
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include <stdint.h>
 #include <stddef.h>
 #include <stdalign.h>
@@ -19,14 +34,18 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+/**
+ * @brief line_mesh_geometry_t管理システム構造体
+ * 
+ */
 struct line_mesh_geometry_registry {
-    size_t max_geometry_count;  // 0は許可しない. 仮にそのgeometryを使わなくても1以上にする(ちょっと無駄だけどエラー処理がわかりやすいため)
+    size_t max_geometry_count;          /**< registryが管理可能な最大geometry数(0は許可しない. 仮にそのgeometryを使わなくても1以上にする) */
 
     // CPU resources
-    line_mesh_geometry_t** geometries;
+    line_mesh_geometry_t** geometries;  /**< geometry CPUリソース構造体へのポインタ配列(リソース所有権はregistry) */
 
     // GPU resources
-    size_t* vertex_offsets;
+    size_t* vertex_offsets;             /**< geometry GPUリソース(VBOの頂点オフセット) */
 };
 
 static bool geometry_id_valid_check(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_);
@@ -99,7 +118,6 @@ cleanup:
     return ret;
 }
 
-// リニアアロケータ経由なので、geometriesとvertex_offsetsはNULLにしない、メモリは残しておく
 void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return;
@@ -129,7 +147,6 @@ bool line_mesh_geometry_registry_geometry_find(const char* name_, const line_mes
     return line_mesh_geometry_find(name_, registry_, &tmp_id);
 }
 
-// 失敗時にout_geometry_id_は不変
 resource_registry_result_t line_mesh_geometry_registry_geometry_id_get(const char* name_, const line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
@@ -154,7 +171,6 @@ cleanup:
     return ret;
 }
 
-// 失敗時にout_vertex_offset_, out_vertex_count_は不変
 resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
