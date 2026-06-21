@@ -260,7 +260,7 @@ renderer_result_t line_shader_projection_matrix_set(const renderer_backend_conte
  *
  * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] line_shader_ 線分描画用シェーダーリソースへのポインタ
- * @param[in] color_ 送信する色情報配列(格納順: RGBA / 各要素の値: 0...255 / backend側でshader uniform vec4用に0.0〜1.0に正規化される)
+ * @param[in] color_ 送信する色情報配列(格納順: RGB(4byte目はpadding) / 各要素の値: 0...255 / backend側でshader uniform vec4用に0.0〜1.0に正規化される)
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - color_ == NULL

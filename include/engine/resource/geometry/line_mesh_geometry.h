@@ -4,7 +4,7 @@
  * @author chocolate-pie24
  * @brief line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義
  *
- * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGBAで指定する。このため、全ての線分が指定した色で描画される
+ * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGB(4byte目はpadding)で指定する。このため、全ての線分が指定した色で描画される
  * @note line_mesh_geometryは線分の幾何情報のみを保持し、色情報はline_mesh_geometryを保持する親構造体で扱う
  *
  * @version 0.1
