@@ -53,10 +53,10 @@
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
-#include "engine/systems/renderer/renderer_resources/ui_shader.h"
-#include "engine/systems/renderer/renderer_resources/line_shader.h"
-#include "engine/systems/renderer/renderer_resources/point_shader.h"
-#include "engine/systems/renderer/renderer_resources/lit_mesh_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/ui_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/line_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/point_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 

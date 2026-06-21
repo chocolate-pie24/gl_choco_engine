@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/renderer_resources/lit_mesh_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"

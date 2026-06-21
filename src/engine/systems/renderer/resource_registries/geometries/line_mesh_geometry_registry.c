@@ -20,7 +20,7 @@
 #include <string.h> // for memset
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resource_registries/line_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
