@@ -2,10 +2,10 @@
  *
  * @file point_mesh_geometry_registry.h
  * @author chocolate-pie24
- * @brief 点群を描画するためのpoint_mesh_geometry幾何情報のCPUリソースとGPUリソースをIDを用いて管理するシステムで、以下の機能を提供する
- * - リソースの検索機能
- * - リソースの登録、登録解除機能
- * - 描画のための頂点数、頂点オフセット情報の取得機能
+ *
+ * @brief 点描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する
+ *
+ * @note GPU頂点バッファ自体はshader resourceが所有し、本レジストリは所有しない
  *
  * @version 0.1
  * @date 2026-06-20
@@ -33,16 +33,16 @@ extern "C" {
 
 #include "engine/core/memory/linear_allocator.h"
 
-typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**< point_mesh_geometry_registry_t前方宣言 */
+typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**< 点描画用ジオメトリレジストリのopaque型 */
 
 /**
- * @brief point_mesh_geometry_registry_t管理システムのリソースを確保し初期化する
+ * @brief 点描画用ジオメトリレジストリ用のメモリを確保し、初期化する
  *
  * @note 失敗した場合out_registry_は不変
  *
- * @param[in] max_geometry_count_ 管理システムで管理可能なジオメトリ数
- * @param[in,out] allocator_ リニアアロケータ
- * @param[out] out_registry_ 管理システム構造体インスタンスへのダブルポインタ
+ * @param[in] max_geometry_count_ レジストリに登録可能な最大ジオメトリ数
+ * @param[in,out] allocator_ レジストリ用メモリの確保に使用するリニアアロケータ
+ * @param[out] out_registry_ 初期化されたレジストリの格納先
  *
  * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
  * - max_geometry_count_ == 0
@@ -57,26 +57,23 @@ typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**<
 resource_registry_result_t point_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, point_mesh_geometry_registry_t** out_registry_);
 
 /**
- * @brief point_mesh描画ジオメトリ管理システムを初期状態に戻す
+ * @brief registry_に登録された全ジオメトリを破棄し、登録内容を空に戻す
  *
- * @note 初期状態とは、以下の状態を指す
- * - point_mesh_geometry_registry_t自身のメモリと構造体フィールドのメモリが確保されている
- * - 構造体フィールドの全てNULLまたは0で初期化されている
+ * @note registry_自身および内部配列用に確保されたメモリは解放しない
+ * @note GPU頂点バッファ上のデータの消去および領域の解放は行わない
  *
- * @note registry_が保持するリソースのメモリは解放しない
- *
- * @param[in,out] registry_ 初期化対象lit_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in,out] registry_ 登録内容を空に戻すレジストリ
  */
 void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_);
 
 /**
- * @brief point_mesh_geometry管理システムにジオメトリ名称がname_のジオメトリが存在しているかを判定する
+ * @brief registry_にname_のジオメトリが登録されているか判定する
  *
  * @param[in] name_ 検索ジオメトリ名称文字列
  * @param[in] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
  *
- * @retval 管理システム内にname_という名称のジオメトリが存在する
- * @retval 以下のいずれか
+ * @retval true registry_にname_という名称のジオメトリが存在する
+ * @retval false 以下のいずれか
  * - name_ == NULL
  * - registry_ == NULL
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
@@ -85,7 +82,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
 bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_mesh_geometry_registry_t* registry_);
 
 /**
- * @brief registry_が管理システムジオメトリから名称name_のジオメトリのidを返す
+ * @brief registry_に登録されているname_のジオメトリidを取得する
  *
  * @note idはregistry_が保持するジオメトリ配列のインデックスで0以上の値
  *
@@ -106,14 +103,14 @@ bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_m
 resource_registry_result_t point_mesh_geometry_registry_geometry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
- * @brief ジオメトリ管理システムからid = geometry_id_のジオメトリを描画するために必要な、頂点数とVBO頂点オフセットを取得する
+ * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
  *
  * @note 失敗時にout_vertex_offset_, out_vertex_count_は不変
  *
  * @param[in] geometry_id_ 取得対象ジオメトリのid
  * @param[in] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
- * @param[out] out_vertex_offset_ 頂点VBOオフセット格納先
- * @param[out] out_vertex_count_ ジオメトリ頂点数格納先
+ * @param[out] out_vertex_offset_ GPU頂点バッファ上の先頭頂点オフセット格納先
+ * @param[out] out_vertex_count_ ジオメトリの頂点数格納先
  *
  * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
  * - registry_ == NULL
@@ -123,19 +120,22 @@ resource_registry_result_t point_mesh_geometry_registry_geometry_id_get(const ch
  * @retval RESOURCE_REGISTRY_DATA_CORRUPTED 以下のいずれか
  * - registry_の内部データ不整合が発生している
  * - geometry_id_に相当するジオメトリの内部データ不整合が発生している
- * @retval RESOURCE_REGISTRY_BAD_OPERATION 管理システムにgeometry_id_に相当するジオメトリが存在しない
+ * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが登録されていない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
 resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const point_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
 
 /**
- * @brief geometry_とgeometry_のGPU側リソース(vertex_offset_)をregistry_に登録し、geometry_idをout_geometry_id_に格納する
+ * @brief geometry_の複製と対応する頂点オフセットをregistry_に登録し、ジオメトリidを取得する
  *
- * @note geometry_をgeometry_registry_へdeep copyする。geometry_の所有権は呼び出し側にある
+ * @note geometry_をregistry_へdeep copyする。geometry_の所有権は呼び出し側にある
+ * @note vertex_offset_は頂点単位のオフセットであり、byte単位ではない
+ * @note GPU頂点バッファへの書き込みおよび領域の確保は行わない
  * @note 失敗時にregistry_, out_geometry_id_は不変
+ * @note 登録解除されたジオメトリのidは、後から登録される別のジオメトリに再利用される場合がある
  *
  * @param[in] geometry_ 登録するpoint_mesh_geometry_t構造体インスタンスへのポインタ
- * @param[in] vertex_offset_ 登録ジオメトリのGPU側リソース(VBO頂点オフセット)
+ * @param[in] vertex_offset_ geometry_に対応するGPU頂点バッファ上の先頭頂点オフセット
  * @param[in,out] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
  * @param[out] out_geometry_id_ ジオメトリid格納先
  *
@@ -159,8 +159,10 @@ resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t g
 resource_registry_result_t point_mesh_geometry_registry_geometry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
- * @brief registry_からgeometry_id_のジオメトリを削除する
+ * @brief registry_からgeometry_id_のジオメトリを登録解除する
  *
+ * @note 登録時に作成したジオメトリの複製は破棄する
+ * @note GPU頂点バッファ上のデータの消去および領域の解放は行わない
  * @note 失敗した場合、registry_は不変
  *
  * @param[in] geometry_id_ 削除対象ジオメトリid

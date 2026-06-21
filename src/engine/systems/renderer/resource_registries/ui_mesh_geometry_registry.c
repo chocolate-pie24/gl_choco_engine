@@ -1,8 +1,9 @@
 /** @ingroup renderer
  *
- * @file ui_mesh_geometry_registry.h
+ * @file ui_mesh_geometry_registry.c
  * @author chocolate-pie24
- * @brief UIを描画するための、ui_mesh_geometry幾何情報のCPUリソースとGPUリソースをIDを用いて管理するシステムの実装
+ *
+ * @brief UI描画用ジオメトリレジストリAPIの実装
  *
  * @version 0.1
  * @date 2026-06-20
@@ -35,17 +36,18 @@
 #include "engine/base/choco_message.h"
 
 /**
- * @brief ui_mesh_geometry_t管理システム構造体
+ * @brief UI描画用ジオメトリレジストリ内部構造体
  *
  */
+
 struct ui_mesh_geometry_registry {
-    size_t max_geometry_count;          /**< registryが管理可能な最大geometry数(0は許可しない. 仮にそのgeometryを使わなくても1以上にする) */
+    size_t max_geometry_count;          /**< レジストリに登録可能な最大ジオメトリ数(0は許可しない. UI描画を使用しなくても1以上にする) */
 
     // CPU resources
-    ui_mesh_geometry_t** geometries;    /**< geometry CPUリソース構造体へのポインタ配列(リソース所有権はregistry) */
+    ui_mesh_geometry_t** geometries;    /**< 登録されたジオメトリの複製へのポインタ配列。複製の所有権はレジストリが持つ */
 
     // GPU resources
-    size_t* vertex_offsets;             /**< geometry GPUリソース(VBOの頂点オフセット) */
+    size_t* vertex_offsets;             /**< 各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 */
 };
 
 static bool geometry_id_valid_check(int16_t geometry_id_, const ui_mesh_geometry_registry_t* registry_);
@@ -59,7 +61,7 @@ resource_registry_result_t ui_mesh_geometry_registry_initialize(size_t max_geome
     ui_mesh_geometry_registry_t* tmp_registry = NULL;
     ui_mesh_geometry_t** tmp_geometry_array = NULL;
 
-    size_t* tmp_vertex_offset = NULL;
+    size_t* tmp_vertex_offsets = NULL;
 
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_initialize", "max_geometry_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(INT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_initialize", "max_geometry_count_")
@@ -93,7 +95,7 @@ resource_registry_result_t ui_mesh_geometry_registry_initialize(size_t max_geome
         ERROR_MESSAGE("ui_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), SIZE_MAX);
         goto cleanup;
     }
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(size_t) * max_geometry_count_, alignof(size_t), (void**)&tmp_vertex_offset);
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(size_t) * max_geometry_count_, alignof(size_t), (void**)&tmp_vertex_offsets);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
         ERROR_MESSAGE("ui_mesh_geometry_registry_initialize(%s) - Failed to allocate vertex offset array. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, bytes=%zu, align=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), sizeof(size_t) * max_geometry_count_, alignof(size_t));
@@ -103,11 +105,11 @@ resource_registry_result_t ui_mesh_geometry_registry_initialize(size_t max_geome
     tmp_registry->max_geometry_count = max_geometry_count_;
     for(size_t i = 0; i != max_geometry_count_; ++i) {
         tmp_geometry_array[i] = NULL;
-        tmp_vertex_offset[i] = 0;
+        tmp_vertex_offsets[i] = 0;
     }
 
     tmp_registry->geometries = tmp_geometry_array;
-    tmp_registry->vertex_offsets = tmp_vertex_offset;
+    tmp_registry->vertex_offsets = tmp_vertex_offsets;
 
     *out_registry_ = tmp_registry;
 
@@ -216,7 +218,7 @@ resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_
     size_t free_slot = 0;
     bool found_free_slot = false;
     const char* name = NULL;
-    ui_mesh_geometry_t* new_ui_mesh_geometry = NULL;
+    ui_mesh_geometry_t* cloned_geometry = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_geometry_register", "registry_")
     IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "ui_mesh_geometry_registry_geometry_register", "registry_")
@@ -238,7 +240,7 @@ resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_
 
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         if(NULL == registry_->geometries[i]) {
-            ret_resource = ui_mesh_geometry_clone(geometry_, &new_ui_mesh_geometry);
+            ret_resource = ui_mesh_geometry_clone(geometry_, &cloned_geometry);
             if(RESOURCE_SUCCESS != ret_resource) {
                 ret = resource_registry_rslt_convert_resource(ret_resource);
                 ERROR_MESSAGE("ui_mesh_geometry_registry_geometry_register(%s) - Failed to register ui mesh geometry. reason=clone_failed, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
@@ -257,7 +259,7 @@ resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_
     }
 
     registry_->vertex_offsets[free_slot] = vertex_offset_;
-    registry_->geometries[free_slot] = new_ui_mesh_geometry;
+    registry_->geometries[free_slot] = cloned_geometry;
     *out_geometry_id_ = (int16_t)free_slot;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
@@ -340,15 +342,15 @@ static bool geometry_registry_internal_state_check(const ui_mesh_geometry_regist
 }
 
 /**
- * @brief registry_に名称がname_のジオメトリが格納されているかを判定し、格納されている場合はidをout_index_に格納する
+ * @brief registry_にname_のジオメトリが登録されているか判定し、登録されている場合はそのインデックスを取得する
  *
  * @note 返り値がfalseの場合はout_index_の値は不変
  *
- * @param[in] name_ 判定対象geometry_名称文字列
- * @param[in] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
- * @param[out] out_index_ ジオメトリid格納先
+ * @param[in] name_ 検索対象のジオメトリ名
+ * @param[in] registry_ 検索対象のレジストリ
+ * @param[out] out_index_ 登録先インデックスの格納先
  *
- * @retval true registry_内に名称name_のジオメトリが見つかった
+ * @retval true registry_にname_のジオメトリが登録されている
  * @retval false 以下のいずれか
  * - name_ == NULL
  * - registry_ == NULL
