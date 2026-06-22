@@ -426,8 +426,10 @@ application_result_t application_create(void) {
 
     // geometry registries
     tmp->lit_mesh_geometry_registry = NULL;
-    ret_registry = lit_mesh_geometry_registry_initialize(256, tmp->linear_alloc, &tmp->lit_mesh_geometry_registry);   // TODO: エラー処理
+    ret_registry = lit_mesh_geometry_registry_initialize(256, tmp->linear_alloc, &tmp->lit_mesh_geometry_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        // TODO: エラーコード変換
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh geometry registry.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
