@@ -25,8 +25,6 @@
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/resource_core/resource_err_utils.h"
 
-#include "engine/resource/loaders/stl_loader.h"
-
 #include "engine/containers/choco_string.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
@@ -69,10 +67,8 @@ struct lit_mesh_geometry {
 
 // 外部公開APIテスト設定
 static test_call_control_t s_test_config_lit_mesh_geometry_default_create;              /**< lit_mesh_geometry_default_create()テスト設定 */
-static test_call_control_t s_test_config_lit_mesh_geometry_create_from_vertices;        /**< lit_mesh_geometry_create_from_vertices()テスト設定 */
-static test_call_control_t s_test_config_lit_mesh_geometry_create_from_file;            /**< lit_mesh_geometry_create_from_file()テスト設定 */
-static test_call_control_t s_test_config_lit_mesh_geometry_initialize_from_vertices;    /**< lit_mesh_geometry_initialize_from_vertices()テスト設定 */
-static test_call_control_t s_test_config_lit_mesh_geometry_initialize_from_file;        /**< lit_mesh_geometry_initialize_from_file()テスト設定 */
+static test_call_control_t s_test_config_lit_mesh_geometry_create;                      /**< lit_mesh_geometry_create()テスト設定 */
+static test_call_control_t s_test_config_lit_mesh_geometry_initialize;                  /**< lit_mesh_geometry_initialize()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_clone;                       /**< lit_mesh_geometry_clone()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_vertices_get;                /**< lit_mesh_geometry_vertices_get()テスト設定 */
 static test_call_control_t s_test_config_lit_mesh_geometry_vertex_count_get;            /**< lit_mesh_geometry_vertex_count_get()テスト設定 */
@@ -81,11 +77,9 @@ static test_call_control_t s_test_config_lit_mesh_geometry_vertex_count_get;    
 
 // 全テスト関数プロトタイプ宣言
 static void test_lit_mesh_geometry_default_create(void);
-static void test_lit_mesh_geometry_create_from_vertices(void);
-static void test_lit_mesh_geometry_create_from_file(void);
+static void test_lit_mesh_geometry_create(void);
 static void test_lit_mesh_geometry_destroy(void);
-static void test_lit_mesh_geometry_initialize_from_vertices(void);
-static void test_lit_mesh_geometry_initialize_from_file(void);
+static void test_lit_mesh_geometry_initialize(void);
 static void test_lit_mesh_geometry_deinitialize(void);
 static void test_lit_mesh_geometry_clone(void);
 static void test_lit_mesh_geometry_name_get(void);
@@ -138,79 +132,36 @@ cleanup:
     return ret;
 }
 
-resource_result_t lit_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_) {
+resource_result_t lit_mesh_geometry_create(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_) {
 #ifdef TEST_BUILD
-    s_test_config_lit_mesh_geometry_create_from_vertices.call_count++;
-    if(s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call != 0) {
-        if(s_test_config_lit_mesh_geometry_create_from_vertices.call_count == s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call) {
-            return (resource_result_t)s_test_config_lit_mesh_geometry_create_from_vertices.forced_result;
+    s_test_config_lit_mesh_geometry_create.call_count++;
+    if(s_test_config_lit_mesh_geometry_create.fail_on_call != 0) {
+        if(s_test_config_lit_mesh_geometry_create.call_count == s_test_config_lit_mesh_geometry_create.fail_on_call) {
+            return (resource_result_t)s_test_config_lit_mesh_geometry_create.forced_result;
         }
     }
 #endif
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    lit_mesh_geometry_t* tmp_geometry = NULL;    
+    lit_mesh_geometry_t* tmp_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "name_[0]")
-
-    ret = lit_mesh_geometry_default_create(&tmp_geometry);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Failed to create lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = lit_mesh_geometry_initialize_from_vertices(name_, vertex_count_, vertices_, tmp_geometry);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    *geometry_ = tmp_geometry;
-
-    ret = RESOURCE_SUCCESS;
-
-cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        lit_mesh_geometry_destroy(&tmp_geometry);
-    }
-    return ret;
-}
-
-resource_result_t lit_mesh_geometry_create_from_file(const char* path_, const char* name_, const char* extension_, lit_mesh_geometry_t** geometry_) {
-#ifdef TEST_BUILD
-    s_test_config_lit_mesh_geometry_create_from_file.call_count++;
-    if(s_test_config_lit_mesh_geometry_create_from_file.fail_on_call != 0) {
-        if(s_test_config_lit_mesh_geometry_create_from_file.call_count == s_test_config_lit_mesh_geometry_create_from_file.fail_on_call) {
-            return (resource_result_t)s_test_config_lit_mesh_geometry_create_from_file.forced_result;
-        }
-    }
-#endif
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-
-    lit_mesh_geometry_t* tmp_geometry = NULL;    
-
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "extension_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_file", "name_[0]")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertices_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "name_[0]")
 
     ret = lit_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_file(%s) - Failed to create lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_create(%s) - Failed to create lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = lit_mesh_geometry_initialize_from_file(path_, name_, extension_, tmp_geometry);
+    ret = lit_mesh_geometry_initialize(name_, vertex_count_, vertices_, tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_file(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_create(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -250,12 +201,12 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     *geometry_ = NULL;
 }
 
-resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_) {
+resource_result_t lit_mesh_geometry_initialize(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_) {
 #ifdef TEST_BUILD
-    s_test_config_lit_mesh_geometry_initialize_from_vertices.call_count++;
-    if(s_test_config_lit_mesh_geometry_initialize_from_vertices.fail_on_call != 0) {
-        if(s_test_config_lit_mesh_geometry_initialize_from_vertices.call_count == s_test_config_lit_mesh_geometry_initialize_from_vertices.fail_on_call) {
-            return (resource_result_t)s_test_config_lit_mesh_geometry_initialize_from_vertices.forced_result;
+    s_test_config_lit_mesh_geometry_initialize.call_count++;
+    if(s_test_config_lit_mesh_geometry_initialize.fail_on_call != 0) {
+        if(s_test_config_lit_mesh_geometry_initialize.call_count == s_test_config_lit_mesh_geometry_initialize.fail_on_call) {
+            return (resource_result_t)s_test_config_lit_mesh_geometry_initialize.forced_result;
         }
     }
 #endif
@@ -266,32 +217,32 @@ resource_result_t lit_mesh_geometry_initialize_from_vertices(const char* name_, 
     choco_string_t* tmp_name = NULL;
     point_normal_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "name_[0]")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->name")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_vertices", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "name_[0]")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->name")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertex_count_")
 
     ret_string = choco_string_create_from_c_string(name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("lit_mesh_geometry_initialize_from_vertices(%s) - Failed to create lit mesh geometry name string.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - Failed to create lit mesh geometry name string.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX / vertex_count_) < sizeof(point_normal_vertex_t)) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("lit_mesh_geometry_initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
+        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
     ret_mem = memory_system_allocate(sizeof(point_normal_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
-        ERROR_MESSAGE("lit_mesh_geometry_initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
+        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
 
@@ -314,87 +265,6 @@ cleanup:
             memory_system_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
             tmp_vertices = NULL;
         }
-    }
-    return ret;
-}
-
-resource_result_t lit_mesh_geometry_initialize_from_file(const char* path_, const char* name_, const char* extension_, lit_mesh_geometry_t* geometry_) {
-#ifdef TEST_BUILD
-    s_test_config_lit_mesh_geometry_initialize_from_file.call_count++;
-    if(s_test_config_lit_mesh_geometry_initialize_from_file.fail_on_call != 0) {
-        if(s_test_config_lit_mesh_geometry_initialize_from_file.call_count == s_test_config_lit_mesh_geometry_initialize_from_file.fail_on_call) {
-            return (resource_result_t)s_test_config_lit_mesh_geometry_initialize_from_file.forced_result;
-        }
-    }
-#endif
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-
-    stl_loader_t* stl_loader = NULL;
-    point_normal_vertex_t* tmp_vertices = NULL;
-    choco_string_t* tmp_name = NULL;
-    size_t tmp_vertex_count = 0;
-
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_file", "path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_file", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_file", "extension_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_file", "name_[0]")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize_from_file", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_file", "geometry_->name")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_file", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize_from_file", "geometry_->vertex_count")
-
-    if(choco_string_equal(".stl", extension_)) {
-        ret = stl_loader_create(&stl_loader);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to create stl_loader_t instance for lit mesh geometry loading.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-        ret = stl_loader_ascii_load(path_, name_, extension_, stl_loader);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to load ASCII STL file for lit mesh geometry. name = '%s', extension = '%s'.", resource_rslt_to_str(ret), name_, extension_);
-            goto cleanup;
-        }
-        ret = stl_loader_vertices_move(stl_loader, &tmp_vertices, &tmp_vertex_count);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to move vertices from STL loader.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-        if(0 != (tmp_vertex_count % 3) || 0 == tmp_vertex_count) {
-            ret = RESOURCE_DATA_CORRUPTED;
-            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Loaded STL vertex data is invalid: vertex_count must be non-zero and a multiple of 3. vertex_count = %zu.", resource_rslt_to_str(ret), tmp_vertex_count);
-            goto cleanup;
-        }
-        ret_string = choco_string_create_from_c_string(name_, &tmp_name);
-        if(CHOCO_STRING_SUCCESS != ret_string) {
-            ret = resource_rslt_convert_choco_string(ret_string);
-            ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Failed to create lit mesh geometry name string.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        geometry_->name = tmp_name;
-        geometry_->vertex_count = tmp_vertex_count;
-        geometry_->vertices = tmp_vertices;
-    } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("lit_mesh_geometry_initialize_from_file(%s) - Unsupported lit mesh geometry file extension '%s'. Currently supported: '.stl' ASCII STL.", resource_rslt_to_str(ret), extension_);
-        goto cleanup;
-    }
-
-    ret = RESOURCE_SUCCESS;
-
-cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_name) {
-            choco_string_destroy(&tmp_name);
-        }
-        if(NULL != tmp_vertices) {
-            memory_system_free(tmp_vertices, sizeof(point_normal_vertex_t) * tmp_vertex_count, MEMORY_TAG_GEOMETRY);
-            tmp_vertices = NULL;
-        }
-    }
-    if(NULL != stl_loader) {
-        stl_loader_destroy(&stl_loader);
     }
     return ret;
 }
@@ -466,7 +336,7 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
     }
     if(0 != src_->vertex_count) {
         tmp_name = choco_string_c_str(src_->name);
-        ret = lit_mesh_geometry_initialize_from_vertices(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        ret = lit_mesh_geometry_initialize(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
         if(RESOURCE_OVERFLOW == ret) {
             ret = RESOURCE_DATA_CORRUPTED;
             ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
@@ -562,40 +432,22 @@ void NO_COVERAGE test_lit_mesh_geometry_default_create_config_set(const test_cal
     s_test_config_lit_mesh_geometry_default_create.forced_result = config_->forced_result;
 }
 
-void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_) {
+void NO_COVERAGE test_lit_mesh_geometry_create_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
         return;
     }
-    s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call = config_->fail_on_call;
-    s_test_config_lit_mesh_geometry_create_from_vertices.forced_result = config_->forced_result;
+    s_test_config_lit_mesh_geometry_create.fail_on_call = config_->fail_on_call;
+    s_test_config_lit_mesh_geometry_create.forced_result = config_->forced_result;
 }
 
-void NO_COVERAGE test_lit_mesh_geometry_create_from_file_config_set(const test_call_control_t* config_) {
+void NO_COVERAGE test_lit_mesh_geometry_initialize_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
         return;
     }
-    s_test_config_lit_mesh_geometry_create_from_file.fail_on_call = config_->fail_on_call;
-    s_test_config_lit_mesh_geometry_create_from_file.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_lit_mesh_geometry_initialize_from_vertices.fail_on_call = config_->fail_on_call;
-    s_test_config_lit_mesh_geometry_initialize_from_vertices.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_lit_mesh_geometry_initialize_from_file_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_lit_mesh_geometry_initialize_from_file.fail_on_call = config_->fail_on_call;
-    s_test_config_lit_mesh_geometry_initialize_from_file.forced_result = config_->forced_result;
+    s_test_config_lit_mesh_geometry_initialize.fail_on_call = config_->fail_on_call;
+    s_test_config_lit_mesh_geometry_initialize.forced_result = config_->forced_result;
 }
 
 void NO_COVERAGE test_lit_mesh_geometry_clone_config_set(const test_call_control_t* config_) {
@@ -627,10 +479,8 @@ void NO_COVERAGE test_lit_mesh_geometry_vertex_count_get_config_set(const test_c
 
 void NO_COVERAGE test_lit_mesh_geometry_config_reset(void) {
     test_call_control_reset(&s_test_config_lit_mesh_geometry_default_create);
-    test_call_control_reset(&s_test_config_lit_mesh_geometry_create_from_vertices);
-    test_call_control_reset(&s_test_config_lit_mesh_geometry_create_from_file);
-    test_call_control_reset(&s_test_config_lit_mesh_geometry_initialize_from_vertices);
-    test_call_control_reset(&s_test_config_lit_mesh_geometry_initialize_from_file);
+    test_call_control_reset(&s_test_config_lit_mesh_geometry_create);
+    test_call_control_reset(&s_test_config_lit_mesh_geometry_initialize);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_clone);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_vertices_get);
     test_call_control_reset(&s_test_config_lit_mesh_geometry_vertex_count_get);
@@ -638,11 +488,9 @@ void NO_COVERAGE test_lit_mesh_geometry_config_reset(void) {
 
 void NO_COVERAGE test_lit_mesh_geometry(void) {
     test_lit_mesh_geometry_default_create();
-    test_lit_mesh_geometry_create_from_vertices();
-    test_lit_mesh_geometry_create_from_file();
+    test_lit_mesh_geometry_create();
     test_lit_mesh_geometry_destroy();
-    test_lit_mesh_geometry_initialize_from_vertices();
-    test_lit_mesh_geometry_initialize_from_file();
+    test_lit_mesh_geometry_initialize();
     test_lit_mesh_geometry_deinitialize();
     test_lit_mesh_geometry_clone();
     test_lit_mesh_geometry_name_get();
@@ -748,11 +596,11 @@ static void NO_COVERAGE test_lit_mesh_geometry_default_create(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
+static void NO_COVERAGE test_lit_mesh_geometry_create(void) {
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     {
-        // lit_mesh_geometry_create_from_vertices() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        // lit_mesh_geometry_create() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
         resource_result_t ret = RESOURCE_SUCCESS;
         lit_mesh_geometry_t* geometry = NULL;
         point_normal_vertex_t vertices[3] = { 0 };
@@ -770,10 +618,10 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        s_test_config_lit_mesh_geometry_create_from_vertices.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_create_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+        s_test_config_lit_mesh_geometry_create.fail_on_call = 1U;
+        s_test_config_lit_mesh_geometry_create.forced_result = (int)RESOURCE_RUNTIME_ERROR;
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_RUNTIME_ERROR == ret);
         assert(NULL == geometry);
 
@@ -790,7 +638,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, NULL);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, NULL);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         test_lit_mesh_geometry_config_reset();
@@ -808,7 +656,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(&dummy_geometry == geometry);
 
@@ -829,7 +677,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         s_test_config_lit_mesh_geometry_default_create.fail_on_call = 1U;
         s_test_config_lit_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -853,7 +701,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
         test_memory_system_allocate_config_set(&config);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -862,7 +710,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_memory_config_reset();
     }
     {
-        // lit_mesh_geometry_initialize_from_vertices() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
+        // lit_mesh_geometry_initialize() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
         resource_result_t ret = RESOURCE_SUCCESS;
         lit_mesh_geometry_t* geometry = NULL;
         point_normal_vertex_t vertices[3] = { 0 };
@@ -871,10 +719,10 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        s_test_config_lit_mesh_geometry_initialize_from_vertices.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_initialize_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+        s_test_config_lit_mesh_geometry_initialize.fail_on_call = 1U;
+        s_test_config_lit_mesh_geometry_initialize.forced_result = (int)RESOURCE_RUNTIME_ERROR;
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_RUNTIME_ERROR == ret);
         assert(NULL == geometry);
 
@@ -892,7 +740,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices(NULL, 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create(NULL, 3U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(NULL == geometry);
 
@@ -910,7 +758,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 0U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 0U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(NULL == geometry);
 
@@ -927,7 +775,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, NULL, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, NULL, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(NULL == geometry);
 
@@ -945,7 +793,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 4U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 4U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(NULL == geometry);
 
@@ -963,7 +811,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 1U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 1U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
         assert(NULL == geometry);
 
@@ -987,7 +835,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
         test_choco_string_create_from_c_string_config_set(&config);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -1012,7 +860,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
         test_memory_system_allocate_config_set(&config);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
         assert(NULL == geometry);
 
@@ -1034,7 +882,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         dummy_vertex.position = vec3f_initialize(0.0f, 1.0f, 2.0f);
         dummy_vertex.normal = vec4i8_initialize(0, 0, 127, 0);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
         assert(RESOURCE_OVERFLOW == ret);
         assert(NULL == geometry);
 
@@ -1061,7 +909,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1143,7 +991,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         vertices[5].position = vec3f_initialize(15.0f, 16.0f, 17.0f);
         vertices[5].normal = vec4i8_initialize(90, 100, 110, 120);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry_two_triangles", 6U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry_two_triangles", 6U, vertices, &geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -1171,470 +1019,6 @@ static void NO_COVERAGE test_lit_mesh_geometry_create_from_vertices(void) {
         test_lit_mesh_geometry_config_reset();
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
-    }
-
-    memory_system_destroy();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_lit_mesh_geometry_create_from_file(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-    {
-        // テスト用ASCII STLファイル生成
-        FILE* fp = NULL;
-
-        fp = fopen("assets/test/filesystem/test_lit_mesh_geometry_create_from_file_valid_1_triangle.stl", "wb");
-        assert(NULL != fp);
-        assert(EOF != fputs("solid test\n", fp));
-        assert(EOF != fputs("  facet normal 0.0 0.0 1.0\n", fp));
-        assert(EOF != fputs("    outer loop\n", fp));
-        assert(EOF != fputs("      vertex 0.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 1.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 0.0 1.0 0.0\n", fp));
-        assert(EOF != fputs("    endloop\n", fp));
-        assert(EOF != fputs("  endfacet\n", fp));
-        assert(EOF != fputs("endsolid test\n", fp));
-        assert(0 == fclose(fp));
-
-        fp = fopen("assets/test/filesystem/test_lit_mesh_geometry_create_from_file_invalid_stl.stl", "wb");
-        assert(NULL != fp);
-        assert(EOF != fputs("solid test\n", fp));
-        assert(EOF != fputs("  facet normal 0.0 0.0 1.0\n", fp));
-        assert(EOF != fputs("    outer loop\n", fp));
-        assert(EOF != fputs("      vertex 0.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 1.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("    endloop\n", fp));
-        assert(EOF != fputs("  endfacet\n", fp));
-        assert(EOF != fputs("endsolid test\n", fp));
-        assert(0 == fclose(fp));
-    }
-    {
-        // lit_mesh_geometry_create_from_file() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_lit_mesh_geometry_create_from_file.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_create_from_file.forced_result = (int)RESOURCE_RUNTIME_ERROR;
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_RUNTIME_ERROR == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            NULL
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // *geometry_ != NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t dummy_geometry = { 0 };
-        lit_mesh_geometry_t* geometry = &dummy_geometry;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(&dummy_geometry == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // lit_mesh_geometry_default_create() が失敗 -> その戻り値を返し、geometryは変更されない
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_lit_mesh_geometry_default_create.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // lit_mesh_geometry_default_create() 内部のmemory_system_allocate()が失敗 -> RESOURCE_NO_MEMORY
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
-        test_memory_system_allocate_config_set(&config);
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // lit_mesh_geometry_initialize_from_file() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_lit_mesh_geometry_initialize_from_file.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_initialize_from_file.forced_result = (int)RESOURCE_RUNTIME_ERROR;
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_RUNTIME_ERROR == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // path_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            NULL,
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            NULL,
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // extension_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            NULL,
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 未対応拡張子 -> RESOURCE_UNSUPPORTED_FILE
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".obj",
-            &geometry
-        );
-        assert(RESOURCE_UNSUPPORTED_FILE == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_create() 失敗 -> RESOURCE_NO_MEMORY
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_NO_MEMORY;
-        test_stl_loader_create_config_set(&config);
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_ascii_load() 失敗 -> RESOURCE_DATA_CORRUPTED
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_DATA_CORRUPTED;
-        test_stl_loader_ascii_load_config_set(&config);
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_DATA_CORRUPTED == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_vertices_move() 失敗 -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_BAD_OPERATION;
-        test_stl_loader_vertices_move_config_set(&config);
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_BAD_OPERATION == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 実STL構造不正 -> RESOURCE_DATA_CORRUPTED
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_invalid_stl",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_DATA_CORRUPTED == ret);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: ASCII STLからlit_mesh_geometry_tを生成する
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_create_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_create_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != geometry);
-
-        assert(NULL != geometry->name);
-        assert(NULL != geometry->vertices);
-        assert(3U == geometry->vertex_count);
-
-        assert(0 == strcmp("test_lit_mesh_geometry_create_from_file_valid_1_triangle", choco_string_c_str(geometry->name)));
-
-        assert(0.0f == geometry->vertices[0].position.elem[0]);
-        assert(0.0f == geometry->vertices[0].position.elem[1]);
-        assert(0.0f == geometry->vertices[0].position.elem[2]);
-        assert(0 == geometry->vertices[0].normal.elem[0]);
-        assert(0 == geometry->vertices[0].normal.elem[1]);
-        assert(127 == geometry->vertices[0].normal.elem[2]);
-
-        assert(1.0f == geometry->vertices[1].position.elem[0]);
-        assert(0.0f == geometry->vertices[1].position.elem[1]);
-        assert(0.0f == geometry->vertices[1].position.elem[2]);
-        assert(0 == geometry->vertices[1].normal.elem[0]);
-        assert(0 == geometry->vertices[1].normal.elem[1]);
-        assert(127 == geometry->vertices[1].normal.elem[2]);
-
-        assert(0.0f == geometry->vertices[2].position.elem[0]);
-        assert(1.0f == geometry->vertices[2].position.elem[1]);
-        assert(0.0f == geometry->vertices[2].position.elem[2]);
-        assert(0 == geometry->vertices[2].normal.elem[0]);
-        assert(0 == geometry->vertices[2].normal.elem[1]);
-        assert(127 == geometry->vertices[2].normal.elem[2]);
-
-        lit_mesh_geometry_destroy(&geometry);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // テスト用ASCII STLファイル削除
-        assert(0 == remove("assets/test/filesystem/test_lit_mesh_geometry_create_from_file_valid_1_triangle.stl"));
-        assert(0 == remove("assets/test/filesystem/test_lit_mesh_geometry_create_from_file_invalid_stl.stl"));
     }
 
     memory_system_destroy();
@@ -1823,11 +1207,11 @@ static void NO_COVERAGE test_lit_mesh_geometry_destroy(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
+static void NO_COVERAGE test_lit_mesh_geometry_initialize(void) {
     assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
 
     {
-        // lit_mesh_geometry_initialize_from_vertices() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        // lit_mesh_geometry_initialize() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
         resource_result_t ret = RESOURCE_SUCCESS;
         lit_mesh_geometry_t geometry = { 0 };
         point_normal_vertex_t vertices[3] = { 0 };
@@ -1836,10 +1220,10 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        s_test_config_lit_mesh_geometry_initialize_from_vertices.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_initialize_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+        s_test_config_lit_mesh_geometry_initialize.fail_on_call = 1U;
+        s_test_config_lit_mesh_geometry_initialize.forced_result = (int)RESOURCE_RUNTIME_ERROR;
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_RUNTIME_ERROR == ret);
 
         assert(NULL == geometry.name);
@@ -1860,7 +1244,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices(NULL, 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize(NULL, 3U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         assert(NULL == geometry.name);
@@ -1881,7 +1265,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 0U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 0U, vertices, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         assert(NULL == geometry.name);
@@ -1901,7 +1285,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, NULL, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, NULL, &geometry);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         assert(NULL == geometry.name);
@@ -1921,7 +1305,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, NULL);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, NULL);
         assert(RESOURCE_INVALID_ARGUMENT == ret);
 
         test_lit_mesh_geometry_config_reset();
@@ -1943,7 +1327,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         assert(CHOCO_STRING_SUCCESS == ret_string);
         assert(NULL != geometry.name);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_BAD_OPERATION == ret);
 
         assert(NULL != geometry.name);
@@ -1971,7 +1355,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_BAD_OPERATION == ret);
 
         assert(NULL == geometry.name);
@@ -1996,7 +1380,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_BAD_OPERATION == ret);
 
         assert(NULL == geometry.name);
@@ -2023,7 +1407,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
         test_choco_string_create_from_c_string_config_set(&config);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
 
         assert(NULL == geometry.name);
@@ -2044,7 +1428,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
         assert(RESOURCE_OVERFLOW == ret);
 
         assert(NULL == geometry.name);
@@ -2072,7 +1456,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
         test_memory_system_allocate_config_set(&config);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_NO_MEMORY == ret);
 
         assert(NULL == geometry.name);
@@ -2106,7 +1490,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         assert(NULL != geometry->name);
@@ -2159,522 +1543,6 @@ static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_vertices(void) {
         test_lit_mesh_geometry_config_reset();
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
-    }
-
-    memory_system_destroy();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_lit_mesh_geometry_initialize_from_file(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-    {
-        // テスト用ASCII STLファイル生成
-        FILE* fp = NULL;
-
-        fp = fopen("assets/test/filesystem/test_lit_mesh_geometry_from_file_valid_1_triangle.stl", "wb");
-        assert(NULL != fp);
-        assert(EOF != fputs("solid test\n", fp));
-        assert(EOF != fputs("  facet normal 0.0 0.0 1.0\n", fp));
-        assert(EOF != fputs("    outer loop\n", fp));
-        assert(EOF != fputs("      vertex 0.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 1.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 0.0 1.0 0.0\n", fp));
-        assert(EOF != fputs("    endloop\n", fp));
-        assert(EOF != fputs("  endfacet\n", fp));
-        assert(EOF != fputs("endsolid test\n", fp));
-        assert(0 == fclose(fp));
-
-        fp = fopen("assets/test/filesystem/test_lit_mesh_geometry_from_file_invalid_stl.stl", "wb");
-        assert(NULL != fp);
-        assert(EOF != fputs("solid test\n", fp));
-        assert(EOF != fputs("  facet normal 0.0 0.0 1.0\n", fp));
-        assert(EOF != fputs("    outer loop\n", fp));
-        assert(EOF != fputs("      vertex 0.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("      vertex 1.0 0.0 0.0\n", fp));
-        assert(EOF != fputs("    endloop\n", fp));
-        assert(EOF != fputs("  endfacet\n", fp));
-        assert(EOF != fputs("endsolid test\n", fp));
-        assert(0 == fclose(fp));
-    }
-    {
-        // lit_mesh_geometry_initialize_from_file() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_lit_mesh_geometry_initialize_from_file.fail_on_call = 1U;
-        s_test_config_lit_mesh_geometry_initialize_from_file.forced_result = (int)RESOURCE_RUNTIME_ERROR;
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_RUNTIME_ERROR == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // path_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            NULL,
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            NULL,
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // extension_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            NULL,
-            &geometry
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            NULL
-        );
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_->name != NULL -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret_string = choco_string_create_from_c_string("already_initialized", &geometry.name);
-        assert(CHOCO_STRING_SUCCESS == ret_string);
-        assert(NULL != geometry.name);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_BAD_OPERATION == ret);
-
-        assert(NULL != geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        choco_string_destroy(&geometry.name);
-        assert(NULL == geometry.name);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_->vertices != NULL -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-        point_normal_vertex_t dummy_vertices[3] = { 0 };
-
-        geometry.vertices = dummy_vertices;
-        geometry.vertex_count = 0U;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_BAD_OPERATION == ret);
-
-        assert(NULL == geometry.name);
-        assert(dummy_vertices == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_->vertex_count != 0 -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        geometry.name = NULL;
-        geometry.vertices = NULL;
-        geometry.vertex_count = 3U;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_BAD_OPERATION == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(3U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 未対応拡張子 -> RESOURCE_UNSUPPORTED_FILE
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".obj",
-            &geometry
-        );
-        assert(RESOURCE_UNSUPPORTED_FILE == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_create() 失敗 -> RESOURCE_NO_MEMORY
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_NO_MEMORY;
-        test_stl_loader_create_config_set(&config);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_NO_MEMORY == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_ascii_load() 失敗 -> RESOURCE_DATA_CORRUPTED
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_DATA_CORRUPTED;
-        test_stl_loader_ascii_load_config_set(&config);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_DATA_CORRUPTED == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_vertices_move() 失敗 -> RESOURCE_BAD_OPERATION
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)RESOURCE_BAD_OPERATION;
-        test_stl_loader_vertices_move_config_set(&config);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_BAD_OPERATION == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // stl_loader_vertices_move()成功後のname生成失敗 -> RESOURCE_NO_MEMORY
-        // tmp_verticesはcleanupでfreeされ、geometry_は不変のまま
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 7U;
-        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
-        test_choco_string_create_from_c_string_config_set(&config);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_NO_MEMORY == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 実STL構造不正 -> RESOURCE_DATA_CORRUPTED
-        resource_result_t ret = RESOURCE_SUCCESS;
-        lit_mesh_geometry_t geometry = { 0 };
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_invalid_stl",
-            ".stl",
-            &geometry
-        );
-        assert(RESOURCE_DATA_CORRUPTED == ret);
-
-        assert(NULL == geometry.name);
-        assert(NULL == geometry.vertices);
-        assert(0U == geometry.vertex_count);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: ASCII STLからlit_mesh_geometryを初期化する
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        lit_mesh_geometry_t* geometry = NULL;
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = lit_mesh_geometry_default_create(&geometry);
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != geometry);
-
-        ret = lit_mesh_geometry_initialize_from_file(
-            "assets/test/filesystem/",
-            "test_lit_mesh_geometry_from_file_valid_1_triangle",
-            ".stl",
-            geometry
-        );
-        assert(RESOURCE_SUCCESS == ret);
-
-        assert(NULL != geometry->name);
-        assert(NULL != geometry->vertices);
-        assert(3U == geometry->vertex_count);
-
-        assert(0 == strcmp("test_lit_mesh_geometry_from_file_valid_1_triangle", choco_string_c_str(geometry->name)));
-
-        assert(0.0f == geometry->vertices[0].position.elem[0]);
-        assert(0.0f == geometry->vertices[0].position.elem[1]);
-        assert(0.0f == geometry->vertices[0].position.elem[2]);
-        assert(0 == geometry->vertices[0].normal.elem[0]);
-        assert(0 == geometry->vertices[0].normal.elem[1]);
-        assert(127 == geometry->vertices[0].normal.elem[2]);
-
-        assert(1.0f == geometry->vertices[1].position.elem[0]);
-        assert(0.0f == geometry->vertices[1].position.elem[1]);
-        assert(0.0f == geometry->vertices[1].position.elem[2]);
-        assert(0 == geometry->vertices[1].normal.elem[0]);
-        assert(0 == geometry->vertices[1].normal.elem[1]);
-        assert(127 == geometry->vertices[1].normal.elem[2]);
-
-        assert(0.0f == geometry->vertices[2].position.elem[0]);
-        assert(1.0f == geometry->vertices[2].position.elem[1]);
-        assert(0.0f == geometry->vertices[2].position.elem[2]);
-        assert(0 == geometry->vertices[2].normal.elem[0]);
-        assert(0 == geometry->vertices[2].normal.elem[1]);
-        assert(127 == geometry->vertices[2].normal.elem[2]);
-
-        lit_mesh_geometry_destroy(&geometry);
-        assert(NULL == geometry);
-
-        test_lit_mesh_geometry_config_reset();
-        test_stl_loader_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // テスト用ASCII STLファイル削除
-        assert(0 == remove("assets/test/filesystem/test_lit_mesh_geometry_from_file_valid_1_triangle.stl"));
-        assert(0 == remove("assets/test/filesystem/test_lit_mesh_geometry_from_file_invalid_stl.stl"));
     }
 
     memory_system_destroy();
@@ -2797,7 +1665,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_deinitialize(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
         assert(NULL != geometry->name);
@@ -2832,7 +1700,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_deinitialize(void) {
             vertices[i].normal = vec4i8_initialize(0, 0, 127, 0);
         }
 
-        ret = lit_mesh_geometry_create_from_vertices("two_triangle_geometry", 6U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("two_triangle_geometry", 6U, vertices, &geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
         assert(NULL != geometry->name);
@@ -2885,7 +1753,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_deinitialize(void) {
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry_a", 3U, vertices_a, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry_a", 3U, vertices_a, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         assert(NULL != geometry->name);
@@ -2899,7 +1767,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_deinitialize(void) {
         assert(NULL == geometry->vertices);
         assert(0U == geometry->vertex_count);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry_b", 3U, vertices_b, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry_b", 3U, vertices_b, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         assert(NULL != geometry->name);
@@ -2957,7 +1825,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_deinitialize(void) {
         vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
         vertices[2].normal = vec4i8_initialize(127, 0, 0, 0);
 
-        ret = lit_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        ret = lit_mesh_geometry_create("test_geometry", 3U, vertices, &geometry);
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
@@ -3125,7 +1993,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_name_get(void) {
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         name = lit_mesh_geometry_name_get(geometry);
@@ -3346,7 +2214,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_vertices_get(void) {
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         ret = lit_mesh_geometry_vertices_get(geometry, &out_vertices);
@@ -3566,7 +2434,7 @@ static void NO_COVERAGE test_lit_mesh_geometry_vertex_count_get(void) {
         assert(RESOURCE_SUCCESS == ret);
         assert(NULL != geometry);
 
-        ret = lit_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        ret = lit_mesh_geometry_initialize("test_geometry", 3U, vertices, geometry);
         assert(RESOURCE_SUCCESS == ret);
 
         ret = lit_mesh_geometry_vertex_count_get(geometry, &out_vertex_count);

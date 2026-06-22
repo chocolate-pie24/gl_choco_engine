@@ -7,7 +7,17 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_types.h"
 
-const char* renderer_pipeline_rslt_to_str(renderer_pipeline_result_t rslt_);
+#include "engine/resource/resource_core/resource_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+
+const char* resource_pipeline_rslt_to_str(resource_pipeline_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_resource(resource_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_renderer(renderer_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_resource_registries(resource_registry_result_t rslt_);
 
 #ifdef __cplusplus
 }
