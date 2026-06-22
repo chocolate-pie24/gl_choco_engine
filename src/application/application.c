@@ -55,7 +55,7 @@
 
 #include "engine/systems/renderer/renderer_resources/shaders/ui_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
-#include "engine/systems/renderer/renderer_resources/shaders/point_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
@@ -122,7 +122,7 @@ typedef struct app_state {
 
     ui_shader_t* ui_shader;
     line_mesh_shader_t* line_mesh_shader;
-    point_shader_t* point_shader;
+    point_mesh_shader_t* point_mesh_shader;
     lit_mesh_shader_t* lit_mesh_shader;
 
     camera_manager_t* camera_manager;
@@ -372,13 +372,13 @@ application_result_t application_create(void) {
     }
 
     // Point Shader
-    ret_renderer = point_shader_create("assets/shaders/test_shader/", "point_shader", tmp->renderer_backend_context, &tmp->point_shader);
+    ret_renderer = point_mesh_shader_create("assets/shaders/test_shader/", "point_mesh_shader", tmp->renderer_backend_context, &tmp->point_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = point_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->point_shader, BUFFER_USAGE_DYNAMIC, BUFFER_USAGE_DYNAMIC, 1024, 1024);
+    ret_renderer = point_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->point_mesh_shader, BUFFER_USAGE_DYNAMIC, BUFFER_USAGE_DYNAMIC, 1024, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create point vertex buffer.", app_rslt_to_str(ret));
@@ -489,8 +489,8 @@ cleanup:
                 if(NULL != tmp->lit_mesh_shader) {
                     lit_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->lit_mesh_shader);
                 }
-                if(NULL != tmp->point_shader) {
-                    point_shader_destroy(tmp->renderer_backend_context, &tmp->point_shader);
+                if(NULL != tmp->point_mesh_shader) {
+                    point_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->point_mesh_shader);
                 }
                 if(NULL != tmp->line_mesh_shader) {
                     line_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->line_mesh_shader);
@@ -555,8 +555,8 @@ void application_destroy(void) {
         if(NULL != s_app_state->lit_mesh_shader) {
             lit_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->lit_mesh_shader);
         }
-        if(NULL != s_app_state->point_shader) {
-            point_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_shader);
+        if(NULL != s_app_state->point_mesh_shader) {
+            point_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_mesh_shader);
         }
         if(NULL != s_app_state->line_mesh_shader) {
             line_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_mesh_shader);
@@ -650,10 +650,10 @@ application_result_t application_run(void) {
     line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
     line_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->projection_matrix, true);
 
-    point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
-    point_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->model_matrix, true);
-    point_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->view_matrix, true);
-    point_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->projection_matrix, true);
+    point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+    point_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->model_matrix, true);
+    point_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
+    point_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->projection_matrix, true);
 
     lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
     lit_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->model_matrix, true);
@@ -733,8 +733,8 @@ application_result_t application_run(void) {
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
-        point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
-        point_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_shader);
+        point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+        point_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
 
         glDrawArrays(GL_POINTS, s_app_state->point_geometry_vertex_count_offset, s_app_state->point_geometry_vertex_count);
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
@@ -980,8 +980,8 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
-            ret_renderer = point_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &tmp_projection, true);
+            point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+            ret_renderer = point_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
@@ -1012,8 +1012,8 @@ static void app_state_dispatch(void) {
         line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
         line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
 
-        point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
-        point_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->view_matrix, true);    // TODO: エラー処理
+        point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+        point_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);    // TODO: エラー処理
 
         lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
         lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
@@ -1217,8 +1217,8 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_geometry_create", "app_state_")
     IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->point_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_shader")
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_shader")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->point_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_mesh_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_mesh_shader")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->point_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_geometry_vertex_count")
 
     tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
@@ -1257,13 +1257,13 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to get point mesh geometry vertex count.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = point_shader_vertex_buffer_point_append(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(point_vertex_t) * vertex_count, vertices, &app_state_->point_geometry_vertex_count_offset);
+    ret_renderer = point_mesh_shader_vertex_buffer_point_append(app_state_->renderer_backend_context, app_state_->point_mesh_shader, sizeof(point_vertex_t) * vertex_count, vertices, &app_state_->point_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to append vertices to point shader VBO.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = point_shader_vertex_buffer_color_append(app_state_->renderer_backend_context, app_state_->point_shader, sizeof(vec4u8_t) * vertex_count, &colors[0]);
+    ret_renderer = point_mesh_shader_vertex_buffer_color_append(app_state_->renderer_backend_context, app_state_->point_mesh_shader, sizeof(vec4u8_t) * vertex_count, &colors[0]);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("point_geometry_create(%s) - Failed to append colors to point shader VBO.", app_rslt_to_str(ret));
