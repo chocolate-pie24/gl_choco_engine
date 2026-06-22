@@ -53,7 +53,7 @@
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/ui_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
@@ -120,7 +120,7 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
 
-    ui_shader_t* ui_shader;
+    ui_mesh_shader_t* ui_mesh_shader;
     line_mesh_shader_t* line_mesh_shader;
     point_mesh_shader_t* point_mesh_shader;
     lit_mesh_shader_t* lit_mesh_shader;
@@ -344,13 +344,13 @@ application_result_t application_create(void) {
     }
 
     // UI Shader
-    ret_renderer = ui_shader_create("assets/shaders/test_shader/", "ui_shader", tmp->renderer_backend_context, &tmp->ui_shader);
+    ret_renderer = ui_mesh_shader_create("assets/shaders/test_shader/", "ui_mesh_shader", tmp->renderer_backend_context, &tmp->ui_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = ui_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_shader, BUFFER_USAGE_STATIC, 1024);
+    ret_renderer = ui_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_mesh_shader, BUFFER_USAGE_STATIC, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
@@ -495,8 +495,8 @@ cleanup:
                 if(NULL != tmp->line_mesh_shader) {
                     line_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->line_mesh_shader);
                 }
-                if(NULL != tmp->ui_shader) {
-                    ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
+                if(NULL != tmp->ui_mesh_shader) {
+                    ui_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->ui_mesh_shader);
                 }
             }
 
@@ -561,8 +561,8 @@ void application_destroy(void) {
         if(NULL != s_app_state->line_mesh_shader) {
             line_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_mesh_shader);
         }
-        if(NULL != s_app_state->ui_shader) {
-            ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
+        if(NULL != s_app_state->ui_mesh_shader) {
+            ui_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_mesh_shader);
         }
     }
     renderer_backend_destroy(s_app_state->renderer_backend_context);
@@ -641,9 +641,9 @@ application_result_t application_run(void) {
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-    ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
-    ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);
-    ui_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->projection_matrix, true);
+    ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+    ui_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
+    ui_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->projection_matrix, true);
 
     line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
     line_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->model_matrix, true);
@@ -700,23 +700,23 @@ application_result_t application_run(void) {
         size_t vertex_count = 0;
         size_t vertex_offset = 0;
         // UI描画
-        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
 
-        ui_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_shader);
+        ui_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
 
-        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->rabbit_mesh_model_mat, true);
+        ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->green_mesh_model_mat, true);
+        ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
         renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-        ui_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->frog_mesh_model_mat, true);
+        ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
         texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
         renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
         glDrawArrays(GL_TRIANGLES, s_app_state->ui_geometry_vertex_count_offset, s_app_state->ui_geometry_vertex_count);
@@ -966,8 +966,8 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
-            renderer_result_t ret_renderer = ui_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &tmp_projection, true);
+            ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+            renderer_result_t ret_renderer = ui_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
@@ -1006,8 +1006,8 @@ static void app_state_dispatch(void) {
     if(s_app_state->view_dirty) {
         camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-        ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
-        ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
+        ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+        ui_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
 
         line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
         line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
@@ -1297,7 +1297,7 @@ static application_result_t ui_geometry_create(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_geometry_create", "app_state_")
     IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->renderer_backend_context")
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_->ui_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->ui_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_mesh_shader")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->ui_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_geometry")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->ui_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "ui_geometry_create", "app_state_->ui_geometry_vertex_count")
 
@@ -1336,7 +1336,7 @@ static application_result_t ui_geometry_create(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_renderer = ui_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->ui_shader, sizeof(ui_vertex_t) * vertex_count, vertices, &app_state_->ui_geometry_vertex_count_offset);
+    ret_renderer = ui_mesh_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->ui_mesh_shader, sizeof(ui_vertex_t) * vertex_count, vertices, &app_state_->ui_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("ui_gemetry_create(%s) - Failed to append vertex to ui shader VBO.", app_rslt_to_str(ret));
