@@ -54,7 +54,7 @@
 #include "engine/systems/platform/platform_context.h"
 
 #include "engine/systems/renderer/renderer_resources/shaders/ui_shader.h"
-#include "engine/systems/renderer/renderer_resources/shaders/line_shader.h"
+#include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/point_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
 
@@ -121,7 +121,7 @@ typedef struct app_state {
     renderer_backend_context_t* renderer_backend_context;
 
     ui_shader_t* ui_shader;
-    line_shader_t* line_shader;
+    line_mesh_shader_t* line_mesh_shader;
     point_shader_t* point_shader;
     lit_mesh_shader_t* lit_mesh_shader;
 
@@ -358,13 +358,13 @@ application_result_t application_create(void) {
     }
 
     // Line Shader
-    ret_renderer = line_shader_create("assets/shaders/test_shader/", "line_shader", tmp->renderer_backend_context, &tmp->line_shader);
+    ret_renderer = line_mesh_shader_create("assets/shaders/test_shader/", "line_mesh_shader", tmp->renderer_backend_context, &tmp->line_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = line_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->line_shader, BUFFER_USAGE_STATIC, 1024);
+    ret_renderer = line_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->line_mesh_shader, BUFFER_USAGE_STATIC, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line vertex buffer.", app_rslt_to_str(ret));
@@ -492,8 +492,8 @@ cleanup:
                 if(NULL != tmp->point_shader) {
                     point_shader_destroy(tmp->renderer_backend_context, &tmp->point_shader);
                 }
-                if(NULL != tmp->line_shader) {
-                    line_shader_destroy(tmp->renderer_backend_context, &tmp->line_shader);
+                if(NULL != tmp->line_mesh_shader) {
+                    line_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->line_mesh_shader);
                 }
                 if(NULL != tmp->ui_shader) {
                     ui_shader_destroy(tmp->renderer_backend_context, &tmp->ui_shader);
@@ -558,8 +558,8 @@ void application_destroy(void) {
         if(NULL != s_app_state->point_shader) {
             point_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_shader);
         }
-        if(NULL != s_app_state->line_shader) {
-            line_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_shader);
+        if(NULL != s_app_state->line_mesh_shader) {
+            line_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_mesh_shader);
         }
         if(NULL != s_app_state->ui_shader) {
             ui_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_shader);
@@ -645,10 +645,10 @@ application_result_t application_run(void) {
     ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);
     ui_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->projection_matrix, true);
 
-    line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
-    line_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->model_matrix, true);
-    line_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->view_matrix, true);
-    line_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->projection_matrix, true);
+    line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+    line_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->model_matrix, true);
+    line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
+    line_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->projection_matrix, true);
 
     point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
     point_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->model_matrix, true);
@@ -725,9 +725,9 @@ application_result_t application_run(void) {
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // 線分描画
-        line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
-        line_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_shader, s_app_state->test_line_color.elem);
-        line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+        line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
+        line_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
 
         glDrawArrays(GL_LINES, s_app_state->test_line_geometry_vertex_count_offset, s_app_state->test_line_geometry_vertex_count);
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
@@ -750,9 +750,9 @@ application_result_t application_run(void) {
         }
 
         // Debug用STL AABB
-        // line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
-        // line_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_shader, s_app_state->aabb_color.elem);
-        // line_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_shader);
+        // line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+        // line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->aabb_color.elem);
+        // line_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
 
         // glDrawArrays(GL_LINES, s_app_state->aabb_geometry_vertex_count_offset, s_app_state->aabb_geometry_vertex_count);
         // renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
@@ -973,8 +973,8 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
-            ret_renderer = line_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &tmp_projection, true);
+            line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+            ret_renderer = line_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &tmp_projection, true);
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(app_rslt_convert_renderer(ret_renderer)));
                 goto cleanup;
@@ -1009,8 +1009,8 @@ static void app_state_dispatch(void) {
         ui_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_shader);
         ui_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
 
-        line_shader_use(s_app_state->renderer_backend_context, s_app_state->line_shader);
-        line_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
+        line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+        line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);  // TODO: エラー処理
 
         point_shader_use(s_app_state->renderer_backend_context, s_app_state->point_shader);
         point_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_shader, &s_app_state->view_matrix, true);    // TODO: エラー処理
@@ -1054,7 +1054,7 @@ static application_result_t test_line_geometry_create(app_state_t* app_state_) {
     IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->test_line_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->test_line_geometry")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->test_line_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->test_line_geometry_vertex_count")
     IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->renderer_backend_context")
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->line_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "test_line_geometry_create", "app_state_->line_mesh_shader")
 
     tmp_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
     tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
@@ -1083,7 +1083,7 @@ static application_result_t test_line_geometry_create(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_renderer = line_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->test_line_geometry_vertex_count_offset);
+    ret_renderer = line_mesh_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_mesh_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->test_line_geometry_vertex_count_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("test_line_geometry_create(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
@@ -1127,7 +1127,7 @@ cleanup:
 //     IF_ARG_NOT_NULL_GOTO_CLEANUP(app_state_->aabb_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->aabb_geometry")
 //     IF_ARG_FALSE_GOTO_CLEANUP(0 == app_state_->aabb_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->aabb_geometry_vertex_count")
 //     IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->renderer_backend_context")
-//     IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->line_shader")
+//     IF_ARG_NULL_GOTO_CLEANUP(app_state_->line_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->line_mesh_shader")
 //     IF_ARG_NULL_GOTO_CLEANUP(app_state_->stl_geometry, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->stl_geometry")
 //     IF_ARG_FALSE_GOTO_CLEANUP(0 != app_state_->stl_geometry_vertex_count, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "aabb_geometry_create", "app_state_->stl_geometry_vertex_count")
 
@@ -1180,7 +1180,7 @@ cleanup:
 //         ERROR_MESSAGE("application_run(%s) - Failed to get line mesh geometry vertex count.", app_rslt_to_str(ret));
 //         goto cleanup;
 //     }
-//     ret_renderer = line_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->aabb_geometry_vertex_count_offset);
+//     ret_renderer = line_mesh_shader_vertex_buffer_append(app_state_->renderer_backend_context, app_state_->line_mesh_shader, sizeof(line_vertex_t) * vertex_count, vertices, &app_state_->aabb_geometry_vertex_count_offset);
 //     if(RENDERER_SUCCESS != ret_renderer) {
 //         ret = app_rslt_convert_renderer(ret_renderer);
 //         ERROR_MESSAGE("application_run(%s) - Failed to append vertices to line shader VBO.", app_rslt_to_str(ret));
