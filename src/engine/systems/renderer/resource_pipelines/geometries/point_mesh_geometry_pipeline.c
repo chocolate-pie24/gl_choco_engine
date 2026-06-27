@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -11,8 +11,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/geometry/lit_mesh_geometry.h"
-#include "engine/resource/loaders/stl_loader.h"
+#include "engine/resource/geometry/point_mesh_geometry.h"
 #include "engine/resource/resource_core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
