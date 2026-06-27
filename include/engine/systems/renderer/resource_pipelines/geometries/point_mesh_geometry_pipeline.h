@@ -6,18 +6,21 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h"
 
-resource_pipeline_result_t resource_pipelines_point_mesh_geometry_import_from_vertices(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_);
+resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_);
 
-resource_pipeline_result_t resource_pipelines_point_mesh_geometry_release(int16_t geometry_id_);
+resource_pipeline_result_t point_mesh_geometry_pipeline_release(int16_t geometry_id_);
 
 #ifdef __cplusplus
 }

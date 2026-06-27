@@ -1247,7 +1247,7 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     colors[6] = vec4u8_initialize(255, 255, 0, 255);
     colors[7] = vec4u8_initialize(255, 255, 0, 255);
 
-    ret_resource_pipeline = resource_pipelines_point_mesh_geometry_import_from_vertices(app_state_->renderer_backend_context, app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
+    ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->renderer_backend_context, app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ERROR_MESSAGE("point_geometry_create - Failed to import point mesh geometry.");
         goto cleanup;
