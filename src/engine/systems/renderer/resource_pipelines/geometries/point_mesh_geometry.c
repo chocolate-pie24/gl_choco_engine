@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resource_pipelines/lit_mesh_geometry.h"
+#include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

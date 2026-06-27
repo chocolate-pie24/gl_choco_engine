@@ -63,8 +63,8 @@
 #include "engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h"
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/lit_mesh_geometry.h"
-#include "engine/systems/renderer/resource_pipelines/point_mesh_geometry.h"
+#include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry.h"
+#include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
