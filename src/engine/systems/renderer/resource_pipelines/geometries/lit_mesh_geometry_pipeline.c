@@ -124,6 +124,6 @@ cleanup:
 
 resource_pipeline_result_t lit_mesh_geometry_pipeline_release(int16_t geometry_id_) {
     // TODO: VBO FreeList + releaseができたら実装する
-    ERROR_MESSAGE("lit_mesh_geometry_pipeline_release - Failed to release lit mesh geometry. reason=not_implemented, geometry_id=%d, vertex_buffer_release=not_supported", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_RUNTIME_ERROR), geometry_id_);
+    ERROR_MESSAGE("lit_mesh_geometry_pipeline_release(%s) - Failed to release lit mesh geometry. reason=not_implemented, geometry_id=%d, vertex_buffer_release=not_supported", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_RUNTIME_ERROR), geometry_id_);
     return RESOURCE_PIPELINE_RUNTIME_ERROR;
 }
