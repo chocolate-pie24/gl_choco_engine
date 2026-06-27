@@ -1,5 +1,5 @@
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_err_utils.h"
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 

@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 #include "engine/base/choco_math/math_types.h"
 

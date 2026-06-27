@@ -1,11 +1,11 @@
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_RESOURCE_PIPELINES_CORE_RESOURCE_PIPELINE_ERR_UTILS_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_RESOURCE_PIPELINES_CORE_RESOURCE_PIPELINE_ERR_UTILS_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_CORE_RESOURCE_PIPELINE_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_CORE_RESOURCE_PIPELINE_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"

@@ -19,8 +19,8 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/resource_pipelines_core/resource_pipeline_err_utils.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
 
