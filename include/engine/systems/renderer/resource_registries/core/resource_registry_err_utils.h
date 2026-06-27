@@ -40,7 +40,7 @@ const char* resource_registry_rslt_to_str(resource_registry_result_t rslt_);
  *
  * @param[in] rslt_ linear_allocatorモジュールが出力する実行結果コード
  *
- * @return renderer_result_t 変換されたresource_registriesの実行結果コード
+ * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
  */
 resource_registry_result_t resource_registry_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
@@ -49,7 +49,7 @@ resource_registry_result_t resource_registry_rslt_convert_linear_alloc(linear_al
  *
  * @param[in] rslt_ resourceレイヤーが出力する実行結果コード
  *
- * @return renderer_result_t 変換されたresource_registriesの実行結果コード
+ * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
  */
 resource_registry_result_t resource_registry_rslt_convert_resource(resource_result_t rslt_);
 
