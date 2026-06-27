@@ -15,9 +15,9 @@ extern "C" {
 
 resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* path_, const char* name_, const char* extension_, int16_t* out_geometry_id_);
 
-// resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_vertices();
+// resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_vertices();
 
-resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_release(int16_t geometry_id_);
+resource_pipeline_result_t lit_mesh_geometry_pipeline_release(int16_t geometry_id_);
 
 #ifdef __cplusplus
 }
