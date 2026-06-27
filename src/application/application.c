@@ -674,7 +674,7 @@ application_result_t application_run(void) {
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
     ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_green);
 
-    ret_resource_pipeline = resource_pipelines_lit_mesh_geometry_import_from_file(
+    ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
         s_app_state->renderer_backend_context,
         s_app_state->lit_mesh_shader,
         s_app_state->lit_mesh_geometry_registry,

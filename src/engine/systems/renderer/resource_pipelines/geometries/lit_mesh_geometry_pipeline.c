@@ -27,7 +27,7 @@
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
 
 // append成功後の後続処理で失敗した場合、shader_に追加された頂点データは巻き戻されない
-resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_file(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* path_, const char* name_, const char* extension_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* path_, const char* name_, const char* extension_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
@@ -43,36 +43,36 @@ resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_file
     lit_mesh_geometry_t* geometry = NULL;
 
     // path_が空文字列なのは許容する
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret,RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "geometry_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "name_[0]")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "extension_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != extension_[0], ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "extension_[0]")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resource_pipelines_lit_mesh_geometry_import_from_file", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret,RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "path_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "name_[0]")
+    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "extension_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != extension_[0], ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "extension_[0]")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "out_geometry_id_")
 
     // TODO: private function: stl_geometry_import()作成
     if(choco_string_equal(extension_, ".stl")) {
         ret_resource = stl_loader_create(&stl_loader);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = resource_pipeline_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_loader_create_failed, geometry_name='%s', extension='%s'", resource_pipeline_rslt_to_str(ret), name_, extension_);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_loader_create_failed, geometry_name='%s', extension='%s'", resource_pipeline_rslt_to_str(ret), name_, extension_);
             goto cleanup;
         }
 
         ret_resource = stl_loader_ascii_load(path_, name_, extension_, stl_loader);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = resource_pipeline_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_load_failed, path='%s', geometry_name='%s', extension='%s'", resource_pipeline_rslt_to_str(ret), path_, name_, extension_);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_load_failed, path='%s', geometry_name='%s', extension='%s'", resource_pipeline_rslt_to_str(ret), path_, name_, extension_);
             goto cleanup;
         }
 
         ret_resource = stl_loader_vertices_move(stl_loader, &vertices, &vertex_count);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = resource_pipeline_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_vertices_move_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), name_);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_vertices_move_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), name_);
             goto cleanup;
         }
         vertex_array_size = sizeof(point_normal_vertex_t) * vertex_count;
@@ -80,7 +80,7 @@ resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_file
         ret_resource = lit_mesh_geometry_create(name_, vertex_count, vertices, &geometry);
         if(RESOURCE_SUCCESS != ret_resource) {
             ret = resource_pipeline_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
             goto cleanup;
         }
 
@@ -88,7 +88,7 @@ resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_file
         ret_renderer = lit_mesh_shader_vertex_buffer_vertex_append(backend_context_, shader_, vertex_array_size, vertices, &vertex_offset);
         if(RENDERER_SUCCESS != ret_renderer) {
             ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
             goto cleanup;
         }
 
@@ -99,14 +99,14 @@ resource_pipeline_result_t resource_pipelines_lit_mesh_geometry_import_from_file
         ret_registry = lit_mesh_geometry_registry_geometry_register(geometry, vertex_offset, geometry_registry_, &tmp_geometry_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
             ret = resource_pipeline_rslt_convert_resource_registries(ret_registry);
-            ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
             goto cleanup;
         }
 
         *out_geometry_id_ = tmp_geometry_id;
     } else {
         ret = RESOURCE_PIPELINE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("resource_pipelines_lit_mesh_geometry_import_from_file(%s) - Failed to import lit mesh geometry. reason=unsupported_file_extension, extension='%s', supported_extension='.stl'", resource_pipeline_rslt_to_str(ret), extension_);
+        ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=unsupported_file_extension, extension='%s', supported_extension='.stl'", resource_pipeline_rslt_to_str(ret), extension_);
         goto cleanup;
     }
 
