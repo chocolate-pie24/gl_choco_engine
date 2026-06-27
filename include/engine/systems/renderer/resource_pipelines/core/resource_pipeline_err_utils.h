@@ -17,7 +17,7 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_resource(resource_resu
 
 resource_pipeline_result_t resource_pipeline_rslt_convert_renderer(renderer_result_t rslt_);
 
-resource_pipeline_result_t resource_pipeline_rslt_convert_resource_registries(resource_registry_result_t rslt_);
+resource_pipeline_result_t resource_pipeline_rslt_convert_resource_registry(resource_registry_result_t rslt_);
 
 #ifdef __cplusplus
 }

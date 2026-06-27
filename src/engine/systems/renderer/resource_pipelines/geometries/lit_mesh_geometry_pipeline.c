@@ -98,7 +98,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
         // NOTE: 一時的にverticesが2つ分必要なので、deep copyではなくmoveを検討しても良い
         ret_registry = lit_mesh_geometry_registry_geometry_register(geometry, vertex_offset, geometry_registry_, &tmp_geometry_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-            ret = resource_pipeline_rslt_convert_resource_registries(ret_registry);
+            ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
             goto cleanup;
         }
