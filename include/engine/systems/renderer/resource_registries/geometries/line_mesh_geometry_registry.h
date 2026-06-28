@@ -27,11 +27,11 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/resource/geometry/line_mesh_geometry.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
 typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**< 線分描画用ジオメトリレジストリのopaque型 */
 
@@ -79,7 +79,7 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool line_mesh_geometry_registry_geometry_find(const char* name_, const line_mesh_geometry_registry_t* registry_);
+bool line_mesh_geometry_registry_find(const char* name_, const line_mesh_geometry_registry_t* registry_);
 
 /**
  * @brief registry_に登録されているname_のジオメトリidを取得する
@@ -100,7 +100,7 @@ bool line_mesh_geometry_registry_geometry_find(const char* name_, const line_mes
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_内に名称name_のジオメトリが存在しない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t line_mesh_geometry_registry_geometry_id_get(const char* name_, const line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_id_get(const char* name_, const line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
@@ -156,7 +156,7 @@ resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t ge
  * - registry_に空きスロットが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t line_mesh_geometry_registry_geometry_register(const line_mesh_geometry_t* geometry_, size_t vertex_offset_, line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_register(const line_mesh_geometry_t* geometry_, size_t vertex_offset_, line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する
@@ -175,7 +175,7 @@ resource_registry_result_t line_mesh_geometry_registry_geometry_register(const l
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t line_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, line_mesh_geometry_registry_t* registry_);
+resource_registry_result_t line_mesh_geometry_registry_unregister(int16_t geometry_id_, line_mesh_geometry_registry_t* registry_);
 
 #ifdef __cplusplus
 }
