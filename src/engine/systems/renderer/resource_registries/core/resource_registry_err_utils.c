@@ -16,9 +16,11 @@
  */
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
 
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-
 #include "engine/core/memory/linear_allocator.h"
+
+#include "engine/resource/resource_core/resource_types.h"
+
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コード(処理成功)文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
