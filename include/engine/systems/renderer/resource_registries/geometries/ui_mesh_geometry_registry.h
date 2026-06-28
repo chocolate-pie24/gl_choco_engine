@@ -78,7 +78,7 @@ void ui_mesh_geometry_registry_deinitialize(ui_mesh_geometry_registry_t* registr
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool ui_mesh_geometry_registry_geometry_find(const char* name_, const ui_mesh_geometry_registry_t* registry_);
+bool ui_mesh_geometry_registry_find(const char* name_, const ui_mesh_geometry_registry_t* registry_);
 
 /**
  * @brief registry_に登録されているname_のジオメトリidを取得する
@@ -99,7 +99,7 @@ bool ui_mesh_geometry_registry_geometry_find(const char* name_, const ui_mesh_ge
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_内に名称name_のジオメトリが存在しない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t ui_mesh_geometry_registry_geometry_id_get(const char* name_, const ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t ui_mesh_geometry_registry_id_get(const char* name_, const ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
@@ -155,7 +155,7 @@ resource_registry_result_t ui_mesh_geometry_registry_draw_range_get(int16_t geom
  * - registry_に空きスロットが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_mesh_geometry_t* geometry_, size_t vertex_offset_, ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t ui_mesh_geometry_registry_register(const ui_mesh_geometry_t* geometry_, size_t vertex_offset_, ui_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する
@@ -174,7 +174,7 @@ resource_registry_result_t ui_mesh_geometry_registry_geometry_register(const ui_
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t ui_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, ui_mesh_geometry_registry_t* registry_);
+resource_registry_result_t ui_mesh_geometry_registry_unregister(int16_t geometry_id_, ui_mesh_geometry_registry_t* registry_);
 
 #ifdef __cplusplus
 }

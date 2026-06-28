@@ -130,7 +130,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
     }
 }
 
-bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_mesh_geometry_registry_t* registry_) {
+bool point_mesh_geometry_registry_find(const char* name_, const point_mesh_geometry_registry_t* registry_) {
     size_t tmp_id = 0;
 
     if(NULL == name_) {
@@ -142,26 +142,26 @@ bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_m
         return false;
     }
     if(!internal_state_is_valid(registry_)) {
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_find(%s) - Registry internal state check failed. operation=find, target=point_mesh_geometry_registry_t, query_name='%s'", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), name_);
+        ERROR_MESSAGE("point_mesh_geometry_registry_find(%s) - Registry internal state check failed. operation=find, target=point_mesh_geometry_registry_t, query_name='%s'", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), name_);
         return false;
     }
 
     return point_mesh_geometry_find(name_, registry_, &tmp_id);
 }
 
-resource_registry_result_t point_mesh_geometry_registry_geometry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+resource_registry_result_t point_mesh_geometry_registry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_id_get", "out_geometry_id_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_geometry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "out_geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_id_get", "registry_")
 
     if(!point_mesh_geometry_find(name_, registry_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_id_get(%s) - Failed to get point mesh geometry id. reason=not_registered, query_name='%s'", resource_registry_rslt_to_str(ret), name_);
+        ERROR_MESSAGE("point_mesh_geometry_registry_id_get(%s) - Failed to get point mesh geometry id. reason=not_registered, query_name='%s'", resource_registry_rslt_to_str(ret), name_);
         goto cleanup;
     }
 
@@ -210,7 +210,7 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t point_mesh_geometry_registry_geometry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+resource_registry_result_t point_mesh_geometry_registry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
@@ -220,21 +220,21 @@ resource_registry_result_t point_mesh_geometry_registry_geometry_register(const 
     const char* name = NULL;
     point_mesh_geometry_t* cloned_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_register", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_geometry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_register", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_register", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "out_geometry_id_")
 
     // 重複チェック
     name = point_mesh_geometry_name_get(geometry_);
     if(NULL == name) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_register(%s) - Failed to register point mesh geometry. reason=name_get_failed", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_geometry_registry_register(%s) - Failed to register point mesh geometry. reason=name_get_failed", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
     if(point_mesh_geometry_find(name, registry_, &rubbish)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_register(%s) - Failed to register point mesh geometry. reason=already_registered, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
+        ERROR_MESSAGE("point_mesh_geometry_registry_register(%s) - Failed to register point mesh geometry. reason=already_registered, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
         goto cleanup;
     }
 
@@ -243,7 +243,7 @@ resource_registry_result_t point_mesh_geometry_registry_geometry_register(const 
             ret_resource = point_mesh_geometry_clone(geometry_, &cloned_geometry);
             if(RESOURCE_SUCCESS != ret_resource) {
                 ret = resource_registry_rslt_convert_resource(ret_resource);
-                ERROR_MESSAGE("point_mesh_geometry_registry_geometry_register(%s) - Failed to register point mesh geometry. reason=clone_failed, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
+                ERROR_MESSAGE("point_mesh_geometry_registry_register(%s) - Failed to register point mesh geometry. reason=clone_failed, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
                 goto cleanup;
             }
             found_free_slot = true;
@@ -254,7 +254,7 @@ resource_registry_result_t point_mesh_geometry_registry_geometry_register(const 
 
     if(!found_free_slot) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_register(%s) - Failed to register point mesh geometry. reason=registry_full, geometry_name='%s', max_geometry_count=%zu", resource_registry_rslt_to_str(ret), name, registry_->max_geometry_count);
+        ERROR_MESSAGE("point_mesh_geometry_registry_register(%s) - Failed to register point mesh geometry. reason=registry_full, geometry_name='%s', max_geometry_count=%zu", resource_registry_rslt_to_str(ret), name, registry_->max_geometry_count);
         goto cleanup;
     }
 
@@ -268,16 +268,16 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t point_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, point_mesh_geometry_registry_t* registry_) {
+resource_registry_result_t point_mesh_geometry_registry_unregister(int16_t geometry_id_, point_mesh_geometry_registry_t* registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_geometry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_geometry_unregister", "geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_unregister", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("point_mesh_geometry_registry_geometry_unregister(%s) - Failed to unregister point mesh geometry. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        ERROR_MESSAGE("point_mesh_geometry_registry_unregister(%s) - Failed to unregister point mesh geometry. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
         goto cleanup;
     }
 

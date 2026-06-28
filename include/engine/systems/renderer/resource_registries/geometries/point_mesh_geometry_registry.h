@@ -78,7 +78,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_mesh_geometry_registry_t* registry_);
+bool point_mesh_geometry_registry_find(const char* name_, const point_mesh_geometry_registry_t* registry_);
 
 /**
  * @brief registry_に登録されているname_のジオメトリidを取得する
@@ -99,7 +99,7 @@ bool point_mesh_geometry_registry_geometry_find(const char* name_, const point_m
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_内に名称name_のジオメトリが存在しない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_geometry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
@@ -155,7 +155,7 @@ resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t g
  * - registry_に空きスロットが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_geometry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する
@@ -174,7 +174,7 @@ resource_registry_result_t point_mesh_geometry_registry_geometry_register(const 
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_geometry_unregister(int16_t geometry_id_, point_mesh_geometry_registry_t* registry_);
+resource_registry_result_t point_mesh_geometry_registry_unregister(int16_t geometry_id_, point_mesh_geometry_registry_t* registry_);
 
 #ifdef __cplusplus
 }
