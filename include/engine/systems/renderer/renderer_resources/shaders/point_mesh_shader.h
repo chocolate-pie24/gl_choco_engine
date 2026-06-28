@@ -118,7 +118,7 @@ void point_mesh_shader_destroy(renderer_backend_context_t* backend_context_, poi
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR buffer_usage_またはbuffer_size_が規定値外
+ * @retval RENDERER_RUNTIME_ERROR point_buffer_usage_ / color_buffer_usage_またはpoint_buffer_size_ / color_buffer_size_が規定値外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
 renderer_result_t point_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, buffer_usage_t point_buffer_usage_, buffer_usage_t color_buffer_usage_, size_t point_buffer_size_, size_t color_buffer_size_);

@@ -347,7 +347,7 @@ static bool internal_state_is_valid(const line_mesh_geometry_registry_t* registr
  *
  * @param[in] name_ 検索対象のジオメトリ名
  * @param[in] registry_ 検索対象のレジストリ
- * @param[out] out_index_ 登録先インデックスの格納先
+ * @param[out] out_index_ 登録済みジオメトリのインデックス
  *
  * @retval true registry_にname_のジオメトリが登録されている
  * @retval false 以下のいずれか

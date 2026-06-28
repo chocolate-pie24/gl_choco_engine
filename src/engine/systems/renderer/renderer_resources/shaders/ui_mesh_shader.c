@@ -369,7 +369,7 @@ renderer_result_t ui_mesh_shader_vertex_buffer_append(const renderer_backend_con
     IF_ARG_FALSE_GOTO_CLEANUP(ui_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "ui_mesh_shader_vertex_buffer_append", "size_")
     IF_ARG_FALSE_GOTO_CLEANUP((ui_mesh_shader_->current_buffer_offset + size_) <= ui_mesh_shader_->vertex_buffer_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_mesh_shader_vertex_buffer_append", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(ui_vertex_t) * 6)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_vertex_buffer_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(size_ != (sizeof(ui_vertex_t) * 6), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_vertex_buffer_append", "size_")
 
     ret = renderer_backend_vertex_buffer_bind(backend_context_, ui_mesh_shader_->ui_vbo);
     if(RENDERER_SUCCESS != ret) {
