@@ -49,8 +49,8 @@ struct lit_mesh_geometry_registry {
     size_t* vertex_offsets;             /**< 各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 */
 };
 
-static bool geometry_id_valid_check(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_);
-static bool geometry_registry_internal_state_check(const lit_mesh_geometry_registry_t* registry_);
+static bool geometry_id_is_valid(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_);
+static bool internal_state_is_valid(const lit_mesh_geometry_registry_t* registry_);
 static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_);
 
 resource_registry_result_t lit_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, lit_mesh_geometry_registry_t** out_registry_) {
@@ -140,7 +140,7 @@ bool lit_mesh_geometry_registry_geometry_find(const char* name_, const lit_mesh_
         // これは場合によっては起こりうる(かも)ので、メッセージは出さない
         return false;
     }
-    if(!geometry_registry_internal_state_check(registry_)) {
+    if(!internal_state_is_valid(registry_)) {
         ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_find(%s) - Registry internal state check failed. operation=find, target=lit_mesh_geometry_registry_t, query_name='%s'", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), name_);
         return false;
     }
@@ -156,7 +156,7 @@ resource_registry_result_t lit_mesh_geometry_registry_geometry_id_get(const char
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_id_get", "out_geometry_id_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_id_get", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_id_get", "registry_")
 
     if(!lit_mesh_geometry_find(name_, registry_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
@@ -182,8 +182,8 @@ resource_registry_result_t lit_mesh_geometry_registry_draw_range_get(int16_t geo
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "out_vertex_offset_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "out_vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_valid_check(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_draw_range_get", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_draw_range_get", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
@@ -220,7 +220,7 @@ resource_registry_result_t lit_mesh_geometry_registry_geometry_register(const li
     lit_mesh_geometry_t* cloned_geometry = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_register", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_register", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_register", "out_geometry_id_")
 
@@ -271,8 +271,8 @@ resource_registry_result_t lit_mesh_geometry_registry_geometry_unregister(int16_
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_registry_internal_state_check(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_valid_check(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_unregister", "geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_geometry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_geometry_unregister", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
@@ -301,11 +301,11 @@ cleanup:
  * - geometry_id_が0未満
  * - geometry_id_がregistry_->max_geometry_count以上
  */
-static bool geometry_id_valid_check(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_) {
+static bool geometry_id_is_valid(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
-    if(!geometry_registry_internal_state_check(registry_)) {
+    if(!internal_state_is_valid(registry_)) {
         return false;
     }
     if(geometry_id_ < 0 || registry_->max_geometry_count <= (size_t)geometry_id_) {
@@ -327,7 +327,7 @@ static bool geometry_id_valid_check(int16_t geometry_id_, const lit_mesh_geometr
  * - registry_->geometriesが未初期化でNULL
  * - registry_->vertex_offsetsが未初期化でNULL
  */
-static bool geometry_registry_internal_state_check(const lit_mesh_geometry_registry_t* registry_) {
+static bool internal_state_is_valid(const lit_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
@@ -365,7 +365,7 @@ static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_re
     if(NULL == name_ || NULL == registry_ || NULL == out_index_) {
         return false;
     }
-    if(!geometry_registry_internal_state_check(registry_)) {
+    if(!internal_state_is_valid(registry_)) {
         return false;
     }
 
