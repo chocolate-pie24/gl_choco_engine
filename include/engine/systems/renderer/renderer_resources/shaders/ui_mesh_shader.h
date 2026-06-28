@@ -44,9 +44,9 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - UIシェーダーが扱うビュー行列のLocation取得
  * - UIシェーダーが扱うプロジェクション行列のLocation取得
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
  * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[out] out_ui_mesh_shader_ リソース確保対象UIシェーダーリソースへのダブルポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -72,7 +72,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t ui_mesh_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, ui_mesh_shader_t** out_ui_mesh_shader_);
+renderer_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, ui_mesh_shader_t** out_ui_mesh_shader_);
 
 /**
  * @brief UIシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する

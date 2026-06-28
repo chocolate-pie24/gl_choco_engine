@@ -49,9 +49,9 @@ struct line_mesh_geometry_registry {
     size_t* vertex_offsets;             /**< 各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 */
 };
 
-static bool geometry_id_is_valid(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_);
+static bool geometry_id_is_valid(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
 static bool internal_state_is_valid(const line_mesh_geometry_registry_t* registry_);
-static bool find_by_name(const char* name_, const line_mesh_geometry_registry_t* registry_, size_t* out_index_);
+static bool find_by_name(const line_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
 
 resource_registry_result_t line_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, line_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -129,14 +129,14 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
     }
 }
 
-bool line_mesh_geometry_registry_find(const char* name_, const line_mesh_geometry_registry_t* registry_) {
+bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* registry_, const char* name_) {
     size_t tmp_id = 0;
 
-    if(NULL == name_) {
+    if(NULL == registry_) {
         // これは場合によっては起こりうる(かも)ので、メッセージは出さない
         return false;
     }
-    if(NULL == registry_) {
+    if(NULL == name_) {
         // これは場合によっては起こりうる(かも)ので、メッセージは出さない
         return false;
     }
@@ -145,10 +145,10 @@ bool line_mesh_geometry_registry_find(const char* name_, const line_mesh_geometr
         return false;
     }
 
-    return find_by_name(name_, registry_, &tmp_id);
+    return find_by_name(registry_, name_, &tmp_id);
 }
 
-resource_registry_result_t line_mesh_geometry_registry_id_get(const char* name_, const line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
@@ -158,7 +158,7 @@ resource_registry_result_t line_mesh_geometry_registry_id_get(const char* name_,
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "out_geometry_id_")
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_id_get", "registry_")
 
-    if(!find_by_name(name_, registry_, &tmp_id)) {
+    if(!find_by_name(registry_, name_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - Failed to get line mesh geometry id. reason=not_registered, query_name='%s'", resource_registry_rslt_to_str(ret), name_);
         goto cleanup;
@@ -172,7 +172,7 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
+resource_registry_result_t line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
@@ -183,7 +183,7 @@ resource_registry_result_t line_mesh_geometry_registry_draw_range_get(int16_t ge
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "out_vertex_offset_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "out_vertex_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
@@ -209,7 +209,7 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t line_mesh_geometry_registry_register(const line_mesh_geometry_t* geometry_, size_t vertex_offset_, line_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
+resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const line_mesh_geometry_t* geometry_, size_t vertex_offset_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
@@ -231,7 +231,7 @@ resource_registry_result_t line_mesh_geometry_registry_register(const line_mesh_
         ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - Failed to register line mesh geometry. reason=name_get_failed", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
-    if(find_by_name(name, registry_, &unused_index)) {
+    if(find_by_name(registry_, name, &unused_index)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - Failed to register line mesh geometry. reason=already_registered, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
         goto cleanup;
@@ -267,12 +267,12 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t line_mesh_geometry_registry_unregister(int16_t geometry_id_, line_mesh_geometry_registry_t* registry_) {
+resource_registry_result_t line_mesh_geometry_registry_unregister(line_mesh_geometry_registry_t* registry_, int16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "registry_")
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(geometry_id_, registry_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "geometry_id_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
@@ -292,8 +292,8 @@ cleanup:
 /**
  * @brief geometry_id_が有効な値かを判定する
  *
- * @param[in] geometry_id_ 判定対象ジオメトリid
  * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] geometry_id_ 判定対象ジオメトリid
  *
  * @retval true geometry_id_は正常
  * @retval false 以下のいずれか
@@ -301,7 +301,7 @@ cleanup:
  * - geometry_id_が0未満
  * - geometry_id_がregistry_->max_geometry_count以上
  */
-static bool geometry_id_is_valid(int16_t geometry_id_, const line_mesh_geometry_registry_t* registry_) {
+static bool geometry_id_is_valid(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_) {
     if(NULL == registry_) {
         return false;
     }
@@ -345,8 +345,8 @@ static bool internal_state_is_valid(const line_mesh_geometry_registry_t* registr
  *
  * @note 返り値がfalseの場合はout_index_の値は不変
  *
- * @param[in] name_ 検索対象のジオメトリ名
  * @param[in] registry_ 検索対象のレジストリ
+ * @param[in] name_ 検索対象のジオメトリ名
  * @param[out] out_index_ 登録済みジオメトリのインデックス
  *
  * @retval true registry_にname_のジオメトリが登録されている
@@ -357,7 +357,7 @@ static bool internal_state_is_valid(const line_mesh_geometry_registry_t* registr
  * - registry_内部データ不整合が発生している
  * - registry_にname_のジオメトリが見つからない
  */
-static bool find_by_name(const char* name_, const line_mesh_geometry_registry_t* registry_, size_t* out_index_) {
+static bool find_by_name(const line_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_) {
     const char* tmp_name = NULL;
     size_t tmp_slot = 0;
     bool found = false;

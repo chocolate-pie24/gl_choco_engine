@@ -64,7 +64,7 @@ struct line_mesh_shader {
     size_t current_vertex_count;            /**< 現在バーテックスバッファに転送されている頂点数 */
 };
 
-renderer_result_t line_mesh_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, line_mesh_shader_t** out_line_mesh_shader_) {
+renderer_result_t line_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, line_mesh_shader_t** out_line_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
@@ -76,9 +76,9 @@ renderer_result_t line_mesh_shader_create(const char* file_path_, const char* na
     choco_string_t* vert_shader_source = NULL;
     choco_string_t* frag_shader_source = NULL;
 
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "file_path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(out_line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "out_line_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_create", "*out_line_mesh_shader_")
 

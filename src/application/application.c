@@ -343,7 +343,7 @@ application_result_t application_create(void) {
     }
 
     // UI Shader
-    ret_renderer = ui_mesh_shader_create("assets/shaders/test_shader/", "ui_mesh_shader", tmp->renderer_backend_context, &tmp->ui_mesh_shader);
+    ret_renderer = ui_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "ui_mesh_shader", &tmp->ui_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
@@ -357,7 +357,7 @@ application_result_t application_create(void) {
     }
 
     // Line Shader
-    ret_renderer = line_mesh_shader_create("assets/shaders/test_shader/", "line_mesh_shader", tmp->renderer_backend_context, &tmp->line_mesh_shader);
+    ret_renderer = line_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "line_mesh_shader", &tmp->line_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
@@ -371,7 +371,7 @@ application_result_t application_create(void) {
     }
 
     // Point Shader
-    ret_renderer = point_mesh_shader_create("assets/shaders/test_shader/", "point_mesh_shader", tmp->renderer_backend_context, &tmp->point_mesh_shader);
+    ret_renderer = point_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "point_mesh_shader", &tmp->point_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
@@ -385,7 +385,7 @@ application_result_t application_create(void) {
     }
 
     // Lit Mesh Shader
-    ret_renderer = lit_mesh_shader_create("assets/shaders/test_shader/", "lit_mesh_shader", tmp->renderer_backend_context, &tmp->lit_mesh_shader);
+    ret_renderer = lit_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "lit_mesh_shader", &tmp->lit_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
@@ -744,7 +744,7 @@ application_result_t application_run(void) {
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
-        ret_resource_registy = point_mesh_geometry_registry_draw_range_get(s_app_state->geometry_id_test_points, s_app_state->point_mesh_geometry_registry, &vertex_offset, &vertex_count);
+        ret_resource_registy = point_mesh_geometry_registry_draw_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points, &vertex_offset, &vertex_count);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
             point_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
@@ -754,7 +754,7 @@ application_result_t application_run(void) {
         }
 
         // STL描画
-        ret_resource_registy = lit_mesh_geometry_registry_draw_range_get(s_app_state->geometry_id_penguin, s_app_state->lit_mesh_geometry_registry, &vertex_offset, &vertex_count);
+        ret_resource_registy = lit_mesh_geometry_registry_draw_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin, &vertex_offset, &vertex_count);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
             lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
@@ -1153,7 +1153,7 @@ cleanup:
 //         goto cleanup;
 //     }
 
-//     ret_registry = lit_mesh_geometry_registry_draw_range_get(app_state_->geometry_id_penguin, app_state_->lit_mesh_geometry_registry, &stl_vertex_offset, &stl_vertex_count);
+//     ret_registry = lit_mesh_geometry_registry_draw_range_get(app_state_->lit_mesh_geometry_registry, app_state_->geometry_id_penguin, &stl_vertex_offset, &stl_vertex_count);
 //     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
 //         ERROR_MESSAGE("aabb_geometry_create - Failed to get draw range.");
 //         goto cleanup;

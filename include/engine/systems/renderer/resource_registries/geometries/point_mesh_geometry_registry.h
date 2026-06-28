@@ -68,8 +68,8 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
 /**
  * @brief registry_にname_のジオメトリが登録されているか判定する
  *
- * @param[in] name_ 検索ジオメトリ名称文字列
  * @param[in] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] name_ 検索ジオメトリ名称文字列
  *
  * @retval true registry_にname_という名称のジオメトリが存在する
  * @retval false 以下のいずれか
@@ -78,7 +78,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool point_mesh_geometry_registry_find(const char* name_, const point_mesh_geometry_registry_t* registry_);
+bool point_mesh_geometry_registry_find(const point_mesh_geometry_registry_t* registry_, const char* name_);
 
 /**
  * @brief registry_に登録されているname_のジオメトリidを取得する
@@ -87,8 +87,8 @@ bool point_mesh_geometry_registry_find(const char* name_, const point_mesh_geome
  *
  * @note 失敗時にout_geometry_id_は不変
  *
- * @param[in] name_ id取得対象ジオメトリ名称文字列
  * @param[in] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] name_ id取得対象ジオメトリ名称文字列
  * @param[out] out_geometry_id_ ジオメトリid格納先
  *
  * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
@@ -99,15 +99,15 @@ bool point_mesh_geometry_registry_find(const char* name_, const point_mesh_geome
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_内に名称name_のジオメトリが存在しない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_id_get(const char* name_, const point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
  *
  * @note 失敗時にout_vertex_offset_, out_vertex_count_は不変
  *
- * @param[in] geometry_id_ 取得対象ジオメトリのid
  * @param[in] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] geometry_id_ 取得対象ジオメトリのid
  * @param[out] out_vertex_offset_ GPU頂点バッファ上の先頭頂点オフセット格納先
  * @param[out] out_vertex_count_ ジオメトリの頂点数格納先
  *
@@ -122,7 +122,7 @@ resource_registry_result_t point_mesh_geometry_registry_id_get(const char* name_
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが登録されていない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t geometry_id_, const point_mesh_geometry_registry_t* registry_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
+resource_registry_result_t point_mesh_geometry_registry_draw_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
 
 /**
  * @brief geometry_の複製と対応する頂点オフセットをregistry_に登録し、ジオメトリidを取得する
@@ -133,9 +133,9 @@ resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t g
  * @note 失敗時にregistry_, out_geometry_id_は不変
  * @note 登録解除されたジオメトリのidは、後から登録される別のジオメトリに再利用される場合がある
  *
+ * @param[in,out] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
  * @param[in] geometry_ 登録するpoint_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[in] vertex_offset_ geometry_に対応するGPU頂点バッファ上の先頭頂点オフセット
- * @param[in,out] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
  * @param[out] out_geometry_id_ ジオメトリid格納先
  *
  * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
@@ -155,7 +155,7 @@ resource_registry_result_t point_mesh_geometry_registry_draw_range_get(int16_t g
  * - registry_に空きスロットが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_register(const point_mesh_geometry_t* geometry_, size_t vertex_offset_, point_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const point_mesh_geometry_t* geometry_, size_t vertex_offset_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する
@@ -164,8 +164,8 @@ resource_registry_result_t point_mesh_geometry_registry_register(const point_mes
  * @note GPU頂点バッファ上のデータの消去および領域の解放は行わない
  * @note 失敗した場合、registry_は不変
  *
- * @param[in] geometry_id_ 削除対象ジオメトリid
  * @param[in,out] registry_ point_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] geometry_id_ 削除対象ジオメトリid
  *
  * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
  * - registry_ == NULL
@@ -174,7 +174,7 @@ resource_registry_result_t point_mesh_geometry_registry_register(const point_mes
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが見つからない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t point_mesh_geometry_registry_unregister(int16_t geometry_id_, point_mesh_geometry_registry_t* registry_);
+resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
 
 #ifdef __cplusplus
 }
