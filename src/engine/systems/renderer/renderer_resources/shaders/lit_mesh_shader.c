@@ -355,7 +355,7 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
     lit_mesh_shader_->current_vertex_count = 0;
 }
 
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
+renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     size_t vertex_count = 0;
     bool vbo_bound = false;

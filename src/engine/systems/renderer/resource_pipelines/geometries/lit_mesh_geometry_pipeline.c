@@ -85,7 +85,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
         }
 
         // lit_mesh_geometry_create()が成功しているのでオーバーフローチェックは不要
-        ret_renderer = lit_mesh_shader_vertex_buffer_vertex_append(backend_context_, shader_, vertex_array_size, vertices, &vertex_offset);
+        ret_renderer = lit_mesh_shader_vertex_buffer_append(backend_context_, shader_, vertex_array_size, vertices, &vertex_offset);
         if(RENDERER_SUCCESS != ret_renderer) {
             ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);

@@ -156,7 +156,7 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief lit_meshシェーダーが保持するVAOをbindする
