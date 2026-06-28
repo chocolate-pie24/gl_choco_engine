@@ -13,31 +13,30 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
-
-#include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
-#include "engine/systems/renderer/renderer_core/renderer_memory.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/core/memory/choco_memory.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
-#include "engine/core/geometry_primitive/vertex.h"
+#include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
+#include "engine/systems/renderer/renderer_core/renderer_memory.h"
 
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
 // TODO: テスト(line_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る

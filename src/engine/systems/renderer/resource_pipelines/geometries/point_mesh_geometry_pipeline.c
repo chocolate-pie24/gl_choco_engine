@@ -1,8 +1,8 @@
+#include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -13,20 +13,20 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/geometry/point_mesh_geometry.h"
 #include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/geometry/point_mesh_geometry.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
-
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
+
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h"
+
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
 // append成功後の後続処理で失敗した場合、shader_に追加された頂点データは巻き戻されない
 resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_) {

@@ -21,10 +21,11 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-
 #include "engine/core/memory/linear_allocator.h"
+
 #include "engine/resource/resource_core/resource_types.h"
+
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
 /**
  * @brief ログ出力用にresource_registriesの実行結果コードを文字列に変換する

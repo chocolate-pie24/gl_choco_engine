@@ -14,26 +14,26 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/renderer/resource_registries/geometries/ui_mesh_geometry_registry.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdalign.h>
 #include <string.h> // for memset
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resource_registries/geometries/ui_mesh_geometry_registry.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
+#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/containers/choco_string.h"
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/geometry/ui_mesh_geometry.h"
 
-#include "engine/containers/choco_string.h"
-
-#include "engine/core/memory/linear_allocator.h"
-
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
 
 /**
  * @brief UI描画用ジオメトリレジストリ内部構造体

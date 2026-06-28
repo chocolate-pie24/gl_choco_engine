@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-
 #include "engine/resource/resource_core/resource_types.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 const char* resource_pipeline_rslt_to_str(resource_pipeline_result_t rslt_);
 
