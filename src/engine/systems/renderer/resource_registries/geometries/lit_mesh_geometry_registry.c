@@ -51,7 +51,7 @@ struct lit_mesh_geometry_registry {
 
 static bool geometry_id_is_valid(int16_t geometry_id_, const lit_mesh_geometry_registry_t* registry_);
 static bool internal_state_is_valid(const lit_mesh_geometry_registry_t* registry_);
-static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_);
+static bool find_by_name(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_);
 
 resource_registry_result_t lit_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, lit_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -145,7 +145,7 @@ bool lit_mesh_geometry_registry_find(const char* name_, const lit_mesh_geometry_
         return false;
     }
 
-    return lit_mesh_geometry_find(name_, registry_, &tmp_id);
+    return find_by_name(name_, registry_, &tmp_id);
 }
 
 resource_registry_result_t lit_mesh_geometry_registry_id_get(const char* name_, const lit_mesh_geometry_registry_t* registry_, int16_t* out_geometry_id_) {
@@ -158,7 +158,7 @@ resource_registry_result_t lit_mesh_geometry_registry_id_get(const char* name_, 
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_id_get", "out_geometry_id_")
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_id_get", "registry_")
 
-    if(!lit_mesh_geometry_find(name_, registry_, &tmp_id)) {
+    if(!find_by_name(name_, registry_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("lit_mesh_geometry_registry_id_get(%s) - Failed to get lit mesh geometry id. reason=not_registered, query_name='%s'", resource_registry_rslt_to_str(ret), name_);
         goto cleanup;
@@ -213,7 +213,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(const lit_mesh_ge
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
-    size_t rubbish = 0;
+    size_t unused_index = 0;
     size_t free_slot = 0;
     bool found_free_slot = false;
     const char* name = NULL;
@@ -231,7 +231,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(const lit_mesh_ge
         ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - Failed to register lit mesh geometry. reason=name_get_failed", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
-    if(lit_mesh_geometry_find(name, registry_, &rubbish)) {
+    if(find_by_name(name, registry_, &unused_index)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - Failed to register lit mesh geometry. reason=already_registered, geometry_name='%s'", resource_registry_rslt_to_str(ret), name);
         goto cleanup;
@@ -357,7 +357,7 @@ static bool internal_state_is_valid(const lit_mesh_geometry_registry_t* registry
  * - registry_内部データ不整合が発生している
  * - registry_にname_のジオメトリが見つからない
  */
-static bool lit_mesh_geometry_find(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_) {
+static bool find_by_name(const char* name_, const lit_mesh_geometry_registry_t* registry_, size_t* out_index_) {
     const char* tmp_name = NULL;
     size_t tmp_slot = 0;
     bool found = false;
