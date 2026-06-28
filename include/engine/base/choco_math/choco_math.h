@@ -88,7 +88,7 @@ vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_);
 
 /**
  * @brief 3次元ベクトルのスカラー倍を計算する
- * 
+ *
  * @param[in] vec_ vec3f_t構造体インスタンス
  * @param[in] scale_ 掛ける値
  *
@@ -127,7 +127,7 @@ vec3f_t vec3f_normalize(vec3f_t vec_);
 
 /**
  * @brief 3次元ベクトルの全要素が有限の値かをチェックする
- * 
+ *
  * @param[in] vec_ 判定対象vec3f_t構造体インスタンス
  *
  * @return true 全要素が正常
@@ -137,7 +137,7 @@ bool vec3f_is_finite(vec3f_t vec_);
 
 /**
  * @brief v1_とv2_の各要素の小さい方を格納したvec3f_tを返す
- * 
+ *
  * @param v1_ vec3f_t構造体インスタンス1
  * @param v2_ vec3f_t構造体インスタンス2
  *
@@ -147,7 +147,7 @@ vec3f_t vec3f_component_min(vec3f_t v1_, vec3f_t v2_);
 
 /**
  * @brief v1_とv2_の各要素の大きい方を格納したvec3f_tを返す
- * 
+ *
  * @param v1_ vec3f_t構造体インスタンス1
  * @param v2_ vec3f_t構造体インスタンス2
  *
