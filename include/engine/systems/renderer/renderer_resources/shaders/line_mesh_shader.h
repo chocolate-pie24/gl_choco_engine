@@ -30,9 +30,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */
 
-typedef struct line_mesh_shader line_mesh_shader_t;   /**< 線分描画シェーダーリソース構造体前方宣言 */
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief 線分描画用シェーダーリソースインスタンスのメモリを確保し初期化する

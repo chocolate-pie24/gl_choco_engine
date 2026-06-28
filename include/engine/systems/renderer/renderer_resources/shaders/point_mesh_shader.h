@@ -29,9 +29,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+typedef struct point_mesh_shader point_mesh_shader_t;               /**< 点描画用シェーダーリソースのopaque型 */
 
-typedef struct point_mesh_shader point_mesh_shader_t;   /**< ポイント描画シェーダーリソース構造体前方宣言 */
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief ポイント描画用シェーダーリソースインスタンスのメモリを確保し初期化する

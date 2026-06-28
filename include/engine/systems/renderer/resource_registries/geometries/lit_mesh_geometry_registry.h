@@ -29,11 +29,10 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
-#include "engine/resource/geometry/lit_mesh_geometry.h"
-
-#include "engine/core/memory/linear_allocator.h"
-
 typedef struct lit_mesh_geometry_registry lit_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
+
+typedef struct linear_alloc linear_alloc_t;                             /**< リニアアロケータのopaque型 */
+typedef struct lit_mesh_geometry lit_mesh_geometry_t;                   /**< 単色ライティング描画用ジオメトリのopaque型 */
 
 /**
  * @brief 単色ライティング描画用ジオメトリレジストリ用のメモリを確保し、初期化する

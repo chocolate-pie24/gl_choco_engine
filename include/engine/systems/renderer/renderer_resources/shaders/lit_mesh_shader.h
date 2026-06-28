@@ -34,9 +34,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
 
-typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダーリソース構造体前方宣言 */
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する

@@ -31,7 +31,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
-typedef struct ui_mesh_shader ui_mesh_shader_t;   /**< UIシェーダーリソース構造体前方宣言 */
+typedef struct ui_mesh_shader ui_mesh_shader_t;                     /**< UI描画用シェーダーリソースのopaque型 */
+
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief UIシェーダーリソースインスタンスのメモリを確保し初期化する

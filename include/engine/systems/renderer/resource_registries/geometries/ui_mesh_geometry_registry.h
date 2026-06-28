@@ -29,11 +29,10 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
-#include "engine/resource/geometry/ui_mesh_geometry.h"
+typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t;   /**< UI描画用ジオメトリレジストリのopaque型 */
 
-#include "engine/core/memory/linear_allocator.h"
-
-typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t;   /**< ui_mesh_geometry_registry_t前方宣言 */
+typedef struct linear_alloc linear_alloc_t;                             /**< リニアアロケータのopaque型 */
+typedef struct ui_mesh_geometry ui_mesh_geometry_t;                     /**< UI描画用ジオメトリのopaque型 */
 
 /**
  * @brief UI描画用ジオメトリレジストリ用のメモリを確保し、初期化する
