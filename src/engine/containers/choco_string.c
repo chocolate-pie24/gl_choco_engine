@@ -46,6 +46,7 @@ static test_call_control_t s_test_config_choco_string_concat_from_c_string;     
 static test_call_control_size_t_t s_test_config_choco_string_length;            /**< choco_string_length()テスト設定 */
 static test_call_control_bool_t s_test_config_choco_string_equal;               /**< choco_string_equal()テスト設定 */
 static test_call_control_bool_t s_test_config_choco_string_substring_exists;    /**< choco_string_substring_exists()テスト設定 */
+static test_call_control_t s_test_config_choco_string_key_value_value_get;      /**< choco_string_key_value_value_get()テスト設定 */
 
 // プライベート関数テスト設定
 static test_call_control_t s_test_config_choco_string_mem_allocate; /**< choco_string_mem_allocate()テスト設定 */
@@ -67,6 +68,7 @@ static void test_choco_string_length(void);
 static void test_choco_string_c_str(void);
 static void test_choco_string_equal(void);
 static void test_choco_string_substring_exists(void);
+static void test_choco_string_key_value_value_get(void);
 static void test_rslt_to_str(void);
 static void test_choco_string_mem_allocate(void);
 static void test_buffer_reserve(void);
@@ -519,6 +521,84 @@ bool choco_string_substring_exists(const char* str_, const char* target_) {
     return (NULL == result) ? false : true;
 }
 
+choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_string_t* out_value_) {
+#ifdef TEST_BUILD
+    s_test_config_choco_string_key_value_value_get.call_count++;
+    if(s_test_config_choco_string_key_value_value_get.fail_on_call != 0) {
+        if(s_test_config_choco_string_key_value_value_get.call_count == s_test_config_choco_string_key_value_value_get.fail_on_call) {
+            return (choco_string_result_t)s_test_config_choco_string_key_value_value_get.forced_result;
+        }
+    }
+#endif
+    choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+
+    char* tmp_buff = NULL;
+    size_t len = 0;
+    size_t equal_index = 0;
+    size_t buff_size = 0;
+    bool equal_found = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_value_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "out_value_")
+    IF_ARG_FALSE_GOTO_CLEANUP(is_string_valid(out_value_), ret, CHOCO_STRING_DATA_CORRUPTED, rslt_to_str(CHOCO_STRING_DATA_CORRUPTED), "choco_string_key_value_value_get", "out_value_")
+
+    len = mock_strlen(line_);
+    for(size_t i = 0; i != len; ++i) {
+        if('=' == line_[i]) {
+            equal_found = true;
+            equal_index = i;
+            break;
+        }
+    }
+    if(!equal_found || 0 == equal_index || (len - 1) == equal_index) {
+        ret = CHOCO_STRING_BAD_OPERATION;
+        // ファイルをロードし、xxx = yyyの行じゃなければ無視する処理を想定し、メッセージは出さない
+        goto cleanup;
+    }
+
+    // =の後のスペースをtrim
+    for(size_t i = (equal_index + 1); i != len; ++i) {
+        if(' ' == line_[i]) {
+            equal_index++;
+        } else {
+            break;
+        }
+    }
+    if((len - 1) == equal_index) {
+        ret = CHOCO_STRING_BAD_OPERATION;
+        goto cleanup;
+    }
+
+    buff_size = len - equal_index;
+    ret = choco_string_mem_allocate(buff_size, (void**)&tmp_buff);
+    if(CHOCO_STRING_SUCCESS != ret) {
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Failed to get key-value value. reason=tmp_buffer_allocate_failed, bytes=%zu", rslt_to_str(ret), buff_size);
+        goto cleanup;
+    }
+    memset(tmp_buff, 0, buff_size);
+
+    for(size_t i = (equal_index + 1), j = 0; i != len; ++i, ++j) {
+        tmp_buff[j] = line_[i];
+    }
+
+    // 末尾のスペースをtrim
+    for(size_t i = (len - equal_index - 1); i != 0; --i) {
+        if(tmp_buff[i - 1] != ' ') {
+            break;
+        } else {
+            tmp_buff[i - 1] = '\0';
+        }
+    }
+    ret = choco_string_copy_from_c_string(tmp_buff, out_value_);
+
+cleanup:
+    if(NULL != tmp_buff) {
+        memory_system_free(tmp_buff, buff_size, MEMORY_TAG_STRING);
+        tmp_buff = NULL;
+    }
+    return ret;
+}
+
 /**
  * @brief 実行結果コードを文字列に変換する
  *
@@ -815,6 +895,11 @@ void test_choco_string_substring_exists_config_set(const test_call_control_bool_
     s_test_config_choco_string_substring_exists.forced_result = config_->forced_result;
 }
 
+void test_choco_string_key_value_value_get_config_set(const test_call_control_t* config_) {
+    s_test_config_choco_string_key_value_value_get.fail_on_call = config_->fail_on_call;
+    s_test_config_choco_string_key_value_value_get.forced_result = config_->forced_result;
+}
+
 void test_choco_string_config_reset(void) {
     test_call_control_reset(&s_test_config_choco_string_default_create);
     test_call_control_reset(&s_test_config_choco_string_create_from_c_string);
@@ -825,6 +910,7 @@ void test_choco_string_config_reset(void) {
     test_call_control_size_t_reset(&s_test_config_choco_string_length);
     test_call_control_bool_reset(&s_test_config_choco_string_equal);
     test_call_control_bool_reset(&s_test_config_choco_string_substring_exists);
+    test_call_control_reset(&s_test_config_choco_string_key_value_value_get);
 
     test_call_control_reset(&s_test_config_choco_string_mem_allocate);
     test_call_control_reset(&s_test_config_buffer_reserve);
@@ -848,6 +934,7 @@ void test_choco_string(void) {
     test_choco_string_c_str();
     test_choco_string_equal();
     test_choco_string_substring_exists();
+    test_choco_string_key_value_value_get();
 
     test_rslt_to_str();
     test_choco_string_mem_allocate();
@@ -2885,6 +2972,266 @@ static void NO_COVERAGE test_choco_string_substring_exists(void) {
 
         test_choco_string_config_reset();
     }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_choco_string_key_value_value_get(void) {
+    memory_system_create();
+
+    {
+        // choco_string_key_value_value_get() 冒頭で強制的に CHOCO_STRING_RUNTIME_ERROR を返させる
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_t* value = NULL;
+        test_call_control_t config = { 0 };
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CHOCO_STRING_RUNTIME_ERROR;
+        test_choco_string_key_value_value_get_config_set(&config);
+
+        ret = choco_string_key_value_value_get("key = value", value);
+        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // line_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get(NULL, value);
+        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // out_value_ == NULL -> CHOCO_STRING_INVALID_ARGUMENT
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_key_value_value_get("key = value", NULL);
+        assert(CHOCO_STRING_INVALID_ARGUMENT == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // out_value_ 内部状態破損 -> CHOCO_STRING_DATA_CORRUPTED
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t value = { 0 };
+
+        test_choco_string_config_reset();
+
+        value.len = 1U;
+        value.capacity = 0U;
+        value.buffer = NULL;
+
+        ret = choco_string_key_value_value_get("key = value", &value);
+        assert(CHOCO_STRING_DATA_CORRUPTED == ret);
+
+        test_choco_string_config_reset();
+    }
+    {
+        // '=' がない -> CHOCO_STRING_BAD_OPERATION
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key value", value);
+        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // '=' が先頭 -> CHOCO_STRING_BAD_OPERATION
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("= value", value);
+        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // '=' が末尾 -> CHOCO_STRING_BAD_OPERATION
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key =", value);
+        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // '=' の後がスペースのみ -> CHOCO_STRING_BAD_OPERATION
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key =    ", value);
+        assert(CHOCO_STRING_BAD_OPERATION == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // tmp_buff確保失敗 -> 注入結果が返る
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        s_test_config_choco_string_mem_allocate.fail_on_call = 2U;
+        s_test_config_choco_string_mem_allocate.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+
+        ret = choco_string_key_value_value_get("key = value", value);
+        assert(CHOCO_STRING_NO_MEMORY == ret);
+        assert(0U == value->len);
+        assert(0 == strcmp("", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // choco_string_copy_from_c_string失敗 -> 注入結果が返る
+        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        s_test_config_choco_string_copy_from_c_string.fail_on_call = 1U;
+        s_test_config_choco_string_copy_from_c_string.forced_result = (int)CHOCO_STRING_RUNTIME_ERROR;
+
+        ret = choco_string_key_value_value_get("key = value", value);
+        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // 正常系: "key = value" -> "value"
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key = value", value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+        assert(5U == value->len);
+        assert(0 == strcmp("value", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // 正常系: "key=value" -> "value"
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key=value", value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+        assert(5U == value->len);
+        assert(0 == strcmp("value", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // 正常系: 前方/末尾スペースをtrimし、途中スペースは保持する
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_default_create(&value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("key =   val ue   ", value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+        assert(6U == value->len);
+        assert(0 == strcmp("val ue", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+    {
+        // 正常系: 既存valueを上書きできる
+        choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+        choco_string_t* value = NULL;
+
+        test_choco_string_config_reset();
+
+        ret = choco_string_create_from_c_string("old_value", &value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+
+        ret = choco_string_key_value_value_get("icon_width = 32", value);
+        assert(CHOCO_STRING_SUCCESS == ret);
+        assert(2U == value->len);
+        assert(0 == strcmp("32", choco_string_c_str(value)));
+
+        choco_string_destroy(&value);
+        test_choco_string_config_reset();
+    }
+
+    memory_system_destroy();
 }
 
 // Generated by ChatGPT 5.4 Thinking
