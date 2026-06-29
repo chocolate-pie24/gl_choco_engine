@@ -257,6 +257,34 @@ bool choco_string_equal(const char* str1_, const char* str2_);
 bool choco_string_substring_exists(const char* str_, const char* target_);
 
 /**
+ * @brief key = valueの文字列からkeyを取り出す
+ *
+ * @note choco_string_copy_from_c_stringに失敗した場合、out_key_の状態は不変ではない場合がある
+ *
+ * @note スペースは以下のようにtrimされる
+ * - keyの前方スペースはtrimされる
+ * - keyの末尾スペースはtrimされる
+ * - k eyのように途中のスペースは有効
+ * - =の後に有効文字(スペース以外)がない場合も成功とする
+ *
+ * @param[in] line_ key = valueの文字列
+ * @param[in,out] out_key_ key格納先
+ *
+ * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
+ * - line_ == NULL
+ * - out_key_ == NULL
+ * @retval CHOCO_STRING_DATA_CORRUPTED out_key_の内部状態が破損
+ * @retval CHOCO_STRING_BAD_OPERATION 以下のいずれか
+ * - line_に=が含まれない
+ * - = の前に有効文字(スペース以外)がない
+ * - メモリシステム未初期化
+ * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
+ * @retval CHOCO_STRING_SUCCESS 処理に成功し、正常終了
+ */
+choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_string_t* out_key_);
+
+/**
  * @brief key = valueの文字列からvalueを取り出す
  *
  * @note choco_string_copy_from_c_stringに失敗した場合、out_value_の状態は不変ではない場合がある
@@ -266,8 +294,8 @@ bool choco_string_substring_exists(const char* str_, const char* target_);
  * - valueの末尾スペースはtrimされる
  * - val ueのように途中のスペースは有効
  *
- * @param line_ key = valueの文字列
- * @param out_value_ value格納先
+ * @param[in] line_ key = valueの文字列
+ * @param[in,out] out_value_ value格納先
  *
  * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
  * - line_ == NULL
