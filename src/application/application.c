@@ -687,26 +687,37 @@ application_result_t application_run(void) {
         "./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl",
         &s_app_state->geometry_id_penguin);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
         goto cleanup;
     }
 
     // アイコンサイズはUI描画用projection, viewができたら整える
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_size(
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
         s_app_state->renderer_backend_context,
         s_app_state->ui_mesh_shader,
         s_app_state->ui_mesh_geometry_registry,
         "small_icon",
-        1, 1, &s_app_state->geometry_id_small_icon
+        &s_app_state->geometry_id_small_icon
     );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(small icon).");
+        goto cleanup;
+    }
 
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_size(
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
         s_app_state->renderer_backend_context,
         s_app_state->ui_mesh_shader,
         s_app_state->ui_mesh_geometry_registry,
         "large_icon",
-        2, 2, &s_app_state->geometry_id_large_icon
+        &s_app_state->geometry_id_large_icon
     );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(large icon).");
+        goto cleanup;
+    }
 
     // TODO: window NULLチェック
 
