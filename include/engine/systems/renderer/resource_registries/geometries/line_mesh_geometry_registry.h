@@ -81,6 +81,24 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
 bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* registry_, const char* name_);
 
 /**
+ * @brief registry_からline_mesh_geometry_tへの参照を取得する
+ *
+ * @note 戻り値のジオメトリはregistry_が所有するため、呼び出し側で破棄してはならない
+ * @note 戻り値の参照は該当ジオメトリのunregisterまたはregistryのdeinitialize後に無効となる
+ * @note 以下の場合はNULLを返す
+ * - geometry_id_が無効
+ * - registry_ == NULL
+ * - registry_内部データ異常
+ * - registry_にgeometry_id_のジオメトリが登録されていない
+ *
+ * @param[in] registry_ line_mesh_geometry_registry_t構造体インスタンスへのポインタ
+ * @param[in] geometry_id_ 取得対象ジオメトリのid
+ *
+ * @return line_mesh_geometry_tへの参照
+ */
+const line_mesh_geometry_t* line_mesh_geometry_registry_geometry_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
+
+/**
  * @brief registry_に登録されているname_のジオメトリidを取得する
  *
  * @note idはregistry_が保持するジオメトリ配列のインデックスで0以上の値

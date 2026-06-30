@@ -149,6 +149,14 @@ bool ui_mesh_geometry_registry_find(const ui_mesh_geometry_registry_t* registry_
     return find_by_name(registry_, name_, &tmp_id);
 }
 
+const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_geometry_registry_t* registry_, int16_t geometry_id_) {
+    if(NULL == registry_ || !internal_state_is_valid(registry_) || !geometry_id_is_valid(registry_, geometry_id_)) {
+        return NULL;
+    }
+
+    return registry_->geometries[geometry_id_];
+}
+
 resource_registry_result_t ui_mesh_geometry_registry_id_get(const ui_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
