@@ -194,6 +194,8 @@ renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
         return RENDERER_RUNTIME_ERROR;
     case FS_UTILS_FILE_OPEN_ERROR:
         return RENDERER_RUNTIME_ERROR;
+    case FS_UTILS_EOF:
+        return RENDERER_RUNTIME_ERROR;
     case FS_UTILS_RUNTIME_ERROR:
         return RENDERER_RUNTIME_ERROR;
     case FS_UTILS_UNDEFINED_ERROR:
