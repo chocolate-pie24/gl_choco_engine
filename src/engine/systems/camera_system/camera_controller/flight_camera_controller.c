@@ -15,31 +15,28 @@
  */
 #include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
-#include "engine/systems/camera_system/camera/camera.h"
-
-#include "engine/systems/camera_system/camera_core/camera_err_utils.h"
-#include "engine/systems/camera_system/camera_core/camera_types.h"
-
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_core/camera_err_utils.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
 
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
-#include <assert.h>
-
-#include "engine/core/memory/choco_memory.h"
 #include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
+
+#include <assert.h>
 
 #include "test_controller.h"
 
+#include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/test_choco_memory.h"
 
-#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/systems/camera_system/camera/test_camera.h"
 #include "engine/systems/camera_system/camera_core/test_camera_memory.h"
 

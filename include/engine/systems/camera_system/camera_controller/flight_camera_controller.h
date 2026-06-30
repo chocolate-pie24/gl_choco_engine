@@ -21,7 +21,8 @@ extern "C" {
 #endif
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-#include "engine/systems/camera_system/camera/camera.h"
+
+typedef struct camera camera_t; /**< カメラ状態管理構造体のopaque型 */
 
 /**
  * @brief フライトカメラを前方に動かす

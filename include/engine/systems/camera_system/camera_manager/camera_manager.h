@@ -20,15 +20,13 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
 #include <stdint.h>
-
-#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 
-typedef struct camera_manager camera_manager_t; /**< カメラ管理システム構造体前方宣言 */
-typedef struct camera camera_t;                 /**< カメラ構造体前方宣言 */
+typedef struct camera_manager camera_manager_t; /**< カメラ管理システム構造体のopaque型 */
+typedef struct camera camera_t;                 /**< カメラ状態管理構造体のopaque型 */
+typedef struct linear_alloc linear_alloc_t;     /**< リニアアロケータのopaque型 */
 
 #define INVALID_CAMERA_ID (-1)  /**< 無効なカメラ識別子定義 */
 

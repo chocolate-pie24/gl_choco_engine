@@ -1,3 +1,22 @@
+/** @ingroup renderer
+ *
+ * @file line_mesh_geometry_pipeline.h
+ * @author chocolate-pie24
+ *
+ * @brief line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する
+ *
+ * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
+ * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
+ *
+ * @version 0.1
+ * @date 2026-06-30
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_GEOMETRIES_LINE_MESH_GEOMETRY_PIPELINE_H
 #define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_GEOMETRIES_LINE_MESH_GEOMETRY_PIPELINE_H
 

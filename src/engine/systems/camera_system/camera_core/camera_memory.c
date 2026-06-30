@@ -13,14 +13,14 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/camera_system/camera_core/camera_memory.h"
+
 #include <stddef.h>
 
-#include "engine/systems/camera_system/camera_core/camera_memory.h"
+#include "engine/core/memory/choco_memory.h"
 
 #include "engine/systems/camera_system/camera_core/camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-
-#include "engine/core/memory/choco_memory.h"
 
 // #define TEST_BUILD
 

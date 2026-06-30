@@ -13,20 +13,20 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/camera_system/camera/camera.h"
+
 #include <stdbool.h>
 
-#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+#include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
+
+#include "engine/containers/choco_string.h"
 
 #include "engine/systems/camera_system/camera_core/camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/camera_memory.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-
-#include "engine/base/choco_math/math_types.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
-
-#include "engine/containers/choco_string.h"
 
 // #define TEST_BUILD
 
