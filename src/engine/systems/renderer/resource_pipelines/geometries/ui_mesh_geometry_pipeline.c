@@ -75,14 +75,14 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ui_vertex[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
     ui_vertex[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
-    ret_resource = ui_mesh_geometry_create_from_vertices(name_, 6, ui_vertex, &geometry);
+    ret_resource = ui_mesh_geometry_create_from_vertices(name_, vertex_count, ui_vertex, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
         goto cleanup;
     }
 
-    ret_renderer = ui_mesh_shader_vertex_buffer_append(backend_context_, shader_, sizeof(ui_vertex_t) * 6, ui_vertex, &vertex_offset);
+    ret_renderer = ui_mesh_shader_vertex_buffer_append(backend_context_, shader_, sizeof(ui_vertex_t) * vertex_count, ui_vertex, &vertex_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
@@ -92,7 +92,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ret_registry = ui_mesh_geometry_registry_register(geometry_registry_, geometry, vertex_offset, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%d", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
         goto cleanup;
     }
 

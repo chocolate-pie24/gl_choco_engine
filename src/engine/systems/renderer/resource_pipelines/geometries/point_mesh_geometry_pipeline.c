@@ -35,14 +35,12 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    size_t vertex_count = 0;
     size_t vertex_offset = 0;
     size_t vertex_array_size = 0;
     int16_t tmp_geometry_id = 0;
 
     point_mesh_geometry_t* geometry = NULL;
 
-    // path_が空文字列なのは許容する
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "geometry_registry_")
@@ -55,7 +53,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
     ret_resource = point_mesh_geometry_create_from_vertices(name_, vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
         goto cleanup;
     }
     vertex_array_size = sizeof(point_vertex_t) * vertex_count_;
@@ -64,7 +62,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
     ret_renderer = point_mesh_shader_vertex_buffer_point_append(backend_context_, shader_, vertex_array_size, vertices_, &vertex_offset);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
         goto cleanup;
     }
 
@@ -72,7 +70,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
     ret_registry = point_mesh_geometry_registry_register(geometry_registry_, geometry, vertex_offset, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
+        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count_);
         goto cleanup;
     }
 
