@@ -62,8 +62,8 @@ void camera_manager_deinitialize(camera_manager_t* camera_manager_);
 /**
  * @brief カメラをカメラ管理システムに追加する
  *
- * @param[in] camera_name_ 追加するカメラの名称
  * @param[in,out] camera_manager_ 追加対象カメラ管理システム
+ * @param[in] camera_name_ 追加するカメラの名称
  * @param[out] out_camera_id_ 追加したカメラに付与されるカメラ識別子
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -80,13 +80,13 @@ void camera_manager_deinitialize(camera_manager_t* camera_manager_);
  * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_register(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_);
+camera_result_t camera_manager_register(camera_manager_t* camera_manager_, const char* camera_name_, int16_t* out_camera_id_);
 
 /**
  * @brief カメラIDを使用して対応するカメラをカメラ管理システムから削除する
  *
- * @param[in] camera_id_ 削除対象カメラID
  * @param[in,out] camera_manager_ 対象カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in] camera_id_ 削除対象カメラID
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_manager_ == NULL
@@ -98,13 +98,13 @@ camera_result_t camera_manager_register(const char* camera_name_, camera_manager
  * - カメラIDに対応するカメラが管理システム内に見つからない
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* camera_manager_);
+camera_result_t camera_manager_unregister(camera_manager_t* camera_manager_, int16_t camera_id_);
 
 /**
  * @brief カメラ名称を使用して対応するカメラをカメラ管理システムから削除する
  *
- * @param[in] name_ 削除対象カメラ名称
  * @param[in,out] camera_manager_ 対象カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in] name_ 削除対象カメラ名称
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_manager_ == NULL
@@ -116,13 +116,13 @@ camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* 
  * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_unregister_by_name(const char* name_, camera_manager_t* camera_manager_);
+camera_result_t camera_manager_unregister_by_name(camera_manager_t* camera_manager_, const char* name_);
 
 /**
  * @brief カメラ名称に対応するカメラ識別子をカメラ管理システムから取得する
  *
- * @param[in] name_ 識別子を取得するカメラの名称
  * @param[in] camera_manager_ 取得元カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in] name_ 識別子を取得するカメラの名称
  * @param[out] out_camera_id_ カメラ識別子格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -135,13 +135,13 @@ camera_result_t camera_manager_unregister_by_name(const char* name_, camera_mana
  * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_, int16_t* out_camera_id_);
+camera_result_t camera_manager_camera_id_get(const camera_manager_t* camera_manager_, const char* name_, int16_t* out_camera_id_);
 
 /**
  * @brief カメラIDを使用して対応するカメラ管理システムからカメラ構造体インスタンスへのポインタを取得する
  *
- * @param[in] camera_id_ 取得対象カメラ識別子
  * @param[in] camera_manager_ カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in] camera_id_ 取得対象カメラ識別子
  * @param[out] out_camera_ カメラ構造体インスタンスへのポインタ格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -155,13 +155,13 @@ camera_result_t camera_manager_camera_id_get(const char* name_, const camera_man
  * - camera_id_に対応するカメラが管理システム内に見つからない
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manager_t* camera_manager_, camera_t** out_camera_);
+camera_result_t camera_manager_camera_get(const camera_manager_t* camera_manager_, int16_t camera_id_, camera_t** out_camera_);
 
 /**
  * @brief カメラ管理システムからカメラ名称をもとにカメラ構造体インスタンスへのポインタを取得する
  *
- * @param[in] name_ カメラ名称文字列
  * @param[in] camera_manager_ カメラ管理システム構造体インスタンスへのポインタ
+ * @param[in] name_ カメラ名称文字列
  * @param[out] out_camera_ カメラ構造体インスタンスへのポインタ格納先
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
@@ -175,7 +175,7 @@ camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manag
  * @retval CAMERA_DATA_CORRUPTED カメラ管理システム内部データ破損
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_manager_camera_get_by_name(const char* name_, const camera_manager_t* camera_manager_, camera_t** out_camera_);
+camera_result_t camera_manager_camera_get_by_name(const camera_manager_t* camera_manager_, const char* name_, camera_t** out_camera_);
 
 #ifdef __cplusplus
 }

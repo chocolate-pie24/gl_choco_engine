@@ -397,15 +397,15 @@ application_result_t application_create(void) {
     }
 
     tmp->active_camera_id = INVALID_CAMERA_ID;
-    ret_camera = camera_manager_register("flight camera", tmp->camera_manager, &tmp->active_camera_id);
+    ret_camera = camera_manager_register(tmp->camera_manager, "flight camera", &tmp->active_camera_id);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
         ERROR_MESSAGE("application_create(%s) - Failed to register camera.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_camera = camera_manager_camera_get(tmp->active_camera_id, tmp->camera_manager, &tmp->active_camera);
-    // ret_camera = camera_manager_camera_get_by_name("flight camera", tmp->camera_manager, &tmp->active_camera);
+    ret_camera = camera_manager_camera_get(tmp->camera_manager, tmp->active_camera_id, &tmp->active_camera);
+    // ret_camera = camera_manager_camera_get_by_name(tmp->camera_manager, "flight camera", &tmp->active_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
         ERROR_MESSAGE("application_create(%s) - Failed to get camera.", app_rslt_to_str(ret));
@@ -645,7 +645,7 @@ application_result_t application_run(void) {
     mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_app_state->green_mesh_model_mat);
     mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_app_state->frog_mesh_model_mat);
 
-    camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->active_camera); // TODO: エラー処理
+    camera_viewing_frustum_update(s_app_state->active_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
@@ -1055,7 +1055,7 @@ static void app_state_dispatch(void) {
 
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            camera_result_t ret_camera = camera_viewing_frustum_update(45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f, s_app_state->active_camera); // TODO: エラー処理
+            camera_result_t ret_camera = camera_viewing_frustum_update(s_app_state->active_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
             if(CAMERA_SUCCESS != ret_camera) {
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(app_rslt_convert_camera(ret_camera)));
                 goto cleanup;
