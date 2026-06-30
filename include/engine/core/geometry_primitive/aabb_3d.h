@@ -31,7 +31,7 @@ extern "C" {
 
 /**
  * @brief AABB内部データ格納構造体
- * 
+ *
  */
 typedef struct aabb_3d {
     vec3f_t min;    /**< AABBを構成する8頂点のうち、x, y, zが全て最小の点の座標 */
@@ -40,7 +40,7 @@ typedef struct aabb_3d {
 
 /**
  * @brief AABBの最小点・最大点を使ってout_aabb_を初期化する
- * 
+ *
  * @param[in] min_ AABBの最小点
  * @param[in] max_ AABBの最大点
  * @param[out] out_aabb_ 初期化対象aabb_3d_t構造体インスタンスへのポインタ
@@ -56,7 +56,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_min_max(vec3f_t min_, vec3f_
 
 /**
  * @brief ポイント用頂点配列を使用してout_aabb_を初期化する
- * 
+ *
  * @param[in] vertices_ ポイント用頂点配列
  * @param[in] vertex_count_ ポイント頂点数
  * @param[out] out_aabb_ 初期化対象aabb_3d_t構造体インスタンスへのポインタ
@@ -73,7 +73,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_vertices(const point_v
 
 /**
  * @brief 線分用頂点配列を使用してout_aabb_を初期化する
- * 
+ *
  * @param[in] vertices_ 線分用頂点配列
  * @param[in] vertex_count_ 線分用頂点配列に含まれる頂点数(線分の数 x 2)
  * @param[out] out_aabb_ 初期化対象aabb_3d_t構造体インスタンスへのポインタ
@@ -91,7 +91,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_line_vertices(const line_ver
 
 /**
  * @brief 頂点座標と法線を持つ頂点情報配列を用いてout_aabb_を初期化する
- * 
+ *
  * @param[in] vertices_ 頂点座標と法線を持つ頂点情報配列
  * @param[in] vertex_count_ 頂点数(三角形で描画するので必ず3の倍数)
  * @param[out] out_aabb_ 初期化対象aabb_3d_t構造体インスタンスへのポインタ
@@ -112,7 +112,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_normal_vertices(const 
  *
  * @note min, maxが全て0の状態のaabb_は退化したAABBであり、有効な状態とするため、aabb_3d_is_valid()はtrueとなる
  * @note aabb_ == NULLの場合は何もしない
- * 
+ *
  * @param[out] aabb_ 初期化対象aabb_3d_t構造体インスタンスへのポインタ
  */
 void aabb_3d_reset(aabb_3d_t* aabb_);
@@ -132,7 +132,7 @@ void aabb_3d_reset(aabb_3d_t* aabb_);
  * - vertices_[5]: max_x, max_y, max_z
  * - vertices_[6]: max_x, max_y, min_z
  * - vertices_[7]: min_x, max_y, min_z
- * 
+ *
  * @param[in] aabb_ 座標を取得するaabb_3d_t構造体インスタンスへのポインタ
  * @param[out] vertices_ 頂点座標格納先
  *
@@ -151,7 +151,7 @@ geometry_primitive_result_t aabb_3d_vertices_get(const aabb_3d_t* aabb_, vec3f_t
  * - min, maxの値にNaN, Infが含まれる
  * - x, y, z のいずれかの成分でmin_がmax_を上回る
  * @note 厚み、体積を持たない退化したaabb_3d_tは有効(整合性が取れている)とする
- * 
+ *
  * @param[in] aabb_ 判定対象aabb_3d_t構造体インスタンスへのポインタ
  *
  * @return true 内部データ有効

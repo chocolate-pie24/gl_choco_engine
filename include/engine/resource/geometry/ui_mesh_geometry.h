@@ -3,7 +3,7 @@
  * @file ui_mesh_geometry.h
  * @author chocolate-pie24
  * @brief ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義
- * 
+ *
  * @note ui_mesh_shader: 2D矩形領域にテクスチャを貼った描画を行う, 描画単位は矩形領域ごとに描画する
  * @note ui_mesh_geometryは矩形領域のテクスチャuv座標、矩形領域座標のみを保持する
  *
@@ -35,7 +35,7 @@ typedef struct ui_mesh_geometry ui_mesh_geometry_t;   /**< ui_mesh_geometryモ�
  * @brief ui_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを初期化する
  *
  * @note 失敗時には*geometry_は変更しない
- * 
+ *
  * @param[out] geometry_ ui_mesh_geometry_t構造体インスタンスへのダブルポインタ
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
@@ -53,7 +53,7 @@ resource_result_t ui_mesh_geometry_default_create(ui_mesh_geometry_t** geometry_
  *
  * @note 失敗時には*geometry_は変更しない
  * @note vertex_count_は6固定なので引数指定は不要だが、当面は残す
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] vertex_count_ 6固定(頂点配列の配列要素数で、矩形領域を構成する2枚の三角形の頂点数)
  * @param[in] vertices_ 頂点配列
@@ -83,7 +83,7 @@ resource_result_t ui_mesh_geometry_create_from_vertices(const char* name_, size_
  * @warning 内部データの不整合が発生していた場合はui_mesh_geometry_tが保有する頂点配列のメモリは解放されず、リーク状態となる。この場合、geometry_自身のメモリは解放し、エラーメッセージを出力する
  * @note geometry_ == NULL または *geometry_ == NULL の場合は何も行わない
  * @note 本API実行後、*geometry_はNULLとなる
- * 
+ *
  * @param[in,out] geometry_ ui_mesh_geometry_t構造体インスタンスへのダブルポインタ
  */
 void ui_mesh_geometry_destroy(ui_mesh_geometry_t** geometry_);
@@ -95,7 +95,7 @@ void ui_mesh_geometry_destroy(ui_mesh_geometry_t** geometry_);
  * @note geometry_にvertices_をdeep copyする。vertices_の所有権は呼び出し側にある
  * @note 失敗時にはgeometry_の内部状態は不変
  * @note vertex_count_は6固定なので引数指定は不要だが、当面は残す
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] vertex_count_ 6固定(頂点配列の配列要素数で、矩形領域を構成する2枚の三角形の頂点数)
  * @param[in] vertices_ 頂点配列
@@ -124,7 +124,7 @@ resource_result_t ui_mesh_geometry_initialize_from_vertices(const char* name_, s
  *
  * @warning 内部データの不整合が発生していた場合はui_mesh_geometry_tが保有する頂点配列のメモリは解放されず、エラーメッセージを出力し、リーク状態となる
  * @note geometry_ == NULLの場合は何もしない
- * 
+ *
  * @param[in,out] geometry_ 初期化対象ui_mesh_geometry_t構造体インスタンスへのポインタ
  */
 void ui_mesh_geometry_deinitialize(ui_mesh_geometry_t* geometry_);
@@ -134,7 +134,7 @@ void ui_mesh_geometry_deinitialize(ui_mesh_geometry_t* geometry_);
  *
  * @note ui_mesh_geometry_default_createで生成された空のsrc_が与えられた場合もクローンする
  * @note 処理に失敗した場合、*out_geometry_の内部状態は不変
- * 
+ *
  * @param[in] src_ クローン生成元ui_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_geometry_ ui_mesh_geometry_t構造体インスタンスへのダブルポインタ
  *
@@ -156,7 +156,7 @@ resource_result_t ui_mesh_geometry_clone(const ui_mesh_geometry_t* src_, ui_mesh
  * @note geometry_またはgeometry_が保有する文字列がNULLの場合はNULLを返す
  * @note 戻り値はui_mesh_geometry_t内部文字列への参照であり、呼び出し側で解放してはならない
  * @note 戻り値の有効期間はgeometry_が破棄または再初期化されるまで
- * 
+ *
  * @param[in] geometry_ ui_mesh_geometry_t構造体インスタンスへのポインタ
  *
  * @return const char* ジオメトリ名称文字列
@@ -170,7 +170,7 @@ const char* ui_mesh_geometry_name_get(const ui_mesh_geometry_t* geometry_);
  * @note 失敗時には*out_vertices_は変更しない
  * @note 取得した頂点配列参照は読み取り専用であり、呼び出し側で書き換え・解放してはならない
  * @note 参照の有効期間はgeometry_が破棄またはdeinitializeされるまで
- * 
+ *
  * @param[in] geometry_ ui_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertices_ 頂点情報配列への参照格納先
  *
@@ -189,7 +189,7 @@ resource_result_t ui_mesh_geometry_vertices_get(const ui_mesh_geometry_t* geomet
  *
  * @note 失敗時には*out_vertex_count_は変更しない
  * @note 頂点数は当面6(三角形2枚分の頂点数)以外返らない
- * 
+ *
  * @param[in] geometry_ ui_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertex_count_ 頂点数格納先
  *

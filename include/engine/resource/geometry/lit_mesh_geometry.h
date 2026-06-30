@@ -3,7 +3,7 @@
  * @file lit_mesh_geometry.h
  * @author chocolate-pie24
  * @brief lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義
- * 
+ *
  * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
  *
  * @version 0.1
