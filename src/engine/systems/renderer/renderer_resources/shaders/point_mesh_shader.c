@@ -417,8 +417,8 @@ renderer_result_t point_mesh_shader_vertex_buffer_point_append(const renderer_ba
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->point_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vertex_buffer_point_append", "point_vbo")
     IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vertex_buffer_point_append", "write_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vertex_buffer_point_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_->point_current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "point_mesh_shader_vertex_buffer_point_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP((point_mesh_shader_->point_current_buffer_offset + size_) <= point_mesh_shader_->point_vertex_buffer_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vertex_buffer_point_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_->point_current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_OVERFLOW, renderer_rslt_to_str(RENDERER_OVERFLOW), "point_mesh_shader_vertex_buffer_point_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP((point_mesh_shader_->point_current_buffer_offset + size_) <= point_mesh_shader_->point_vertex_buffer_size, ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "point_mesh_shader_vertex_buffer_point_append", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vertex_buffer_point_append", "out_vertex_offset_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % sizeof(point_vertex_t)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vertex_buffer_point_append", "size_")
 

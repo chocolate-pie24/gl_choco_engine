@@ -178,10 +178,10 @@ renderer_result_t point_mesh_shader_vertex_buffer_point_append(const renderer_ba
  * - point_mesh_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
- * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+ * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
+ * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
- * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */

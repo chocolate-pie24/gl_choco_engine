@@ -146,10 +146,10 @@ void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_
  * - size_ == 0
  * - out_vertex_offset_ == NULL
  * - size_がsizeof(line_vertex_t) x 2の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+ * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
+ * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
- * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
