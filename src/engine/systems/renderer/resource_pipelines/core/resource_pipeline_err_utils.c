@@ -107,6 +107,8 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_renderer(renderer_resu
         return RESOURCE_PIPELINE_BAD_OPERATION;
     case RENDERER_DATA_CORRUPTED:
         return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case RENDERER_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
     case RENDERER_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:

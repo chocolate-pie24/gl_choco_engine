@@ -114,9 +114,10 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
                 goto cleanup;
             }
         } else {
-            ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-            if(RESOURCE_RUNTIME_ERROR == ret) {
-                ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERRORはFILE_READ_ERRORに変換する
+            if(FS_UTILS_RUNTIME_ERROR == ret_fs_utils || FS_UTILS_UNDEFINED_ERROR == ret_fs_utils) {
+                ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
+            } else {
+                ret = resource_rslt_convert_fs_utils(ret_fs_utils);
             }
             ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_utils_text_file_line_read_failed, config_name='%s', next_line=%zu", resource_rslt_to_str(ret), name_, line_count + 1);
             goto cleanup;

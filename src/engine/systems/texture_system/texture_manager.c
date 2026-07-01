@@ -614,6 +614,8 @@ static texture_system_result_t tex_sys_rslt_convert_renderer(renderer_result_t r
         return TEXTURE_SYSTEM_BAD_OPERATION;
     case RENDERER_DATA_CORRUPTED:
         return TEXTURE_SYSTEM_DATA_CORRUPTED;
+    case RENDERER_OVERFLOW:
+        return TEXTURE_SYSTEM_OVERFLOW;
     case RENDERER_UNDEFINED_ERROR:
         return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     default:

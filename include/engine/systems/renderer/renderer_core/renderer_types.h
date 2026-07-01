@@ -42,6 +42,7 @@ typedef enum {
     RENDERER_LIMIT_EXCEEDED,        /**< システム使用可能範囲上限超過 */
     RENDERER_BAD_OPERATION,         /**< API誤用 */
     RENDERER_DATA_CORRUPTED,        /**< メモリ破損,未初期化 */
+    RENDERER_OVERFLOW,              /**< 計算過程でオーバーフロー発生 */
     RENDERER_UNDEFINED_ERROR,       /**< 不明なエラー */
 } renderer_result_t;
 

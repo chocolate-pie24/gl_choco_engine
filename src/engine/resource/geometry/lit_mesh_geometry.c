@@ -385,7 +385,7 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertices")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count");
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
 
     *out_vertices_ = geometry_->vertices;
 
