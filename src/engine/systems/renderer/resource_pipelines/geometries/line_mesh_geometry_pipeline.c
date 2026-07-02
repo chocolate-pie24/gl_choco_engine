@@ -98,50 +98,6 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief AABB(3D)を使用して線分描画用ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う
- *
- * @note VBOへのappend成功後の後続処理で失敗した場合、shader_に追加された頂点データは巻き戻されない
- *
- * @param[in] backend_context_ Renderer Backend Context構造体インスタンスへのポインタ
- * @param[in,out] shader_ 線分描画用シェーダーリソース構造体インスタンスへのポインタ
- * @param[in,out] geometry_registry_ 線分描画用ジオメトリレジストリ構造体インスタンスへのポインタ
- * @param[in] name_ ジオメトリ名称
- * @param[in] aabb_ 線分ジオメトリに変換するAABB(3D)
- * @param[out] out_geometry_id_ ジオメトリレジストリ内でのジオメトリ識別子
- *
- * @retval RESOURCE_PIPELINE_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - shader_ == NULL
- * - geometry_registry_ == NULL
- * - name_ == NULL
- * - name_が空文字列
- * - out_geometry_id_ == NULL
- * - aabb_ == NULL
- * @retval RESOURCE_PIPELINE_LIMIT_EXCEEDED 以下のいずれか
- * - メモリシステム使用可能範囲上限超過
- * - 
- * @retval RESOURCE_PIPELINE_BAD_OPERATION 以下のいずれか
- * - メモリシステム未初期化
- * - aabb_が不正
- * @retval RESOURCE_PIPELINE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_PIPELINE_OVERFLOW 処理過程でオーバーフローが発生
- * @retval RESOURCE_DATA_CORRUPTED 生成したgeometryにデータ不整合が発生
- * @retval RESOURCE_BAD_OPERATION 何らかの理由で生成したgeometryが未初期化となり、後続APIに渡った
- */
-// line_mesh_shader_vertex_buffer_append
-// RENDERER_INVALID_ARGUMENT 以下のいずれか - backend_context_ == NULL - line_mesh_shader_ == NULL - write_data_ == NULL - size_ == 0 - out_vertex_offset_ == NULL - size_がsizeof(line_vertex_t) x 2の倍数ではない
-// RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
-// RENDERER_BAD_OPERATION 以下のいずれか - VBO未初期化 - 転送後にバーテックスバッファサイズを超過 - backend_context_が未初期化
-// RENDERER_SUCCESS 処理に成功し、正常終了
-
-// line_mesh_geometry_registry_register
-// RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか - registry_ == NULL - geometry_ == NULL - out_geometry_id_ == NULL - geometry_が未初期化でジオメトリ名称が取得できない
-// RESOURCE_REGISTRY_DATA_CORRUPTED 以下のいずれか - registry_の内部データ不整合が発生している - geometry_の内部データ不整合が発生している
-// RESOURCE_REGISTRY_BAD_OPERATION 以下のいずれか - geometry_のジオメトリ名称が既にregistry_に登録されている - メモリシステム未初期化
-// RESOURCE_REGISTRY_NO_MEMORY メモリ確保失敗
-// RESOURCE_REGISTRY_LIMIT_EXCEEDED 以下のいずれか - メモリシステム使用可能範囲上限超過 - registry_に空きスロットが見つからない
-// RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;

@@ -193,6 +193,11 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     IF_ARG_NOT_NULL_GOTO_CLEANUP(stl_loader_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertices")
 
     ret = stl_loader_vertex_count_calc(path_, name_, extension_, &vertex_count);
+    if(0 == vertex_count) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - ASCII STL has no vertices.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to calculate vertex count for ASCII STL file.", resource_rslt_to_str(ret));
         goto cleanup;

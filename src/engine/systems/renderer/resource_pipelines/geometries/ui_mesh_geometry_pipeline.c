@@ -1,3 +1,19 @@
+/** @ingroup renderer
+ *
+ * @file ui_mesh_geometry_pipeline.c
+ * @author chocolate-pie24
+ *
+ * @brief UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装
+ *
+ * @version 0.1
+ * @date 2026-06-30
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
 #include "engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h"
 
 #include <stdint.h>
@@ -30,7 +46,6 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-// append成功後の後続処理で失敗した場合、shader_に追加された頂点データは巻き戻されない
 resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* name_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
