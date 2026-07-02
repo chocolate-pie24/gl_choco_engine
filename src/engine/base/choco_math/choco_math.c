@@ -46,6 +46,7 @@ static void test_vec2f_initialize(void);
 static void test_vec2f_add(void);
 static void test_vec3f_initialize(void);
 static void test_vec3f_add(void);
+static void test_vec3f_scale(void);
 static void test_vec3f_length_squared(void);
 static void test_vec3f_length(void);
 static void test_vec3f_normalize(void);
@@ -82,142 +83,147 @@ bool is_equal_float(float a_, float b_) {
     }
 }
 
-void vec2f_initialize(float x_, float y_, vec2f_t* out_vec2f_) {
-    if(NULL == out_vec2f_) {
-        ERROR_MESSAGE("vec2f_initialize(INVALID_ARGUMENT) - Argument out_vec2f_ requires a valid pointer.");
-        return;
-    }
-    out_vec2f_->elem[0] = x_;
-    out_vec2f_->elem[1] = y_;
+vec2f_t vec2f_initialize(float x_, float y_) {
+    vec2f_t ret = { 0.0f };
+
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+
+    return ret;
 }
 
-void vec2f_add(const vec2f_t* vec1_, const vec2f_t* vec2_, vec2f_t* out_vec2f_) {
-    if(NULL == vec1_) {
-        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == vec2_) {
-        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument vec2_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == out_vec2f_) {
-        ERROR_MESSAGE("vec2f_add(INVALID_ARGUMENT) - Argument out_vec2f_ requires a valid pointer.");
-        return;
-    }
-    out_vec2f_->elem[0] = vec1_->elem[0] + vec2_->elem[0];
-    out_vec2f_->elem[1] = vec1_->elem[1] + vec2_->elem[1];
+vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_) {
+    vec2f_t ret = { 0.0f };
+
+    ret.elem[0] = vec1_.elem[0] + vec2_.elem[0];
+    ret.elem[1] = vec1_.elem[1] + vec2_.elem[1];
+
+    return ret;
 }
 
-void vec3f_initialize(float x_, float y_, float z_, vec3f_t* out_vec3f_) {
-    if(NULL == out_vec3f_) {
-        ERROR_MESSAGE("vec3f_initialize(INVALID_ARGUMENT) - Argument out_vec3f_ requires a valid pointer.");
-        return;
-    }
-    out_vec3f_->elem[0] = x_;
-    out_vec3f_->elem[1] = y_;
-    out_vec3f_->elem[2] = z_;
+vec3f_t vec3f_initialize(float x_, float y_, float z_) {
+    vec3f_t ret = { 0.0f };
+
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+    ret.elem[2] = z_;
+
+    return ret;
 }
 
-void vec3f_add(const vec3f_t* vec1_, const vec3f_t* vec2_, vec3f_t* out_vec3f_) {
-    if(NULL == vec1_) {
-        ERROR_MESSAGE("vec3f_add(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == vec2_) {
-        ERROR_MESSAGE("vec3f_add(INVALID_ARGUMENT) - Argument vec2_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == out_vec3f_) {
-        ERROR_MESSAGE("vec3f_add(INVALID_ARGUMENT) - Argument out_vec3f_ requires a valid pointer.");
-        return;
-    }
-    out_vec3f_->elem[0] = vec1_->elem[0] + vec2_->elem[0];
-    out_vec3f_->elem[1] = vec1_->elem[1] + vec2_->elem[1];
-    out_vec3f_->elem[2] = vec1_->elem[2] + vec2_->elem[2];
+vec3f_t vec3f_add(vec3f_t vec1_, vec3f_t vec2_) {
+    vec3f_t ret = { 0.0f };
+
+    ret.elem[0] = vec1_.elem[0] + vec2_.elem[0];
+    ret.elem[1] = vec1_.elem[1] + vec2_.elem[1];
+    ret.elem[2] = vec1_.elem[2] + vec2_.elem[2];
+
+    return ret;
 }
 
-float vec3f_length_squared(const vec3f_t* vec_) {
-    if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_length_squared(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
-        return 0.0f;
-    }
+vec3f_t vec3f_scale(vec3f_t vec_, float scale_) {
+    vec3f_t ret = { 0.0f };
 
-    return (vec_->elem[0] * vec_->elem[0]) + (vec_->elem[1] * vec_->elem[1]) + (vec_->elem[2] * vec_->elem[2]);
+    ret.elem[0] = vec_.elem[0] * scale_;
+    ret.elem[1] = vec_.elem[1] * scale_;
+    ret.elem[2] = vec_.elem[2] * scale_;
+
+    return ret;
 }
 
-float vec3f_length(const vec3f_t* vec_) {
-    if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_length(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
-        return 0.0f;
-    }
+float vec3f_length_squared(vec3f_t vec_) {
+    return (vec_.elem[0] * vec_.elem[0]) + (vec_.elem[1] * vec_.elem[1]) + (vec_.elem[2] * vec_.elem[2]);
+}
+
+float vec3f_length(vec3f_t vec_) {
     return sqrtf(vec3f_length_squared(vec_));
 }
 
-void vec3f_normalize(vec3f_t* vec_) {
-    if(NULL == vec_) {
-        ERROR_MESSAGE("vec3f_normalize(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
-        return;
-    }
+vec3f_t vec3f_normalize(vec3f_t vec_) {
+    vec3f_t ret = vec_;
+
     const float length = vec3f_length(vec_);
     if(is_equal_float(length, 0.0f)) {
         WARN_MESSAGE("vec3f_normalize - Argument vec_ is a zero vector.");
-        return;
+        return ret;
     }
-    vec_->elem[0] /= length;
-    vec_->elem[1] /= length;
-    vec_->elem[2] /= length;
+
+    ret.elem[0] /= length;
+    ret.elem[1] /= length;
+    ret.elem[2] /= length;
+
+    return ret;
 }
 
-void vec4f_initialize(float x_, float y_, float z_, float w_, vec4f_t* out_vec4f_) {
-    if(NULL == out_vec4f_) {
-        ERROR_MESSAGE("vec4f_initialize(INVALID_ARGUMENT) - Argument out_vec4f_ requires a valid pointer.");
-        return;
+bool vec3f_is_finite(vec3f_t vec_) {
+    if(!isfinite(vec_.elem[0]) || !isfinite(vec_.elem[1]) || !isfinite(vec_.elem[2])) {
+        return false;
     }
-    out_vec4f_->elem[0] = x_;
-    out_vec4f_->elem[1] = y_;
-    out_vec4f_->elem[2] = z_;
-    out_vec4f_->elem[3] = w_;
+    return true;
 }
 
-void vec4f_add(const vec4f_t* vec1_, const vec4f_t* vec2_, vec4f_t* out_vec4f_) {
-    if(NULL == vec1_) {
-        ERROR_MESSAGE("vec4f_add(INVALID_ARGUMENT) - Argument vec1_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == vec2_) {
-        ERROR_MESSAGE("vec4f_add(INVALID_ARGUMENT) - Argument vec2_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == out_vec4f_) {
-        ERROR_MESSAGE("vec4f_add(INVALID_ARGUMENT) - Argument out_vec4f_ requires a valid pointer.");
-        return;
-    }
-    out_vec4f_->elem[0] = vec1_->elem[0] + vec2_->elem[0];
-    out_vec4f_->elem[1] = vec1_->elem[1] + vec2_->elem[1];
-    out_vec4f_->elem[2] = vec1_->elem[2] + vec2_->elem[2];
-    out_vec4f_->elem[3] = vec1_->elem[3] + vec2_->elem[3];
+vec3f_t vec3f_component_min(vec3f_t v1_, vec3f_t v2_) {
+    vec3f_t tmp_v = { 0 };
+
+    tmp_v.elem[0] = (v1_.elem[0] > v2_.elem[0]) ? v2_.elem[0] : v1_.elem[0];
+    tmp_v.elem[1] = (v1_.elem[1] > v2_.elem[1]) ? v2_.elem[1] : v1_.elem[1];
+    tmp_v.elem[2] = (v1_.elem[2] > v2_.elem[2]) ? v2_.elem[2] : v1_.elem[2];
+
+    return tmp_v;
 }
 
-void vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, vec4u8_t* out_vec4u8_) {
-    if(NULL == out_vec4u8_) {
-        ERROR_MESSAGE("vec4u8_initialize(INVALID_ARGUMENT) - Argument out_vec4u8_ requires a valid pointer.");
-        return;
-    }
-    out_vec4u8_->elem[0] = r_;
-    out_vec4u8_->elem[1] = g_;
-    out_vec4u8_->elem[2] = b_;
-    out_vec4u8_->elem[3] = a_;
+vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_) {
+    vec3f_t tmp_v = { 0 };
+
+    tmp_v.elem[0] = (v1_.elem[0] < v2_.elem[0]) ? v2_.elem[0] : v1_.elem[0];
+    tmp_v.elem[1] = (v1_.elem[1] < v2_.elem[1]) ? v2_.elem[1] : v1_.elem[1];
+    tmp_v.elem[2] = (v1_.elem[2] < v2_.elem[2]) ? v2_.elem[2] : v1_.elem[2];
+
+    return tmp_v;
 }
 
-void vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_, vec4i8_t* out_vec4i8_) {
-    if(NULL == out_vec4i8_) {
-        ERROR_MESSAGE("vec4i8_initialize(INVALID_ARGUMENT) - Argument out_vec4i8_ requires a valid pointer.");
-        return;
-    }
-    out_vec4i8_->elem[0] = x_;
-    out_vec4i8_->elem[1] = y_;
-    out_vec4i8_->elem[2] = z_;
-    out_vec4i8_->elem[3] = w_;
+vec4f_t vec4f_initialize(float x_, float y_, float z_, float w_) {
+    vec4f_t ret = { 0.0f };
+
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+    ret.elem[2] = z_;
+    ret.elem[3] = w_;
+
+    return ret;
+}
+
+vec4f_t vec4f_add(vec4f_t vec1_, vec4f_t vec2_) {
+    vec4f_t ret = { 0.0f };
+
+    ret.elem[0] = vec1_.elem[0] + vec2_.elem[0];
+    ret.elem[1] = vec1_.elem[1] + vec2_.elem[1];
+    ret.elem[2] = vec1_.elem[2] + vec2_.elem[2];
+    ret.elem[3] = vec1_.elem[3] + vec2_.elem[3];
+
+    return ret;
+}
+
+vec4u8_t vec4u8_initialize(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_) {
+    vec4u8_t ret = { 0 };
+
+    ret.elem[0] = r_;
+    ret.elem[1] = g_;
+    ret.elem[2] = b_;
+    ret.elem[3] = a_;
+
+    return ret;
+}
+
+vec4i8_t vec4i8_initialize(int8_t x_, int8_t y_, int8_t z_, int8_t w_) {
+    vec4i8_t ret = { 0 };
+
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+    ret.elem[2] = z_;
+    ret.elem[3] = w_;
+
+    return ret;
 }
 
 void mat4f_zero(mat4x4f_t* out_mat_) {
@@ -454,44 +460,36 @@ bool mat4f_inverse(mat4x4f_t* mat_) {
     return true;
 }
 
-void mat4f_vec4f_mul(const mat4x4f_t* mat_, const vec4f_t* vec_, vec4f_t* out_vec_) {
+vec4f_t mat4f_vec4f_mul(const mat4x4f_t* mat_, vec4f_t vec_) {
+    vec4f_t ret = { 0.0f };
+
     if(NULL == mat_) {
         ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument mat_ requires a valid pointer.");
-        return;
+        return ret;
     }
-    if(NULL == vec_) {
-        ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument vec_ requires a valid pointer.");
-        return;
-    }
-    if(NULL == out_vec_) {
-        ERROR_MESSAGE("mat4f_vec4f_mul(INVALID_ARGUMENT) - Argument out_vec_ requires a valid pointer.");
-        return;
-    }
-    const float x = vec_->elem[0];
-    const float y = vec_->elem[1];
-    const float z = vec_->elem[2];
-    const float w = vec_->elem[3];
+    const float x = vec_.elem[0];
+    const float y = vec_.elem[1];
+    const float z = vec_.elem[2];
+    const float w = vec_.elem[3];
 
-    out_vec_->elem[0] = mat_->elem[0]  * x + mat_->elem[1]  * y + mat_->elem[2]  * z + mat_->elem[3]  * w;
-    out_vec_->elem[1] = mat_->elem[4]  * x + mat_->elem[5]  * y + mat_->elem[6]  * z + mat_->elem[7]  * w;
-    out_vec_->elem[2] = mat_->elem[8]  * x + mat_->elem[9]  * y + mat_->elem[10] * z + mat_->elem[11] * w;
-    out_vec_->elem[3] = mat_->elem[12] * x + mat_->elem[13] * y + mat_->elem[14] * z + mat_->elem[15] * w;
+    ret.elem[0] = mat_->elem[0]  * x + mat_->elem[1]  * y + mat_->elem[2]  * z + mat_->elem[3]  * w;
+    ret.elem[1] = mat_->elem[4]  * x + mat_->elem[5]  * y + mat_->elem[6]  * z + mat_->elem[7]  * w;
+    ret.elem[2] = mat_->elem[8]  * x + mat_->elem[9]  * y + mat_->elem[10] * z + mat_->elem[11] * w;
+    ret.elem[3] = mat_->elem[12] * x + mat_->elem[13] * y + mat_->elem[14] * z + mat_->elem[15] * w;
+
+    return ret;
 }
 
-void mat4f_translation(const vec3f_t* position_, mat4x4f_t* mat_) {
-    if(NULL == position_) {
-        ERROR_MESSAGE("mat4f_translation(INVALID_ARGUMENT) - Argument position_ requires a valid pointer.");
-        return;
-    }
+void mat4f_translation(vec3f_t position_, mat4x4f_t* mat_) {
     if(NULL == mat_) {
         ERROR_MESSAGE("mat4f_translation(INVALID_ARGUMENT) - Argument mat_ requires a valid pointer.");
         return;
     }
 
     mat4f_identity(mat_);
-    mat_->elem[3] = position_->elem[0];
-    mat_->elem[7] = position_->elem[1];
-    mat_->elem[11] = position_->elem[2];
+    mat_->elem[3] = position_.elem[0];
+    mat_->elem[7] = position_.elem[1];
+    mat_->elem[11] = position_.elem[2];
 }
 
 void mat4f_rot_x(float radian_, mat4x4f_t* mat_) {
@@ -572,6 +570,7 @@ void NO_COVERAGE test_choco_math(void) {
     test_vec2f_add();
     test_vec3f_initialize();
     test_vec3f_add();
+    test_vec3f_scale();
     test_vec3f_length_squared();
     test_vec3f_length();
     test_vec3f_normalize();
@@ -658,13 +657,8 @@ static void NO_COVERAGE test_is_equal_float(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_vec2f_initialize(void) {
     {
-        // out_vec2f_ == NULL
-        vec2f_initialize(1.0f, 2.0f, NULL);
-    }
-    {
         // 正常系
-        vec2f_t vec = { 0 };
-        vec2f_initialize(1.0f, -2.5f, &vec);
+        vec2f_t vec = vec2f_initialize(1.0f, -2.5f);
 
         assert(is_equal_float(vec.elem[0], 1.0f));
         assert(is_equal_float(vec.elem[1], -2.5f));
@@ -674,44 +668,10 @@ static void NO_COVERAGE test_vec2f_initialize(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_vec2f_add(void) {
     {
-        // vec1_ == NULL: out_vec2f_は変更されない
-        vec2f_t vec2 = { .elem = { 1.0f, 2.0f } };
-        vec2f_t out = { .elem = { -10.0f, -20.0f } };
-
-        vec2f_add(NULL, &vec2, &out);
-
-        assert(is_equal_float(out.elem[0], -10.0f));
-        assert(is_equal_float(out.elem[1], -20.0f));
-    }
-    {
-        // vec2_ == NULL: out_vec2f_は変更されない
-        vec2f_t vec1 = { .elem = { 1.0f, 2.0f } };
-        vec2f_t out = { .elem = { -10.0f, -20.0f } };
-
-        vec2f_add(&vec1, NULL, &out);
-
-        assert(is_equal_float(out.elem[0], -10.0f));
-        assert(is_equal_float(out.elem[1], -20.0f));
-    }
-    {
-        // out_vec2f_ == NULL: 入力ベクトルは変更されない
-        vec2f_t vec1 = { .elem = { 1.0f, 2.0f } };
-        vec2f_t vec2 = { .elem = { 3.0f, 4.0f } };
-
-        vec2f_add(&vec1, &vec2, NULL);
-
-        assert(is_equal_float(vec1.elem[0], 1.0f));
-        assert(is_equal_float(vec1.elem[1], 2.0f));
-        assert(is_equal_float(vec2.elem[0], 3.0f));
-        assert(is_equal_float(vec2.elem[1], 4.0f));
-    }
-    {
         // 正常系
         vec2f_t vec1 = { .elem = { 1.0f, -2.0f } };
         vec2f_t vec2 = { .elem = { -3.5f, 4.25f } };
-        vec2f_t out = { 0 };
-
-        vec2f_add(&vec1, &vec2, &out);
+        vec2f_t out = vec2f_add(vec1, vec2);
 
         assert(is_equal_float(out.elem[0], -2.5f));
         assert(is_equal_float(out.elem[1], 2.25f));
@@ -721,7 +681,7 @@ static void NO_COVERAGE test_vec2f_add(void) {
         vec2f_t vec1 = { .elem = { 1.0f, 2.0f } };
         vec2f_t vec2 = { .elem = { 3.0f, 4.0f } };
 
-        vec2f_add(&vec1, &vec2, &vec1);
+        vec1 = vec2f_add(vec1, vec2);
 
         assert(is_equal_float(vec1.elem[0], 4.0f));
         assert(is_equal_float(vec1.elem[1], 6.0f));
@@ -731,7 +691,7 @@ static void NO_COVERAGE test_vec2f_add(void) {
         vec2f_t vec1 = { .elem = { 1.0f, 2.0f } };
         vec2f_t vec2 = { .elem = { 3.0f, 4.0f } };
 
-        vec2f_add(&vec1, &vec2, &vec2);
+        vec2 = vec2f_add(vec1, vec2);
 
         assert(is_equal_float(vec2.elem[0], 4.0f));
         assert(is_equal_float(vec2.elem[1], 6.0f));
@@ -741,13 +701,8 @@ static void NO_COVERAGE test_vec2f_add(void) {
 static void NO_COVERAGE test_vec3f_initialize(void) {
     // Generated by ChatGPT 5.4 Thinking
     {
-        // out_vec3f_ == NULL
-        vec3f_initialize(1.0f, 2.0f, 3.0f, NULL);
-    }
-    {
         // 正常系
-        vec3f_t vec = { 0 };
-        vec3f_initialize(1.0f, -2.0f, 3.5f, &vec);
+        vec3f_t vec = vec3f_initialize(1.0f, -2.0f, 3.5f);
 
         assert(is_equal_float(1.0f, vec.elem[0]));
         assert(is_equal_float(-2.0f, vec.elem[1]));
@@ -758,33 +713,10 @@ static void NO_COVERAGE test_vec3f_initialize(void) {
 static void NO_COVERAGE test_vec3f_add(void) {
     // Generated by ChatGPT 5.4 Thinking
     {
-        // vec1_ == NULL
-        vec3f_t vec2 = { .elem = { 1.0f, 2.0f, 3.0f } };
-        vec3f_t out = { 0 };
-
-        vec3f_add(NULL, &vec2, &out);
-    }
-    {
-        // vec2_ == NULL
-        vec3f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f } };
-        vec3f_t out = { 0 };
-
-        vec3f_add(&vec1, NULL, &out);
-    }
-    {
-        // out_vec3f_ == NULL
-        vec3f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f } };
-        vec3f_t vec2 = { .elem = { 4.0f, 5.0f, 6.0f } };
-
-        vec3f_add(&vec1, &vec2, NULL);
-    }
-    {
         // 正常系
         vec3f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f } };
         vec3f_t vec2 = { .elem = { 4.0f, 5.0f, 6.0f } };
-        vec3f_t out = { 0 };
-
-        vec3f_add(&vec1, &vec2, &out);
+        vec3f_t out = vec3f_add(vec1, vec2);
 
         assert(is_equal_float(out.elem[0], 5.0f));
         assert(is_equal_float(out.elem[1], 7.0f));
@@ -795,7 +727,7 @@ static void NO_COVERAGE test_vec3f_add(void) {
         vec3f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f } };
         vec3f_t vec2 = { .elem = { 4.0f, 5.0f, 6.0f } };
 
-        vec3f_add(&vec1, &vec2, &vec1);
+        vec1 = vec3f_add(vec1, vec2);
 
         assert(is_equal_float(vec1.elem[0], 5.0f));
         assert(is_equal_float(vec1.elem[1], 7.0f));
@@ -806,7 +738,7 @@ static void NO_COVERAGE test_vec3f_add(void) {
         vec3f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f } };
         vec3f_t vec2 = { .elem = { 4.0f, 5.0f, 6.0f } };
 
-        vec3f_add(&vec1, &vec2, &vec2);
+        vec2 = vec3f_add(vec1, vec2);
 
         assert(is_equal_float(vec2.elem[0], 5.0f));
         assert(is_equal_float(vec2.elem[1], 7.0f));
@@ -815,30 +747,53 @@ static void NO_COVERAGE test_vec3f_add(void) {
 }
 
 // Generated by ChatGPT
-static void NO_COVERAGE test_vec3f_length_squared(void) {
+static void NO_COVERAGE test_vec3f_scale(void) {
     {
-        // vec_ == NULL
-        const float ret = vec3f_length_squared(NULL);
-        assert(is_equal_float(ret, 0.0f));
+        vec3f_t v = { .elem = { 1.0f, -2.0f, 3.0f } };
+        vec3f_t out = vec3f_scale(v, 2.0f);
+
+        assert(is_equal_float(out.elem[0], 2.0f));
+        assert(is_equal_float(out.elem[1], -4.0f));
+        assert(is_equal_float(out.elem[2], 6.0f));
     }
+    {
+        vec3f_t v = { .elem = { 1.0f, -2.0f, 3.0f } };
+        vec3f_t out = vec3f_scale(v, 0.0f);
+
+        assert(is_equal_float(out.elem[0], 0.0f));
+        assert(is_equal_float(out.elem[1], 0.0f));
+        assert(is_equal_float(out.elem[2], 0.0f));
+    }
+    {
+        vec3f_t v = { .elem = { 1.0f, -2.0f, 3.0f } };
+        vec3f_t out = vec3f_scale(v, -1.0f);
+
+        assert(is_equal_float(out.elem[0], -1.0f));
+        assert(is_equal_float(out.elem[1], 2.0f));
+        assert(is_equal_float(out.elem[2], -3.0f));
+    }
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_vec3f_length_squared(void) {
     {
         // ゼロベクトル
         vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
-        const float ret = vec3f_length_squared(&vec);
+        const float ret = vec3f_length_squared(vec);
 
         assert(is_equal_float(ret, 0.0f));
     }
     {
         // 正の一般値
         vec3f_t vec = { .elem = { 1.0f, 2.0f, 2.0f } };
-        const float ret = vec3f_length_squared(&vec);
+        const float ret = vec3f_length_squared(vec);
 
         assert(is_equal_float(ret, 9.0f));
     }
     {
         // 負値を含む一般値
         vec3f_t vec = { .elem = { -3.0f, 4.0f, -12.0f } };
-        const float ret = vec3f_length_squared(&vec);
+        const float ret = vec3f_length_squared(vec);
 
         assert(is_equal_float(ret, 169.0f));
     }
@@ -847,28 +802,23 @@ static void NO_COVERAGE test_vec3f_length_squared(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_vec3f_length(void) {
     {
-        // vec_ == NULL
-        const float ret = vec3f_length(NULL);
-        assert(is_equal_float(ret, 0.0f));
-    }
-    {
         // ゼロベクトル
         vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
-        const float ret = vec3f_length(&vec);
+        const float ret = vec3f_length(vec);
 
         assert(is_equal_float(ret, 0.0f));
     }
     {
         // 一般値
         vec3f_t vec = { .elem = { 3.0f, 4.0f, 12.0f } };
-        const float ret = vec3f_length(&vec);
+        const float ret = vec3f_length(vec);
 
         assert(is_equal_float(ret, 13.0f));
     }
     {
         // 負値を含む一般値
         vec3f_t vec = { .elem = { -1.0f, -2.0f, -2.0f } };
-        const float ret = vec3f_length(&vec);
+        const float ret = vec3f_length(vec);
 
         assert(is_equal_float(ret, 3.0f));
     }
@@ -877,65 +827,56 @@ static void NO_COVERAGE test_vec3f_length(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_vec3f_normalize(void) {
     {
-        // vec_ == NULL
-        vec3f_normalize(NULL);
-    }
-    {
         // ゼロベクトル: 値不変
         vec3f_t vec = { .elem = { 0.0f, 0.0f, 0.0f } };
 
-        vec3f_normalize(&vec);
+        vec = vec3f_normalize(vec);
 
         assert(is_equal_float(vec.elem[0], 0.0f));
         assert(is_equal_float(vec.elem[1], 0.0f));
         assert(is_equal_float(vec.elem[2], 0.0f));
-        assert(is_equal_float(vec3f_length(&vec), 0.0f));
+        assert(is_equal_float(vec3f_length(vec), 0.0f));
     }
     {
         // 軸ベクトル
         vec3f_t vec = { .elem = { 3.0f, 0.0f, 0.0f } };
 
-        vec3f_normalize(&vec);
+        vec = vec3f_normalize(vec);
 
         assert(is_equal_float(vec.elem[0], 1.0f));
         assert(is_equal_float(vec.elem[1], 0.0f));
         assert(is_equal_float(vec.elem[2], 0.0f));
-        assert(is_equal_float(vec3f_length(&vec), 1.0f));
+        assert(is_equal_float(vec3f_length(vec), 1.0f));
     }
     {
         // 一般値
         vec3f_t vec = { .elem = { 1.0f, 2.0f, 2.0f } };
 
-        vec3f_normalize(&vec);
+        vec = vec3f_normalize(vec);
 
         assert(is_equal_float(vec.elem[0], (1.0f / 3.0f)));
         assert(is_equal_float(vec.elem[1], (2.0f / 3.0f)));
         assert(is_equal_float(vec.elem[2], (2.0f / 3.0f)));
-        assert(is_equal_float(vec3f_length(&vec), 1.0f));
+        assert(is_equal_float(vec3f_length(vec), 1.0f));
     }
     {
         // 負値を含む一般値
         vec3f_t vec = { .elem = { -2.0f, 0.0f, 0.0f } };
 
-        vec3f_normalize(&vec);
+        vec = vec3f_normalize(vec);
 
         assert(is_equal_float(vec.elem[0], -1.0f));
         assert(is_equal_float(vec.elem[1], 0.0f));
         assert(is_equal_float(vec.elem[2], 0.0f));
-        assert(is_equal_float(vec3f_length(&vec), 1.0f));
+        assert(is_equal_float(vec3f_length(vec), 1.0f));
     }
 }
 
 static void NO_COVERAGE test_vec4f_initialize(void) {
     // Generated by ChatGPT 5.4 Thinking
     {
-        // out_vec4f_ == NULL
-        vec4f_initialize(1.0f, 2.0f, 3.0f, 4.0f, NULL);
-    }
-    {
         // 正常系
-        vec4f_t vec = { 0 };
-        vec4f_initialize(1.0f, -2.0f, 3.5f, -4.25f, &vec);
+        vec4f_t vec = vec4f_initialize(1.0f, -2.0f, 3.5f, -4.25f);
 
         assert(is_equal_float(vec.elem[0], 1.0f));
         assert(is_equal_float(vec.elem[1], -2.0f));
@@ -947,33 +888,10 @@ static void NO_COVERAGE test_vec4f_initialize(void) {
 static void NO_COVERAGE test_vec4f_add(void) {
     // Generated by ChatGPT 5.4 Thinking
     {
-        // vec1_ == NULL
-        vec4f_t vec2 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
-
-        vec4f_add(NULL, &vec2, &out);
-    }
-    {
-        // vec2_ == NULL
-        vec4f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
-
-        vec4f_add(&vec1, NULL, &out);
-    }
-    {
-        // out_vec4f_ == NULL
-        vec4f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t vec2 = { .elem = { 5.0f, 6.0f, 7.0f, 8.0f } };
-
-        vec4f_add(&vec1, &vec2, NULL);
-    }
-    {
         // 正常系
         vec4f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
         vec4f_t vec2 = { .elem = { 5.0f, 6.0f, 7.0f, 8.0f } };
-        vec4f_t out = { 0 };
-
-        vec4f_add(&vec1, &vec2, &out);
+        vec4f_t out = vec4f_add(vec1, vec2);
 
         assert(is_equal_float(out.elem[0], 6.0f));
         assert(is_equal_float(out.elem[1], 8.0f));
@@ -985,7 +903,7 @@ static void NO_COVERAGE test_vec4f_add(void) {
         vec4f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
         vec4f_t vec2 = { .elem = { 5.0f, 6.0f, 7.0f, 8.0f } };
 
-        vec4f_add(&vec1, &vec2, &vec1);
+        vec1 = vec4f_add(vec1, vec2);
 
         assert(is_equal_float(vec1.elem[0], 6.0f));
         assert(is_equal_float(vec1.elem[1], 8.0f));
@@ -997,7 +915,7 @@ static void NO_COVERAGE test_vec4f_add(void) {
         vec4f_t vec1 = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
         vec4f_t vec2 = { .elem = { 5.0f, 6.0f, 7.0f, 8.0f } };
 
-        vec4f_add(&vec1, &vec2, &vec2);
+        vec2 = vec4f_add(vec1, vec2);
 
         assert(is_equal_float(vec2.elem[0], 6.0f));
         assert(is_equal_float(vec2.elem[1], 8.0f));
@@ -1009,14 +927,8 @@ static void NO_COVERAGE test_vec4f_add(void) {
 // Generated by ChatGPT
 static void NO_COVERAGE test_vec4u8_initialize(void) {
     {
-        // out_vec4u8_ == NULL
-        vec4u8_initialize(1, 2, 3, 4, NULL);
-    }
-    {
         // 正常系
-        vec4u8_t vec = { 0 };
-
-        vec4u8_initialize(10, 20, 30, 40, &vec);
+        vec4u8_t vec = vec4u8_initialize(10, 20, 30, 40);
 
         assert(vec.elem[0] == 10);
         assert(vec.elem[1] == 20);
@@ -1025,9 +937,7 @@ static void NO_COVERAGE test_vec4u8_initialize(void) {
     }
     {
         // 境界値: 0
-        vec4u8_t vec = { 0 };
-
-        vec4u8_initialize(0, 0, 0, 0, &vec);
+        vec4u8_t vec = vec4u8_initialize(0, 0, 0, 0);
 
         assert(vec.elem[0] == 0);
         assert(vec.elem[1] == 0);
@@ -1036,9 +946,7 @@ static void NO_COVERAGE test_vec4u8_initialize(void) {
     }
     {
         // 境界値: 255
-        vec4u8_t vec = { 0 };
-
-        vec4u8_initialize(255, 255, 255, 255, &vec);
+        vec4u8_t vec = vec4u8_initialize(255, 255, 255, 255);
 
         assert(vec.elem[0] == 255);
         assert(vec.elem[1] == 255);
@@ -1049,7 +957,7 @@ static void NO_COVERAGE test_vec4u8_initialize(void) {
         // 既存値の上書き
         vec4u8_t vec = { .elem = { 255, 128, 64, 32 } };
 
-        vec4u8_initialize(1, 2, 3, 4, &vec);
+        vec = vec4u8_initialize(1, 2, 3, 4);
 
         assert(vec.elem[0] == 1);
         assert(vec.elem[1] == 2);
@@ -1675,37 +1583,12 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
     {
         // mat_ == NULL
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
+        vec4f_t out = mat4f_vec4f_mul(NULL, vec);
 
-        mat4f_vec4f_mul(NULL, &vec, &out);
-    }
-    {
-        // vec_ == NULL
-        mat4x4f_t mat = {
-            .elem = {
-                 1.0f,  2.0f,  3.0f,  4.0f,
-                 5.0f,  6.0f,  7.0f,  8.0f,
-                 9.0f, 10.0f, 11.0f, 12.0f,
-                13.0f, 14.0f, 15.0f, 16.0f
-            }
-        };
-        vec4f_t out = { 0 };
-
-        mat4f_vec4f_mul(&mat, NULL, &out);
-    }
-    {
-        // out_vec_ == NULL
-        mat4x4f_t mat = {
-            .elem = {
-                 1.0f,  2.0f,  3.0f,  4.0f,
-                 5.0f,  6.0f,  7.0f,  8.0f,
-                 9.0f, 10.0f, 11.0f, 12.0f,
-                13.0f, 14.0f, 15.0f, 16.0f
-            }
-        };
-        vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-
-        mat4f_vec4f_mul(&mat, &vec, NULL);
+        assert(is_equal_float(0.0f, out.elem[0]));
+        assert(is_equal_float(0.0f, out.elem[1]));
+        assert(is_equal_float(0.0f, out.elem[2]));
+        assert(is_equal_float(0.0f, out.elem[3]));
     }
     {
         // 正常系
@@ -1718,9 +1601,7 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
             }
         };
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
-        vec4f_t out = { 0 };
-
-        mat4f_vec4f_mul(&mat, &vec, &out);
+        vec4f_t out = mat4f_vec4f_mul(&mat, vec);
 
         assert(is_equal_float(out.elem[0], 30.0f));
         assert(is_equal_float(out.elem[1], 70.0f));
@@ -1739,7 +1620,7 @@ static void NO_COVERAGE test_mat4f_vec4f_mul(void) {
         };
         vec4f_t vec = { .elem = { 1.0f, 2.0f, 3.0f, 4.0f } };
 
-        mat4f_vec4f_mul(&mat, &vec, &vec);
+        vec = mat4f_vec4f_mul(&mat, vec);
 
         assert(is_equal_float(vec.elem[0], 30.0f));
         assert(is_equal_float(vec.elem[1], 70.0f));
@@ -1753,7 +1634,7 @@ static void NO_COVERAGE test_mat4f_translation(void) {
     {
         // mat_ == NULL
         vec3f_t position = { .elem = { 1.0f, 2.0f, 3.0f } };
-        mat4f_translation(&position, NULL);
+        mat4f_translation(position, NULL);
     }
     {
         // 正常系: 正の値・負の値・小数を含む平行移動
@@ -1767,7 +1648,7 @@ static void NO_COVERAGE test_mat4f_translation(void) {
             }
         };
 
-        mat4f_translation(&position, &mat);
+        mat4f_translation(position, &mat);
 
         assert(is_equal_float(mat.elem[0], 1.0f));
         assert(is_equal_float(mat.elem[1], 0.0f));
@@ -1790,16 +1671,11 @@ static void NO_COVERAGE test_mat4f_translation(void) {
         assert(is_equal_float(mat.elem[15], 1.0f));
     }
     {
-        // position_ == NULL
-        mat4x4f_t mat = { 0 };
-        mat4f_translation(NULL, &mat);
-    }
-    {
         // 正常系: ゼロ平行移動は単位行列になる
         vec3f_t position = { .elem = { 0.0f, 0.0f, 0.0f } };
         mat4x4f_t mat = { 0 };
 
-        mat4f_translation(&position, &mat);
+        mat4f_translation(position, &mat);
 
         assert(is_equal_float(mat.elem[0], 1.0f));
         assert(is_equal_float(mat.elem[1], 0.0f));

@@ -13,20 +13,20 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/camera_system/camera/camera.h"
+
 #include <stdbool.h>
 
-#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+#include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
+
+#include "engine/containers/choco_string.h"
 
 #include "engine/systems/camera_system/camera_core/camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/camera_memory.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-
-#include "engine/base/choco_math/math_types.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
-
-#include "engine/containers/choco_string.h"
 
 // #define TEST_BUILD
 
@@ -181,8 +181,8 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     tmp_camera->posture_cache_dirty = true;
     tmp_camera->frustum_cache_dirty = true;
 
-    vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->euler);
-    vec3f_initialize(0.0f, 0.0f, 0.0f, &tmp_camera->position);
+    tmp_camera->euler = vec3f_initialize(0.0f, 0.0f, 0.0f);
+    tmp_camera->position = vec3f_initialize(0.0f, 0.0f, 0.0f);
 
     *out_camera_ = tmp_camera;
 
@@ -227,7 +227,7 @@ const char* camera_name_get(const camera_t* camera_) {
     return choco_string_c_str(camera_->name);
 }
 
-camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
+camera_result_t camera_viewing_frustum_update(camera_t* camera_, float fovy_, float aspect_, float near_clip_, float far_clip_) {
 #ifdef TEST_BUILD
     s_test_config_camera_viewing_frustum_update.call_count++;
     if(s_test_config_camera_viewing_frustum_update.fail_on_call != 0) {
@@ -259,7 +259,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_) {
+camera_result_t camera_euler_update(camera_t* camera_, vec3f_t euler_) {
 #ifdef TEST_BUILD
     s_test_config_camera_euler_update.call_count++;
     if(s_test_config_camera_euler_update.fail_on_call != 0) {
@@ -270,13 +270,9 @@ camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_) {
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(euler_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_euler_update", "euler_")
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_euler_update", "camera_")
 
-    camera_->euler.elem[0] = euler_->elem[0];
-    camera_->euler.elem[1] = euler_->elem[1];
-    camera_->euler.elem[2] = euler_->elem[2];
-
+    camera_->euler = euler_;
     camera_->posture_cache_dirty = true;
 
     ret = CAMERA_SUCCESS;
@@ -285,7 +281,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_) {
+camera_result_t camera_position_update(camera_t* camera_, vec3f_t position_) {
 #ifdef TEST_BUILD
     s_test_config_camera_position_update.call_count++;
     if(s_test_config_camera_position_update.fail_on_call != 0) {
@@ -296,13 +292,9 @@ camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camer
 #endif
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(position_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_update", "position_")
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_update", "camera_")
 
-    camera_->position.elem[0] = position_->elem[0];
-    camera_->position.elem[1] = position_->elem[1];
-    camera_->position.elem[2] = position_->elem[2];
-
+    camera_->position = position_;
     camera_->posture_cache_dirty = true;
 
     ret = CAMERA_SUCCESS;
@@ -438,7 +430,7 @@ camera_result_t camera_forward_vector_get(camera_t* camera_, vec3f_t* out_vec_) 
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[10];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -474,7 +466,7 @@ camera_result_t camera_backward_vector_get(camera_t* camera_, vec3f_t* out_vec_)
     v.elem[0] = camera_->camera_to_world_matrix.elem[2];
     v.elem[1] = camera_->camera_to_world_matrix.elem[6];
     v.elem[2] = camera_->camera_to_world_matrix.elem[10];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -510,7 +502,7 @@ camera_result_t camera_right_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = camera_->camera_to_world_matrix.elem[8];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -546,7 +538,7 @@ camera_result_t camera_left_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[0];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[4];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[8];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -582,7 +574,7 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = camera_->camera_to_world_matrix.elem[9];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -618,7 +610,7 @@ camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_) {
     v.elem[0] = -1.0f * camera_->camera_to_world_matrix.elem[1];
     v.elem[1] = -1.0f * camera_->camera_to_world_matrix.elem[5];
     v.elem[2] = -1.0f * camera_->camera_to_world_matrix.elem[9];
-    vec3f_normalize(&v);
+    v = vec3f_normalize(v);
 
     out_vec_->elem[0] = v.elem[0];
     out_vec_->elem[1] = v.elem[1];
@@ -743,7 +735,7 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t trans = { 0 };
 
     mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
-    mat4f_translation(&camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
+    mat4f_translation(camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
 
     // 後に変換するものを左から掛ける
     mat4f_mul(&trans, &rot, &camera_->camera_to_world_matrix);
@@ -1359,7 +1351,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_viewing_frustum_update_config_set(&config);
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         camera_destroy(&camera);
@@ -1377,7 +1369,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
+        ret = camera_viewing_frustum_update(NULL, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1405,7 +1397,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         camera->frustum_cache_dirty = false;
 
         // near_clip >= far_clip で無効
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 1.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 10.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         // 既存状態が維持されること
@@ -1445,7 +1437,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         camera->frustum.far_clip = 2.0f;
         camera->frustum_cache_dirty = false;
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->frustum.aspect, 16.0f / 9.0f));
@@ -1489,46 +1481,8 @@ static void NO_COVERAGE test_camera_euler_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_euler_update_config_set(&config);
 
-        ret = camera_euler_update(&euler, camera);
+        ret = camera_euler_update(camera, euler);
         assert(CAMERA_BAD_OPERATION == ret);
-
-        camera_destroy(&camera);
-        assert(NULL == camera);
-
-        memory_system_destroy();
-
-        test_choco_string_config_reset();
-        test_camera_memory_config_reset();
-        test_camera_config_reset();
-    }
-    {
-        // euler_ == NULL -> CAMERA_INVALID_ARGUMENT
-        // 状態が変更されないこと
-        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        camera_t* camera = NULL;
-
-        test_camera_config_reset();
-        test_camera_memory_config_reset();
-        test_choco_string_config_reset();
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-        ret = camera_create("main_camera", &camera);
-        assert(CAMERA_SUCCESS == ret);
-        assert(NULL != camera);
-
-        camera->euler.elem[0] = 1.0f;
-        camera->euler.elem[1] = 2.0f;
-        camera->euler.elem[2] = 3.0f;
-        camera->posture_cache_dirty = false;
-
-        ret = camera_euler_update(NULL, camera);
-        assert(CAMERA_INVALID_ARGUMENT == ret);
-
-        assert(is_equal_float(camera->euler.elem[0], 1.0f));
-        assert(is_equal_float(camera->euler.elem[1], 2.0f));
-        assert(is_equal_float(camera->euler.elem[2], 3.0f));
-        assert(false == camera->posture_cache_dirty);
 
         camera_destroy(&camera);
         assert(NULL == camera);
@@ -1546,7 +1500,7 @@ static void NO_COVERAGE test_camera_euler_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_euler_update(&euler, NULL);
+        ret = camera_euler_update(NULL, euler);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1575,7 +1529,7 @@ static void NO_COVERAGE test_camera_euler_update(void) {
         camera->position.elem[2] = 300.0f;
         camera->posture_cache_dirty = false;
 
-        ret = camera_euler_update(&euler, camera);
+        ret = camera_euler_update(camera, euler);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->euler.elem[0], 15.0f));
@@ -1623,46 +1577,8 @@ static void NO_COVERAGE test_camera_position_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_position_update_config_set(&config);
 
-        ret = camera_position_update(&position, camera);
+        ret = camera_position_update(camera, position);
         assert(CAMERA_BAD_OPERATION == ret);
-
-        camera_destroy(&camera);
-        assert(NULL == camera);
-
-        memory_system_destroy();
-
-        test_choco_string_config_reset();
-        test_camera_memory_config_reset();
-        test_camera_config_reset();
-    }
-    {
-        // position_ == NULL -> CAMERA_INVALID_ARGUMENT
-        // 状態が変更されないこと
-        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-        camera_t* camera = NULL;
-
-        test_camera_config_reset();
-        test_camera_memory_config_reset();
-        test_choco_string_config_reset();
-
-        assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-        ret = camera_create("main_camera", &camera);
-        assert(CAMERA_SUCCESS == ret);
-        assert(NULL != camera);
-
-        camera->position.elem[0] = 1.0f;
-        camera->position.elem[1] = 2.0f;
-        camera->position.elem[2] = 3.0f;
-        camera->posture_cache_dirty = false;
-
-        ret = camera_position_update(NULL, camera);
-        assert(CAMERA_INVALID_ARGUMENT == ret);
-
-        assert(is_equal_float(camera->position.elem[0], 1.0f));
-        assert(is_equal_float(camera->position.elem[1], 2.0f));
-        assert(is_equal_float(camera->position.elem[2], 3.0f));
-        assert(false == camera->posture_cache_dirty);
 
         camera_destroy(&camera);
         assert(NULL == camera);
@@ -1680,7 +1596,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_position_update(&position, NULL);
+        ret = camera_position_update(NULL, position);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1709,7 +1625,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
         camera->euler.elem[2] = 300.0f;
         camera->posture_cache_dirty = false;
 
-        ret = camera_position_update(&position, camera);
+        ret = camera_position_update(camera, position);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->position.elem[0], 15.0f));
@@ -4286,7 +4202,7 @@ static void NO_COVERAGE test_camera_to_world_matrix_update(void) {
 
         camera_to_world_matrix_update(&camera);
 
-        mat4f_translation(&position, &expected);
+        mat4f_translation(position, &expected);
         for(int i = 0; i < 16; ++i) {
             assert(is_equal_float(expected.elem[i], camera.camera_to_world_matrix.elem[i]));
         }
@@ -4321,7 +4237,7 @@ static void NO_COVERAGE test_camera_to_world_matrix_update(void) {
             CHOCO_DEG_TO_RAD(z_deg),
             &rot
         );
-        mat4f_translation(&position, &trans);
+        mat4f_translation(position, &trans);
         mat4f_mul(&trans, &rot, &expected);
 
         for(int i = 0; i < 16; ++i) {
@@ -4409,7 +4325,7 @@ static void NO_COVERAGE test_view_matrix_update(void) {
 
         test_camera_config_reset();
 
-        mat4f_translation(&position, &camera.camera_to_world_matrix);
+        mat4f_translation(position, &camera.camera_to_world_matrix);
 
         const bool ret = view_matrix_update(&camera);
         assert(true == ret);

@@ -35,10 +35,10 @@ typedef renderer_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_destroyの前方宣言 */
 typedef renderer_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_compileの前方宣言 */
 typedef renderer_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_linkの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_, uint32_t* out_program_id_);   /**< renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 */
 typedef renderer_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);  /**< renderer_shader_vtableが保持するrenderer_shader_uniform_location_getの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, bool should_transpose_, const float* data_, uint32_t* out_program_id_);  /**< renderer_shader_vtableが保持するrenderer_shader_mat4f_uniform_setの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_shader_vec4u8_uniform_set)(const renderer_backend_shader_t* shader_handle_, int32_t location_, const uint8_t* data_, uint32_t* out_program_id_);   /**< renderer_shader_vtableが保持するrenderer_shader_vec4u8_uniform_setの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_mat4f_uniform_set)(int32_t location_, bool should_transpose_, const float* data_);  /**< renderer_shader_vtableが保持するrenderer_shader_mat4f_uniform_setの前方宣言 */
+typedef renderer_result_t (*pfn_renderer_shader_vec4u8_uniform_set)(int32_t location_, const uint8_t* data_);   /**< renderer_shader_vtableが保持するrenderer_shader_vec4u8_uniform_setの前方宣言 */
 
 /**
  * @brief シェーダー機能仮想関数テーブル
@@ -115,14 +115,9 @@ typedef struct renderer_shader_vtable {
     /**
      * @brief シェーダープログラムを切り替える
      *
-     * @note 切り替え先シェーダープログラムがすでに使用中であれば切り替えは行わない
-     *
      * @param[in] shader_handle_ 切り替え先シェーダープログラムを管理する内部状態管理構造体インスタンスへのポインタ
-     * @param[in,out] out_program_id_ 現在使用中のシェーダープログラム識別子
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
-     * - shader_handle_ == NULL
-     * - out_program_id_ == NULL
+     * @retval RENDERER_INVALID_ARGUMENT shader_handle_ == NULL
      * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
      * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
      * - program_idが設定されているにもかかわらず、バーテックスシェーダーオブジェクトハンドルが未設定
@@ -150,18 +145,13 @@ typedef struct renderer_shader_vtable {
     /**
      * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
      *
-     * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+     * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
+     *
      * @param[in] location_ ユニフォーム変数のLocation
      * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
      * @param[in] data_ 送信データへのポインタ
-     * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
-     * - shader_handle_ == NULL
-     * - data_ == NULL
-     * - out_program_id_ == NULL
-     * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
-     * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
+     * @retval RENDERER_INVALID_ARGUMENT data_ == NULL
      * @retval RENDERER_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_shader_mat4f_uniform_set renderer_shader_mat4f_uniform_set;
@@ -169,17 +159,12 @@ typedef struct renderer_shader_vtable {
     /**
      * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
      *
-     * @param[in] shader_handle_ シェーダープログラムハンドルインスタンスへのポインタ
+     * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
+     *
      * @param[in] location_ ユニフォーム変数のLocation
      * @param[in] data_ 送信データへのポインタ
-     * @param[in,out] out_program_id_ 現在使用中のOpenGLプログラム識別子
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
-     * - shader_handle_ == NULL
-     * - data_ == NULL
-     * - out_program_id_ == NULL
-     * @retval RENDERER_DATA_CORRUPTED シェーダープログラムハンドルインスタンスの内部データが破損
-     * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク状態
+     * @retval RENDERER_INVALID_ARGUMENT data_ == NULL
      * @retval RENDERER_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_shader_vec4u8_uniform_set renderer_shader_vec4u8_uniform_set;

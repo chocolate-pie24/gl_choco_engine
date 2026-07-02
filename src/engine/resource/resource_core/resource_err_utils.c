@@ -18,6 +18,7 @@
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -37,10 +38,11 @@
 // resource_err_utils用モジュール専用テスト制御構造体定義
 
 // 外部公開APIテスト設定
-static test_call_control_t s_test_config_resource_rslt_convert_choco_memory;    /**< resource_rslt_convert_choco_memory()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_filesystem;      /**< resource_rslt_convert_filesystem()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_fs_utils;        /**< resource_rslt_convert_fs_utils()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_choco_string;    /**< resource_rslt_convert_choco_string()テスト設定 */
+static test_call_control_t s_test_config_resource_rslt_convert_choco_memory;        /**< resource_rslt_convert_choco_memory()テスト設定 */
+static test_call_control_t s_test_config_resource_rslt_convert_filesystem;          /**< resource_rslt_convert_filesystem()テスト設定 */
+static test_call_control_t s_test_config_resource_rslt_convert_fs_utils;            /**< resource_rslt_convert_fs_utils()テスト設定 */
+static test_call_control_t s_test_config_resource_rslt_convert_choco_string;        /**< resource_rslt_convert_choco_string()テスト設定 */
+static test_call_control_t s_test_config_resource_rslt_convert_geometry_primitive;  /**< resource_rslt_convert_geometry_primitive()テスト設定 */
 
 // プライベート関数テスト設定
 
@@ -50,6 +52,7 @@ static void test_resource_rslt_convert_choco_memory(void);
 static void test_resource_rslt_convert_filesystem(void);
 static void test_resource_rslt_convert_fs_utils(void);
 static void test_resource_rslt_convert_choco_string(void);
+static void test_resource_rslt_convert_geometry_primitive(void);
 #endif
 
 static const char* const s_rslt_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
@@ -189,6 +192,8 @@ resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t result_) {
         return RESOURCE_FILE_OPEN_ERROR;
     case FS_UTILS_RUNTIME_ERROR:
         return RESOURCE_RUNTIME_ERROR;
+    case FS_UTILS_EOF:
+        return RESOURCE_RUNTIME_ERROR;  // 基本的にEOFをそのまま伝播させることはないのでとりあえずRUNTIME_ERRORに変換する
     case FS_UTILS_UNDEFINED_ERROR:
         return RESOURCE_UNDEFINED_ERROR;
     default:
@@ -224,6 +229,37 @@ resource_result_t resource_rslt_convert_choco_string(choco_string_result_t resul
         return RESOURCE_OVERFLOW;
     case CHOCO_STRING_LIMIT_EXCEEDED:
         return RESOURCE_LIMIT_EXCEEDED;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_) {
+#ifdef TEST_BUILD
+    s_test_config_resource_rslt_convert_geometry_primitive.call_count++;
+    if(s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call != 0) {
+        if(s_test_config_resource_rslt_convert_geometry_primitive.call_count == s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call) {
+            return (resource_result_t)s_test_config_resource_rslt_convert_geometry_primitive.forced_result;
+        }
+    }
+#endif
+    switch(rslt_) {
+    case GEOMETRY_PRIMITIVE_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
+        return RESOURCE_RUNTIME_ERROR;
+    case GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
+        return RESOURCE_LIMIT_EXCEEDED;
+    case GEOMETRY_PRIMITIVE_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case GEOMETRY_PRIMITIVE_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
     default:
         return RESOURCE_UNDEFINED_ERROR;
     }
@@ -266,11 +302,21 @@ void NO_COVERAGE test_resource_rslt_convert_choco_string_config_set(const test_c
     s_test_config_resource_rslt_convert_choco_string.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_resource_rslt_convert_geometry_primitive_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call = config_->fail_on_call;
+    s_test_config_resource_rslt_convert_geometry_primitive.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_resource_err_utils_config_reset(void) {
     test_call_control_reset(&s_test_config_resource_rslt_convert_choco_memory);
     test_call_control_reset(&s_test_config_resource_rslt_convert_filesystem);
     test_call_control_reset(&s_test_config_resource_rslt_convert_fs_utils);
     test_call_control_reset(&s_test_config_resource_rslt_convert_choco_string);
+    test_call_control_reset(&s_test_config_resource_rslt_convert_geometry_primitive);
 }
 
 void NO_COVERAGE test_resource_err_utils(void) {
@@ -279,6 +325,7 @@ void NO_COVERAGE test_resource_err_utils(void) {
     test_resource_rslt_convert_filesystem();
     test_resource_rslt_convert_fs_utils();
     test_resource_rslt_convert_choco_string();
+    test_resource_rslt_convert_geometry_primitive();
 }
 
 // Generated by ChatGPT
@@ -415,6 +462,35 @@ static void NO_COVERAGE test_resource_rslt_convert_choco_string(void) {
 
     assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
     assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
+
+    test_resource_err_utils_config_reset();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_resource_rslt_convert_geometry_primitive(void) {
+    test_call_control_t config;
+
+    test_resource_err_utils_config_reset();
+
+    assert(RESOURCE_SUCCESS == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
+    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT));
+    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_RUNTIME_ERROR));
+    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED));
+    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_BAD_OPERATION));
+    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_NO_MEMORY));
+    assert(RESOURCE_DATA_CORRUPTED == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_DATA_CORRUPTED));
+    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_UNDEFINED_ERROR));
+
+    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_geometry_primitive((geometry_primitive_result_t)-1));
+
+    test_resource_err_utils_config_reset();
+
+    config.fail_on_call = 2;
+    config.forced_result = RESOURCE_RUNTIME_ERROR;
+    test_resource_rslt_convert_geometry_primitive_config_set(&config);
+
+    assert(RESOURCE_SUCCESS == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
+    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
 
     test_resource_err_utils_config_reset();
 }

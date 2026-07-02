@@ -25,12 +25,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>  // for sscanf
-#include <math.h>   // for isfinite
 
 #include "engine/resource/loaders/stl_loader.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
@@ -193,6 +193,11 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     IF_ARG_NOT_NULL_GOTO_CLEANUP(stl_loader_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertices")
 
     ret = stl_loader_vertex_count_calc(path_, name_, extension_, &vertex_count);
+    if(0 == vertex_count) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - ASCII STL has no vertices.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to calculate vertex count for ASCII STL file.", resource_rslt_to_str(ret));
         goto cleanup;
@@ -247,7 +252,7 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
                     ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to parse 'facet normal' at line %zu. Expected 3 float values. line = '%s'.", resource_rslt_to_str(ret), line_count, choco_string_c_str(string));
                     goto cleanup;
                 }
-                if(!isfinite(tmp_normal.elem[0]) || !isfinite(tmp_normal.elem[1]) || !isfinite(tmp_normal.elem[2])) {
+                if(!vec3f_is_finite(tmp_normal)) {
                     ret = RESOURCE_DATA_CORRUPTED;
                     ERROR_MESSAGE("stl_loader_ascii_load(%s) - Invalid normal value at line %zu. Normal contains NaN or infinity. line = '%s'.", resource_rslt_to_str(ret), line_count, choco_string_c_str(string));
                     goto cleanup;
@@ -286,7 +291,7 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
                     ERROR_MESSAGE("stl_loader_ascii_load(%s) - Vertex index exceeded precomputed vertex count at line %zu. The STL file may have changed during loading, or the count pass and parse pass are inconsistent. vertex_index = %zu, vertex_count = %zu.", resource_rslt_to_str(ret), line_count, vertex_index, vertex_count);
                     goto cleanup;
                 }
-                if(!isfinite(tmp_vertex.elem[0]) || !isfinite(tmp_vertex.elem[1]) || !isfinite(tmp_vertex.elem[2])) {
+                if(!vec3f_is_finite(tmp_vertex)) {
                     ret = RESOURCE_DATA_CORRUPTED;
                     ERROR_MESSAGE("stl_loader_ascii_load(%s) - Invalid vertex value at line %zu. Vertex contains NaN or infinity. line = '%s'.", resource_rslt_to_str(ret), line_count, choco_string_c_str(string));
                     goto cleanup;
@@ -296,9 +301,8 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
                 tmp_vertices[vertex_index].normal.elem[1] = (int8_t)(127.5f * tmp_normal.elem[1]);
                 tmp_vertices[vertex_index].normal.elem[2] = (int8_t)(127.5f * tmp_normal.elem[2]);
 
-                tmp_vertices[vertex_index].position.elem[0] = tmp_vertex.elem[0];
-                tmp_vertices[vertex_index].position.elem[1] = tmp_vertex.elem[1];
-                tmp_vertices[vertex_index].position.elem[2] = tmp_vertex.elem[2];
+                tmp_vertices[vertex_index].position = tmp_vertex;
+
                 vertex_index++;
                 facet_vertex_count++;
                 if(3 == facet_vertex_count) {

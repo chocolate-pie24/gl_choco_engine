@@ -68,7 +68,7 @@ typedef struct command_status_flight_camera {
     command_list_flight_camera_t command;   /**< フライトカメラ制御コマンド */
     keycode_t keybind;                      /**< 制御コマンドに割り当てられたキーバインド */
     bool status;                            /**< 制御コマンド実行要求有無(true: 実行要求あり / false: 実行要求なし) */
-    camera_result_t (*pfn_command_executor)(float speed_, float delta_time_, camera_t* camera_);  /**< コマンド実行関数 */
+    camera_result_t (*pfn_command_executor)(camera_t* camera_, float speed_, float delta_time_);  /**< コマンド実行関数 */
 } command_status_flight_camera_t;
 
 /**

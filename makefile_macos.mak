@@ -53,6 +53,8 @@ COMPILER_FLAGS += -Wno-padded
 COMPILER_FLAGS += -Wno-switch-default
 COMPILER_FLAGS += -Wno-pre-c11-compat
 COMPILER_FLAGS += -Wno-covered-switch-default
+COMPILER_FLAGS += -Wno-double-promotion
+
 # glfw3のワーニング抑制
 COMPILER_FLAGS += -Wno-documentation-unknown-command
 COMPILER_FLAGS += -Wno-documentation

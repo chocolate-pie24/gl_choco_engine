@@ -18,8 +18,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_LIT_MESH_SHADER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_LIT_MESH_SHADER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LIT_MESH_SHADER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LIT_MESH_SHADER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,11 +30,13 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
+#include "engine/core/geometry_primitive/vertex.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
 
-typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダーリソース構造体前方宣言 */
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する
@@ -47,9 +49,9 @@ typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダー
  * - lit_meshシェーダーが扱うビュー行列のLocation取得
  * - lit_meshシェーダーが扱うプロジェクション行列のLocation取得
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
  * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[out] out_lit_mesh_shader_ リソース確保対象lit_meshシェーダーリソースへのダブルポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -75,7 +77,7 @@ typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダー
  * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, lit_mesh_shader_t** out_lit_mesh_shader_);
+renderer_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, lit_mesh_shader_t** out_lit_mesh_shader_);
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する
@@ -108,6 +110,7 @@ void lit_mesh_shader_destroy(renderer_backend_context_t* backend_context_, lit_m
  * - lit_mesh_shader_->lit_mesh_vao != NULL
  * - lit_mesh_shader_->lit_mesh_vbo != NULL
  * - lit_mesh_shader_->current_buffer_offset != 0
+ * - lit_mesh_shader_->current_vertex_count != 0
  * - メモリシステム未初期化
  * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_NO_MEMORY メモリ確保失敗
@@ -137,20 +140,23 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
  * @param[in,out] lit_mesh_shader_ 転送先VBOを保持するlit_meshシェーダー構造体インスタンスへのポインタ
  * @param[in] size_ 転送データサイズ
  * @param[in] write_data_ 転送データ
+ * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - lit_mesh_shader_ == NULL
  * - write_data_ == NULL
  * - size_ == 0
- * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+ * - out_vertex_offset_ == NULL
+ * - size_がsizeof(point_normal_vertex_t) x 3の倍数ではない
+ * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
+ * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
- * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_write(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const void* write_data_);
+renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief lit_meshシェーダーが保持するVAOをbindする
@@ -164,110 +170,91 @@ renderer_result_t lit_mesh_shader_vertex_buffer_vertex_write(renderer_backend_co
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_vertex_array_bind(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
-
-/**
- * @brief lit_meshシェーダーが保持するVAOをunbindする
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in] lit_mesh_shader_ VAOを保持するlit_meshシェーダー構造体インスタンスへのポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - lit_mesh_shader_ == NULL
- * @retval RENDERER_BAD_OPERATION VAOが未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t lit_mesh_shader_vertex_array_unbind(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
+renderer_result_t lit_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
 
 /**
  * @brief lit_meshシェーダープログラムの使用開始をグラフィックスAPIに伝える
  *
  * @note 処理に成功した場合、現在使用中のプログラム識別子がlit_meshシェーダープログラムに切り替わる
  *
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] lit_mesh_shader_ lit_meshシェーダーリソースインスタンスへのポインタ
- * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - lit_mesh_shader_ == NULL
- * - lit_meshシェーダーリソースが保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
+ * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * - シェーダープログラムが未リンク
+ * - lit_mesh_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
- * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
- * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
+ * - バーテックスシェーダーオブジェクトが未コンパイル
+ * - フラグメントシェーダーオブジェクトが未コンパイル
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_use(const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t lit_mesh_shader_use(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
 
 /**
  * @brief GPUにモデル行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
  * @param[in] model_matrix_ 送信するモデル行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - model_matrix_ == NULL
  * - backend_context_ == NULL
  * - lit_mesh_shader_ == NULL
- * - lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - lit_mesh_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_model_matrix_set(const mat4x4f_t* model_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t lit_mesh_shader_model_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにビュー行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
  * @param[in] view_matrix_ 送信するビュー行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - view_matrix_ == NULL
  * - backend_context_ == NULL
  * - lit_mesh_shader_ == NULL
- * - lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - lit_mesh_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_view_matrix_set(const mat4x4f_t* view_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t lit_mesh_shader_view_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
 /**
  * @brief GPUにプロジェクション行列を送信する
  *
- * @note 本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる
+ * @warning 本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
+ * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
  * @param[in] projection_matrix_ 送信するプロジェクション行列のポインタ
  * @param[in] should_transpose_ true: 送信時に行列を転置する, false: 送信時に行列を転置しない
- * @param[in] lit_mesh_shader_ lit_mesh描画用シェーダーリソースへのポインタ
- * @param[in,out] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
  * - projection_matrix_ == NULL
  * - backend_context_ == NULL
  * - lit_mesh_shader_ == NULL
- * - lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL
- * @retval RENDERER_DATA_CORRUPTED lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムが未リンク状態
  * - backend_context_が未初期化でshader_vtableがNULL
+ * - lit_mesh_shader_が保持するシェーダーハンドルが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_projection_matrix_set(const mat4x4f_t* projection_matrix_, bool should_transpose_, const lit_mesh_shader_t* lit_mesh_shader_, renderer_backend_context_t* backend_context_);
+renderer_result_t lit_mesh_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 #ifdef __cplusplus
 }

@@ -71,8 +71,6 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
 /**
  * @brief VAOをbindする
  *
- * @note VAOは本関数内でbindされるが、頂点属性の参照元となるVBOは事前にbindされている必要がある
- *
  * @param[in] backend_context_ bind用vtable保有構造体インスタンスへのポインタ
  * @param[in] vertex_array_ bind対象VAOハンドル構造体インスタンスへのポインタ
  *
@@ -84,31 +82,25 @@ void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_c
  * - VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_array_bind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_);
+renderer_result_t renderer_backend_vertex_array_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vertex_array_);
 
 /**
  * @brief VAOをunbindする
  *
  * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_array_ unbind対象VAOハンドル構造体インスタンスへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - vertex_array_ == NULL
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - VAOが未初期化
+ * @retval RENDERER_INVALID_ARGUMENT backend_context_ == NULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_);
+renderer_result_t renderer_backend_vertex_array_unbind(const renderer_backend_context_t* backend_context_);
 
  /**
- * @brief 頂点情報のレイアウトをGPUに通知する
+ * @brief 現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する
  *
- * @note 本関数内でVAOがbindされるため、事前のbindは不要
+ * @warning 呼び出し側は、本APIを呼ぶ前に設定対象VAOと参照元VBOをbindしておく必要がある
  *
  * @param[in] backend_context_ アトリビュート設定用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_array_ VAOハンドル
  * @param[in] layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
  * @param[in] size_ 頂点情報(layoutごと)に含まれるデータの数([x, y, z, u, v]のうち、3次元座標のみであれば3、テクスチャ座標であれば2)
  * @param[in] type_ バッファに格納されているデータの型 @ref renderer_type_t
@@ -134,16 +126,12 @@ renderer_result_t renderer_backend_vertex_array_unbind(renderer_backend_context_
  * );
  * @endcode
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - vertex_array_ == NULL
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - VAOが未初期化
+ * @retval RENDERER_INVALID_ARGUMENT backend_context_ == NULL
+ * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_RUNTIME_ERROR type_の値が既定値外
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_array_attribute_set(renderer_backend_context_t* backend_context_, renderer_backend_vao_t* vertex_array_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+renderer_result_t renderer_backend_vertex_array_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 #ifdef __cplusplus
 }

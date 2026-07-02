@@ -59,6 +59,7 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";              /**< 実行結果コードRENDERER_LIMIT_EXCEEDEDの文字列 */
 static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";                /**< 実行結果コードRENDERER_BAD_OPERATIONの文字列 */
 static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";              /**< 実行結果コードRENDERER_DATA_CORRUPTEDの文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                          /**< 実行結果コードRENDERER_OVERFLOWの文字列 */
 
 const char* renderer_rslt_to_str(renderer_result_t rslt_) {
     switch(rslt_) {
@@ -80,6 +81,8 @@ const char* renderer_rslt_to_str(renderer_result_t rslt_) {
         return s_rslt_str_bad_operation;
     case RENDERER_DATA_CORRUPTED:
         return s_rslt_str_data_corrupted;
+    case RENDERER_OVERFLOW:
+        return s_rslt_str_overflow;
     case RENDERER_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -193,6 +196,8 @@ renderer_result_t renderer_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
     case FS_UTILS_OVERFLOW: // オーバーフローはRUNTIME_ERRORに変換
         return RENDERER_RUNTIME_ERROR;
     case FS_UTILS_FILE_OPEN_ERROR:
+        return RENDERER_RUNTIME_ERROR;
+    case FS_UTILS_EOF:
         return RENDERER_RUNTIME_ERROR;
     case FS_UTILS_RUNTIME_ERROR:
         return RENDERER_RUNTIME_ERROR;

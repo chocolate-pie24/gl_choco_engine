@@ -15,31 +15,28 @@
  */
 #include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
-#include "engine/systems/camera_system/camera/camera.h"
-
-#include "engine/systems/camera_system/camera_core/camera_err_utils.h"
-#include "engine/systems/camera_system/camera_core/camera_types.h"
-
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/systems/camera_system/camera_core/camera_err_utils.h"
+#include "engine/systems/camera_system/camera_core/camera_types.h"
 
 // #define TEST_BUILD
 
 #ifdef TEST_BUILD
 // テスト時のみ使用するヘッダのinclude
-#include <assert.h>
-
-#include "engine/core/memory/choco_memory.h"
 #include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
+
+#include <assert.h>
 
 #include "test_controller.h"
 
+#include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/test_choco_memory.h"
 
-#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/systems/camera_system/camera/test_camera.h"
 #include "engine/systems/camera_system/camera_core/test_camera_memory.h"
 
@@ -74,9 +71,9 @@ static void test_flight_camera_controller_rot_yaw_minus(void);
 static void test_camera_position_movement_apply(void);
 #endif
 
-static camera_result_t camera_position_movement_apply(const vec3f_t* translation_, camera_t* camera_);
+static camera_result_t camera_position_movement_apply(camera_t* camera_, vec3f_t translation_);
 
-camera_result_t flight_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_forward(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_forward.call_count++;
     if(s_test_config_flight_camera_controller_move_forward.fail_on_call != 0) {
@@ -98,12 +95,10 @@ camera_result_t flight_camera_controller_move_forward(float speed_, float delta_
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    forward_vec.elem[0] *= (speed_ * delta_time_);
-    forward_vec.elem[1] *= (speed_ * delta_time_);
-    forward_vec.elem[2] *= (speed_ * delta_time_);
+    forward_vec = vec3f_scale(forward_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&forward_vec, camera_);
+    ret = camera_position_movement_apply(camera_, forward_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_forward(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -115,7 +110,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_backward(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_backward.call_count++;
     if(s_test_config_flight_camera_controller_move_backward.fail_on_call != 0) {
@@ -137,12 +132,10 @@ camera_result_t flight_camera_controller_move_backward(float speed_, float delta
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    backward_vec.elem[0] *= (speed_ * delta_time_);
-    backward_vec.elem[1] *= (speed_ * delta_time_);
-    backward_vec.elem[2] *= (speed_ * delta_time_);
+    backward_vec = vec3f_scale(backward_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&backward_vec, camera_);
+    ret = camera_position_movement_apply(camera_, backward_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_backward(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -154,7 +147,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_right(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_right.call_count++;
     if(s_test_config_flight_camera_controller_move_right.fail_on_call != 0) {
@@ -176,12 +169,10 @@ camera_result_t flight_camera_controller_move_right(float speed_, float delta_ti
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    right_vec.elem[0] *= (speed_ * delta_time_);
-    right_vec.elem[1] *= (speed_ * delta_time_);
-    right_vec.elem[2] *= (speed_ * delta_time_);
+    right_vec = vec3f_scale(right_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&right_vec, camera_);
+    ret = camera_position_movement_apply(camera_, right_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_right(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -193,7 +184,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_left(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_left.call_count++;
     if(s_test_config_flight_camera_controller_move_left.fail_on_call != 0) {
@@ -215,12 +206,10 @@ camera_result_t flight_camera_controller_move_left(float speed_, float delta_tim
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    left_vec.elem[0] *= (speed_ * delta_time_);
-    left_vec.elem[1] *= (speed_ * delta_time_);
-    left_vec.elem[2] *= (speed_ * delta_time_);
+    left_vec = vec3f_scale(left_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&left_vec, camera_);
+    ret = camera_position_movement_apply(camera_, left_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_left(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -232,7 +221,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_up(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_up.call_count++;
     if(s_test_config_flight_camera_controller_move_up.fail_on_call != 0) {
@@ -254,12 +243,10 @@ camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    up_vec.elem[0] *= (speed_ * delta_time_);
-    up_vec.elem[1] *= (speed_ * delta_time_);
-    up_vec.elem[2] *= (speed_ * delta_time_);
+    up_vec = vec3f_scale(up_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&up_vec, camera_);
+    ret = camera_position_movement_apply(camera_, up_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_up(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -271,7 +258,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_move_down(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_move_down.call_count++;
     if(s_test_config_flight_camera_controller_move_down.fail_on_call != 0) {
@@ -293,12 +280,10 @@ camera_result_t flight_camera_controller_move_down(float speed_, float delta_tim
     }
 
     // ワールド座標系でのカメラ移動量を計算
-    down_vec.elem[0] *= (speed_ * delta_time_);
-    down_vec.elem[1] *= (speed_ * delta_time_);
-    down_vec.elem[2] *= (speed_ * delta_time_);
+    down_vec = vec3f_scale(down_vec, speed_ * delta_time_);
 
     // カメラ位置更新
-    ret = camera_position_movement_apply(&down_vec, camera_);
+    ret = camera_position_movement_apply(camera_, down_vec);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_move_down(%s) - Failed to update camera position.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -310,7 +295,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_rot_pitch_plus(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_rot_pitch_plus.call_count++;
     if(s_test_config_flight_camera_controller_rot_pitch_plus.fail_on_call != 0) {
@@ -332,7 +317,7 @@ camera_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delt
 
     euler.elem[0] += (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(camera_, euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_plus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -344,7 +329,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_rot_pitch_minus(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_rot_pitch_minus(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_rot_pitch_minus.call_count++;
     if(s_test_config_flight_camera_controller_rot_pitch_minus.fail_on_call != 0) {
@@ -366,7 +351,7 @@ camera_result_t flight_camera_controller_rot_pitch_minus(float speed_, float del
 
     euler.elem[0] -= (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(camera_, euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_pitch_minus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -378,7 +363,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_rot_yaw_plus(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_rot_yaw_plus.call_count++;
     if(s_test_config_flight_camera_controller_rot_yaw_plus.fail_on_call != 0) {
@@ -400,7 +385,7 @@ camera_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_
 
     euler.elem[1] += (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(camera_, euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_plus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -412,7 +397,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta_time_, camera_t* camera_) {
+camera_result_t flight_camera_controller_rot_yaw_minus(camera_t* camera_, float speed_, float delta_time_) {
 #ifdef TEST_BUILD
     s_test_config_flight_camera_controller_rot_yaw_minus.call_count++;
     if(s_test_config_flight_camera_controller_rot_yaw_minus.fail_on_call != 0) {
@@ -434,7 +419,7 @@ camera_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta
 
     euler.elem[1] -= (speed_ * delta_time_);
 
-    ret = camera_euler_update(&euler, camera_);
+    ret = camera_euler_update(camera_, euler);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_controller_rot_yaw_minus(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -449,18 +434,16 @@ cleanup:
 /**
  * @brief カメラ位置にカメラ移動量を適用する
  *
- * @param[in] translation_ カメラ移動量
  * @param[in,out] camera_ 更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in] translation_ カメラ移動量
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - translation_ == NULL
- * - camera_ == NULL
+ * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
  * - カメラ位置の取得に失敗
  * - カメラ位置の更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-static camera_result_t camera_position_movement_apply(const vec3f_t* translation_, camera_t* camera_) {
+static camera_result_t camera_position_movement_apply(camera_t* camera_, vec3f_t translation_) {
 #ifdef TEST_BUILD
     s_test_config_camera_position_movement_apply.call_count++;
     if(s_test_config_camera_position_movement_apply.fail_on_call != 0) {
@@ -473,7 +456,6 @@ static camera_result_t camera_position_movement_apply(const vec3f_t* translation
     vec3f_t position = { 0 };
     vec3f_t new_pos = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(translation_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_movement_apply", "translation_")
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_movement_apply", "camera_")
 
     // 現在のカメラ座標を取得
@@ -484,10 +466,10 @@ static camera_result_t camera_position_movement_apply(const vec3f_t* translation
     }
 
     // 新しいカメラ座標を計算
-    vec3f_add(translation_, &position, &new_pos);
+    new_pos = vec3f_add(translation_, position);
 
     // カメラ座標更新
-    if(CAMERA_SUCCESS != camera_position_update(&new_pos, camera_)) {
+    if(CAMERA_SUCCESS != camera_position_update(camera_, new_pos)) {
         ret = CAMERA_RUNTIME_ERROR;
         ERROR_MESSAGE("camera_position_movement_apply(%s) - Failed to update camera posture.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -636,7 +618,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_forward(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_forward_config_set(&config);
 
-        ret = flight_camera_controller_move_forward(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_forward(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -653,7 +635,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_forward(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_forward(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_forward(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -676,7 +658,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_forward(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_forward_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_forward(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_forward((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -705,7 +687,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_forward(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_forward(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_forward(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -741,7 +723,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_forward(void) {
         assert(CAMERA_SUCCESS == ret);
         assert(NULL != camera);
 
-        ret = flight_camera_controller_move_forward(2.0f, 0.5f, camera);
+        ret = flight_camera_controller_move_forward(camera, 2.0f, 0.5f);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -780,7 +762,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_backward(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_backward_config_set(&config);
 
-        ret = flight_camera_controller_move_backward(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_backward(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -797,7 +779,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_backward(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_backward(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_backward(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -820,7 +802,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_backward(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_backward_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_backward(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_backward((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -849,7 +831,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_backward(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_backward(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_backward(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -885,7 +867,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_backward(void) {
         assert(CAMERA_SUCCESS == ret);
         assert(NULL != camera);
 
-        ret = flight_camera_controller_move_backward(2.0f, 0.5f, camera);
+        ret = flight_camera_controller_move_backward(camera, 2.0f, 0.5f);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -924,7 +906,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_right(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_right_config_set(&config);
 
-        ret = flight_camera_controller_move_right(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_right(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -941,7 +923,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_right(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_right(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_right(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -964,7 +946,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_right(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_right_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_right(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_right((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -993,7 +975,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_right(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_right(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_right(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1035,7 +1017,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_right(void) {
         ret = camera_right_vector_get(camera, &right_vec);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_move_right(speed, delta_time, camera);
+        ret = flight_camera_controller_move_right(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -1074,7 +1056,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_left(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_left_config_set(&config);
 
-        ret = flight_camera_controller_move_left(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_left(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1091,7 +1073,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_left(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_left(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_left(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1114,7 +1096,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_left(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_left_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_left(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_left((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1143,7 +1125,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_left(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_left(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_left(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1185,7 +1167,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_left(void) {
         ret = camera_left_vector_get(camera, &left_vec);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_move_left(speed, delta_time, camera);
+        ret = flight_camera_controller_move_left(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -1224,7 +1206,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_up(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_up_config_set(&config);
 
-        ret = flight_camera_controller_move_up(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_up(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1241,7 +1223,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_up(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_up(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_up(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1264,7 +1246,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_up(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_up_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_up(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_up((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1293,7 +1275,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_up(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_up(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_up(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1335,7 +1317,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_up(void) {
         ret = camera_up_vector_get(camera, &up_vec);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_move_up(speed, delta_time, camera);
+        ret = flight_camera_controller_move_up(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -1374,7 +1356,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_down(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_move_down_config_set(&config);
 
-        ret = flight_camera_controller_move_down(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_down(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1391,7 +1373,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_down(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_move_down(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_move_down(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1414,7 +1396,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_down(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_down_vector_get_config_set(&config);
 
-        ret = flight_camera_controller_move_down(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_move_down((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1443,7 +1425,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_down(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_RUNTIME_ERROR;
 
-        ret = flight_camera_controller_move_down(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_move_down(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1485,7 +1467,7 @@ static void NO_COVERAGE test_flight_camera_controller_move_down(void) {
         ret = camera_down_vector_get(camera, &down_vec);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_move_down(speed, delta_time, camera);
+        ret = flight_camera_controller_move_down(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);
@@ -1524,7 +1506,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_plus(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_rot_pitch_plus_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_plus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_pitch_plus(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1541,7 +1523,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_plus(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_rot_pitch_plus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_pitch_plus(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1564,7 +1546,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_plus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_get_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_plus(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_rot_pitch_plus((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1596,7 +1578,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_plus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_update_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_plus(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_rot_pitch_plus(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1635,7 +1617,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_plus(void) {
         ret = camera_euler_get(camera, &before_euler);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_rot_pitch_plus(speed, delta_time, camera);
+        ret = flight_camera_controller_rot_pitch_plus(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_euler_get(camera, &after_euler);
@@ -1674,7 +1656,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_minus(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_rot_pitch_minus_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_minus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_pitch_minus(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1691,7 +1673,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_minus(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_rot_pitch_minus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_pitch_minus(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1714,7 +1696,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_minus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_get_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_minus(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_rot_pitch_minus((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1746,7 +1728,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_minus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_update_config_set(&config);
 
-        ret = flight_camera_controller_rot_pitch_minus(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_rot_pitch_minus(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1785,7 +1767,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_pitch_minus(void) {
         ret = camera_euler_get(camera, &before_euler);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_rot_pitch_minus(speed, delta_time, camera);
+        ret = flight_camera_controller_rot_pitch_minus(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_euler_get(camera, &after_euler);
@@ -1824,7 +1806,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_plus(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_rot_yaw_plus_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_plus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_yaw_plus(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1841,7 +1823,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_plus(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_rot_yaw_plus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_yaw_plus(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1864,7 +1846,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_plus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_get_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_plus(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_rot_yaw_plus((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1896,7 +1878,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_plus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_update_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_plus(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_rot_yaw_plus(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -1935,7 +1917,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_plus(void) {
         ret = camera_euler_get(camera, &before_euler);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_rot_yaw_plus(speed, delta_time, camera);
+        ret = flight_camera_controller_rot_yaw_plus(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_euler_get(camera, &after_euler);
@@ -1974,7 +1956,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_minus(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_flight_camera_controller_rot_yaw_minus_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_minus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_yaw_minus(NULL, 1.0f, 1.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         test_flight_camera_controller_config_reset();
@@ -1991,7 +1973,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_minus(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = flight_camera_controller_rot_yaw_minus(1.0f, 1.0f, NULL);
+        ret = flight_camera_controller_rot_yaw_minus(NULL, 1.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -2014,7 +1996,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_minus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_get_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_minus(1.0f, 1.0f, (camera_t*)0x1);
+        ret = flight_camera_controller_rot_yaw_minus((camera_t*)0x1, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -2046,7 +2028,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_minus(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_euler_update_config_set(&config);
 
-        ret = flight_camera_controller_rot_yaw_minus(1.0f, 1.0f, camera);
+        ret = flight_camera_controller_rot_yaw_minus(camera, 1.0f, 1.0f);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -2085,7 +2067,7 @@ static void NO_COVERAGE test_flight_camera_controller_rot_yaw_minus(void) {
         ret = camera_euler_get(camera, &before_euler);
         assert(CAMERA_SUCCESS == ret);
 
-        ret = flight_camera_controller_rot_yaw_minus(speed, delta_time, camera);
+        ret = flight_camera_controller_rot_yaw_minus(camera, speed, delta_time);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_euler_get(camera, &after_euler);
@@ -2122,25 +2104,8 @@ static void NO_COVERAGE test_camera_position_movement_apply(void) {
         s_test_config_camera_position_movement_apply.fail_on_call = 1U;
         s_test_config_camera_position_movement_apply.forced_result = (int)CAMERA_BAD_OPERATION;
 
-        ret = camera_position_movement_apply(&translation, NULL);
+        ret = camera_position_movement_apply(NULL, translation);
         assert(CAMERA_BAD_OPERATION == ret);
-
-        test_flight_camera_controller_config_reset();
-        test_camera_config_reset();
-        test_camera_memory_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        /* translation_ == NULL -> CAMERA_INVALID_ARGUMENT */
-        camera_result_t ret = CAMERA_UNDEFINED_ERROR;
-
-        test_flight_camera_controller_config_reset();
-        test_camera_config_reset();
-        test_camera_memory_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = camera_position_movement_apply(NULL, (camera_t*)0x1);
-        assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
         test_camera_config_reset();
@@ -2157,7 +2122,7 @@ static void NO_COVERAGE test_camera_position_movement_apply(void) {
         test_camera_memory_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_position_movement_apply(&translation, NULL);
+        ret = camera_position_movement_apply(NULL, translation);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_flight_camera_controller_config_reset();
@@ -2181,7 +2146,7 @@ static void NO_COVERAGE test_camera_position_movement_apply(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_position_get_config_set(&config);
 
-        ret = camera_position_movement_apply(&translation, (camera_t*)0x1);
+        ret = camera_position_movement_apply((camera_t*)0x1, translation);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         test_flight_camera_controller_config_reset();
@@ -2214,7 +2179,7 @@ static void NO_COVERAGE test_camera_position_movement_apply(void) {
         config.forced_result = (int)CAMERA_RUNTIME_ERROR;
         test_camera_position_update_config_set(&config);
 
-        ret = camera_position_movement_apply(&translation, camera);
+        ret = camera_position_movement_apply(camera, translation);
         assert(CAMERA_RUNTIME_ERROR == ret);
 
         camera_destroy(&camera);
@@ -2247,7 +2212,7 @@ static void NO_COVERAGE test_camera_position_movement_apply(void) {
         assert(CAMERA_SUCCESS == ret);
         assert(NULL != camera);
 
-        ret = camera_position_movement_apply(&translation, camera);
+        ret = camera_position_movement_apply(camera, translation);
         assert(CAMERA_SUCCESS == ret);
 
         ret = camera_position_get(camera, &position);

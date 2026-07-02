@@ -24,6 +24,7 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -31,6 +32,8 @@ extern "C" {
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/texture_system/texture_manager.h"
+
+#include "engine/resource/resource_core/resource_types.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
@@ -103,6 +106,24 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_);
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t app_rslt_convert_texture_system(texture_system_result_t rslt_);
+
+/**
+ * @brief Resourceレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
+ *
+ * @param[in] rslt_ Resourceレイヤー実行結果コード
+ *
+ * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
+ */
+application_result_t app_rslt_convert_resource(resource_result_t rslt_);
+
+/**
+ * @brief geometry_primitive保有モジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
+ *
+ * @param[in] rslt_ geometry_primitive保有モジュール実行結果コード
+ *
+ * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
+ */
+application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
 
 #ifdef __cplusplus
 }

@@ -34,6 +34,8 @@
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/filesystem/test_filesystem.h"
 #include "engine/core/buffer_utils/test_buffer_utils.h"
+#include "engine/core/geometry_primitive/test_aabb_3d.h"
+#include "engine/core/geometry_primitive/test_geometry_primitive_err_utils.h"
 
 // test: engine/containers
 #include "engine/containers/test_choco_string.h"
@@ -47,6 +49,10 @@
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
 #include "engine/resource/texture/test_texture.h"
+#include "engine/resource/geometry/test_lit_mesh_geometry.h"
+#include "engine/resource/geometry/test_line_mesh_geometry.h"
+#include "engine/resource/geometry/test_point_mesh_geometry.h"
+#include "engine/resource/geometry/test_ui_mesh_geometry.h"
 
 // test: engine/systems/platform
 #include "engine/systems/platform/platform_core/test_platform_err_utils.h"
@@ -114,6 +120,8 @@ int main(int argc_, char** argv_) {
         test_choco_memory();
         test_filesystem();
         test_buffer_utils();
+        test_aabb_3d();
+        test_geometry_primitive_err_utils();
 
         // engine/containers
         test_choco_string();
@@ -127,6 +135,10 @@ int main(int argc_, char** argv_) {
         test_bmp_loader();
         test_stl_loader();
         test_texture();
+        test_lit_mesh_geometry();
+        test_line_mesh_geometry();
+        test_point_mesh_geometry();
+        test_ui_mesh_geometry();
 
         // engine/camera
         test_camera_err_utils();

@@ -24,6 +24,10 @@ void test_app_rslt_convert_camera_config_set(const test_call_control_t* config_)
 
 void test_app_rslt_convert_texture_system_config_set(const test_call_control_t* config_);
 
+void test_app_rslt_convert_resource_config_set(const test_call_control_t* config_);
+
+void test_app_rslt_convert_geometry_primitive_config_set(const test_call_control_t* config_);
+
 void test_application_err_utils_config_reset(void);
 
 void test_application_err_utils(void);

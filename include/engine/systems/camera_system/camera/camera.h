@@ -73,44 +73,40 @@ const char* camera_name_get(const camera_t* camera_);
 /**
  * @brief カメラ構造体が管理する視錐台パラメータを更新(または初期化)する
  *
+ * @param[in,out] camera_ カメラ構造体インスタンスへのポインタ
  * @param[in] fovy_ 画角(degree)
  * @param[in] aspect_ 画面アスペクト比
  * @param[in] near_clip_ 描画範囲(near)
  * @param[in] far_clip_ 描画範囲(far)
- * @param[in,out] camera_ カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
  * - camera_ == NULL
  * - 引数で与えた視錐台パラメータが不正
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_);
+camera_result_t camera_viewing_frustum_update(camera_t* camera_, float fovy_, float aspect_, float near_clip_, float far_clip_);
 
 /**
  * @brief カメラ姿勢情報を更新する
  *
- * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンスへのポインタ
  * @param[out] camera_ 姿勢更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in] euler_ カメラ姿勢ベクトル構造体インスタンス
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - euler_ == NULL
- * - camera_ == NULL
+ * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_euler_update(const vec3f_t* euler_, camera_t* camera_);
+camera_result_t camera_euler_update(camera_t* camera_, vec3f_t euler_);
 
 /**
  * @brief カメラ位置情報を更新する
  *
- * @param[in] position_ カメラ位置ベクトル構造体インスタンスへのポインタ
  * @param[out] camera_ 位置更新対象カメラ構造体インスタンスへのポインタ
+ * @param[in] position_ カメラ位置ベクトル構造体インスタンス
  *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - position_ == NULL
- * - camera_ == NULL
+ * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t camera_position_update(const vec3f_t* position_, camera_t* camera_);
+camera_result_t camera_position_update(camera_t* camera_, vec3f_t position_);
 
 /**
  * @brief カメラ姿勢情報を取得する

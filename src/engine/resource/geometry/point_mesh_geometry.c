@@ -1,0 +1,2275 @@
+/** @ingroup resource
+ *
+ * @file point_mesh_geometry.c
+ * @author chocolate-pie24
+ * @brief point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
+ * 
+ * @note point_mesh_shader: 複数の点を描画する
+ * @note point_mesh_geometryは点群の幾何情報のみを保持し、色情報はpoint_mesh_geometryを保持する親構造体で扱う
+ *
+ * @todo TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる
+ *
+ * @version 0.1
+ * @date 2026-06-06
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
+#include "engine/resource/geometry/point_mesh_geometry.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/resource_core/resource_err_utils.h"
+
+#include "engine/containers/choco_string.h"
+
+#include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/memory/choco_memory.h"
+
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+/**
+ * @brief point_mesh_geometry内部状態管理構造体
+ *
+ */
+struct point_mesh_geometry {
+    choco_string_t* name;       /**< point_mesh_geometry CPU側リソース名称 */
+
+    size_t vertex_count;        /**< point_mesh_geometryが所有する頂点数 */
+    point_vertex_t* vertices;    /**< point_mesh_geometryが所有する頂点配列 */
+};
+
+// #define TEST_BUILD
+
+#ifdef TEST_BUILD
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "test_controller.h"
+
+#include "engine/resource/geometry/test_point_mesh_geometry.h"
+
+#include "engine/core/memory/test_choco_memory.h"
+
+#include "engine/containers/test_choco_string.h"
+
+#include "engine/base/choco_math/choco_math.h"
+#include "engine/base/choco_math/math_types.h"
+
+// point_mesh_geometry用モジュール専用テスト制御構造体定義
+
+// 外部公開APIテスト設定
+static test_call_control_t s_test_config_point_mesh_geometry_default_create;               /**< point_mesh_geometry_default_create()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_create_from_vertices;         /**< point_mesh_geometry_create_from_vertices()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_initialize_from_vertices;     /**< point_mesh_geometry_initialize_from_vertices()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_clone;                        /**< point_mesh_geometry_clone()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_vertices_get;                 /**< point_mesh_geometry_vertices_get()テスト設定 */
+static test_call_control_t s_test_config_point_mesh_geometry_vertex_count_get;             /**< point_mesh_geometry_vertex_count_get()テスト設定 */
+
+// プライベート関数テスト設定
+
+// 全テスト関数プロトタイプ宣言
+static void test_point_mesh_geometry_default_create(void);
+static void test_point_mesh_geometry_create_from_vertices(void);
+static void test_point_mesh_geometry_destroy(void);
+static void test_point_mesh_geometry_initialize_from_vertices(void);
+static void test_point_mesh_geometry_deinitialize(void);
+static void test_point_mesh_geometry_clone(void);
+static void test_point_mesh_geometry_name_get(void);
+static void test_point_mesh_geometry_vertices_get(void);
+static void test_point_mesh_geometry_vertex_count_get(void);
+
+// テスト用ヘルパー関数
+
+#endif
+
+resource_result_t point_mesh_geometry_default_create(point_mesh_geometry_t** geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_default_create.call_count++;
+    if(s_test_config_point_mesh_geometry_default_create.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_default_create.call_count == s_test_config_point_mesh_geometry_default_create.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_default_create.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    point_mesh_geometry_t* tmp_geometry = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_default_create", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_default_create", "*geometry_")
+
+    ret_mem = memory_system_allocate(sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = resource_rslt_convert_choco_memory(ret_mem);
+        ERROR_MESSAGE("point_mesh_geometry_default_create(%s) - Failed to allocate point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_geometry->name = NULL;
+    tmp_geometry->vertex_count = 0;
+    tmp_geometry->vertices = NULL;
+
+    *geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != tmp_geometry) {
+            memory_system_free(tmp_geometry, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+            tmp_geometry = NULL;
+        }
+    }
+    return ret;
+}
+
+resource_result_t point_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const point_vertex_t* vertices_, point_mesh_geometry_t** geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_create_from_vertices.call_count++;
+    if(s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_create_from_vertices.call_count == s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_create_from_vertices.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    point_mesh_geometry_t* tmp_geometry = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "name_[0]")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "vertices_")
+
+    ret = point_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Failed to create point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = point_mesh_geometry_initialize_from_vertices(name_, vertex_count_, vertices_, tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Failed to initialize point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        point_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
+}
+
+void point_mesh_geometry_destroy(point_mesh_geometry_t** geometry_) {
+    if(NULL == geometry_) {
+        return;
+    }
+    if(NULL == *geometry_) {
+        return;
+    }
+    if(NULL != (*geometry_)->name) {
+        choco_string_destroy(&(*geometry_)->name);
+    }
+    
+    if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
+        ERROR_MESSAGE("point_mesh_geometry_destroy(%s) - point_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != (*geometry_)->vertices) {
+        memory_system_free((*geometry_)->vertices, sizeof(point_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
+        (*geometry_)->vertices = NULL;
+        (*geometry_)->vertex_count = 0;
+    }
+
+    memory_system_free(*geometry_, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+    *geometry_ = NULL;
+}
+
+resource_result_t point_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const point_vertex_t* vertices_, point_mesh_geometry_t* geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_initialize_from_vertices.call_count++;
+    if(s_test_config_point_mesh_geometry_initialize_from_vertices.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_initialize_from_vertices.call_count == s_test_config_point_mesh_geometry_initialize_from_vertices.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_initialize_from_vertices.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_name = NULL;
+    point_vertex_t* tmp_vertices = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_initialize_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_initialize_from_vertices", "name_[0]")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_initialize_from_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_initialize_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_initialize_from_vertices", "geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_initialize_from_vertices", "geometry_->name")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_initialize_from_vertices", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_initialize_from_vertices", "geometry_->vertex_count")
+
+    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = resource_rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("point_mesh_geometry_initialize_from_vertices(%s) - Failed to create point mesh geometry name string.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if((SIZE_MAX / vertex_count_) < sizeof(point_vertex_t)) {
+        ret = RESOURCE_OVERFLOW;
+        ERROR_MESSAGE("point_mesh_geometry_initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_vertex_t));
+        goto cleanup;
+    }
+    ret_mem = memory_system_allocate(sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
+        ret = resource_rslt_convert_choco_memory(ret_mem);
+        ERROR_MESSAGE("point_mesh_geometry_initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_vertex_t));
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != vertex_count_; ++i) {
+        tmp_vertices[i] = vertices_[i];
+    }
+
+    geometry_->name = tmp_name;
+    geometry_->vertex_count = vertex_count_;
+    geometry_->vertices = tmp_vertices;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        if(NULL != tmp_name) {
+            choco_string_destroy(&tmp_name);
+        }
+        if(NULL != tmp_vertices) {
+            memory_system_free(tmp_vertices, sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
+            tmp_vertices = NULL;
+        }
+    }
+    return ret;
+}
+
+void point_mesh_geometry_deinitialize(point_mesh_geometry_t* geometry_) {
+    if(NULL == geometry_) {
+        return;
+    }
+    if(NULL != geometry_->name) {
+        choco_string_destroy(&geometry_->name);
+    }
+    
+    if(NULL != geometry_->vertices && 0 == geometry_->vertex_count) {
+        ERROR_MESSAGE("point_mesh_geometry_deinitialize(%s) - point_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
+    } else if(NULL != geometry_->vertices) {
+        memory_system_free(geometry_->vertices, sizeof(point_vertex_t) * geometry_->vertex_count, MEMORY_TAG_GEOMETRY);
+        geometry_->vertices = NULL;
+        geometry_->vertex_count = 0;
+    }
+}
+
+resource_result_t point_mesh_geometry_clone(const point_mesh_geometry_t* src_, point_mesh_geometry_t** out_geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_clone.call_count++;
+    if(s_test_config_point_mesh_geometry_clone.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_clone.call_count == s_test_config_point_mesh_geometry_clone.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_clone.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    point_mesh_geometry_t* tmp_geometry = NULL;
+    const char* tmp_name = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_clone", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_clone", "*out_geometry_")
+
+    // 内部データチェック
+    if(0 == src_->vertex_count && NULL != src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is 0 but vertices is not NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->name) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but vertices = NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 == choco_string_length(src_->name) && 0 != src_->vertex_count) {    // src_->name == NULL or src_->nameが空
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is empty.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // clone生成
+    ret = point_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_geometry_clone(%s) - Failed to create empty clone instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != src_->vertex_count) {
+        tmp_name = choco_string_c_str(src_->name);
+        ret = point_mesh_geometry_initialize_from_vertices(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        if(RESOURCE_OVERFLOW == ret) {
+            ret = RESOURCE_DATA_CORRUPTED;
+            ERROR_MESSAGE("point_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
+            goto cleanup;
+        } else if(RESOURCE_SUCCESS != ret) {
+            ERROR_MESSAGE("point_mesh_geometry_clone(%s) - Failed to initialize clone instance from src_ geometry data.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    *out_geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        point_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
+}
+
+const char* point_mesh_geometry_name_get(const point_mesh_geometry_t* geometry_) {
+    if(NULL == geometry_) {
+        return NULL;
+    }
+    if(NULL == geometry_->name) {
+        return NULL;
+    }
+    return choco_string_c_str(geometry_->name);
+}
+
+resource_result_t point_mesh_geometry_vertices_get(const point_mesh_geometry_t* geometry_, const point_vertex_t** out_vertices_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_vertices_get.call_count++;
+    if(s_test_config_point_mesh_geometry_vertices_get.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_vertices_get.call_count == s_test_config_point_mesh_geometry_vertices_get.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_vertices_get.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_vertices_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_vertices_get", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_vertices_get", "*out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertices_get", "geometry_->name")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertices_get", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertices_get", "geometry_->vertex_count")
+
+    *out_vertices_ = geometry_->vertices;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+resource_result_t point_mesh_geometry_vertex_count_get(const point_mesh_geometry_t* geometry_, size_t* out_vertex_count_) {
+#ifdef TEST_BUILD
+    s_test_config_point_mesh_geometry_vertex_count_get.call_count++;
+    if(s_test_config_point_mesh_geometry_vertex_count_get.fail_on_call != 0) {
+        if(s_test_config_point_mesh_geometry_vertex_count_get.call_count == s_test_config_point_mesh_geometry_vertex_count_get.fail_on_call) {
+            return (resource_result_t)s_test_config_point_mesh_geometry_vertex_count_get.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_vertex_count_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_vertex_count_get", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertex_count_get", "geometry_->name")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertex_count_get", "geometry_->vertices")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "point_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
+
+    *out_vertex_count_ = geometry_->vertex_count;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+#ifdef TEST_BUILD
+
+void NO_COVERAGE test_point_mesh_geometry_default_create_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_default_create.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_default_create.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_create_from_vertices.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_initialize_from_vertices.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_initialize_from_vertices.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_clone_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_clone.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_clone.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_vertices_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_vertices_get.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_vertices_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_vertex_count_get_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_point_mesh_geometry_vertex_count_get.fail_on_call = config_->fail_on_call;
+    s_test_config_point_mesh_geometry_vertex_count_get.forced_result = config_->forced_result;
+}
+
+void NO_COVERAGE test_point_mesh_geometry_config_reset(void) {
+    test_call_control_reset(&s_test_config_point_mesh_geometry_default_create);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_create_from_vertices);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_initialize_from_vertices);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_clone);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_vertices_get);
+    test_call_control_reset(&s_test_config_point_mesh_geometry_vertex_count_get);
+}
+
+void NO_COVERAGE test_point_mesh_geometry(void) {
+    test_point_mesh_geometry_default_create();
+    test_point_mesh_geometry_create_from_vertices();
+    test_point_mesh_geometry_destroy();
+    test_point_mesh_geometry_initialize_from_vertices();
+    test_point_mesh_geometry_deinitialize();
+    test_point_mesh_geometry_clone();
+    test_point_mesh_geometry_name_get();
+    test_point_mesh_geometry_vertices_get();
+    test_point_mesh_geometry_vertex_count_get();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_default_create(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // point_mesh_geometry_default_create() 冒頭で強制的に RESOURCE_NO_MEMORY を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+
+        s_test_config_point_mesh_geometry_default_create.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *geometry_ != NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t dummy_geometry = { 0 };
+        point_mesh_geometry_t* geometry = &dummy_geometry;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(&dummy_geometry == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // memory_system_allocate() 失敗 -> RESOURCE_NO_MEMORY
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: point_mesh_geometry_t が確保され、全フィールドが未初期化状態で初期化される
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_create_from_vertices(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // point_mesh_geometry_create_from_vertices() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        s_test_config_point_mesh_geometry_create_from_vertices.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_create_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *geometry_ != NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t dummy_geometry = { 0 };
+        point_mesh_geometry_t* geometry = &dummy_geometry;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(&dummy_geometry == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // point_mesh_geometry_default_create() が失敗 -> その戻り値を返し、geometryは変更されない
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        s_test_config_point_mesh_geometry_default_create.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // point_mesh_geometry_default_create() 内部のmemory_system_allocate()が失敗 -> RESOURCE_NO_MEMORY
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // point_mesh_geometry_initialize_from_vertices() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        s_test_config_point_mesh_geometry_initialize_from_vertices.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_initialize_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices(NULL, 3U, vertices, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertex_count_ == 0 -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 0U, vertices, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertices_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, NULL, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertex_count_ == 1 でもpoint meshでは有効
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[1] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("single_point_geometry", 1U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(1U == geometry->vertex_count);
+        assert(0 == strcmp("single_point_geometry", choco_string_c_str(geometry->name)));
+
+        assert(vertices != geometry->vertices);
+
+        assert(0.0f == geometry->vertices[0].position.elem[0]);
+        assert(1.0f == geometry->vertices[0].position.elem[1]);
+        assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // choco_string_create_from_c_string() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_create_from_c_string_config_set(&config);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列用memory_system_allocate() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
+        // 1回目のallocateはpoint_mesh_geometry_t本体、2回目はchoco_string_t本体、3回目は文字列バッファ、4回目がtmp_vertices用
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        config.fail_on_call = 4U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列サイズoverflow -> RESOURCE_OVERFLOW
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t dummy_vertex = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        dummy_vertex.position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
+        assert(RESOURCE_OVERFLOW == ret);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: point_mesh_geometry_tを生成し、vertices_をdeep copyしてgeometryが所有する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(3U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry", choco_string_c_str(geometry->name)));
+
+        assert(vertices != geometry->vertices);
+
+        assert(0.0f == geometry->vertices[0].position.elem[0]);
+        assert(1.0f == geometry->vertices[0].position.elem[1]);
+        assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        assert(3.0f == geometry->vertices[1].position.elem[0]);
+        assert(4.0f == geometry->vertices[1].position.elem[1]);
+        assert(5.0f == geometry->vertices[1].position.elem[2]);
+
+        assert(6.0f == geometry->vertices[2].position.elem[0]);
+        assert(7.0f == geometry->vertices[2].position.elem[1]);
+        assert(8.0f == geometry->vertices[2].position.elem[2]);
+
+        // 元配列を書き換えてもgeometry側には影響しない
+        vertices[0].position = vec3f_initialize(100.0f, 100.0f, 100.0f);
+
+        assert(0.0f == geometry->vertices[0].position.elem[0]);
+        assert(1.0f == geometry->vertices[0].position.elem[1]);
+        assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: 複数点の頂点配列をdeep copyする
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[5] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+        vertices[3].position = vec3f_initialize(9.0f, 10.0f, 11.0f);
+        vertices[4].position = vec3f_initialize(12.0f, 13.0f, 14.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry_many_points", 5U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(5U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry_many_points", choco_string_c_str(geometry->name)));
+
+        assert(vertices != geometry->vertices);
+
+        for(size_t i = 0; i != 5U; ++i) {
+            assert(vertices[i].position.elem[0] == geometry->vertices[i].position.elem[0]);
+            assert(vertices[i].position.elem[1] == geometry->vertices[i].position.elem[1]);
+            assert(vertices[i].position.elem[2] == geometry->vertices[i].position.elem[2]);
+        }
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_destroy(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // geometry_ == NULL -> 何もせずreturn
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        point_mesh_geometry_destroy(NULL);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *geometry_ == NULL -> 何もせずreturn
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: name == NULL, vertices == NULL, vertex_count == 0 のgeometry本体だけを破棄
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: nameのみを保持するgeometryを破棄
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry->name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry->name);
+
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: nameとverticesを保持するgeometryを破棄
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t* vertices = NULL;
+        const size_t vertex_count = 3U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry->name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry->name);
+
+        ret_mem = memory_system_allocate(sizeof(point_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&vertices);
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+        assert(NULL != vertices);
+
+        geometry->vertices = vertices;
+        geometry->vertex_count = vertex_count;
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 破損状態: vertices != NULL, vertex_count == 0 の場合、verticesはdestroy側ではfreeされない
+        // テスト側で後始末する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t* leaked_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry->name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry->name);
+
+        ret_mem = memory_system_allocate(sizeof(point_vertex_t), MEMORY_TAG_GEOMETRY, (void**)&leaked_vertices);
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+        assert(NULL != leaked_vertices);
+
+        geometry->vertices = leaked_vertices;
+        geometry->vertex_count = 0U;
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        memory_system_free(leaked_vertices, sizeof(point_vertex_t), MEMORY_TAG_GEOMETRY);
+        leaked_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 二重destroy相当: 1回目でNULL化され、2回目は何もせずreturn
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_initialize_from_vertices(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // point_mesh_geometry_initialize_from_vertices() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        s_test_config_point_mesh_geometry_initialize_from_vertices.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_initialize_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices(NULL, 3U, vertices, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertex_count_ == 0 -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 0U, vertices, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertices_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, NULL, &geometry);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->name != NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("already_initialized", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL != geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertices != NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+        point_vertex_t dummy_vertices[3] = { 0 };
+
+        geometry.vertices = dummy_vertices;
+        geometry.vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(dummy_vertices == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertex_count != 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+
+        geometry.name = NULL;
+        geometry.vertices = NULL;
+        geometry.vertex_count = 3U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_BAD_OPERATION == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(3U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // choco_string_create_from_c_string() 失敗 -> RESOURCE_NO_MEMORY
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        config.fail_on_call = 1U;
+        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
+        test_choco_string_create_from_c_string_config_set(&config);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列サイズoverflow -> RESOURCE_OVERFLOW
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t dummy_vertex = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", SIZE_MAX, &dummy_vertex, &geometry);
+        assert(RESOURCE_OVERFLOW == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 頂点配列用memory_system_allocate() 失敗 -> RESOURCE_NO_MEMORY
+        // 1回目のallocateはchoco_string_t本体、2回目は文字列バッファ、3回目がtmp_vertices用
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t vertices[3] = { 0 };
+        test_call_control_t config = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+        test_call_control_reset(&config);
+
+        config.fail_on_call = 3U;
+        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
+        test_memory_system_allocate_config_set(&config);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_NO_MEMORY == ret);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: vertices_をdeep copyしてgeometryが所有する
+        // point_mesh_geometryではvertex_countが2の倍数である必要はないため、3点で確認する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(3U == geometry->vertex_count);
+
+        assert(0 == strcmp("test_geometry", choco_string_c_str(geometry->name)));
+
+        assert(vertices != geometry->vertices);
+
+        assert(0.0f == geometry->vertices[0].position.elem[0]);
+        assert(1.0f == geometry->vertices[0].position.elem[1]);
+        assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        assert(3.0f == geometry->vertices[1].position.elem[0]);
+        assert(4.0f == geometry->vertices[1].position.elem[1]);
+        assert(5.0f == geometry->vertices[1].position.elem[2]);
+
+        assert(6.0f == geometry->vertices[2].position.elem[0]);
+        assert(7.0f == geometry->vertices[2].position.elem[1]);
+        assert(8.0f == geometry->vertices[2].position.elem[2]);
+
+        // 元配列を書き換えてもgeometry側には影響しない
+        vertices[0].position = vec3f_initialize(100.0f, 100.0f, 100.0f);
+
+        assert(0.0f == geometry->vertices[0].position.elem[0]);
+        assert(1.0f == geometry->vertices[0].position.elem[1]);
+        assert(2.0f == geometry->vertices[0].position.elem[2]);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_deinitialize(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // geometry_ == NULL -> 何もせずreturn
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        point_mesh_geometry_deinitialize(NULL);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 未初期化状態のstack geometry -> 何も解放せず、状態はそのまま
+        point_mesh_geometry_t geometry = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        point_mesh_geometry_deinitialize(&geometry);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // nameのみを保持するgeometry -> nameを破棄し、未初期化状態に戻る
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        point_mesh_geometry_deinitialize(&geometry);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // verticesのみを保持するgeometry -> verticesを破棄し、未初期化状態に戻る
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t* vertices = NULL;
+        const size_t vertex_count = 3U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_mem = memory_system_allocate(sizeof(point_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&vertices);
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+        assert(NULL != vertices);
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        geometry.name = NULL;
+        geometry.vertices = vertices;
+        geometry.vertex_count = vertex_count;
+
+        point_mesh_geometry_deinitialize(&geometry);
+
+        assert(NULL == geometry.name);
+        assert(NULL == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // nameとverticesを保持するgeometry -> 両方破棄し、未初期化状態に戻る
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(3U == geometry->vertex_count);
+
+        point_mesh_geometry_deinitialize(geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // vertex_count == 1 のgeometryも正常にdeinitializeできる
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[1] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("single_point_geometry", 1U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(1U == geometry->vertex_count);
+
+        point_mesh_geometry_deinitialize(geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // deinitialize後に再度initializeできる
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices_a[3] = { 0 };
+        point_vertex_t vertices_b[2] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices_a[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices_a[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices_a[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        vertices_b[0].position = vec3f_initialize(10.0f, 11.0f, 12.0f);
+        vertices_b[1].position = vec3f_initialize(13.0f, 14.0f, 15.0f);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry_a", 3U, vertices_a, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(3U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry_a", choco_string_c_str(geometry->name)));
+
+        point_mesh_geometry_deinitialize(geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry_b", 2U, vertices_b, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        assert(NULL != geometry->name);
+        assert(NULL != geometry->vertices);
+        assert(2U == geometry->vertex_count);
+        assert(0 == strcmp("test_geometry_b", choco_string_c_str(geometry->name)));
+
+        assert(10.0f == geometry->vertices[0].position.elem[0]);
+        assert(11.0f == geometry->vertices[0].position.elem[1]);
+        assert(12.0f == geometry->vertices[0].position.elem[2]);
+
+        assert(13.0f == geometry->vertices[1].position.elem[0]);
+        assert(14.0f == geometry->vertices[1].position.elem[1]);
+        assert(15.0f == geometry->vertices[1].position.elem[2]);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // deinitializeを2回呼んでも安全
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_create_from_vertices("test_geometry", 3U, vertices, &geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        point_mesh_geometry_deinitialize(geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_deinitialize(geometry);
+
+        assert(NULL == geometry->name);
+        assert(NULL == geometry->vertices);
+        assert(0U == geometry->vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 破損状態: vertices != NULL, vertex_count == 0 の場合、verticesはdeinitialize側ではfreeされない
+        // nameは破棄される。verticesはテスト側で後始末する
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t* leaked_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        ret_mem = memory_system_allocate(sizeof(point_vertex_t), MEMORY_TAG_GEOMETRY, (void**)&leaked_vertices);
+        assert(MEMORY_SYSTEM_SUCCESS == ret_mem);
+        assert(NULL != leaked_vertices);
+
+        geometry.vertices = leaked_vertices;
+        geometry.vertex_count = 0U;
+
+        point_mesh_geometry_deinitialize(&geometry);
+
+        assert(NULL == geometry.name);
+        assert(leaked_vertices == geometry.vertices);
+        assert(0U == geometry.vertex_count);
+
+        memory_system_free(leaked_vertices, sizeof(point_vertex_t), MEMORY_TAG_GEOMETRY);
+        leaked_vertices = NULL;
+        geometry.vertices = NULL;
+        geometry.vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_clone(void) {
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_name_get(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // geometry_ == NULL -> NULL
+        const char* name = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        name = point_mesh_geometry_name_get(NULL);
+        assert(NULL == name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->name == NULL -> NULL
+        point_mesh_geometry_t geometry = { 0 };
+        const char* name = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        name = point_mesh_geometry_name_get(&geometry);
+        assert(NULL == name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: geometry_が保有する名称文字列への参照を返す
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        const char* name = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry->name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry->name);
+
+        name = point_mesh_geometry_name_get(geometry);
+        assert(NULL != name);
+        assert(0 == strcmp("test_geometry", name));
+
+        assert(name == choco_string_c_str(geometry->name));
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_vertices_get(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // point_mesh_geometry_vertices_get() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        s_test_config_point_mesh_geometry_vertices_get.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_vertices_get.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = point_mesh_geometry_vertices_get(&geometry, &out_vertices);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+        assert(NULL == out_vertices);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertices_get(NULL, &out_vertices);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(NULL == out_vertices);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // out_vertices_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertices_get(&geometry, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // *out_vertices_ != NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t dummy_vertex = { 0 };
+        const point_vertex_t* out_vertices = &dummy_vertex;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertices_get(&geometry, &out_vertices);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(&dummy_vertex == out_vertices);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->name == NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertices_get(&geometry, &out_vertices);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == out_vertices);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertices == NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        geometry.vertices = NULL;
+        geometry.vertex_count = 3U;
+
+        ret = point_mesh_geometry_vertices_get(&geometry, &out_vertices);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == out_vertices);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertex_count == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t dummy_vertices[3] = { 0 };
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        geometry.vertices = dummy_vertices;
+        geometry.vertex_count = 0U;
+
+        ret = point_mesh_geometry_vertices_get(&geometry, &out_vertices);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(NULL == out_vertices);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: geometry_が保有する頂点配列への読み取り専用参照を返す
+        // point_mesh_geometryではvertex_countが2の倍数である必要はないため、3点で確認する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+        const point_vertex_t* out_vertices = NULL;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        ret = point_mesh_geometry_vertices_get(geometry, &out_vertices);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != out_vertices);
+
+        assert(out_vertices == geometry->vertices);
+        assert(out_vertices != vertices);
+
+        assert(0.0f == out_vertices[0].position.elem[0]);
+        assert(1.0f == out_vertices[0].position.elem[1]);
+        assert(2.0f == out_vertices[0].position.elem[2]);
+
+        assert(3.0f == out_vertices[1].position.elem[0]);
+        assert(4.0f == out_vertices[1].position.elem[1]);
+        assert(5.0f == out_vertices[1].position.elem[2]);
+
+        assert(6.0f == out_vertices[2].position.elem[0]);
+        assert(7.0f == out_vertices[2].position.elem[1]);
+        assert(8.0f == out_vertices[2].position.elem[2]);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_point_mesh_geometry_vertex_count_get(void) {
+    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
+
+    {
+        // point_mesh_geometry_vertex_count_get() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        size_t out_vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        s_test_config_point_mesh_geometry_vertex_count_get.fail_on_call = 1U;
+        s_test_config_point_mesh_geometry_vertex_count_get.forced_result = (int)RESOURCE_RUNTIME_ERROR;
+
+        ret = point_mesh_geometry_vertex_count_get(&geometry, &out_vertex_count);
+        assert(RESOURCE_RUNTIME_ERROR == ret);
+        assert(0U == out_vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        size_t out_vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertex_count_get(NULL, &out_vertex_count);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+        assert(0U == out_vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // out_vertex_count_ == NULL -> RESOURCE_INVALID_ARGUMENT
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        ret = point_mesh_geometry_vertex_count_get(geometry, NULL);
+        assert(RESOURCE_INVALID_ARGUMENT == ret);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->name == NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        point_mesh_geometry_t geometry = { 0 };
+        size_t out_vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret = point_mesh_geometry_vertex_count_get(&geometry, &out_vertex_count);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(0U == out_vertex_count);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertices == NULL -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        size_t out_vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        geometry.vertices = NULL;
+        geometry.vertex_count = 3U;
+
+        ret = point_mesh_geometry_vertex_count_get(&geometry, &out_vertex_count);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(0U == out_vertex_count);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // geometry_->vertex_count == 0 -> RESOURCE_BAD_OPERATION
+        resource_result_t ret = RESOURCE_SUCCESS;
+        choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+        point_mesh_geometry_t geometry = { 0 };
+        point_vertex_t dummy_vertices[3] = { 0 };
+        size_t out_vertex_count = 0U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        ret_string = choco_string_create_from_c_string("test_geometry", &geometry.name);
+        assert(CHOCO_STRING_SUCCESS == ret_string);
+        assert(NULL != geometry.name);
+
+        geometry.vertices = dummy_vertices;
+        geometry.vertex_count = 0U;
+
+        ret = point_mesh_geometry_vertex_count_get(&geometry, &out_vertex_count);
+        assert(RESOURCE_BAD_OPERATION == ret);
+        assert(0U == out_vertex_count);
+
+        choco_string_destroy(&geometry.name);
+        assert(NULL == geometry.name);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+    {
+        // 正常系: geometry_が保持する頂点数を返す
+        // point_mesh_geometryではvertex_countが2の倍数である必要はないため、3点で確認する
+        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+        point_mesh_geometry_t* geometry = NULL;
+        point_vertex_t vertices[3] = { 0 };
+        size_t out_vertex_count = 12345U;
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+
+        vertices[0].position = vec3f_initialize(0.0f, 1.0f, 2.0f);
+        vertices[1].position = vec3f_initialize(3.0f, 4.0f, 5.0f);
+        vertices[2].position = vec3f_initialize(6.0f, 7.0f, 8.0f);
+
+        ret = point_mesh_geometry_default_create(&geometry);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(NULL != geometry);
+
+        ret = point_mesh_geometry_initialize_from_vertices("test_geometry", 3U, vertices, geometry);
+        assert(RESOURCE_SUCCESS == ret);
+
+        ret = point_mesh_geometry_vertex_count_get(geometry, &out_vertex_count);
+        assert(RESOURCE_SUCCESS == ret);
+        assert(3U == out_vertex_count);
+
+        point_mesh_geometry_destroy(&geometry);
+        assert(NULL == geometry);
+
+        test_point_mesh_geometry_config_reset();
+        test_choco_string_config_reset();
+        test_choco_memory_config_reset();
+    }
+
+    memory_system_destroy();
+}
+
+#endif

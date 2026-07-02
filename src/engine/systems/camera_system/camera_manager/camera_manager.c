@@ -144,7 +144,7 @@ void camera_manager_deinitialize(camera_manager_t* camera_manager_) {
     camera_manager_->max_camera_count = 0;
 }
 
-camera_result_t camera_manager_register(const char* camera_name_, camera_manager_t* camera_manager_, int16_t* out_camera_id_) {
+camera_result_t camera_manager_register(camera_manager_t* camera_manager_, const char* camera_name_, int16_t* out_camera_id_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_register.call_count++;
     if(s_test_config_camera_manager_register.fail_on_call != 0) {
@@ -201,7 +201,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_unregister(int16_t camera_id_, camera_manager_t* camera_manager_) {
+camera_result_t camera_manager_unregister(camera_manager_t* camera_manager_, int16_t camera_id_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_unregister.call_count++;
     if(s_test_config_camera_manager_unregister.fail_on_call != 0) {
@@ -231,7 +231,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_unregister_by_name(const char* name_, camera_manager_t* camera_manager_) {
+camera_result_t camera_manager_unregister_by_name(camera_manager_t* camera_manager_, const char* name_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_unregister_by_name.call_count++;
     if(s_test_config_camera_manager_unregister_by_name.fail_on_call != 0) {
@@ -248,7 +248,7 @@ camera_result_t camera_manager_unregister_by_name(const char* name_, camera_mana
     IF_ARG_NULL_GOTO_CLEANUP(camera_manager_->camera_array, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_manager_unregister_by_name", "camera_manager_->camera_array")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_unregister_by_name", "name_")
 
-    ret = camera_manager_camera_id_get(name_, camera_manager_, &tmp_id);
+    ret = camera_manager_camera_id_get(camera_manager_, name_, &tmp_id);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("camera_manager_unregister_by_name(%s) - Failed to get camera id. Provided camera name = '%s'.", camera_rslt_to_str(ret), name_);
         goto cleanup;
@@ -261,7 +261,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_camera_id_get(const char* name_, const camera_manager_t* camera_manager_, int16_t* out_camera_id_) {
+camera_result_t camera_manager_camera_id_get(const camera_manager_t* camera_manager_, const char* name_, int16_t* out_camera_id_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_camera_id_get.call_count++;
     if(s_test_config_camera_manager_camera_id_get.fail_on_call != 0) {
@@ -308,7 +308,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_camera_get(int16_t camera_id_, const camera_manager_t* camera_manager_, camera_t** out_camera_) {
+camera_result_t camera_manager_camera_get(const camera_manager_t* camera_manager_, int16_t camera_id_, camera_t** out_camera_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_camera_get.call_count++;
     if(s_test_config_camera_manager_camera_get.fail_on_call != 0) {
@@ -339,7 +339,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_manager_camera_get_by_name(const char* name_, const camera_manager_t* camera_manager_, camera_t** out_camera_) {
+camera_result_t camera_manager_camera_get_by_name(const camera_manager_t* camera_manager_, const char* name_, camera_t** out_camera_) {
 #ifdef TEST_BUILD
     s_test_config_camera_manager_camera_get_by_name.call_count++;
     if(s_test_config_camera_manager_camera_get_by_name.fail_on_call != 0) {
@@ -357,7 +357,7 @@ camera_result_t camera_manager_camera_get_by_name(const char* name_, const camer
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_manager_camera_get_by_name", "out_camera_")
 
-    ret = camera_manager_camera_id_get(name_, camera_manager_, &tmp_id);
+    ret = camera_manager_camera_id_get(camera_manager_, name_, &tmp_id);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("camera_manager_camera_get_by_name(%s) - Failed to get camera.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -866,7 +866,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_register_config_set(&config);
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -888,7 +888,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 1;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register(NULL, &manager, &camera_id);
+        ret = camera_manager_register(&manager, NULL, &camera_id);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -902,7 +902,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_register("main_camera", NULL, &camera_id);
+        ret = camera_manager_register(NULL, "main_camera", &camera_id);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(123 == camera_id);
     }
@@ -919,7 +919,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 1;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("main_camera", &manager, NULL);
+        ret = camera_manager_register(&manager, "main_camera", NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
     }
@@ -937,14 +937,14 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -962,7 +962,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
     }
@@ -988,7 +988,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
 
@@ -1026,7 +1026,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("new_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "new_camera", &camera_id);
         assert(CAMERA_LIMIT_EXCEEDED == ret);
         assert(123 == camera_id);
 
@@ -1058,7 +1058,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         config.forced_result = (int)CAMERA_NO_MEMORY;
         test_camera_create_config_set(&config);
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_NO_MEMORY == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -1084,7 +1084,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("main_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "main_camera", &camera_id);
         assert(CAMERA_SUCCESS == ret);
         assert(0 == camera_id);
 
@@ -1121,7 +1121,7 @@ static void NO_COVERAGE test_camera_manager_register(void) {
         manager.max_camera_count = 4;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_register("new_camera", &manager, &camera_id);
+        ret = camera_manager_register(&manager, "new_camera", &camera_id);
         assert(CAMERA_SUCCESS == ret);
         assert(1 == camera_id);
 
@@ -1160,7 +1160,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_unregister_config_set(&config);
 
-        ret = camera_manager_unregister(0, &manager);
+        ret = camera_manager_unregister(&manager, 0);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1175,7 +1175,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_unregister(0, NULL);
+        ret = camera_manager_unregister(NULL, 0);
         assert(CAMERA_INVALID_ARGUMENT == ret);
     }
     {
@@ -1191,13 +1191,13 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister(0, &manager);
+        ret = camera_manager_unregister(&manager, 0);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_unregister(0, &manager);
+        ret = camera_manager_unregister(&manager, 0);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
     }
@@ -1213,7 +1213,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_unregister(0, &manager);
+        ret = camera_manager_unregister(&manager, 0);
         assert(CAMERA_BAD_OPERATION == ret);
     }
     {
@@ -1229,7 +1229,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister(-1, &manager);
+        ret = camera_manager_unregister(&manager, -1);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1247,7 +1247,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister(2, &manager);
+        ret = camera_manager_unregister(&manager, 2);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1277,7 +1277,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister(1, &manager);
+        ret = camera_manager_unregister(&manager, 1);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL != manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1317,7 +1317,7 @@ static void NO_COVERAGE test_camera_manager_unregister(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister(1, &manager);
+        ret = camera_manager_unregister(&manager, 1);
         assert(CAMERA_SUCCESS == ret);
 
         assert(NULL != manager.camera_array[0]);
@@ -1353,7 +1353,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_unregister_by_name_config_set(&config);
 
-        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "main_camera");
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1368,7 +1368,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_unregister_by_name("main_camera", NULL);
+        ret = camera_manager_unregister_by_name(NULL, "main_camera");
         assert(CAMERA_INVALID_ARGUMENT == ret);
     }
     {
@@ -1384,13 +1384,13 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "main_camera");
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "main_camera");
         assert(CAMERA_BAD_OPERATION == ret);
         assert(NULL == manager.camera_array[0]);
     }
@@ -1406,7 +1406,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "main_camera");
         assert(CAMERA_BAD_OPERATION == ret);
     }
     {
@@ -1422,7 +1422,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister_by_name(NULL, &manager);
+        ret = camera_manager_unregister_by_name(&manager, NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1458,7 +1458,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         config.forced_result = (int)CAMERA_DATA_CORRUPTED;
         test_camera_manager_camera_id_get_config_set(&config);
 
-        ret = camera_manager_unregister_by_name("main_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "main_camera");
         assert(CAMERA_DATA_CORRUPTED == ret);
 
         assert(NULL != manager.camera_array[0]);
@@ -1496,7 +1496,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister_by_name("not_found_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "not_found_camera");
         assert(CAMERA_BAD_OPERATION == ret);
 
         assert(NULL != manager.camera_array[0]);
@@ -1537,7 +1537,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 4;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister_by_name("target_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "target_camera");
         assert(CAMERA_SUCCESS == ret);
 
         assert(NULL == manager.camera_array[0]);
@@ -1580,7 +1580,7 @@ static void NO_COVERAGE test_camera_manager_unregister_by_name(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_unregister_by_name("target_camera", &manager);
+        ret = camera_manager_unregister_by_name(&manager, "target_camera");
         assert(CAMERA_SUCCESS == ret);
 
         assert(NULL != manager.camera_array[0]);
@@ -1617,7 +1617,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_camera_id_get_config_set(&config);
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
 
@@ -1632,7 +1632,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_camera_id_get("main_camera", NULL, &camera_id);
+        ret = camera_manager_camera_id_get(NULL, "main_camera", &camera_id);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(123 == camera_id);
     }
@@ -1650,14 +1650,14 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -1675,7 +1675,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
     }
@@ -1693,7 +1693,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get(NULL, &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, NULL, &camera_id);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(123 == camera_id);
         assert(NULL == manager.camera_array[0]);
@@ -1712,7 +1712,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, NULL);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -1743,7 +1743,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("not_found_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "not_found_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
 
@@ -1770,7 +1770,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("main_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "main_camera", &camera_id);
         assert(CAMERA_BAD_OPERATION == ret);
         assert(123 == camera_id);
 
@@ -1808,7 +1808,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 4;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("target_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "target_camera", &camera_id);
         assert(CAMERA_SUCCESS == ret);
         assert(2 == camera_id);
 
@@ -1853,7 +1853,7 @@ static void NO_COVERAGE test_camera_manager_camera_id_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_id_get("target_camera", &manager, &camera_id);
+        ret = camera_manager_camera_id_get(&manager, "target_camera", &camera_id);
         assert(CAMERA_SUCCESS == ret);
         assert(1 == camera_id);
 
@@ -1892,7 +1892,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_camera_get_config_set(&config);
 
-        ret = camera_manager_camera_get(0, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 0, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
 
@@ -1907,7 +1907,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_camera_get(0, NULL, &out_camera);
+        ret = camera_manager_camera_get(NULL, 0, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -1925,13 +1925,13 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(0, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 0, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_camera_get(0, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 0, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -1948,7 +1948,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_camera_get(0, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 0, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -1965,7 +1965,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(0, &manager, NULL);
+        ret = camera_manager_camera_get(&manager, 0, NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
     }
     {
@@ -1982,7 +1982,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(2, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 2, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -2000,7 +2000,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(-1, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, -1, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -2030,7 +2030,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(1, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 1, &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
 
@@ -2071,7 +2071,7 @@ static void NO_COVERAGE test_camera_manager_camera_get(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get(1, &manager, &out_camera);
+        ret = camera_manager_camera_get(&manager, 1, &out_camera);
         assert(CAMERA_SUCCESS == ret);
         assert(camera_array[1] == out_camera);
         assert(choco_string_equal("target_camera", camera_name_get(out_camera)));
@@ -2111,7 +2111,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_manager_camera_get_by_name_config_set(&config);
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
         assert(NULL == manager.camera_array[0]);
@@ -2128,7 +2128,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         test_camera_config_reset();
         test_choco_memory_config_reset();
 
-        ret = camera_manager_camera_get_by_name("main_camera", NULL, &out_camera);
+        ret = camera_manager_camera_get_by_name(NULL, "main_camera", &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -2146,14 +2146,14 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 0;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
         assert(NULL == manager.camera_array[0]);
 
         manager.max_camera_count = -1;
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
         assert(NULL == manager.camera_array[0]);
@@ -2171,7 +2171,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = NULL;
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
     }
@@ -2189,7 +2189,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name(NULL, &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, NULL, &out_camera);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert((camera_t*)0x1 == out_camera);
         assert(NULL == manager.camera_array[0]);
@@ -2208,7 +2208,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 2;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, NULL);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", NULL);
         assert(CAMERA_INVALID_ARGUMENT == ret);
         assert(NULL == manager.camera_array[0]);
         assert(NULL == manager.camera_array[1]);
@@ -2245,7 +2245,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         config.forced_result = (int)CAMERA_DATA_CORRUPTED;
         test_camera_manager_camera_id_get_config_set(&config);
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_DATA_CORRUPTED == ret);
         assert((camera_t*)0x1 == out_camera);
 
@@ -2285,7 +2285,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("not_found_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "not_found_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
 
@@ -2312,7 +2312,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("main_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "main_camera", &out_camera);
         assert(CAMERA_BAD_OPERATION == ret);
         assert((camera_t*)0x1 == out_camera);
 
@@ -2350,7 +2350,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 4;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "target_camera", &out_camera);
         assert(CAMERA_SUCCESS == ret);
         assert(camera_array[2] == out_camera);
         assert(choco_string_equal("target_camera", camera_name_get(out_camera)));
@@ -2396,7 +2396,7 @@ static void NO_COVERAGE test_camera_manager_camera_get_by_name(void) {
         manager.max_camera_count = 3;
         manager.camera_array = camera_array;
 
-        ret = camera_manager_camera_get_by_name("target_camera", &manager, &out_camera);
+        ret = camera_manager_camera_get_by_name(&manager, "target_camera", &out_camera);
         assert(CAMERA_SUCCESS == ret);
         assert(camera_array[1] == out_camera);
         assert(choco_string_equal("target_camera", camera_name_get(out_camera)));
