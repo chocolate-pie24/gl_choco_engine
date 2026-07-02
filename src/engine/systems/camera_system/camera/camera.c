@@ -13,20 +13,20 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/camera_system/camera/camera.h"
+
 #include <stdbool.h>
 
-#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+#include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
+
+#include "engine/containers/choco_string.h"
 
 #include "engine/systems/camera_system/camera_core/camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/camera_memory.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-
-#include "engine/base/choco_math/math_types.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
-
-#include "engine/containers/choco_string.h"
 
 // #define TEST_BUILD
 
@@ -227,7 +227,7 @@ const char* camera_name_get(const camera_t* camera_) {
     return choco_string_c_str(camera_->name);
 }
 
-camera_result_t camera_viewing_frustum_update(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t* camera_) {
+camera_result_t camera_viewing_frustum_update(camera_t* camera_, float fovy_, float aspect_, float near_clip_, float far_clip_) {
 #ifdef TEST_BUILD
     s_test_config_camera_viewing_frustum_update.call_count++;
     if(s_test_config_camera_viewing_frustum_update.fail_on_call != 0) {
@@ -259,7 +259,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_euler_update(vec3f_t euler_, camera_t* camera_) {
+camera_result_t camera_euler_update(camera_t* camera_, vec3f_t euler_) {
 #ifdef TEST_BUILD
     s_test_config_camera_euler_update.call_count++;
     if(s_test_config_camera_euler_update.fail_on_call != 0) {
@@ -281,7 +281,7 @@ cleanup:
     return ret;
 }
 
-camera_result_t camera_position_update(vec3f_t position_, camera_t* camera_) {
+camera_result_t camera_position_update(camera_t* camera_, vec3f_t position_) {
 #ifdef TEST_BUILD
     s_test_config_camera_position_update.call_count++;
     if(s_test_config_camera_position_update.fail_on_call != 0) {
@@ -1351,7 +1351,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_viewing_frustum_update_config_set(&config);
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_BAD_OPERATION == ret);
 
         camera_destroy(&camera);
@@ -1369,7 +1369,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, NULL);
+        ret = camera_viewing_frustum_update(NULL, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1397,7 +1397,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         camera->frustum_cache_dirty = false;
 
         // near_clip >= far_clip で無効
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 10.0f, 1.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 10.0f, 1.0f);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         // 既存状態が維持されること
@@ -1437,7 +1437,7 @@ static void NO_COVERAGE test_camera_viewing_frustum_update(void) {
         camera->frustum.far_clip = 2.0f;
         camera->frustum_cache_dirty = false;
 
-        ret = camera_viewing_frustum_update(60.0f, 16.0f / 9.0f, 0.1f, 100.0f, camera);
+        ret = camera_viewing_frustum_update(camera, 60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->frustum.aspect, 16.0f / 9.0f));
@@ -1481,7 +1481,7 @@ static void NO_COVERAGE test_camera_euler_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_euler_update_config_set(&config);
 
-        ret = camera_euler_update(euler, camera);
+        ret = camera_euler_update(camera, euler);
         assert(CAMERA_BAD_OPERATION == ret);
 
         camera_destroy(&camera);
@@ -1500,7 +1500,7 @@ static void NO_COVERAGE test_camera_euler_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_euler_update(euler, NULL);
+        ret = camera_euler_update(NULL, euler);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1529,7 +1529,7 @@ static void NO_COVERAGE test_camera_euler_update(void) {
         camera->position.elem[2] = 300.0f;
         camera->posture_cache_dirty = false;
 
-        ret = camera_euler_update(euler, camera);
+        ret = camera_euler_update(camera, euler);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->euler.elem[0], 15.0f));
@@ -1577,7 +1577,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
         config.forced_result = (int)CAMERA_BAD_OPERATION;
         test_camera_position_update_config_set(&config);
 
-        ret = camera_position_update(position, camera);
+        ret = camera_position_update(camera, position);
         assert(CAMERA_BAD_OPERATION == ret);
 
         camera_destroy(&camera);
@@ -1596,7 +1596,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
 
         test_camera_config_reset();
 
-        ret = camera_position_update(position, NULL);
+        ret = camera_position_update(NULL, position);
         assert(CAMERA_INVALID_ARGUMENT == ret);
 
         test_camera_config_reset();
@@ -1625,7 +1625,7 @@ static void NO_COVERAGE test_camera_position_update(void) {
         camera->euler.elem[2] = 300.0f;
         camera->posture_cache_dirty = false;
 
-        ret = camera_position_update(position, camera);
+        ret = camera_position_update(camera, position);
         assert(CAMERA_SUCCESS == ret);
 
         assert(is_equal_float(camera->position.elem[0], 15.0f));

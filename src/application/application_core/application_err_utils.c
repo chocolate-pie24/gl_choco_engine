@@ -267,6 +267,8 @@ application_result_t app_rslt_convert_renderer(renderer_result_t rslt_) {
         return APPLICATION_BAD_OPERATION;
     case RENDERER_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
+    case RENDERER_OVERFLOW:
+        return APPLICATION_OVERFLOW;
     case RENDERER_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
@@ -337,6 +339,8 @@ application_result_t app_rslt_convert_texture_system(texture_system_result_t rsl
         return APPLICATION_FILE_OPEN_ERROR;
     case TEXTURE_SYSTEM_FILE_READ_ERROR:
         return APPLICATION_FILE_READ_ERROR;
+    case TEXTURE_SYSTEM_FILE_CLOSE_ERROR:
+        return APPLICATION_FILE_CLOSE_ERROR;
     case TEXTURE_SYSTEM_UNSUPPORTED_FILE:
         return APPLICATION_UNSUPPORTED_FILE;
     case TEXTURE_SYSTEM_UNDEFINED_ERROR:

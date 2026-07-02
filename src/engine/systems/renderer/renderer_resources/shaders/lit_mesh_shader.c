@@ -15,31 +15,30 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/renderer_resources/lit_mesh_shader.h"
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
-
-#include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
-#include "engine/systems/renderer/renderer_core/renderer_memory.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/core/memory/choco_memory.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
-#include "engine/core/geometry_primitive/vertex.h"
+#include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
+#include "engine/systems/renderer/renderer_core/renderer_memory.h"
 
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
 // TODO: テスト(lit_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
@@ -59,7 +58,7 @@ struct lit_mesh_shader {
     size_t current_vertex_count;            /**< 現在バーテックスバッファに転送されている頂点数 */
 };
 
-renderer_result_t lit_mesh_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, lit_mesh_shader_t** out_lit_mesh_shader_) {
+renderer_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, lit_mesh_shader_t** out_lit_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
@@ -71,9 +70,9 @@ renderer_result_t lit_mesh_shader_create(const char* file_path_, const char* nam
     choco_string_t* vert_shader_source = NULL;
     choco_string_t* frag_shader_source = NULL;
 
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "file_path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(out_lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "out_lit_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_create", "*out_lit_mesh_shader_")
 
@@ -356,7 +355,7 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
     lit_mesh_shader_->current_vertex_count = 0;
 }
 
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
+renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     size_t vertex_count = 0;
     bool vbo_bound = false;
@@ -366,8 +365,8 @@ renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_bac
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_append", "lit_mesh_vbo")
     IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "write_data_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(lit_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "lit_mesh_shader_vertex_buffer_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP((lit_mesh_shader_->current_buffer_offset + size_) <= lit_mesh_shader_->vertex_buffer_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(lit_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_OVERFLOW, renderer_rslt_to_str(RENDERER_OVERFLOW), "lit_mesh_shader_vertex_buffer_append", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP((lit_mesh_shader_->current_buffer_offset + size_) <= lit_mesh_shader_->vertex_buffer_size, ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "lit_mesh_shader_vertex_buffer_append", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(point_normal_vertex_t) * 3)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "size_")
 

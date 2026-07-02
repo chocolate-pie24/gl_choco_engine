@@ -22,7 +22,7 @@ extern "C" {
 
 /**
  * @brief geometry primitive実行結果コード定義
- * 
+ *
  */
 typedef enum {
     GEOMETRY_PRIMITIVE_SUCCESS = 0,         /**< 実行結果正常 */

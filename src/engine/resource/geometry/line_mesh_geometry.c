@@ -3,8 +3,8 @@
  * @file line_mesh_geometry.c
  * @author chocolate-pie24
  * @brief line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
- * 
- * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGBで指定する。このため、全ての線分が指定した色で描画される
+ *
+ * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGB(4byte目はpadding)で指定する。このため、全ての線分が指定した色で描画される
  *
  * @version 0.1
  * @date 2026-06-04
@@ -69,6 +69,7 @@ static test_call_control_t s_test_config_line_mesh_geometry_create_from_vertices
 static test_call_control_t s_test_config_line_mesh_geometry_create_from_aabbs;          /**< line_mesh_geometry_create_from_aabbs()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_initialize_from_vertices;   /**< line_mesh_geometry_initialize_from_vertices()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_initialize_from_aabbs;      /**< line_mesh_geometry_initialize_from_aabbs()テスト設定 */
+static test_call_control_t s_test_config_line_mesh_geometry_clone;                      /**< line_mesh_geometry_clone()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_name_get;                   /**< line_mesh_geometry_name_get()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_vertices_get;               /**< line_mesh_geometry_vertices_get()テスト設定 */
 static test_call_control_t s_test_config_line_mesh_geometry_vertex_count_get;           /**< line_mesh_geometry_vertex_count_get()テスト設定 */
@@ -83,6 +84,7 @@ static void test_line_mesh_geometry_destroy(void);
 static void test_line_mesh_geometry_initialize_from_vertices(void);
 static void test_line_mesh_geometry_initialize_from_aabbs(void);
 static void test_line_mesh_geometry_deinitialize(void);
+static void test_line_mesh_geometry_clone(void);
 static void test_line_mesh_geometry_name_get(void);
 static void test_line_mesh_geometry_vertices_get(void);
 static void test_line_mesh_geometry_vertex_count_get(void);
@@ -148,6 +150,11 @@ resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, siz
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "name_[0]")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertices_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertex_count_")
 
     ret = line_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -187,6 +194,10 @@ resource_result_t line_mesh_geometry_create_from_aabbs(const char* name_, size_t
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "name_[0]")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabb_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabbs_")
 
     ret = line_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -253,6 +264,7 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
     line_vertex_t* tmp_vertices = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "name_[0]")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "geometry_")
@@ -323,6 +335,7 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
     size_t vertex_count = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_[0]")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabb_count_")
     IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabbs_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "geometry_")
@@ -416,6 +429,77 @@ void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_) {
         geometry_->vertices = NULL;
         geometry_->vertex_count = 0;
     }
+}
+
+resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, line_mesh_geometry_t** out_geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_line_mesh_geometry_clone.call_count++;
+    if(s_test_config_line_mesh_geometry_clone.fail_on_call != 0) {
+        if(s_test_config_line_mesh_geometry_clone.call_count == s_test_config_line_mesh_geometry_clone.fail_on_call) {
+            return (resource_result_t)s_test_config_line_mesh_geometry_clone.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    line_mesh_geometry_t* tmp_geometry = NULL;
+    const char* tmp_name = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_clone", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_clone", "*out_geometry_")
+
+    // 内部データチェック
+    if(0 == src_->vertex_count && NULL != src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is 0 but vertices is not NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->name) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but vertices = NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != (src_->vertex_count % 2)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is not multiple of 2.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 == choco_string_length(src_->name) && 0 != src_->vertex_count) {    // src_->name == NULL or src_->nameが空
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is empty.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // clone生成
+    ret = line_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - Failed to create empty clone instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != src_->vertex_count) {
+        tmp_name = choco_string_c_str(src_->name);
+        ret = line_mesh_geometry_initialize_from_vertices(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        if(RESOURCE_OVERFLOW == ret) {
+            ret = RESOURCE_DATA_CORRUPTED;
+            ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
+            goto cleanup;
+        } else if(RESOURCE_SUCCESS != ret) {
+            ERROR_MESSAGE("line_mesh_geometry_clone(%s) - Failed to initialize clone instance from src_ geometry data.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    *out_geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        line_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
 }
 
 const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_) {
@@ -528,6 +612,15 @@ void NO_COVERAGE test_line_mesh_geometry_initialize_from_aabbs_config_set(const 
     s_test_config_line_mesh_geometry_initialize_from_aabbs.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_line_mesh_geometry_clone_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_line_mesh_geometry_clone.fail_on_call = config_->fail_on_call;
+    s_test_config_line_mesh_geometry_clone.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_line_mesh_geometry_vertices_get_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -553,6 +646,7 @@ void NO_COVERAGE test_line_mesh_geometry_config_reset(void) {
     test_call_control_reset(&s_test_config_line_mesh_geometry_create_from_aabbs);
     test_call_control_reset(&s_test_config_line_mesh_geometry_initialize_from_vertices);
     test_call_control_reset(&s_test_config_line_mesh_geometry_initialize_from_aabbs);
+    test_call_control_reset(&s_test_config_line_mesh_geometry_clone);
     test_call_control_reset(&s_test_config_line_mesh_geometry_name_get);
     test_call_control_reset(&s_test_config_line_mesh_geometry_vertices_get);
     test_call_control_reset(&s_test_config_line_mesh_geometry_vertex_count_get);
@@ -566,6 +660,7 @@ void NO_COVERAGE test_line_mesh_geometry(void) {
     test_line_mesh_geometry_initialize_from_vertices();
     test_line_mesh_geometry_initialize_from_aabbs();
     test_line_mesh_geometry_deinitialize();
+    test_line_mesh_geometry_clone();
     test_line_mesh_geometry_name_get();
     test_line_mesh_geometry_vertices_get();
     test_line_mesh_geometry_vertex_count_get();
@@ -2889,6 +2984,11 @@ static void NO_COVERAGE test_line_mesh_geometry_deinitialize(void) {
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_line_mesh_geometry_clone(void) {
+
 }
 
 // Generated by ChatGPT

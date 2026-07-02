@@ -34,40 +34,31 @@ extern "C" {
 void test_lit_mesh_geometry_default_create_config_set(const test_call_control_t* config_);
 
 /**
- * @brief lit_mesh_geometry_create_from_vertices()APIに対して失敗注入設定を行う
+ * @brief lit_mesh_geometry_create()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、lit_mesh_geometry内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_lit_mesh_geometry_create_from_vertices_config_set(const test_call_control_t* config_);
+void test_lit_mesh_geometry_create_config_set(const test_call_control_t* config_);
 
 /**
- * @brief lit_mesh_geometry_create_from_file()APIに対して失敗注入設定を行う
+ * @brief lit_mesh_geometry_initialize()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、lit_mesh_geometry内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_lit_mesh_geometry_create_from_file_config_set(const test_call_control_t* config_);
+void test_lit_mesh_geometry_initialize_config_set(const test_call_control_t* config_);
 
 /**
- * @brief lit_mesh_geometry_initialize_from_vertices()APIに対して失敗注入設定を行う
+ * @brief lit_mesh_geometry_clone()APIに対して失敗注入設定を行う
  *
  * @note API呼び出し回数についてはコピーされず、lit_mesh_geometry内で管理している値が保持される
  *
  * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
  */
-void test_lit_mesh_geometry_initialize_from_vertices_config_set(const test_call_control_t* config_);
-
-/**
- * @brief lit_mesh_geometry_initialize_from_file()APIに対して失敗注入設定を行う
- *
- * @note API呼び出し回数についてはコピーされず、lit_mesh_geometry内で管理している値が保持される
- *
- * @param[in] config_ テスト設定値構造体インスタンスへのポインタ
- */
-void test_lit_mesh_geometry_initialize_from_file_config_set(const test_call_control_t* config_);
+void test_lit_mesh_geometry_clone_config_set(const test_call_control_t* config_);
 
 /**
  * @brief lit_mesh_geometry_vertices_get()APIに対して失敗注入設定を行う

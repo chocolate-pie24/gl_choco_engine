@@ -18,8 +18,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_LIT_MESH_SHADER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_LIT_MESH_SHADER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LIT_MESH_SHADER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LIT_MESH_SHADER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,9 +34,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
 
-typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダーリソース構造体前方宣言 */
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する
@@ -49,9 +49,9 @@ typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダー
  * - lit_meshシェーダーが扱うビュー行列のLocation取得
  * - lit_meshシェーダーが扱うプロジェクション行列のLocation取得
  *
+ * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
  * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
  * @param[out] out_lit_mesh_shader_ リソース確保対象lit_meshシェーダーリソースへのダブルポインタ
  *
  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
@@ -77,7 +77,7 @@ typedef struct lit_mesh_shader lit_mesh_shader_t;   /**< lit_meshシェーダー
  * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_create(const char* file_path_, const char* name_, renderer_backend_context_t* backend_context_, lit_mesh_shader_t** out_lit_mesh_shader_);
+renderer_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, lit_mesh_shader_t** out_lit_mesh_shader_);
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する
@@ -149,14 +149,14 @@ void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_c
  * - size_ == 0
  * - out_vertex_offset_ == NULL
  * - size_がsizeof(point_normal_vertex_t) x 3の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+ * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
+ * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
  * @retval RENDERER_BAD_OPERATION 以下のいずれか
  * - VBO未初期化
- * - 転送後にバーテックスバッファサイズを超過
  * - backend_context_が未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t lit_mesh_shader_vertex_buffer_vertex_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief lit_meshシェーダーが保持するVAOをbindする

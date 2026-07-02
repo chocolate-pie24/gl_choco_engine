@@ -25,13 +25,14 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/linear_allocator.h"
+#include "engine/core/memory/choco_memory.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
 #include "engine/resource/texture/texture.h"
 
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
@@ -613,6 +614,8 @@ static texture_system_result_t tex_sys_rslt_convert_renderer(renderer_result_t r
         return TEXTURE_SYSTEM_BAD_OPERATION;
     case RENDERER_DATA_CORRUPTED:
         return TEXTURE_SYSTEM_DATA_CORRUPTED;
+    case RENDERER_OVERFLOW:
+        return TEXTURE_SYSTEM_OVERFLOW;
     case RENDERER_UNDEFINED_ERROR:
         return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     default:

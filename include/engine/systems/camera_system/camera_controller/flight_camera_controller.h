@@ -21,14 +21,15 @@ extern "C" {
 #endif
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
-#include "engine/systems/camera_system/camera/camera.h"
+
+typedef struct camera camera_t; /**< カメラ状態管理構造体のopaque型 */
 
 /**
  * @brief フライトカメラを前方に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -36,14 +37,14 @@ extern "C" {
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_forward(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_forward(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラを後方に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -51,14 +52,14 @@ camera_result_t flight_camera_controller_move_forward(float speed_, float delta_
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_backward(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_backward(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラを右方向に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -66,14 +67,14 @@ camera_result_t flight_camera_controller_move_backward(float speed_, float delta
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_right(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_right(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラを左方向に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -81,14 +82,14 @@ camera_result_t flight_camera_controller_move_right(float speed_, float delta_ti
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_left(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_left(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラを上方向に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -96,14 +97,14 @@ camera_result_t flight_camera_controller_move_left(float speed_, float delta_tim
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_up(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラを下方向に動かす
  *
+ * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 移動速度
  * @param[in] delta_time_ 移動時間
- * @param[in,out] camera_ 移動対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_RUNTIME_ERROR 以下のいずれか
@@ -111,55 +112,55 @@ camera_result_t flight_camera_controller_move_up(float speed_, float delta_time_
  * - カメラ位置の取得 / 更新に失敗
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_move_down(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_move_down(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラをピッチ+方向に回転する
  *
+ * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 回転速度
  * @param[in] delta_time_ 回転時間
- * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_rot_pitch_plus(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_rot_pitch_plus(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラをピッチ-方向に回転する
  *
+ * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 回転速度
  * @param[in] delta_time_ 回転時間
- * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_rot_pitch_minus(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_rot_pitch_minus(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラをヨー+方向に回転する
  *
+ * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 回転速度
  * @param[in] delta_time_ 回転時間
- * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_rot_yaw_plus(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_rot_yaw_plus(camera_t* camera_, float speed_, float delta_time_);
 
 /**
  * @brief フライトカメラをヨー-方向に回転する
  *
+ * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  * @param[in] speed_ 回転速度
  * @param[in] delta_time_ 回転時間
- * @param[in,out] camera_ 回転対象カメラ構造体インスタンスへのポインタ
  *
  * @retval CAMERA_INVALID_ARGUMENT camera_ == NULL
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
-camera_result_t flight_camera_controller_rot_yaw_minus(float speed_, float delta_time_, camera_t* camera_);
+camera_result_t flight_camera_controller_rot_yaw_minus(camera_t* camera_, float speed_, float delta_time_);
 
 #ifdef __cplusplus
 }

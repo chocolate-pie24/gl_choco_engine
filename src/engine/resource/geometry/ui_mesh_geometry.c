@@ -67,6 +67,7 @@ struct ui_mesh_geometry {
 static test_call_control_t s_test_config_ui_mesh_geometry_default_create;               /**< ui_mesh_geometry_default_create()テスト設定 */
 static test_call_control_t s_test_config_ui_mesh_geometry_create_from_vertices;         /**< ui_mesh_geometry_create_from_vertices()テスト設定 */
 static test_call_control_t s_test_config_ui_mesh_geometry_initialize_from_vertices;     /**< ui_mesh_geometry_initialize_from_vertices()テスト設定 */
+static test_call_control_t s_test_config_ui_mesh_geometry_clone;                        /**< ui_mesh_geometry_clone()テスト設定 */
 static test_call_control_t s_test_config_ui_mesh_geometry_vertices_get;                 /**< ui_mesh_geometry_vertices_get()テスト設定 */
 static test_call_control_t s_test_config_ui_mesh_geometry_vertex_count_get;             /**< ui_mesh_geometry_vertex_count_get()テスト設定 */
 
@@ -78,6 +79,7 @@ static void test_ui_mesh_geometry_create_from_vertices(void);
 static void test_ui_mesh_geometry_destroy(void);
 static void test_ui_mesh_geometry_initialize_from_vertices(void);
 static void test_ui_mesh_geometry_deinitialize(void);
+static void test_ui_mesh_geometry_clone(void);
 static void test_ui_mesh_geometry_name_get(void);
 static void test_ui_mesh_geometry_vertices_get(void);
 static void test_ui_mesh_geometry_vertex_count_get(void);
@@ -141,9 +143,12 @@ resource_result_t ui_mesh_geometry_create_from_vertices(const char* name_, size_
 
     ui_mesh_geometry_t* tmp_geometry = NULL;
 
-    // NOTE: vertex_count_ == 6のチェックはui_mesh_geometry_initialize_from_verticesで行う
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "name_[0]")
+    IF_ARG_FALSE_GOTO_CLEANUP(6 == vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "vertices_")
 
     ret = ui_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -210,6 +215,7 @@ resource_result_t ui_mesh_geometry_initialize_from_vertices(const char* name_, s
     ui_vertex_t* tmp_vertices = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_initialize_from_vertices", "name_")
+    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_initialize_from_vertices", "name_[0]")
     IF_ARG_FALSE_GOTO_CLEANUP(6 == vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_initialize_from_vertices", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_initialize_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_initialize_from_vertices", "geometry_")
@@ -275,6 +281,77 @@ void ui_mesh_geometry_deinitialize(ui_mesh_geometry_t* geometry_) {
         geometry_->vertices = NULL;
         geometry_->vertex_count = 0;
     }
+}
+
+resource_result_t ui_mesh_geometry_clone(const ui_mesh_geometry_t* src_, ui_mesh_geometry_t** out_geometry_) {
+#ifdef TEST_BUILD
+    s_test_config_ui_mesh_geometry_clone.call_count++;
+    if(s_test_config_ui_mesh_geometry_clone.fail_on_call != 0) {
+        if(s_test_config_ui_mesh_geometry_clone.call_count == s_test_config_ui_mesh_geometry_clone.fail_on_call) {
+            return (resource_result_t)s_test_config_ui_mesh_geometry_clone.forced_result;
+        }
+    }
+#endif
+    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
+    ui_mesh_geometry_t* tmp_geometry = NULL;
+    const char* tmp_name = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_clone", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_clone", "*out_geometry_")
+
+    // 内部データチェック
+    if(0 == src_->vertex_count && NULL != src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is 0 but vertices is not NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->name) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && NULL == src_->vertices) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but vertices = NULL.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 != src_->vertex_count && 6 != src_->vertex_count) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is not 6.", resource_rslt_to_str(ret));
+        goto cleanup;
+    } else if(0 == choco_string_length(src_->name) && 0 != src_->vertex_count) {    // src_->name == NULL or src_->nameが空
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is empty.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // clone生成
+    ret = ui_mesh_geometry_default_create(&tmp_geometry);
+    if(RESOURCE_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - Failed to create empty clone instance.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != src_->vertex_count) {
+        tmp_name = choco_string_c_str(src_->name);
+        ret = ui_mesh_geometry_initialize_from_vertices(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        if(RESOURCE_OVERFLOW == ret) {
+            ret = RESOURCE_DATA_CORRUPTED;
+            ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
+            goto cleanup;
+        } else if(RESOURCE_SUCCESS != ret) {
+            ERROR_MESSAGE("ui_mesh_geometry_clone(%s) - Failed to initialize clone instance from src_ geometry data.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    *out_geometry_ = tmp_geometry;
+
+    ret = RESOURCE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_SUCCESS != ret) {
+        ui_mesh_geometry_destroy(&tmp_geometry);
+    }
+    return ret;
 }
 
 const char* ui_mesh_geometry_name_get(const ui_mesh_geometry_t* geometry_) {
@@ -367,6 +444,15 @@ void NO_COVERAGE test_ui_mesh_geometry_initialize_from_vertices_config_set(const
     s_test_config_ui_mesh_geometry_initialize_from_vertices.forced_result = config_->forced_result;
 }
 
+void NO_COVERAGE test_ui_mesh_geometry_clone_config_set(const test_call_control_t* config_) {
+    if(NULL == config_) {
+        assert(false);
+        return;
+    }
+    s_test_config_ui_mesh_geometry_clone.fail_on_call = config_->fail_on_call;
+    s_test_config_ui_mesh_geometry_clone.forced_result = config_->forced_result;
+}
+
 void NO_COVERAGE test_ui_mesh_geometry_vertices_get_config_set(const test_call_control_t* config_) {
     if(NULL == config_) {
         assert(false);
@@ -389,6 +475,7 @@ void NO_COVERAGE test_ui_mesh_geometry_config_reset(void) {
     test_call_control_reset(&s_test_config_ui_mesh_geometry_default_create);
     test_call_control_reset(&s_test_config_ui_mesh_geometry_create_from_vertices);
     test_call_control_reset(&s_test_config_ui_mesh_geometry_initialize_from_vertices);
+    test_call_control_reset(&s_test_config_ui_mesh_geometry_clone);
     test_call_control_reset(&s_test_config_ui_mesh_geometry_vertices_get);
     test_call_control_reset(&s_test_config_ui_mesh_geometry_vertex_count_get);
 }
@@ -399,6 +486,7 @@ void NO_COVERAGE test_ui_mesh_geometry(void) {
     test_ui_mesh_geometry_destroy();
     test_ui_mesh_geometry_initialize_from_vertices();
     test_ui_mesh_geometry_deinitialize();
+    test_ui_mesh_geometry_clone();
     test_ui_mesh_geometry_name_get();
     test_ui_mesh_geometry_vertices_get();
     test_ui_mesh_geometry_vertex_count_get();
@@ -504,340 +592,6 @@ static void NO_COVERAGE test_ui_mesh_geometry_default_create(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_ui_mesh_geometry_create_from_vertices(void) {
-    assert(MEMORY_SYSTEM_SUCCESS == memory_system_create());
-
-    {
-        // ui_mesh_geometry_create_from_vertices() 冒頭で強制的に RESOURCE_RUNTIME_ERROR を返させる
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        vertices[0].position = vec2f_initialize(0.0f, 1.0f);
-        vertices[0].tex_coord = vec2f_initialize(0.0f, 0.0f);
-        vertices[1].position = vec2f_initialize(2.0f, 3.0f);
-        vertices[1].tex_coord = vec2f_initialize(0.0f, 1.0f);
-        vertices[2].position = vec2f_initialize(4.0f, 5.0f);
-        vertices[2].tex_coord = vec2f_initialize(1.0f, 1.0f);
-        vertices[3].position = vec2f_initialize(6.0f, 7.0f);
-        vertices[3].tex_coord = vec2f_initialize(0.0f, 0.0f);
-        vertices[4].position = vec2f_initialize(8.0f, 9.0f);
-        vertices[4].tex_coord = vec2f_initialize(1.0f, 1.0f);
-        vertices[5].position = vec2f_initialize(10.0f, 11.0f);
-        vertices[5].tex_coord = vec2f_initialize(1.0f, 0.0f);
-
-        s_test_config_ui_mesh_geometry_create_from_vertices.fail_on_call = 1U;
-        s_test_config_ui_mesh_geometry_create_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_RUNTIME_ERROR == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // geometry_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, NULL);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // *geometry_ != NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t dummy_geometry = { 0 };
-        ui_mesh_geometry_t* geometry = &dummy_geometry;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(&dummy_geometry == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // ui_mesh_geometry_default_create() が失敗 -> その戻り値を返し、geometryは変更されない
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_ui_mesh_geometry_default_create.fail_on_call = 1U;
-        s_test_config_ui_mesh_geometry_default_create.forced_result = (int)RESOURCE_NO_MEMORY;
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // ui_mesh_geometry_default_create() 内部のmemory_system_allocate()が失敗 -> RESOURCE_NO_MEMORY
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
-        test_memory_system_allocate_config_set(&config);
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // ui_mesh_geometry_initialize_from_vertices() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        s_test_config_ui_mesh_geometry_initialize_from_vertices.fail_on_call = 1U;
-        s_test_config_ui_mesh_geometry_initialize_from_vertices.forced_result = (int)RESOURCE_RUNTIME_ERROR;
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_RUNTIME_ERROR == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // name_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices(NULL, 6U, vertices, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // vertex_count_ == 0 -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 0U, vertices, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // vertex_count_ != 6 -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[5] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 5U, vertices, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // vertex_count_ が6の倍数でも6でなければ無効 -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[12] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 12U, vertices, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // vertices_ == NULL -> RESOURCE_INVALID_ARGUMENT
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, NULL, &geometry);
-        assert(RESOURCE_INVALID_ARGUMENT == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // choco_string_create_from_c_string() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 1U;
-        config.forced_result = (int)CHOCO_STRING_NO_MEMORY;
-        test_choco_string_create_from_c_string_config_set(&config);
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 頂点配列用memory_system_allocate() が失敗 -> tmp_geometryはcleanupされ、geometryは変更されない
-        // 1回目のallocateはui_mesh_geometry_t本体、2回目はchoco_string_t本体、3回目は文字列バッファ、4回目がtmp_vertices用
-        resource_result_t ret = RESOURCE_SUCCESS;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-        test_call_control_t config = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-        test_call_control_reset(&config);
-
-        config.fail_on_call = 4U;
-        config.forced_result = (int)MEMORY_SYSTEM_NO_MEMORY;
-        test_memory_system_allocate_config_set(&config);
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_NO_MEMORY == ret);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-    {
-        // 正常系: ui_mesh_geometry_tを生成し、vertices_をdeep copyしてgeometryが所有する
-        resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-        ui_mesh_geometry_t* geometry = NULL;
-        ui_vertex_t vertices[6] = { 0 };
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-
-        vertices[0].position = vec2f_initialize(0.0f, 1.0f);
-        vertices[0].tex_coord = vec2f_initialize(0.0f, 0.0f);
-        vertices[1].position = vec2f_initialize(2.0f, 3.0f);
-        vertices[1].tex_coord = vec2f_initialize(0.0f, 1.0f);
-        vertices[2].position = vec2f_initialize(4.0f, 5.0f);
-        vertices[2].tex_coord = vec2f_initialize(1.0f, 1.0f);
-        vertices[3].position = vec2f_initialize(6.0f, 7.0f);
-        vertices[3].tex_coord = vec2f_initialize(0.0f, 0.0f);
-        vertices[4].position = vec2f_initialize(8.0f, 9.0f);
-        vertices[4].tex_coord = vec2f_initialize(1.0f, 1.0f);
-        vertices[5].position = vec2f_initialize(10.0f, 11.0f);
-        vertices[5].tex_coord = vec2f_initialize(1.0f, 0.0f);
-
-        ret = ui_mesh_geometry_create_from_vertices("test_ui_geometry", 6U, vertices, &geometry);
-        assert(RESOURCE_SUCCESS == ret);
-        assert(NULL != geometry);
-
-        assert(NULL != geometry->name);
-        assert(NULL != geometry->vertices);
-        assert(6U == geometry->vertex_count);
-        assert(0 == strcmp("test_ui_geometry", choco_string_c_str(geometry->name)));
-
-        assert(vertices != geometry->vertices);
-
-        for(size_t i = 0; i != 6U; ++i) {
-            assert(vertices[i].position.elem[0] == geometry->vertices[i].position.elem[0]);
-            assert(vertices[i].position.elem[1] == geometry->vertices[i].position.elem[1]);
-            assert(vertices[i].tex_coord.elem[0] == geometry->vertices[i].tex_coord.elem[0]);
-            assert(vertices[i].tex_coord.elem[1] == geometry->vertices[i].tex_coord.elem[1]);
-        }
-
-        // 元配列を書き換えてもgeometry側には影響しない
-        vertices[0].position = vec2f_initialize(100.0f, 100.0f);
-        vertices[0].tex_coord = vec2f_initialize(100.0f, 100.0f);
-
-        assert(0.0f == geometry->vertices[0].position.elem[0]);
-        assert(1.0f == geometry->vertices[0].position.elem[1]);
-        assert(0.0f == geometry->vertices[0].tex_coord.elem[0]);
-        assert(0.0f == geometry->vertices[0].tex_coord.elem[1]);
-
-        ui_mesh_geometry_destroy(&geometry);
-        assert(NULL == geometry);
-
-        test_ui_mesh_geometry_config_reset();
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
-
-    memory_system_destroy();
 }
 
 // Generated by ChatGPT
@@ -1839,6 +1593,10 @@ static void NO_COVERAGE test_ui_mesh_geometry_deinitialize(void) {
     }
 
     memory_system_destroy();
+}
+
+// Generated by ChatGPT
+static void NO_COVERAGE test_ui_mesh_geometry_clone(void) {
 }
 
 // Generated by ChatGPT

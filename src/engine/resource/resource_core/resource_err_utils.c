@@ -192,6 +192,8 @@ resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t result_) {
         return RESOURCE_FILE_OPEN_ERROR;
     case FS_UTILS_RUNTIME_ERROR:
         return RESOURCE_RUNTIME_ERROR;
+    case FS_UTILS_EOF:
+        return RESOURCE_RUNTIME_ERROR;  // 基本的にEOFをそのまま伝播させることはないのでとりあえずRUNTIME_ERRORに変換する
     case FS_UTILS_UNDEFINED_ERROR:
         return RESOURCE_UNDEFINED_ERROR;
     default:

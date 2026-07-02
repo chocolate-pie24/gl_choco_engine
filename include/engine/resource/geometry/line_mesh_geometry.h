@@ -3,8 +3,8 @@
  * @file line_mesh_geometry.h
  * @author chocolate-pie24
  * @brief line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義
- * 
- * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGBで指定する。このため、全ての線分が指定した色で描画される
+ *
+ * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGB(4byte目はpadding)で指定する。このため、全ての線分が指定した色で描画される
  * @note line_mesh_geometryは線分の幾何情報のみを保持し、色情報はline_mesh_geometryを保持する親構造体で扱う
  *
  * @version 0.1
@@ -36,7 +36,7 @@ typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometr
  * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを初期化する
  *
  * @note 失敗時には*geometry_は変更しない
- * 
+ *
  * @param[out] geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
@@ -53,7 +53,7 @@ resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geome
  * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを引数で与えた頂点配列によって初期化する
  *
  * @note 失敗時には*geometry_は変更しない
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] vertex_count_ 頂点配列の配列要素数で、線分の端点の数を線分ごとに指定する(線分の数 = vertex_count_ / 2となる)
  * @param[in] vertices_ 頂点配列
@@ -61,7 +61,9 @@ resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geome
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
  * - name_ == NULL
+ * - name_が空文字列
  * - vertex_count_ == 0
+ * - vertex_count_が2の倍数ではない
  * - vertices_ == NULL
  * - geometry_ == NULL
  * - *geometry_ != NULL
@@ -80,7 +82,7 @@ resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, siz
  * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを引数で与えたaabb_3d_t配列によって初期化する
  *
  * @note 失敗時には*geometry_は変更しない
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] aabb_count_ aabbs_に含まれるaabb_3d_t構造体インスタンスの数
  * @param[in] aabbs_ aabb_3d_t構造体インスタンス配列
@@ -90,6 +92,7 @@ resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, siz
  * - geometry_ == NULL
  * - *geometry_ != NULL
  * - name_ == NULL
+ * - name_が空文字列
  * - aabb_count_ == 0
  * - aabbs_ == NULL
  * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
@@ -110,7 +113,7 @@ resource_result_t line_mesh_geometry_create_from_aabbs(const char* name_, size_t
  * @warning 内部データの不整合が発生していた場合はline_mesh_geometry_tが保有する頂点配列のメモリは解放されず、リーク状態となる。この場合、geometry_自身のメモリは解放し、エラーメッセージを出力する
  * @note geometry_ == NULL または *geometry_ == NULL の場合は何も行わない
  * @note 本API実行後、*geometry_はNULLとなる
- * 
+ *
  * @param[in,out] geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
  */
 void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
@@ -121,7 +124,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
  * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyまたはdeinitializeをせずに再初期化することは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
  * @note geometry_にvertices_をdeep copyする。vertices_の所有権は呼び出し側にある
  * @note 失敗時にはgeometry_の内部状態は不変
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] vertex_count_ 頂点配列の配列要素数で、線分の端点の数を線分ごとに指定する(線分の数 = vertex_count_ / 2となる)
  * @param[in] vertices_ 頂点配列
@@ -129,6 +132,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
  * - name_ == NULL
+ * - name_が空文字列
  * - vertex_count_ == 0
  * - vertices_ == NULL
  * - geometry_ == NULL
@@ -151,7 +155,7 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
  * @note line_mesh_geometry_tの内部リソースはline_mesh_geometryが所有するため、一度初期化したあと、destroyまたはdeinitializeをせずに再初期化することは禁止する。これを行った場合、RESOURCE_BAD_OPERATIONを返す
  * @note geometry_にaabb_3d_tから頂点情報を生成し、geometry_に格納する。aabbs_の所有権は呼び出し側にある
  * @note 失敗時にはgeometry_の内部状態は不変
- * 
+ *
  * @param[in] name_ ジオメトリ名称文字列
  * @param[in] aabb_count_ aabbs_に含まれるaabb_3d_t構造体インスタンスの数
  * @param[in] aabbs_ aabb_3d_t構造体インスタンス配列
@@ -159,6 +163,7 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
  * - name_ == NULL
+ * - name_が空文字列
  * - aabb_count_ == 0
  * - aabbs_ == NULL
  * - geometry_ == NULL
@@ -180,10 +185,31 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
  *
  * @warning 内部データの不整合が発生していた場合はline_mesh_geometry_tが保有する頂点配列のメモリは解放されず、エラーメッセージを出力し、リーク状態となる
  * @note geometry_ == NULLの場合は何もしない
- * 
+ *
  * @param[in,out] geometry_ 初期化対象line_mesh_geometry_t構造体インスタンスへのポインタ
  */
 void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_);
+
+/**
+ * @brief src_のクローンを生成し、*out_geometry_に格納する
+ *
+ * @note line_mesh_geometry_default_createで生成された空のsrc_が与えられた場合もクローンする
+ * @note 処理に失敗した場合、*out_geometry_の内部状態は不変
+ *
+ * @param[in] src_ クローン生成元line_mesh_geometry_t構造体インスタンスへのポインタ
+ * @param[out] out_geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
+ *
+ * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
+ * - src_ == NULL
+ * - out_geometry_ == NULL
+ * - *out_geometry_ != NULL
+ * @retval RESOURCE_DATA_CORRUPTED src_の内部データ不整合
+ * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RESOURCE_NO_MEMORY メモリ確保失敗
+ * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
+ * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
+ */
+resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, line_mesh_geometry_t** out_geometry_);
 
 /**
  * @brief line_mesh_geometry_tが保有するジオメトリ名称文字列を取得する
@@ -191,7 +217,7 @@ void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_);
  * @note geometry_またはgeometry_が保有する文字列がNULLの場合はNULLを返す
  * @note 戻り値はline_mesh_geometry_t内部文字列への参照であり、呼び出し側で解放してはならない
  * @note 戻り値の有効期間はgeometry_が破棄または再初期化されるまで
- * 
+ *
  * @param[in] geometry_ line_mesh_geometry_t構造体インスタンスへのポインタ
  *
  * @return const char* ジオメトリ名称文字列
@@ -205,7 +231,7 @@ const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_);
  * @note 失敗時には*out_vertices_は変更しない
  * @note 取得した頂点配列参照は読み取り専用であり、呼び出し側で書き換え・解放してはならない
  * @note 参照の有効期間はgeometry_が破棄またはdeinitializeされるまで
- * 
+ *
  * @param[in] geometry_ line_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertices_ 頂点情報配列への参照格納先
  *
@@ -224,7 +250,7 @@ resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* ge
  *
  * @note 失敗時には*out_vertex_count_は変更しない
  * @note 頂点数は線分の端点ごとにカウントするため、線分の数の2倍となる
- * 
+ *
  * @param[in] geometry_ line_mesh_geometry_t構造体インスタンスへのポインタ
  * @param[out] out_vertex_count_ 頂点数格納先
  *
