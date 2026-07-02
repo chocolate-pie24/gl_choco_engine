@@ -1,0 +1,7 @@
+<map id="include/engine/core/geometry_primitive/geometry_primitive_err_utils.h" name="include/engine/core/geometry_primitive/geometry_primitive_err_utils.h">
+<area shape="rect" id="node1" title="geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="345,5,525,75"/>
+<area shape="rect" id="node2" href="$aabb__3d_8c.html" title="3次元AABB幾何情報構造体, API実装" alt="" coords="5,130,193,170"/>
+<area shape="rect" id="node3" href="$geometry__primitive__err__utils_8c.html" title="geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="218,123,439,177"/>
+<area shape="rect" id="node4" href="$line__mesh__geometry_8c.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="463,123,623,177"/>
+<area shape="rect" id="node5" href="$ui__mesh__geometry_8c.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="647,130,874,170"/>
+</map>

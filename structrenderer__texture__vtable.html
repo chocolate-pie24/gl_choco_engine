@@ -119,7 +119,7 @@ Data Fields</h2></td></tr>
 <tr class="memitem:af978b6784f0a1888de8e5128cbe2630a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__texture_8h.html#ab15af0925074abda4d6407040b1db774">pfn_renderer_texture_destroy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__texture__vtable.html#af978b6784f0a1888de8e5128cbe2630a">renderer_texture_destroy</a></td></tr>
 <tr class="memdesc:af978b6784f0a1888de8e5128cbe2630a"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する  <br /></td></tr>
 <tr class="separator:af978b6784f0a1888de8e5128cbe2630a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5f6f9b49fa538b23370c189ec9a07b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__texture_8h.html#a47a9579d91ef2d4f440f111f86c809df">pfn_renderer_texture_bind</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__texture__vtable.html#ae5f6f9b49fa538b23370c189ec9a07b8">renderer_texture_bind</a></td></tr>
+<tr class="memitem:ae5f6f9b49fa538b23370c189ec9a07b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__texture_8h.html#ad107f96c79bd4d6484e33b0a1e95ff67">pfn_renderer_texture_bind</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__texture__vtable.html#ae5f6f9b49fa538b23370c189ec9a07b8">renderer_texture_bind</a></td></tr>
 <tr class="memdesc:ae5f6f9b49fa538b23370c189ec9a07b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャをactiveにし、bindする  <br /></td></tr>
 <tr class="separator:ae5f6f9b49fa538b23370c189ec9a07b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad67e0b0dcc44933a8bfd5cf5b2514613"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface__texture_8h.html#a17b6042a6a104e3de7a9eda5b9cb8dd9">pfn_renderer_texture_unbind</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__texture__vtable.html#ad67e0b0dcc44933a8bfd5cf5b2514613">renderer_texture_unbind</a></td></tr>
@@ -139,29 +139,21 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="interface__texture_8h.html#a47a9579d91ef2d4f440f111f86c809df">pfn_renderer_texture_bind</a> renderer_texture_vtable::renderer_texture_bind</td>
+          <td class="memname"><a class="el" href="interface__texture_8h.html#ad107f96c79bd4d6484e33b0a1e95ff67">pfn_renderer_texture_bind</a> renderer_texture_vtable::renderer_texture_bind</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>テクスチャをactiveにし、bindする </p>
-<dl class="section note"><dt>Note</dt><dd>呼び出し側が保持している現在のtexture unit / texture handleキャッシュとtexture_handle_が保持するunit / handleと等しい場合はactive化 / bindを行わない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">texture_handle_</td><td>bind対象テクスチャハンドル保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_texture_unit_</td><td>現在activeになっているテクスチャユニット番号 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_texture_internal_handle_</td><td>現在Bindされているテクスチャハンドル</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">texture_handle_</td><td>bind対象テクスチャハンドル保有構造体インスタンスへのポインタ</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>texture_handle_ == NULL</li>
-<li>out_texture_unit_ == NULL</li>
-<li>out_texture_internal_handle_ == NULL </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>texture_handle_ == NULL </td></tr>
     <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>以下のいずれか<ul>
 <li>texture_handle_-&gt;handle == 0</li>
 <li>texture_handle_-&gt;unit_number &lt; 0 </li>
@@ -258,6 +250,7 @@ Data Fields</h2></td></tr>
 </div><div class="memdoc">
 
 <p>現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する </p>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼び出す前にrenderer_texture_bindによって対象テクスチャユニットのactive化とbindを行っておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">width_</td><td>転送ピクセルデータの幅 </td></tr>

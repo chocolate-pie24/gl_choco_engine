@@ -1,0 +1,4 @@
+<map id="ui_geom_config_state" name="ui_geom_config_state">
+<area shape="rect" id="node1" title="コンフィグレーションロード用一時データ格納構造体" alt="" coords="5,93,169,119"/>
+<area shape="rect" id="node2" href="$structui__geom__config.html" title="UI描画用ジオメトリ設定値格納構造体" alt="" coords="25,5,149,31"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="include/engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h" name="include/engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h">
+<area shape="rect" id="node1" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="14,5,265,75"/>
+<area shape="rect" id="node2" title=" " alt="" coords="22,313,92,339"/>
+<area shape="rect" id="node3" title=" " alt="" coords="30,137,105,163"/>
+<area shape="rect" id="node4" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="129,130,294,170"/>
+<area shape="rect" id="node6" href="$resource__pipeline__types_8h_source.html" title=" " alt="" coords="319,123,515,177"/>
+<area shape="rect" id="node5" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="74,225,258,265"/>
+</map>

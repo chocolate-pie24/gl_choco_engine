@@ -1,7 +1,4 @@
 <map id="include/engine/systems/camera_system/camera_controller/flight_camera_controller.h" name="include/engine/systems/camera_system/camera_controller/flight_camera_controller.h">
-<area shape="rect" id="node1" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="89,5,273,75"/>
-<area shape="rect" id="node2" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,211,224,265"/>
-<area shape="rect" id="node3" href="$camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="152,123,347,163"/>
-<area shape="rect" id="node4" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="248,218,432,258"/>
-<area shape="rect" id="node5" title=" " alt="" coords="305,313,375,339"/>
+<area shape="rect" id="node1" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="23,5,207,75"/>
+<area shape="rect" id="node2" href="$camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,123,224,177"/>
 </map>

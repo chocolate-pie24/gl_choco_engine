@@ -1,0 +1,11 @@
+<map id="include/engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h" name="include/engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h">
+<area shape="rect" id="node1" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="176,5,417,75"/>
+<area shape="rect" id="node2" title=" " alt="" coords="27,416,97,441"/>
+<area shape="rect" id="node3" title=" " alt="" coords="627,240,702,265"/>
+<area shape="rect" id="node4" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="35,233,201,273"/>
+<area shape="rect" id="node6" href="$aabb__3d_8h.html" title="3次元AABB幾何情報構造体, API定義" alt="" coords="214,130,379,170"/>
+<area shape="rect" id="node9" href="$resource__pipeline__types_8h_source.html" title=" " alt="" coords="455,123,651,177"/>
+<area shape="rect" id="node5" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="35,328,219,368"/>
+<area shape="rect" id="node7" title=" " alt="" coords="275,240,358,265"/>
+<area shape="rect" id="node8" href="$geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="382,225,603,280"/>
+</map>

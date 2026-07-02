@@ -1,0 +1,25 @@
+<map id="include/engine/core/geometry_primitive/geometry_primitive_types.h" name="include/engine/core/geometry_primitive/geometry_primitive_types.h">
+<area shape="rect" id="node1" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="1298,5,1509,60"/>
+<area shape="rect" id="node2" href="$application__err__utils_8h.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="300,115,509,170"/>
+<area shape="rect" id="node6" href="$aabb__3d_8h.html" title="3次元AABB幾何情報構造体, API定義" alt="" coords="843,115,998,170"/>
+<area shape="rect" id="node12" href="$aabb__3d_8c.html" title="3次元AABB幾何情報構造体, API実装" alt="" coords="1144,240,1332,280"/>
+<area shape="rect" id="node13" href="$geometry__primitive__err__utils_8h.html" title="geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="1441,108,1621,177"/>
+<area shape="rect" id="node14" href="$geometry__primitive__err__utils_8c.html" title="geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="1357,233,1578,287"/>
+<area shape="rect" id="node16" href="$resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="2295,115,2472,170"/>
+<area shape="rect" id="node22" href="$resource__err__utils_8c.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="3144,233,3321,287"/>
+<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="423,365,627,390"/>
+<area shape="rect" id="node4" href="$application__err__utils_8c.html" title="アプリケーションレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="5,240,209,280"/>
+<area shape="rect" id="node5" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="234,240,437,280"/>
+<area shape="rect" id="node7" href="$line__mesh__geometry_8h.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="879,240,1119,280"/>
+<area shape="rect" id="node9" href="$line__mesh__geometry__pipeline_8c.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="687,343,928,412"/>
+<area shape="rect" id="node11" href="$line__mesh__geometry__pipeline_8h.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="563,225,804,295"/>
+<area shape="rect" id="node8" href="$line__mesh__geometry_8c.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="1535,350,1695,405"/>
+<area shape="rect" id="node10" href="$line__mesh__geometry__registry_8c.html" title="線分描画用ジオメトリレジストリAPIの実装" alt="" coords="952,343,1193,412"/>
+<area shape="rect" id="node15" href="$ui__mesh__geometry_8c.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="1653,240,1879,280"/>
+<area shape="rect" id="node17" href="$ui__geom__config__loader_8c.html" title="UI描画用ジオメトリコンフィグレーションファイルのローダーAPI実装" alt="" coords="1955,233,2135,287"/>
+<area shape="rect" id="node18" href="$lit__mesh__geometry_8c.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="2159,240,2387,280"/>
+<area shape="rect" id="node19" href="$point__mesh__geometry_8c.html" title="point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="2411,233,2580,287"/>
+<area shape="rect" id="node20" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="2605,240,2770,280"/>
+<area shape="rect" id="node21" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="2794,240,2946,280"/>
+<area shape="rect" id="node23" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="2970,240,3119,280"/>
+</map>

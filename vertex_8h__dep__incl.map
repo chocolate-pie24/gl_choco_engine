@@ -1,7 +1,33 @@
 <map id="include/engine/core/geometry_primitive/vertex.h" name="include/engine/core/geometry_primitive/vertex.h">
-<area shape="rect" id="node1" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="194,5,349,60"/>
-<area shape="rect" id="node2" href="$stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="120,115,297,155"/>
-<area shape="rect" id="node3" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,218,209,243"/>
-<area shape="rect" id="node4" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="246,211,398,251"/>
-<area shape="rect" id="node5" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="373,108,583,163"/>
+<area shape="rect" id="node1" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="2293,5,2448,60"/>
+<area shape="rect" id="node2" href="$aabb__3d_8h.html" title="3次元AABB幾何情報構造体, API定義" alt="" coords="560,115,715,170"/>
+<area shape="rect" id="node3" href="$line__mesh__geometry_8h.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="173,240,413,280"/>
+<area shape="rect" id="node4" href="$line__mesh__geometry_8c.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="5,350,165,405"/>
+<area shape="rect" id="node5" href="$line__mesh__geometry__pipeline_8c.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="455,343,697,412"/>
+<area shape="rect" id="node7" href="$line__mesh__geometry__pipeline_8h.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="590,225,831,295"/>
+<area shape="rect" id="node8" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="2539,365,2743,390"/>
+<area shape="rect" id="node9" href="$aabb__3d_8c.html" title="3次元AABB幾何情報構造体, API実装" alt="" coords="855,240,1043,280"/>
+<area shape="rect" id="node10" href="$lit__mesh__geometry_8h.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="1473,123,1703,163"/>
+<area shape="rect" id="node11" href="$lit__mesh__geometry_8c.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="1067,240,1295,280"/>
+<area shape="rect" id="node14" href="$point__mesh__geometry_8h.html" title="point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="3191,123,3441,163"/>
+<area shape="rect" id="node15" href="$point__mesh__geometry_8c.html" title="point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="3349,233,3518,287"/>
+<area shape="rect" id="node16" href="$point__mesh__geometry__pipeline_8c.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="2780,225,3031,295"/>
+<area shape="rect" id="node17" href="$ui__mesh__geometry_8h.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="4029,123,4257,163"/>
+<area shape="rect" id="node18" href="$ui__mesh__geometry_8c.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="4335,240,4561,280"/>
+<area shape="rect" id="node19" href="$ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="3828,225,4057,295"/>
+<area shape="rect" id="node21" href="$stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="1749,123,1926,163"/>
+<area shape="rect" id="node22" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="1881,240,2033,280"/>
+<area shape="rect" id="node23" href="$line__mesh__shader_8h.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="2337,115,2548,170"/>
+<area shape="rect" id="node24" href="$line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="2343,233,2553,287"/>
+<area shape="rect" id="node25" href="$lit__mesh__shader_8h.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="2001,115,2212,170"/>
+<area shape="rect" id="node26" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="2108,233,2319,287"/>
+<area shape="rect" id="node27" href="$point__mesh__shader_8h.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="2948,115,3167,170"/>
+<area shape="rect" id="node28" href="$point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="3105,233,3324,287"/>
+<area shape="rect" id="node29" href="$ui__mesh__shader_8h.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="3672,115,3883,170"/>
+<area shape="rect" id="node30" href="$ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="3543,233,3753,287"/>
+<area shape="rect" id="node31" href="$point__mesh__geometry__pipeline_8h.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="2623,108,2873,177"/>
+<area shape="rect" id="node6" href="$line__mesh__geometry__registry_8c.html" title="線分描画用ジオメトリレジストリAPIの実装" alt="" coords="190,343,431,412"/>
+<area shape="rect" id="node12" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1626,225,1857,295"/>
+<area shape="rect" id="node13" href="$lit__mesh__geometry__registry_8c.html" title="単色ライティング描画用ジオメトリレジストリAPIの実装" alt="" coords="1319,225,1550,295"/>
+<area shape="rect" id="node20" href="$ui__mesh__geometry__registry_8c.html" title="UI描画用ジオメトリレジストリAPIの実装" alt="" coords="4081,225,4311,295"/>
 </map>

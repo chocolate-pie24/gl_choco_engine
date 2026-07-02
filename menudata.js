@@ -133,6 +133,7 @@ var menudata={children:[
 {text:"b",url:"globals_enum.html#index_b"},
 {text:"c",url:"globals_enum.html#index_c"},
 {text:"f",url:"globals_enum.html#index_f"},
+{text:"g",url:"globals_enum.html#index_g"},
 {text:"k",url:"globals_enum.html#index_k"},
 {text:"l",url:"globals_enum.html#index_l"},
 {text:"m",url:"globals_enum.html#index_m"},

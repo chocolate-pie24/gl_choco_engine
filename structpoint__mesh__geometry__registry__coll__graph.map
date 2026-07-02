@@ -1,0 +1,7 @@
+<map id="point_mesh_geometry_registry" name="point_mesh_geometry_registry">
+<area shape="rect" id="node1" title="点描画用ジオメトリレジストリ内部構造体" alt="" coords="23,269,191,309"/>
+<area shape="rect" id="node2" href="$structpoint__mesh__geometry.html" title="point_mesh_geometry内部状態管理構造体" alt="" coords="23,181,191,207"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,93,109,119"/>
+<area shape="rect" id="node4" href="$structpoint__vertex.html" title="ポイント描画用頂点情報構造体" alt="" coords="133,93,237,119"/>
+<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="156,5,215,31"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="include/engine/core/geometry_primitive/geometry_primitive_err_utils.h" name="include/engine/core/geometry_primitive/geometry_primitive_err_utils.h">
+<area shape="rect" id="node1" title="geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="26,5,206,75"/>
+<area shape="rect" id="node2" href="$geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="5,123,227,177"/>
+</map>

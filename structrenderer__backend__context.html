@@ -104,15 +104,15 @@ Collaboration diagram for renderer_backend_context:</div>
 <div class="dyncontent">
 <div class="center"><img src="structrenderer__backend__context__coll__graph.png" border="0" usemap="#arenderer__backend__context_coll__map" alt="Collaboration graph"/></div>
 <map name="arenderer__backend__context_coll__map" id="arenderer__backend__context_coll__map">
-<area shape="rect" title="RendererBackend内部状態管理構造体" alt="" coords="741,331,936,357"/>
-<area shape="rect" href="structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="416,186,592,211"/>
-<area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="7,138,196,163"/>
-<area shape="rect" href="structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="426,282,582,307"/>
-<area shape="rect" href="structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="17,257,186,282"/>
-<area shape="rect" href="structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="426,355,582,381"/>
-<area shape="rect" href="structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="17,405,186,430"/>
-<area shape="rect" href="structrenderer__texture__vtable.html" title="Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル" alt="" coords="415,425,593,450"/>
-<area shape="rect" href="structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,494,197,519"/>
+<area shape="rect" title="RendererBackend内部状態管理構造体" alt="" coords="741,203,936,229"/>
+<area shape="rect" href="structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="416,106,592,131"/>
+<area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="7,90,196,115"/>
+<area shape="rect" href="structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="426,171,582,197"/>
+<area shape="rect" href="structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="17,165,186,190"/>
+<area shape="rect" href="structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="426,227,582,253"/>
+<area shape="rect" href="structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="17,239,186,265"/>
+<area shape="rect" href="structrenderer__texture__vtable.html" title="Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル" alt="" coords="415,297,593,322"/>
+<area shape="rect" href="structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,329,197,354"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -128,95 +128,10 @@ Data Fields</h2></td></tr>
 <tr class="separator:aaab43dac09c26b5d52223ca65d16d29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af78628a25dda29203873de549da87860"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__texture_8h.html#aa36ddeb541b425aef9f4f0cb92022399">renderer_texture_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#af78628a25dda29203873de549da87860">texture_vtable</a></td></tr>
 <tr class="separator:af78628a25dda29203873de549da87860"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8401eab876547f6c5c9c4142db84d949"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#a8401eab876547f6c5c9c4142db84d949">current_program_id</a></td></tr>
-<tr class="separator:a8401eab876547f6c5c9c4142db84d949"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ce78f4a6fe51c1b550fbc4beafc5d7f"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#a8ce78f4a6fe51c1b550fbc4beafc5d7f">current_bound_vao</a></td></tr>
-<tr class="separator:a8ce78f4a6fe51c1b550fbc4beafc5d7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff8f94ad977ccd31dda11a88a2b89a71"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#aff8f94ad977ccd31dda11a88a2b89a71">current_bound_vbo</a></td></tr>
-<tr class="separator:aff8f94ad977ccd31dda11a88a2b89a71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b8137dfa11f1bd5868fc2a512aafedf"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#a4b8137dfa11f1bd5868fc2a512aafedf">current_texture_unit</a></td></tr>
-<tr class="separator:a4b8137dfa11f1bd5868fc2a512aafedf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56698543aeb2f5beabdb286b4b4710dc"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#a56698543aeb2f5beabdb286b4b4710dc">current_bound_texture</a></td></tr>
-<tr class="separator:a56698543aeb2f5beabdb286b4b4710dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>RendererBackend内部状態管理構造体 </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a id="a56698543aeb2f5beabdb286b4b4710dc" name="a56698543aeb2f5beabdb286b4b4710dc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a56698543aeb2f5beabdb286b4b4710dc">&#9670;&#160;</a></span>current_bound_texture</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int32_t renderer_backend_context::current_bound_texture</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在バインド中のTextureハンドル </p>
-
-</div>
-</div>
-<a id="a8ce78f4a6fe51c1b550fbc4beafc5d7f" name="a8ce78f4a6fe51c1b550fbc4beafc5d7f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ce78f4a6fe51c1b550fbc4beafc5d7f">&#9670;&#160;</a></span>current_bound_vao</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t renderer_backend_context::current_bound_vao</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在バインド中のVAO識別子 </p>
-
-</div>
-</div>
-<a id="aff8f94ad977ccd31dda11a88a2b89a71" name="aff8f94ad977ccd31dda11a88a2b89a71"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff8f94ad977ccd31dda11a88a2b89a71">&#9670;&#160;</a></span>current_bound_vbo</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t renderer_backend_context::current_bound_vbo</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在バインド中のVBO識別子 </p>
-
-</div>
-</div>
-<a id="a8401eab876547f6c5c9c4142db84d949" name="a8401eab876547f6c5c9c4142db84d949"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8401eab876547f6c5c9c4142db84d949">&#9670;&#160;</a></span>current_program_id</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t renderer_backend_context::current_program_id</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在使用中のリンクされたシェーダープログラムID </p>
-
-</div>
-</div>
-<a id="a4b8137dfa11f1bd5868fc2a512aafedf" name="a4b8137dfa11f1bd5868fc2a512aafedf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b8137dfa11f1bd5868fc2a512aafedf">&#9670;&#160;</a></span>current_texture_unit</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int32_t renderer_backend_context::current_texture_unit</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在使用中のテクスチャユニット番号 </p>
-
-</div>
-</div>
 <a id="ab532279778c8eebd1cfbe967b1f10d20" name="ab532279778c8eebd1cfbe967b1f10d20"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab532279778c8eebd1cfbe967b1f10d20">&#9670;&#160;</a></span>shader_vtable</h2>
 

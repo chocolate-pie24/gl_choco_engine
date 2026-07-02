@@ -103,6 +103,7 @@ $(document).ready(function(){initNavTree('resource__err__utils_8c.html',''); ini
 <code>#include &quot;<a class="el" href="resource__err__utils_8h_source.html">engine/resource/resource_core/resource_err_utils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="filesystem_8h_source.html">engine/core/filesystem/filesystem.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="geometry__primitive__types_8h_source.html">engine/core/geometry_primitive/geometry_primitive_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fs__utils_8h_source.html">engine/io_utils/fs_utils/fs_utils.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -110,15 +111,16 @@ Include dependency graph for resource_err_utils.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="resource__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2resource_2resource__core_2resource__err__utils_8c" alt=""/></div>
 <map name="asrc_2engine_2resource_2resource__core_2resource__err__utils_8c" id="asrc_2engine_2resource_2resource__core_2resource__err__utils_8c">
-<area shape="rect" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="271,5,449,60"/>
-<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="36,196,223,236"/>
-<area shape="rect" href="resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="332,108,521,148"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="247,196,404,236"/>
-<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="363,284,533,324"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="558,284,738,324"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="479,196,612,236"/>
-<area shape="rect" title=" " alt="" coords="411,372,485,397"/>
-<area shape="rect" title=" " alt="" coords="607,372,689,397"/>
+<area shape="rect" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="387,5,565,60"/>
+<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="237,203,424,243"/>
+<area shape="rect" href="resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="381,108,571,148"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="5,203,163,243"/>
+<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="331,299,501,339"/>
+<area shape="rect" href="geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="707,196,928,251"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="526,299,706,339"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="549,203,683,243"/>
+<area shape="rect" title=" " alt="" coords="379,387,453,412"/>
+<area shape="rect" title=" " alt="" coords="575,387,657,412"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -139,6 +141,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aa5e400b5caa3288e0b4929cbb5756d4f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="resource__err__utils_8c.html#aa5e400b5caa3288e0b4929cbb5756d4f">resource_rslt_convert_choco_string</a> (<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> result_)</td></tr>
 <tr class="memdesc:aa5e400b5caa3288e0b4929cbb5756d4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">choco_stringモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する  <br /></td></tr>
 <tr class="separator:aa5e400b5caa3288e0b4929cbb5756d4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac95b3bc7ff96b221d961d34fe31226f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="resource__err__utils_8c.html#ac95b3bc7ff96b221d961d34fe31226f7">resource_rslt_convert_geometry_primitive</a> (<a class="el" href="geometry__primitive__types_8h.html#aa0ba8695dd6553a1918b8f0b9056ba90">geometry_primitive_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:ac95b3bc7ff96b221d961d34fe31226f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">geometry_primitive保有モジュールの実行結果コードをResourceレイヤー実行結果コードに変換する  <br /></td></tr>
+<tr class="separator:ac95b3bc7ff96b221d961d34fe31226f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装 </p>
@@ -312,6 +317,49 @@ Functions</h2></td></tr>
     <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>以下のいずれか<ul>
 <li>fs_utils実行結果コード:FS_UTILS_UNDEFINED_ERROR</li>
 <li>未定義のfs_utils実行結果コード </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac95b3bc7ff96b221d961d34fe31226f7" name="ac95b3bc7ff96b221d961d34fe31226f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac95b3bc7ff96b221d961d34fe31226f7">&#9670;&#160;</a></span>resource_rslt_convert_geometry_primitive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> resource_rslt_convert_geometry_primitive </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="geometry__primitive__types_8h.html#aa0ba8695dd6553a1918b8f0b9056ba90">geometry_primitive_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>geometry_primitive保有モジュールの実行結果コードをResourceレイヤー実行結果コードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>geometry_primitive保有モジュール実行結果コード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_SUCCESS: </td></tr>
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_INVALID_ARGUMENT: </td></tr>
+    <tr><td class="paramname">RESOURCE_RUNTIME_ERROR</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_RUNTIME_ERROR: </td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED: </td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_BAD_OPERATION: </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_NO_MEMORY: </td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_DATA_CORRUPTED: </td></tr>
+    <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>以下のいずれか<ul>
+<li>geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_UNDEFINED_ERROR</li>
+<li>未定義のgeometry_primitive実行結果コード </li>
 </ul>
 </td></tr>
   </table>

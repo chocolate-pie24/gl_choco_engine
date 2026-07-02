@@ -1,0 +1,6 @@
+<map id="ui_mesh_geometry" name="ui_mesh_geometry">
+<area shape="rect" id="node1" title="ui_mesh_geometry内部状態管理構造体" alt="" coords="31,196,177,221"/>
+<area shape="rect" id="node2" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,108,109,133"/>
+<area shape="rect" id="node3" href="$structui__vertex.html" title="ui geometry用頂点情報構造体" alt="" coords="133,108,216,133"/>
+<area shape="rect" id="node4" href="$structvec2f.html" title="float型2次元ベクトル定義" alt="" coords="145,5,204,31"/>
+</map>

@@ -1,11 +1,11 @@
 <map id="renderer_backend_context" name="renderer_backend_context">
-<area shape="rect" id="node1" title="RendererBackend内部状態管理構造体" alt="" coords="741,331,936,357"/>
-<area shape="rect" id="node2" href="$structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="416,186,592,211"/>
-<area shape="rect" id="node3" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="7,138,196,163"/>
-<area shape="rect" id="node4" href="$structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="426,282,582,307"/>
-<area shape="rect" id="node5" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="17,257,186,282"/>
-<area shape="rect" id="node6" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="426,355,582,381"/>
-<area shape="rect" id="node7" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="17,405,186,430"/>
-<area shape="rect" id="node8" href="$structrenderer__texture__vtable.html" title="Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル" alt="" coords="415,425,593,450"/>
-<area shape="rect" id="node9" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,494,197,519"/>
+<area shape="rect" id="node1" title="RendererBackend内部状態管理構造体" alt="" coords="741,203,936,229"/>
+<area shape="rect" id="node2" href="$structrenderer__shader__vtable.html" title="シェーダー機能仮想関数テーブル" alt="" coords="416,106,592,131"/>
+<area shape="rect" id="node3" href="$structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="7,90,196,115"/>
+<area shape="rect" id="node4" href="$structrenderer__vao__vtable.html" title="VAO機能仮想関数テーブル" alt="" coords="426,171,582,197"/>
+<area shape="rect" id="node5" href="$structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="17,165,186,190"/>
+<area shape="rect" id="node6" href="$structrenderer__vbo__vtable.html" title="VBO機能仮想関数テーブル" alt="" coords="426,227,582,253"/>
+<area shape="rect" id="node7" href="$structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="17,239,186,265"/>
+<area shape="rect" id="node8" href="$structrenderer__texture__vtable.html" title="Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル" alt="" coords="415,297,593,322"/>
+<area shape="rect" id="node9" href="$structrenderer__backend__texture.html" title="テクスチャGPU側リソース内部状態管理構造体" alt="" coords="5,329,197,354"/>
 </map>

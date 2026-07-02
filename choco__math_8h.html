@@ -118,11 +118,14 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="choco__math_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2base_2choco__math_2choco__math_8hdep" alt=""/></div>
 <map name="ainclude_2engine_2base_2choco__math_2choco__math_8hdep" id="ainclude_2engine_2base_2choco__math_2choco__math_8hdep">
-<area shape="rect" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="315,5,515,45"/>
+<area shape="rect" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="613,5,813,45"/>
 <area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,115,209,141"/>
 <area shape="rect" href="choco__math_8c.html" title="GLCE以外のプロジェクトでも使用可能な数学演算実装" alt="" coords="233,108,400,148"/>
-<area shape="rect" href="camera_8c.html" title="カメラモジュール実装" alt="" coords="424,101,607,155"/>
-<area shape="rect" href="flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="631,93,815,163"/>
+<area shape="rect" href="aabb__3d_8c.html" title="3次元AABB幾何情報構造体, API実装" alt="" coords="424,108,612,148"/>
+<area shape="rect" href="stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="637,108,789,148"/>
+<area shape="rect" href="camera_8c.html" title="カメラモジュール実装" alt="" coords="813,101,996,155"/>
+<area shape="rect" href="flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="1021,93,1205,163"/>
+<area shape="rect" href="ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1229,93,1458,163"/>
 </map>
 </div>
 </div>
@@ -136,39 +139,51 @@ Functions</h2></td></tr>
 <tr class="memitem:a7b9642a045ca402e72c83e97cf29f0a1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a7b9642a045ca402e72c83e97cf29f0a1">is_equal_float</a> (float a_, float b_)</td></tr>
 <tr class="memdesc:a7b9642a045ca402e72c83e97cf29f0a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">2つのfloat値が等しいかを判定する  <br /></td></tr>
 <tr class="separator:a7b9642a045ca402e72c83e97cf29f0a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af54a2140de8af377d98a406405046e96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#af54a2140de8af377d98a406405046e96">vec2f_initialize</a> (float x_, float y_, <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *out_vec2f_)</td></tr>
-<tr class="memdesc:af54a2140de8af377d98a406405046e96"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルxyを初期化する  <br /></td></tr>
-<tr class="separator:af54a2140de8af377d98a406405046e96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26636e750059548830a82c2149eaac93"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a26636e750059548830a82c2149eaac93">vec2f_add</a> (const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *vec1_, const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *vec2_, <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *out_vec2f_)</td></tr>
-<tr class="memdesc:a26636e750059548830a82c2149eaac93"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する  <br /></td></tr>
-<tr class="separator:a26636e750059548830a82c2149eaac93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af284f3f32c75b277fa8545d83936b783"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#af284f3f32c75b277fa8545d83936b783">vec3f_initialize</a> (float x_, float y_, float z_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *out_vec3f_)</td></tr>
-<tr class="memdesc:af284f3f32c75b277fa8545d83936b783"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルxyzを初期化する  <br /></td></tr>
-<tr class="separator:af284f3f32c75b277fa8545d83936b783"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92b43e2c87b31879ac7123ef97f72c70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a92b43e2c87b31879ac7123ef97f72c70">vec3f_add</a> (const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *vec1_, const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *vec2_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *out_vec3f_)</td></tr>
-<tr class="memdesc:a92b43e2c87b31879ac7123ef97f72c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの足し算(out_vec3f_ = vec1_ + vec2_)を実行する  <br /></td></tr>
-<tr class="separator:a92b43e2c87b31879ac7123ef97f72c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fa493a5b44abc35d8bd196fabf18454"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a1fa493a5b44abc35d8bd196fabf18454">vec3f_length_squared</a> (const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *vec_)</td></tr>
-<tr class="memdesc:a1fa493a5b44abc35d8bd196fabf18454"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの長さの2乗を返す  <br /></td></tr>
-<tr class="separator:a1fa493a5b44abc35d8bd196fabf18454"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a188703116f6c116f0e71c5ec4c5eb310"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a188703116f6c116f0e71c5ec4c5eb310">vec3f_length</a> (const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *vec_)</td></tr>
-<tr class="memdesc:a188703116f6c116f0e71c5ec4c5eb310"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの長さを返す  <br /></td></tr>
-<tr class="separator:a188703116f6c116f0e71c5ec4c5eb310"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1662565fb8cffb597226f6f405a0581"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ad1662565fb8cffb597226f6f405a0581">vec3f_normalize</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *vec_)</td></tr>
-<tr class="memdesc:ad1662565fb8cffb597226f6f405a0581"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルを正規化する  <br /></td></tr>
-<tr class="separator:ad1662565fb8cffb597226f6f405a0581"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d7f8a19f1d8a745592799fbf86d6b3d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a8d7f8a19f1d8a745592799fbf86d6b3d">vec4f_initialize</a> (float x_, float y_, float z_, float w_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *out_vec4f_)</td></tr>
-<tr class="memdesc:a8d7f8a19f1d8a745592799fbf86d6b3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルxyzwを初期化する  <br /></td></tr>
-<tr class="separator:a8d7f8a19f1d8a745592799fbf86d6b3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a7dbff4c06bc0e559d1e033e2dea746a2">vec4f_add</a> (const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *vec1_, const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *vec2_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *out_vec4f_)</td></tr>
-<tr class="memdesc:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する  <br /></td></tr>
-<tr class="separator:a7dbff4c06bc0e559d1e033e2dea746a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77fde56188d5890bdc6ec3e02c449e06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a77fde56188d5890bdc6ec3e02c449e06">vec4u8_initialize</a> (uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_, <a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> *out_vec4u8_)</td></tr>
-<tr class="memdesc:a77fde56188d5890bdc6ec3e02c449e06"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルrgbaを初期化する  <br /></td></tr>
-<tr class="separator:a77fde56188d5890bdc6ec3e02c449e06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae793e97336721694da9d952fb0814ad2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ae793e97336721694da9d952fb0814ad2">vec4i8_initialize</a> (int8_t x_, int8_t y_, int8_t z_, int8_t w_, <a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a> *out_vec4i8_)</td></tr>
-<tr class="memdesc:ae793e97336721694da9d952fb0814ad2"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルxyzwを初期化する  <br /></td></tr>
-<tr class="separator:ae793e97336721694da9d952fb0814ad2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a873c4cbda12321e795bc70e5b4d8e6eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a873c4cbda12321e795bc70e5b4d8e6eb">vec2f_initialize</a> (float x_, float y_)</td></tr>
+<tr class="memdesc:a873c4cbda12321e795bc70e5b4d8e6eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルxyを初期化する  <br /></td></tr>
+<tr class="separator:a873c4cbda12321e795bc70e5b4d8e6eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0409004744ab62e533f3101c08de21ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a0409004744ab62e533f3101c08de21ba">vec2f_add</a> (<a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> vec1_, <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> vec2_)</td></tr>
+<tr class="memdesc:a0409004744ab62e533f3101c08de21ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">2次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す  <br /></td></tr>
+<tr class="separator:a0409004744ab62e533f3101c08de21ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaff069c3a31982b25eebaa3e9818123d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#aaff069c3a31982b25eebaa3e9818123d">vec3f_initialize</a> (float x_, float y_, float z_)</td></tr>
+<tr class="memdesc:aaff069c3a31982b25eebaa3e9818123d"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルxyzを初期化する  <br /></td></tr>
+<tr class="separator:aaff069c3a31982b25eebaa3e9818123d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49e2d676b06e0c68c229ca2799ad7ccd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a49e2d676b06e0c68c229ca2799ad7ccd">vec3f_add</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec1_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec2_)</td></tr>
+<tr class="memdesc:a49e2d676b06e0c68c229ca2799ad7ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す  <br /></td></tr>
+<tr class="separator:a49e2d676b06e0c68c229ca2799ad7ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39391ca7538eee5a04d9607fc956b912"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a39391ca7538eee5a04d9607fc956b912">vec3f_scale</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec_, float scale_)</td></tr>
+<tr class="memdesc:a39391ca7538eee5a04d9607fc956b912"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルのスカラー倍を計算する  <br /></td></tr>
+<tr class="separator:a39391ca7538eee5a04d9607fc956b912"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e43cfc4318ca907b7835573aa3d84da"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a0e43cfc4318ca907b7835573aa3d84da">vec3f_length_squared</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec_)</td></tr>
+<tr class="memdesc:a0e43cfc4318ca907b7835573aa3d84da"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの長さの2乗を返す  <br /></td></tr>
+<tr class="separator:a0e43cfc4318ca907b7835573aa3d84da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a048396a34886f78fc0d0998f48dfbb2c"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a048396a34886f78fc0d0998f48dfbb2c">vec3f_length</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec_)</td></tr>
+<tr class="memdesc:a048396a34886f78fc0d0998f48dfbb2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの長さを返す  <br /></td></tr>
+<tr class="separator:a048396a34886f78fc0d0998f48dfbb2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa67e996d1d6200befd26ef3c1c58c4f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#afa67e996d1d6200befd26ef3c1c58c4f">vec3f_normalize</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec_)</td></tr>
+<tr class="memdesc:afa67e996d1d6200befd26ef3c1c58c4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルを正規化する  <br /></td></tr>
+<tr class="separator:afa67e996d1d6200befd26ef3c1c58c4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aade8b0d88f331286ece50fb636e61312"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#aade8b0d88f331286ece50fb636e61312">vec3f_is_finite</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec_)</td></tr>
+<tr class="memdesc:aade8b0d88f331286ece50fb636e61312"><td class="mdescLeft">&#160;</td><td class="mdescRight">3次元ベクトルの全要素が有限の値かをチェックする  <br /></td></tr>
+<tr class="separator:aade8b0d88f331286ece50fb636e61312"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad577df8b6090d3db8b354e33f68379cb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ad577df8b6090d3db8b354e33f68379cb">vec3f_component_min</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> v1_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> v2_)</td></tr>
+<tr class="memdesc:ad577df8b6090d3db8b354e33f68379cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">v1_とv2_の各要素の小さい方を格納したvec3f_tを返す  <br /></td></tr>
+<tr class="separator:ad577df8b6090d3db8b354e33f68379cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8a13c4846fb05bfc99fa46bb4052b38"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ad8a13c4846fb05bfc99fa46bb4052b38">vec3f_component_max</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> v1_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> v2_)</td></tr>
+<tr class="memdesc:ad8a13c4846fb05bfc99fa46bb4052b38"><td class="mdescLeft">&#160;</td><td class="mdescRight">v1_とv2_の各要素の大きい方を格納したvec3f_tを返す  <br /></td></tr>
+<tr class="separator:ad8a13c4846fb05bfc99fa46bb4052b38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e45104d6bd442eca6dbc384baf4af17"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a3e45104d6bd442eca6dbc384baf4af17">vec4f_initialize</a> (float x_, float y_, float z_, float w_)</td></tr>
+<tr class="memdesc:a3e45104d6bd442eca6dbc384baf4af17"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルxyzwを初期化する  <br /></td></tr>
+<tr class="separator:a3e45104d6bd442eca6dbc384baf4af17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b573ec60fea667127a24991710120e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a2b573ec60fea667127a24991710120e1">vec4f_add</a> (<a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> vec1_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> vec2_)</td></tr>
+<tr class="memdesc:a2b573ec60fea667127a24991710120e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す  <br /></td></tr>
+<tr class="separator:a2b573ec60fea667127a24991710120e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f57dddb3bca6a2dbbb96a7f0743ad36"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a5f57dddb3bca6a2dbbb96a7f0743ad36">vec4u8_initialize</a> (uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_)</td></tr>
+<tr class="memdesc:a5f57dddb3bca6a2dbbb96a7f0743ad36"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルrgbaを初期化する  <br /></td></tr>
+<tr class="separator:a5f57dddb3bca6a2dbbb96a7f0743ad36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a334977646589f6b75758bb7addc6dd52"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a334977646589f6b75758bb7addc6dd52">vec4i8_initialize</a> (int8_t x_, int8_t y_, int8_t z_, int8_t w_)</td></tr>
+<tr class="memdesc:a334977646589f6b75758bb7addc6dd52"><td class="mdescLeft">&#160;</td><td class="mdescRight">4次元ベクトルxyzwを初期化する  <br /></td></tr>
+<tr class="separator:a334977646589f6b75758bb7addc6dd52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a341fa9c2f49c25afce7a2938ae7554b1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a341fa9c2f49c25afce7a2938ae7554b1">mat4f_zero</a> (<a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *out_mat_)</td></tr>
 <tr class="memdesc:a341fa9c2f49c25afce7a2938ae7554b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">4行4列の行列の全要素を0にする  <br /></td></tr>
 <tr class="separator:a341fa9c2f49c25afce7a2938ae7554b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -187,12 +202,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a127faca6dd0a62e66cbb757faf7a593b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a127faca6dd0a62e66cbb757faf7a593b">mat4f_inverse</a> (<a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_)</td></tr>
 <tr class="memdesc:a127faca6dd0a62e66cbb757faf7a593b"><td class="mdescLeft">&#160;</td><td class="mdescRight">行列を逆行列に変換する  <br /></td></tr>
 <tr class="separator:a127faca6dd0a62e66cbb757faf7a593b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62e7a36a759da036950f8e3d6684e9fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a62e7a36a759da036950f8e3d6684e9fd">mat4f_vec4f_mul</a> (const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_, const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *vec_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *out_vec_)</td></tr>
-<tr class="memdesc:a62e7a36a759da036950f8e3d6684e9fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">out_vec_ = mat_ x vec_を計算する  <br /></td></tr>
-<tr class="separator:a62e7a36a759da036950f8e3d6684e9fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea75a624f3a5efc156b4e71e01cc799f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#aea75a624f3a5efc156b4e71e01cc799f">mat4f_translation</a> (const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *position_, <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_)</td></tr>
-<tr class="memdesc:aea75a624f3a5efc156b4e71e01cc799f"><td class="mdescLeft">&#160;</td><td class="mdescRight">平行移動行列を取得する  <br /></td></tr>
-<tr class="separator:aea75a624f3a5efc156b4e71e01cc799f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1bbd9cfa3c668459b8e187300bd9e03"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#ad1bbd9cfa3c668459b8e187300bd9e03">mat4f_vec4f_mul</a> (const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_, <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> vec_)</td></tr>
+<tr class="memdesc:ad1bbd9cfa3c668459b8e187300bd9e03"><td class="mdescLeft">&#160;</td><td class="mdescRight">mat_ x vec_を計算し、結果を返す  <br /></td></tr>
+<tr class="separator:ad1bbd9cfa3c668459b8e187300bd9e03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49f14d4c7344ead5914f30fd675c0a83"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a49f14d4c7344ead5914f30fd675c0a83">mat4f_translation</a> (<a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> position_, <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_)</td></tr>
+<tr class="memdesc:a49f14d4c7344ead5914f30fd675c0a83"><td class="mdescLeft">&#160;</td><td class="mdescRight">平行移動行列を取得する  <br /></td></tr>
+<tr class="separator:a49f14d4c7344ead5914f30fd675c0a83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a795cb12abb16004bfdd0a81ff08f29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__math_8h.html#a2a795cb12abb16004bfdd0a81ff08f29">mat4f_rot_x</a> (float radian_, <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *mat_)</td></tr>
 <tr class="memdesc:a2a795cb12abb16004bfdd0a81ff08f29"><td class="mdescLeft">&#160;</td><td class="mdescRight">X軸周りにradian_回転させる回転行列を取得する  <br /></td></tr>
 <tr class="separator:a2a795cb12abb16004bfdd0a81ff08f29"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -613,8 +628,8 @@ X, Y, Zの順で回転する</dd></dl>
 
 </div>
 </div>
-<a id="aea75a624f3a5efc156b4e71e01cc799f" name="aea75a624f3a5efc156b4e71e01cc799f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea75a624f3a5efc156b4e71e01cc799f">&#9670;&#160;</a></span>mat4f_translation()</h2>
+<a id="a49f14d4c7344ead5914f30fd675c0a83" name="a49f14d4c7344ead5914f30fd675c0a83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49f14d4c7344ead5914f30fd675c0a83">&#9670;&#160;</a></span>mat4f_translation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -622,7 +637,7 @@ X, Y, Zの順で回転する</dd></dl>
         <tr>
           <td class="memname">void mat4f_translation </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
           <td class="paramname"><em>position_</em>, </td>
         </tr>
         <tr>
@@ -640,11 +655,7 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>平行移動行列を取得する </p>
-<dl class="section note"><dt>Note</dt><dd>以下の場合は何もしない<ul>
-<li>position_ == NULL</li>
-<li>mat_ == NULL</li>
-</ul>
-</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>mat_ == NULLの場合は何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">position_</td><td>平行移動量 </td></tr>
@@ -682,14 +693,14 @@ X, Y, Zの順で回転する</dd></dl>
 
 </div>
 </div>
-<a id="a62e7a36a759da036950f8e3d6684e9fd" name="a62e7a36a759da036950f8e3d6684e9fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a62e7a36a759da036950f8e3d6684e9fd">&#9670;&#160;</a></span>mat4f_vec4f_mul()</h2>
+<a id="ad1bbd9cfa3c668459b8e187300bd9e03" name="ad1bbd9cfa3c668459b8e187300bd9e03"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1bbd9cfa3c668459b8e187300bd9e03">&#9670;&#160;</a></span>mat4f_vec4f_mul()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void mat4f_vec4f_mul </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> mat4f_vec4f_mul </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
           <td class="paramname"><em>mat_</em>, </td>
@@ -697,14 +708,8 @@ X, Y, Zの順で回転する</dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
-          <td class="paramname"><em>vec_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec_</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td>
+          <td class="paramname"><em>vec_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -714,23 +719,17 @@ X, Y, Zの順で回転する</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>out_vec_ = mat_ x vec_を計算する </p>
-<dl class="section note"><dt>Note</dt><dd>行列の要素は全て行優先で格納されていること</dd>
-<dd>
-以下の場合はエラーメッセージを出力し、何もしない<ul>
-<li>mat_ == NULL</li>
-<li>vec_ == NULL</li>
-<li>out_vec_ == NULL</li>
-</ul>
-</dd></dl>
+<p>mat_ x vec_を計算し、結果を返す </p>
+<dl class="section note"><dt>Note</dt><dd>行列の要素は全て行優先で格納されていること</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>mat_ == NULLの場合は0ベクトルを返す</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">mat_</td><td>4行4列の行列 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>4次元ベクトル </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec_</td><td>計算結果格納先 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>4次元ベクトル</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>計算されたvec4f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
@@ -761,29 +760,23 @@ X, Y, Zの順で回転する</dd></dl>
 
 </div>
 </div>
-<a id="a26636e750059548830a82c2149eaac93" name="a26636e750059548830a82c2149eaac93"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26636e750059548830a82c2149eaac93">&#9670;&#160;</a></span>vec2f_add()</h2>
+<a id="a0409004744ab62e533f3101c08de21ba" name="a0409004744ab62e533f3101c08de21ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0409004744ab62e533f3101c08de21ba">&#9670;&#160;</a></span>vec2f_add()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec2f_add </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> vec2f_add </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a>&#160;</td>
           <td class="paramname"><em>vec1_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
-          <td class="paramname"><em>vec2_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec2f_</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a>&#160;</td>
+          <td class="paramname"><em>vec2_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -793,32 +786,26 @@ X, Y, Zの順で回転する</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>2次元ベクトルの足し算(out_vec2f_ = vec1_ + vec2_)を実行する </p>
-<dl class="section note"><dt>Note</dt><dd>以下の場合はエラーメッセージを出力し、何もしない<ul>
-<li>vec1_ == NULL</li>
-<li>vec2_ == NULL</li>
-<li>out_vec2f_ == NULL</li>
-</ul>
-</dd></dl>
+<p>2次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec1_ + vec2_のvec1_ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec1_ + vec2_のvec2_ </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec2f_</td><td>加算結果ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec2f_t構造体インスタンス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec2f_t構造体インスタンス</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>加算結果vec2f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="af54a2140de8af377d98a406405046e96" name="af54a2140de8af377d98a406405046e96"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af54a2140de8af377d98a406405046e96">&#9670;&#160;</a></span>vec2f_initialize()</h2>
+<a id="a873c4cbda12321e795bc70e5b4d8e6eb" name="a873c4cbda12321e795bc70e5b4d8e6eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a873c4cbda12321e795bc70e5b4d8e6eb">&#9670;&#160;</a></span>vec2f_initialize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec2f_initialize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> vec2f_initialize </td>
           <td>(</td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>x_</em>, </td>
@@ -827,13 +814,7 @@ X, Y, Zの順で回転する</dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>y_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#adca540ff5da2142d179403c0464c27f0">vec2f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec2f_</em>&#160;</td>
+          <td class="paramname"><em>y_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -844,41 +825,34 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>2次元ベクトルxyを初期化する </p>
-<dl class="section note"><dt>Note</dt><dd>out_vec2f_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec2f_</td><td>初期化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y)</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>初期化されたvec2f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="a92b43e2c87b31879ac7123ef97f72c70" name="a92b43e2c87b31879ac7123ef97f72c70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a92b43e2c87b31879ac7123ef97f72c70">&#9670;&#160;</a></span>vec3f_add()</h2>
+<a id="a49e2d676b06e0c68c229ca2799ad7ccd" name="a49e2d676b06e0c68c229ca2799ad7ccd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49e2d676b06e0c68c229ca2799ad7ccd">&#9670;&#160;</a></span>vec3f_add()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec3f_add </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_add </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
           <td class="paramname"><em>vec1_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
-          <td class="paramname"><em>vec2_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec3f_</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>vec2_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -888,32 +862,102 @@ X, Y, Zの順で回転する</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>3次元ベクトルの足し算(out_vec3f_ = vec1_ + vec2_)を実行する </p>
-<dl class="section note"><dt>Note</dt><dd>以下の場合はエラーメッセージを出力し、何もしない<ul>
-<li>vec1_ == NULL</li>
-<li>vec2_ == NULL</li>
-<li>out_vec3f_ == NULL</li>
-</ul>
-</dd></dl>
+<p>3次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec1_ + vec2_のvec1_ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec1_ + vec2_のvec2_ </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec3f_</td><td>加算結果ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec3f_t構造体インスタンス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec3f_t構造体インスタンス</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>加算結果のvec3f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="af284f3f32c75b277fa8545d83936b783" name="af284f3f32c75b277fa8545d83936b783"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af284f3f32c75b277fa8545d83936b783">&#9670;&#160;</a></span>vec3f_initialize()</h2>
+<a id="ad8a13c4846fb05bfc99fa46bb4052b38" name="ad8a13c4846fb05bfc99fa46bb4052b38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8a13c4846fb05bfc99fa46bb4052b38">&#9670;&#160;</a></span>vec3f_component_max()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec3f_initialize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_component_max </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>v1_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>v2_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>v1_とv2_の各要素の大きい方を格納したvec3f_tを返す </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">v1_</td><td>vec3f_t構造体インスタンス1 </td></tr>
+    <tr><td class="paramname">v2_</td><td>vec3f_t構造体インスタンス2</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>vec3f_t v1_, v2_の各要素の大きい方を格納したvec3f_t </dd></dl>
+
+</div>
+</div>
+<a id="ad577df8b6090d3db8b354e33f68379cb" name="ad577df8b6090d3db8b354e33f68379cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad577df8b6090d3db8b354e33f68379cb">&#9670;&#160;</a></span>vec3f_component_min()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_component_min </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>v1_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>v2_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>v1_とv2_の各要素の小さい方を格納したvec3f_tを返す </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">v1_</td><td>vec3f_t構造体インスタンス1 </td></tr>
+    <tr><td class="paramname">v2_</td><td>vec3f_t構造体インスタンス2</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>vec3f_t v1_, v2_の各要素の小さい方を格納したvec3f_t </dd></dl>
+
+</div>
+</div>
+<a id="aaff069c3a31982b25eebaa3e9818123d" name="aaff069c3a31982b25eebaa3e9818123d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaff069c3a31982b25eebaa3e9818123d">&#9670;&#160;</a></span>vec3f_initialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_initialize </td>
           <td>(</td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>x_</em>, </td>
@@ -928,13 +972,7 @@ X, Y, Zの順で回転する</dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>z_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec3f_</em>&#160;</td>
+          <td class="paramname"><em>z_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -945,21 +983,49 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>3次元ベクトルxyzを初期化する </p>
-<dl class="section note"><dt>Note</dt><dd>out_vec3f_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec3f_</td><td>初期化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z)</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>初期化されたvec3f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="a188703116f6c116f0e71c5ec4c5eb310" name="a188703116f6c116f0e71c5ec4c5eb310"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a188703116f6c116f0e71c5ec4c5eb310">&#9670;&#160;</a></span>vec3f_length()</h2>
+<a id="aade8b0d88f331286ece50fb636e61312" name="aade8b0d88f331286ece50fb636e61312"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aade8b0d88f331286ece50fb636e61312">&#9670;&#160;</a></span>vec3f_is_finite()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool vec3f_is_finite </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>vec_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>3次元ベクトルの全要素が有限の値かをチェックする </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>判定対象vec3f_t構造体インスタンス</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true 全要素が正常 </dd>
+<dd>
+false 要素にNaN, Infが含まれる </dd></dl>
+
+</div>
+</div>
+<a id="a048396a34886f78fc0d0998f48dfbb2c" name="a048396a34886f78fc0d0998f48dfbb2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a048396a34886f78fc0d0998f48dfbb2c">&#9670;&#160;</a></span>vec3f_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -967,7 +1033,7 @@ X, Y, Zの順で回転する</dd></dl>
         <tr>
           <td class="memname">float vec3f_length </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
           <td class="paramname"><em>vec_</em></td><td>)</td>
           <td></td>
         </tr>
@@ -977,7 +1043,7 @@ X, Y, Zの順で回転する</dd></dl>
 <p>3次元ベクトルの長さを返す </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>計算対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>計算対象ベクトル</td></tr>
   </table>
   </dd>
 </dl>
@@ -985,8 +1051,8 @@ X, Y, Zの順で回転する</dd></dl>
 
 </div>
 </div>
-<a id="a1fa493a5b44abc35d8bd196fabf18454" name="a1fa493a5b44abc35d8bd196fabf18454"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1fa493a5b44abc35d8bd196fabf18454">&#9670;&#160;</a></span>vec3f_length_squared()</h2>
+<a id="a0e43cfc4318ca907b7835573aa3d84da" name="a0e43cfc4318ca907b7835573aa3d84da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e43cfc4318ca907b7835573aa3d84da">&#9670;&#160;</a></span>vec3f_length_squared()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -994,7 +1060,7 @@ X, Y, Zの順で回転する</dd></dl>
         <tr>
           <td class="memname">float vec3f_length_squared </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
           <td class="paramname"><em>vec_</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1004,7 +1070,7 @@ X, Y, Zの順で回転する</dd></dl>
 <p>3次元ベクトルの長さの2乗を返す </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>計算対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>計算対象ベクトル</td></tr>
   </table>
   </dd>
 </dl>
@@ -1012,16 +1078,16 @@ X, Y, Zの順で回転する</dd></dl>
 
 </div>
 </div>
-<a id="ad1662565fb8cffb597226f6f405a0581" name="ad1662565fb8cffb597226f6f405a0581"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad1662565fb8cffb597226f6f405a0581">&#9670;&#160;</a></span>vec3f_normalize()</h2>
+<a id="afa67e996d1d6200befd26ef3c1c58c4f" name="afa67e996d1d6200befd26ef3c1c58c4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa67e996d1d6200befd26ef3c1c58c4f">&#9670;&#160;</a></span>vec3f_normalize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec3f_normalize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_normalize </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
           <td class="paramname"><em>vec_</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1029,39 +1095,72 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>3次元ベクトルを正規化する </p>
-<dl class="section note"><dt>Note</dt><dd>与えられたベクトルの長さが0の場合はワーニングメッセージを出し何もしない</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>与えられたベクトルの長さが0の場合はワーニングメッセージを出し、入力値と同じベクトルを返す</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">vec_</td><td>正規化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>正規化対象vec3f_t構造体インスタンス</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>正規化されたvec3f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="a7dbff4c06bc0e559d1e033e2dea746a2" name="a7dbff4c06bc0e559d1e033e2dea746a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7dbff4c06bc0e559d1e033e2dea746a2">&#9670;&#160;</a></span>vec4f_add()</h2>
+<a id="a39391ca7538eee5a04d9607fc956b912" name="a39391ca7538eee5a04d9607fc956b912"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39391ca7538eee5a04d9607fc956b912">&#9670;&#160;</a></span>vec3f_scale()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec4f_add </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> vec3f_scale </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>vec_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>scale_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>3次元ベクトルのスカラー倍を計算する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec_</td><td>vec3f_t構造体インスタンス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale_</td><td>掛ける値</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>計算結果vec3f_t構造体インスタンス </dd></dl>
+
+</div>
+</div>
+<a id="a2b573ec60fea667127a24991710120e1" name="a2b573ec60fea667127a24991710120e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b573ec60fea667127a24991710120e1">&#9670;&#160;</a></span>vec4f_add()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> vec4f_add </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td>
           <td class="paramname"><em>vec1_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
-          <td class="paramname"><em>vec2_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec4f_</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a>&#160;</td>
+          <td class="paramname"><em>vec2_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1071,32 +1170,26 @@ X, Y, Zの順で回転する</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>4次元ベクトルの足し算(out_vec4f_ = vec1_ + vec2_)を実行する </p>
-<dl class="section note"><dt>Note</dt><dd>以下の場合はエラーメッセージを出力し、何もしない<ul>
-<li>vec1_ == NULL</li>
-<li>vec2_ == NULL</li>
-<li>out_vec4f_ == NULL</li>
-</ul>
-</dd></dl>
+<p>4次元ベクトルの足し算vec1_ + vec2_を実行し、返り値として返す </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec1_ + vec2_のvec1_ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec1_ + vec2_のvec2_ </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4f_</td><td>加算結果ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec1_</td><td>vec4f_t構造体インスタンス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec2_</td><td>vec4f_t構造体インスタンス</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>加算されたvec4f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="a8d7f8a19f1d8a745592799fbf86d6b3d" name="a8d7f8a19f1d8a745592799fbf86d6b3d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d7f8a19f1d8a745592799fbf86d6b3d">&#9670;&#160;</a></span>vec4f_initialize()</h2>
+<a id="a3e45104d6bd442eca6dbc384baf4af17" name="a3e45104d6bd442eca6dbc384baf4af17"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e45104d6bd442eca6dbc384baf4af17">&#9670;&#160;</a></span>vec4f_initialize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec4f_initialize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> vec4f_initialize </td>
           <td>(</td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>x_</em>, </td>
@@ -1117,13 +1210,7 @@ X, Y, Zの順で回転する</dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>w_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#a68ecc88b56d18cb8acd4af50d7b657d3">vec4f_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec4f_</em>&#160;</td>
+          <td class="paramname"><em>w_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1134,28 +1221,27 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>4次元ベクトルxyzwを初期化する </p>
-<dl class="section note"><dt>Note</dt><dd>out_vec4f_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4f_</td><td>初期化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w)</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>初期化されたvec4f_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="ae793e97336721694da9d952fb0814ad2" name="ae793e97336721694da9d952fb0814ad2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae793e97336721694da9d952fb0814ad2">&#9670;&#160;</a></span>vec4i8_initialize()</h2>
+<a id="a334977646589f6b75758bb7addc6dd52" name="a334977646589f6b75758bb7addc6dd52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a334977646589f6b75758bb7addc6dd52">&#9670;&#160;</a></span>vec4i8_initialize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec4i8_initialize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a> vec4i8_initialize </td>
           <td>(</td>
           <td class="paramtype">int8_t&#160;</td>
           <td class="paramname"><em>x_</em>, </td>
@@ -1176,13 +1262,7 @@ X, Y, Zの順で回転する</dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int8_t&#160;</td>
-          <td class="paramname"><em>w_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#a15936d92f2925c75dc97ba184e1f7bbe">vec4i8_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec4i8_</em>&#160;</td>
+          <td class="paramname"><em>w_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1193,28 +1273,27 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>4次元ベクトルxyzwを初期化する </p>
-<dl class="section note"><dt>Note</dt><dd>out_vec4i8_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x_</td><td>初期化値(x) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">y_</td><td>初期化値(y) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">z_</td><td>初期化値(z) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4i8_</td><td>初期化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">w_</td><td>初期化値(w)</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>初期化されたvec4i8_t構造体インスタンス </dd></dl>
 
 </div>
 </div>
-<a id="a77fde56188d5890bdc6ec3e02c449e06" name="a77fde56188d5890bdc6ec3e02c449e06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77fde56188d5890bdc6ec3e02c449e06">&#9670;&#160;</a></span>vec4u8_initialize()</h2>
+<a id="a5f57dddb3bca6a2dbbb96a7f0743ad36" name="a5f57dddb3bca6a2dbbb96a7f0743ad36"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f57dddb3bca6a2dbbb96a7f0743ad36">&#9670;&#160;</a></span>vec4u8_initialize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void vec4u8_initialize </td>
+          <td class="memname"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> vec4u8_initialize </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
           <td class="paramname"><em>r_</em>, </td>
@@ -1235,13 +1314,7 @@ X, Y, Zの順で回転する</dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>a_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> *&#160;</td>
-          <td class="paramname"><em>out_vec4u8_</em>&#160;</td>
+          <td class="paramname"><em>a_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1252,17 +1325,16 @@ X, Y, Zの順で回転する</dd></dl>
 </div><div class="memdoc">
 
 <p>4次元ベクトルrgbaを初期化する </p>
-<dl class="section note"><dt>Note</dt><dd>out_vec4u8_ == NULLの場合はエラーメッセージを出力し、何もしない</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">r_</td><td>初期化値(r) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">g_</td><td>初期化値(g) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">b_</td><td>初期化値(b) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">a_</td><td>初期化値(a) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vec4u8_</td><td>初期化対象ベクトル </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">a_</td><td>初期化値(a)</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>初期化されたvec4u8_t構造体インスタンス </dd></dl>
 
 </div>
 </div>

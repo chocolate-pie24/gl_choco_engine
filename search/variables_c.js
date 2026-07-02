@@ -3,7 +3,7 @@ var searchData=
   ['padding_0',['padding',['../structbmp__loader.html#a8c894df9d2b2d3747a07afb18550ef82',1,'bmp_loader::padding()'],['../structring__queue.html#a200bf551e0a05a2d3755abd15c83f432',1,'ring_queue::padding()']]],
   ['padding_5fremoved_1',['padding_removed',['../structbmp__loader.html#a4fffb6c060ae111f8652d69fc9915e76',1,'bmp_loader']]],
   ['perspective_5fmatrix_2',['perspective_matrix',['../structcamera.html#a24562c33cd724c731932edc4f60227a9',1,'camera']]],
-  ['pfn_5fcommand_5fexecutor_3',['pfn_command_executor',['../structcommand__status__flight__camera.html#ab39be1774a3cb39e93eceb769eb303fd',1,'command_status_flight_camera']]],
+  ['pfn_5fcommand_5fexecutor_3',['pfn_command_executor',['../structcommand__status__flight__camera.html#a66542af155a47d0e9b1ee594bda56363',1,'command_status_flight_camera']]],
   ['pixels_4',['pixels',['../structbmp__loader.html#a4efab0e2376a8f1f9fad9f0f61e59217',1,'bmp_loader::pixels()'],['../structtexture.html#ac7424ff245e56be41a6666f30623266a',1,'texture::pixels()']]],
   ['platform_5fbackend_5fdestroy_5',['platform_backend_destroy',['../structplatform__vtable.html#a2bfb6e674266be2665be9f5b753901f2',1,'platform_vtable']]],
   ['platform_5fbackend_5finit_6',['platform_backend_init',['../structplatform__vtable.html#ac24546ccaae4812b2d0eefd694bcc00f',1,'platform_vtable']]],
@@ -12,14 +12,14 @@ var searchData=
   ['platform_5fbackend_5fswap_5fbuffers_9',['platform_backend_swap_buffers',['../structplatform__vtable.html#a7a4fd6f22bc8eb87228c0042c413e3a6',1,'platform_vtable']]],
   ['platform_5fbackend_5fwindow_5fcreate_10',['platform_backend_window_create',['../structplatform__vtable.html#a0add5132fbe0edfdbc2946d9d7b64a8b',1,'platform_vtable']]],
   ['platform_5fcontext_11',['platform_context',['../structapp__state.html#af6f60a331cabd2b5bc97307827c5564f',1,'app_state']]],
-  ['point_5fcurrent_5fbuffer_5foffset_12',['point_current_buffer_offset',['../structpoint__shader.html#a49d8029baf79aaf61ca02353e3de73fb',1,'point_shader']]],
-  ['point_5fvao_13',['point_vao',['../structpoint__shader.html#a4d3a23b088ce9b478907d1f2d5b79a1c',1,'point_shader']]],
-  ['point_5fvbo_14',['point_vbo',['../structpoint__shader.html#a141d0d40b547f4f4994b36e3e5752550',1,'point_shader']]],
-  ['point_5fvertex_5fbuffer_5fsize_15',['point_vertex_buffer_size',['../structpoint__shader.html#a492767e5a490d07395e40bb3baf97b00',1,'point_shader']]],
+  ['point_5fcurrent_5fbuffer_5foffset_12',['point_current_buffer_offset',['../structpoint__mesh__shader.html#a7ee717e594999704403a94a4a4f97d99',1,'point_mesh_shader']]],
+  ['point_5fvao_13',['point_vao',['../structpoint__mesh__shader.html#a2682ff1dda143c0f497e048b0c469c08',1,'point_mesh_shader']]],
+  ['point_5fvbo_14',['point_vbo',['../structpoint__mesh__shader.html#a9d092977fd265ac2bba326bda6d22e3e',1,'point_mesh_shader']]],
+  ['point_5fvertex_5fbuffer_5fsize_15',['point_vertex_buffer_size',['../structpoint__mesh__shader.html#ac772410adf4fc7ea7723782f8b062b5e',1,'point_mesh_shader']]],
   ['position_16',['position',['../structui__vertex.html#a226f99e22ec7580c202a34b6634522f1',1,'ui_vertex::position()'],['../structline__vertex.html#ad44b02b87fb7492f723f652a7a9429bc',1,'line_vertex::position()'],['../structpoint__vertex.html#a829b0b9e793c464452301139fc245bd1',1,'point_vertex::position()'],['../structpoint__normal__vertex.html#a3fadf2af958251232e4ef41c97ccf442',1,'point_normal_vertex::position()'],['../structcamera.html#a1b74c0923abb981d870c9f8abbea688c',1,'camera::position()']]],
   ['posture_5fcache_5fdirty_17',['posture_cache_dirty',['../structcamera.html#adf8f11f2f978815e4ad6432a9680749d',1,'camera']]],
   ['pressed_18',['pressed',['../structkeyboard__event__args.html#a52c0c67f7d8320c6040b18ee511aaae6',1,'keyboard_event_args::pressed()'],['../structmouse__event__args.html#a9495f63736e3b431af4bd02a5f6a725a',1,'mouse_event_args::pressed()']]],
   ['prev_19',['prev',['../structplatform__backend.html#a860acc5ac061dc0f4f8d77f8c4fd438b',1,'platform_backend']]],
   ['program_5fid_20',['program_id',['../structrenderer__backend__shader.html#a5be96473ac8df57873fcd583fcb8a6f1',1,'renderer_backend_shader']]],
-  ['projection_5fmatrix_5flocation_21',['projection_matrix_location',['../structline__shader.html#ab16b6b716efcccc8c198f7d726e76570',1,'line_shader::projection_matrix_location()'],['../structlit__mesh__shader.html#a57f8fc7af66f84584a5d67598ff2d5ed',1,'lit_mesh_shader::projection_matrix_location()'],['../structpoint__shader.html#a88306cb965bfb29b6b2d8e7b4e8e10a0',1,'point_shader::projection_matrix_location()'],['../structui__shader.html#ac5bfd78e38627b49ce3fc8561d3e3dde',1,'ui_shader::projection_matrix_location()']]]
+  ['projection_5fmatrix_5flocation_21',['projection_matrix_location',['../structline__mesh__shader.html#aeaf1b98cffb653ce8268779a8ba691f4',1,'line_mesh_shader::projection_matrix_location()'],['../structlit__mesh__shader.html#a57f8fc7af66f84584a5d67598ff2d5ed',1,'lit_mesh_shader::projection_matrix_location()'],['../structpoint__mesh__shader.html#aeda8739f454110e9aa1de8f73ed168ba',1,'point_mesh_shader::projection_matrix_location()'],['../structui__mesh__shader.html#a544dc00fa5a1ffb203fd97ba02fe8c8d',1,'ui_mesh_shader::projection_matrix_location()']]]
 ];

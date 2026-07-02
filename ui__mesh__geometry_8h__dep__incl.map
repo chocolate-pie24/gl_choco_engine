@@ -1,0 +1,6 @@
+<map id="include/engine/resource/geometry/ui_mesh_geometry.h" name="include/engine/resource/geometry/ui_mesh_geometry.h">
+<area shape="rect" id="node1" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="257,5,485,45"/>
+<area shape="rect" id="node2" href="$ui__mesh__geometry_8c.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="5,108,232,148"/>
+<area shape="rect" id="node3" href="$ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="256,93,485,163"/>
+<area shape="rect" id="node4" href="$ui__mesh__geometry__registry_8c.html" title="UI描画用ジオメトリレジストリAPIの実装" alt="" coords="509,93,739,163"/>
+</map>

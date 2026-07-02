@@ -5,8 +5,8 @@ var context__shader_8h =
     [ "renderer_backend_shader_create", "context__shader_8h.html#a3d4f5ca86e208a4722b49b7eb4cea7be", null ],
     [ "renderer_backend_shader_destroy", "context__shader_8h.html#ac905ffe170390bd42850379026c52bfa", null ],
     [ "renderer_backend_shader_link", "context__shader_8h.html#a0c103cbf19d607272ca056b4dac83b5f", null ],
-    [ "renderer_backend_shader_mat4f_uniform_set", "context__shader_8h.html#a3976e2437367ffe9969e3054389c7fc5", null ],
+    [ "renderer_backend_shader_mat4f_uniform_set", "context__shader_8h.html#ac3ac5b79816c52fc79bf464924ac1bb8", null ],
     [ "renderer_backend_shader_uniform_location_get", "context__shader_8h.html#a9ed3224e63b70d742438c7cf2e7a96f2", null ],
-    [ "renderer_backend_shader_use", "context__shader_8h.html#af82084868748dd0762cda5eedbe209ae", null ],
-    [ "renderer_backend_shader_vec4u8_uniform_set", "context__shader_8h.html#a64b5a0e829bcdd95caec6aa5c547b938", null ]
+    [ "renderer_backend_shader_use", "context__shader_8h.html#ab0008f55bfe63b2c3198dec6df8d3376", null ],
+    [ "renderer_backend_shader_vec4u8_uniform_set", "context__shader_8h.html#ad01c2b3c8b76dc60e24f80a44ea8c334", null ]
 ];

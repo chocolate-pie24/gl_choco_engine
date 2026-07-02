@@ -12,6 +12,9 @@ var application__types_8h =
       [ "APPLICATION_OVERFLOW", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aabd291f0e90e86606895e9f53689dec58", null ],
       [ "APPLICATION_LIMIT_EXCEEDED", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa41f392599e948261ad87aff7673e4bf4", null ],
       [ "APPLICATION_UNSUPPORTED_FILE", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aae4cd05761b797c80dae682e24444fc6a", null ],
+      [ "APPLICATION_FILE_OPEN_ERROR", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa2cc3a83384efc754202ff0dddfb839e4", null ],
+      [ "APPLICATION_FILE_CLOSE_ERROR", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa3b0411f8396c7098393ab78137c7b8d0", null ],
+      [ "APPLICATION_FILE_READ_ERROR", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aaddd2388b16ff834829154c80c733d930", null ],
       [ "APPLICATION_UNDEFINED_ERROR", "application__types_8h.html#a0d87614822b854251c7d55d1accaf44aa9177566447b59447cbc5fe4d3ad7fad3", null ]
     ] ]
 ];

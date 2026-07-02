@@ -96,7 +96,7 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <div class="contents">
 <div class="textblock"><dl class="reflist">
 <dt>File <a class="el" href="application_8c.html">application.c</a>  </dt>
-<dd><a class="anchor" id="_todo000013"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
+<dd><a class="anchor" id="_todo000011"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
 <dt>File <a class="el" href="bmp__loader_8c.html">bmp_loader.c</a>  </dt>
 <dd><a class="anchor" id="_todo000017"></a>計算各所のオーバーフローチェック漏れ修正 </dd>
 <dt>File <a class="el" href="buffer__utils_8h.html">buffer_utils.h</a>  </dt>
@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <p class="enddd">バッファへのデータ書き込みAPIは必要に応じて追加する </p>
 </dd>
 <dt>Global <a class="el" href="camera_8c.html#a13d7f2cfdfcdbdf00c68f7a47dfa892a">camera_view_matrix_get</a>  (camera_t *camera_, mat4x4f_t *out_mat_)</dt>
-<dd><a class="anchor" id="_todo000007"></a>逆行列計算をなくすため、以下を行う<ul>
+<dd><a class="anchor" id="_todo000008"></a>逆行列計算をなくすため、以下を行う<ul>
 <li>回転行列の逆行列 = 転置行列の性質を利用する</li>
 <li>平行移動行列の逆行列は平行移動量 x (-1)の性質を利用する  </li>
 </ul>
@@ -115,20 +115,17 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <dt>Global <a class="el" href="filesystem_8c.html#a0e8cf1cd622e3a94e20be47b9c628062">filesystem_open</a>  (const char *fullpath_, filesystem_open_mode_t mode_, filesystem_t *filesystem_)</dt>
 <dd><a class="anchor" id="_todo000002"></a>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する  </dd>
 <dt>File <a class="el" href="fs__utils_8c.html">fs_utils.c</a>  </dt>
-<dd><a class="anchor" id="_todo000016"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
+<dd><a class="anchor" id="_todo000014"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
 <dt>Global <a class="el" href="fs__utils_8c.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a>  (fs_utils_t *fs_utils_, choco_string_t *out_string_)</dt>
 <dd><a class="anchor" id="_todo000005"></a>失敗時にout_string_を不変にする  </dd>
-<dt>Class <a class="el" href="structline__shader.html">line_shader</a>  </dt>
+<dt>Class <a class="el" href="structline__mesh__shader.html">line_mesh_shader</a>  </dt>
 <dd><a class="anchor" id="_todo000022"></a>TODO: FreeListを使用したバッファ管理 </dd>
-<dt>Global <a class="el" href="line__shader_8c.html#afa9884cdf354d6926382fd2bf506bb23">line_shader_vertex_buffer_write</a>  (renderer_backend_context_t *backend_context_, line_shader_t *line_shader_, size_t size_, const void *write_data_)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000009"></a>TODO: void* -&gt; line_vertex_t*, size_のチェック(line_vertex_tのサイズ x 2 x n) </p>
-<p class="interdd"></p>
-<p class="enddd">TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -&gt; appendに変更する  </p>
-</dd>
 <dt>Class <a class="el" href="structlinear__alloc.html">linear_alloc</a>  </dt>
-<dd><a class="anchor" id="_todo000015"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
+<dd><a class="anchor" id="_todo000013"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
 <dt>File <a class="el" href="linear__allocator_8h.html">linear_allocator.h</a>  </dt>
 <dd><a class="anchor" id="_todo000004"></a>linear_allocator_reset追加 </dd>
+<dt>File <a class="el" href="lit__mesh__geometry_8c.html">lit_mesh_geometry.c</a>  </dt>
+<dd><a class="anchor" id="_todo000015"></a>カバレッジ改善 </dd>
 <dt>File <a class="el" href="lit__mesh__shader_8h.html">lit_mesh_shader.h</a>  </dt>
 <dd><a class="anchor" id="_todo000010"></a>ライティング等の実装後、以下をメンテナンスする<ul>
 <li>docs/layer.md</li>
@@ -140,20 +137,14 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <p class="interdd"></p>
 <p class="enddd">glfwSwapInterval </p>
 </dd>
-<dt>Class <a class="el" href="structpoint__shader.html">point_shader</a>  </dt>
+<dt>File <a class="el" href="point__mesh__geometry_8c.html">point_mesh_geometry.c</a>  </dt>
+<dd><a class="anchor" id="_todo000016"></a>TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる </dd>
+<dt>File <a class="el" href="point__mesh__geometry_8h.html">point_mesh_geometry.h</a>  </dt>
+<dd><a class="anchor" id="_todo000006"></a>TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる </dd>
+<dt>Class <a class="el" href="structpoint__mesh__shader.html">point_mesh_shader</a>  </dt>
 <dd><a class="anchor" id="_todo000023"></a>TODO: FreeListを使用したバッファ管理 </dd>
-<dt>Global <a class="el" href="point__shader_8c.html#a70df36ac6ad7a1a955bb50973e3e227e">point_shader_vertex_buffer_color_write</a>  (renderer_backend_context_t *backend_context_, point_shader_t *point_shader_, size_t size_, const void *write_data_)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000012"></a>TODO: void* -&gt; vec4u8_t*, size_のチェック(vec4u8_tのサイズ x n) </p>
-<p class="interdd"></p>
-<p class="enddd">TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -&gt; appendに変更する  </p>
-</dd>
-<dt>Global <a class="el" href="point__shader_8c.html#ae98b8f32611fcde36edebf72afc6f875">point_shader_vertex_buffer_point_write</a>  (renderer_backend_context_t *backend_context_, point_shader_t *point_shader_, size_t size_, const void *write_data_)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000011"></a>TODO: void* -&gt; point_vertex_t*, size_のチェック(point_vertex_tのサイズ x n) </p>
-<p class="interdd"></p>
-<p class="enddd">TODO: バッファの途中だけを書き換えるAPI追加した後で他のシェーダーリソースも含めてwrite -&gt; appendに変更する  </p>
-</dd>
 <dt>Global <a class="el" href="renderer__err__utils_8c.html#adfba520127fecd994a5db7f9bf9fcf10">renderer_rslt_convert_fs_utils</a>  (fs_utils_result_t rslt_)</dt>
-<dd><a class="anchor" id="_todo000008"></a>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する  </dd>
+<dd><a class="anchor" id="_todo000009"></a>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する  </dd>
 <dt>File <a class="el" href="stl__loader_8c.html">stl_loader.c</a>  </dt>
 <dd><a class="anchor" id="_todo000020"></a>以下を行う<ul>
 <li>GLCEカスタムフォーマットでの出力機能</li>
@@ -161,14 +152,14 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 </ul>
 </dd>
 <dt>File <a class="el" href="stl__loader_8h.html">stl_loader.h</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>以下を行う</p><ul>
+<dd><p class="startdd"><a class="anchor" id="_todo000007"></a>以下を行う</p><ul>
 <li>GLCEカスタムフォーマットでの出力機能</li>
 <li>カスタムフォーマットが存在する場合はそちらで読み込み、ない場合は通常STLを読み込みカスタムフォーマットファイルを出力 </li>
 </ul>
 <p class="interdd"></p>
 <p class="enddd">現状では法線情報が[-1.0...1.0]の範囲に収まっているかをチェックしているが、この範囲に収まっていても長さが非1.0で正規化されていない場合がある。チェックを厳密化する。 </p>
 </dd>
-<dt>Class <a class="el" href="structui__shader.html">ui_shader</a>  </dt>
+<dt>Class <a class="el" href="structui__mesh__shader.html">ui_mesh_shader</a>  </dt>
 <dd><a class="anchor" id="_todo000024"></a>TODO: FreeListを使用したバッファ管理</dd>
 </dl>
 </div></div><!-- contents -->

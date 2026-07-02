@@ -1,0 +1,7 @@
+<map id="line_mesh_geometry_registry" name="line_mesh_geometry_registry">
+<area shape="rect" id="node1" title="線分描画用ジオメトリレジストリ内部構造体" alt="" coords="14,269,173,309"/>
+<area shape="rect" id="node2" href="$structline__mesh__geometry.html" title="line_mesh_geometry内部状態管理構造体" alt="" coords="14,181,173,207"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,93,109,119"/>
+<area shape="rect" id="node4" href="$structline__vertex.html" title="線分描画用頂点情報構造体" alt="" coords="134,93,229,119"/>
+<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="152,5,211,31"/>
+</map>

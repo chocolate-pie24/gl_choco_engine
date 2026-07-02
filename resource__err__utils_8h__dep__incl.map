@@ -1,8 +1,12 @@
 <map id="include/engine/resource/resource_core/resource_err_utils.h" name="include/engine/resource/resource_core/resource_err_utils.h">
-<area shape="rect" id="node1" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="371,5,549,60"/>
-<area shape="rect" id="node2" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="5,115,171,155"/>
-<area shape="rect" id="node3" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="195,115,347,155"/>
-<area shape="rect" id="node4" href="$resource__err__utils_8c.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="371,108,549,163"/>
-<area shape="rect" id="node5" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="573,115,723,155"/>
-<area shape="rect" id="node6" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="747,108,925,163"/>
+<area shape="rect" id="node1" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="865,5,1043,60"/>
+<area shape="rect" id="node2" href="$ui__geom__config__loader_8c.html" title="UI描画用ジオメトリコンフィグレーションファイルのローダーAPI実装" alt="" coords="5,108,185,163"/>
+<area shape="rect" id="node3" href="$line__mesh__geometry_8c.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="210,108,370,163"/>
+<area shape="rect" id="node4" href="$lit__mesh__geometry_8c.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="395,115,623,155"/>
+<area shape="rect" id="node5" href="$point__mesh__geometry_8c.html" title="point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="647,108,816,163"/>
+<area shape="rect" id="node6" href="$ui__mesh__geometry_8c.html" title="ui_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装" alt="" coords="841,115,1067,155"/>
+<area shape="rect" id="node7" href="$bmp__loader_8c.html" title="BMPファイルのロード処理を行うAPIの実装" alt="" coords="1091,115,1257,155"/>
+<area shape="rect" id="node8" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="1281,115,1433,155"/>
+<area shape="rect" id="node9" href="$resource__err__utils_8c.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="1457,108,1635,163"/>
+<area shape="rect" id="node10" href="$texture_8c.html" title="テクスチャCPU側リソースを操作するモジュールAPIの実装" alt="" coords="1659,115,1809,155"/>
 </map>

@@ -1,5 +1,5 @@
 <map id="include/engine/resource/loaders/stl_loader.h" name="include/engine/resource/loaders/stl_loader.h">
-<area shape="rect" id="node1" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="120,5,297,45"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,101,209,126"/>
-<area shape="rect" id="node3" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="234,93,386,133"/>
+<area shape="rect" id="node1" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="101,5,278,45"/>
+<area shape="rect" id="node2" href="$stl__loader_8c.html" title="STLファイルのロード処理を行うAPIの実装" alt="" coords="5,108,157,148"/>
+<area shape="rect" id="node3" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="182,93,413,163"/>
 </map>

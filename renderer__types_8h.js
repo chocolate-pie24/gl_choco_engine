@@ -14,6 +14,7 @@ var renderer__types_8h =
       [ "RENDERER_LIMIT_EXCEEDED", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9abe7db16cf925a8f0dbd0de0aa6c5e840", null ],
       [ "RENDERER_BAD_OPERATION", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a4b427ce7642fca60d6c952af1a150579", null ],
       [ "RENDERER_DATA_CORRUPTED", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9aa52ca6ed8ca8574c721e4e1bf8e671b1", null ],
+      [ "RENDERER_OVERFLOW", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a74ab576644e4c74f7eb639aac920e3ed", null ],
       [ "RENDERER_UNDEFINED_ERROR", "renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9a15cb01e7984a87937a3e15149d8722e9", null ]
     ] ],
     [ "renderer_type_t", "renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440", [

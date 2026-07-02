@@ -1,0 +1,7 @@
+<map id="include/engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h" name="include/engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h">
+<area shape="rect" id="node1" title="点描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する" alt="" coords="63,5,314,75"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,137,76,163"/>
+<area shape="rect" id="node3" title=" " alt="" coords="101,137,175,163"/>
+<area shape="rect" id="node4" title=" " alt="" coords="199,137,282,163"/>
+<area shape="rect" id="node5" href="$resource__registry__types_8h.html" title="resource_registries全体で使用されるデータ型を提供する" alt="" coords="306,123,501,177"/>
+</map>

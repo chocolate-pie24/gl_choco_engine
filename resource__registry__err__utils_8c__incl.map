@@ -1,0 +1,8 @@
+<map id="src/engine/systems/renderer/resource_registries/core/resource_registry_err_utils.c" name="src/engine/systems/renderer/resource_registries/core/resource_registry_err_utils.c">
+<area shape="rect" id="node1" title="resource_registry_err_utilsは、resource_registries内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="216,5,459,60"/>
+<area shape="rect" id="node2" href="$resource__registry__err__utils_8h.html" title="resource_registry_err_utilsは、resource_registries内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="161,108,372,163"/>
+<area shape="rect" id="node3" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="5,218,163,258"/>
+<area shape="rect" id="node5" href="$resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="187,218,373,258"/>
+<area shape="rect" id="node6" href="$resource__registry__types_8h.html" title="resource_registries全体で使用されるデータ型を提供する" alt="" coords="397,211,592,265"/>
+<area shape="rect" id="node4" title=" " alt="" coords="47,313,121,339"/>
+</map>

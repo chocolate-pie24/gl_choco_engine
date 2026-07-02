@@ -100,68 +100,68 @@ $(document).ready(function(){initNavTree('flight__camera__controller_8c.html',''
 <p>空間内を自由に移動する飛行型カメラの制御機能の実装  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="flight__camera__controller_8h_source.html">engine/systems/camera_system/camera_controller/flight_camera_controller.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="choco__math_8h_source.html">engine/base/choco_math/choco_math.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="camera_8h_source.html">engine/systems/camera_system/camera/camera.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="camera__err__utils_8h_source.html">engine/systems/camera_system/camera_core/camera_err_utils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="camera__types_8h_source.html">engine/systems/camera_system/camera_core/camera_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="choco__math_8h_source.html">engine/base/choco_math/choco_math.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for flight_camera_controller.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="flight__camera__controller_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2camera__system_2camera__controller_2flight__camera__controller_8c" alt=""/></div>
 <map name="asrc_2engine_2systems_2camera__system_2camera__controller_2flight__camera__controller_8c" id="asrc_2engine_2systems_2camera__system_2camera__controller_2flight__camera__controller_8c">
-<area shape="rect" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="359,5,543,75"/>
-<area shape="rect" href="flight__camera__controller_8h.html" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="101,123,299,177"/>
-<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,313,224,368"/>
-<area shape="rect" href="camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="104,225,299,265"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="295,321,479,361"/>
-<area shape="rect" href="camera__err__utils_8h.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="613,123,832,177"/>
-<area shape="rect" href="choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="424,225,608,265"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1072,137,1283,163"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1251,233,1389,258"/>
-<area shape="rect" title=" " alt="" coords="415,416,486,441"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="633,225,813,265"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1019,225,1176,265"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="837,225,995,265"/>
-<area shape="rect" title=" " alt="" coords="969,328,1044,353"/>
-<area shape="rect" title=" " alt="" coords="617,328,700,353"/>
+<area shape="rect" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="456,5,640,75"/>
+<area shape="rect" href="flight__camera__controller_8h.html" title="空間内を自由に移動する飛行型カメラの制御機能を提供する" alt="" coords="29,123,228,177"/>
+<area shape="rect" href="camera__types_8h.html" title="カメラシステムレイヤー全体で使用されるデータ型を提供する" alt="" coords="59,225,278,280"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1071,137,1282,163"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1250,240,1388,265"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="322,233,506,273"/>
+<area shape="rect" href="choco__math_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学演算定義" alt="" coords="522,130,706,170"/>
+<area shape="rect" href="camera_8h.html" title="カメラモジュールで、以下を提供する" alt="" coords="252,130,447,170"/>
+<area shape="rect" href="camera__err__utils_8h.html" title="カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="730,123,948,177"/>
+<area shape="rect" title=" " alt="" coords="968,328,1043,353"/>
+<area shape="rect" title=" " alt="" coords="462,328,533,353"/>
+<area shape="rect" title=" " alt="" coords="596,328,679,353"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="836,233,994,273"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1018,233,1175,273"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="632,233,812,273"/>
 </map>
 </div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a35e7af840082d18e54b6433bd97c1cdb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a35e7af840082d18e54b6433bd97c1cdb">flight_camera_controller_move_forward</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a35e7af840082d18e54b6433bd97c1cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを前方に動かす  <br /></td></tr>
-<tr class="separator:a35e7af840082d18e54b6433bd97c1cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e36c54ad1219ed27e68c6cbf83a6823"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a0e36c54ad1219ed27e68c6cbf83a6823">flight_camera_controller_move_backward</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a0e36c54ad1219ed27e68c6cbf83a6823"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを後方に動かす  <br /></td></tr>
-<tr class="separator:a0e36c54ad1219ed27e68c6cbf83a6823"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2738bbf9d0a5ad9e318c27a2c8384291"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a2738bbf9d0a5ad9e318c27a2c8384291">flight_camera_controller_move_right</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a2738bbf9d0a5ad9e318c27a2c8384291"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを右方向に動かす  <br /></td></tr>
-<tr class="separator:a2738bbf9d0a5ad9e318c27a2c8384291"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33bfceb0e16f24650bd93bd6fbcc8902"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a33bfceb0e16f24650bd93bd6fbcc8902">flight_camera_controller_move_left</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a33bfceb0e16f24650bd93bd6fbcc8902"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを左方向に動かす  <br /></td></tr>
-<tr class="separator:a33bfceb0e16f24650bd93bd6fbcc8902"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a026781c6c2846c97e3c0ae8bdce71ea3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a026781c6c2846c97e3c0ae8bdce71ea3">flight_camera_controller_move_up</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a026781c6c2846c97e3c0ae8bdce71ea3"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを上方向に動かす  <br /></td></tr>
-<tr class="separator:a026781c6c2846c97e3c0ae8bdce71ea3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf107362748ae0995a5eb088a2bfe9cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#abf107362748ae0995a5eb088a2bfe9cc">flight_camera_controller_move_down</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:abf107362748ae0995a5eb088a2bfe9cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを下方向に動かす  <br /></td></tr>
-<tr class="separator:abf107362748ae0995a5eb088a2bfe9cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3650f6d40348a60e1f6ec581c28d734b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a3650f6d40348a60e1f6ec581c28d734b">flight_camera_controller_rot_pitch_plus</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a3650f6d40348a60e1f6ec581c28d734b"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをピッチ+方向に回転する  <br /></td></tr>
-<tr class="separator:a3650f6d40348a60e1f6ec581c28d734b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad322398c62d00cb84644ad9fa29063ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#ad322398c62d00cb84644ad9fa29063ad">flight_camera_controller_rot_pitch_minus</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:ad322398c62d00cb84644ad9fa29063ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをピッチ-方向に回転する  <br /></td></tr>
-<tr class="separator:ad322398c62d00cb84644ad9fa29063ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02948051a28ef1d0db63bfdf8a86bd54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a02948051a28ef1d0db63bfdf8a86bd54">flight_camera_controller_rot_yaw_plus</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a02948051a28ef1d0db63bfdf8a86bd54"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをヨー+方向に回転する  <br /></td></tr>
-<tr class="separator:a02948051a28ef1d0db63bfdf8a86bd54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a595ae745fb5389d9517dc4ba3b14087e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a595ae745fb5389d9517dc4ba3b14087e">flight_camera_controller_rot_yaw_minus</a> (float speed_, float delta_time_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
-<tr class="memdesc:a595ae745fb5389d9517dc4ba3b14087e"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをヨー-方向に回転する  <br /></td></tr>
-<tr class="separator:a595ae745fb5389d9517dc4ba3b14087e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a498dc51ace3904472d5eef1fe5eef1c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a498dc51ace3904472d5eef1fe5eef1c2">flight_camera_controller_move_forward</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a498dc51ace3904472d5eef1fe5eef1c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを前方に動かす  <br /></td></tr>
+<tr class="separator:a498dc51ace3904472d5eef1fe5eef1c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa47a68add0771a9e9d2893d052b31578"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#aa47a68add0771a9e9d2893d052b31578">flight_camera_controller_move_backward</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:aa47a68add0771a9e9d2893d052b31578"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを後方に動かす  <br /></td></tr>
+<tr class="separator:aa47a68add0771a9e9d2893d052b31578"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79a002f46a252dc828086ccf67b51f7b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a79a002f46a252dc828086ccf67b51f7b">flight_camera_controller_move_right</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a79a002f46a252dc828086ccf67b51f7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを右方向に動かす  <br /></td></tr>
+<tr class="separator:a79a002f46a252dc828086ccf67b51f7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9032a5219ea1f5f255f981b422920c61"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a9032a5219ea1f5f255f981b422920c61">flight_camera_controller_move_left</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a9032a5219ea1f5f255f981b422920c61"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを左方向に動かす  <br /></td></tr>
+<tr class="separator:a9032a5219ea1f5f255f981b422920c61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0d3775f8c78851fe8d337931a3fa9ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#ac0d3775f8c78851fe8d337931a3fa9ad">flight_camera_controller_move_up</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:ac0d3775f8c78851fe8d337931a3fa9ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを上方向に動かす  <br /></td></tr>
+<tr class="separator:ac0d3775f8c78851fe8d337931a3fa9ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5ed11400ff846940284425b42dc6fd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#af5ed11400ff846940284425b42dc6fd8">flight_camera_controller_move_down</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:af5ed11400ff846940284425b42dc6fd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを下方向に動かす  <br /></td></tr>
+<tr class="separator:af5ed11400ff846940284425b42dc6fd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6652bb40db80bb075cfaf64609965b1a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a6652bb40db80bb075cfaf64609965b1a">flight_camera_controller_rot_pitch_plus</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a6652bb40db80bb075cfaf64609965b1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをピッチ+方向に回転する  <br /></td></tr>
+<tr class="separator:a6652bb40db80bb075cfaf64609965b1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e4bfdf66709cf1bbc6af6bea0d94c56"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a5e4bfdf66709cf1bbc6af6bea0d94c56">flight_camera_controller_rot_pitch_minus</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a5e4bfdf66709cf1bbc6af6bea0d94c56"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをピッチ-方向に回転する  <br /></td></tr>
+<tr class="separator:a5e4bfdf66709cf1bbc6af6bea0d94c56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1196e5ebdf6dbf0bc867fe19952e1f99"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a1196e5ebdf6dbf0bc867fe19952e1f99">flight_camera_controller_rot_yaw_plus</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a1196e5ebdf6dbf0bc867fe19952e1f99"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをヨー+方向に回転する  <br /></td></tr>
+<tr class="separator:a1196e5ebdf6dbf0bc867fe19952e1f99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d5e0f700b056e17d7fde02964e46997"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a5d5e0f700b056e17d7fde02964e46997">flight_camera_controller_rot_yaw_minus</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
+<tr class="memdesc:a5d5e0f700b056e17d7fde02964e46997"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラをヨー-方向に回転する  <br /></td></tr>
+<tr class="separator:a5d5e0f700b056e17d7fde02964e46997"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>空間内を自由に移動する飛行型カメラの制御機能の実装 </p>
@@ -171,8 +171,8 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a0e36c54ad1219ed27e68c6cbf83a6823" name="a0e36c54ad1219ed27e68c6cbf83a6823"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e36c54ad1219ed27e68c6cbf83a6823">&#9670;&#160;</a></span>flight_camera_controller_move_backward()</h2>
+<a id="aa47a68add0771a9e9d2893d052b31578" name="aa47a68add0771a9e9d2893d052b31578"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa47a68add0771a9e9d2893d052b31578">&#9670;&#160;</a></span>flight_camera_controller_move_backward()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,6 +180,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_backward </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -187,13 +193,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -206,9 +206,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを後方に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -227,8 +227,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="abf107362748ae0995a5eb088a2bfe9cc" name="abf107362748ae0995a5eb088a2bfe9cc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf107362748ae0995a5eb088a2bfe9cc">&#9670;&#160;</a></span>flight_camera_controller_move_down()</h2>
+<a id="af5ed11400ff846940284425b42dc6fd8" name="af5ed11400ff846940284425b42dc6fd8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5ed11400ff846940284425b42dc6fd8">&#9670;&#160;</a></span>flight_camera_controller_move_down()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -236,6 +236,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_down </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -243,13 +249,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -262,9 +262,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを下方向に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -283,8 +283,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a35e7af840082d18e54b6433bd97c1cdb" name="a35e7af840082d18e54b6433bd97c1cdb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35e7af840082d18e54b6433bd97c1cdb">&#9670;&#160;</a></span>flight_camera_controller_move_forward()</h2>
+<a id="a498dc51ace3904472d5eef1fe5eef1c2" name="a498dc51ace3904472d5eef1fe5eef1c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a498dc51ace3904472d5eef1fe5eef1c2">&#9670;&#160;</a></span>flight_camera_controller_move_forward()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -292,6 +292,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_forward </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -299,13 +305,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -318,9 +318,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを前方に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -339,8 +339,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a33bfceb0e16f24650bd93bd6fbcc8902" name="a33bfceb0e16f24650bd93bd6fbcc8902"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a33bfceb0e16f24650bd93bd6fbcc8902">&#9670;&#160;</a></span>flight_camera_controller_move_left()</h2>
+<a id="a9032a5219ea1f5f255f981b422920c61" name="a9032a5219ea1f5f255f981b422920c61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9032a5219ea1f5f255f981b422920c61">&#9670;&#160;</a></span>flight_camera_controller_move_left()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -348,6 +348,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_left </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -355,13 +361,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -374,9 +374,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを左方向に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -395,8 +395,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a2738bbf9d0a5ad9e318c27a2c8384291" name="a2738bbf9d0a5ad9e318c27a2c8384291"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2738bbf9d0a5ad9e318c27a2c8384291">&#9670;&#160;</a></span>flight_camera_controller_move_right()</h2>
+<a id="a79a002f46a252dc828086ccf67b51f7b" name="a79a002f46a252dc828086ccf67b51f7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79a002f46a252dc828086ccf67b51f7b">&#9670;&#160;</a></span>flight_camera_controller_move_right()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -404,6 +404,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_right </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -411,13 +417,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -430,9 +430,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを右方向に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -451,8 +451,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a026781c6c2846c97e3c0ae8bdce71ea3" name="a026781c6c2846c97e3c0ae8bdce71ea3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a026781c6c2846c97e3c0ae8bdce71ea3">&#9670;&#160;</a></span>flight_camera_controller_move_up()</h2>
+<a id="ac0d3775f8c78851fe8d337931a3fa9ad" name="ac0d3775f8c78851fe8d337931a3fa9ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0d3775f8c78851fe8d337931a3fa9ad">&#9670;&#160;</a></span>flight_camera_controller_move_up()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -460,6 +460,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_move_up </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -467,13 +473,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -486,9 +486,9 @@ Functions</h2></td></tr>
 <p>フライトカメラを上方向に動かす </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>移動速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>移動対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>移動時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -507,8 +507,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad322398c62d00cb84644ad9fa29063ad" name="ad322398c62d00cb84644ad9fa29063ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad322398c62d00cb84644ad9fa29063ad">&#9670;&#160;</a></span>flight_camera_controller_rot_pitch_minus()</h2>
+<a id="a5e4bfdf66709cf1bbc6af6bea0d94c56" name="a5e4bfdf66709cf1bbc6af6bea0d94c56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e4bfdf66709cf1bbc6af6bea0d94c56">&#9670;&#160;</a></span>flight_camera_controller_rot_pitch_minus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -516,6 +516,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_rot_pitch_minus </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -523,13 +529,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -542,9 +542,9 @@ Functions</h2></td></tr>
 <p>フライトカメラをピッチ-方向に回転する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>回転速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -558,8 +558,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3650f6d40348a60e1f6ec581c28d734b" name="a3650f6d40348a60e1f6ec581c28d734b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3650f6d40348a60e1f6ec581c28d734b">&#9670;&#160;</a></span>flight_camera_controller_rot_pitch_plus()</h2>
+<a id="a6652bb40db80bb075cfaf64609965b1a" name="a6652bb40db80bb075cfaf64609965b1a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6652bb40db80bb075cfaf64609965b1a">&#9670;&#160;</a></span>flight_camera_controller_rot_pitch_plus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -567,6 +567,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_rot_pitch_plus </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -574,13 +580,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -593,9 +593,9 @@ Functions</h2></td></tr>
 <p>フライトカメラをピッチ+方向に回転する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>回転速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -609,8 +609,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a595ae745fb5389d9517dc4ba3b14087e" name="a595ae745fb5389d9517dc4ba3b14087e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a595ae745fb5389d9517dc4ba3b14087e">&#9670;&#160;</a></span>flight_camera_controller_rot_yaw_minus()</h2>
+<a id="a5d5e0f700b056e17d7fde02964e46997" name="a5d5e0f700b056e17d7fde02964e46997"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d5e0f700b056e17d7fde02964e46997">&#9670;&#160;</a></span>flight_camera_controller_rot_yaw_minus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -618,6 +618,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_rot_yaw_minus </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -625,13 +631,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -644,9 +644,9 @@ Functions</h2></td></tr>
 <p>フライトカメラをヨー-方向に回転する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>回転速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間</td></tr>
   </table>
   </dd>
 </dl>
@@ -660,8 +660,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a02948051a28ef1d0db63bfdf8a86bd54" name="a02948051a28ef1d0db63bfdf8a86bd54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a02948051a28ef1d0db63bfdf8a86bd54">&#9670;&#160;</a></span>flight_camera_controller_rot_yaw_plus()</h2>
+<a id="a1196e5ebdf6dbf0bc867fe19952e1f99" name="a1196e5ebdf6dbf0bc867fe19952e1f99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1196e5ebdf6dbf0bc867fe19952e1f99">&#9670;&#160;</a></span>flight_camera_controller_rot_yaw_plus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -669,6 +669,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> flight_camera_controller_rot_yaw_plus </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed_</em>, </td>
         </tr>
@@ -676,13 +682,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>delta_time_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
-          <td class="paramname"><em>camera_</em>&#160;</td>
+          <td class="paramname"><em>delta_time_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -695,9 +695,9 @@ Functions</h2></td></tr>
 <p>フライトカメラをヨー+方向に回転する </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">speed_</td><td>回転速度 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間 </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>回転対象カメラ構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_time_</td><td>回転時間</td></tr>
   </table>
   </dd>
 </dl>

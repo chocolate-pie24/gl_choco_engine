@@ -166,6 +166,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a7d19a1c91dae5c7c1d961169b6f9d577">choco_string_substring_exists</a> (const char *str_, const char *target_)</td></tr>
 <tr class="memdesc:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="mdescLeft">&#160;</td><td class="mdescRight">str_内に部分文字列target_が存在するかを判定する  <br /></td></tr>
 <tr class="separator:a7d19a1c91dae5c7c1d961169b6f9d577"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeed70d1e90df7364a8b1184654d049d2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#aeed70d1e90df7364a8b1184654d049d2">choco_string_key_value_key_get</a> (const char *line_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_key_)</td></tr>
+<tr class="memdesc:aeed70d1e90df7364a8b1184654d049d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">key = valueの文字列からkeyを取り出す  <br /></td></tr>
+<tr class="separator:aeed70d1e90df7364a8b1184654d049d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a9ddb4aaa0d6b1551fcf322c1aa7a62e7">choco_string_key_value_value_get</a> (const char *line_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_value_)</td></tr>
+<tr class="memdesc:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">key = valueの文字列からvalueを取り出す  <br /></td></tr>
+<tr class="separator:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>文字列を格納するコンテナモジュールAPIの実装 </p>
@@ -634,6 +640,139 @@ Functions</h2></td></tr>
 <li>2つの文字列が等しくない </li>
 </ul>
 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aeed70d1e90df7364a8b1184654d049d2" name="aeed70d1e90df7364a8b1184654d049d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeed70d1e90df7364a8b1184654d049d2">&#9670;&#160;</a></span>choco_string_key_value_key_get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_key_value_key_get </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>line_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>out_key_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>key = valueの文字列からkeyを取り出す </p>
+<dl class="section note"><dt>Note</dt><dd>choco_string_copy_from_c_stringに失敗した場合、out_key_の状態は不変ではない場合がある</dd>
+<dd>
+スペースは以下のようにtrimされる<ul>
+<li>keyの前方スペースはtrimされる</li>
+<li>keyの末尾スペースはtrimされる</li>
+<li>k eyのように途中のスペースは有効</li>
+<li>=の後に有効文字(スペース以外)がない場合も成功とする</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">line_</td><td>key = valueの文字列 </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_key_</td><td>key格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>line_ == NULL</li>
+<li>out_key_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>out_key_の内部状態が破損 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>line_に=が含まれない</li>
+<li>= の前に有効文字(スペース以外)がない</li>
+<li>メモリシステム未初期化 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a9ddb4aaa0d6b1551fcf322c1aa7a62e7" name="a9ddb4aaa0d6b1551fcf322c1aa7a62e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ddb4aaa0d6b1551fcf322c1aa7a62e7">&#9670;&#160;</a></span>choco_string_key_value_value_get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_key_value_value_get </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>line_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>out_value_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>key = valueの文字列からvalueを取り出す </p>
+<dl class="section note"><dt>Note</dt><dd>choco_string_copy_from_c_stringに失敗した場合、out_value_の状態は不変ではない場合がある</dd>
+<dd>
+スペースは以下のようにtrimされる<ul>
+<li>valueの前方スペースはtrimされる</li>
+<li>valueの末尾スペースはtrimされる</li>
+<li>val ueのように途中のスペースは有効</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">line_</td><td>key = valueの文字列 </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_value_</td><td>value格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>line_ == NULL</li>
+<li>out_value_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_DATA_CORRUPTED</td><td>out_value_の内部状態が破損 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>= が存在しない</li>
+<li>= が先頭にある</li>
+<li>= が末尾にある</li>
+<li>= の後にスペース以外の有効文字がない</li>
+<li>メモリシステム未初期化 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>

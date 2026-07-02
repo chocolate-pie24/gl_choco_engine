@@ -1,0 +1,5 @@
+<map id="include/engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h" name="include/engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h">
+<area shape="rect" id="node1" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="107,5,358,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,145,209,170"/>
+<area shape="rect" id="node3" href="$point__mesh__geometry__pipeline_8c.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="234,123,485,192"/>
+</map>

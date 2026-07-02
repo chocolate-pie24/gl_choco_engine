@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_resources/lit_mesh_shader.h File Reference</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -103,31 +103,31 @@ $(document).ready(function(){initNavTree('lit__mesh__shader_8h.html',''); initRe
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for lit_mesh_shader.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="lit__mesh__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8h" alt=""/></div>
-<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8h" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8h">
-<area shape="rect" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="149,5,360,60"/>
-<area shape="rect" title=" " alt="" coords="5,130,88,155"/>
-<area shape="rect" title=" " alt="" coords="315,328,389,353"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="163,123,347,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="292,225,476,280"/>
-<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="422,108,623,177"/>
-<area shape="rect" title=" " alt="" coords="197,240,267,265"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="500,233,657,273"/>
+<div class="center"><img src="lit__mesh__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8h" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8h" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8h">
+<area shape="rect" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="119,5,329,60"/>
+<area shape="rect" title=" " alt="" coords="5,123,88,148"/>
+<area shape="rect" title=" " alt="" coords="112,123,187,148"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="192,211,376,251"/>
+<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="261,115,427,155"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="451,108,635,163"/>
+<area shape="rect" title=" " alt="" coords="249,299,319,324"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="lit__mesh__shader_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8hdep" alt=""/></div>
-<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2lit__mesh__shader_8hdep">
-<area shape="rect" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="118,5,329,60"/>
-<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,123,209,148"/>
-<area shape="rect" href="lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,108,445,163"/>
+<div class="center"><img src="lit__mesh__shader_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8hdep" alt=""/></div>
+<map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2lit__mesh__shader_8hdep">
+<area shape="rect" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="234,5,445,60"/>
+<area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,130,209,155"/>
+<area shape="rect" href="lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,115,445,170"/>
+<area shape="rect" href="lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="469,108,700,177"/>
 </map>
 </div>
 </div>
@@ -137,12 +137,14 @@ This graph shows which files directly or indirectly include this file:</div>
 Typedefs</h2></td></tr>
 <tr class="memitem:a3528e46fca89fa2d11c6493063c92114"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structlit__mesh__shader.html">lit_mesh_shader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a></td></tr>
 <tr class="separator:a3528e46fca89fa2d11c6493063c92114"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabce7f662bbd82e374beb11c9414c1f8"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__backend__context.html">renderer_backend_context</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a></td></tr>
+<tr class="separator:aabce7f662bbd82e374beb11c9414c1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:abf460da3a306f7dda491acfa211081e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#abf460da3a306f7dda491acfa211081e9">lit_mesh_shader_create</a> (const char *file_path_, const char *name_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> **out_lit_mesh_shader_)</td></tr>
-<tr class="memdesc:abf460da3a306f7dda491acfa211081e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する  <br /></td></tr>
-<tr class="separator:abf460da3a306f7dda491acfa211081e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7957d8aefd0d0fb030cbc1378b29cbc8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a7957d8aefd0d0fb030cbc1378b29cbc8">lit_mesh_shader_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const char *file_path_, const char *name_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> **out_lit_mesh_shader_)</td></tr>
+<tr class="memdesc:a7957d8aefd0d0fb030cbc1378b29cbc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する  <br /></td></tr>
+<tr class="separator:a7957d8aefd0d0fb030cbc1378b29cbc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adff5ffba38bb3bb600d87dd4d81f1566"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#adff5ffba38bb3bb600d87dd4d81f1566">lit_mesh_shader_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> **lit_mesh_shader_)</td></tr>
 <tr class="memdesc:adff5ffba38bb3bb600d87dd4d81f1566"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する  <br /></td></tr>
 <tr class="separator:adff5ffba38bb3bb600d87dd4d81f1566"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,27 +154,24 @@ Functions</h2></td></tr>
 <tr class="memitem:ac43cb33c3da87bab6f5950b3487b1fea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#ac43cb33c3da87bab6f5950b3487b1fea">lit_mesh_shader_vertex_buffer_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_)</td></tr>
 <tr class="memdesc:ac43cb33c3da87bab6f5950b3487b1fea"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVAO / VBOを破棄する  <br /></td></tr>
 <tr class="separator:ac43cb33c3da87bab6f5950b3487b1fea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38974787f6d65431c7b54747fab25221"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a38974787f6d65431c7b54747fab25221">lit_mesh_shader_vertex_buffer_vertex_write</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, size_t size_, const void *write_data_)</td></tr>
-<tr class="memdesc:a38974787f6d65431c7b54747fab25221"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)  <br /></td></tr>
-<tr class="separator:a38974787f6d65431c7b54747fab25221"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa31503d6f99e4cf4b165012f882e98fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#aa31503d6f99e4cf4b165012f882e98fd">lit_mesh_shader_vertex_array_bind</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_)</td></tr>
-<tr class="memdesc:aa31503d6f99e4cf4b165012f882e98fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVAOをbindする  <br /></td></tr>
-<tr class="separator:aa31503d6f99e4cf4b165012f882e98fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdbd1cb888a800295dd5ccf251078bbb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#afdbd1cb888a800295dd5ccf251078bbb">lit_mesh_shader_vertex_array_unbind</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_)</td></tr>
-<tr class="memdesc:afdbd1cb888a800295dd5ccf251078bbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVAOをunbindする  <br /></td></tr>
-<tr class="separator:afdbd1cb888a800295dd5ccf251078bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1444979eae3ca56b416030f015a1d72"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#ac1444979eae3ca56b416030f015a1d72">lit_mesh_shader_use</a> (const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
-<tr class="memdesc:ac1444979eae3ca56b416030f015a1d72"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
-<tr class="separator:ac1444979eae3ca56b416030f015a1d72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa844984ae4fcb33782534e977b77c44e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#aa844984ae4fcb33782534e977b77c44e">lit_mesh_shader_model_matrix_set</a> (const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
-<tr class="memdesc:aa844984ae4fcb33782534e977b77c44e"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにモデル行列を送信する  <br /></td></tr>
-<tr class="separator:aa844984ae4fcb33782534e977b77c44e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2955cfc9ca7cc41a39406568022c0f93"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a2955cfc9ca7cc41a39406568022c0f93">lit_mesh_shader_view_matrix_set</a> (const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
-<tr class="memdesc:a2955cfc9ca7cc41a39406568022c0f93"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにビュー行列を送信する  <br /></td></tr>
-<tr class="separator:a2955cfc9ca7cc41a39406568022c0f93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadb7874fd4ad375073288967f2304d3b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#aadb7874fd4ad375073288967f2304d3b">lit_mesh_shader_projection_matrix_set</a> (const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
-<tr class="memdesc:aadb7874fd4ad375073288967f2304d3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにプロジェクション行列を送信する  <br /></td></tr>
-<tr class="separator:aadb7874fd4ad375073288967f2304d3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a310808c15787d5da83f14f83c73476"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a3a310808c15787d5da83f14f83c73476">lit_mesh_shader_vertex_buffer_append</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, size_t size_, const <a class="el" href="vertex_8h.html#a1a03aa47b397500faa05fc9af3b27d92">point_normal_vertex_t</a> *write_data_, size_t *out_vertex_offset_)</td></tr>
+<tr class="memdesc:a3a310808c15787d5da83f14f83c73476"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)  <br /></td></tr>
+<tr class="separator:a3a310808c15787d5da83f14f83c73476"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b3edfb9f2f7ef7e38b01c934c05d6f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a6b3edfb9f2f7ef7e38b01c934c05d6f8">lit_mesh_shader_vertex_array_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_)</td></tr>
+<tr class="memdesc:a6b3edfb9f2f7ef7e38b01c934c05d6f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダーが保持するVAOをbindする  <br /></td></tr>
+<tr class="separator:a6b3edfb9f2f7ef7e38b01c934c05d6f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0db53f37bf83e8063c09e434a129134"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#ad0db53f37bf83e8063c09e434a129134">lit_mesh_shader_use</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_)</td></tr>
+<tr class="memdesc:ad0db53f37bf83e8063c09e434a129134"><td class="mdescLeft">&#160;</td><td class="mdescRight">lit_meshシェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
+<tr class="separator:ad0db53f37bf83e8063c09e434a129134"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1aefc19f1458496cc4ce35d6b18600dc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a1aefc19f1458496cc4ce35d6b18600dc">lit_mesh_shader_model_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
+<tr class="memdesc:a1aefc19f1458496cc4ce35d6b18600dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにモデル行列を送信する  <br /></td></tr>
+<tr class="separator:a1aefc19f1458496cc4ce35d6b18600dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b974a5990517ccfc1fe4addf697893d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#a4b974a5990517ccfc1fe4addf697893d">lit_mesh_shader_view_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
+<tr class="memdesc:a4b974a5990517ccfc1fe4addf697893d"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにビュー行列を送信する  <br /></td></tr>
+<tr class="separator:a4b974a5990517ccfc1fe4addf697893d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3014b4422d5ec0fb4363463eb4b0dca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__shader_8h.html#af3014b4422d5ec0fb4363463eb4b0dca">lit_mesh_shader_projection_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *lit_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
+<tr class="memdesc:af3014b4422d5ec0fb4363463eb4b0dca"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにプロジェクション行列を送信する  <br /></td></tr>
+<tr class="separator:af3014b4422d5ec0fb4363463eb4b0dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する </p>
@@ -199,13 +198,28 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>lit_meshシェーダーリソース構造体前方宣言 </p>
+<p>単色ライティング描画用シェーダーリソースのopaque型 </p>
+
+</div>
+</div>
+<a id="aabce7f662bbd82e374beb11c9414c1f8" name="aabce7f662bbd82e374beb11c9414c1f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aabce7f662bbd82e374beb11c9414c1f8">&#9670;&#160;</a></span>renderer_backend_context_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structrenderer__backend__context.html">renderer_backend_context</a> <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Renderer Backend Contextのopaque型 </p>
 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="abf460da3a306f7dda491acfa211081e9" name="abf460da3a306f7dda491acfa211081e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf460da3a306f7dda491acfa211081e9">&#9670;&#160;</a></span>lit_mesh_shader_create()</h2>
+<a id="a7957d8aefd0d0fb030cbc1378b29cbc8" name="a7957d8aefd0d0fb030cbc1378b29cbc8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7957d8aefd0d0fb030cbc1378b29cbc8">&#9670;&#160;</a></span>lit_mesh_shader_create()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -213,6 +227,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_create </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>file_path_</em>, </td>
         </tr>
@@ -221,12 +241,6 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>name_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -253,9 +267,9 @@ Functions</h2></td></tr>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">file_path_</td><td>シェーダーソース格納ファイルパス(文字列の最後を'/'にすること) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">name_</td><td>シェーダーソースファイル名称(拡張子は含まない) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_lit_mesh_shader_</td><td>リソース確保対象lit_meshシェーダーリソースへのダブルポインタ</td></tr>
   </table>
   </dd>
@@ -342,8 +356,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa844984ae4fcb33782534e977b77c44e" name="aa844984ae4fcb33782534e977b77c44e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa844984ae4fcb33782534e977b77c44e">&#9670;&#160;</a></span>lit_mesh_shader_model_matrix_set()</h2>
+<a id="a1aefc19f1458496cc4ce35d6b18600dc" name="a1aefc19f1458496cc4ce35d6b18600dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1aefc19f1458496cc4ce35d6b18600dc">&#9670;&#160;</a></span>lit_mesh_shader_model_matrix_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -351,14 +365,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_model_matrix_set </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>model_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>, </td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -369,8 +377,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
+          <td class="paramname"><em>model_matrix_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>should_transpose_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -381,13 +395,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>GPUにモデル行列を送信する </p>
-<dl class="section note"><dt>Note</dt><dd>本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">model_matrix_</td><td>送信するモデル行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>lit_mesh描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">model_matrix_</td><td>送信するモデル行列のポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
   </table>
   </dd>
 </dl>
@@ -396,14 +410,12 @@ Functions</h2></td></tr>
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>model_matrix_ == NULL</li>
 <li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL</li>
-<li>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL </li>
+<li>lit_mesh_shader_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
     <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク状態</li>
-<li>backend_context_が未初期化でshader_vtableがNULL </li>
+<li>backend_context_が未初期化でshader_vtableがNULL</li>
+<li>lit_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
@@ -413,8 +425,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aadb7874fd4ad375073288967f2304d3b" name="aadb7874fd4ad375073288967f2304d3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aadb7874fd4ad375073288967f2304d3b">&#9670;&#160;</a></span>lit_mesh_shader_projection_matrix_set()</h2>
+<a id="af3014b4422d5ec0fb4363463eb4b0dca" name="af3014b4422d5ec0fb4363463eb4b0dca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3014b4422d5ec0fb4363463eb4b0dca">&#9670;&#160;</a></span>lit_mesh_shader_projection_matrix_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -422,14 +434,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_projection_matrix_set </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>projection_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>, </td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -440,8 +446,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
+          <td class="paramname"><em>projection_matrix_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>should_transpose_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -452,13 +464,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>GPUにプロジェクション行列を送信する </p>
-<dl class="section note"><dt>Note</dt><dd>本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">projection_matrix_</td><td>送信するプロジェクション行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>lit_mesh描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">projection_matrix_</td><td>送信するプロジェクション行列のポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
   </table>
   </dd>
 </dl>
@@ -467,14 +479,12 @@ Functions</h2></td></tr>
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>projection_matrix_ == NULL</li>
 <li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL</li>
-<li>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL </li>
+<li>lit_mesh_shader_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
     <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク状態</li>
-<li>backend_context_が未初期化でshader_vtableがNULL </li>
+<li>backend_context_が未初期化でshader_vtableがNULL</li>
+<li>lit_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
@@ -484,8 +494,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac1444979eae3ca56b416030f015a1d72" name="ac1444979eae3ca56b416030f015a1d72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1444979eae3ca56b416030f015a1d72">&#9670;&#160;</a></span>lit_mesh_shader_use()</h2>
+<a id="ad0db53f37bf83e8063c09e434a129134" name="ad0db53f37bf83e8063c09e434a129134"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0db53f37bf83e8063c09e434a129134">&#9670;&#160;</a></span>lit_mesh_shader_use()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -493,14 +503,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_use </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>lit_mesh_shader_</em>, </td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
+          <td class="paramname"><em>lit_mesh_shader_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -514,8 +524,8 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>処理に成功した場合、現在使用中のプログラム識別子がlit_meshシェーダープログラムに切り替わる</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>lit_meshシェーダーリソースインスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>lit_meshシェーダーリソースインスタンスへのポインタ</td></tr>
   </table>
   </dd>
 </dl>
@@ -523,14 +533,17 @@ Functions</h2></td></tr>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL</li>
-<li>lit_meshシェーダーリソースが保持するシェーダープログラムハンドルインスタンスがNULL </li>
+<li>lit_mesh_shader_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>シェーダープログラムが未リンク </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>シェーダープログラムが未リンク</li>
+<li>lit_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
+</ul>
+</td></tr>
     <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>以下のいずれか<ul>
-<li>shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル</li>
-<li>shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル </li>
+<li>バーテックスシェーダーオブジェクトが未コンパイル</li>
+<li>フラグメントシェーダーオブジェクトが未コンパイル </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
@@ -540,8 +553,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa31503d6f99e4cf4b165012f882e98fd" name="aa31503d6f99e4cf4b165012f882e98fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa31503d6f99e4cf4b165012f882e98fd">&#9670;&#160;</a></span>lit_mesh_shader_vertex_array_bind()</h2>
+<a id="a6b3edfb9f2f7ef7e38b01c934c05d6f8" name="a6b3edfb9f2f7ef7e38b01c934c05d6f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b3edfb9f2f7ef7e38b01c934c05d6f8">&#9670;&#160;</a></span>lit_mesh_shader_vertex_array_bind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -549,13 +562,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_vertex_array_bind </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
           <td class="paramname"><em>lit_mesh_shader_</em>&#160;</td>
         </tr>
         <tr>
@@ -589,23 +602,41 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="afdbd1cb888a800295dd5ccf251078bbb" name="afdbd1cb888a800295dd5ccf251078bbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afdbd1cb888a800295dd5ccf251078bbb">&#9670;&#160;</a></span>lit_mesh_shader_vertex_array_unbind()</h2>
+<a id="a3a310808c15787d5da83f14f83c73476" name="a3a310808c15787d5da83f14f83c73476"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a310808c15787d5da83f14f83c73476">&#9670;&#160;</a></span>lit_mesh_shader_vertex_buffer_append()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_vertex_array_unbind </td>
+          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_vertex_buffer_append </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>lit_mesh_shader_</em>&#160;</td>
+          <td class="paramname"><em>lit_mesh_shader_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="vertex_8h.html#a1a03aa47b397500faa05fc9af3b27d92">point_normal_vertex_t</a> *&#160;</td>
+          <td class="paramname"><em>write_data_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>out_vertex_offset_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -615,11 +646,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>lit_meshシェーダーが保持するVAOをunbindする </p>
+<p>lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>VAOを保持するlit_meshシェーダー構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">lit_mesh_shader_</td><td>転送先VBOを保持するlit_meshシェーダー構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>転送データサイズ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">write_data_</td><td>転送データ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vertex_offset_</td><td>転送前にバーテックスバッファに転送されている頂点の数</td></tr>
   </table>
   </dd>
 </dl>
@@ -627,10 +661,20 @@ Functions</h2></td></tr>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL </li>
+<li>lit_mesh_shader_ == NULL</li>
+<li>write_data_ == NULL</li>
+<li>size_ == 0</li>
+<li>out_vertex_offset_ == NULL</li>
+<li>size_がsizeof(point_normal_vertex_t) x 3の倍数ではない </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>VAOが未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>転送後にバーテックスバッファサイズを超過 </td></tr>
+    <tr><td class="paramname">RENDERER_OVERFLOW</td><td>転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過 </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>VBO未初期化</li>
+<li>backend_context_が未初期化 </li>
+</ul>
+</td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
@@ -699,6 +743,7 @@ Functions</h2></td></tr>
 <li>lit_mesh_shader_-&gt;lit_mesh_vao != NULL</li>
 <li>lit_mesh_shader_-&gt;lit_mesh_vbo != NULL</li>
 <li>lit_mesh_shader_-&gt;current_buffer_offset != 0</li>
+<li>lit_mesh_shader_-&gt;current_vertex_count != 0</li>
 <li>メモリシステム未初期化 </li>
 </ul>
 </td></tr>
@@ -756,79 +801,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a38974787f6d65431c7b54747fab25221" name="a38974787f6d65431c7b54747fab25221"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38974787f6d65431c7b54747fab25221">&#9670;&#160;</a></span>lit_mesh_shader_vertex_buffer_vertex_write()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_vertex_buffer_vertex_write </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>lit_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>write_data_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">lit_mesh_shader_</td><td>転送先VBOを保持するlit_meshシェーダー構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>転送データサイズ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">write_data_</td><td>転送データ</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL</li>
-<li>write_data_ == NULL</li>
-<li>size_ == 0 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>VBO未初期化</li>
-<li>転送後にバーテックスバッファサイズを超過</li>
-<li>backend_context_が未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a2955cfc9ca7cc41a39406568022c0f93" name="a2955cfc9ca7cc41a39406568022c0f93"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2955cfc9ca7cc41a39406568022c0f93">&#9670;&#160;</a></span>lit_mesh_shader_view_matrix_set()</h2>
+<a id="a4b974a5990517ccfc1fe4addf697893d" name="a4b974a5990517ccfc1fe4addf697893d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b974a5990517ccfc1fe4addf697893d">&#9670;&#160;</a></span>lit_mesh_shader_view_matrix_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -836,14 +810,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> lit_mesh_shader_view_matrix_set </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>view_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>, </td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -854,8 +822,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
+          <td class="paramname"><em>view_matrix_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>should_transpose_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -866,13 +840,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>GPUにビュー行列を送信する </p>
-<dl class="section note"><dt>Note</dt><dd>本API実行後、backend_context_が保持する現在使用中のプログラムIDが切り替わる</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">view_matrix_</td><td>送信するビュー行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">lit_mesh_shader_</td><td>lit_mesh描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">view_matrix_</td><td>送信するビュー行列のポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
   </table>
   </dd>
 </dl>
@@ -881,14 +855,12 @@ Functions</h2></td></tr>
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>view_matrix_ == NULL</li>
 <li>backend_context_ == NULL</li>
-<li>lit_mesh_shader_ == NULL</li>
-<li>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスがNULL </li>
+<li>lit_mesh_shader_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>lit_mesh_shader_が保持するシェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
     <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク状態</li>
-<li>backend_context_が未初期化でshader_vtableがNULL </li>
+<li>backend_context_が未初期化でshader_vtableがNULL</li>
+<li>lit_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
 </ul>
 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
@@ -903,7 +875,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e30dfff12da3d0a227234e949c491947.html">renderer_resources</a></li><li class="navelem"><a class="el" href="lit__mesh__shader_8h.html">lit_mesh_shader.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e30dfff12da3d0a227234e949c491947.html">renderer_resources</a></li><li class="navelem"><a class="el" href="dir_1d51d4193a0487f4dba78452b0670703.html">shaders</a></li><li class="navelem"><a class="el" href="lit__mesh__shader_8h.html">lit_mesh_shader.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

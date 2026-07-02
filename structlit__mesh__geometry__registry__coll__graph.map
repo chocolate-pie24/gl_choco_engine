@@ -1,0 +1,8 @@
+<map id="lit_mesh_geometry_registry" name="lit_mesh_geometry_registry">
+<area shape="rect" id="node1" title="単色ライティング描画用ジオメトリレジストリ内部構造体" alt="" coords="5,269,211,295"/>
+<area shape="rect" id="node2" href="$structlit__mesh__geometry.html" title="lit_mesh_geometry内部状態管理構造体" alt="" coords="34,181,182,207"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="20,93,124,119"/>
+<area shape="rect" id="node4" href="$structpoint__normal__vertex.html" title="頂点座標と法線を持つ頂点情報構造体" alt="" coords="148,93,305,119"/>
+<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="153,5,212,31"/>
+<area shape="rect" id="node6" href="$structvec4i8.html" title="int8_t型4次元ベクトル定義" alt="" coords="238,5,303,31"/>
+</map>

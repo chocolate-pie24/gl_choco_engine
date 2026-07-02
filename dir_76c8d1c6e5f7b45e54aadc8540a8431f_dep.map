@@ -1,0 +1,10 @@
+<map id="include/engine/systems/renderer/resource_pipelines/core" name="include/engine/systems/renderer/resource_pipelines/core">
+<area shape="rect" id="node1" href="dir_76c8d1c6e5f7b45e54aadc8540a8431f.html" title="core" alt="" coords="156,52,207,77"/>
+<area shape="rect" id="node2" href="dir_13f875e20adb779afe7d064fa1385933.html" title="renderer_core" alt="" coords="5,125,117,151"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000029_000082.html" title="1" alt="" coords="96,116,106,131"/>
+<area shape="rect" id="node3" href="dir_e2452e8222574076f626362bf4d8a90a.html" title="resource" alt="" coords="142,125,221,151"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000029_000088.html" title="1" alt="" coords="185,100,194,114"/>
+<area shape="rect" id="node4" href="dir_f0d5fbb80c0237ccd8fc8e6716f3202b.html" title="resource_registries" alt="" coords="245,125,392,151"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000029_000094.html" title="1" alt="" coords="279,102,289,117"/>
+<area shape="rect" id="clust1" href="dir_36c37996811176d92d705c41522f2bf3.html" title="resource_pipelines" alt="" coords="109,16,253,88"/>
+</map>

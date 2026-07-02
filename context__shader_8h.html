@@ -123,10 +123,10 @@ This graph shows which files directly or indirectly include this file:</div>
 <map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__shader_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__shader_8hdep">
 <area shape="rect" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="473,5,675,75"/>
 <area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
-<area shape="rect" href="line__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,123,445,177"/>
+<area shape="rect" href="line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,123,445,177"/>
 <area shape="rect" href="lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="469,123,679,177"/>
-<area shape="rect" href="point__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="703,123,914,177"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="938,123,1149,177"/>
+<area shape="rect" href="point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="703,123,922,177"/>
+<area shape="rect" href="ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="946,123,1157,177"/>
 </map>
 </div>
 </div>
@@ -151,18 +151,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a0c103cbf19d607272ca056b4dac83b5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#a0c103cbf19d607272ca056b4dac83b5f">renderer_backend_shader_link</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_)</td></tr>
 <tr class="memdesc:a0c103cbf19d607272ca056b4dac83b5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">コンパイル済みのシェーダーオブジェクトをリンクする  <br /></td></tr>
 <tr class="separator:a0c103cbf19d607272ca056b4dac83b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af82084868748dd0762cda5eedbe209ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#af82084868748dd0762cda5eedbe209ae">renderer_backend_shader_use</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_)</td></tr>
-<tr class="memdesc:af82084868748dd0762cda5eedbe209ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
-<tr class="separator:af82084868748dd0762cda5eedbe209ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0008f55bfe63b2c3198dec6df8d3376"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#ab0008f55bfe63b2c3198dec6df8d3376">renderer_backend_shader_use</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_)</td></tr>
+<tr class="memdesc:ab0008f55bfe63b2c3198dec6df8d3376"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
+<tr class="separator:ab0008f55bfe63b2c3198dec6df8d3376"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ed3224e63b70d742438c7cf2e7a96f2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#a9ed3224e63b70d742438c7cf2e7a96f2">renderer_backend_shader_uniform_location_get</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, const char *name_, int32_t *out_location_)</td></tr>
 <tr class="memdesc:a9ed3224e63b70d742438c7cf2e7a96f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムのユニフォーム変数のLocationを取得する  <br /></td></tr>
 <tr class="separator:a9ed3224e63b70d742438c7cf2e7a96f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3976e2437367ffe9969e3054389c7fc5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#a3976e2437367ffe9969e3054389c7fc5">renderer_backend_shader_mat4f_uniform_set</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, bool should_transpose_, const float *data_)</td></tr>
-<tr class="memdesc:a3976e2437367ffe9969e3054389c7fc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにmat4f型のユニフォーム変数を送信する  <br /></td></tr>
-<tr class="separator:a3976e2437367ffe9969e3054389c7fc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64b5a0e829bcdd95caec6aa5c547b938"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#a64b5a0e829bcdd95caec6aa5c547b938">renderer_backend_shader_vec4u8_uniform_set</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *shader_handle_, int32_t location_, const uint8_t *data_)</td></tr>
-<tr class="memdesc:a64b5a0e829bcdd95caec6aa5c547b938"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにvec4u8型のユニフォーム変数を送信する  <br /></td></tr>
-<tr class="separator:a64b5a0e829bcdd95caec6aa5c547b938"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3ac5b79816c52fc79bf464924ac1bb8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#ac3ac5b79816c52fc79bf464924ac1bb8">renderer_backend_shader_mat4f_uniform_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t location_, bool should_transpose_, const float *data_)</td></tr>
+<tr class="memdesc:ac3ac5b79816c52fc79bf464924ac1bb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにmat4f型のユニフォーム変数を送信する  <br /></td></tr>
+<tr class="separator:ac3ac5b79816c52fc79bf464924ac1bb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad01c2b3c8b76dc60e24f80a44ea8c334"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__shader_8h.html#ad01c2b3c8b76dc60e24f80a44ea8c334">renderer_backend_shader_vec4u8_uniform_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t location_, const uint8_t *data_)</td></tr>
+<tr class="memdesc:ad01c2b3c8b76dc60e24f80a44ea8c334"><td class="mdescLeft">&#160;</td><td class="mdescRight">シェーダープログラムにvec4u8型のユニフォーム変数を送信する  <br /></td></tr>
+<tr class="separator:ad01c2b3c8b76dc60e24f80a44ea8c334"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する </p>
@@ -438,8 +438,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3976e2437367ffe9969e3054389c7fc5" name="a3976e2437367ffe9969e3054389c7fc5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3976e2437367ffe9969e3054389c7fc5">&#9670;&#160;</a></span>renderer_backend_shader_mat4f_uniform_set()</h2>
+<a id="ac3ac5b79816c52fc79bf464924ac1bb8" name="ac3ac5b79816c52fc79bf464924ac1bb8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3ac5b79816c52fc79bf464924ac1bb8">&#9670;&#160;</a></span>renderer_backend_shader_mat4f_uniform_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -447,14 +447,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_shader_mat4f_uniform_set </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>shader_handle_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -483,15 +477,11 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>シェーダープログラムにmat4f型のユニフォーム変数を送信する </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
-<li>OpenGL 3.3実装</li>
-<li>現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる</li>
-</ul>
-</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>OpenGL 3.3実装 </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">shader_handle_</td><td>シェーダープログラムハンドルインスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">location_</td><td>ユニフォーム変数のLocation </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する / false: 送信時に行列を転置しない </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data_</td><td>送信データへのポインタ</td></tr>
@@ -502,16 +492,10 @@ Functions</h2></td></tr>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
-<li>shader_handle_ == NULL</li>
 <li>data_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>シェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク状態</li>
-<li>backend_context_が未初期化でshader_vtableがNULL </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化でshader_vtableがNULL </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
@@ -585,8 +569,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af82084868748dd0762cda5eedbe209ae" name="af82084868748dd0762cda5eedbe209ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af82084868748dd0762cda5eedbe209ae">&#9670;&#160;</a></span>renderer_backend_shader_use()</h2>
+<a id="ab0008f55bfe63b2c3198dec6df8d3376" name="ab0008f55bfe63b2c3198dec6df8d3376"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0008f55bfe63b2c3198dec6df8d3376">&#9670;&#160;</a></span>renderer_backend_shader_use()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -594,7 +578,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_shader_use </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
@@ -612,7 +596,6 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>シェーダープログラムの使用開始をグラフィックスAPIに伝える </p>
-<dl class="section note"><dt>Note</dt><dd>処理に成功した場合、現在使用中のプログラム識別子がbackend_context_が保持するフィールドに記憶される</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
@@ -640,8 +623,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a64b5a0e829bcdd95caec6aa5c547b938" name="a64b5a0e829bcdd95caec6aa5c547b938"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64b5a0e829bcdd95caec6aa5c547b938">&#9670;&#160;</a></span>renderer_backend_shader_vec4u8_uniform_set()</h2>
+<a id="ad01c2b3c8b76dc60e24f80a44ea8c334" name="ad01c2b3c8b76dc60e24f80a44ea8c334"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad01c2b3c8b76dc60e24f80a44ea8c334">&#9670;&#160;</a></span>renderer_backend_shader_vec4u8_uniform_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -649,14 +632,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_shader_vec4u8_uniform_set </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>shader_handle_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -679,15 +656,11 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>シェーダープログラムにvec4u8型のユニフォーム変数を送信する </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
-<li>OpenGL 3.3実装</li>
-<li>現在使用中のシェーダープログラムと、送信対象シェーダープログラムが異なる場合は、使用中のプログラムが送信対象シェーダープログラムに切り替わる</li>
-</ul>
-</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>OpenGL 3.3実装 </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">shader_handle_</td><td>シェーダープログラムハンドルインスタンスへのポインタ </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">location_</td><td>ユニフォーム変数のLocation </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data_</td><td>送信データへのポインタ</td></tr>
   </table>
@@ -697,16 +670,10 @@ Functions</h2></td></tr>
   <table class="retval">
     <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
-<li>shader_handle_ == NULL</li>
 <li>data_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>シェーダープログラムハンドルインスタンスの内部データが破損 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク状態</li>
-<li>backend_context_が未初期化でshader_vtableがNULL </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化でshader_vtableがNULL </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>

@@ -1,0 +1,6 @@
+<map id="include/engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h" name="include/engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h">
+<area shape="rect" id="node1" title="単色ライティング描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する" alt="" coords="233,5,464,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,145,209,170"/>
+<area shape="rect" id="node3" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="233,123,464,192"/>
+<area shape="rect" id="node4" href="$lit__mesh__geometry__registry_8c.html" title="単色ライティング描画用ジオメトリレジストリAPIの実装" alt="" coords="488,123,719,192"/>
+</map>

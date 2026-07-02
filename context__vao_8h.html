@@ -125,10 +125,10 @@ This graph shows which files directly or indirectly include this file:</div>
 <map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__vao_8hdep">
 <area shape="rect" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="473,5,675,75"/>
 <area shape="rect" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
-<area shape="rect" href="line__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,123,445,177"/>
+<area shape="rect" href="line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,123,445,177"/>
 <area shape="rect" href="lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="469,123,679,177"/>
-<area shape="rect" href="point__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="703,123,914,177"/>
-<area shape="rect" href="ui__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="938,123,1149,177"/>
+<area shape="rect" href="point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="703,123,922,177"/>
+<area shape="rect" href="ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="946,123,1157,177"/>
 </map>
 </div>
 </div>
@@ -147,15 +147,15 @@ Functions</h2></td></tr>
 <tr class="memitem:aa0e5e705386cce083e612ee009926e1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#aa0e5e705386cce083e612ee009926e1a">renderer_backend_vertex_array_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
 <tr class="memdesc:aa0e5e705386cce083e612ee009926e1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO内部状態管理構造体インスタンスを破棄する  <br /></td></tr>
 <tr class="separator:aa0e5e705386cce083e612ee009926e1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab928a18aa3976ae1cef6a500d53e3d04"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#ab928a18aa3976ae1cef6a500d53e3d04">renderer_backend_vertex_array_bind</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
-<tr class="memdesc:ab928a18aa3976ae1cef6a500d53e3d04"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをbindする  <br /></td></tr>
-<tr class="separator:ab928a18aa3976ae1cef6a500d53e3d04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2367538bb915a549e63fb4bfb5c21f52"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a2367538bb915a549e63fb4bfb5c21f52">renderer_backend_vertex_array_unbind</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
-<tr class="memdesc:a2367538bb915a549e63fb4bfb5c21f52"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをunbindする  <br /></td></tr>
-<tr class="separator:a2367538bb915a549e63fb4bfb5c21f52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed2621dbff2039a9111c0e178abbe5bb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#aed2621dbff2039a9111c0e178abbe5bb">renderer_backend_vertex_array_attribute_set</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
-<tr class="memdesc:aed2621dbff2039a9111c0e178abbe5bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">頂点情報のレイアウトをGPUに通知する  <br /></td></tr>
-<tr class="separator:aed2621dbff2039a9111c0e178abbe5bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47d1a205c32635d140936edf700671c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a47d1a205c32635d140936edf700671c0">renderer_backend_vertex_array_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
+<tr class="memdesc:a47d1a205c32635d140936edf700671c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをbindする  <br /></td></tr>
+<tr class="separator:a47d1a205c32635d140936edf700671c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3b858d9c46214a8597df2f604b17309"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#ab3b858d9c46214a8597df2f604b17309">renderer_backend_vertex_array_unbind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
+<tr class="memdesc:ab3b858d9c46214a8597df2f604b17309"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをunbindする  <br /></td></tr>
+<tr class="separator:ab3b858d9c46214a8597df2f604b17309"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a96da05021eafd09d85b7fd2b99f0f3cc">renderer_backend_vertex_array_attribute_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
+<tr class="memdesc:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する  <br /></td></tr>
+<tr class="separator:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_backendが保有するVAO機能の窓口を上位層に提供する </p>
@@ -181,8 +181,8 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="aed2621dbff2039a9111c0e178abbe5bb" name="aed2621dbff2039a9111c0e178abbe5bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed2621dbff2039a9111c0e178abbe5bb">&#9670;&#160;</a></span>renderer_backend_vertex_array_attribute_set()</h2>
+<a id="a96da05021eafd09d85b7fd2b99f0f3cc" name="a96da05021eafd09d85b7fd2b99f0f3cc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96da05021eafd09d85b7fd2b99f0f3cc">&#9670;&#160;</a></span>renderer_backend_vertex_array_attribute_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -190,14 +190,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_attribute_set </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td>
-          <td class="paramname"><em>vertex_array_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -243,12 +237,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>頂点情報のレイアウトをGPUに通知する </p>
-<dl class="section note"><dt>Note</dt><dd>本関数内でVAOがbindされるため、事前のbindは不要</dd></dl>
+<p>現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する </p>
+<dl class="section warning"><dt>Warning</dt><dd>呼び出し側は、本APIを呼ぶ前に設定対象VAOと参照元VBOをbindしておく必要がある</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>アトリビュート設定用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>VAOハンドル </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">layout_</td><td>シェーダープログラム内のどのバッファ変数の設定値かを指定 </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>頂点情報(layoutごと)に含まれるデータの数([x, y, z, u, v]のうち、3次元座標のみであれば3、テクスチャ座標であれば2) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type_</td><td>バッファに格納されているデータの型 <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> </td></tr>
@@ -274,16 +267,8 @@ Functions</h2></td></tr>
 <div class="line">);</div>
 </div><!-- fragment --><dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>vertex_array_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化</li>
-<li>VAOが未初期化 </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
     <tr><td class="paramname">RENDERER_RUNTIME_ERROR</td><td>type_の値が既定値外 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
@@ -292,8 +277,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab928a18aa3976ae1cef6a500d53e3d04" name="ab928a18aa3976ae1cef6a500d53e3d04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab928a18aa3976ae1cef6a500d53e3d04">&#9670;&#160;</a></span>renderer_backend_vertex_array_bind()</h2>
+<a id="a47d1a205c32635d140936edf700671c0" name="a47d1a205c32635d140936edf700671c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47d1a205c32635d140936edf700671c0">&#9670;&#160;</a></span>renderer_backend_vertex_array_bind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -301,13 +286,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_bind </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td>
           <td class="paramname"><em>vertex_array_</em>&#160;</td>
         </tr>
         <tr>
@@ -319,7 +304,6 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>VAOをbindする </p>
-<dl class="section note"><dt>Note</dt><dd>VAOは本関数内でbindされるが、頂点属性の参照元となるVBOは事前にbindされている必要がある</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>bind用vtable保有構造体インスタンスへのポインタ </td></tr>
@@ -446,8 +430,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a2367538bb915a549e63fb4bfb5c21f52" name="a2367538bb915a549e63fb4bfb5c21f52"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2367538bb915a549e63fb4bfb5c21f52">&#9670;&#160;</a></span>renderer_backend_vertex_array_unbind()</h2>
+<a id="ab3b858d9c46214a8597df2f604b17309" name="ab3b858d9c46214a8597df2f604b17309"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3b858d9c46214a8597df2f604b17309">&#9670;&#160;</a></span>renderer_backend_vertex_array_unbind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -455,19 +439,9 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_unbind </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
+          <td class="paramname"><em>backend_context_</em></td><td>)</td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td>
-          <td class="paramname"><em>vertex_array_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -475,23 +449,14 @@ Functions</h2></td></tr>
 <p>VAOをunbindする </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>unbind用vtable保有構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>unbind対象VAOハンドル構造体インスタンスへのポインタ</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>unbind用vtable保有構造体インスタンスへのポインタ</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>vertex_array_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化</li>
-<li>VAOが未初期化 </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
+    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
     <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>

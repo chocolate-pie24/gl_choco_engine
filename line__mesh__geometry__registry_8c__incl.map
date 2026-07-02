@@ -1,0 +1,21 @@
+<map id="src/engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.c" name="src/engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.c">
+<area shape="rect" id="node1" title="線分描画用ジオメトリレジストリAPIの実装" alt="" coords="525,5,766,75"/>
+<area shape="rect" id="node2" href="$line__mesh__geometry__registry_8h.html" title="線分描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する" alt="" coords="157,123,387,177"/>
+<area shape="rect" id="node3" title=" " alt="" coords="327,519,398,544"/>
+<area shape="rect" id="node4" title=" " alt="" coords="859,343,933,368"/>
+<area shape="rect" id="node5" title=" " alt="" coords="193,343,276,368"/>
+<area shape="rect" id="node6" href="$resource__registry__types_8h.html" title="resource_registries全体で使用されるデータ型を提供する" alt="" coords="451,225,645,280"/>
+<area shape="rect" id="node7" title=" " alt="" coords="463,137,550,163"/>
+<area shape="rect" id="node8" title=" " alt="" coords="574,137,645,163"/>
+<area shape="rect" id="node9" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="771,137,981,163"/>
+<area shape="rect" id="node10" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="720,240,859,265"/>
+<area shape="rect" id="node11" href="$linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="933,233,1091,273"/>
+<area shape="rect" id="node12" href="$choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="94,233,274,273"/>
+<area shape="rect" id="node13" href="$resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="1115,233,1301,273"/>
+<area shape="rect" id="node14" href="$line__mesh__geometry_8h.html" title="line_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="1342,130,1535,170"/>
+<area shape="rect" id="node19" href="$resource__registry__err__utils_8h.html" title="resource_registry_err_utilsは、resource_registries内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="1056,123,1267,177"/>
+<area shape="rect" id="node15" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="1496,335,1661,375"/>
+<area shape="rect" id="node17" href="$aabb__3d_8h.html" title="3次元AABB幾何情報構造体, API定義" alt="" coords="1376,233,1541,273"/>
+<area shape="rect" id="node16" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="1367,431,1551,471"/>
+<area shape="rect" id="node18" href="$geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="1200,328,1421,383"/>
+</map>

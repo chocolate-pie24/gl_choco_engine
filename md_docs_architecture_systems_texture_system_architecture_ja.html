@@ -191,7 +191,7 @@ texture_managerモジュール詳細</h2>
 <li><code><a class="el" href="context__texture_8h.html#aaaece882e40108af0c8d1fc8f39581fa" title="テクスチャGPU側リソース構造体インスタンスのメモリを確保し、テクスチャ設定を行い初期化する">renderer_backend_texture_create()</a></code> によりGPU側テクスチャリソースを生成する</li>
 <li><code><a class="el" href="texture_8h.html#aa78b617727640281b4ff7f2b32c8282d" title="テクスチャピクセルデータをロードする">texture_pixel_load()</a></code> によりCPU側テクスチャリソースへピクセルデータをロードする</li>
 <li><code><a class="el" href="texture_8h.html#a75948a6b9c734f25d5ee4278f1a848be" title="texture_が保持するピクセルデータへのポインタを取得する(委譲ではない)">texture_pixel_get()</a></code> と <code><a class="el" href="texture_8h.html#aead0f2143ca53d58d3f95a3c42887352" title="テクスチャのピクセルサイズを取得する">texture_pixel_size_get()</a></code> によりアップロードに必要な情報を取得する</li>
-<li><code><a class="el" href="context__texture_8h.html#af5c59aaff74fe65a70e563026bebcc74" title="指定されたテクスチャをbindし、ピクセルデータをGPUへ転送する">renderer_backend_texture_pixel_upload()</a></code> によりGPU側テクスチャリソースへピクセルデータをアップロードする</li>
+<li><code><a class="el" href="context__texture_8h.html#a3c3a23b01883a569fe43f921f5949193" title="現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する">renderer_backend_texture_pixel_upload()</a></code> によりGPU側テクスチャリソースへピクセルデータをアップロードする</li>
 <li><code><a class="el" href="texture_8h.html#a4ed8bd31160c88625cb523b3d5e273d8" title="texture_が保持するピクセルデータのメモリを解放し、テクスチャ情報をNULL, 0で初期化する">texture_pixel_unload()</a></code> によりCPU側ピクセルデータを解放する</li>
 <li>CPU側リソースとGPU側リソースを同じスロットに登録する</li>
 <li>登録したスロット番号を <code>texture_id</code> として返す</li>
@@ -236,7 +236,7 @@ Renderer Backendとの関係</h2>
 <ul>
 <li><code><a class="el" href="context__texture_8h.html#aaaece882e40108af0c8d1fc8f39581fa" title="テクスチャGPU側リソース構造体インスタンスのメモリを確保し、テクスチャ設定を行い初期化する">renderer_backend_texture_create()</a></code></li>
 <li><code><a class="el" href="context__texture_8h.html#ab58ec9d091347f345035c3d0f8456afe" title="テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する">renderer_backend_texture_destroy()</a></code></li>
-<li><code><a class="el" href="context__texture_8h.html#af5c59aaff74fe65a70e563026bebcc74" title="指定されたテクスチャをbindし、ピクセルデータをGPUへ転送する">renderer_backend_texture_pixel_upload()</a></code></li>
+<li><code><a class="el" href="context__texture_8h.html#a3c3a23b01883a569fe43f921f5949193" title="現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する">renderer_backend_texture_pixel_upload()</a></code></li>
 </ul>
 <p><code>Texture System</code> はGPU側リソースの具体的な実装には依存しない。 OpenGL 3.3などの具体的なグラフィックスAPI差異は、<code>Renderer Backend</code> のConcrete実装によって吸収される。</p>
 <p>詳細は <a class="el" href="md_docs_architecture_systems_renderer_system_renderer_backend_architecture_ja.html">Renderer Backend</a> を参照のこと。</p>

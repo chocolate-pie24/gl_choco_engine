@@ -10,6 +10,8 @@ var choco__string_8c =
     [ "choco_string_default_create", "choco__string_8c.html#af01ca795324a4347a1ce80057f71de42", null ],
     [ "choco_string_destroy", "choco__string_8c.html#a8f9f6a2fd6ca5edc802c67016bdc4ea0", null ],
     [ "choco_string_equal", "choco__string_8c.html#af6b4b0a652dacd79d19fc0ef8a7fc8a8", null ],
+    [ "choco_string_key_value_key_get", "choco__string_8c.html#aeed70d1e90df7364a8b1184654d049d2", null ],
+    [ "choco_string_key_value_value_get", "choco__string_8c.html#a9ddb4aaa0d6b1551fcf322c1aa7a62e7", null ],
     [ "choco_string_length", "choco__string_8c.html#a7e48eed3cd7ec393b2d877d39e1c47d6", null ],
     [ "choco_string_substring_exists", "choco__string_8c.html#a7d19a1c91dae5c7c1d961169b6f9d577", null ]
 ];
