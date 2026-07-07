@@ -1,5 +1,3 @@
-// offset + size の範囲管理だけを行う, メモリープールは別にもつ
-// こうすることで、CPU側アロケーションとVBO用アロケーション両方に使用できるようにする
 #ifndef GLCE_ENGINE_CORE_MEMORY_RANGE_FREE_LIST_H
 #define GLCE_ENGINE_CORE_MEMORY_RANGE_FREE_LIST_H
 
@@ -23,7 +21,7 @@ typedef enum {
     RANGE_FREE_LIST_UNDEFINED_ERROR,
 } range_free_list_result_t;
 
-range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, range_free_list_t** out_range_free_list_);
+range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, size_t base_align_, range_free_list_t** out_range_free_list_);
 
 void range_free_list_destroy(range_free_list_t** range_free_list_);
 
