@@ -25,8 +25,7 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
 
 void range_free_list_destroy(range_free_list_t** range_free_list_);
 
-// required_align_: 2の冪乗のみを許可, 最小アライメントサイズは64bit環境であれば8, 32bit環境であれば4, 最小アライメントサイズ未満のrequired_align_が渡された場合, 最小アライメントサイズに丸められる
-range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_);
+range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_, size_t* out_allocated_size_);
 
 range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, size_t offset_, size_t size_);
 

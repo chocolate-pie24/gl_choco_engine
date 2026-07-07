@@ -61,13 +61,15 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_FREE_LIST_OVERFLOW文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
-static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t required_size_, node_t** out_node_, size_t* out_allocated_size_);
+static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
 static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_);
 
 static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_);
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_);
 static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
 static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
+
+static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
 static const char* rslt_to_str(range_free_list_result_t rslt_);
 
 range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, size_t base_align_, range_free_list_t** out_range_free_list_) {
@@ -174,43 +176,63 @@ void range_free_list_destroy(range_free_list_t** range_free_list_) {
     *range_free_list_ = NULL;
 }
 
+range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_, size_t* out_allocated_size_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    size_t allocation_size = 0;
+    size_t tmp_offset = 0;
+    node_t* node = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "range_free_list_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_offset_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_offset_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_allocated_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->base_align == required_align_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_allocate", "required_align_")
+
+    ret = align_up(range_free_list_->base_align, required_size_, &allocation_size);
+    if(RANGE_FREE_LIST_SUCCESS != ret) {
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=align_up failed. base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_free_list_->base_align, required_size_);
+        goto cleanup;
+    }
+
+    ret = find_first_fit_node(range_free_list_, allocation_size, &node);
+    if(RANGE_FREE_LIST_SUCCESS != ret) {
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=find_first_fit_node failed. required_size=%zu.", rslt_to_str(ret), required_size_);
+        goto cleanup;
+    }
+
+    ret = allocate_from_node(range_free_list_, node, allocation_size, &tmp_offset);
+    if(RANGE_FREE_LIST_SUCCESS != ret) {
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=allocate_from_node failed. allocation_size=%zu.", rslt_to_str(ret), allocation_size);
+        goto cleanup;
+    }
+
+    *out_offset_ = tmp_offset;
+    *out_allocated_size_ = allocation_size;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 // 要求サイズを満たす最初の空き領域ノードをfree_block_list_headから探索する。
 // 探索方式: first-fit
-static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t required_size_, node_t** out_node_, size_t* out_allocated_size_) {
+// allocation_sizeにはoffsetがbase_alignになるよう調整されたrequired_size + paddingの容量を渡すこと
+static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     bool found = false;
     node_t* node = NULL;
 
-    size_t updated_size = 0;    // アライメントを考慮して更新された要求サイズ
-    size_t padding = 0;
-
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "range_free_list_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "required_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "out_node_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "*out_node_")
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->free_block_list_head, ret, RANGE_FREE_LIST_NO_MEMORY, rslt_to_str(RANGE_FREE_LIST_NO_MEMORY), "find_first_fit_node", "range_free_list_->free_block_list_head")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "out_allocated_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != range_free_list_->base_align, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "find_first_fit_node", "range_free_list_->base_align")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(range_free_list_->base_align), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "find_first_fit_node", "range_free_list_->base_align")
-
-    // このrange_free_listはcreate時に指定されたbase_align固定で範囲を管理する。
-    // そのため、各空き領域ノードのoffsetは常にbase_align境界に整列している必要がある。よって、確保したメモリの後ろにpaddingを追加する
-    //
-    // offsetがbase_align境界に整列している場合、確保後の次の空き領域offsetを
-    // base_align境界に保つために必要なpadding量は、各nodeのoffsetには依存しない
-    // よって、required_size_をbase_align単位に丸めた値が、実際に消費するallocated_sizeとなる。
-    padding = required_size_ % range_free_list_->base_align;
-    if(0 != padding) {
-        padding = range_free_list_->base_align - padding;
-    }
-
-    if((SIZE_MAX - padding) < required_size_) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
-        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=size overflow.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    updated_size = required_size_ + padding;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
 
     node = range_free_list_->free_block_list_head;
     while(NULL != node) {
@@ -219,7 +241,7 @@ static range_free_list_result_t find_first_fit_node(range_free_list_t* range_fre
             ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=offset is not aligned to base_align.", rslt_to_str(ret));
             goto cleanup;
         }
-        if(node->block_size >= updated_size) {
+        if(node->block_size >= allocation_size_) {
             found = true;
             break;
         } else {
@@ -229,11 +251,10 @@ static range_free_list_result_t find_first_fit_node(range_free_list_t* range_fre
 
     if(!found) {
         ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=required free space size could not be found. required size=%zu", rslt_to_str(ret), required_size_);
+        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=required free space size could not be found. allocation_size=%zu", rslt_to_str(ret), allocation_size_);
         goto cleanup;
     }
     *out_node_ = node;
-    *out_allocated_size_ = updated_size;
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
@@ -501,6 +522,40 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
     }
 
     range_free_list_->node_pool[index]->state = NODE_STATE_NOT_CONNECTED;
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    size_t padding = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "out_allocation_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "base_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "required_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "align_up", "base_align_")
+
+    // このrange_free_listはcreate時に指定されたbase_align固定で範囲を管理する。
+    // そのため、各空き領域ノードのoffsetは常にbase_align境界に整列している必要がある。よって、確保範囲としてpadding分も消費する
+    //
+    // offsetがbase_align境界に整列している場合、確保後の次の空き領域offsetを
+    // base_align境界に保つために必要なpadding量は、各nodeのoffsetには依存しない
+    // よって、required_size_をbase_align単位に丸めた値が、実際に消費するallocation_sizeとなる。
+    padding = required_size_ % base_align_;
+    if(0 != padding) {
+        padding = base_align_ - padding;
+    }
+
+    if((SIZE_MAX - padding) < required_size_) {
+        ret = RANGE_FREE_LIST_OVERFLOW;
+        ERROR_MESSAGE("align_up(%s) - Failed to find first_fit_node. reason=size overflow.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    *out_allocation_size_ = required_size_ + padding;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
+
     ret = RANGE_FREE_LIST_SUCCESS;
 
 cleanup:
