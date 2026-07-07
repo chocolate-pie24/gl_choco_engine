@@ -62,6 +62,7 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**<
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
 static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t required_size_, node_t** out_node_, size_t* out_allocated_size_);
+static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_);
 
 static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_);
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_);
@@ -233,6 +234,55 @@ static range_free_list_result_t find_first_fit_node(range_free_list_t* range_fre
     }
     *out_node_ = node;
     *out_allocated_size_ = updated_size;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// 対象nodeからallocation_size分を確保する
+// out_offsetに確保開始offsetを返す
+// nodeに残り領域がある場合はoffset/block_sizeを更新する
+// もしnodeを完全に使い切ったらnode_remove + node_releaseする
+// node_removeもしくはnode_releaseが失敗した場合はnode_の状態は変化している場合がある
+static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    size_t escape_offset = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "allocation_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_offset_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "out_offset_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_->block_size >= allocation_size_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "allocation_size_")
+
+    escape_offset = node_->offset;
+
+    if(node_->block_size == allocation_size_) {
+        ret = node_remove(range_free_list_, node_);
+        if(RANGE_FREE_LIST_SUCCESS != ret) {
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=node_remove failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+
+        ret = node_release(range_free_list_, node_);
+        if(RANGE_FREE_LIST_SUCCESS != ret) {
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=node_release failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        if((SIZE_MAX - allocation_size_) < node_->offset) {
+            ret = RANGE_FREE_LIST_OVERFLOW;
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=overflow. allocated_size=%zu, offset=%zu.", rslt_to_str(ret), allocation_size_, node_->offset);
+            goto cleanup;
+        }
+        node_->block_size -= allocation_size_;
+        node_->offset += allocation_size_;
+    }
+
+    *out_offset_ = escape_offset;
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
