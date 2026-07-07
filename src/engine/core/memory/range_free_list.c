@@ -2,9 +2,25 @@
 
 #include <stdlib.h> // for malloc / free
 #include <string.h> // for memset
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+
+/**
+ * @brief 空き領域ノード状態定義
+ *
+ * @note 状態遷移仕様
+ * - acquire() : NOT_USED -> NOT_CONNECTED
+ * - insert()  : NOT_CONNECTED -> CONNECTED
+ * - remove()  : CONNECTED -> NOT_CONNECTED
+ * - release() : NOT_CONNECTED -> NOT_USED
+ */
+typedef enum {
+    NODE_STATE_NOT_USED,        /**< node_poolにはいるが, どの範囲管理にも使われていない */
+    NODE_STATE_CONNECTED,       /**< 空き範囲nodeとしてfree_block_listに接続されている */
+    NODE_STATE_NOT_CONNECTED,   /**< node_poolから借用中だが, free_block_listには接続されていない */
+} node_state_t;
 
 /**
  * @brief 各空き領域を管理するノード構造体
@@ -16,6 +32,8 @@ typedef struct node {
 
     size_t block_size;  /**< 空き領域サイズ(byte) */
     size_t offset;      /**< この空き領域の開始オフセット(byte) */
+
+    node_state_t state; /**< ノード状態 */
 } node_t;
 
 /**
@@ -27,9 +45,8 @@ struct range_free_list {
     size_t max_node_count;      /**< 最大ノード数(個) */
     size_t unused_node_count;   /**< 未使用ノード数 */
 
-    node_t* head;               /**< 先頭の空き領域ノードへのポインタ */
-
-    node_t** node_pool;         /**< range_free_listが所有する全ノードへのポインタ配列 */
+    node_t** node_pool;             /**< range_free_listが所有する全ノードへのポインタ配列 */
+    node_t* free_block_list_head;   /**< 空き領域を繋いだ双方向リストの先頭ノードで, node_pool配列の要素 */
 };
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コードRANGE_FREE_LIST_SUCCESS文字列 */
@@ -42,6 +59,9 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**<
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
 static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_);
+static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_);
+static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
+static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
 static const char* rslt_to_str(range_free_list_result_t rslt_);
 
 range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, range_free_list_t** out_range_free_list_) {
@@ -79,16 +99,21 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
             goto cleanup;
         }
         memset(tmp_node_pool[i], 0, sizeof(node_t));
+        tmp_node_pool[i]->state = NODE_STATE_NOT_USED;
     }
 
     tmp_range_free_list->max_node_count = max_node_count_;
     tmp_range_free_list->memory_pool_size = memory_pool_size_;
     tmp_range_free_list->unused_node_count = max_node_count_ - 1;
-    tmp_range_free_list->head = tmp_node_pool[0];
-    tmp_range_free_list->head->block_size = memory_pool_size_;
-    tmp_range_free_list->head->offset = 0;
-    tmp_range_free_list->head->next = NULL;
-    tmp_range_free_list->head->prev = NULL;
+
+    tmp_range_free_list->free_block_list_head = tmp_node_pool[0];
+    tmp_range_free_list->free_block_list_head->block_size = memory_pool_size_;
+    tmp_range_free_list->free_block_list_head->offset = 0;
+    tmp_range_free_list->free_block_list_head->next = NULL;
+    tmp_range_free_list->free_block_list_head->prev = NULL;
+
+    tmp_node_pool[0]->state = NODE_STATE_CONNECTED;
+
     tmp_range_free_list->node_pool = tmp_node_pool;
 
     *out_range_free_list_ = tmp_range_free_list;
@@ -153,6 +178,8 @@ static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_)
     IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->next, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->next")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->prev, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->prev")
     IF_ARG_FALSE_GOTO_CLEANUP(insert_node_ != node_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_ != node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == insert_node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "node_->state")
 
     if(NULL == node_->prev && NULL == node_->next) {    // node_が唯一のノード
         node_->next = insert_node_;
@@ -175,6 +202,180 @@ static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_)
         insert_node_->next = NULL;
     }
 
+    insert_node_->state = NODE_STATE_CONNECTED;
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    bool found = false;
+    node_t* tmp_node = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "range_free_list")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "*out_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->node_pool, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_acquire", "node_pool")
+
+    if(0 == range_free_list_->unused_node_count) {
+        ret = RANGE_FREE_LIST_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=unused_node_count is zero.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
+        if(NULL == range_free_list_->node_pool[i]) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            goto cleanup;
+        }
+        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i]->state) {
+            tmp_node = range_free_list_->node_pool[i];
+            found = true;
+            break;
+        }
+    }
+
+    if(!found) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=unused_node_count != 0, but free slot not found.", rslt_to_str(ret));
+        goto cleanup;
+    } else {
+        if(NULL != tmp_node->next || NULL != tmp_node->prev) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=contents of the found node are corrupted.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    tmp_node->block_size = 0;
+    tmp_node->offset = 0;
+    tmp_node->next = NULL;
+    tmp_node->prev = NULL;
+    tmp_node->state = NODE_STATE_NOT_CONNECTED; // insert後にCONNECTEDに遷移する
+
+    range_free_list_->unused_node_count--;
+    *out_node_ = tmp_node;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// リストから外されたnode_を未使用状態に戻す
+// node_は呼び出し側でremove()によりリストから外し、next/prevをNULLにしておくこと
+static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    bool found = false;
+    size_t index = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "range_free_list")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->node_pool, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_release", "node_pool")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->unused_node_count < range_free_list_->max_node_count, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_release", "unused_node_count")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(node_->prev, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_release", "node_->prev")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(node_->next, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_release", "node_->next")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_release", "node_->state")
+
+    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
+        if(NULL == range_free_list_->node_pool[i]) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_release(%s) - Failed to release node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            goto cleanup;
+        }
+        if(range_free_list_->node_pool[i] == node_) {
+            found = true;
+            index = i;
+            break;
+        }
+    }
+
+    if(!found) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_release(%s) - Failed to release node. reason=requested node was not found in the pool.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    range_free_list_->node_pool[index]->block_size = 0;
+    range_free_list_->node_pool[index]->offset = 0;
+    range_free_list_->node_pool[index]->state = NODE_STATE_NOT_USED;
+    range_free_list_->unused_node_count++;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// node_のreleaseに先立ち、node_をリストから外す
+static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    bool found = false;
+    size_t index = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "range_free_list")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->node_pool, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_remove", "node_pool")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_remove", "node_->state")
+
+    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
+        if(NULL == range_free_list_->node_pool[i]) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            goto cleanup;
+        }
+        if(range_free_list_->node_pool[i] == node_) {
+            found = true;
+            index = i;
+            break;
+        }
+    }
+
+    if(!found) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=requested node was not found in the pool.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if(NULL == range_free_list_->node_pool[index]->prev && NULL == range_free_list_->node_pool[index]->next) {  // node_が唯一のノード
+        if(range_free_list_->free_block_list_head != range_free_list_->node_pool[index]) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=only node, but not connected to the list.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        range_free_list_->free_block_list_head = NULL;
+    } else if(NULL == range_free_list_->node_pool[index]->prev && NULL != range_free_list_->node_pool[index]->next) {   // node_が先頭で、node_の次に別のノードがある
+        if(range_free_list_->free_block_list_head != range_free_list_->node_pool[index]) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=head node, but not connected to the list.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        range_free_list_->free_block_list_head = range_free_list_->node_pool[index]->next;
+
+        range_free_list_->node_pool[index]->next->prev = NULL;
+
+        range_free_list_->node_pool[index]->next = NULL;
+        range_free_list_->node_pool[index]->prev = NULL;
+    } else if(NULL != range_free_list_->node_pool[index]->prev && NULL != range_free_list_->node_pool[index]->next) {   // node_の前後に別のノードがある
+        range_free_list_->node_pool[index]->prev->next = range_free_list_->node_pool[index]->next;
+        range_free_list_->node_pool[index]->next->prev = range_free_list_->node_pool[index]->prev;
+
+        range_free_list_->node_pool[index]->next = NULL;
+        range_free_list_->node_pool[index]->prev = NULL;
+    } else if(NULL != range_free_list_->node_pool[index]->prev && NULL == range_free_list_->node_pool[index]->next) {   // node_の前にノードが存在し、かつ、node_が末尾ノード
+        range_free_list_->node_pool[index]->prev->next = NULL;
+
+        range_free_list_->node_pool[index]->next = NULL;
+        range_free_list_->node_pool[index]->prev = NULL;
+    }
+
+    range_free_list_->node_pool[index]->state = NODE_STATE_NOT_CONNECTED;
     ret = RANGE_FREE_LIST_SUCCESS;
 
 cleanup:
