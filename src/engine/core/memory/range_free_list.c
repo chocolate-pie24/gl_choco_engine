@@ -61,15 +61,17 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_FREE_LIST_OVERFLOW文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
-static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
+static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
 static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_);
 
 static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_);
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_);
 static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
 static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
+static range_free_list_result_t find_free_block_insert_position(const range_free_list_t* range_free_list_, size_t offset_, size_t free_size_, node_t** out_prev_node_, node_t** out_next_node_);
 
 static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
+static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_);
 static const char* rslt_to_str(range_free_list_result_t rslt_);
 
 range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, size_t base_align_, range_free_list_t** out_range_free_list_) {
@@ -220,7 +222,7 @@ cleanup:
 // 要求サイズを満たす最初の空き領域ノードをfree_block_list_headから探索する。
 // 探索方式: first-fit
 // allocation_sizeにはoffsetがbase_alignになるよう調整されたrequired_size + paddingの容量を渡すこと
-static range_free_list_result_t find_first_fit_node(range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
+static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     bool found = false;
@@ -526,6 +528,121 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
 
 cleanup:
     return ret;
+}
+
+static range_free_list_result_t find_free_block_insert_position(const range_free_list_t* range_free_list_, size_t offset_, size_t free_size_, node_t** out_prev_node_, node_t** out_next_node_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    node_t* tmp_node = NULL;
+    node_t* tmp_prev_node = NULL;
+    node_t* tmp_next_node = NULL;
+    bool found = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_prev_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "out_prev_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_next_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "out_next_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_prev_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "*out_prev_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_next_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "*out_next_node_")
+
+    // TODO: check_area(range_free_list, offset, free_size)
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != free_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "free_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->memory_pool_size >= free_size_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "free_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(offset_ <= (range_free_list_->memory_pool_size - free_size_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "free_size_")
+
+    // アライメントチェック(free_size_はalign_upで必ずbase_alignにアラインされている, もしされていなければrequired_sizeをそのまま使用している可能性あり)
+    // TODO: base_align 2の冪乗、非0チェック -> ragen_free_list_is_valid()を作る(順序整合チェックは安定したらリリースビルドでは行わないとコメントを入れておく, todoにも追加する)
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (offset_ % range_free_list_->base_align), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "offset_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (free_size_ % range_free_list_->base_align), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "free_size_")
+
+    // TODO: find_first_fit_nodeも上記ヘルパーでpreconditionsを修正, allocateも必要であれば
+    // TODO: プライベート関数のチェックは勘弁にし、公開API側できちんとvalidationチェックをする
+
+    // TODO: check_range_relationは最後に一箇所でやるようにして見通しをよくする
+    tmp_node = range_free_list_->free_block_list_head;
+    if(NULL == tmp_node) {  // free listが空
+        tmp_prev_node = NULL;
+        tmp_next_node = NULL;
+        found = true;
+    } else {
+        if(tmp_node->offset > offset_) {    // 先頭に挿入
+            if(!check_range_relation(offset_, free_size_, tmp_node->offset)) {
+                ret = RANGE_FREE_LIST_BAD_OPERATION;
+                ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                goto cleanup;
+            }
+            tmp_prev_node = NULL;
+            tmp_next_node = tmp_node;
+            found = true;
+        } else {
+            while(NULL != tmp_node) {
+                if(tmp_node->offset == offset_) {
+                    ret = RANGE_FREE_LIST_BAD_OPERATION;
+                    ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                    goto cleanup;
+                }
+                if(NULL != tmp_node->next && tmp_node->offset >= tmp_node->next->offset) {
+                    ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+                    ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                    goto cleanup;
+                }
+                if(tmp_node->offset < offset_ && NULL != tmp_node->next) {
+                    if(tmp_node->next->offset > offset_) {  // 途中に挿入
+                        if(!check_range_relation(tmp_node->offset, tmp_node->block_size, offset_)) {
+                            ret = RANGE_FREE_LIST_BAD_OPERATION;
+                            ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                            goto cleanup;
+                        }
+                        if(!check_range_relation(offset_, free_size_, tmp_node->next->offset)) {
+                            ret = RANGE_FREE_LIST_BAD_OPERATION;
+                            ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                            goto cleanup;
+                        }
+                        tmp_prev_node = tmp_node;
+                        tmp_next_node = tmp_node->next;
+                        found = true;
+                        break;
+                    }
+                } else if(tmp_node->offset < offset_ && NULL == tmp_node->next) {   // 末尾に挿入
+                    if(!check_range_relation(tmp_node->offset, tmp_node->block_size, offset_)) {
+                        ret = RANGE_FREE_LIST_BAD_OPERATION;
+                        ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                        goto cleanup;
+                    }
+                    tmp_prev_node = tmp_node;
+                    tmp_next_node = NULL;
+                    found = true;
+                    break;
+                }
+                tmp_node = tmp_node->next;
+            }
+        }
+    }
+
+    if(!found) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_prev_node_ = tmp_prev_node;
+    *out_next_node_ = tmp_next_node;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// prev_nodeの領域と、next_nodeの領域が干渉していないかをチェックする
+// (prev_offset_ + prev_block_size_) < next_offset_であることをチェックする
+static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_) {
+    if(prev_offset_ > next_offset_) {
+        return false;
+    } else if((next_offset_ - prev_offset_) < prev_block_size_) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_) {
