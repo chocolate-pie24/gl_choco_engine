@@ -61,14 +61,16 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_FREE_LIST_OVERFLOW文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
+// TODO: allocate系, free系, それ以外のヘルパーで整理する
 static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
 static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_);
 
-static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_);
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_);
 static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
 static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
+
 static range_free_list_result_t find_free_block_insert_position(const range_free_list_t* range_free_list_, size_t offset_, size_t free_size_, node_t** out_prev_node_, node_t** out_next_node_);
+static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_t* prev_, node_t* next_);
 
 static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
 static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_);
@@ -313,50 +315,6 @@ cleanup:
     return ret;
 }
 
-// 双方向リストにノード挿入処理
-// node_の直後にinsert_node_を挿入する
-// insert_node_がすでに別リストに接続されている場合はBAD_OPERATION
-static range_free_list_result_t node_insert(node_t* insert_node_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
-
-    node_t* next = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert", "insert_node_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert", "node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->next, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->next")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->prev, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->prev")
-    IF_ARG_FALSE_GOTO_CLEANUP(insert_node_ != node_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_ != node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == insert_node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "insert_node_->state")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert", "node_->state")
-
-    if(NULL == node_->prev && NULL == node_->next) {    // node_が唯一のノード
-        node_->next = insert_node_;
-        insert_node_->prev = node_;
-    } else if(NULL == node_->prev && NULL != node_->next) { // node_が先頭で、node_の次に別のノードがある
-        next = node_->next;
-        node_->next = insert_node_;
-        insert_node_->prev = node_;
-        insert_node_->next = next;
-        next->prev = insert_node_;
-    } else if(NULL != node_->prev && NULL != node_->next) { // node_の前後に別のノードがある
-        next = node_->next;
-        node_->next = insert_node_;
-        insert_node_->next = next;
-        insert_node_->prev = node_;
-        next->prev = insert_node_;
-    } else if(NULL != node_->prev && NULL == node_->next) { // node_の前にノードが存在し、かつ、node_が末尾ノード
-        node_->next = insert_node_;
-        insert_node_->prev = node_;
-        insert_node_->next = NULL;
-    }
-
-    insert_node_->state = NODE_STATE_CONNECTED;
-    ret = RANGE_FREE_LIST_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
@@ -585,6 +543,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                     ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
                     goto cleanup;
                 }
+                // TODO: ここから下はもっとスッキリできる
                 if(tmp_node->offset < offset_ && NULL != tmp_node->next) {
                     if(tmp_node->next->offset > offset_) {  // 途中に挿入
                         if(!check_range_relation(tmp_node->offset, tmp_node->block_size, offset_)) {
@@ -626,6 +585,71 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
 
     *out_prev_node_ = tmp_prev_node;
     *out_next_node_ = tmp_next_node;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_t* prev_, node_t* next_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "insert_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->next, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->next")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(insert_node_->prev, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->prev")
+    IF_ARG_FALSE_GOTO_CLEANUP(insert_node_ != prev_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_ != prev_")
+    IF_ARG_FALSE_GOTO_CLEANUP(insert_node_ != next_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_ != next_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == insert_node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(prev_ != next_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "prev_ != next_")
+    if(NULL != prev_ && NULL != next_ && prev_ == next_) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if(NULL == prev_ && NULL == next_) {
+        if(NULL != range_free_list_->free_block_list_head) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        insert_node_->next = NULL;
+        insert_node_->prev = NULL;
+        range_free_list_->free_block_list_head = insert_node_;
+    } else if(NULL == prev_ && NULL != next_) {
+        if(next_ != range_free_list_->free_block_list_head || NULL != range_free_list_->free_block_list_head->prev) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        insert_node_->prev = NULL;
+        insert_node_->next = next_;
+        next_->prev = insert_node_;
+        range_free_list_->free_block_list_head = insert_node_;
+    } else if(NULL != prev_ && NULL != next_) {
+        if(prev_->next != next_ || prev_ != next_->prev) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        prev_->next = insert_node_;
+        insert_node_->prev = prev_;
+        insert_node_->next = next_;
+        next_->prev = insert_node_;
+    } else if(NULL != prev_ && NULL == next_) {
+        if(NULL != prev_->next) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        prev_->next = insert_node_;
+        insert_node_->prev = prev_;
+        insert_node_->next = NULL;
+    }
+
+    insert_node_->state = NODE_STATE_CONNECTED;
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
