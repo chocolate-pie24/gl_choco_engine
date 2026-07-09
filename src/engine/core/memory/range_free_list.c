@@ -298,6 +298,41 @@ cleanup:
     return ret;
 }
 
+void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_) {
+    node_t* node = NULL;
+    size_t tmp_max = 0;
+    size_t total_free_size = 0;
+    size_t free_block_count = 0;
+
+    if(NULL == range_free_list_ || NULL == out_status_) {
+        return;
+    }
+
+    out_status_->base_align = range_free_list_->base_align;
+    out_status_->max_node_count = range_free_list_->max_node_count;
+    out_status_->memory_pool_size = range_free_list_->memory_pool_size;
+    out_status_->unused_node_count = range_free_list_->unused_node_count;
+
+    node = range_free_list_->free_block_list_head;
+    if(NULL == node) {
+        out_status_->free_block_count = 0;
+        out_status_->total_free_size = 0;
+        out_status_->max_free_block_size = 0;
+    } else {
+        tmp_max = node->block_size;
+        while(NULL != node) {
+            tmp_max = (node->block_size > tmp_max) ? node->block_size : tmp_max;
+            total_free_size += node->block_size;
+            free_block_count++;
+
+            node = node->next;
+        }
+        out_status_->max_free_block_size = tmp_max;
+        out_status_->free_block_count = free_block_count;
+        out_status_->total_free_size = total_free_size;
+    }
+}
+
 // 要求サイズを満たす最初の空き領域ノードをfree_block_list_headから探索する。
 // 探索方式: first-fit
 // allocation_sizeにはoffsetがbase_alignになるよう調整されたrequired_size + paddingの容量を渡すこと
