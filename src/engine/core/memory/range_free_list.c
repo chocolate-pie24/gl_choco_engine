@@ -1,5 +1,6 @@
 #include "engine/core/memory/range_free_list.h"
 
+#include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc / free
 #include <string.h> // for memset
 #include <stdbool.h>
@@ -324,6 +325,43 @@ void range_free_list_status_get(const range_free_list_t* range_free_list_, range
     out_status_->max_free_block_size = tmp_max;
     out_status_->free_block_count = free_block_count;
     out_status_->total_free_size = total_free_size;
+}
+
+void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
+    size_t index = 0;
+    const node_t* node = NULL;
+    range_free_list_status_t status = { 0 };
+    bool valid = false;
+
+    if(NULL == range_free_list_) {
+        return;
+    }
+
+    valid = range_free_list_is_valid(range_free_list_);
+    range_free_list_status_get(range_free_list_, &status);
+
+    flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
+
+    fprintf(stdout, "\033[1;35m[RANGE FREE LIST DUMP MESSAGE]\n");
+    fprintf(stdout, "  range_free_list_is_valid = %s\n", valid ? "true" : "false");
+    fprintf(stdout, "  memory_pool_size = %zu\n", status.memory_pool_size);
+    fprintf(stdout, "  base_align = %zu\n", status.base_align);
+    fprintf(stdout, "  max_node_count = %zu\n", status.max_node_count);
+    fprintf(stdout, "  unused_node_count = %zu\n", status.unused_node_count);
+    fprintf(stdout, "  free_block_count = %zu\n", status.free_block_count);
+    fprintf(stdout, "  total_free_size = %zu\n", status.total_free_size);
+    fprintf(stdout, "  max_free_block_size = %zu\n", status.max_free_block_size);
+    fprintf(stdout, "  free blocks:\n");
+
+    node = range_free_list_->free_block_list_head;
+    while(NULL != node) {
+        fprintf(stdout, "    [%zu] offset=%zu, size=%zu, end=%zu\n", index, node->offset, node->block_size, node->offset + node->block_size);
+        node = node->next;
+        index++;
+    }
+
+    fprintf(stdout, "\033[0m");
+    funlockfile(stdout);
 }
 
 // 要求サイズを満たす最初の空き領域ノードをfree_block_list_headから探索する。

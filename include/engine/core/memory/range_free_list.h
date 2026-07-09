@@ -43,6 +43,8 @@ range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list
 
 void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_);
 
+void range_free_list_debug_print(const range_free_list_t* range_free_list_);
+
 #ifdef __cplusplus
 }
 #endif
