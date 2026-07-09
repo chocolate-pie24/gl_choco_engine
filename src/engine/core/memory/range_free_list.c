@@ -77,6 +77,7 @@ static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bo
 static range_free_list_result_t merge_free_block(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
 
 // validation
+static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);
 static bool node_is_valid(const node_t* node_);
 static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_);
 
@@ -204,6 +205,12 @@ range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_
     IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_allocated_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->base_align == required_align_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_allocate", "required_align_")
 
+    if(!range_free_list_is_valid(range_free_list_)) {   // TODO: この処理は動作実績ができたらRELEASE_BUILDでのチェックを軽めにする
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("range_free_list_allocate(%s) - range_free_list_ corrupted.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
     ret = align_up(range_free_list_->base_align, required_size_, &allocation_size);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
         ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=align_up failed. base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_free_list_->base_align, required_size_);
@@ -240,6 +247,14 @@ range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list
 
     bool should_merge_prev = false;
     bool should_merge_next = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_free", "range_free_list_")
+
+    if(!range_free_list_is_valid(range_free_list_)) {   // TODO: この処理は動作実績ができたらRELEASE_BUILDでのチェックを軽めにする
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_ corrupted.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = find_free_block_insert_position(range_free_list_, offset_, allocation_size_, &prev, &next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
@@ -966,6 +981,64 @@ static void set_node_to_connected(node_t* target_, node_t* prev_, node_t* next_)
     target_->prev = prev_;
     target_->next = next_;
     target_->state = NODE_STATE_CONNECTED;
+}
+
+static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) {
+    if(NULL == range_free_list_) {
+        return false;
+    }
+    if(0 == range_free_list_->base_align || 0 == range_free_list_->max_node_count || 0 == range_free_list_->memory_pool_size) {
+        return false;
+    }
+    if(!IS_POWER_OF_TWO(range_free_list_->base_align)) {
+        return false;
+    }
+
+    // NOTE: 以下はfree_listの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
+    node_t* head = range_free_list_->free_block_list_head;
+    node_t* prev = NULL;
+    size_t loop_count = 0;
+    size_t used_count = 0;
+    while(NULL != head) {
+        if(loop_count >= range_free_list_->max_node_count) {
+            return false;
+        }
+        if(!node_is_valid(head)) {
+            return false;
+        }
+        if(head->prev != prev) {
+            return false;
+        }
+        if(range_free_list_->memory_pool_size < head->block_size) {
+            return false;
+        }
+        if(head->offset > (range_free_list_->memory_pool_size - head->block_size)) {
+            return false;
+        }
+        if(0 != (head->offset % range_free_list_->base_align)) {
+            return false;
+        }
+        if(0 != (head->block_size % range_free_list_->base_align)) {
+            return false;
+        }
+        if(NODE_STATE_CONNECTED != head->state) {
+            return false;
+        }
+        if(NULL != head->next) {
+            if(!check_range_relation(head->offset, head->block_size, head->next->offset)) {
+                return false;
+            }
+        }
+        head = head->next;
+        used_count++;
+        loop_count++;
+    }
+
+    if((range_free_list_->max_node_count - used_count) != range_free_list_->unused_node_count) {
+        return false;
+    }
+
+    return true;
 }
 
 static bool node_is_valid(const node_t* node_) {
