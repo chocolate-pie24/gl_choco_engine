@@ -304,6 +304,7 @@ void range_free_list_status_get(const range_free_list_t* range_free_list_, range
     size_t tmp_max = 0;
     size_t total_free_size = 0;
     size_t free_block_count = 0;
+    size_t index = 0;
 
     if(NULL == range_free_list_ || NULL == out_status_) {
         return;
@@ -315,12 +316,13 @@ void range_free_list_status_get(const range_free_list_t* range_free_list_, range
     out_status_->unused_node_count = range_free_list_->unused_node_count;
 
     node = range_free_list_->free_block_list_head;
-    while(NULL != node) {
+    while(NULL != node && index < range_free_list_->max_node_count) {
         tmp_max = (node->block_size > tmp_max) ? node->block_size : tmp_max;
         total_free_size += node->block_size;
         free_block_count++;
 
         node = node->next;
+        index++;
     }
     out_status_->max_free_block_size = tmp_max;
     out_status_->free_block_count = free_block_count;
@@ -354,7 +356,7 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     fprintf(stdout, "  free blocks:\n");
 
     node = range_free_list_->free_block_list_head;
-    while(NULL != node) {
+    while(NULL != node && index < range_free_list_->max_node_count) {
         fprintf(stdout, "    [%zu] offset=%zu, size=%zu, end=%zu\n", index, node->offset, node->block_size, node->offset + node->block_size);
         node = node->next;
         index++;
@@ -370,6 +372,7 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
 static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
+    size_t index = 0;
     bool found = false;
     node_t* node = NULL;
 
@@ -382,7 +385,7 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(range_free_list_->base_align), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "find_first_fit_node", "range_free_list_->base_align")
 
     node = range_free_list_->free_block_list_head;
-    while(NULL != node) {
+    while(NULL != node && index < range_free_list_->max_node_count) {
         if(0 != (node->offset % range_free_list_->base_align)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
             ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=offset is not aligned to base_align.", rslt_to_str(ret));
@@ -394,6 +397,7 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
         } else {
             node = node->next;
         }
+        index++;
     }
 
     if(!found) {
@@ -632,6 +636,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
     node_t* tmp_prev_node = NULL;
     node_t* tmp_next_node = NULL;
     bool found = false;
+    size_t index = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(out_prev_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_free_block_insert_position", "out_prev_node_")
@@ -669,7 +674,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
             tmp_next_node = tmp_node;
             found = true;
         } else {
-            while(NULL != tmp_node) {
+            while(NULL != tmp_node && index < range_free_list_->max_node_count) {
                 if(tmp_node->offset == offset_) {
                     ret = RANGE_FREE_LIST_BAD_OPERATION;
                     ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
@@ -710,6 +715,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                     break;
                 }
                 tmp_node = tmp_node->next;
+                index++;
             }
         }
     }
