@@ -27,7 +27,7 @@ void range_free_list_destroy(range_free_list_t** range_free_list_);
 
 range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_, size_t* out_allocated_size_);
 
-range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, size_t offset_, size_t size_);
+range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, size_t offset_, size_t allocation_size_);
 
 #ifdef __cplusplus
 }
