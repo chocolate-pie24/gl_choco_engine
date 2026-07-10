@@ -9,7 +9,6 @@ extern "C" {
 
 typedef struct range_free_list range_free_list_t;   /**< Range Free List内部状態管理構造体のopaque型 */
 
-// TODO: core/memory内の実行結果コードを統一する
 typedef enum {
     RANGE_FREE_LIST_SUCCESS = 0,
     RANGE_FREE_LIST_INVALID_ARGUMENT,
@@ -20,6 +19,11 @@ typedef enum {
     RANGE_FREE_LIST_OVERFLOW,
     RANGE_FREE_LIST_UNDEFINED_ERROR,
 } range_free_list_result_t;
+
+typedef struct range_allocation {
+    size_t offset;
+    size_t allocated_size;
+} range_allocation_t;
 
 typedef struct range_free_list_status {
     size_t memory_pool_size;
@@ -37,9 +41,9 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
 
 void range_free_list_destroy(range_free_list_t** range_free_list_);
 
-range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_, size_t* out_allocated_size_);
+range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
 
-range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, size_t offset_, size_t allocation_size_);
+range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, range_allocation_t allocation_);
 
 void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_);
 

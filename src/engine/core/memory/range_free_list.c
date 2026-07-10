@@ -192,7 +192,7 @@ void range_free_list_destroy(range_free_list_t** range_free_list_) {
     *range_free_list_ = NULL;
 }
 
-range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, size_t* out_offset_, size_t* out_allocated_size_) {
+range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     size_t allocation_size = 0;
@@ -202,8 +202,7 @@ range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "range_free_list_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != required_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_align_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_offset_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_offset_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_allocated_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_allocation_")
     IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->base_align == required_align_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_allocate", "required_align_")
 
     if(!range_free_list_is_valid(range_free_list_)) {   // TODO: この処理は動作実績ができたらRELEASE_BUILDでのチェックを軽めにする
@@ -230,8 +229,8 @@ range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_
         goto cleanup;
     }
 
-    *out_offset_ = tmp_offset;
-    *out_allocated_size_ = allocation_size;
+    out_allocation_->allocated_size = allocation_size;
+    out_allocation_->offset = tmp_offset;
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
@@ -239,7 +238,7 @@ cleanup:
     return ret;
 }
 
-range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, size_t offset_, size_t allocation_size_) {
+range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, range_allocation_t allocation_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     node_t* new_node = NULL;
@@ -257,13 +256,13 @@ range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list
         goto cleanup;
     }
 
-    ret = find_free_block_insert_position(range_free_list_, offset_, allocation_size_, &prev, &next);
+    ret = find_free_block_insert_position(range_free_list_, allocation_.offset, allocation_.allocated_size, &prev, &next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
         ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = node_acquire(range_free_list_, offset_, allocation_size_, &new_node);
+    ret = node_acquire(range_free_list_, allocation_.offset, allocation_.allocated_size, &new_node);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
         ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
         goto cleanup;
