@@ -78,9 +78,12 @@ static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bo
 static range_free_list_result_t merge_free_block(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
 
 // validation
-static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);
+static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);            // deep validation
+static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free_list_);    // shallow validation
 static bool node_is_valid(const node_t* node_);
-static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_);
+static bool is_non_overlap(size_t left_node_offset_, size_t left_node_block_size_, size_t right_node_offset_);
+static bool is_valid_range(const range_free_list_t* range_free_list_, size_t offset_, size_t block_size_);
+static bool is_valid_align(size_t base_align_, size_t offset_, size_t block_size_);
 
 // その他ヘルパー
 static void set_node_to_not_used(node_t* target_);
@@ -656,7 +659,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
     // TODO: find_first_fit_nodeも上記ヘルパーでpreconditionsを修正, allocateも必要であれば
     // TODO: プライベート関数のチェックは勘弁にし、公開API側できちんとvalidationチェックをする
 
-    // TODO: check_range_relationは最後に一箇所でやるようにして見通しをよくする
+    // TODO: is_non_overlapは最後に一箇所でやるようにして見通しをよくする
     tmp_node = range_free_list_->free_block_list_head;
     if(NULL == tmp_node) {  // free listが空
         tmp_prev_node = NULL;
@@ -664,7 +667,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
         found = true;
     } else {
         if(tmp_node->offset > offset_) {    // 先頭に挿入
-            if(!check_range_relation(offset_, free_size_, tmp_node->offset)) {
+            if(!is_non_overlap(offset_, free_size_, tmp_node->offset)) {
                 ret = RANGE_FREE_LIST_BAD_OPERATION;
                 ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
                 goto cleanup;
@@ -687,12 +690,12 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                 // TODO: ここから下はもっとスッキリできる
                 if(tmp_node->offset < offset_ && NULL != tmp_node->next) {
                     if(tmp_node->next->offset > offset_) {  // 途中に挿入
-                        if(!check_range_relation(tmp_node->offset, tmp_node->block_size, offset_)) {
+                        if(!is_non_overlap(tmp_node->offset, tmp_node->block_size, offset_)) {
                             ret = RANGE_FREE_LIST_BAD_OPERATION;
                             ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
                             goto cleanup;
                         }
-                        if(!check_range_relation(offset_, free_size_, tmp_node->next->offset)) {
+                        if(!is_non_overlap(offset_, free_size_, tmp_node->next->offset)) {
                             ret = RANGE_FREE_LIST_BAD_OPERATION;
                             ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
                             goto cleanup;
@@ -703,7 +706,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                         break;
                     }
                 } else if(tmp_node->offset < offset_ && NULL == tmp_node->next) {   // 末尾に挿入
-                    if(!check_range_relation(tmp_node->offset, tmp_node->block_size, offset_)) {
+                    if(!is_non_overlap(tmp_node->offset, tmp_node->block_size, offset_)) {
                         ret = RANGE_FREE_LIST_BAD_OPERATION;
                         ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
                         goto cleanup;
@@ -1058,18 +1061,17 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
     if(NULL == range_free_list_) {
         return false;
     }
-    if(0 == range_free_list_->base_align || 0 == range_free_list_->max_node_count || 0 == range_free_list_->memory_pool_size) {
-        return false;
-    }
-    if(!IS_POWER_OF_TWO(range_free_list_->base_align)) {
-        return false;
-    }
 
     // NOTE: 以下はfree_listの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
     node_t* head = range_free_list_->free_block_list_head;
     node_t* prev = NULL;
     size_t loop_count = 0;
     size_t used_count = 0;
+
+    if(!range_free_list_is_valid_shallow(range_free_list_)) {
+        return false;
+    }
+
     while(NULL != head) {
         if(loop_count >= range_free_list_->max_node_count) {
             return false;
@@ -1089,14 +1091,14 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
         if(0 != (head->offset % range_free_list_->base_align)) {
             return false;
         }
-        if(0 != (head->block_size % range_free_list_->base_align)) {
+        if(head->offset + head->block_size != range_free_list_->memory_pool_size && 0 != (head->block_size % range_free_list_->base_align)) {   // memory_pool_sizeはbase_alignの倍数以外を許可しているため、末尾ノードはbase_alignの倍数ではない場合がある
             return false;
         }
         if(NODE_STATE_CONNECTED != head->state) {
             return false;
         }
         if(NULL != head->next) {
-            if(!check_range_relation(head->offset, head->block_size, head->next->offset)) {
+            if(!is_non_overlap(head->offset, head->block_size, head->next->offset)) {
                 return false;
             }
         }
@@ -1109,6 +1111,28 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
         return false;
     }
 
+    return true;
+}
+
+static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free_list_) {
+    if(NULL == range_free_list_) {
+        return false;
+    }
+    if(0 == range_free_list_->base_align || !IS_POWER_OF_TWO(range_free_list_->base_align)) {
+        return false;
+    }
+    if(0 == range_free_list_->max_node_count) {
+        return false;
+    }
+    if(0 == range_free_list_->memory_pool_size) {
+        return false;
+    }
+    if(NULL == range_free_list_->node_pool) {
+        return false;
+    }
+    if(range_free_list_->unused_node_count > range_free_list_->max_node_count) {
+        return false;
+    }
     return true;
 }
 
@@ -1180,16 +1204,45 @@ cleanup:
     return ret;
 }
 
-// prev_nodeの領域と、next_nodeの領域が干渉していないかをチェックする
-// (prev_offset_ + prev_block_size_) < next_offset_であることをチェックする
-static bool check_range_relation(size_t prev_offset_, size_t prev_block_size_, size_t next_offset_) {
-    if(prev_offset_ > next_offset_) {
+// left_node(prev)の領域と、right_node(next)の領域が干渉していないかをチェックする
+// (left_node_offset_ + left_node_block_size_) <= right_node_offset_であることをチェックする
+static bool is_non_overlap(size_t left_node_offset_, size_t left_node_block_size_, size_t right_node_offset_) {
+    if(left_node_offset_ > right_node_offset_) {
         return false;
-    } else if((next_offset_ - prev_offset_) < prev_block_size_) {
+    } else if((right_node_offset_ - left_node_offset_) < left_node_block_size_) {
         return false;
     } else {
         return true;
     }
+}
+
+static bool is_valid_range(const range_free_list_t* range_free_list_, size_t offset_, size_t block_size_) {
+    if(NULL == range_free_list_) {
+        return false;
+    }
+    if(0 == block_size_) {
+        return false;
+    }
+    if((SIZE_MAX - block_size_) < offset_) {
+        return false;
+    }
+    if(range_free_list_->memory_pool_size < (offset_ + block_size_)) {
+        return false;
+    }
+    return true;
+}
+
+static bool is_valid_align(size_t base_align_, size_t offset_, size_t block_size_) {
+    if(0 == base_align_ || !IS_POWER_OF_TWO(base_align_)) {
+        return false;
+    }
+    if(0 != (offset_ % base_align_)) {
+        return false;
+    }
+    if(0 == block_size_ || 0 != (block_size_ % base_align_)) {
+        return false;
+    }
+    return true;
 }
 
 static const char* rslt_to_str(range_free_list_result_t rslt_) {
