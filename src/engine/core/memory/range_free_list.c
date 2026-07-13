@@ -111,7 +111,7 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
     tmp_range_free_list = (range_free_list_t*)malloc(sizeof(range_free_list_t));
     if(NULL == tmp_range_free_list) {
         ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to allocate range_free_list_t instance.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate range_free_list_t, bytes=%zu.", rslt_to_str(ret), sizeof(range_free_list_t));
         goto cleanup;
     }
     memset(tmp_range_free_list, 0, sizeof(range_free_list_t));
@@ -119,7 +119,7 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
     tmp_node_pool = (node_t**)malloc(sizeof(node_t*) * max_node_count_);
     if(NULL == tmp_node_pool) {
         ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to allocate node_t* array instance.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate node pointer array, max_node_count=%zu, bytes=%zu.", rslt_to_str(ret), max_node_count_, sizeof(node_t*) * max_node_count_);
         goto cleanup;
     }
     memset(tmp_node_pool, 0, sizeof(node_t*) * max_node_count_);
@@ -128,7 +128,7 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
         tmp_node_pool[i] = (node_t*)malloc(sizeof(node_t));
         if(NULL == tmp_node_pool[i]) {
             ret = RANGE_FREE_LIST_NO_MEMORY;
-            ERROR_MESSAGE("range_free_list_create(%s) - Failed to allocate node_t instance.", rslt_to_str(ret));
+            ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate node, node_index=%zu, max_node_count=%zu, bytes=%zu.", rslt_to_str(ret), i, max_node_count_, sizeof(node_t));
             goto cleanup;
         }
         memset(tmp_node_pool[i], 0, sizeof(node_t));
@@ -216,19 +216,19 @@ range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_
 
     ret = align_up(range_free_list_->base_align, required_size_, &allocation_size);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=align_up failed. base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_free_list_->base_align, required_size_);
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to align required size, base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_free_list_->base_align, required_size_);
         goto cleanup;
     }
 
     ret = find_first_fit_node(range_free_list_, allocation_size, &node);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=find_first_fit_node failed. required_size=%zu.", rslt_to_str(ret), required_size_);
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to find free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
         goto cleanup;
     }
 
     ret = allocate_from_node(range_free_list_, node, allocation_size, &tmp_offset);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Range free list allocation failed. reason=allocate_from_node failed. allocation_size=%zu.", rslt_to_str(ret), allocation_size);
+        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to consume free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
         goto cleanup;
     }
 
@@ -258,37 +258,37 @@ range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list
 
     ret = find_free_block_insert_position(range_free_list_, allocation_.offset, allocation_.allocated_size, &prev, &next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to find free block insert position, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
     }
 
     ret = node_acquire(range_free_list_, allocation_.offset, allocation_.allocated_size, &new_node);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to acquire free block node, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
     }
 
     ret = node_insert_between(range_free_list_, new_node, prev, next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to insert free block node, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
     }
 
     ret = node_adjacent_check_prev(new_node, &should_merge_prev);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to check previous free block adjacency, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
     }
 
     ret = node_adjacent_check_next(new_node, &should_merge_next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to check next free block adjacency, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
     }
 
     ret = merge_free_block(range_free_list_, new_node, should_merge_prev, should_merge_next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to merge adjacent free blocks, offset=%zu, size=%zu, should_merge_prev=%d, should_merge_next=%d.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size, should_merge_prev, should_merge_next);
         goto cleanup;
     }
 
@@ -388,7 +388,7 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
     while(NULL != node && index < range_free_list_->max_node_count) {
         if(0 != (node->offset % range_free_list_->base_align)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=offset is not aligned to base_align.", rslt_to_str(ret));
+            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=free block offset is not aligned to base_align, node_index=%zu, offset=%zu, block_size=%zu, base_align=%zu.", rslt_to_str(ret), index, node->offset, node->block_size, range_free_list_->base_align);
             goto cleanup;
         }
         if(node->block_size >= allocation_size_) {
@@ -402,7 +402,7 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
 
     if(!found) {
         ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first_fit_node. reason=required free space size could not be found. allocation_size=%zu", rslt_to_str(ret), allocation_size_);
+        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=no free block large enough, allocation_size=%zu.", rslt_to_str(ret), allocation_size_);
         goto cleanup;
     }
     *out_node_ = node;
@@ -437,19 +437,19 @@ static range_free_list_result_t allocate_from_node(range_free_list_t* range_free
     if(node_->block_size == allocation_size_) {
         ret = node_remove(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=node_remove failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=failed to remove fully consumed node, offset=%zu, block_size=%zu, allocation_size=%zu.", rslt_to_str(ret), escape_offset, node_->block_size, allocation_size_);
             goto cleanup;
         }
 
         ret = node_release(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=node_release failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=failed to release fully consumed node, offset=%zu, block_size=%zu, allocation_size=%zu.", rslt_to_str(ret), escape_offset, allocation_size_, allocation_size_);
             goto cleanup;
         }
     } else {
         if((SIZE_MAX - allocation_size_) < node_->offset) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from node. reason=overflow. allocated_size=%zu, offset=%zu.", rslt_to_str(ret), allocation_size_, node_->offset);
+            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=offset overflow while advancing free block, offset=%zu, allocation_size=%zu, block_size=%zu.", rslt_to_str(ret), node_->offset, allocation_size_, node_->block_size);
             goto cleanup;
         }
         node_->block_size -= allocation_size_;
@@ -479,14 +479,14 @@ static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_
 
     if(0 == range_free_list_->unused_node_count) {
         ret = RANGE_FREE_LIST_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=unused_node_count is zero.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=no unused node available, unused_node_count=%zu, max_node_count=%zu, offset=%zu, block_size=%zu.", rslt_to_str(ret), range_free_list_->unused_node_count, range_free_list_->max_node_count, offset_, block_size_);
         goto cleanup;
     }
 
     for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
         if(NULL == range_free_list_->node_pool[i]) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=node_pool entry is NULL, node_index=%zu, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), i, range_free_list_->max_node_count, range_free_list_->unused_node_count);
             goto cleanup;
         }
         if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i]->state) {
@@ -498,12 +498,12 @@ static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=unused_node_count != 0, but free slot not found.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=unused_node_count is nonzero but no NOT_USED node was found, unused_node_count=%zu, max_node_count=%zu.", rslt_to_str(ret), range_free_list_->unused_node_count, range_free_list_->max_node_count);
         goto cleanup;
     } else {
         if(!node_is_valid(tmp_node)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free node. reason=contents of the found node are corrupted.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=found NOT_USED node is corrupted, offset=%zu, block_size=%zu.", rslt_to_str(ret), tmp_node->offset, tmp_node->block_size);
             goto cleanup;
         }
     }
@@ -537,7 +537,7 @@ static range_free_list_result_t node_release(range_free_list_t* range_free_list_
     for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
         if(NULL == range_free_list_->node_pool[i]) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_release(%s) - Failed to release node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=node_pool entry is NULL, node_index=%zu, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), i, range_free_list_->max_node_count, range_free_list_->unused_node_count);
             goto cleanup;
         }
         if(range_free_list_->node_pool[i] == node_) {
@@ -549,7 +549,7 @@ static range_free_list_result_t node_release(range_free_list_t* range_free_list_
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_release(%s) - Failed to release node. reason=requested node was not found in the pool.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->state, range_free_list_->max_node_count, range_free_list_->unused_node_count);
         goto cleanup;
     }
 
@@ -579,7 +579,7 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
     for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
         if(NULL == range_free_list_->node_pool[i]) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=range_free_list_ is already initialized, but node_pool[%zu] is null.", rslt_to_str(ret), i);
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node_pool entry is NULL, node_index=%zu, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), i, range_free_list_->max_node_count, range_free_list_->unused_node_count);
             goto cleanup;
         }
         if(range_free_list_->node_pool[i] == node_) {
@@ -591,21 +591,21 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=requested node was not found in the pool.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->state, range_free_list_->max_node_count);
         goto cleanup;
     }
 
     if(NULL == range_free_list_->node_pool[index]->prev && NULL == range_free_list_->node_pool[index]->next) {  // node_が唯一のノード
         if(range_free_list_->free_block_list_head != range_free_list_->node_pool[index]) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=only node, but not connected to the list.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev/next but is not free_block_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), range_free_list_->node_pool[index]->offset, range_free_list_->node_pool[index]->block_size, index);
             goto cleanup;
         }
         range_free_list_->free_block_list_head = NULL;
     } else if(NULL == range_free_list_->node_pool[index]->prev && NULL != range_free_list_->node_pool[index]->next) {   // node_が先頭で、node_の次に別のノードがある
         if(range_free_list_->free_block_list_head != range_free_list_->node_pool[index]) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node. reason=head node, but not connected to the list.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev but is not free_block_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), range_free_list_->node_pool[index]->offset, range_free_list_->node_pool[index]->block_size, index);
             goto cleanup;
         }
         range_free_list_->free_block_list_head = range_free_list_->node_pool[index]->next;
@@ -647,7 +647,6 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
     IF_ARG_FALSE_GOTO_CLEANUP(is_valid_range(range_free_list_, offset_, free_size_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "range")
     IF_ARG_FALSE_GOTO_CLEANUP(is_valid_align(range_free_list_->base_align, offset_, free_size_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_free_block_insert_position", "align")
 
-    // TODO: is_non_overlapは最後に一箇所でやるようにして見通しをよくする
     tmp_node = range_free_list_->free_block_list_head;
     if(NULL == tmp_node) {  // free listが空
         tmp_prev_node = NULL;
@@ -657,7 +656,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
         if(tmp_node->offset > offset_) {    // 先頭に挿入
             if(!is_non_overlap(offset_, free_size_, tmp_node->offset)) {
                 ret = RANGE_FREE_LIST_BAD_OPERATION;
-                ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=new free range overlaps head free block, offset=%zu, free_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), offset_, free_size_, tmp_node->offset, tmp_node->block_size);
                 goto cleanup;
             }
             tmp_prev_node = NULL;
@@ -667,12 +666,12 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
             while(NULL != tmp_node && index < range_free_list_->max_node_count) {
                 if(tmp_node->offset == offset_) {
                     ret = RANGE_FREE_LIST_BAD_OPERATION;
-                    ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                    ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=free block with same offset already exists, offset=%zu, free_size=%zu, node_index=%zu, existing_block_size=%zu.", rslt_to_str(ret), offset_, free_size_, index, tmp_node->block_size);
                     goto cleanup;
                 }
                 if(NULL != tmp_node->next && tmp_node->offset >= tmp_node->next->offset) {
                     ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-                    ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                    ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=free block list order is corrupted, node_index=%zu, offset=%zu, next_offset=%zu.", rslt_to_str(ret), index, tmp_node->offset, tmp_node->next->offset);
                     goto cleanup;
                 }
                 // TODO: ここから下はもっとスッキリできる
@@ -680,12 +679,12 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                     if(tmp_node->next->offset > offset_) {  // 途中に挿入
                         if(!is_non_overlap(tmp_node->offset, tmp_node->block_size, offset_)) {
                             ret = RANGE_FREE_LIST_BAD_OPERATION;
-                            ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                            ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=new free range overlaps previous free block, offset=%zu, free_size=%zu, prev_index=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), offset_, free_size_, index, tmp_node->offset, tmp_node->block_size);
                             goto cleanup;
                         }
                         if(!is_non_overlap(offset_, free_size_, tmp_node->next->offset)) {
                             ret = RANGE_FREE_LIST_BAD_OPERATION;
-                            ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                            ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=new free range overlaps next free block, offset=%zu, free_size=%zu, next_index=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), offset_, free_size_, index + 1, tmp_node->next->offset, tmp_node->next->block_size);
                             goto cleanup;
                         }
                         tmp_prev_node = tmp_node;
@@ -696,7 +695,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
                 } else if(tmp_node->offset < offset_ && NULL == tmp_node->next) {   // 末尾に挿入
                     if(!is_non_overlap(tmp_node->offset, tmp_node->block_size, offset_)) {
                         ret = RANGE_FREE_LIST_BAD_OPERATION;
-                        ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+                        ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=new free range overlaps tail free block, offset=%zu, free_size=%zu, tail_index=%zu, tail_offset=%zu, tail_block_size=%zu.", rslt_to_str(ret), offset_, free_size_, index, tmp_node->offset, tmp_node->block_size);
                         goto cleanup;
                     }
                     tmp_prev_node = tmp_node;
@@ -712,7 +711,7 @@ static range_free_list_result_t find_free_block_insert_position(const range_free
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("find_free_block_insert_position(%s) - find_free_block_insert_position failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("find_free_block_insert_position(%s) - Failed to find free block insert position. reason=no valid insert position found, offset=%zu, free_size=%zu, max_node_count=%zu.", rslt_to_str(ret), offset_, free_size_, range_free_list_->max_node_count);
         goto cleanup;
     }
 
@@ -735,21 +734,21 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
 
     if(NULL != prev_ && NULL != next_ && prev_ == next_) {
         ret = RANGE_FREE_LIST_BAD_OPERATION;
-        ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ point to the same node, insert_offset=%zu, insert_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size);
         goto cleanup;
     }
 
     if(NULL == prev_ && NULL == next_) {
         if(NULL != range_free_list_->free_block_list_head) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=insert position indicates empty list but free_block_list_head is not NULL, insert_offset=%zu, insert_block_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, range_free_list_->free_block_list_head->offset, range_free_list_->free_block_list_head->block_size);
             goto cleanup;
         }
         range_free_list_->free_block_list_head = insert_node_;
     } else if(NULL == prev_ && NULL != next_) {
         if(next_ != range_free_list_->free_block_list_head || NULL != range_free_list_->free_block_list_head->prev) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=invalid head insert position, insert_offset=%zu, insert_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
         next_->prev = insert_node_;
@@ -757,7 +756,7 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
     } else if(NULL != prev_ && NULL != next_) {
         if(prev_->next != next_ || prev_ != next_->prev) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ are not linked, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
         prev_->next = insert_node_;
@@ -765,7 +764,7 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
     } else if(NULL != prev_ && NULL == next_) {
         if(NULL != prev_->next) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - node_insert_between failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ already has next for tail insertion, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size);
             goto cleanup;
         }
         prev_->next = insert_node_;
@@ -795,29 +794,29 @@ static range_free_list_result_t node_adjacent_check_prev(const node_t* node_, bo
     } else {
         if(NODE_STATE_CONNECTED != node_->prev->state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - node_adjacent_check_prev failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state);
             goto cleanup;
         }
         if(!node_is_valid(node_->prev)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - node_adjacent_check_prev failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state);
             goto cleanup;
         }
         if(node_->prev->next != node_) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - node_adjacent_check_prev failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is not linked to current node, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size);
             goto cleanup;
         }
 
         if(SIZE_MAX - node_->prev->block_size < node_->prev->offset) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - node_adjacent_check_prev failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous free block end offset overflow, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), node_->prev->offset, node_->prev->block_size);
             goto cleanup;
         }
         prev_end = node_->prev->block_size + node_->prev->offset;
         if(prev_end > node_->offset) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - node_adjacent_check_prev failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous free block overlaps current node, prev_offset=%zu, prev_block_size=%zu, prev_end=%zu, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), node_->prev->offset, node_->prev->block_size, prev_end, node_->offset, node_->block_size);
             goto cleanup;
         }
 
@@ -852,29 +851,29 @@ static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bo
     } else {
         if(NODE_STATE_CONNECTED != node_->next->state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - node_adjacent_check_next failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is not CONNECTED, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->state);
             goto cleanup;
         }
         if(!node_is_valid(node_->next)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - node_adjacent_check_next failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is corrupted, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->state);
             goto cleanup;
         }
         if(node_->next->prev != node_) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - node_adjacent_check_next failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is not linked to current node, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size);
             goto cleanup;
         }
 
         if(SIZE_MAX - node_->block_size < node_->offset) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - node_adjacent_check_next failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=current free block end offset overflow, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size);
             goto cleanup;
         }
         node_end = node_->block_size + node_->offset;
         if(node_end > node_->next->offset) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - node_adjacent_check_next failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=current free block overlaps next node, node_offset=%zu, node_block_size=%zu, node_end=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_end, node_->next->offset, node_->next->block_size);
             goto cleanup;
         }
 
@@ -909,14 +908,14 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
     if(should_merge_prev_) {
         if(!node_is_valid(node_->prev)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge prev block.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=previous merge target is corrupted, node_offset=%zu, node_block_size=%zu, should_merge_prev=%d, should_merge_next=%d.", rslt_to_str(ret), node_->offset, node_->block_size, should_merge_prev_, should_merge_next_);
             goto cleanup;
         }
     }
     if(should_merge_next_) {
         if(!node_is_valid(node_->next)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge next block.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=next merge target is corrupted, node_offset=%zu, node_block_size=%zu, should_merge_prev=%d, should_merge_next=%d.", rslt_to_str(ret), node_->offset, node_->block_size, should_merge_prev_, should_merge_next_);
             goto cleanup;
         }
     }
@@ -926,12 +925,12 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
         // node_->prevを残し、node_とnode_->nextを削除
         if(NODE_STATE_CONNECTED != node_->prev->state || NODE_STATE_CONNECTED != node_->next->state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge targets are not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state, node_->next->offset, node_->next->block_size, node_->next->state);
             goto cleanup;
         }
         if(!node_is_valid(node_->prev) || !node_is_valid(node_->next)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge target node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state, node_->next->offset, node_->next->block_size, node_->next->state);
             goto cleanup;
         }
         prev = node_->prev;
@@ -939,37 +938,37 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
 
         if((SIZE_MAX - node_->block_size) < prev->block_size) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=block size overflow while merging previous and current blocks, prev_offset=%zu, prev_block_size=%zu, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), prev->offset, prev->block_size, node_->offset, node_->block_size);
             goto cleanup;
         }
         new_block_size = prev->block_size + node_->block_size;
 
         if((SIZE_MAX - next->block_size) < new_block_size) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=block size overflow while merging next block, merged_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), new_block_size, next->offset, next->block_size);
             goto cleanup;
         }
         new_block_size += next->block_size;
 
         ret = node_remove(range_free_list_, next);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to remove next node, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), next->offset, next->block_size);
             goto cleanup;
         }
         ret = node_release(range_free_list_, next);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to release next node, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), next->offset, next->block_size);
             goto cleanup;
         }
 
         ret = node_remove(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to remove current node, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size);
             goto cleanup;
         }
         ret = node_release(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to release current node, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size);
             goto cleanup;
         }
 
@@ -980,19 +979,19 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
         next = node_->next;
         if((SIZE_MAX - prev->block_size) < node_->block_size) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=block size overflow while merging previous block, prev_offset=%zu, prev_block_size=%zu, node_offset=%zu, node_block_size=%zu.", rslt_to_str(ret), prev->offset, prev->block_size, node_->offset, node_->block_size);
             goto cleanup;
         }
         new_block_size = node_->block_size + prev->block_size;
 
         ret = node_remove(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to remove current node for previous merge, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, prev->offset, prev->block_size);
             goto cleanup;
         }
         ret = node_release(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to release current node for previous merge, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, prev->offset, prev->block_size);
             goto cleanup;
         }
 
@@ -1003,7 +1002,7 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
 
         if((SIZE_MAX - next->block_size) < node_->block_size) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=block size overflow while merging next block, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, next->offset, next->block_size);
             goto cleanup;
         }
         new_block_size = node_->block_size + next->block_size;
@@ -1011,12 +1010,12 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
 
         ret = node_remove(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to remove current node for next merge, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, next->offset, next->block_size);
             goto cleanup;
         }
         ret = node_release(range_free_list_, node_);
         if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("merge_free_block(%s) - merge_free_block failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=failed to release current node for next merge, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, next->offset, next->block_size);
             goto cleanup;
         }
 
@@ -1203,7 +1202,7 @@ static range_free_list_result_t align_up(size_t base_align_, size_t required_siz
 
     if((SIZE_MAX - padding) < required_size_) {
         ret = RANGE_FREE_LIST_OVERFLOW;
-        ERROR_MESSAGE("align_up(%s) - Failed to find first_fit_node. reason=size overflow.", rslt_to_str(ret));
+        ERROR_MESSAGE("align_up(%s) - Failed to align allocation size. reason=required_size plus padding overflows, base_align=%zu, required_size=%zu, padding=%zu.", rslt_to_str(ret), base_align_, required_size_, padding);
         goto cleanup;
     }
     *out_allocation_size_ = required_size_ + padding;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
