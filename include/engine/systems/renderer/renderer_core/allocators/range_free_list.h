@@ -15,8 +15,8 @@
 // - vbo_poolを導入し、dynamic_arrayで管理する
 // - vbo_poolはvbo_pageの配列で、vbo_pageはvboとrange_free_listを保持する
 // - 空きノードが足りなくなった場合、vbo_poolの配列要素を増やす
-#ifndef GLCE_ENGINE_CORE_MEMORY_RANGE_FREE_LIST_H
-#define GLCE_ENGINE_CORE_MEMORY_RANGE_FREE_LIST_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_CORE_ALLOCATORS_RANGE_FREE_LIST_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_CORE_ALLOCATORS_RANGE_FREE_LIST_H
 
 #ifdef __cplusplus
 extern "C" {

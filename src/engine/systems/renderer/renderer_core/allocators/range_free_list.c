@@ -2,7 +2,7 @@
 // - メモリアロケータであり、バグがあった際に原因究明が困難であることから、エラー処理は厚めにする
 // - allocate / freeはエラー処理が特に重要なので、動作が安定するまではエラー処理は厳しくする、安定後、リリースビルドでは重いエラー処理を省く
 // - プライベート関数については、range_free_list_t全体のvalidationは行わない(外部公開APIで厚めのチェックをすることと、極端にエラー処理を重くしすぎないため)
-#include "engine/core/memory/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc / free
