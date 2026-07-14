@@ -16,9 +16,9 @@ const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_);
 
 buffer_manager_result_t buffer_manager_rslt_convert_range_free_list(range_free_list_result_t rslt_);
 
-renderer_result_t buffer_manager_rslt_convert_renderer(renderer_result_t rslt_);
+buffer_manager_result_t buffer_manager_rslt_convert_renderer(renderer_result_t rslt_);
 
-memory_system_result_t buffer_manager_rslt_convert_choco_memory(memory_system_result_t rslt_);
+buffer_manager_result_t buffer_manager_rslt_convert_choco_memory(memory_system_result_t rslt_);
 
 #ifdef __cplusplus
 }
