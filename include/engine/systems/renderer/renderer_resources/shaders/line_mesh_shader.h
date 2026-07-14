@@ -52,31 +52,9 @@ void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line
 
 renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_);
 
-/**
- * @brief 線分描画用シェーダー用のバーテックスバッファを生成する
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] line_mesh_shader_ バーテックスバッファ生成対象線分描画用シェーダーリソースインスタンスへのポインタ
- * @param[in] buffer_usage_ バッファ使用用途(DYNAMIC / STATIC)
- * @param[in] buffer_size_ バーテックスバッファサイズ(byte)
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_mesh_shader_ == NULL
- * - buffer_size_ == 0
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - line_mesh_shader_->line_vao != NULL
- * - line_mesh_shader_->line_vbo != NULL
- * - line_mesh_shader_->current_buffer_offset != 0
- * - line_mesh_shader_->current_vertex_count != 0
- * - メモリシステム未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR buffer_usage_またはbuffer_size_が規定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_);
+renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_, size_t max_free_node_count_);
+
+renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAO / VBOを破棄する

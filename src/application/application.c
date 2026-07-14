@@ -358,10 +358,16 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = line_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->line_mesh_shader, BUFFER_USAGE_STATIC, 1024);
+    ret_renderer = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, BUFFER_USAGE_STATIC, 1024, 1024);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line vertex buffer.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = line_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize line vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

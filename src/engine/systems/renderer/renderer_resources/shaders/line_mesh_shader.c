@@ -210,11 +210,10 @@ cleanup:
     return ret;
 }
 
-renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_) {
+renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_, size_t max_free_node_count_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    bool vao_created = false;
+
     bool vbo_created = false;
-    bool vao_bound = false;
     bool vbo_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "backend_context_")
@@ -224,13 +223,7 @@ renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context
     IF_ARG_FALSE_GOTO_CLEANUP(0 == line_mesh_shader_->current_buffer_offset, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "current_buffer_offset")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == line_mesh_shader_->current_vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "current_vertex_count")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "buffer_size_")
-
-    ret = renderer_backend_vertex_array_create(backend_context_, &line_mesh_shader_->line_vao);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to create line vao.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vao_created = true;
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_free_node_count_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "max_free_node_count_")
 
     ret = renderer_backend_vertex_buffer_create(backend_context_, &line_mesh_shader_->line_vbo);
     if(RENDERER_SUCCESS != ret) {
@@ -239,13 +232,6 @@ renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context
     }
     vbo_created = true;
 
-    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->line_vao);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vao_bound = true;
-
     ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(ret));
@@ -253,24 +239,11 @@ renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context
     }
     vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
     ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, buffer_size_, 0, buffer_usage_);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to create vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-
-    ret = renderer_backend_vertex_array_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vao_bound = false;
 
     ret = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
@@ -291,18 +264,80 @@ cleanup:
             }
             renderer_backend_vertex_buffer_destroy(backend_context_, &line_mesh_shader_->line_vbo);
         }
-        if(vao_created) {
-            if(vao_bound) {
-                renderer_backend_vertex_array_unbind(backend_context_);
-            }
-            renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
-        }
         if(NULL != line_mesh_shader_) {
             line_mesh_shader_->current_buffer_offset = 0;
             line_mesh_shader_->vertex_buffer_size = 0;
         }
     }
 
+    return ret;
+}
+
+renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    bool vao_created = false;
+    bool vao_bound = false;
+    bool vbo_bound = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "line_mesh_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_vao")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_vbo")
+
+    ret = renderer_backend_vertex_array_create(backend_context_, &line_mesh_shader_->line_vao);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to create line vao.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vao_created = true;
+
+    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->line_vao);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vao_bound = true;
+
+    ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vbo_bound = true;
+
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vbo_bound = false;
+
+    ret = renderer_backend_vertex_array_unbind(backend_context_);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex array.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    vao_bound = false;
+
+cleanup:
+    if(RENDERER_SUCCESS != ret) {
+        if(vbo_bound) {
+            renderer_backend_vertex_buffer_unbind(backend_context_);
+        }
+        if(vao_bound) {
+            renderer_backend_vertex_array_unbind(backend_context_);
+        }
+        if(vao_created) {
+            renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
+        }
+    }
     return ret;
 }
 
