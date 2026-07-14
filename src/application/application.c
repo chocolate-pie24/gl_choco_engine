@@ -346,7 +346,13 @@ application_result_t application_create(void) {
     }
 
     // Line Shader
-    ret_renderer = line_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "line_mesh_shader", &tmp->line_mesh_shader);
+    ret_renderer = line_mesh_shader_create(&tmp->line_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = line_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, "assets/shaders/test_shader/", "line_mesh_shader");
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
