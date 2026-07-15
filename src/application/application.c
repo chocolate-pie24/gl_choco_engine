@@ -53,6 +53,8 @@
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+
 #include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
@@ -121,6 +123,8 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
 
+    vbo_manager_config_t line_mesh_shader_vbo_config;
+
     ui_mesh_shader_t* ui_mesh_shader;
     line_mesh_shader_t* line_mesh_shader;
     point_mesh_shader_t* point_mesh_shader;
@@ -148,8 +152,10 @@ typedef struct app_state {
 
     line_mesh_geometry_registry_t* line_mesh_geometry_registry;
     int16_t geometry_id_penguin_aabb;
+    vertex_buffer_range_t penguin_aabb_buffer_range;
     vec4u8_t penguin_aabb_color;
     int16_t geometry_id_test_line;
+    vertex_buffer_range_t test_line_buffer_range;
     vec4u8_t test_line_color;
 
     mat4x4f_t rabbit_mesh_model_mat;
@@ -358,7 +364,12 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, BUFFER_USAGE_STATIC, 1024, 1024);
+
+    tmp->line_mesh_shader_vbo_config.base_align = alignof(float);
+    tmp->line_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->line_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->line_mesh_shader_vbo_config.vbo_size = 1024;
+    ret_renderer = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, &tmp->line_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create line vertex buffer.", app_rslt_to_str(ret));
@@ -839,15 +850,15 @@ application_result_t application_run(void) {
         // 線分描画
         line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
         line_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
-        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb, &vertex_offset, &vertex_count);
+        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb, &s_app_state->penguin_aabb_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
-            glDrawArrays(GL_LINES, vertex_offset, vertex_count);
+            glDrawArrays(GL_LINES, s_app_state->penguin_aabb_buffer_range.draw_range.first_vertex_count, s_app_state->penguin_aabb_buffer_range.draw_range.vertex_count);
         }
-        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line, &vertex_offset, &vertex_count);
+        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line, &s_app_state->test_line_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
-            glDrawArrays(GL_LINES, vertex_offset, vertex_count);
+            glDrawArrays(GL_LINES, s_app_state->test_line_buffer_range.draw_range.first_vertex_count, s_app_state->test_line_buffer_range.draw_range.vertex_count);
         }
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 

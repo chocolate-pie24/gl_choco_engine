@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdalign.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -31,12 +32,14 @@
 
 #include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/systems/renderer/renderer_core/renderer_memory.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+
+#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 // TODO: テスト(line_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
@@ -57,15 +60,17 @@ struct line_mesh_shader {
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 
     renderer_backend_vao_t* line_vao;       /**< 線分描画シェーダー用VAO */
-    renderer_backend_vbo_t* line_vbo;       /**< 線分描画シェーダー用VBO */
 
-    size_t vertex_buffer_size;              /**< バーテックスバッファのサイズ */
-    size_t current_buffer_offset;           /**< 現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) */
-    size_t current_vertex_count;            /**< 現在バーテックスバッファに転送されている頂点数 */
+    vbo_manager_t* vbo_manager;
+    vbo_manager_config_t vbo_config;
 };
 
 static renderer_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_);
 static renderer_result_t shader_program_build(renderer_backend_shader_t* shader_, renderer_backend_context_t* backend_context_, const choco_string_t* vertex_shader_source_, const choco_string_t* fragment_shader_source_);
+
+// validation
+static bool vbo_config_is_valid(const vbo_manager_config_t* config_);
+static bool line_mesh_shader_is_initialized(const line_mesh_shader_t* line_mesh_shader_);
 
 renderer_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
@@ -83,14 +88,11 @@ renderer_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_sha
     }
     tmp_line_mesh_shader->shader = NULL;
     tmp_line_mesh_shader->line_vao = NULL;
-    tmp_line_mesh_shader->line_vbo = NULL;
+    tmp_line_mesh_shader->vbo_manager = NULL;
     tmp_line_mesh_shader->model_matrix_location = 0;
     tmp_line_mesh_shader->view_matrix_location = 0;
     tmp_line_mesh_shader->projection_matrix_location = 0;
     tmp_line_mesh_shader->color_location = 0;
-    tmp_line_mesh_shader->current_buffer_offset = 0;
-    tmp_line_mesh_shader->vertex_buffer_size = 0;
-    tmp_line_mesh_shader->current_vertex_count = 0;
 
     *out_line_mesh_shader_ = tmp_line_mesh_shader;
     ret = RENDERER_SUCCESS;
@@ -210,63 +212,35 @@ cleanup:
     return ret;
 }
 
-renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_, size_t max_free_node_count_) {
+renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vbo_manager_config_t* vbo_config_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    bool vbo_created = false;
-    bool vbo_bound = false;
+    vbo_manager_t* tmp_vbo_manager = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "line_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "line_vao")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "line_vbo")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == line_mesh_shader_->current_buffer_offset, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "current_buffer_offset")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == line_mesh_shader_->current_vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "current_vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "buffer_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_free_node_count_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "max_free_node_count_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "line_mesh_shader_->vbo_manager")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "vbo_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "vbo_config_")
 
-    ret = renderer_backend_vertex_buffer_create(backend_context_, &line_mesh_shader_->line_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to create line vbo.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_created = true;
-
-    ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_bound = true;
-
-    ret = renderer_backend_vertex_buffer_vertex_load(backend_context_, buffer_size_, 0, buffer_usage_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to create vertex buffer.", renderer_rslt_to_str(ret));
+    ret_buff_mgr = vbo_manager_create(backend_context_, vbo_config_, &tmp_vbo_manager);
+    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+        ret = RENDERER_RUNTIME_ERROR;   // TODO: vbo_manager_create仕様が安定したら適切な実行結果コードに変換する
+        ERROR_MESSAGE("line_mesh_shader_vbo_initialize(%s) - buffer manager create failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_create(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_bound = false;
-
-    line_mesh_shader_->vertex_buffer_size = buffer_size_;
+    line_mesh_shader_->vbo_config = *vbo_config_;
+    line_mesh_shader_->vbo_manager = tmp_vbo_manager;
 
     ret = RENDERER_SUCCESS;
 
 cleanup:
     if(RENDERER_SUCCESS != ret) {
-        if(vbo_created) {
-            if(vbo_bound) {
-                renderer_backend_vertex_buffer_unbind(backend_context_);
-            }
-            renderer_backend_vertex_buffer_destroy(backend_context_, &line_mesh_shader_->line_vbo);
-        }
-        if(NULL != line_mesh_shader_) {
-            line_mesh_shader_->current_buffer_offset = 0;
-            line_mesh_shader_->vertex_buffer_size = 0;
+        if(NULL != tmp_vbo_manager) {
+            vbo_manager_destroy(backend_context_, &tmp_vbo_manager);
         }
     }
 
@@ -276,6 +250,8 @@ cleanup:
 renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
+    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
+
     bool vao_created = false;
     bool vao_bound = false;
     bool vbo_bound = false;
@@ -283,7 +259,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "line_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_vao")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_vbo")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_mesh_shader_->vbo_manager")
 
     ret = renderer_backend_vertex_array_create(backend_context_, &line_mesh_shader_->line_vao);
     if(RENDERER_SUCCESS != ret) {
@@ -299,9 +275,10 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     }
     vao_bound = true;
 
-    ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(ret));
+    ret_buff_mgr = vbo_manager_vbo_bind(line_mesh_shader_->vbo_manager, backend_context_);
+    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+        // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));
         goto cleanup;
     }
     vbo_bound = true;
@@ -312,9 +289,10 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
+    ret_buff_mgr = vbo_manager_vbo_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
+        // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));
         goto cleanup;
     }
     vbo_bound = false;
@@ -329,7 +307,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
 cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(vbo_bound) {
-            renderer_backend_vertex_buffer_unbind(backend_context_);
+            vbo_manager_vbo_unbind(backend_context_);
         }
         if(vao_bound) {
             renderer_backend_vertex_array_unbind(backend_context_);
@@ -350,68 +328,97 @@ void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_
         WARN_MESSAGE("line_mesh_shader_vertex_buffer_destroy - Provided line_mesh_shader_ is not valid.");
         return;
     }
-    if(NULL != line_mesh_shader_->line_vbo) {
-        renderer_backend_vertex_buffer_destroy(backend_context_, &line_mesh_shader_->line_vbo);
+    if(NULL != line_mesh_shader_->vbo_manager) {
+        vbo_manager_destroy(backend_context_, &line_mesh_shader_->vbo_manager);
     }
     if(NULL != line_mesh_shader_->line_vao) {
         renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
     }
-    line_mesh_shader_->current_buffer_offset = 0;
-    line_mesh_shader_->vertex_buffer_size = 0;
-    line_mesh_shader_->current_vertex_count = 0;
 }
 
-renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_) {
+renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    size_t vertex_count = 0;
-    bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "line_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_append", "line_vbo")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "write_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_OVERFLOW, renderer_rslt_to_str(RENDERER_OVERFLOW), "line_mesh_shader_vertex_buffer_append", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP((line_mesh_shader_->current_buffer_offset + size_) <= line_mesh_shader_->vertex_buffer_size, ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "line_mesh_shader_vertex_buffer_append", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(line_vertex_t) * 2)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "size_")
+    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_bound = true;
+    vertex_allocation_t tmp_alloc_handle = { 0 };
 
-    ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, line_mesh_shader_->current_buffer_offset, size_, write_data_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "backend_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_is_initialized(line_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "line_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "write_data_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(line_vertex_t) * 2)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "out_buffer_range_")
+
+    ret_buff_mgr = vbo_manager_vbo_write(line_mesh_shader_->vbo_manager, backend_context_, size_, (void*)write_data_, &tmp_alloc_handle);
+    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+        ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
+        ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_buffer_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // NOTE: vertex_countは必ずsize_よりも小さいため、line_mesh_shader_->current_vertex_countのオーバーフローチェックは不要
-    vertex_count = size_ / sizeof(line_vertex_t);
-
-    *out_vertex_offset_ = line_mesh_shader_->current_vertex_count;
-    line_mesh_shader_->current_buffer_offset += size_;
-    line_mesh_shader_->current_vertex_count += vertex_count;
+    out_buffer_range_->allocation_size = tmp_alloc_handle.allocation_size;
+    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.vertex_offset / sizeof(line_vertex_t);
+    out_buffer_range_->draw_range.vertex_count = size_ / sizeof(line_vertex_t);
 
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    if(RENDERER_SUCCESS != ret) {
-        if(NULL != backend_context_ && vbo_bound) {
-            renderer_backend_vertex_buffer_unbind(backend_context_);
-        }
-    }
+    // TODO: range_free_listの2-phase allocation完成後、ロールバックを追加する
     return ret;
 }
+
+// renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_) {
+//     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+//     size_t vertex_count = 0;
+//     bool vbo_bound = false;
+
+//     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "backend_context_")
+//     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "line_mesh_shader_")
+//     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_append", "line_vbo")
+//     IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "write_data_")
+//     IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "size_")
+//     IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_OVERFLOW, renderer_rslt_to_str(RENDERER_OVERFLOW), "line_mesh_shader_vertex_buffer_append", "size_")
+//     IF_ARG_FALSE_GOTO_CLEANUP((line_mesh_shader_->current_buffer_offset + size_) <= line_mesh_shader_->vertex_buffer_size, ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "line_mesh_shader_vertex_buffer_append", "size_")
+//     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
+//     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(line_vertex_t) * 2)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_append", "size_")
+
+//     ret = renderer_backend_vertex_buffer_bind(backend_context_, line_mesh_shader_->line_vbo);
+//     if(RENDERER_SUCCESS != ret) {
+//         ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
+//         goto cleanup;
+//     }
+//     vbo_bound = true;
+
+//     ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, line_mesh_shader_->current_buffer_offset, size_, write_data_);
+//     if(RENDERER_SUCCESS != ret) {
+//         ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
+//         goto cleanup;
+//     }
+
+//     ret = renderer_backend_vertex_buffer_unbind(backend_context_);
+//     if(RENDERER_SUCCESS != ret) {
+//         ERROR_MESSAGE("line_mesh_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
+//         goto cleanup;
+//     }
+
+//     // NOTE: vertex_countは必ずsize_よりも小さいため、line_mesh_shader_->current_vertex_countのオーバーフローチェックは不要
+//     vertex_count = size_ / sizeof(line_vertex_t);
+
+//     *out_vertex_offset_ = line_mesh_shader_->current_vertex_count;
+//     line_mesh_shader_->current_buffer_offset += size_;
+//     line_mesh_shader_->current_vertex_count += vertex_count;
+
+//     ret = RENDERER_SUCCESS;
+
+// cleanup:
+//     if(RENDERER_SUCCESS != ret) {
+//         if(NULL != backend_context_ && vbo_bound) {
+//             renderer_backend_vertex_buffer_unbind(backend_context_);
+//         }
+//     }
+//     return ret;
+// }
 
 renderer_result_t line_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
@@ -607,4 +614,39 @@ static renderer_result_t shader_program_build(renderer_backend_shader_t* shader_
 
 cleanup:
     return ret;
+}
+
+static bool vbo_config_is_valid(const vbo_manager_config_t* config_) {
+    if(NULL == config_) {
+        return false;
+    }
+    if(0 == config_->vbo_size) {
+        return false;
+    }
+    if(0 == config_->max_node_count) {
+        return false;
+    }
+    if(BUFFER_USAGE_DYNAMIC != config_->buffer_usage && BUFFER_USAGE_STATIC != config_->buffer_usage) {
+        return false;
+    }
+    if(alignof(float) != config_->base_align) {
+        return false;
+    }
+    return true;
+}
+
+static bool line_mesh_shader_is_initialized(const line_mesh_shader_t* line_mesh_shader_) {
+    if(NULL == line_mesh_shader_) {
+        return false;
+    }
+    if(NULL == line_mesh_shader_->shader) {
+        return false;
+    }
+    if(NULL == line_mesh_shader_->line_vao) {
+        return false;
+    }
+    if(NULL == line_mesh_shader_->vbo_manager) {
+        return false;
+    }
+    return true;
 }

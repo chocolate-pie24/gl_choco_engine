@@ -28,7 +28,9 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+
+#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */
 
@@ -52,7 +54,7 @@ void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line
 
 renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_);
 
-renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_, size_t max_free_node_count_);
+renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vbo_manager_config_t* vbo_config_);
 
 renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
@@ -70,30 +72,34 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
  */
 void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
-/**
- * @brief 線分描画用シェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] line_mesh_shader_ 転送先VBOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
- * @param[in] size_ 転送データサイズ
- * @param[in] write_data_ 転送データ
- * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_mesh_shader_ == NULL
- * - write_data_ == NULL
- * - size_ == 0
- * - out_vertex_offset_ == NULL
- * - size_がsizeof(line_vertex_t) x 2の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
- * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - VBO未初期化
- * - backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
+
+renderer_result_t line_mesh_shader_vbo_free(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
+
+// /**
+//  * @brief 線分描画用シェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)
+//  *
+//  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+//  * @param[in,out] line_mesh_shader_ 転送先VBOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
+//  * @param[in] size_ 転送データサイズ
+//  * @param[in] write_data_ 転送データ
+//  * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
+//  *
+//  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+//  * - backend_context_ == NULL
+//  * - line_mesh_shader_ == NULL
+//  * - write_data_ == NULL
+//  * - size_ == 0
+//  * - out_vertex_offset_ == NULL
+//  * - size_がsizeof(line_vertex_t) x 2の倍数ではない
+//  * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
+//  * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
+//  * @retval RENDERER_BAD_OPERATION 以下のいずれか
+//  * - VBO未初期化
+//  * - backend_context_が未初期化
+//  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+//  */
+// renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAOをbindする
