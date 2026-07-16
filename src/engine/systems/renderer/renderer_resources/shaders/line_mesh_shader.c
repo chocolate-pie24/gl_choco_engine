@@ -359,8 +359,8 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
         goto cleanup;
     }
 
-    out_buffer_range_->allocation_size = tmp_alloc_handle.allocation_size;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.vertex_offset / sizeof(line_vertex_t);
+    out_buffer_range_->allocation_size = tmp_alloc_handle.allocated_size;
+    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.byte_offset / sizeof(line_vertex_t);
     out_buffer_range_->draw_range.vertex_count = size_ / sizeof(line_vertex_t);
 
     ret = RENDERER_SUCCESS;
@@ -388,8 +388,8 @@ renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader
         goto cleanup;
     }
 
-    alloc_info.allocation_size = buffer_range_->allocation_size;
-    alloc_info.vertex_offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
+    alloc_info.allocated_size = buffer_range_->allocation_size;
+    alloc_info.byte_offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
 
     ret_buff_mgr = vbo_manager_vbo_free(line_mesh_shader_->vbo_manager, &alloc_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {

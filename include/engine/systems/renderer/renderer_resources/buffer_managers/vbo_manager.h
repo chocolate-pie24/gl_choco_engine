@@ -20,8 +20,8 @@ typedef struct vbo_manager_config {
 
 // NOTE: 将来のvbo_managerの拡張(vbo_pool, pageの導入)を見据え、range_allocation_tとは別に用意する
 typedef struct vertex_allocation {
-    size_t vertex_offset;
-    size_t allocation_size;
+    size_t byte_offset;
+    size_t allocated_size;
 } vertex_allocation_t;
 
 typedef struct vbo_manager vbo_manager_t;                           /**< VBO Managerのopaque型 */

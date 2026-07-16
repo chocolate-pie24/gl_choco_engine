@@ -191,8 +191,8 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
     }
     vbo_bound = false;
 
-    out_allocation_handle_->allocation_size = tmp_allocation.allocated_size;
-    out_allocation_handle_->vertex_offset = tmp_allocation.offset;
+    out_allocation_handle_->allocated_size = tmp_allocation.allocated_size;
+    out_allocation_handle_->byte_offset = tmp_allocation.offset;
 
     ret = BUFFER_MANAGER_SUCCESS;
 
@@ -226,11 +226,11 @@ buffer_manager_result_t vbo_manager_vbo_free(vbo_manager_t* vbo_manager_, const 
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_free", "allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocation_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_vbo_free", "range_.allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_vbo_free", "range_.allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_vbo_free", "vbo_manager_")
 
-    tmp_range.allocated_size = allocation_handle_->allocation_size;
-    tmp_range.offset = allocation_handle_->vertex_offset;
+    tmp_range.allocated_size = allocation_handle_->allocated_size;
+    tmp_range.offset = allocation_handle_->byte_offset;
 
     ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_range);
     if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
