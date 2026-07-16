@@ -114,7 +114,7 @@ void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line
         WARN_MESSAGE("line_mesh_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
-    line_mesh_shader_vertex_buffer_destroy(backend_context_, *line_mesh_shader_);
+    line_mesh_shader_vao_vbo_destroy(backend_context_, *line_mesh_shader_);
     if(NULL != (*line_mesh_shader_)->shader) {
         renderer_backend_shader_destroy(backend_context_, &(*line_mesh_shader_)->shader);
     }
@@ -321,13 +321,13 @@ cleanup:
     return ret;
 }
 
-void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_) {
+void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_) {
     if(NULL == backend_context_) {
-        WARN_MESSAGE("line_mesh_shader_vertex_buffer_destroy - Provided backend_context_ is not valid.");
+        WARN_MESSAGE("line_mesh_shader_vao_vbo_destroy - Provided backend_context_ is not valid.");
         return;
     }
     if(NULL == line_mesh_shader_) {
-        WARN_MESSAGE("line_mesh_shader_vertex_buffer_destroy - Provided line_mesh_shader_ is not valid.");
+        WARN_MESSAGE("line_mesh_shader_vao_vbo_destroy - Provided line_mesh_shader_ is not valid.");
         return;
     }
     if(NULL != line_mesh_shader_->vbo_manager) {

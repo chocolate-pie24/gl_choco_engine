@@ -70,7 +70,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] line_mesh_shader_ VAO, VBOリソースを保持する線分描画用シェーダー構造体インスタンスへのポインタ
  */
-void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
+void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
 renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
 
