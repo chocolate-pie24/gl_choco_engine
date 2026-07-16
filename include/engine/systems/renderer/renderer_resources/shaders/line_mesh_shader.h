@@ -113,7 +113,7 @@ renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_);
+renderer_result_t line_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_);
 
 /**
  * @brief 線分描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える

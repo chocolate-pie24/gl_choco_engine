@@ -456,16 +456,16 @@ cleanup:
 //     return ret;
 // }
 
-renderer_result_t line_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_) {
+renderer_result_t line_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_array_bind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_array_bind", "line_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_array_bind", "line_vao")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_bind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_bind", "line_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_bind", "line_vao")
 
     ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->line_vao);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_vertex_array_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
