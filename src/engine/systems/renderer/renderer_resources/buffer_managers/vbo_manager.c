@@ -122,7 +122,7 @@ cleanup:
     return ret;
 }
 
-void vbo_manager_destroy(renderer_backend_context_t* backend_context_, vbo_manager_t** vbo_manager_) {
+void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_t* backend_context_) {
     if(NULL == backend_context_) {
         ERROR_MESSAGE("vbo_manager_destroy - VBO cannot be released because backend_context is NULL.");
         return;

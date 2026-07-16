@@ -240,7 +240,7 @@ renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* ba
 cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(NULL != tmp_vbo_manager) {
-            vbo_manager_destroy(backend_context_, &tmp_vbo_manager);
+            vbo_manager_destroy(&tmp_vbo_manager, backend_context_);
         }
     }
 
@@ -331,7 +331,7 @@ void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_contex
         return;
     }
     if(NULL != line_mesh_shader_->vbo_manager) {
-        vbo_manager_destroy(backend_context_, &line_mesh_shader_->vbo_manager);
+        vbo_manager_destroy(&line_mesh_shader_->vbo_manager, backend_context_);
     }
     if(NULL != line_mesh_shader_->line_vao) {
         renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
