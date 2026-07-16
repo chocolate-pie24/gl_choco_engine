@@ -187,17 +187,17 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_) {
+resource_registry_result_t line_mesh_geometry_registry_vertex_buffer_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "out_vertex_buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_draw_range_get", "geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_vertex_buffer_range_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_vertex_buffer_range_get", "out_vertex_buffer_range_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_vertex_buffer_range_get", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_vertex_buffer_range_get", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - Failed to get line mesh geometry draw range. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        ERROR_MESSAGE("line_mesh_geometry_registry_vertex_buffer_range_get(%s) - Failed to get line mesh geometry draw range. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
         goto cleanup;
     }
 
@@ -223,8 +223,8 @@ resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geomet
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_register", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "vertex_buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_size, ret, RESOURCE_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->draw_range.vertex_count, ret, RESOURCE_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_registry_register", "vertex_buffer_range_->draw_range.vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_size, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "line_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->draw_range.vertex_count, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "line_mesh_geometry_registry_register", "vertex_buffer_range_->draw_range.vertex_count")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "out_geometry_id_")
 
     // 重複チェック

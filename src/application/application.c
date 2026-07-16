@@ -850,12 +850,12 @@ application_result_t application_run(void) {
         // 線分描画
         line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
         line_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
-        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb, &s_app_state->penguin_aabb_buffer_range);
+        ret_resource_registy = line_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb, &s_app_state->penguin_aabb_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
             glDrawArrays(GL_LINES, s_app_state->penguin_aabb_buffer_range.draw_range.first_vertex_count, s_app_state->penguin_aabb_buffer_range.draw_range.vertex_count);
         }
-        ret_resource_registy = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line, &s_app_state->test_line_buffer_range);
+        ret_resource_registy = line_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line, &s_app_state->test_line_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
             glDrawArrays(GL_LINES, s_app_state->test_line_buffer_range.draw_range.first_vertex_count, s_app_state->test_line_buffer_range.draw_range.vertex_count);

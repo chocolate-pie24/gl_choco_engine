@@ -141,7 +141,7 @@ resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_ge
 //  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが登録されていない
 //  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
 //  */
-resource_registry_result_t line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_);
+resource_registry_result_t line_mesh_geometry_registry_vertex_buffer_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_);
 
 // /**
 //  * @brief geometry_の複製と対応する頂点オフセットをregistry_に登録し、ジオメトリidを取得する
