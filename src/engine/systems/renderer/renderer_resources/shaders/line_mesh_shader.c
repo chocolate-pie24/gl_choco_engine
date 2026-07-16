@@ -275,7 +275,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     }
     vao_bound = true;
 
-    ret_buff_mgr = vbo_manager_vbo_bind(line_mesh_shader_->vbo_manager, backend_context_);
+    ret_buff_mgr = vbo_manager_bind(line_mesh_shader_->vbo_manager, backend_context_);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
         ret = RENDERER_RUNTIME_ERROR;
@@ -290,8 +290,8 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
         goto cleanup;
     }
 
-    ret_buff_mgr = vbo_manager_vbo_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret_buff_mgr) {
+    ret_buff_mgr = vbo_manager_unbind(backend_context_);
+    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
         ret = RENDERER_RUNTIME_ERROR;
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
@@ -309,7 +309,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
 cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(vbo_bound) {
-            vbo_manager_vbo_unbind(backend_context_);
+            vbo_manager_unbind(backend_context_);
         }
         if(vao_bound) {
             renderer_backend_vertex_array_unbind(backend_context_);
@@ -352,7 +352,7 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(line_vertex_t) * 2)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "out_buffer_range_")
 
-    ret_buff_mgr = vbo_manager_vbo_write(line_mesh_shader_->vbo_manager, backend_context_, size_, (void*)write_data_, &tmp_alloc_handle);
+    ret_buff_mgr = vbo_manager_write(line_mesh_shader_->vbo_manager, backend_context_, size_, (const void*)write_data_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
@@ -391,7 +391,7 @@ renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader
     alloc_info.allocated_size = buffer_range_->allocation_size;
     alloc_info.byte_offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
 
-    ret_buff_mgr = vbo_manager_vbo_free(line_mesh_shader_->vbo_manager, &alloc_info);
+    ret_buff_mgr = vbo_manager_free(line_mesh_shader_->vbo_manager, &alloc_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
         ERROR_MESSAGE("line_mesh_shader_vbo_free(%s) - vbo free failed.", renderer_rslt_to_str(ret));

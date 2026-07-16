@@ -140,7 +140,7 @@ void vbo_manager_destroy(renderer_backend_context_t* backend_context_, vbo_manag
     *vbo_manager_ = NULL;
 }
 
-buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_) {
+buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
@@ -152,17 +152,17 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
     bool load_success = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_write", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_write", "backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_write", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_write", "write_data_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_write", "out_allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_vbo_write", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "backend_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "write_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_write", "vbo_manager_")
 
     ret_allocator = range_free_list_allocate(vbo_manager_->range_free_list, size_, vbo_manager_->config.base_align, &tmp_allocation);
     if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
         ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_vbo_write(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
     allocate_success = true;
@@ -170,7 +170,7 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
     ret_renderer = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_vbo_write(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_bound = true;
@@ -178,7 +178,7 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
     ret_renderer = renderer_backend_vertex_buffer_vertex_subload(backend_context_, tmp_allocation.offset, size_, write_data_);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_vbo_write(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
     load_success = true;
@@ -186,7 +186,7 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
     ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_vbo_write(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_bound = false;
@@ -203,13 +203,13 @@ cleanup:
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
             ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_allocation);
             if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
-                ERROR_MESSAGE("vbo_manager_vbo_write(%s) - range_free_list_free failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_range_free_list(ret_allocator)));
+                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_range_free_list(ret_allocator)));
             }
         }
         if(vbo_bound) {
             ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
             if(RENDERER_SUCCESS != ret_renderer) {
-                ERROR_MESSAGE("vbo_manager_vbo_write(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_renderer(ret_renderer)));
+                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_renderer(ret_renderer)));
             }
         }
     }
@@ -217,17 +217,17 @@ cleanup:
     return ret;
 }
 
-buffer_manager_result_t vbo_manager_vbo_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_) {
+buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     range_allocation_t tmp_range = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_free", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_free", "allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_vbo_free", "range_.allocated_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_vbo_free", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "range_.allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
 
     tmp_range.allocated_size = allocation_handle_->allocated_size;
     tmp_range.offset = allocation_handle_->byte_offset;
@@ -235,7 +235,7 @@ buffer_manager_result_t vbo_manager_vbo_free(vbo_manager_t* vbo_manager_, const 
     ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_range);
     if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
         ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_vbo_free(%s) - vbo_manager_vbo_free failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_free(%s) - vbo_manager_free failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -245,19 +245,19 @@ cleanup:
     return ret;
 }
 
-buffer_manager_result_t vbo_manager_vbo_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_) {
+buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_bind", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_bind", "backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_vbo_bind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "backend_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_bind", "vbo_manager_")
 
     ret_renderer = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_vbo_bind(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_bind(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -267,17 +267,17 @@ cleanup:
     return ret;
 }
 
-buffer_manager_result_t vbo_manager_vbo_unbind(const renderer_backend_context_t* backend_context_) {
+buffer_manager_result_t vbo_manager_unbind(const renderer_backend_context_t* backend_context_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_vbo_unbind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "backend_context_")
 
     ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_vbo_unbind(%s) - vbo_manager_vbo_write failed.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_unbind(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
 

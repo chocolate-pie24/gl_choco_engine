@@ -31,13 +31,13 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
 
 void vbo_manager_destroy(renderer_backend_context_t* backend_context_, vbo_manager_t** vbo_manager_);
 
-buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_);
+buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_);
 
-buffer_manager_result_t vbo_manager_vbo_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_);
+buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_);
 
-buffer_manager_result_t vbo_manager_vbo_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_);
+buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_);
 
-buffer_manager_result_t vbo_manager_vbo_unbind(const renderer_backend_context_t* backend_context_);
+buffer_manager_result_t vbo_manager_unbind(const renderer_backend_context_t* backend_context_);
 
 void vbo_manager_status_print(const vbo_manager_t* vbo_manager_);
 
