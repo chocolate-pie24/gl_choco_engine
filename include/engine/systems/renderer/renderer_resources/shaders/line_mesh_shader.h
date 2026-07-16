@@ -74,7 +74,7 @@ void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_
 
 renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
 
-renderer_result_t line_mesh_shader_vbo_free(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
+renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
 // /**
 //  * @brief 線分描画用シェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)

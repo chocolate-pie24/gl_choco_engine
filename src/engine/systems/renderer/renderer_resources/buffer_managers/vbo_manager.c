@@ -198,7 +198,7 @@ buffer_manager_result_t vbo_manager_vbo_write(vbo_manager_t* vbo_manager_, const
 
 cleanup:
     // NOTE: allocateで失敗した場合、range_free_list側で解放するサイズが不明(アライメントされるためsize_と異なる場合がある)なためローバック不可
-    // NOTE: Range Free Listを、allocateから2-phase allocationに仕様変更し、ロールバック処理を変更する
+    // TODO: Range Free Listを、allocateから2-phase allocationに仕様変更し、ロールバック処理を変更する
     if(allocate_success) {
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
             ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_allocation);

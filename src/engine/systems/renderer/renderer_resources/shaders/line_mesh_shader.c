@@ -278,7 +278,8 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     ret_buff_mgr = vbo_manager_vbo_bind(line_mesh_shader_->vbo_manager, backend_context_);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
-        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));
+        ret = RENDERER_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_bound = true;
@@ -290,9 +291,10 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     }
 
     ret_buff_mgr = vbo_manager_vbo_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret) {
+    if(RENDERER_SUCCESS != ret_buff_mgr) {
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
-        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(RENDERER_RUNTIME_ERROR));
+        ret = RENDERER_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_bound = false;
@@ -365,6 +367,40 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
 
 cleanup:
     // TODO: range_free_listの2-phase allocation完成後、ロールバックを追加する
+    return ret;
+}
+
+renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader_, const vertex_buffer_range_t* buffer_range_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
+
+    vertex_allocation_t alloc_info = { 0 };
+
+    IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_is_initialized(line_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "line_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_free", "buffer_range_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vbo_free", "buffer_range_->allocation_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vbo_free", "buffer_range_->draw_range.vertex_count")
+
+    if((SIZE_MAX / sizeof(line_vertex_t)) < buffer_range_->draw_range.first_vertex_count) {
+        ret = RENDERER_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_shader_vbo_free(%s) - line_mesh_shader_vbo_free failed.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    alloc_info.allocation_size = buffer_range_->allocation_size;
+    alloc_info.vertex_offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
+
+    ret_buff_mgr = vbo_manager_vbo_free(line_mesh_shader_->vbo_manager, &alloc_info);
+    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+        ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
+        ERROR_MESSAGE("line_mesh_shader_vbo_free(%s) - vbo free failed.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
     return ret;
 }
 

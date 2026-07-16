@@ -95,6 +95,9 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
+    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
+    // - registerをreserve -> commit / abort方式の2-phase registerに変更
+    // - range free listの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
     line_mesh_geometry_destroy(&geometry);
     return ret;
 }
@@ -162,12 +165,56 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
+    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
+    // - registerをreserve -> commit / abort方式の2-phase registerに変更
+    // - range free listの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
     line_mesh_geometry_destroy(&geometry);
     return ret;
 }
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_release(int16_t geometry_id_) {
-    // TODO: VBO FreeList + releaseができたら実装する
-    ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - Failed to release line mesh geometry. reason=not_implemented, geometry_id=%d, vertex_buffer_release=not_supported", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_RUNTIME_ERROR), geometry_id_);
-    return RESOURCE_PIPELINE_RUNTIME_ERROR;
+resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+
+    vertex_buffer_range_t vertex_buffer_range = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "geometry_registry_")
+
+    ret_registry = line_mesh_geometry_registry_draw_range_get(geometry_registry_, geometry_id_, &vertex_buffer_range);
+    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = line_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_registry = line_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
+    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    return ret;
 }
