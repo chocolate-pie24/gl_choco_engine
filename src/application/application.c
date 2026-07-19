@@ -124,6 +124,7 @@ typedef struct app_state {
     renderer_backend_context_t* renderer_backend_context;
 
     vbo_manager_config_t line_mesh_shader_vbo_config;
+    vbo_manager_config_t lit_mesh_shader_vbo_config;
 
     ui_mesh_shader_t* ui_mesh_shader;
     line_mesh_shader_t* line_mesh_shader;
@@ -144,6 +145,7 @@ typedef struct app_state {
 
     lit_mesh_geometry_registry_t* lit_mesh_geometry_registry;
     int16_t geometry_id_penguin;
+    vertex_buffer_range_t penguin_buffer_range;
     bool should_draw_penguin_aabb;
 
     ui_mesh_geometry_registry_t* ui_mesh_geometry_registry;
@@ -421,10 +423,20 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = lit_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->lit_mesh_shader, BUFFER_USAGE_STATIC, 1 * GIB);
+    tmp->lit_mesh_shader_vbo_config.base_align = alignof(float);
+    tmp->lit_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->lit_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->lit_mesh_shader_vbo_config.vbo_size = 1 * GIB;
+    ret_renderer = lit_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, &tmp->lit_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh vertex buffer.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - Failed to create lit vertex buffer.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = lit_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize lit vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -891,12 +903,12 @@ application_result_t application_run(void) {
         }
 
         // STL描画
-        ret_resource_registy = lit_mesh_geometry_registry_draw_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin, &vertex_offset, &vertex_count);
+        ret_resource_registy = lit_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin, &s_app_state->penguin_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
             lit_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
-            glDrawArrays(GL_TRIANGLES, vertex_offset, vertex_count);
+            glDrawArrays(GL_TRIANGLES, s_app_state->penguin_buffer_range.draw_range.first_vertex_count, s_app_state->penguin_buffer_range.draw_range.vertex_count);
             renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
         }
 

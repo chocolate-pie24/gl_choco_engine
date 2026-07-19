@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdalign.h>
+#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -80,13 +81,7 @@ renderer_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_sha
         ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to allocate memory for tmp_line_mesh_shader.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp_line_mesh_shader->shader = NULL;
-    tmp_line_mesh_shader->line_vao = NULL;
-    tmp_line_mesh_shader->vbo_manager = NULL;
-    tmp_line_mesh_shader->model_matrix_location = 0;
-    tmp_line_mesh_shader->view_matrix_location = 0;
-    tmp_line_mesh_shader->projection_matrix_location = 0;
-    tmp_line_mesh_shader->color_location = 0;
+    memset(tmp_line_mesh_shader, 0, sizeof(line_mesh_shader_t));
 
     *out_line_mesh_shader_ = tmp_line_mesh_shader;
     ret = RENDERER_SUCCESS;

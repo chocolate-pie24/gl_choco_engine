@@ -83,7 +83,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
 // resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_vertices();
 
 // TODO: 実装後にdoxygenコメントを追加する
-resource_pipeline_result_t lit_mesh_geometry_pipeline_release(int16_t geometry_id_);
+resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 
 #ifdef __cplusplus
 }

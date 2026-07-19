@@ -48,7 +48,6 @@ struct line_mesh_geometry_registry {
     line_mesh_geometry_t** geometries;  /**< 登録されたジオメトリの複製へのポインタ配列。複製の所有権はレジストリが持つ */
 
     // GPU placement metadata
-    // size_t* vertex_offsets;             /**< 各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 */
     vertex_buffer_range_t* vertex_ranges;
 };
 
@@ -92,9 +91,9 @@ resource_registry_result_t line_mesh_geometry_registry_initialize(size_t max_geo
         goto cleanup;
     }
 
-    if((SIZE_MAX / max_geometry_count_) < sizeof(size_t)) {
+    if((SIZE_MAX / max_geometry_count_) < sizeof(vertex_buffer_range_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), SIZE_MAX);
+        ERROR_MESSAGE("line_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(vertex_buffer_range_t), SIZE_MAX);
         goto cleanup;
     }
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(vertex_buffer_range_t) * max_geometry_count_, alignof(vertex_buffer_range_t), (void**)&tmp_vertex_ranges);
