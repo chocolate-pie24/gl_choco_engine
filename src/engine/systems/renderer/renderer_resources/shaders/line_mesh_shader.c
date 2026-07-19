@@ -26,10 +26,6 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/containers/choco_string.h"
-
-#include "engine/io_utils/fs_utils/fs_utils.h"
-
 #include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/systems/renderer/renderer_core/renderer_memory.h"
 #include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
@@ -45,7 +41,6 @@
 
 // TODO: テスト(line_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
-// TODO: vbo_config_t
 
 /**
  * @brief 線分描画用シェーダーリソース構造体

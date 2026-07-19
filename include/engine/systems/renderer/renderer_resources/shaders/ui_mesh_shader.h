@@ -33,46 +33,7 @@ typedef struct ui_mesh_shader ui_mesh_shader_t;                     /**< UI描�
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
-/**
- * @brief UIシェーダーリソースインスタンスのメモリを確保し初期化する
- *
- * @details 以下の処理を行う
- * - out_ui_mesh_shader_自身のリソース確保
- * - シェーダーソースのコンパイル
- * - シェーダーモジュールのリンク
- * - UIシェーダーが扱うモデル行列のLocation取得
- * - UIシェーダーが扱うビュー行列のLocation取得
- * - UIシェーダーが扱うプロジェクション行列のLocation取得
- *
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
- * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
- * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[out] out_ui_mesh_shader_ リソース確保対象UIシェーダーリソースへのダブルポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - file_path_ == NULL
- * - name_ == NULL
- * - backend_context_ == NULL
- * - out_ui_mesh_shader_ == NULL
- * - *out_ui_mesh_shader_ != NULL
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステムのメモリ使用量範囲上限超過
- * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
- * - 計算過程でオーバーフロー発生(文字列長さ異常)
- * - ユニフォーム変数のLocation取得に失敗
- * @retval RENDERER_DATA_CORRUPTED 内部データ破損が発生
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - レンダラーバックエンドが未初期化
- * - シェーダーソースが既にコンパイル済み
- * - シェーダーモジュールが既にリンク済み
- * - メモリシステム未初期化
- * @retval RENDERER_SHADER_COMPILE_ERROR 以下のいずれか
- * - シェーダーモジュールのGPU側リソース確保に失敗
- * - シェーダーソースのコンパイルに失敗
- * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, ui_mesh_shader_t** out_ui_mesh_shader_);
+renderer_result_t ui_mesh_shader_create(ui_mesh_shader_t** out_ui_mesh_shader_);
 
 /**
  * @brief UIシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する
@@ -87,6 +48,8 @@ renderer_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_cont
  * @param[in,out] ui_mesh_shader_ 破棄対象UIシェーダーリソースインスタンスへのダブルポインタ
  */
 void ui_mesh_shader_destroy(renderer_backend_context_t* backend_context_, ui_mesh_shader_t** ui_mesh_shader_);
+
+renderer_result_t ui_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, ui_mesh_shader_t* ui_mesh_shader_, const char* file_path_, const char* name_);
 
 /**
  * @brief UIシェーダー用のバーテックスバッファを生成する

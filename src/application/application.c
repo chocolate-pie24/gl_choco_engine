@@ -338,10 +338,16 @@ application_result_t application_create(void) {
     }
 
     // UI Shader
-    ret_renderer = ui_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "ui_mesh_shader", &tmp->ui_mesh_shader);
+    ret_renderer = ui_mesh_shader_create(&tmp->ui_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = ui_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, "assets/shaders/test_shader/", "ui_mesh_shader");
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = ui_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_mesh_shader, BUFFER_USAGE_STATIC, 1024);
@@ -383,10 +389,16 @@ application_result_t application_create(void) {
     }
 
     // Point Shader
-    ret_renderer = point_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "point_mesh_shader", &tmp->point_mesh_shader);
+    ret_renderer = point_mesh_shader_create(&tmp->point_mesh_shader);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = point_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, "assets/shaders/test_shader/", "point_mesh_shader");
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
     ret_renderer = point_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->point_mesh_shader, BUFFER_USAGE_DYNAMIC, BUFFER_USAGE_DYNAMIC, 1024, 1024);
@@ -397,7 +409,13 @@ application_result_t application_create(void) {
     }
 
     // Lit Mesh Shader
-    ret_renderer = lit_mesh_shader_create(tmp->renderer_backend_context, "assets/shaders/test_shader/", "lit_mesh_shader", &tmp->lit_mesh_shader);
+    ret_renderer = lit_mesh_shader_create(&tmp->lit_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = lit_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, "assets/shaders/test_shader/", "lit_mesh_shader");
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));

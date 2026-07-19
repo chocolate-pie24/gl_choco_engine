@@ -25,10 +25,6 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/containers/choco_string.h"
-
-#include "engine/io_utils/fs_utils/fs_utils.h"
-
 #include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/systems/renderer/renderer_core/renderer_memory.h"
 
@@ -37,6 +33,8 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
 
 // TODO: テスト(ui_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
@@ -62,66 +60,13 @@ struct ui_mesh_shader {
     size_t current_vertex_count;            /**< 現在バーテックスバッファに転送されている頂点数 */
 };
 
-renderer_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, ui_mesh_shader_t** out_ui_mesh_shader_) {
+renderer_result_t ui_mesh_shader_create(ui_mesh_shader_t** out_ui_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
 
     ui_mesh_shader_t* tmp_ui_mesh_shader = NULL;
 
-    fs_utils_t* frag_fs_utils = NULL;
-    fs_utils_t* vert_fs_utils = NULL;
-    choco_string_t* vert_shader_source = NULL;
-    choco_string_t* frag_shader_source = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_create", "file_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_create", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ui_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_create", "out_ui_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_create", "*out_ui_mesh_shader_")
-
-    // シェーダーソース格納用choco_string生成
-    ret_string = choco_string_default_create(&vert_shader_source);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = renderer_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to create string for vert_shader_source.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_string = choco_string_default_create(&frag_shader_source);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = renderer_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to create string for frag_shader_source.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダーソース読み込み用fs_utils生成
-    ret_fs_utils = fs_utils_create(file_path_, name_, ".frag", FILESYSTEM_MODE_READ, &frag_fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to create fs_utils for fragment_shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_utils = fs_utils_create(file_path_, name_, ".vert", FILESYSTEM_MODE_READ, &vert_fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to create fs_utils for vertex_shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダープログラムロード
-    ret_fs_utils = fs_utils_text_file_read(frag_fs_utils, frag_shader_source);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to read shader source(fragment_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_fs_utils = fs_utils_text_file_read(vert_fs_utils, vert_shader_source);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to read shader source(vertex_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // ui shader構造体インスタンス生成
     ret = renderer_mem_allocate(sizeof(ui_mesh_shader_t), (void**)&tmp_ui_mesh_shader);
@@ -139,77 +84,11 @@ renderer_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_cont
     tmp_ui_mesh_shader->vertex_buffer_size = 0;
     tmp_ui_mesh_shader->current_vertex_count = 0;
 
-    // シェーダーモジュール生成
-    ret = renderer_backend_shader_create(backend_context_, &tmp_ui_mesh_shader->shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダーコンパイル / リンク
-    ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vert_shader_source), backend_context_, tmp_ui_mesh_shader->shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to compile shader object(vertex_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(frag_shader_source), backend_context_, tmp_ui_mesh_shader->shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to compile shader object(fragment_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_link(backend_context_, tmp_ui_mesh_shader->shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to link shader program.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // uniform location
-    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_mesh_shader->shader, "g_model_matrix", &tmp_ui_mesh_shader->model_matrix_location);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to get model matrix location.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_mesh_shader->shader, "g_view_matrix", &tmp_ui_mesh_shader->view_matrix_location);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to get view matrix location.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_ui_mesh_shader->shader, "g_projection_matrix", &tmp_ui_mesh_shader->projection_matrix_location);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to get projection matrix location.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    choco_string_destroy(&vert_shader_source);
-    choco_string_destroy(&frag_shader_source);
-    fs_utils_destroy(&vert_fs_utils);
-    fs_utils_destroy(&frag_fs_utils);
-
     *out_ui_mesh_shader_ = tmp_ui_mesh_shader;
+
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    if(RENDERER_SUCCESS != ret) {
-        if(NULL != vert_fs_utils) {
-            fs_utils_destroy(&vert_fs_utils);
-        }
-        if(NULL != frag_fs_utils) {
-            fs_utils_destroy(&frag_fs_utils);
-        }
-        if(NULL != frag_shader_source) {
-            choco_string_destroy(&frag_shader_source);
-        }
-        if(NULL != vert_shader_source) {
-            choco_string_destroy(&vert_shader_source);
-        }
-        if(NULL != tmp_ui_mesh_shader) {
-            ui_mesh_shader_destroy(backend_context_, &tmp_ui_mesh_shader);
-        }
-    }
     return ret;
 }
 
@@ -232,6 +111,60 @@ void ui_mesh_shader_destroy(renderer_backend_context_t* backend_context_, ui_mes
     }
     renderer_mem_free(*ui_mesh_shader_, sizeof(ui_mesh_shader_t));
     *ui_mesh_shader_ = NULL;
+}
+
+renderer_result_t ui_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, ui_mesh_shader_t* ui_mesh_shader_, const char* file_path_, const char* name_) {
+    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+
+    renderer_backend_shader_t* tmp_shader = NULL;
+    int32_t tmp_model_matrix_location = 0;
+    int32_t tmp_view_matrix_location = 0;
+    int32_t tmp_projection_matrix_location = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_program_initialize", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_program_initialize", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_program_initialize", "file_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "ui_mesh_shader_program_initialize", "name_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(ui_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "ui_mesh_shader_program_initialize", "ui_mesh_shader_->shader")
+
+    // シェーダープログラムビルド
+    ret = shader_program_builder_create_from_files(backend_context_, file_path_, name_, &tmp_shader);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_mesh_shader_program_initialize(%s) - Failed to build shader program.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // uniform location
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_model_matrix", &tmp_model_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_mesh_shader_program_initialize(%s) - Failed to get model matrix location.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_view_matrix", &tmp_view_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_mesh_shader_program_initialize(%s) - Failed to get view matrix location.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_projection_matrix", &tmp_projection_matrix_location);
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_mesh_shader_program_initialize(%s) - Failed to get projection matrix location.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ui_mesh_shader_->model_matrix_location = tmp_model_matrix_location;
+    ui_mesh_shader_->view_matrix_location = tmp_view_matrix_location;
+    ui_mesh_shader_->projection_matrix_location = tmp_projection_matrix_location;
+    ui_mesh_shader_->shader = tmp_shader;
+
+    ret = RENDERER_SUCCESS;
+
+cleanup:
+    if(RENDERER_SUCCESS != ret && NULL != tmp_shader) {
+        renderer_backend_shader_destroy(backend_context_, &tmp_shader);
+    }
+    return ret;
 }
 
 renderer_result_t ui_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, ui_mesh_shader_t* ui_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_) {

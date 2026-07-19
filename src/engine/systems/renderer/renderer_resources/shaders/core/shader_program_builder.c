@@ -28,33 +28,33 @@ renderer_result_t shader_program_builder_create_from_files(renderer_backend_cont
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "file_path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "shader_program_builder_create_from_files", "shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "shader_program_builder_create_from_files", "*shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "*out_shader_")
 
     // シェーダーソースロード
     ret = shader_source_load(file_path_, name_, ".frag", &frag_shader_source);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to load fragment shader source.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to load fragment shader source.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = shader_source_load(file_path_, name_, ".vert", &vert_shader_source);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to load vertex shader source.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to load vertex shader source.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     // シェーダーハンドル生成
     ret = renderer_backend_shader_create(backend_context_, &tmp_shader);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     // シェーダープログラムビルド
     ret = shader_program_build(tmp_shader, backend_context_, vert_shader_source, frag_shader_source);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to build shader program.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to build shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
