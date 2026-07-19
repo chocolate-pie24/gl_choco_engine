@@ -39,6 +39,8 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
+
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 // TODO: テスト(line_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
@@ -64,9 +66,6 @@ struct line_mesh_shader {
     vbo_manager_t* vbo_manager;
     vbo_manager_config_t vbo_config;
 };
-
-static renderer_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_);
-static renderer_result_t shader_program_build(renderer_backend_shader_t* shader_, renderer_backend_context_t* backend_context_, const choco_string_t* vertex_shader_source_, const choco_string_t* fragment_shader_source_);
 
 // validation
 static bool vbo_config_is_valid(const vbo_manager_config_t* config_);
@@ -125,16 +124,11 @@ void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line
 renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
-    choco_string_t* vert_shader_source = NULL;
-    choco_string_t* frag_shader_source = NULL;
-
     renderer_backend_shader_t* tmp_shader = NULL;
     int32_t tmp_model_matrix_location = 0;
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
     int32_t tmp_color_location = 0;
-
-    bool shader_handle_created = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_program_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_program_initialize", "line_mesh_shader_")
@@ -142,56 +136,35 @@ renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_program_initialize", "name_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->shader, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_program_initialize", "line_mesh_shader_->shader")
 
-    // シェーダーソースロード
-    ret = shader_source_load(file_path_, name_, ".frag", &frag_shader_source);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to load fragment shader source.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = shader_source_load(file_path_, name_, ".vert", &vert_shader_source);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to load vertex shader source.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダーハンドル生成
-    ret = renderer_backend_shader_create(backend_context_, &tmp_shader);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to create shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    shader_handle_created = true;
-
     // シェーダープログラムビルド
-    ret = shader_program_build(tmp_shader, backend_context_, vert_shader_source, frag_shader_source);
+    ret = shader_program_builder_create_from_files(backend_context_, file_path_, name_, &tmp_shader);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to build shader program.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Failed to build shader program.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     // uniform location
     ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_model_matrix", &tmp_model_matrix_location);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to get model matrix location.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Failed to get model matrix location.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_view_matrix", &tmp_view_matrix_location);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to get view matrix location.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Failed to get view matrix location.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_projection_matrix", &tmp_projection_matrix_location);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to get projection matrix location.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Failed to get projection matrix location.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_line_color", &tmp_color_location);
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to get color location.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Failed to get color location.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -204,9 +177,7 @@ renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    choco_string_destroy(&vert_shader_source);
-    choco_string_destroy(&frag_shader_source);
-    if(RENDERER_SUCCESS != ret && shader_handle_created) {
+    if(RENDERER_SUCCESS != ret && NULL != tmp_shader) {
         renderer_backend_shader_destroy(backend_context_, &tmp_shader);
     }
     return ret;
@@ -559,94 +530,6 @@ renderer_result_t line_mesh_shader_color_set(const renderer_backend_context_t* b
         ERROR_MESSAGE("line_mesh_shader_color_set(%s) - Failed to set color.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-
-cleanup:
-    return ret;
-}
-
-static renderer_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
-
-    fs_utils_t* fs_utils = NULL;
-    choco_string_t* shader_source = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_source_load", "file_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_source_load", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_source_load", "extension_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_source_load", "out_shader_source_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_source_load", "*out_shader_source_")
-
-    // シェーダーソース格納用choco_string生成
-    ret_string = choco_string_default_create(&shader_source);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = renderer_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("shader_source_load(%s) - Failed to create string for vert_shader_source.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダーソース読み込み用fs_utils生成
-    ret_fs_utils = fs_utils_create(file_path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("shader_source_load(%s) - Failed to create fs_utils for fragment_shader.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // シェーダープログラムロード
-    ret_fs_utils = fs_utils_text_file_read(fs_utils, shader_source);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = renderer_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("shader_source_load(%s) - Failed to read shader source(fragment_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    fs_utils_destroy(&fs_utils);
-
-    *out_shader_source_ = shader_source;
-
-    ret = RENDERER_SUCCESS;
-
-cleanup:
-    if(RENDERER_SUCCESS != ret) {
-        if(NULL != fs_utils) {
-            fs_utils_destroy(&fs_utils);
-        }
-        if(NULL != shader_source) {
-            choco_string_destroy(&shader_source);
-        }
-    }
-    return ret;
-}
-
-static renderer_result_t shader_program_build(renderer_backend_shader_t* shader_, renderer_backend_context_t* backend_context_, const choco_string_t* vertex_shader_source_, const choco_string_t* fragment_shader_source_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_build", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_build", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_build", "vertex_shader_source_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_source_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "shader_program_build", "fragment_shader_source_")
-
-    ret = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vertex_shader_source_), backend_context_, shader_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("shader_program_build(%s) - Failed to compile shader object(vertex_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(fragment_shader_source_), backend_context_, shader_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("shader_program_build(%s) - Failed to compile shader object(fragment_shader).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = renderer_backend_shader_link(backend_context_, shader_);
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("shader_program_build(%s) - Failed to link shader program.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_SUCCESS;
 
 cleanup:
     return ret;
