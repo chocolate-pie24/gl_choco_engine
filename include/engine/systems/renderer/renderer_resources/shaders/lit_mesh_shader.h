@@ -80,31 +80,6 @@ renderer_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* ba
 
 renderer_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
-// /**
-//  * @brief lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)
-//  *
-//  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
-//  * @param[in,out] lit_mesh_shader_ 転送先VBOを保持するlit_meshシェーダー構造体インスタンスへのポインタ
-//  * @param[in] size_ 転送データサイズ
-//  * @param[in] write_data_ 転送データ
-//  * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
-//  *
-//  * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
-//  * - backend_context_ == NULL
-//  * - lit_mesh_shader_ == NULL
-//  * - write_data_ == NULL
-//  * - size_ == 0
-//  * - out_vertex_offset_ == NULL
-//  * - size_がsizeof(point_normal_vertex_t) x 3の倍数ではない
-//  * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
-//  * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
-//  * @retval RENDERER_BAD_OPERATION 以下のいずれか
-//  * - VBO未初期化
-//  * - backend_context_が未初期化
-//  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
-//  */
-// renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
-
 /**
  * @brief lit_meshシェーダーが保持するVAOをbindする
  *

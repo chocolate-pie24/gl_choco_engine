@@ -46,8 +46,8 @@ struct point_mesh_geometry_registry {
     // CPU resources
     point_mesh_geometry_t** geometries; /**< 登録されたジオメトリの複製へのポインタ配列。複製の所有権はレジストリが持つ */
 
-    // GPU resources
-    size_t* vertex_offsets;             /**< 各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 */
+    // GPU placement metadata
+    vertex_buffer_range_t* vertex_ranges;
 };
 
 static bool geometry_id_is_valid(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
@@ -61,7 +61,7 @@ resource_registry_result_t point_mesh_geometry_registry_initialize(size_t max_ge
     point_mesh_geometry_registry_t* tmp_registry = NULL;
     point_mesh_geometry_t** tmp_geometry_array = NULL;
 
-    size_t* tmp_vertex_offsets = NULL;
+    vertex_buffer_range_t* tmp_vertex_ranges = NULL;
 
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "max_geometry_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(INT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "max_geometry_count_")
@@ -90,26 +90,28 @@ resource_registry_result_t point_mesh_geometry_registry_initialize(size_t max_ge
         goto cleanup;
     }
 
-    if((SIZE_MAX / max_geometry_count_) < sizeof(size_t)) {
+    if((SIZE_MAX / max_geometry_count_) < sizeof(vertex_buffer_range_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), SIZE_MAX);
+        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - Allocation size overflow while calculating vertex offset array size. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, size_max=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(vertex_buffer_range_t), SIZE_MAX);
         goto cleanup;
     }
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(size_t) * max_geometry_count_, alignof(size_t), (void**)&tmp_vertex_offsets);
+    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(vertex_buffer_range_t) * max_geometry_count_, alignof(vertex_buffer_range_t), (void**)&tmp_vertex_ranges);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - Failed to allocate vertex offset array. target=vertex_offsets, elem_type=size_t, elem_count=%zu, elem_size=%zu, bytes=%zu, align=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(size_t), sizeof(size_t) * max_geometry_count_, alignof(size_t));
+        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - Failed to allocate vertex range array. target=vertex_ranges, elem_type=size_t, elem_count=%zu, elem_size=%zu, bytes=%zu, align=%zu", resource_registry_rslt_to_str(ret), max_geometry_count_, sizeof(vertex_buffer_range_t), sizeof(vertex_buffer_range_t) * max_geometry_count_, alignof(vertex_buffer_range_t));
         goto cleanup;
     }
 
     tmp_registry->max_geometry_count = max_geometry_count_;
     for(size_t i = 0; i != max_geometry_count_; ++i) {
         tmp_geometry_array[i] = NULL;
-        tmp_vertex_offsets[i] = 0;
+        tmp_vertex_ranges[i].allocation_size = 0;
+        tmp_vertex_ranges[i].draw_range.first_vertex_count = 0;
+        tmp_vertex_ranges[i].draw_range.vertex_count = 0;
     }
 
     tmp_registry->geometries = tmp_geometry_array;
-    tmp_registry->vertex_offsets = tmp_vertex_offsets;
+    tmp_registry->vertex_ranges = tmp_vertex_ranges;
 
     *out_registry_ = tmp_registry;
 
@@ -126,7 +128,9 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
     }
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         point_mesh_geometry_destroy(&registry_->geometries[i]);  // registry_->geometries[i] == NULLになる
-        registry_->vertex_offsets[i] = 0;
+        registry_->vertex_ranges[i].allocation_size = 0;
+        registry_->vertex_ranges[i].draw_range.first_vertex_count = 0;
+        registry_->vertex_ranges[i].draw_range.vertex_count = 0;
     }
 }
 
@@ -181,36 +185,25 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t point_mesh_geometry_registry_draw_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_, size_t* out_vertex_offset_, size_t* out_vertex_count_) {
+resource_registry_result_t point_mesh_geometry_registry_vertex_buffer_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
     size_t tmp_count = 0;
     size_t tmp_offset = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_draw_range_get", "out_vertex_offset_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_draw_range_get", "out_vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_draw_range_get", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_draw_range_get", "geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_vertex_buffer_range_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_vertex_buffer_range_get", "out_vertex_buffer_range_")
+    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_vertex_buffer_range_get", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_vertex_buffer_range_get", "geometry_id_")
 
     if(NULL == registry_->geometries[geometry_id_]) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("point_mesh_geometry_registry_draw_range_get(%s) - Failed to get point mesh geometry draw range. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
+        ERROR_MESSAGE("point_mesh_geometry_registry_vertex_buffer_range_get(%s) - Failed to get point mesh geometry draw range. reason=not_registered, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
         goto cleanup;
     }
 
-    ret_resource = point_mesh_geometry_vertex_count_get(registry_->geometries[geometry_id_], &tmp_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_registry_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("point_mesh_geometry_registry_draw_range_get(%s) - Failed to get point mesh geometry draw range. reason=vertex_count_get_failed, geometry_id=%d", resource_registry_rslt_to_str(ret), geometry_id_);
-        goto cleanup;
-    }
-
-    tmp_offset = registry_->vertex_offsets[geometry_id_];
-
-    *out_vertex_count_ = tmp_count;
-    *out_vertex_offset_ = tmp_offset;
+    *out_vertex_buffer_range_ = registry_->vertex_ranges[geometry_id_];
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -218,7 +211,7 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const point_mesh_geometry_t* geometry_, size_t vertex_offset_, int16_t* out_geometry_id_) {
+resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const point_mesh_geometry_t* geometry_, const vertex_buffer_range_t* vertex_buffer_range_, int16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
@@ -231,6 +224,9 @@ resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geom
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "registry_")
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "point_mesh_geometry_registry_register", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "vertex_buffer_range_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_size, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "point_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->draw_range.vertex_count, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "point_mesh_geometry_registry_register", "vertex_buffer_range_->draw_range.vertex_count")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_register", "out_geometry_id_")
 
     // 重複チェック
@@ -266,7 +262,7 @@ resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geom
         goto cleanup;
     }
 
-    registry_->vertex_offsets[free_slot] = vertex_offset_;
+    registry_->vertex_ranges[free_slot] = *vertex_buffer_range_;
     registry_->geometries[free_slot] = cloned_geometry;
     *out_geometry_id_ = (int16_t)free_slot;
 
@@ -290,7 +286,9 @@ resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_ge
     }
 
     point_mesh_geometry_destroy(&registry_->geometries[geometry_id_]);
-    registry_->vertex_offsets[geometry_id_] = 0;
+    registry_->vertex_ranges[geometry_id_].allocation_size = 0;
+    registry_->vertex_ranges[geometry_id_].draw_range.first_vertex_count = 0;
+    registry_->vertex_ranges[geometry_id_].draw_range.vertex_count = 0;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -334,7 +332,7 @@ static bool geometry_id_is_valid(const point_mesh_geometry_registry_t* registry_
  * - registry_->max_geometry_countが未初期化で0
  * - registry_->max_geometry_countがint16_tの最大値を超過
  * - registry_->geometriesが未初期化でNULL
- * - registry_->vertex_offsetsが未初期化でNULL
+ * - registry_->vertex_rangesが未初期化でNULL
  */
 static bool internal_state_is_valid(const point_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
@@ -343,7 +341,7 @@ static bool internal_state_is_valid(const point_mesh_geometry_registry_t* regist
     if(0 == registry_->max_geometry_count || INT16_MAX < registry_->max_geometry_count) {
         return false;
     }
-    if(NULL == registry_->geometries || NULL == registry_->vertex_offsets) {
+    if(NULL == registry_->geometries || NULL == registry_->vertex_ranges) {
         return false;
     }
     return true;

@@ -57,7 +57,7 @@ struct line_mesh_shader {
 
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 
-    renderer_backend_vao_t* line_vao;       /**< 線分描画シェーダー用VAO */
+    renderer_backend_vao_t* vao;            /**< 線分描画シェーダー用VAO */
 
     vbo_manager_t* vbo_manager;
     vbo_manager_config_t vbo_config;
@@ -181,7 +181,7 @@ renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* ba
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "line_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "line_vao")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vertex_buffer_create", "line_mesh_shader_->vbo_manager")
     IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "vbo_config_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vertex_buffer_create", "vbo_config_")
@@ -219,17 +219,17 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_initialize", "line_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_vao")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(line_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "vao")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_initialize", "line_mesh_shader_->vbo_manager")
 
-    ret = renderer_backend_vertex_array_create(backend_context_, &line_mesh_shader_->line_vao);
+    ret = renderer_backend_vertex_array_create(backend_context_, &line_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to create line vao.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     vao_created = true;
 
-    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->line_vao);
+    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -276,7 +276,7 @@ cleanup:
             renderer_backend_vertex_array_unbind(backend_context_);
         }
         if(vao_created) {
-            renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
+            renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->vao);
         }
     }
     return ret;
@@ -294,8 +294,8 @@ void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_contex
     if(NULL != line_mesh_shader_->vbo_manager) {
         vbo_manager_destroy(&line_mesh_shader_->vbo_manager, backend_context_);
     }
-    if(NULL != line_mesh_shader_->line_vao) {
-        renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->line_vao);
+    if(NULL != line_mesh_shader_->vao) {
+        renderer_backend_vertex_array_destroy(backend_context_, &line_mesh_shader_->vao);
     }
 }
 
@@ -422,9 +422,9 @@ renderer_result_t line_mesh_shader_vao_bind(const renderer_backend_context_t* ba
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vao_bind", "line_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->line_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_bind", "line_vao")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "line_mesh_shader_vao_bind", "vao")
 
-    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->line_vao);
+    ret = renderer_backend_vertex_array_bind(backend_context_, line_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -551,7 +551,7 @@ static bool line_mesh_shader_is_initialized(const line_mesh_shader_t* line_mesh_
     if(NULL == line_mesh_shader_->shader) {
         return false;
     }
-    if(NULL == line_mesh_shader_->line_vao) {
+    if(NULL == line_mesh_shader_->vao) {
         return false;
     }
     if(NULL == line_mesh_shader_->vbo_manager) {

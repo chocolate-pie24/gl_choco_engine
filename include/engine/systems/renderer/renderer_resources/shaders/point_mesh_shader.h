@@ -27,7 +27,9 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+
+#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct point_mesh_shader point_mesh_shader_t;               /**< 点描画用シェーダーリソースのopaque型 */
 
@@ -51,40 +53,9 @@ void point_mesh_shader_destroy(renderer_backend_context_t* backend_context_, poi
 
 renderer_result_t point_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const char* file_path_, const char* name_);
 
-/**
- * @brief ポイント描画用シェーダー用のバーテックスバッファを生成する
- *
- * @note バーテックスバッファ構成
- * - layout 0: 頂点座標。float x 3。
- * - layout 1: 色情報。uint8_t x 4 のRGBA, OpenGL側で0.0〜1.0に正規化され、shaderではvec4として扱われる。
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] point_mesh_shader_ バーテックスバッファ生成対象ポイント描画用シェーダーリソースインスタンスへのポインタ
- * @param[in] point_buffer_usage_ 頂点情報バッファ使用用途(DYNAMIC / STATIC)
- * @param[in] color_buffer_usage_ 色情報バッファ使用用途(DYNAMIC / STATIC)
- * @param[in] point_buffer_size_ 頂点情報バーテックスバッファサイズ(byte)
- * @param[in] color_buffer_size_ 色情報バーテックスバッファサイズ(byte)
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - point_mesh_shader_ == NULL
- * - point_buffer_size_ == 0
- * - color_buffer_size_ == 0
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - point_mesh_shader_->point_vao != NULL
- * - point_mesh_shader_->point_vbo != NULL
- * - point_mesh_shader_->color_vbo != NULL
- * - point_mesh_shader_->point_current_buffer_offset != 0
- * - point_mesh_shader_->color_current_buffer_offset != 0
- * - point_mesh_shader_->current_vertex_count != 0
- * - メモリシステム未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR point_buffer_usage_ / color_buffer_usage_またはpoint_buffer_size_ / color_buffer_size_が規定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t point_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, buffer_usage_t point_buffer_usage_, buffer_usage_t color_buffer_usage_, size_t point_buffer_size_, size_t color_buffer_size_);
+renderer_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* point_vbo_config_, const vbo_manager_config_t* color_vbo_config_);
+
+renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
 
 /**
  * @brief ポイント描画用シェーダーが保持するVAO / VBOを破棄する
@@ -101,7 +72,16 @@ renderer_result_t point_mesh_shader_vertex_buffer_create(renderer_backend_contex
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] point_mesh_shader_ VAO, VBOリソースを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
  */
-void point_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
+void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
+
+// colorはマテリアルとして扱うため、geometry_pipelineでは座標情報のみをGPUに転送する
+renderer_result_t point_mesh_shader_vbo_point_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
+
+renderer_result_t point_mesh_shader_vbo_color_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const vec4u8_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
+
+renderer_result_t point_mesh_shader_vbo_point_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
+
+renderer_result_t color_mesh_shader_vbo_color_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
 /**
  * @brief ポイント描画用シェーダーが保持する頂点情報VBOに頂点情報を転送する(バーテックスバッファへのappend)

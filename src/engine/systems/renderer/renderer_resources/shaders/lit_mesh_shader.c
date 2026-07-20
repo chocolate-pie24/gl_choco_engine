@@ -51,7 +51,7 @@ struct lit_mesh_shader {
     int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
 
-    renderer_backend_vao_t* lit_mesh_vao;   /** シェーダーVAO */
+    renderer_backend_vao_t* vao;            /** シェーダーVAO */
 
     vbo_manager_t* vbo_manager;
     vbo_manager_config_t vbo_config;
@@ -167,7 +167,7 @@ renderer_result_t lit_mesh_shader_vbo_initialize(renderer_backend_context_t* bac
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_initialize", "lit_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vbo_initialize", "lit_mesh_shader_->lit_mesh_vao")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vbo_initialize", "lit_mesh_shader_->vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vbo_initialize", "lit_mesh_shader_->vbo_manager")
     IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_initialize", "vbo_config_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_initialize", "vbo_config_")
@@ -205,17 +205,17 @@ renderer_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* bac
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vao_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vao_initialize", "lit_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vao_initialize", "lit_mesh_shader_->lit_mesh_vao")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vao_initialize", "lit_mesh_shader_->vao")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vao_initialize", "lit_mesh_shader_->vbo_manager")
 
-    ret = renderer_backend_vertex_array_create(backend_context_, &lit_mesh_shader_->lit_mesh_vao);
+    ret = renderer_backend_vertex_array_create(backend_context_, &lit_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vao_initialize(%s) - Failed to create lit mesh vao.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     vao_created = true;
 
-    ret = renderer_backend_vertex_array_bind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
+    ret = renderer_backend_vertex_array_bind(backend_context_, lit_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vao_initialize(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -271,7 +271,7 @@ cleanup:
             renderer_backend_vertex_array_unbind(backend_context_);
         }
         if(vao_created) {
-            renderer_backend_vertex_array_destroy(backend_context_, &lit_mesh_shader_->lit_mesh_vao);
+            renderer_backend_vertex_array_destroy(backend_context_, &lit_mesh_shader_->vao);
         }
     }
     return ret;
@@ -290,8 +290,8 @@ void lit_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context
     if(NULL != lit_mesh_shader_->vbo_manager) {
         vbo_manager_destroy(&lit_mesh_shader_->vbo_manager, backend_context_);
     }
-    if(NULL != lit_mesh_shader_->lit_mesh_vao) {
-        renderer_backend_vertex_array_destroy(backend_context_, &lit_mesh_shader_->lit_mesh_vao);
+    if(NULL != lit_mesh_shader_->vao) {
+        renderer_backend_vertex_array_destroy(backend_context_, &lit_mesh_shader_->vao);
     }
 }
 
@@ -361,65 +361,14 @@ cleanup:
     return ret;
 }
 
-// renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_) {
-//     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-//     size_t vertex_count = 0;
-//     bool vbo_bound = false;
-
-//     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "backend_context_")
-//     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "lit_mesh_shader_")
-//     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vbo, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_buffer_append", "lit_mesh_vbo")
-//     IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "write_data_")
-//     IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "size_")
-//     IF_ARG_FALSE_GOTO_CLEANUP(lit_mesh_shader_->current_buffer_offset <= (SIZE_MAX - size_), ret, RENDERER_OVERFLOW, renderer_rslt_to_str(RENDERER_OVERFLOW), "lit_mesh_shader_vertex_buffer_append", "size_")
-//     IF_ARG_FALSE_GOTO_CLEANUP((lit_mesh_shader_->current_buffer_offset + size_) <= lit_mesh_shader_->vertex_buffer_size, ret, RENDERER_LIMIT_EXCEEDED, renderer_rslt_to_str(RENDERER_LIMIT_EXCEEDED), "lit_mesh_shader_vertex_buffer_append", "size_")
-//     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_offset_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "out_vertex_offset_")
-//     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % (sizeof(point_normal_vertex_t) * 3)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_buffer_append", "size_")
-
-//     ret = renderer_backend_vertex_buffer_bind(backend_context_, lit_mesh_shader_->lit_mesh_vbo);
-//     if(RENDERER_SUCCESS != ret) {
-//         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to bind vbo.", renderer_rslt_to_str(ret));
-//         goto cleanup;
-//     }
-//     vbo_bound = true;
-
-//     ret = renderer_backend_vertex_buffer_vertex_subload(backend_context_, lit_mesh_shader_->current_buffer_offset, size_, write_data_);
-//     if(RENDERER_SUCCESS != ret) {
-//         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to write vertex data.", renderer_rslt_to_str(ret));
-//         goto cleanup;
-//     }
-    
-//     ret = renderer_backend_vertex_buffer_unbind(backend_context_);
-//     if(RENDERER_SUCCESS != ret) {
-//         ERROR_MESSAGE("lit_mesh_shader_vertex_buffer_append(%s) - Failed to unbind vertex buffer.", renderer_rslt_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     // NOTE: vertex_countは必ずsize_よりも小さいため、lit_mesh_shader_->current_vertex_countのオーバーフローチェックは不要
-//     vertex_count = size_ / sizeof(point_normal_vertex_t);
-//     *out_vertex_offset_ = lit_mesh_shader_->current_vertex_count;
-//     lit_mesh_shader_->current_buffer_offset += size_;
-//     lit_mesh_shader_->current_vertex_count += vertex_count;
-
-//     ret = RENDERER_SUCCESS;
-
-// cleanup:
-//     if(RENDERER_SUCCESS != ret) {
-//         if(NULL != backend_context_ && vbo_bound) {
-//             renderer_backend_vertex_buffer_unbind(backend_context_);
-//         }
-//     }
-//     return ret;
-// }
-
 renderer_result_t lit_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_array_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "lit_mesh_shader_vertex_array_bind", "lit_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->lit_mesh_vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_array_bind", "lit_mesh_vao")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "lit_mesh_shader_vertex_array_bind", "vao")
 
-    ret = renderer_backend_vertex_array_bind(backend_context_, lit_mesh_shader_->lit_mesh_vao);
+    ret = renderer_backend_vertex_array_bind(backend_context_, lit_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vertex_array_bind(%s) - Failed to bind vertex array.", renderer_rslt_to_str(ret));
         goto cleanup;
@@ -528,7 +477,7 @@ static bool lit_mesh_shader_is_initialized(const lit_mesh_shader_t* lit_mesh_sha
     if(NULL == lit_mesh_shader_->shader) {
         return false;
     }
-    if(NULL == lit_mesh_shader_->lit_mesh_vao) {
+    if(NULL == lit_mesh_shader_->vao) {
         return false;
     }
     if(NULL == lit_mesh_shader_->vbo_manager) {
