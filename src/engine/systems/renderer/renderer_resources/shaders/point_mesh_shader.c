@@ -58,11 +58,9 @@ struct point_mesh_shader {
 
     renderer_backend_vao_t* vao;            /**< ポイント描画シェーダーVAO */
 
-    vbo_manager_t* point_vbo_manager;
-    vbo_manager_t* color_vbo_manager;
+    vbo_manager_config_t vbo_config;
+    vbo_manager_t* vbo_manager;
 
-    vbo_manager_config_t point_vbo_config;
-    vbo_manager_config_t color_vbo_config;
 };
 
 // validation
@@ -168,51 +166,35 @@ cleanup:
     return ret;
 }
 
-renderer_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* point_vbo_config_, const vbo_manager_config_t* color_vbo_config_) {
+renderer_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* vbo_config_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    vbo_manager_t* tmp_point_vbo_manager = NULL;
-    vbo_manager_t* tmp_color_vbo_manager = NULL;
+    vbo_manager_t* tmp_vbo_manager = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "point_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vao")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->point_vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->point_vbo_manager")
-    IF_ARG_NULL_GOTO_CLEANUP(point_vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "point_vbo_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(color_vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "color_vbo_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(point_vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "point_vbo_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(color_vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "color_vbo_config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vbo_manager")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "vbo_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "vbo_config_")
 
-    ret_buff_mgr = vbo_manager_create(backend_context_, point_vbo_config_, &tmp_point_vbo_manager);
+    ret_buff_mgr = vbo_manager_create(backend_context_, vbo_config_, &tmp_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: vbo_manager_create仕様が安定したら適切な実行結果コードに変換する
-        ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - buffer manager(point) create failed.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - buffer manager create failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_buff_mgr = vbo_manager_create(backend_context_, color_vbo_config_, &tmp_color_vbo_manager);
-    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
-        ret = RENDERER_RUNTIME_ERROR;   // TODO: vbo_manager_create仕様が安定したら適切な実行結果コードに変換する
-        ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - buffer manager(color) create failed.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    point_mesh_shader_->point_vbo_config = *point_vbo_config_;
-    point_mesh_shader_->color_vbo_config = *color_vbo_config_;
-
-    point_mesh_shader_->point_vbo_manager = tmp_point_vbo_manager;
-    point_mesh_shader_->color_vbo_manager = tmp_color_vbo_manager;
+    point_mesh_shader_->vbo_config = *vbo_config_;
+    point_mesh_shader_->vbo_manager = tmp_vbo_manager;
 
     ret = RENDERER_SUCCESS;
 
 cleanup:
     if(RENDERER_SUCCESS != ret) {
-        if(NULL != tmp_point_vbo_manager) {
-            vbo_manager_destroy(&tmp_point_vbo_manager, backend_context_);
-        }
-        if(NULL != tmp_color_vbo_manager) {
-            vbo_manager_destroy(&tmp_color_vbo_manager, backend_context_);
+        if(NULL != tmp_vbo_manager) {
+            vbo_manager_destroy(&tmp_vbo_manager, backend_context_);
         }
     }
     return ret;
@@ -230,8 +212,7 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vao_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vao_initialize", "point_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->vao")
-    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->point_vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->point_vbo_manager")
-    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->color_vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->color_vbo_manager")
+    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->vbo_manager, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->vbo_manager")
 
     ret = renderer_backend_vertex_array_create(backend_context_, &point_mesh_shader_->vao);
     if(RENDERER_SUCCESS != ret) {
@@ -247,7 +228,7 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
     }
     vao_bound = true;
 
-    ret_buff_mgr = vbo_manager_bind(point_mesh_shader_->point_vbo_manager, backend_context_);
+    ret_buff_mgr = vbo_manager_bind(point_mesh_shader_->vbo_manager, backend_context_);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
         ret = RENDERER_RUNTIME_ERROR;
@@ -256,9 +237,15 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
     }
     vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), 0);  // 頂点座標(layout = 0)
     if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(position).", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), sizeof(float) * 3);    // 色情報(layout = 1)
+    if(RENDERER_SUCCESS != ret) {
+        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(color).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -267,30 +254,6 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
         // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
         ret = RENDERER_RUNTIME_ERROR;
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer(point).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_bound = false;
-
-    ret_buff_mgr = vbo_manager_bind(point_mesh_shader_->color_vbo_manager, backend_context_);
-    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
-        // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
-        ret = RENDERER_RUNTIME_ERROR;
-        ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer(color).", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-    vbo_bound = true;
-
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(uint8_t) * 4, 0);  // 色情報(layout = 1), OpenGLで正規化
-    if(RENDERER_SUCCESS != ret) {
-        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_buff_mgr = vbo_manager_unbind(backend_context_);
-    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
-        // TODO: buffer_manager仕様確定後、実行結果コード変換を適切にする
-        ret = RENDERER_RUNTIME_ERROR;
-        ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer(color).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_bound = false;
@@ -326,18 +289,15 @@ void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_conte
         WARN_MESSAGE("point_mesh_shader_vao_vbo_destroy - Provided point_mesh_shader_ is not valid.");
         return;
     }
-    if(NULL != point_mesh_shader_->point_vbo_manager) {
-        vbo_manager_destroy(&point_mesh_shader_->point_vbo_manager, backend_context_);
-    }
-    if(NULL != point_mesh_shader_->color_vbo_manager) {
-        vbo_manager_destroy(&point_mesh_shader_->color_vbo_manager, backend_context_);
+    if(NULL != point_mesh_shader_->vbo_manager) {
+        vbo_manager_destroy(&point_mesh_shader_->vbo_manager, backend_context_);
     }
     if(NULL != point_mesh_shader_->vao) {
         renderer_backend_vertex_array_destroy(backend_context_, &point_mesh_shader_->vao);
     }
 }
 
-renderer_result_t point_mesh_shader_vbo_point_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_) {
+renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -351,7 +311,7 @@ renderer_result_t point_mesh_shader_vbo_point_write(const renderer_backend_conte
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % sizeof(point_vertex_t)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "out_buffer_range_")
 
-    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->point_vbo_manager, backend_context_, size_, (const void*)write_data_, &tmp_alloc_handle);
+    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, backend_context_, size_, (const void*)write_data_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
         ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
@@ -369,39 +329,7 @@ cleanup:
     return ret;
 }
 
-renderer_result_t point_mesh_shader_vbo_color_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const vec4u8_t* write_data_, vertex_buffer_range_t* out_buffer_range_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
-    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
-
-    vertex_allocation_t tmp_alloc_handle = { 0 };
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "write_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % sizeof(vec4u8_t)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_color_write", "out_buffer_range_")
-
-    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->color_vbo_manager, backend_context_, size_, (const void*)write_data_, &tmp_alloc_handle);
-    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
-        ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
-        ERROR_MESSAGE("point_mesh_shader_vbo_color_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    out_buffer_range_->allocation_size = tmp_alloc_handle.allocated_size;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.byte_offset / sizeof(vec4u8_t);
-    out_buffer_range_->draw_range.vertex_count = size_ / sizeof(vec4u8_t);
-
-    ret = RENDERER_SUCCESS;
-
-cleanup:
-    // TODO: range_free_listの2-phase allocation完成後、ロールバックを追加する
-    return ret;
-}
-
-renderer_result_t point_mesh_shader_vbo_point_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_) {
+renderer_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -422,44 +350,10 @@ renderer_result_t point_mesh_shader_vbo_point_free(point_mesh_shader_t* point_me
     alloc_info.allocated_size = buffer_range_->allocation_size;
     alloc_info.byte_offset = buffer_range_->draw_range.first_vertex_count * sizeof(point_vertex_t);
 
-    ret_buff_mgr = vbo_manager_free(point_mesh_shader_->point_vbo_manager, &alloc_info);
+    ret_buff_mgr = vbo_manager_free(point_mesh_shader_->vbo_manager, &alloc_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
         ERROR_MESSAGE("point_mesh_shader_vbo_point_free(%s) - point_mesh_shader_vbo_point_free failed.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_result_t color_mesh_shader_vbo_color_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_) {
-    renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
-
-    buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
-
-    vertex_allocation_t alloc_info = { 0 };
-
-    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "color_mesh_shader_vbo_color_free", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "color_mesh_shader_vbo_color_free", "buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "color_mesh_shader_vbo_color_free", "buffer_range_->allocation_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "color_mesh_shader_vbo_color_free", "buffer_range_->draw_range.vertex_count")
-
-    if((SIZE_MAX / sizeof(vec4u8_t)) < buffer_range_->draw_range.first_vertex_count) {
-        ret = RENDERER_OVERFLOW;
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_free(%s) - point_mesh_shader_vbo_color_free failed.", renderer_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    alloc_info.allocated_size = buffer_range_->allocation_size;
-    alloc_info.byte_offset = buffer_range_->draw_range.first_vertex_count * sizeof(vec4u8_t);
-
-    ret_buff_mgr = vbo_manager_free(point_mesh_shader_->color_vbo_manager, &alloc_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
-        ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_free(%s) - point_mesh_shader_vbo_color_free failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -588,7 +482,7 @@ static bool point_mesh_shader_is_initialized(const point_mesh_shader_t* point_me
     if(NULL == point_mesh_shader_->vao) {
         return false;
     }
-    if(NULL == point_mesh_shader_->point_vbo_manager || NULL == point_mesh_shader_->color_vbo_manager) {
+    if(NULL == point_mesh_shader_->vbo_manager) {
         return false;
     }
     return true;

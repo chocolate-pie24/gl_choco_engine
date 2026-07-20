@@ -125,8 +125,7 @@ typedef struct app_state {
 
     vbo_manager_config_t line_mesh_shader_vbo_config;
     vbo_manager_config_t lit_mesh_shader_vbo_config;
-    vbo_manager_config_t point_mesh_shader_point_vbo_config;
-    vbo_manager_config_t point_mesh_shader_color_vbo_config;
+    vbo_manager_config_t point_mesh_shader_vbo_config;
 
     ui_mesh_shader_t* ui_mesh_shader;
     line_mesh_shader_t* line_mesh_shader;
@@ -144,8 +143,7 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     point_mesh_geometry_registry_t* point_mesh_geometry_registry;
     int16_t geometry_id_test_points;
-    vertex_buffer_range_t test_points_point_buffer_range;
-    vertex_buffer_range_t test_points_color_buffer_range;
+    vertex_buffer_range_t test_points_buffer_range;
 
     lit_mesh_geometry_registry_t* lit_mesh_geometry_registry;
     int16_t geometry_id_penguin;
@@ -407,16 +405,11 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp->point_mesh_shader_point_vbo_config.base_align = alignof(float);
-    tmp->point_mesh_shader_point_vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    tmp->point_mesh_shader_point_vbo_config.max_node_count = 1024;
-    tmp->point_mesh_shader_point_vbo_config.vbo_size = 1 * KIB;
-
-    tmp->point_mesh_shader_color_vbo_config.base_align = alignof(float);
-    tmp->point_mesh_shader_color_vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    tmp->point_mesh_shader_color_vbo_config.max_node_count = 1024;
-    tmp->point_mesh_shader_color_vbo_config.vbo_size = 1 * KIB;
-    ret_renderer = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->point_mesh_shader_point_vbo_config, &tmp->point_mesh_shader_color_vbo_config);
+    tmp->point_mesh_shader_vbo_config.base_align = alignof(float);
+    tmp->point_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
+    tmp->point_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->point_mesh_shader_vbo_config.vbo_size = 1 * KIB;
+    ret_renderer = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->point_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create point mesh vertex buffer.", app_rslt_to_str(ret));
@@ -912,12 +905,12 @@ application_result_t application_run(void) {
         renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
-        ret_resource_registy = point_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points, &s_app_state->test_points_point_buffer_range);
+        ret_resource_registy = point_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points, &s_app_state->test_points_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
             point_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
 
-            glDrawArrays(GL_POINTS, s_app_state->test_points_point_buffer_range.draw_range.first_vertex_count, s_app_state->test_points_point_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_POINTS, s_app_state->test_points_buffer_range.draw_range.first_vertex_count, s_app_state->test_points_buffer_range.draw_range.vertex_count);
             renderer_backend_vertex_array_unbind(s_app_state->renderer_backend_context);
         }
 
@@ -1219,7 +1212,6 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     point_vertex_t tmp_vertices[8] = { 0 };
-    vec4u8_t colors[8] = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_geometry_create", "app_state_")
     IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
@@ -1234,25 +1226,18 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     tmp_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
     tmp_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
 
-    colors[0] = vec4u8_initialize(255, 0, 0, 255);
-    colors[1] = vec4u8_initialize(255, 255, 0, 255);
-    colors[2] = vec4u8_initialize(255, 0, 255, 255);
-    colors[3] = vec4u8_initialize(0, 255, 0, 255);
-    colors[4] = vec4u8_initialize(255, 255, 0, 255);
-    colors[5] = vec4u8_initialize(255, 255, 0, 255);
-    colors[6] = vec4u8_initialize(255, 255, 0, 255);
-    colors[7] = vec4u8_initialize(255, 255, 0, 255);
+    tmp_vertices[0].color = vec4u8_initialize(255, 0, 0, 255);
+    tmp_vertices[1].color = vec4u8_initialize(255, 255, 0, 255);
+    tmp_vertices[2].color = vec4u8_initialize(255, 0, 255, 255);
+    tmp_vertices[3].color = vec4u8_initialize(0, 255, 0, 255);
+    tmp_vertices[4].color = vec4u8_initialize(255, 255, 0, 255);
+    tmp_vertices[5].color = vec4u8_initialize(255, 255, 0, 255);
+    tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
+    tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
 
     ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->renderer_backend_context, app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ERROR_MESSAGE("point_geometry_create - Failed to import point mesh geometry.");
-        goto cleanup;
-    }
-
-    ret_renderer = point_mesh_shader_vbo_color_write(app_state_->renderer_backend_context, app_state_->point_mesh_shader, sizeof(vec4u8_t) * 8, &colors[0], &app_state_->test_points_color_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = app_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("point_geometry_create(%s) - Failed to write colors to point shader VBO.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

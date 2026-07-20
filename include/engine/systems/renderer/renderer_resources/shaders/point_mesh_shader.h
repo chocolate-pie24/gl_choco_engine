@@ -53,82 +53,15 @@ void point_mesh_shader_destroy(renderer_backend_context_t* backend_context_, poi
 
 renderer_result_t point_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const char* file_path_, const char* name_);
 
-renderer_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* point_vbo_config_, const vbo_manager_config_t* color_vbo_config_);
+renderer_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* vbo_config_);
 
 renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
 
-/**
- * @brief ポイント描画用シェーダーが保持するVAO / VBOを破棄する
- *
- * @note 有効なbackend_context_と有効なpoint_mesh_shader_が渡された場合、point_mesh_shader_tの内部状態は以下の状態に初期化される
- * - point_vao = NULL
- * - point_vbo = NULL
- * - color_vbo = NULL
- * - point_current_buffer_offset = 0
- * - point_vertex_buffer_size = 0
- * - color_current_buffer_offset = 0
- * - color_vertex_buffer_size = 0
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] point_mesh_shader_ VAO, VBOリソースを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
- */
 void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
 
-// colorはマテリアルとして扱うため、geometry_pipelineでは座標情報のみをGPUに転送する
-renderer_result_t point_mesh_shader_vbo_point_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
+renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
 
-renderer_result_t point_mesh_shader_vbo_color_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const vec4u8_t* write_data_, vertex_buffer_range_t* out_buffer_range_);
-
-renderer_result_t point_mesh_shader_vbo_point_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
-
-renderer_result_t color_mesh_shader_vbo_color_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
-
-/**
- * @brief ポイント描画用シェーダーが保持する頂点情報VBOに頂点情報を転送する(バーテックスバッファへのappend)
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] point_mesh_shader_ 転送先VBOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
- * @param[in] size_ 転送データサイズ
- * @param[in] write_data_ 転送データ
- * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - point_mesh_shader_ == NULL
- * - write_data_ == NULL
- * - size_ == 0
- * - out_vertex_offset_ == NULL
- * - size_がsizeof(point_vertex_t)の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - VBO未初期化
- * - 転送後にバーテックスバッファサイズを超過
- * - backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t point_mesh_shader_vertex_buffer_point_append(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, size_t* out_vertex_offset_);
-
-/**
- * @brief ポイント描画用シェーダーが保持する色情報VBOに色情報を転送する(バーテックスバッファへのappend)
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] point_mesh_shader_ 転送先VBOを保持するポイント描画用シェーダー構造体インスタンスへのポインタ
- * @param[in] size_ 転送データサイズ
- * @param[in] write_data_ 転送データ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - point_mesh_shader_ == NULL
- * - write_data_ == NULL
- * - size_ == 0
- * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
- * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - VBO未初期化
- * - backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t point_mesh_shader_vertex_buffer_color_append(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const vec4u8_t* write_data_);
+renderer_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
 /**
  * @brief ポイント描画用シェーダーが保持するVAOをbindする

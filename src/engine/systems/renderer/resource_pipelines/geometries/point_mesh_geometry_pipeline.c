@@ -74,7 +74,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
     }
     vertex_array_size = sizeof(point_vertex_t) * vertex_count_;
 
-    ret_renderer = point_mesh_shader_vbo_point_write(backend_context_, shader_, vertex_array_size, vertices_, &tmp_buffer_range);
+    ret_renderer = point_mesh_shader_vbo_write(backend_context_, shader_, vertex_array_size, vertices_, &tmp_buffer_range);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
@@ -123,7 +123,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shade
         goto cleanup;
     }
 
-    ret_renderer = point_mesh_shader_vbo_point_free(shader_, &vertex_buffer_range);
+    ret_renderer = point_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
     if(RENDERER_SUCCESS != ret_renderer) {
         // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
         ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
@@ -145,5 +145,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shade
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
+    // TODO: point_mesh_geometry_registry_unregisterに失敗した場合、geometry_id_に対応するCPU側リソースが残っているにも関わらず、GPUリソースがない状態になる
+    // Transactio方式に変更する
     return ret;
 }
