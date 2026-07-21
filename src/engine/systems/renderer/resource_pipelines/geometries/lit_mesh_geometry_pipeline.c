@@ -94,6 +94,11 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_vertices_move_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), name_);
             goto cleanup;
         }
+        if((SIZE_MAX / vertex_count) < sizeof(point_normal_vertex_t)) {
+            ret = RESOURCE_PIPELINE_OVERFLOW;
+            ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - lit_mesh_geometry_pipeline_import_from_file failed.", resource_pipeline_rslt_to_str(ret));
+            goto cleanup;
+        }
         vertex_array_size = sizeof(point_normal_vertex_t) * vertex_count;
 
         ret_resource = lit_mesh_geometry_create(name_, vertex_count, vertices, &geometry);
@@ -103,13 +108,12 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
             goto cleanup;
         }
 
-        ret_renderer = lit_mesh_shader_vbo_write(backend_context_, shader_, vertex_array_size, vertices, &tmp_buffer_range);
+        ret_renderer = lit_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, vertices, &tmp_buffer_range);
         if(RENDERER_SUCCESS != ret_renderer) {
             ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
             goto cleanup;
         }
-
         memory_system_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
         vertices = NULL;
 

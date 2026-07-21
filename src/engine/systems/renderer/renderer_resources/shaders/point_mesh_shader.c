@@ -297,30 +297,42 @@ void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_conte
     }
 }
 
-renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t size_, const point_vertex_t* write_data_, vertex_buffer_range_t* out_buffer_range_) {
+renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t vertex_count_, const point_vertex_t* vertices_, vertex_buffer_range_t* out_buffer_range_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     vertex_allocation_t tmp_alloc_handle = { 0 };
+    size_t write_size = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "write_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (size_ % sizeof(point_vertex_t)), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "vertices_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "out_buffer_range_")
 
-    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, backend_context_, size_, (const void*)write_data_, &tmp_alloc_handle);
+    if((SIZE_MAX / sizeof(point_vertex_t) < vertex_count_)) {
+        ret = RENDERER_OVERFLOW;
+        ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - point_mesh_shader_vbo_write failed.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    write_size = sizeof(point_vertex_t) * vertex_count_;
+
+    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, backend_context_, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
+        ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != (tmp_alloc_handle.byte_offset % sizeof(point_vertex_t))) {
+        ret = RENDERER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
     out_buffer_range_->allocation_size = tmp_alloc_handle.allocated_size;
     out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.byte_offset / sizeof(point_vertex_t);
-    out_buffer_range_->draw_range.vertex_count = size_ / sizeof(point_vertex_t);
+    out_buffer_range_->draw_range.vertex_count = vertex_count_;
 
     ret = RENDERER_SUCCESS;
 

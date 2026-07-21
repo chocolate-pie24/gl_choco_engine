@@ -59,7 +59,6 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
 
     const size_t vertex_count = 6;
     size_t vertex_offset = 0;
-    size_t vertex_array_size = 0;
     int16_t tmp_geometry_id = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "backend_context_")
@@ -98,9 +97,8 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
         goto cleanup;
     }
-    vertex_array_size = sizeof(ui_vertex_t) * 6;
 
-    ret_renderer = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_array_size, ui_vertex, &tmp_buffer_range);
+    ret_renderer = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
