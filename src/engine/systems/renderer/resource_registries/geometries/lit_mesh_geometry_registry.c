@@ -214,6 +214,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
 
     size_t unused_index = 0;
     size_t free_slot = 0;
+    size_t vertex_count = 0;
     bool found_free_slot = false;
     const char* name = NULL;
     lit_mesh_geometry_t* cloned_geometry = NULL;
@@ -225,6 +226,18 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_size, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_size")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->draw_range.vertex_count, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_register", "vertex_buffer_range_->draw_range.vertex_count")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "out_geometry_id_")
+
+    ret_resource = lit_mesh_geometry_vertex_count_get(geometry_, &vertex_count);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_registry_rslt_convert_resource(ret_resource);
+        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - lit_mesh_geometry_registry_register failed.", resource_registry_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(vertex_count != vertex_buffer_range_->draw_range.vertex_count) {
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - lit_mesh_geometry_registry_register failed.", resource_registry_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // 重複チェック
     name = lit_mesh_geometry_name_get(geometry_);
