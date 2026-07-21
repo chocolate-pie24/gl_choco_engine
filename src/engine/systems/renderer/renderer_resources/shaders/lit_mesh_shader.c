@@ -234,13 +234,13 @@ renderer_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     // attribute
     // position: vec3f_t 12byte
     // normal: vec4i8_t 4byte(x, y, z, padding)
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_normal_vertex_t), 0);  // 座標情報(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_normal_vertex_t), offsetof(point_normal_vertex_t, position));  // 座標情報(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(position).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 3, RENDERER_TYPE_BYTE, true, sizeof(point_normal_vertex_t), sizeof(float) * 3);    // 法線情報(layout = 1)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 3, RENDERER_TYPE_BYTE, true, sizeof(point_normal_vertex_t), offsetof(point_normal_vertex_t, normal));    // 法線情報(layout = 1)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(normal).", renderer_rslt_to_str(ret));
         goto cleanup;

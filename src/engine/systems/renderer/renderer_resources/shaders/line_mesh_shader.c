@@ -245,7 +245,7 @@ renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* ba
     }
     vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(float) * 3, 0);  // 頂点座標(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(line_vertex_t), offsetof(line_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute.", renderer_rslt_to_str(ret));
         goto cleanup;

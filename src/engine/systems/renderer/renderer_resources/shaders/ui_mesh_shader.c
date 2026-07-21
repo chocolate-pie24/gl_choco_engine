@@ -232,13 +232,13 @@ renderer_result_t ui_mesh_shader_vao_initialize(renderer_backend_context_t* back
     }
     vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), 0);  // 頂点座標(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(vertex).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), sizeof(float) * 2);    // テクスチャuv座標(layout = 1)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, tex_coord));    // テクスチャuv座標(layout = 1)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("ui_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(texture).", renderer_rslt_to_str(ret));
         goto cleanup;

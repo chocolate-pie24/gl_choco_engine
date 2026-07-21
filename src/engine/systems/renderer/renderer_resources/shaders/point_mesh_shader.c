@@ -237,13 +237,13 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
     }
     vbo_bound = true;
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), 0);  // 頂点座標(layout = 0)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), offsetof(point_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(position).", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), sizeof(float) * 3);    // 色情報(layout = 1)
+    ret = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), offsetof(point_vertex_t, color));    // 色情報(layout = 1)
     if(RENDERER_SUCCESS != ret) {
         ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(color).", renderer_rslt_to_str(ret));
         goto cleanup;
