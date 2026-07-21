@@ -32,52 +32,15 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+
+#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
-/**
- * @brief lit_meshシェーダーリソースインスタンスのメモリを確保し初期化する
- *
- * @details 以下の処理を行う
- * - out_lit_mesh_shader_自身のリソース確保
- * - シェーダーソースのコンパイル
- * - シェーダーモジュールのリンク
- * - lit_meshシェーダーが扱うモデル行列のLocation取得
- * - lit_meshシェーダーが扱うビュー行列のLocation取得
- * - lit_meshシェーダーが扱うプロジェクション行列のLocation取得
- *
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
- * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
- * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[out] out_lit_mesh_shader_ リソース確保対象lit_meshシェーダーリソースへのダブルポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - file_path_ == NULL
- * - name_ == NULL
- * - backend_context_ == NULL
- * - out_lit_mesh_shader_ == NULL
- * - *out_lit_mesh_shader_ != NULL
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステムのメモリ使用量範囲上限超過
- * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
- * - 計算過程でオーバーフロー発生(文字列長さ異常)
- * - ユニフォーム変数のLocation取得に失敗
- * @retval RENDERER_DATA_CORRUPTED 内部データ破損が発生
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - レンダラーバックエンドが未初期化
- * - シェーダーソースが既にコンパイル済み
- * - シェーダーモジュールが既にリンク済み
- * - メモリシステム未初期化
- * @retval RENDERER_SHADER_COMPILE_ERROR 以下のいずれか
- * - シェーダーモジュールのGPU側リソース確保に失敗
- * - シェーダーソースのコンパイルに失敗
- * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, lit_mesh_shader_t** out_lit_mesh_shader_);
+renderer_result_t lit_mesh_shader_create(lit_mesh_shader_t** out_lit_mesh_shader_);
 
 /**
  * @brief lit_meshシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する
@@ -93,31 +56,11 @@ renderer_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_con
  */
 void lit_mesh_shader_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t** lit_mesh_shader_);
 
-/**
- * @brief lit_meshシェーダー用のバーテックスバッファを生成する
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] lit_mesh_shader_ バーテックスバッファ生成対象lit_meshシェーダーリソースインスタンスへのポインタ
- * @param[in] buffer_usage_ バッファ使用用途(DYNAMIC / STATIC)
- * @param[in] buffer_size_ バーテックスバッファサイズ(byte)
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - lit_mesh_shader_ == NULL
- * - buffer_size_ == 0
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - lit_mesh_shader_->lit_mesh_vao != NULL
- * - lit_mesh_shader_->lit_mesh_vbo != NULL
- * - lit_mesh_shader_->current_buffer_offset != 0
- * - lit_mesh_shader_->current_vertex_count != 0
- * - メモリシステム未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR buffer_usage_またはbuffer_size_が規定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_);
+renderer_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const char* file_path_, const char* name_);
+
+renderer_result_t lit_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const vbo_manager_config_t* vbo_config_);
+
+renderer_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
 
 /**
  * @brief lit_meshシェーダーが保持するVAO / VBOを破棄する
@@ -131,32 +74,11 @@ renderer_result_t lit_mesh_shader_vertex_buffer_create(renderer_backend_context_
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] lit_mesh_shader_ VAO, VBOリソースを保持するlit_meshシェーダー構造体インスタンスへのポインタ
  */
-void lit_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
+void lit_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
 
-/**
- * @brief lit_meshシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] lit_mesh_shader_ 転送先VBOを保持するlit_meshシェーダー構造体インスタンスへのポインタ
- * @param[in] size_ 転送データサイズ
- * @param[in] write_data_ 転送データ
- * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - lit_mesh_shader_ == NULL
- * - write_data_ == NULL
- * - size_ == 0
- * - out_vertex_offset_ == NULL
- * - size_がsizeof(point_normal_vertex_t) x 3の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
- * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - VBO未初期化
- * - backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t lit_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t size_, const point_normal_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vertex_buffer_range_t* out_buffer_range_);
+
+renderer_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
 /**
  * @brief lit_meshシェーダーが保持するVAOをbindする

@@ -28,53 +28,15 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+
+#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 
-/**
- * @brief 線分描画用シェーダーリソースインスタンスのメモリを確保し初期化する
- *
- * @details 以下の処理を行う
- * - out_line_mesh_shader_自身のリソース確保
- * - シェーダーソースのコンパイル
- * - シェーダーモジュールのリンク
- * - 線分描画用シェーダーが扱うモデル行列のLocation取得
- * - 線分描画用シェーダーが扱うビュー行列のLocation取得
- * - 線分描画用シェーダーが扱うプロジェクション行列のLocation取得
- * - 線分描画用シェーダーが扱う色情報のLocation取得
- *
- * @param[in] backend_context_ レンダラーバックエンドコンテキストへのポインタ
- * @param[in] file_path_ シェーダーソース格納ファイルパス(文字列の最後を'/'にすること)
- * @param[in] name_ シェーダーソースファイル名称(拡張子は含まない)
- * @param[out] out_line_mesh_shader_ リソース確保対象線分描画用シェーダーリソースへのダブルポインタ
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - file_path_ == NULL
- * - name_ == NULL
- * - backend_context_ == NULL
- * - out_line_mesh_shader_ == NULL
- * - *out_line_mesh_shader_ != NULL
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステムのメモリ使用量範囲上限超過
- * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
- * - 計算過程でオーバーフロー発生(文字列長さ異常)
- * - ユニフォーム変数のLocation取得に失敗
- * @retval RENDERER_DATA_CORRUPTED 内部データ破損が発生
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - レンダラーバックエンドが未初期化
- * - シェーダーソースが既にコンパイル済み
- * - シェーダーモジュールが既にリンク済み
- * - メモリシステム未初期化
- * @retval RENDERER_SHADER_COMPILE_ERROR 以下のいずれか
- * - シェーダーモジュールのGPU側リソース確保に失敗
- * - シェーダーソースのコンパイルに失敗
- * @retval RENDERER_SHADER_LINK_ERROR シェーダーモジュールのリンクに失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, line_mesh_shader_t** out_line_mesh_shader_);
+renderer_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_shader_);
 
 /**
  * @brief 線分描画用シェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する
@@ -90,31 +52,11 @@ renderer_result_t line_mesh_shader_create(renderer_backend_context_t* backend_co
  */
 void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t** line_mesh_shader_);
 
-/**
- * @brief 線分描画用シェーダー用のバーテックスバッファを生成する
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] line_mesh_shader_ バーテックスバッファ生成対象線分描画用シェーダーリソースインスタンスへのポインタ
- * @param[in] buffer_usage_ バッファ使用用途(DYNAMIC / STATIC)
- * @param[in] buffer_size_ バーテックスバッファサイズ(byte)
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_mesh_shader_ == NULL
- * - buffer_size_ == 0
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - backend_context_が未初期化
- * - line_mesh_shader_->line_vao != NULL
- * - line_mesh_shader_->line_vbo != NULL
- * - line_mesh_shader_->current_buffer_offset != 0
- * - line_mesh_shader_->current_vertex_count != 0
- * - メモリシステム未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR buffer_usage_またはbuffer_size_が規定値外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, buffer_usage_t buffer_usage_, size_t buffer_size_);
+renderer_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_);
+
+renderer_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vbo_manager_config_t* vbo_config_);
+
+renderer_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAO / VBOを破棄する
@@ -128,32 +70,11 @@ renderer_result_t line_mesh_shader_vertex_buffer_create(renderer_backend_context
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] line_mesh_shader_ VAO, VBOリソースを保持する線分描画用シェーダー構造体インスタンスへのポインタ
  */
-void line_mesh_shader_vertex_buffer_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
+void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 
-/**
- * @brief 線分描画用シェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)
- *
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] line_mesh_shader_ 転送先VBOを保持する線分描画用シェーダー構造体インスタンスへのポインタ
- * @param[in] size_ 転送データサイズ
- * @param[in] write_data_ 転送データ
- * @param[out] out_vertex_offset_ 転送前にバーテックスバッファに転送されている頂点の数
- *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - line_mesh_shader_ == NULL
- * - write_data_ == NULL
- * - size_ == 0
- * - out_vertex_offset_ == NULL
- * - size_がsizeof(line_vertex_t) x 2の倍数ではない
- * @retval RENDERER_LIMIT_EXCEEDED 転送後にバーテックスバッファサイズを超過
- * @retval RENDERER_OVERFLOW 転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
- * - VBO未初期化
- * - backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
- */
-renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t size_, const line_vertex_t* write_data_, size_t* out_vertex_offset_);
+renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, size_t vertex_count_, const line_vertex_t* vertices_, vertex_buffer_range_t* out_buffer_range_);
+
+renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
 
 /**
  * @brief 線分描画用シェーダーが保持するVAOをbindする
@@ -167,7 +88,7 @@ renderer_result_t line_mesh_shader_vertex_buffer_append(const renderer_backend_c
  * @retval RENDERER_BAD_OPERATION VAOが未初期化
  * @retval RENDERER_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t line_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_);
+renderer_result_t line_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* line_mesh_shader_);
 
 /**
  * @brief 線分描画用シェーダープログラムの使用開始をグラフィックスAPIに伝える

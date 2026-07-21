@@ -43,9 +43,19 @@ typedef struct line_vertex {
 /**
  * @brief ポイント描画用頂点情報構造体
  *
+ * @note 当初は、colorをMaterial情報として扱い、座標と色をそれぞれ別のVBOで管理する予定だった。
+ * しかし、座標と色を別VBOに格納する場合でも、両者は同一の論理頂点インデックスに配置する必要がある。
+ *
+ * そのためcolorをMaterial Subsystemで管理すると、
+ * Geometry Pipelineで確保した頂点範囲をMaterial Pipelineへ引き渡し、同じ頂点範囲へ色情報を書き込まなければならない。
+ *
+ * この依存関係はpoint meshに固有であり、ほかのmeshではGeometryとMaterialを独立して管理できる。
+ * mesh種別間でGeometryとMaterialの責務境界を統一し、両Pipelineを不要に依存させないため、pointごとの色情報はpoint_vertex_tに含める。
+ *
  */
 typedef struct point_vertex {
     vec3f_t position;   /**< 頂点座標 */
+    vec4u8_t color;     /**< 色情報 */
 } point_vertex_t;
 
 /**

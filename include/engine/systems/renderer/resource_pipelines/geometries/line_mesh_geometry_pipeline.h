@@ -117,8 +117,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
  */
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_);
 
-// TODO: 実装後にdoxygenコメントを追加する
-resource_pipeline_result_t line_mesh_geometry_pipeline_release(int16_t geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 
 #ifdef __cplusplus
 }

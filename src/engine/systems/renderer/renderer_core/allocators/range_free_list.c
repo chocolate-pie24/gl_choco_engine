@@ -2,7 +2,7 @@
 // - メモリアロケータであり、バグがあった際に原因究明が困難であることから、エラー処理は厚めにする
 // - allocate / freeはエラー処理が特に重要なので、動作が安定するまではエラー処理は厳しくする、安定後、リリースビルドでは重いエラー処理を省く
 // - プライベート関数については、range_free_list_t全体のvalidationは行わない(外部公開APIで厚めのチェックをすることと、極端にエラー処理を重くしすぎないため)
-#include "engine/core/memory/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
 #include <stdio.h>  // for fprintf
 #include <stdlib.h> // for malloc / free
@@ -101,12 +101,21 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
     range_free_list_t* tmp_range_free_list = NULL;
     node_t** tmp_node_pool = NULL;
 
+    size_t node_pool_size = 0;
+
     IF_ARG_NULL_GOTO_CLEANUP(out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "out_range_free_list_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "*out_range_free_list_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "memory_pool_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_node_count_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "max_node_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "base_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_create", "base_align_")
+
+    if((SIZE_MAX / max_node_count_) < sizeof(node_t*)) {
+        ret = RANGE_FREE_LIST_OVERFLOW;
+        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=node pointer array size exceeds size_t range, max_node_count=%zu, node_pointer_size=%zu, size_max=%zu.", rslt_to_str(ret), max_node_count_, sizeof(node_t*), SIZE_MAX);
+        goto cleanup;
+    }
+    node_pool_size = sizeof(node_t*) * max_node_count_;
 
     tmp_range_free_list = (range_free_list_t*)malloc(sizeof(range_free_list_t));
     if(NULL == tmp_range_free_list) {
@@ -116,13 +125,13 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
     }
     memset(tmp_range_free_list, 0, sizeof(range_free_list_t));
 
-    tmp_node_pool = (node_t**)malloc(sizeof(node_t*) * max_node_count_);
+    tmp_node_pool = (node_t**)malloc(node_pool_size);
     if(NULL == tmp_node_pool) {
         ret = RANGE_FREE_LIST_NO_MEMORY;
         ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate node pointer array, max_node_count=%zu, bytes=%zu.", rslt_to_str(ret), max_node_count_, sizeof(node_t*) * max_node_count_);
         goto cleanup;
     }
-    memset(tmp_node_pool, 0, sizeof(node_t*) * max_node_count_);
+    memset(tmp_node_pool, 0, node_pool_size);
 
     for(size_t i = 0; i != max_node_count_; ++i) {
         tmp_node_pool[i] = (node_t*)malloc(sizeof(node_t));

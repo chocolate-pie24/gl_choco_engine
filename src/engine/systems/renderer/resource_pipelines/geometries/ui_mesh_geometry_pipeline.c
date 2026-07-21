@@ -55,6 +55,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ui_geom_config_t ui_geometry_config = { 0 };
     ui_mesh_geometry_t* geometry = NULL;
     ui_vertex_t ui_vertex[6] = { 0 };
+    vertex_buffer_range_t tmp_buffer_range = { 0 };
 
     const size_t vertex_count = 6;
     size_t vertex_offset = 0;
@@ -97,14 +98,14 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
         goto cleanup;
     }
 
-    ret_renderer = ui_mesh_shader_vertex_buffer_append(backend_context_, shader_, sizeof(ui_vertex_t) * vertex_count, ui_vertex, &vertex_offset);
+    ret_renderer = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
         goto cleanup;
     }
 
-    ret_registry = ui_mesh_geometry_registry_register(geometry_registry_, geometry, vertex_offset, &tmp_geometry_id);
+    ret_registry = ui_mesh_geometry_registry_register(geometry_registry_, geometry, &tmp_buffer_range, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
@@ -116,12 +117,58 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
+    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
+    // - registerをreserve -> commit / abort方式の2-phase registerに変更
+    // - range free listの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
     ui_mesh_geometry_destroy(&geometry);
     return ret;
 }
 
-resource_pipeline_result_t ui_mesh_geometry_pipeline_release(int16_t geometry_id_) {
-    // TODO: VBO FreeList + releaseができたら実装する
-    ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - Failed to release ui mesh geometry. reason=not_implemented, geometry_id=%d, vertex_buffer_release=not_supported", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_RUNTIME_ERROR), geometry_id_);
-    return RESOURCE_PIPELINE_RUNTIME_ERROR;
+resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+
+    vertex_buffer_range_t vertex_buffer_range = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_release", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_release", "geometry_registry_")
+
+    ret_registry = ui_mesh_geometry_registry_vertex_buffer_range_get(geometry_registry_, geometry_id_, &vertex_buffer_range);
+    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_registry = ui_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
+    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    // TODO: ui_mesh_geometry_registry_unregisterに失敗した場合、geometry_id_に対応するCPU側リソースが残っているにも関わらず、GPUリソースがない状態になる
+    // Transactio方式に変更する
+    return ret;
 }
