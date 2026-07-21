@@ -28,6 +28,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
 
 typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t;   /**< UI描画用ジオメトリレジストリのopaque型 */
 
@@ -119,61 +120,9 @@ const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_g
  */
 resource_registry_result_t ui_mesh_geometry_registry_id_get(const ui_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_);
 
-/**
- * @brief registry_に登録されているgeometry_id_のジオメトリの描画範囲を取得する
- *
- * @note 失敗時にout_vertex_offset_, out_vertex_count_は不変
- *
- * @param[in] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
- * @param[in] geometry_id_ 取得対象ジオメトリのid
- * @param[out] out_vertex_offset_ GPU頂点バッファ上の先頭頂点オフセット格納先
- * @param[out] out_vertex_count_ ジオメトリの頂点数格納先
- *
- * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
- * - registry_ == NULL
- * - out_vertex_offset_ == NULL
- * - out_vertex_count_ == NULL
- * - geometry_id_が不正
- * @retval RESOURCE_REGISTRY_DATA_CORRUPTED 以下のいずれか
- * - registry_の内部データ不整合が発生している
- * - geometry_id_に相当するジオメトリの内部データ不整合が発生している
- * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが登録されていない
- * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
- */
-resource_registry_result_t ui_mesh_geometry_registry_draw_range_get(const ui_mesh_geometry_registry_t* registry_, int16_t geometry_id_, size_t* out_vertex_offset_, size_t* out_vertex_count_);
+resource_registry_result_t ui_mesh_geometry_registry_vertex_buffer_range_get(const ui_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_);
 
-/**
- * @brief geometry_の複製と対応する頂点オフセットをregistry_に登録し、ジオメトリidを取得する
- *
- * @note geometry_をregistry_へdeep copyする。geometry_の所有権は呼び出し側にある
- * @note vertex_offset_は頂点単位のオフセットであり、byte単位ではない
- * @note GPU頂点バッファへの書き込みおよび領域の確保は行わない
- * @note 失敗時にregistry_, out_geometry_id_は不変
- * @note 登録解除されたジオメトリのidは、後から登録される別のジオメトリに再利用される場合がある
- *
- * @param[in,out] registry_ ui_mesh_geometry_registry_t構造体インスタンスへのポインタ
- * @param[in] geometry_ 登録するui_mesh_geometry_t構造体インスタンスへのポインタ
- * @param[in] vertex_offset_ geometry_に対応するGPU頂点バッファ上の先頭頂点オフセット
- * @param[out] out_geometry_id_ ジオメトリid格納先
- *
- * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
- * - registry_ == NULL
- * - geometry_ == NULL
- * - out_geometry_id_ == NULL
- * - geometry_が未初期化でジオメトリ名称が取得できない
- * @retval RESOURCE_REGISTRY_DATA_CORRUPTED 以下のいずれか
- * - registry_の内部データ不整合が発生している
- * - geometry_の内部データ不整合が発生している
- * @retval RESOURCE_REGISTRY_BAD_OPERATION 以下のいずれか
- * - geometry_のジオメトリ名称が既にregistry_に登録されている
- * - メモリシステム未初期化
- * @retval RESOURCE_REGISTRY_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_REGISTRY_LIMIT_EXCEEDED 以下のいずれか
- * - メモリシステム使用可能範囲上限超過
- * - registry_に空きスロットが見つからない
- * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
- */
-resource_registry_result_t ui_mesh_geometry_registry_register(ui_mesh_geometry_registry_t* registry_, const ui_mesh_geometry_t* geometry_, size_t vertex_offset_, int16_t* out_geometry_id_);
+resource_registry_result_t ui_mesh_geometry_registry_register(ui_mesh_geometry_registry_t* registry_, const ui_mesh_geometry_t* geometry_, const vertex_buffer_range_t* vertex_buffer_range_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する

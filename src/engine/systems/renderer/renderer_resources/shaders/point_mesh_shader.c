@@ -336,14 +336,14 @@ renderer_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_sha
 
     vertex_allocation_t alloc_info = { 0 };
 
-    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_free", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_free", "buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_point_free", "buffer_range_->allocation_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_point_free", "buffer_range_->draw_range.vertex_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "point_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "buffer_range_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_size, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_free", "buffer_range_->allocation_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, RENDERER_BAD_OPERATION, renderer_rslt_to_str(RENDERER_BAD_OPERATION), "point_mesh_shader_vbo_free", "buffer_range_->draw_range.vertex_count")
 
     if((SIZE_MAX / sizeof(point_vertex_t)) < buffer_range_->draw_range.first_vertex_count) {
         ret = RENDERER_OVERFLOW;
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_free(%s) - point_mesh_shader_vbo_point_free failed.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_free(%s) - point_mesh_shader_vbo_free failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -353,7 +353,7 @@ renderer_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_sha
     ret_buff_mgr = vbo_manager_free(point_mesh_shader_->vbo_manager, &alloc_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = RENDERER_RUNTIME_ERROR;   // TODO: buffer_managerの仕様が安定したら適切な実行結果コードに変換する
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_free(%s) - point_mesh_shader_vbo_point_free failed.", renderer_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_free(%s) - point_mesh_shader_vbo_free failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 

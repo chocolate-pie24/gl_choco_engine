@@ -126,6 +126,7 @@ typedef struct app_state {
     vbo_manager_config_t line_mesh_shader_vbo_config;
     vbo_manager_config_t lit_mesh_shader_vbo_config;
     vbo_manager_config_t point_mesh_shader_vbo_config;
+    vbo_manager_config_t ui_mesh_shader_vbo_config;
 
     ui_mesh_shader_t* ui_mesh_shader;
     line_mesh_shader_t* line_mesh_shader;
@@ -153,6 +154,8 @@ typedef struct app_state {
     ui_mesh_geometry_registry_t* ui_mesh_geometry_registry;
     int16_t geometry_id_small_icon;
     int16_t geometry_id_large_icon;
+    vertex_buffer_range_t small_icon_buffer_range;
+    vertex_buffer_range_t large_icon_buffer_range;
 
     line_mesh_geometry_registry_t* line_mesh_geometry_registry;
     int16_t geometry_id_penguin_aabb;
@@ -354,10 +357,21 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_renderer = ui_mesh_shader_vertex_buffer_create(tmp->renderer_backend_context, tmp->ui_mesh_shader, BUFFER_USAGE_STATIC, 1024);
+
+    tmp->ui_mesh_shader_vbo_config.base_align = alignof(float);
+    tmp->ui_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->ui_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->ui_mesh_shader_vbo_config.vbo_size = 1024;
+    ret_renderer = ui_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, &tmp->ui_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
         ret = app_rslt_convert_renderer(ret_renderer);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_renderer = ui_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        ret = app_rslt_convert_renderer(ret_renderer);
+        ERROR_MESSAGE("application_create(%s) - Failed to initialize ui vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -855,14 +869,14 @@ application_result_t application_run(void) {
         // UI描画
         ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
         ui_mesh_shader_vertex_array_bind(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
-        ret_resource_registy = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon, &vertex_offset, &vertex_count);
+        ret_resource_registy = ui_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon, &s_app_state->small_icon_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
             texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
             renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, vertex_offset, vertex_count);
+            glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
             renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
@@ -871,19 +885,19 @@ application_result_t application_run(void) {
             texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
             renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, vertex_offset, vertex_count);
+            glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
             renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
 
-        ret_resource_registy = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon, &vertex_offset, &vertex_count);
+        ret_resource_registy = ui_mesh_geometry_registry_vertex_buffer_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon, &s_app_state->large_icon_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
             texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
             renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, vertex_offset, vertex_count);
+            glDrawArrays(GL_TRIANGLES, s_app_state->large_icon_buffer_range.draw_range.first_vertex_count, s_app_state->large_icon_buffer_range.draw_range.vertex_count);
 
             renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
