@@ -1,7 +1,81 @@
-// モジュールエラー処理方針
-// - メモリアロケータであり、バグがあった際に原因究明が困難であることから、エラー処理は厚めにする
-// - allocate / freeはエラー処理が特に重要なので、動作が安定するまではエラー処理は厳しくする、安定後、リリースビルドでは重いエラー処理を省く
-// - プライベート関数については、range_free_list_t全体のvalidationは行わない(外部公開APIで厚めのチェックをすることと、極端にエラー処理を重くしすぎないため)
+/**
+ * @file range_free_list.c
+ * @brief 固定alignmentのメモリプール範囲を管理するRange Free Listの実装
+ *
+ * @details
+ * FREE rangeだけでなく、メモリプール全体をFREE／ALLOCATED nodeとして
+ * address orderで管理する。
+ *
+ * allocate成功時に、freeの完遂に必要なALLOCATED nodeを確保済みとすることで、
+ * validなfreeがnode不足や動的メモリ確保失敗によって失敗しない構造を提供する。
+ *
+ * @par Node stateとrange listの不変条件
+ * - node pool上の利用状態、range listへの接続状態、rangeの用途は、
+ *   単一のnode stateで管理する。
+ * - public APIの境界で許可する安定状態は、
+ *   NOT_USED、FREE、ALLOCATEDの三つである。
+ * - TRANSITIONINGはprivate操作の途中だけで使用し、
+ *   public APIの入口、正常終了時、失敗終了時には残さない。
+ * - FREE nodeとALLOCATED nodeだけがrange listへ接続される。
+ * - NOT_USED nodeはrange listへ接続されず、offsetとblock sizeは0、
+ *   prevとnextはNULLである。
+ * - TRANSITIONING nodeのrange情報と接続状態は、
+ *   遷移を担当するprivate関数の契約に従う。
+ * - range listはFREE nodeとALLOCATED nodeをaddress orderで接続した
+ *   双方向listである。
+ * - 同じnodeがrange listへ重複して接続されてはならない。
+ * - 隣接する2つのnodeが両方FREEであってはならない。
+ *
+ * @par Memory poolとalignmentの不変条件
+ * - range listはmemory pool全体を隙間なく表現する。
+ * - 先頭nodeのoffsetは0である。
+ * - 各nodeの終端は次nodeのoffsetと一致する。
+ * - 末尾nodeの終端はmemory pool sizeと一致する。
+ * - 接続nodeのblock sizeは0ではない。
+ * - 接続nodeのoffsetはbase alignment境界に整列している。
+ * - ALLOCATED nodeのblock sizeはbase alignmentの倍数である。
+ * - memory pool末尾を含むFREE nodeのblock sizeは、
+ *   base alignmentの倍数ではない場合がある。
+ *
+ * @par Allocation数とnode数の不変条件
+ * - ALLOCATED node数はallocation countと一致する。
+ * - allocation countはmax allocation count以下である。
+ * - max node countはmax allocation countの2倍である。
+ * - range list接続node数とunused node countの合計は
+ *   max node countと一致する。
+ *
+ * @par Allocate契約
+ * - required alignmentはbase alignmentと一致しなければならない。
+ * - required sizeはbase alignment単位に切り上げる。
+ * - allocation検索にはfirst-fitを使用する。
+ * - required sizeを満たさない先行FREE nodeは検索時に飛ばしてよい。
+ * - allocationは選択したFREE nodeの先頭から行う。
+ * - 分割はexact fitまたはALLOCATED＋後方FREEの2種類だけである。
+ * - partial allocationに必要なNOT_USED nodeは状態変更前に特定する。
+ * - allocate失敗時は内部状態と出力descriptorを変更しない。
+ *
+ * @par Allocation identityとfree契約
+ * - allocation identityはownerとnode indexの組み合わせで表す。
+ * - freeは状態変更前にowner、node index、node state、offset、allocated sizeを検証する。
+ * - validなfreeはnode取得と動的メモリ確保を行わない。
+ * - free後は隣接FREE nodeを必ずmergeする。
+ * - mergeによって不要になったnodeはNOT_USEDへ戻す。
+ *
+ * @par エラー処理方針
+ * - メモリアロケータの不具合は原因究明が困難になるため、
+ *   public APIのエラー検査は厚めに行う。
+ * - allocateとfreeは特に状態変更の影響が大きいため、
+ *   動作が安定するまではdeep validationを含む厳格な検査を行う。
+ * - 動作安定後は、リリースビルドにおける重い検査の省略を検討する。
+ * - private関数ではRange Free List全体のvalidationを繰り返さず、
+ *   呼び出し元が必要なvalidationを完了していることを事前条件とする。
+ * - private関数自身は、担当する局所的な引数と状態の整合性を検査する。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ * 実装コードはプロジェクト作成者が作成し、その内容に責任を負う。
+ */
 #include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
 #include <stdio.h>  // for fprintf
@@ -13,33 +87,77 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/core/memory/choco_memory.h"
+
 /**
- * @brief 空き領域ノード状態定義
+ * @brief nodeの管理状態
  *
- * @note 状態遷移仕様
- * - acquire() : NOT_USED -> NOT_CONNECTED
- * - insert()  : NOT_CONNECTED -> CONNECTED
- * - remove()  : CONNECTED -> NOT_CONNECTED
- * - release() : NOT_CONNECTED -> NOT_USED
+ * @details
+ * node pool上の利用状態、range listへの接続状態、およびnodeが表すrangeの用途を単一のstateで管理する。
+ *
+ * @par 安定状態
+ * public APIの入口、正常終了時、失敗終了時に許可する状態は次の三つである。
+ *
+ * - NOT_USED: node pool内で未使用であり、range listへ接続されていない。
+ * - FREE: range listへ接続され、allocation可能なrangeを表している。
+ * - ALLOCATED: range listへ接続され、live allocationが所有するrangeを表している。
+ *
+ * @par 内部遷移状態
+ * TRANSITIONINGはprivate操作の途中だけで使用する。
+ *
+ * TRANSITIONING中のoffset、block size、prev、next、およびrange listへの
+ * 接続状態は、遷移を担当するprivate関数の契約に従う。
+ *
+ * public APIの入口、正常終了時、失敗終了時にTRANSITIONINGが
+ * 残ってはならない。
+ *
+ * @par 状態遷移
+ * - acquire: NOT_USEDからTRANSITIONINGへ遷移する。
+ * - insert: TRANSITIONINGからFREEまたはALLOCATEDへ遷移する。
+ * - remove: FREEまたはALLOCATEDからTRANSITIONINGへ遷移する。
+ * - release: TRANSITIONINGからNOT_USEDへ遷移する。
+ * - exact fit allocation: FREEからALLOCATEDへ遷移する。
+ * - mergeを伴わないfree: ALLOCATEDからFREEへ遷移する。
+ *
+ * TRANSITIONINGへの遷移前に、失敗し得る検証を完了する。
+ * 遷移開始後に処理が失敗した場合は、public APIから戻る前に安定状態へ戻す。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
  */
 typedef enum {
-    NODE_STATE_NOT_USED,        /**< node_poolにはいるが, どの範囲管理にも使われていない */
-    NODE_STATE_CONNECTED,       /**< 空き範囲nodeとしてfree_block_listに接続されている */
-    NODE_STATE_NOT_CONNECTED,   /**< node_poolから借用中だが, free_block_listには接続されていない */
+    NODE_STATE_NOT_USED,        /**< node pool内で未使用 */
+    NODE_STATE_TRANSITIONING,   /**< private操作によるstate、range情報、またはlist接続の更新中 */
+    NODE_STATE_FREE,            /**< range list上のallocation可能なFREE range */
+    NODE_STATE_ALLOCATED,       /**< range list上のlive allocationが所有するALLOCATED range */
 } node_state_t;
 
 /**
- * @brief 各空き領域を管理するノード構造体
+ * @brief メモリプール内の一つのrangeを管理するnode
  *
+ * @details
+ * FREEまたはALLOCATED状態のnodeはrange listへ接続され、
+ * offsetとblock_sizeによって連続rangeを表す。
+ *
+ * NOT_USED状態ではrangeを保持せず、range listへ接続されない。
+ * TRANSITIONING状態はprivate操作の途中だけで使用する。
+ *
+ * node_stateは、node pool上の利用状態、range listへの接続状態、
+ * およびrangeの用途を統合して表す。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
  */
 typedef struct node {
-    struct node* next;  /**< 次の空き領域ノードへのポインタ */
-    struct node* prev;  /**< 前の空き領域ノードへのポインタ */
+    struct node* next;  /**< address orderで次に接続されたrange node */
+    struct node* prev;  /**< address orderで前に接続されたrange node */
 
-    size_t block_size;  /**< 空き領域サイズ(byte) */
-    size_t offset;      /**< この空き領域の開始オフセット(byte) */
+    size_t block_size;  /**< このnodeが表すrangeのサイズ(byte) */
+    size_t offset;      /**< このnodeが表すrangeの開始offset(byte) */
 
-    node_state_t state; /**< ノード状態 */
+    node_state_t node_state;          /**< nodeの利用状態、list接続状態、range用途を表す統合state */
 } node_t;
 
 /**
@@ -48,13 +166,13 @@ typedef struct node {
  */
 struct range_free_list {
     size_t memory_pool_size;    /**< メモリプール容量(byte) */
-    size_t max_node_count;      /**< 最大ノード数(個) */
+    size_t max_node_count;      /**< 最大ノード数(個)(最もノードを消費する配置がALLOCATED / FREEを交互に繰り返す配置であるため、max_node_countの最大値はmax_allocation_count x 2 + 1となる) */
     size_t unused_node_count;   /**< 未使用ノード数 */
-
+    size_t allocation_count;
     size_t base_align;          /**< メモリプールの先頭アドレスのアライメント */
 
-    node_t** node_pool;             /**< range_free_listが所有する全ノードへのポインタ配列 */
-    node_t* free_block_list_head;   /**< 空き領域を繋いだ双方向リストの先頭ノードで, node_pool配列の要素 */
+    node_t* node_pool;             /**< range_free_listが所有する全ノードへの配列 */
+    node_t* free_block_list_head;   /**< FREE／ALLOCATED range listの先頭nodeで、node_pool配列の要素 */
 };
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コードRANGE_FREE_LIST_SUCCESS文字列 */
@@ -66,20 +184,19 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_FREE_LIST_OVERFLOW文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
 
-// allocation関連
 static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
 static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
 static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_);
-static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
 static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
+static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
 
-// free関連
 static range_free_list_result_t find_free_block_insert_position(const range_free_list_t* range_free_list_, size_t offset_, size_t free_size_, node_t** out_prev_node_, node_t** out_next_node_);
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, size_t offset_, size_t block_size_, node_t** out_node_);
-static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_t* prev_, node_t* next_);
+static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_);
 static range_free_list_result_t node_adjacent_check_prev(const node_t* node_, bool* out_is_adjacent_);
 static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bool* out_is_adjacent_);
 static range_free_list_result_t merge_free_block(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
+static range_free_list_result_t node_pool_find_index(const range_free_list_t* range_free_list_, const node_t* node_, size_t* out_index_);
 
 // validation
 static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);            // deep validation
@@ -91,73 +208,73 @@ static bool range_align_is_valid(size_t base_align_, size_t offset_, size_t bloc
 
 // その他ヘルパー
 static void set_node_to_not_used(node_t* target_);
-static void set_node_to_not_connected(node_t* target_, size_t offset_, size_t block_size_);
-static void set_node_to_connected(node_t* target_, node_t* prev_, node_t* next_);
+static void set_node_to_transitioning(node_t* target_, size_t offset_, size_t block_size_);
+static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_);
+static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_);
 static const char* rslt_to_str(range_free_list_result_t rslt_);
+static range_free_list_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
 
-range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, size_t base_align_, range_free_list_t** out_range_free_list_) {
+range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_free_list_t** out_range_free_list_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+    memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     range_free_list_t* tmp_range_free_list = NULL;
-    node_t** tmp_node_pool = NULL;
 
+    size_t max_node_count = 0;
     size_t node_pool_size = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "out_range_free_list_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "*out_range_free_list_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "memory_pool_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_node_count_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "max_node_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_allocation_count_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "max_node_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "base_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_create", "base_align_")
 
-    if((SIZE_MAX / max_node_count_) < sizeof(node_t*)) {
+    if(((SIZE_MAX - 1) / 2) < max_allocation_count_) {
         ret = RANGE_FREE_LIST_OVERFLOW;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=node pointer array size exceeds size_t range, max_node_count=%zu, node_pointer_size=%zu, size_max=%zu.", rslt_to_str(ret), max_node_count_, sizeof(node_t*), SIZE_MAX);
+        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    node_pool_size = sizeof(node_t*) * max_node_count_;
+    max_node_count = max_allocation_count_ * 2;
 
-    tmp_range_free_list = (range_free_list_t*)malloc(sizeof(range_free_list_t));
-    if(NULL == tmp_range_free_list) {
-        ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate range_free_list_t, bytes=%zu.", rslt_to_str(ret), sizeof(range_free_list_t));
+    if((SIZE_MAX / max_node_count) < sizeof(node_t)) {
+        ret = RANGE_FREE_LIST_OVERFLOW;
+        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=node pointer array size exceeds size_t range, max_node_count=%zu, node_pointer_size=%zu, size_max=%zu.", rslt_to_str(ret), max_node_count, sizeof(node_t), SIZE_MAX);
+        goto cleanup;
+    }
+    node_pool_size = sizeof(node_t) * max_node_count;
+
+    ret_memory = memory_system_allocate(sizeof(range_free_list_t), MEMORY_TAG_RENDERER, (void**)&tmp_range_free_list);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
+        ret = rslt_convert_choco_memory(ret_memory);
+        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_range_free_list, 0, sizeof(range_free_list_t));
 
-    tmp_node_pool = (node_t**)malloc(node_pool_size);
-    if(NULL == tmp_node_pool) {
-        ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate node pointer array, max_node_count=%zu, bytes=%zu.", rslt_to_str(ret), max_node_count_, sizeof(node_t*) * max_node_count_);
+    ret_memory = memory_system_allocate(sizeof(node_t) * max_node_count, MEMORY_TAG_RENDERER, (void**)&tmp_range_free_list->node_pool);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
+        ret = rslt_convert_choco_memory(ret_memory);
+        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_node_pool, 0, node_pool_size);
+    memset(tmp_range_free_list->node_pool, 0, sizeof(node_t) * max_node_count);
 
-    for(size_t i = 0; i != max_node_count_; ++i) {
-        tmp_node_pool[i] = (node_t*)malloc(sizeof(node_t));
-        if(NULL == tmp_node_pool[i]) {
-            ret = RANGE_FREE_LIST_NO_MEMORY;
-            ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=failed to allocate node, node_index=%zu, max_node_count=%zu, bytes=%zu.", rslt_to_str(ret), i, max_node_count_, sizeof(node_t));
-            goto cleanup;
-        }
-        memset(tmp_node_pool[i], 0, sizeof(node_t));
-        tmp_node_pool[i]->state = NODE_STATE_NOT_USED;
+    for(size_t i = 0; i != max_node_count; ++i) {
+        memset(&tmp_range_free_list->node_pool[i], 0, sizeof(node_t));
+        set_node_to_not_used(&tmp_range_free_list->node_pool[i]);
     }
 
-    tmp_range_free_list->max_node_count = max_node_count_;
+    tmp_range_free_list->max_node_count = max_node_count;
+    tmp_range_free_list->allocation_count = 0;
     tmp_range_free_list->memory_pool_size = memory_pool_size_;
-    tmp_range_free_list->unused_node_count = max_node_count_ - 1;
+    tmp_range_free_list->unused_node_count = max_node_count - 1;
     tmp_range_free_list->base_align = base_align_;
 
-    tmp_range_free_list->free_block_list_head = tmp_node_pool[0];
+    tmp_range_free_list->free_block_list_head = &tmp_range_free_list->node_pool[0];
     tmp_range_free_list->free_block_list_head->block_size = memory_pool_size_;
     tmp_range_free_list->free_block_list_head->offset = 0;
-    tmp_range_free_list->free_block_list_head->next = NULL;
-    tmp_range_free_list->free_block_list_head->prev = NULL;
-
-    tmp_node_pool[0]->state = NODE_STATE_CONNECTED;
-
-    tmp_range_free_list->node_pool = tmp_node_pool;
+    set_node_to_free(tmp_range_free_list->free_block_list_head, NULL, NULL);
 
     *out_range_free_list_ = tmp_range_free_list;
 
@@ -165,18 +282,8 @@ range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t
 
 cleanup:
     if(RANGE_FREE_LIST_SUCCESS != ret) {
-        if(NULL != tmp_node_pool) {
-            for(size_t i = 0; i != max_node_count_; ++i) {
-                if(NULL != tmp_node_pool[i]) {
-                    free(tmp_node_pool[i]);
-                    tmp_node_pool[i] = NULL;
-                }
-            }
-            free(tmp_node_pool);
-            tmp_node_pool = NULL;
-        }
         if(NULL != tmp_range_free_list) {
-            free(tmp_range_free_list);
+            memory_system_free(tmp_range_free_list, sizeof(range_free_list_t), MEMORY_TAG_RENDERER);
             tmp_range_free_list = NULL;
         }
     }
@@ -277,7 +384,7 @@ range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list
         goto cleanup;
     }
 
-    ret = node_insert_between(range_free_list_, new_node, prev, next);
+    ret = node_insert_between(range_free_list_, new_node, NODE_STATE_FREE, prev, next);
     if(RANGE_FREE_LIST_SUCCESS != ret) {
         ERROR_MESSAGE("range_free_list_free(%s) - Failed to free range. reason=failed to insert free block node, offset=%zu, size=%zu.", rslt_to_str(ret), allocation_.offset, allocation_.allocated_size);
         goto cleanup;
@@ -384,10 +491,63 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     funlockfile(stdout);
 }
 
-// 要求サイズを満たす最初の空き領域ノードをfree_block_list_headから探索する。
-// 探索方式: first-fit
-// allocation_sizeにはoffsetがbase_alignになるよう調整されたrequired_size + paddingの容量を渡すこと
-// 事前にrange_free_list_にたいし、shallow validation or deep validationを行うこと
+/**
+ * @brief first-fit方式でallocation可能なFREE nodeを検索する
+ *
+ * @details
+ * FREE／ALLOCATED nodeが混在するrange listを先頭から走査し、
+ * block sizeがallocation_size_以上である最初のFREE nodeを返す。
+ *
+ * ALLOCATED nodeは検索対象から除外して読み飛ばす。
+ * 選択したFREE nodeについては、offsetがbase alignment境界にあることを検証する。
+ *
+ * range listの末尾まで走査しても適合するFREE nodeが存在しない場合は、RANGE_FREE_LIST_NO_MEMORYを返す。
+ *
+ * max node countまで走査してもlistの末尾へ到達しない場合は、range listの循環またはnode数の不整合として扱う。
+ *
+ * 本関数はrange listおよびnodeの状態を変更しない。
+ *
+ * @param[in] range_free_list_ 検索対象のRange Free List。
+ * @param[in] allocation_size_ 必要なallocation size。0ではなく、base alignmentの倍数でなければならない。
+ * @param[out] out_node_ 検索結果のFREE nodeを受け取る。呼び出し時の*out_node_はNULLでなければならない。
+ *
+ * @pre
+ * range_free_list_に対するshallow validationまたはdeep validationが
+ * 呼び出し元によって完了していなければならない。
+ *
+ * @pre
+ * range list上のnode stateはFREEまたはALLOCATEDでなければならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * allocation_size_以上のblock sizeを持つ最初のFREE nodeが見つかった。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_、out_node_がNULL、allocation_size_が0、または呼び出し時の*out_node_がNULLではない。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * allocation_size_がbase alignmentの倍数ではない。
+ *
+ * @retval RANGE_FREE_LIST_NO_MEMORY
+ * range listの末尾までに、要求を満たすFREE nodeが存在しない。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * list headがNULL、選択したFREE nodeのoffsetがbase alignment境界にない、
+ * またはmax node count以内にrange listの走査が終了しない。
+ *
+ * @post
+ * 成功時、*out_node_はrange list上のFREE nodeを指し、
+ * そのblock sizeはallocation_size_以上である。
+ *
+ * @post
+ * 失敗時、*out_node_は変更されない。
+ *
+ * @note
+ * 計算量はrange list上のnode数に対してO(n)である。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
@@ -399,17 +559,17 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "out_node_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "*out_node_")
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->free_block_list_head, ret, RANGE_FREE_LIST_NO_MEMORY, rslt_to_str(RANGE_FREE_LIST_NO_MEMORY), "find_first_fit_node", "range_free_list_->free_block_list_head")
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->free_block_list_head, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "find_first_fit_node", "range_free_list_->free_block_list_head")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (allocation_size_ % range_free_list_->base_align), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_first_fit_node", "allocation_size_")
 
     node = range_free_list_->free_block_list_head;
     while(NULL != node && index < range_free_list_->max_node_count) {
-        if(0 != (node->offset % range_free_list_->base_align)) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=free block offset is not aligned to base_align, node_index=%zu, offset=%zu, block_size=%zu, base_align=%zu.", rslt_to_str(ret), index, node->offset, node->block_size, range_free_list_->base_align);
-            goto cleanup;
-        }
-        if(node->block_size >= allocation_size_) {
+        if(NODE_STATE_FREE == node->node_state && node->block_size >= allocation_size_) {
+            if(0 != (node->offset % range_free_list_->base_align)) {
+                ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+                ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=free block offset is not aligned to base_align, list_position=%zu, offset=%zu, block_size=%zu, base_align=%zu.", rslt_to_str(ret), index, node->offset, node->block_size, range_free_list_->base_align);
+                goto cleanup;
+            }
             found = true;
             break;
         } else {
@@ -419,9 +579,15 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
     }
 
     if(!found) {
-        ret = RANGE_FREE_LIST_NO_MEMORY;
-        ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=no free block large enough, allocation_size=%zu.", rslt_to_str(ret), allocation_size_);
-        goto cleanup;
+        if(NULL == node) {  // 末尾まで走査したが該当ノードなし
+            ret = RANGE_FREE_LIST_NO_MEMORY;
+            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit FREE range. reason=no FREE range is large enough, allocation_size=%zu.", rslt_to_str(ret), allocation_size_);
+            goto cleanup;
+        } else {            // max node countまでにlist走査が終了しなかった
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit FREE range. reason=range list traversal did not terminate within max node count, allocation_size=%zu, max_node_count=%zu.", rslt_to_str(ret), allocation_size_, range_free_list_->max_node_count);
+            goto cleanup;
+        }
     }
     *out_node_ = node;
 
@@ -431,58 +597,223 @@ cleanup:
     return ret;
 }
 
-// 対象nodeからallocation_size分を確保する
-// out_offsetに確保開始offsetを返す
-// nodeに残り領域がある場合はoffset/block_sizeを更新する
-// もしnodeを完全に使い切ったらnode_remove + node_releaseする
-// node_removeもしくはnode_releaseが失敗した場合はnode_の状態は変化している場合がある
-// 事前にrange_free_list_にたいし、shallow validation or deep validationを行うこと
-static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_, size_t* out_offset_) {
+/**
+ * @brief FREE nodeの先頭から指定サイズをallocationする
+ *
+ * @details
+ * node_が表すFREE rangeの先頭からallocation_size_を確保し、
+ * node_を対応するALLOCATED nodeへ遷移させる。
+ *
+ * allocationは次の2パターンに対応する。
+ *
+ * @par Exact fit
+ * node_のblock sizeがallocation_size_と等しい場合、
+ * offset、block size、prev、nextを変更せず、node_を
+ * FREEからALLOCATEDへ遷移させる。
+ *
+ * 新しいnodeは取得せず、unused node countも変更しない。
+ *
+ * @par ALLOCATED＋後方FREE
+ * node_のblock sizeがallocation_size_より大きい場合、
+ * node_の先頭部分をALLOCATED rangeとして使用し、残りを新しい後方FREE nodeとして表現する。
+ *
+ * - node_のoffsetは変更しない
+ * - node_のblock sizeをallocation_size_へ変更する
+ * - 後方FREE nodeのoffsetをnode_の元offset＋allocation_size_とする
+ * - 後方FREE nodeのblock sizeをnode_の元block size－allocation_size_とする
+ * - 後方FREE nodeをnode_の直後へ接続する
+ * - node_をFREEからALLOCATEDへ遷移させる
+ *
+ * 後方FREE nodeはnode poolからacquireし、TRANSITIONINGを経てrange listへFREEとして接続する。
+ *
+ * allocation前の不変条件によりnode_の隣にFREE nodeは存在しないため、本関数では後方FREE nodeのmergeを行わない。
+ *
+ * node acquire後にinsertが失敗した場合は、node_のblock sizeを復元し、
+ * acquireしたTRANSITIONING nodeをnode poolへreleaseする。
+ *
+ * 本関数はallocation countの更新、およびallocation descriptorの設定を行わない。
+ * これらは呼び出し元の責務とする。
+ *
+ * @param[in,out] range_free_list_ node_を所有するRange Free List。
+ * @param[in,out] node_ allocation対象のFREE node。
+ * @param[in] allocation_size_ node_の先頭からallocationするサイズ。
+ *
+ * @pre
+ * range_free_list_に対するshallow validationまたはdeep validationが、
+ * 呼び出し元によって完了していなければならない。
+ *
+ * @pre
+ * node_はrange_free_list_のnode poolに所属し、range listへ
+ * FREEとして接続されていなければならない。
+ *
+ * @pre
+ * allocation_size_は0ではなく、base alignmentの倍数であり、
+ * node_のblock size以下でなければならない。
+ *
+ * @pre
+ * node_のoffsetはbase alignment境界にあり、range list上に
+ * 隣接するFREE nodeが存在してはならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * exact fitまたは後方FREE分割によるallocationに成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_またはnode_がNULL、もしくはallocation_size_が0である。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * node_がFREEではない、node_のblock sizeがallocation_size_より小さい、
+ * またはnode acquire／insertの操作条件を満たしていない。
+ *
+ * @retval RANGE_FREE_LIST_LIMIT_EXCEEDED
+ * 後方FREE nodeに使用できるNOT_USED nodeが存在しない。
+ *
+ * @retval RANGE_FREE_LIST_OVERFLOW
+ * 後方FREE nodeのoffset計算でsize_tの範囲を超える。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * node_、node pool、range list、またはnode接続に整合性異常がある。
+ * または、insert失敗後のrollbackでnew nodeをreleaseできなかった。
+ *
+ * @post
+ * 成功時、node_はallocation_size_のALLOCATED rangeを表す。
+ *
+ * @post
+ * partial allocation成功時、node_の直後には残りrangeを表す
+ * FREE nodeが接続され、unused node countは1減少する。
+ *
+ * @post
+ * exact fit成功時、range listの接続関係、node_のrange情報、
+ * およびunused node countは変更されない。
+ *
+ * @post
+ * 失敗時、rollbackに成功した場合はrange list、node_、
+ * node pool、およびunused node countが呼び出し前の状態に保たれる。
+ *
+ * @warning
+ * rollback中のnode releaseに失敗した場合、TRANSITIONING nodeが
+ * node pool内に残る可能性がある。この場合はDATA_CORRUPTEDを返す。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
-    size_t escape_offset = 0;
+    node_t* new_node = NULL;
+    size_t new_node_block_size = 0;
+    size_t new_node_offset = 0;
+    size_t block_size_escape = 0;
+
+    bool acquired = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "node_->node_state")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "allocation_size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_offset_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "out_offset_")
     IF_ARG_FALSE_GOTO_CLEANUP(node_->block_size >= allocation_size_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "allocation_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "allocate_from_node", "node_")
 
-    escape_offset = node_->offset;
-
     if(node_->block_size == allocation_size_) {
-        ret = node_remove(range_free_list_, node_);
-        if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=failed to remove fully consumed node, offset=%zu, block_size=%zu, allocation_size=%zu.", rslt_to_str(ret), escape_offset, node_->block_size, allocation_size_);
-            goto cleanup;
-        }
-
-        ret = node_release(range_free_list_, node_);
-        if(RANGE_FREE_LIST_SUCCESS != ret) {
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=failed to release fully consumed node, offset=%zu, block_size=%zu, allocation_size=%zu.", rslt_to_str(ret), escape_offset, allocation_size_, allocation_size_);
-            goto cleanup;
-        }
+        set_node_to_allocated(node_, node_->prev, node_->next);
     } else {
         if((SIZE_MAX - allocation_size_) < node_->offset) {
             ret = RANGE_FREE_LIST_OVERFLOW;
-            ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate from free block. reason=offset overflow while advancing free block, offset=%zu, allocation_size=%zu, block_size=%zu.", rslt_to_str(ret), node_->offset, allocation_size_, node_->block_size);
+            ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
             goto cleanup;
         }
-        node_->block_size -= allocation_size_;
-        node_->offset += allocation_size_;
-    }
+        new_node_offset = node_->offset + allocation_size_;
+        new_node_block_size = node_->block_size - allocation_size_;
 
-    *out_offset_ = escape_offset;
+        ret = node_acquire(range_free_list_, new_node_offset, new_node_block_size, &new_node);
+        if(RANGE_FREE_LIST_SUCCESS != ret) {
+            ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        acquired = true;
+        block_size_escape = node_->block_size;
+        node_->block_size = allocation_size_;
+
+        ret = node_insert_between(range_free_list_, new_node, NODE_STATE_FREE, node_, node_->next);
+        if(RANGE_FREE_LIST_SUCCESS != ret) {
+            ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+
+        set_node_to_allocated(node_, node_->prev, node_->next);
+    }
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
 cleanup:
+    range_free_list_result_t ret_cleanup = RANGE_FREE_LIST_INVALID_ARGUMENT;
+    if(RANGE_FREE_LIST_SUCCESS != ret) {
+        if(acquired) {
+            node_->block_size = block_size_escape;
+            ret_cleanup = node_release(range_free_list_, new_node);
+            if(RANGE_FREE_LIST_SUCCESS != ret_cleanup) {
+                ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+                ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
+                return ret;
+            }
+        }
+    }
+
     return ret;
 }
 
-// 事前にrange_free_list_にたいし、shallow validation or deep validationを行うこと
+/**
+ * @brief node poolから未使用nodeを取得する
+ *
+ * @details
+ * node poolから最初に見つかったNOT_USED nodeを取得し、
+ * 指定されたrange情報を設定してTRANSITIONING状態へ遷移させる。
+ *
+ * 成功時はunused node countを1減らし、取得したnodeをout_node_へ設定する。
+ *
+ * 取得したnodeはrange listへ接続されない。prevとnextはNULLとなる。
+ * 呼び出し元は後続処理によって、取得したnodeをFREE、ALLOCATED、
+ * またはNOT_USEDの安定状態へ遷移させなければならない。
+ *
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @param[in,out] range_free_list_ nodeを所有するRange Free List。
+ * @param[in] offset_ 取得したnodeへ設定するrange開始offset。
+ * @param[in] block_size_ 取得したnodeへ設定するrangeサイズ。
+ * @param[out] out_node_ 取得したTRANSITIONING nodeの出力先。呼び出し時にNULLを指していなければならない。
+ *
+ * @note
+ * 呼び出し元は、range_free_list_に対するshallow validationまたはdeep validationを事前に完了させなければならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * NOT_USED nodeの取得に成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_またはout_node_がNULL、もしくはout_node_がすでにnodeを指している。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * offset_とblock_size_が有効なrangeを表していない。
+ *
+ * @retval RANGE_FREE_LIST_LIMIT_EXCEEDED
+ * unused node countが0であり、取得可能なnodeが存在しない。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * node pool、unused node count、または取得対象nodeの内部状態に整合性異常が検出された。
+ *
+ * @post
+ * 成功時、out_node_は指定されたrange情報を保持するTRANSITIONING nodeを指し、
+ * unused node countは呼び出し前から1減少する。
+ *
+ * @post
+ * 失敗時、node pool、range list、unused node count、およびout_node_の内容は呼び出し前から変更されない。
+ *
+ * @warning
+ * 成功時に返されるnodeはprivate操作途中の一時的な状態である。public APIから戻る前に安定状態へ遷移させなければならない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, size_t offset_, size_t block_size_, node_t** out_node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
@@ -506,7 +837,7 @@ static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_
             ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=node_pool entry is NULL, node_index=%zu, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), i, range_free_list_->max_node_count, range_free_list_->unused_node_count);
             goto cleanup;
         }
-        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i]->state) {
+        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i]->node_state) {
             tmp_node = range_free_list_->node_pool[i];
             found = true;
             break;
@@ -525,7 +856,7 @@ static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_
         }
     }
 
-    set_node_to_not_connected(tmp_node, offset_, block_size_);
+    set_node_to_transitioning(tmp_node, offset_, block_size_);
 
     range_free_list_->unused_node_count--;
     *out_node_ = tmp_node;
@@ -536,9 +867,71 @@ cleanup:
     return ret;
 }
 
-// リストから外されたnode_を未使用状態に戻す
-// node_は呼び出し側でremove()によりリストから外し、next/prevをNULLにしておくこと
-// 事前にrange_free_list_にたいし、shallow validation or deep validationを行うこと
+/**
+ * @brief 切断済みTRANSITIONING nodeをnode poolへ返却する
+ *
+ * @details
+ * range listから切断されたTRANSITIONING nodeを正規化された
+ * NOT_USED状態へ戻し、unused node countを1増加させる。
+ *
+ * 成功時、node_には次の状態が設定される。
+ *
+ * - stateはNOT_USED
+ * - offsetは0
+ * - block sizeは0
+ * - prevはNULL
+ * - nextはNULL
+ *
+ * 本関数はrange list、list head、隣接nodeを変更しない。
+ * node_のrange listからの切断は、呼び出し前にnode_remove()で
+ * 完了させなければならない。
+ *
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @param[in,out] range_free_list_ node_を所有するRange Free List。
+ * @param[in,out] node_ node poolへ返却するTRANSITIONING node。
+ *
+ * @note
+ * remove／release処理を開始する前に、呼び出し元は
+ * range_free_list_全体を検証しなければならない。
+ *
+ * node_remove()成功後はrange listが内部遷移中となるため、
+ * node_release()呼び出し直前のdeep validationは要求しない。
+ *
+ * @pre
+ * node_のstateはTRANSITIONINGでなければならない。
+ *
+ * @pre
+ * node_はrange_free_list_のnode poolに所属していなければならない。
+ *
+ * @pre
+ * node_はrange listから切断済みであり、prevとnextはNULLで
+ * なければならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * node_のnode poolへの返却に成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_またはnode_がNULLである。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * node_のstateがTRANSITIONINGではない。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * node_、node pool、unused node count、またはnodeの所属関係に整合性異常が検出された。
+ *
+ * @post
+ * 成功時、node_は正規化されたNOT_USED状態となり、
+ * unused node countは呼び出し前から1増加する。
+ *
+ * @post
+ * 失敗時、node_、node pool、range list、およびunused node countは
+ * 呼び出し前から変更されない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
@@ -548,7 +941,7 @@ static range_free_list_result_t node_release(range_free_list_t* range_free_list_
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "node_")
     IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->unused_node_count < range_free_list_->max_node_count, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_release", "unused_node_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_release", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_TRANSITIONING == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_release", "node_->node_state")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_release", "node_")
 
     for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
@@ -566,7 +959,7 @@ static range_free_list_result_t node_release(range_free_list_t* range_free_list_
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->state, range_free_list_->max_node_count, range_free_list_->unused_node_count);
+        ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_free_list_->max_node_count, range_free_list_->unused_node_count);
         goto cleanup;
     }
 
@@ -580,8 +973,72 @@ cleanup:
     return ret;
 }
 
-// node_のreleaseに先立ち、node_をリストから外す
-// 事前にrange_free_list_にたいし、shallow validation or deep validationを行うこと
+/**
+ * @brief FREEまたはALLOCATED nodeをrange listから切断する
+ *
+ * @details
+ * range listへ接続されているnode_を切断し、stateをFREEまたはALLOCATEDからTRANSITIONINGへ遷移させる。
+ *
+ * 次の切断位置に対応する。
+ *
+ * - node_がrange list上の唯一のnode
+ * - node_がrange listの先頭
+ * - node_が二つのnodeの間
+ * - node_がrange listの末尾
+ *
+ * 切断時はlist headと隣接nodeの接続情報を更新する。
+ * node_のoffsetとblock sizeは保持し、prevとnextはNULLへ設定する。
+ *
+ * 本関数はnode_をnode poolへ返却せず、unused node countも変更しない。
+ * node poolへの返却は、切断成功後にnode_release()を使用して行う。
+ *
+ * @param[in,out] range_free_list_ node_を切断するRange Free List。
+ * @param[in,out] node_ range listから切断するFREEまたはALLOCATED node。
+ *
+ * @note
+ * 呼び出し元は、range_free_list_に対するshallow validationまたは
+ * deep validationを事前に完了させなければならない。
+ *
+ * @pre
+ * node_のstateはFREEまたはALLOCATEDでなければならない。
+ *
+ * @pre
+ * node_はrange_free_list_のnode poolに所属し、range listへ
+ * 正しく接続されていなければならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * node_の切断とTRANSITIONINGへの遷移に成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_またはnode_がNULLである。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * node_のstateがFREEでもALLOCATEDでもない。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * node_、node pool、list head、またはprev／nextの接続関係に整合性異常が検出された。
+ *
+ * @post
+ * 成功時、node_はrange listから切断されたTRANSITIONING nodeとなる。
+ * offsetとblock sizeは保持され、prevとnextはNULLとなる。
+ *
+ * @post
+ * 成功時、list headと隣接nodeの接続情報は切断後の状態と整合する。
+ * unused node countは変更されない。
+ *
+ * @post
+ * 失敗時、range list、node_、list head、およびunused node countは
+ * 呼び出し前から変更されない。
+ *
+ * @warning
+ * 成功時のnode_はprivate操作途中の状態である。
+ * public APIから戻る前にnode_release()でNOT_USEDへ戻すか、
+ * range listへ再挿入して安定状態へ遷移させなければならない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
@@ -590,7 +1047,7 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
 
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_remove", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->node_state || NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_remove", "node_->node_state")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_remove", "node_")
 
     for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
@@ -608,7 +1065,7 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
 
     if(!found) {
         ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->state, range_free_list_->max_node_count);
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_free_list_->max_node_count);
         goto cleanup;
     }
 
@@ -636,7 +1093,7 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
     }
 
     // block_size, offsetは保持する
-    set_node_to_not_connected(range_free_list_->node_pool[index], range_free_list_->node_pool[index]->offset, range_free_list_->node_pool[index]->block_size);
+    set_node_to_transitioning(range_free_list_->node_pool[index], range_free_list_->node_pool[index]->offset, range_free_list_->node_pool[index]->block_size);
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
@@ -739,12 +1196,80 @@ cleanup:
     return ret;
 }
 
-static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_t* prev_, node_t* next_) {
+/**
+ * @brief TRANSITIONING nodeをrange listへ接続して指定stateへ遷移させる
+ *
+ * @details
+ * insert_node_をprev_とnext_の間へ接続し、next_state_で指定されたFREEまたはALLOCATEDの安定状態へ遷移させる。
+ *
+ * 次の挿入位置に対応する。
+ *
+ * - prev_とnext_がともにNULL: 空のrange listへ挿入する。
+ * - prev_がNULL: range listの先頭へ挿入する。
+ * - prev_とnext_がともに非NULL: 二つの隣接nodeの間へ挿入する。
+ * - next_がNULL: range listの末尾へ挿入する。
+ *
+ * 必要な隣接nodeとlist headを更新した後、next_state_に応じてinsert_node_をFREEまたはALLOCATEDへ遷移させる。
+ *
+ * 本関数はunused node countを変更しない。
+ * また、挿入rangeのaddress orderと隣接rangeとの非重複性は検証しない。
+ * これらは呼び出し元が挿入位置を決定する際に検証する。
+ *
+ * @param[in,out] range_free_list_ insert_node_を接続するRange Free List。
+ * @param[in,out] insert_node_ range listへ接続するTRANSITIONING node。
+ * @param[in] next_state_ 挿入後のnode state。FREEまたはALLOCATEDでなければならない。
+ * @param[in,out] prev_ insert_node_の直前へ接続するnode。先頭へ挿入する場合はNULL。
+ * @param[in,out] next_ insert_node_の直後へ接続するnode。末尾へ挿入する場合はNULL。
+ *
+ * @note
+ * 呼び出し元は、range_free_list_に対するshallow validationまたは
+ * deep validationを事前に完了させなければならない。
+ *
+ * @pre
+ * insert_node_のstateはTRANSITIONINGであり、next_state_に対応する
+ * 有効なrange情報を保持していなければならない。
+ *
+ * @pre
+ * prev_とnext_はinsert_node_とは異なるnodeでなければならない。
+ * 両方が非NULLの場合、prev_とnext_はrange list上で直接接続されていなければならない。
+ *
+ * @pre
+ * insert_node_のrangeはaddress order上でprev_とnext_の間に位置し、
+ * 隣接rangeと重複してはならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * insert_node_の接続と指定stateへの遷移に成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_またはinsert_node_がNULLである。
+ *
+ * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * insert_node_がTRANSITIONINGではない、next_state_がFREE／ALLOCATED
+ * ではない、またはprev_とnext_が同じnodeを指している。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * insert_node_、range list、list head、またはprev／nextの
+ * 接続関係に整合性異常が検出された。
+ *
+ * @post
+ * 成功時、insert_node_はprev_とnext_の間へ接続され、stateはnext_state_と一致する。
+ * list headと隣接nodeの接続情報も挿入後の状態と整合する。
+ *
+ * @post
+ * 失敗時、range list、insert_node_、list head、および
+ * unused node countは呼び出し前から変更されない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_) {
     range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "insert_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_NOT_CONNECTED == insert_node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_TRANSITIONING == insert_node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == next_state_ || NODE_STATE_FREE == next_state_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "next_state_")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(insert_node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_insert_between", "insert_node_")
 
     if(NULL != prev_ && NULL != next_ && prev_ == next_) {
@@ -785,7 +1310,11 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
         prev_->next = insert_node_;
     }
 
-    set_node_to_connected(insert_node_, prev_, next_);
+    if(NODE_STATE_FREE == next_state_) {
+        set_node_to_free(insert_node_, prev_, next_);
+    } else if(NODE_STATE_ALLOCATED == next_state_) {
+        set_node_to_allocated(insert_node_, prev_, next_);
+    }
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
@@ -801,20 +1330,20 @@ static range_free_list_result_t node_adjacent_check_prev(const node_t* node_, bo
 
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_adjacent_check_prev", "node_")
     IF_ARG_NULL_GOTO_CLEANUP(out_is_adjacent_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_adjacent_check_prev", "out_is_adjacent_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_adjacent_check_prev", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_LIFECYCLE_STATE_CONNECTED == node_->lifecycle_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_adjacent_check_prev", "node_->lifecycle_state")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_adjacent_check_prev", "node_")
 
     if(NULL == node_->prev) {
         is_adjacent = false;
     } else {
-        if(NODE_STATE_CONNECTED != node_->prev->state) {
+        if(NODE_LIFECYCLE_STATE_CONNECTED != node_->prev->lifecycle_state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state);
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->lifecycle_state);
             goto cleanup;
         }
         if(!node_is_valid(node_->prev)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state);
+            ERROR_MESSAGE("node_adjacent_check_prev(%s) - Failed to check previous free block adjacency. reason=previous node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->lifecycle_state);
             goto cleanup;
         }
         if(node_->prev->next != node_) {
@@ -858,20 +1387,20 @@ static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bo
 
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_adjacent_check_next", "node_")
     IF_ARG_NULL_GOTO_CLEANUP(out_is_adjacent_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_adjacent_check_next", "out_is_adjacent_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_adjacent_check_next", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_LIFECYCLE_STATE_CONNECTED == node_->lifecycle_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_adjacent_check_next", "node_->lifecycle_state")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_adjacent_check_next", "node_")
 
     if(NULL == node_->next) {
         is_adjacent = false;
     } else {
-        if(NODE_STATE_CONNECTED != node_->next->state) {
+        if(NODE_LIFECYCLE_STATE_CONNECTED != node_->next->lifecycle_state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is not CONNECTED, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->state);
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is not CONNECTED, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->lifecycle_state);
             goto cleanup;
         }
         if(!node_is_valid(node_->next)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is corrupted, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->state);
+            ERROR_MESSAGE("node_adjacent_check_next(%s) - Failed to check next free block adjacency. reason=next node is corrupted, node_offset=%zu, node_block_size=%zu, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, node_->next->lifecycle_state);
             goto cleanup;
         }
         if(node_->next->prev != node_) {
@@ -917,7 +1446,7 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
 
     IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "merge_free_block", "range_free_list_")
     IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "merge_free_block", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_CONNECTED == node_->state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "merge_free_block", "node_->state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_LIFECYCLE_STATE_CONNECTED == node_->lifecycle_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "merge_free_block", "node_->lifecycle_state")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "merge_free_block", "node_")
 
     if(should_merge_prev_) {
@@ -938,14 +1467,14 @@ static range_free_list_result_t merge_free_block(range_free_list_t* range_free_l
     if(should_merge_prev_ && should_merge_next_) {
         // 前後ノードマージ
         // node_->prevを残し、node_とnode_->nextを削除
-        if(NODE_STATE_CONNECTED != node_->prev->state || NODE_STATE_CONNECTED != node_->next->state) {
+        if(NODE_LIFECYCLE_STATE_CONNECTED != node_->prev->lifecycle_state || NODE_LIFECYCLE_STATE_CONNECTED != node_->next->lifecycle_state) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge targets are not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state, node_->next->offset, node_->next->block_size, node_->next->state);
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge targets are not CONNECTED, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->lifecycle_state, node_->next->offset, node_->next->block_size, node_->next->lifecycle_state);
             goto cleanup;
         }
         if(!node_is_valid(node_->prev) || !node_is_valid(node_->next)) {
             ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge target node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->state, node_->next->offset, node_->next->block_size, node_->next->state);
+            ERROR_MESSAGE("merge_free_block(%s) - Failed to merge adjacent free blocks. reason=merge target node is corrupted, node_offset=%zu, node_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, prev_state=%d, next_offset=%zu, next_block_size=%zu, next_state=%d.", rslt_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, node_->prev->lifecycle_state, node_->next->offset, node_->next->block_size, node_->next->lifecycle_state);
             goto cleanup;
         }
         prev = node_->prev;
@@ -1044,8 +1573,115 @@ cleanup:
     return ret;
 }
 
-// NOTE: この関数は、状態遷移を行う場所と、状態遷移に必要なパラメータを明示することが目的, 以下は行わないため, 呼び出し側で保証すること
-// - 遷移元の検証
+/**
+ * @brief nodeが所属するnode pool indexを取得する
+ *
+ * @details
+ * range_free_list_が所有するnode poolを先頭から線形探索し、
+ * node_と同じポインタを保持する要素のindexを取得する。
+ *
+ * node_がnode poolに所属することをポインタidentityによって
+ * 確認した後、node_is_valid()によってnode単体の局所的不変条件を検証する。
+ *
+ * 本関数はRange Free List、node pool、およびnodeの状態を変更しない。
+ *
+ * @param[in] range_free_list_ node poolを所有するRange Free List。
+ * @param[in] node_ indexを取得するnode。
+ * @param[out] out_index_ node_が格納されているnode pool indexの出力先。
+ *
+ * @pre
+ * range_free_list_に対するshallow validationまたはdeep validationが、
+ * 呼び出し元によって完了していなければならない。
+ *
+ * @retval RANGE_FREE_LIST_SUCCESS
+ * node_の所属確認とindexの取得に成功した。
+ *
+ * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
+ * range_free_list_、node_、またはout_index_がNULLである。
+ *
+ * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * node_がnode poolに所属していない、または所属確認後のnode_が局所的不変条件を満たしていない。
+ *
+ * @post
+ * 成功時、*out_index_はnode_が格納されているnode pool indexと一致する。
+ *
+ * @post
+ * 失敗時、*out_index_は変更されない。
+ *
+ * @note
+ * 計算量はmax node countに対してO(n)である。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static range_free_list_result_t node_pool_find_index(const range_free_list_t* range_free_list_, const node_t* node_, size_t* out_index_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    bool found = false;
+    size_t tmp_index = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_index_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "out_index_")
+
+    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
+        if(&range_free_list_->node_pool[i] == node_) {
+            tmp_index = i;
+            found = true;
+            break;
+        }
+    }
+    if(!found) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_pool_find_index(%s) - Failed to find node index. reason=target node does not belong to node pool, max_node_count=%zu.", rslt_to_str(ret), range_free_list_->max_node_count);
+        goto cleanup;
+    }
+    if(!node_is_valid(node_)) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_pool_find_index(%s) - Failed to find node index. reason=target node is locally invalid, node_index=%zu, node_state=%d, offset=%zu, block_size=%zu.", rslt_to_str(ret), tmp_index, node_->node_state, node_->offset, node_->block_size);
+        goto cleanup;
+    }
+    *out_index_ = tmp_index;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/**
+ * @brief nodeを正規化されたNOT_USED状態へ設定する
+ *
+ * @details
+ * 対象nodeが保持するrange情報と接続情報を消去し、
+ * node pool内の未使用nodeとして再利用可能な状態へ設定する。
+ *
+ * NULL以外のtarget_に対して、次の状態を設定する。
+ *
+ * - stateはNOT_USED
+ * - offsetは0
+ * - block sizeは0
+ * - prevはNULL
+ * - nextはNULL
+ *
+ * 本関数は遷移元stateを検証しない。
+ * また、range listの隣接node、list head、unused node countは更新しない。
+ * nodeの切断とカウンタ更新は呼び出し元の責務とする。
+ *
+ * @param[in,out] target_ NOT_USED状態へ設定するnode。NULLの場合は何も行わない。
+ *
+ * @warning
+ * range listへ接続中のnodeに直接使用してはならない。
+ * 呼び出し元は、必要なlist接続の更新を事前に完了させなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_は正規化されたNOT_USED状態になる。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void set_node_to_not_used(node_t* target_) {
     if(NULL == target_) {
         return;
@@ -1054,13 +1690,54 @@ static void set_node_to_not_used(node_t* target_) {
     target_->offset = 0;
     target_->prev = NULL;
     target_->next = NULL;
-    target_->state = NODE_STATE_NOT_USED;
+    target_->node_state = NODE_STATE_NOT_USED;
 }
 
-// NOTE: この関数は、状態遷移を行う場所と、状態遷移に必要なパラメータを明示することが目的, 以下は行わないため, 呼び出し側で保証すること
-// - 遷移元の検証
-// - offset_, block_size_の検証
-static void set_node_to_not_connected(node_t* target_, size_t offset_, size_t block_size_) {
+/**
+ * @brief nodeをTRANSITIONING状態へ設定する
+ *
+ * @details
+ * 対象nodeへ指定されたrange情報を設定し、接続情報を消去したうえで、
+ * private操作中であることを示すTRANSITIONING状態へ遷移させる。
+ *
+ * NULL以外のtarget_に対して、次の状態を設定する。
+ *
+ * - stateはTRANSITIONING
+ * - offsetはoffset_
+ * - block sizeはblock_size_
+ * - prevはNULL
+ * - nextはNULL
+ *
+ * 本関数は遷移元state、offset_、block_size_を検証しない。
+ * また、range listの隣接node、list head、unused node countは更新しない。
+ * これらの検証と更新は呼び出し元の責務とする。
+ *
+ * @param[in,out] target_ TRANSITIONING状態へ設定するnode。NULLの場合は何も行わない。
+ * @param[in] offset_ target_へ設定するrange開始offset。
+ * @param[in] block_size_ target_へ設定するrangeサイズ。
+ *
+ * @pre
+ * target_がNULLでない場合、呼び出し元は遷移元stateと
+ * offset_およびblock_size_の妥当性を検証済みでなければならない。
+ *
+ * @pre
+ * target_がrange listへ接続されている場合、呼び出し元は
+ * 隣接nodeとlist headの更新を完了していなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_は指定されたrange情報を保持する
+ * TRANSITIONING状態となり、prevとnextはNULLになる。
+ *
+ * @warning
+ * TRANSITIONINGはprivate操作途中の一時的な状態である。
+ * 呼び出し元はpublic APIから戻る前に、target_をNOT_USED、FREE、
+ * ALLOCATEDのいずれかの安定状態へ遷移させなければならない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static void set_node_to_transitioning(node_t* target_, size_t offset_, size_t block_size_) {
     if(NULL == target_) {
         return;
     }
@@ -1068,74 +1745,249 @@ static void set_node_to_not_connected(node_t* target_, size_t offset_, size_t bl
     target_->offset = offset_;
     target_->next = NULL;
     target_->prev = NULL;
-    target_->state = NODE_STATE_NOT_CONNECTED;
+    target_->node_state = NODE_STATE_TRANSITIONING;
 }
 
-// NOTE: この関数は、状態遷移を行う場所と、状態遷移に必要なパラメータを明示することが目的, 以下は行わないため, 呼び出し側で保証すること
-// - 遷移元の検証
-// - prev_, next_の検証
-// - 遷移前target_の検証
-static void set_node_to_connected(node_t* target_, node_t* prev_, node_t* next_) {
+/**
+ * @brief nodeをFREE状態へ設定する
+ *
+ * @details
+ * 対象nodeへ指定された接続情報を設定し、range list上の
+ * allocation可能なFREE rangeを表す安定状態へ遷移させる。
+ *
+ * NULL以外のtarget_に対して、次の状態を設定する。
+ *
+ * - stateはFREE
+ * - prevはprev_
+ * - nextはnext_
+ *
+ * offsetとblock sizeは変更しない。
+ *
+ * 本関数は遷移元state、target_が保持するrange情報、prev_、next_の接続関係を検証しない。
+ * また、隣接node、list head、unused node countは更新しない。
+ * これらの検証と更新は呼び出し元の責務とする。
+ *
+ * @param[in,out] target_ FREE状態へ設定するnode。NULLの場合は何も行わない。
+ * @param[in] prev_ target_の直前へ接続するnode。先頭の場合はNULL。
+ * @param[in] next_ target_の直後へ接続するnode。末尾の場合はNULL。
+ *
+ * @pre
+ * target_がNULLでない場合、呼び出し元は遷移元stateが、
+ * createによる初期化時のNOT_USED、またはTRANSITIONING、ALLOCATEDのいずれかであることを検証済みでなければならない。
+ *
+ * @pre
+ * target_のoffsetとblock sizeは、有効なFREE rangeを表していなければならない。
+ *
+ * @pre
+ * 呼び出し元は、prev_、next_、list headを含むrange list全体が、
+ * target_の接続後に整合することを保証しなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_はoffsetとblock sizeを保持したまま
+ * FREE状態となり、prevとnextは指定されたnodeと一致する。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_) {
     if(NULL == target_) {
         return;
     }
     target_->prev = prev_;
     target_->next = next_;
-    target_->state = NODE_STATE_CONNECTED;
+    target_->node_state = NODE_STATE_FREE;
 }
 
+/**
+ * @brief nodeをALLOCATED状態へ設定する
+ *
+ * @details
+ * 対象nodeへ指定された接続情報を設定し、range list上の
+ * live allocationが所有するALLOCATED rangeを表す安定状態へ遷移させる。
+ *
+ * NULL以外のtarget_に対して、次の状態を設定する。
+ *
+ * - stateはALLOCATED
+ * - prevはprev_
+ * - nextはnext_
+ *
+ * offsetとblock sizeは変更しない。
+ *
+ * 本関数は遷移元state、target_が保持するrange情報、prev_、next_の接続関係を検証しない。
+ * また、隣接node、list head、unused node countは更新しない。
+ * これらの検証と更新は呼び出し元の責務とする。
+ *
+ * @param[in,out] target_ ALLOCATED状態へ設定するnode。NULLの場合は何も行わない。
+ * @param[in] prev_ target_の直前へ接続するnode。先頭の場合はNULL。
+ * @param[in] next_ target_の直後へ接続するnode。末尾の場合はNULL。
+ *
+ * @pre
+ * target_がNULLでない場合、呼び出し元は遷移元stateが
+ * TRANSITIONINGまたはFREEであることを検証済みでなければならない。
+ *
+ * @pre
+ * target_のoffsetとblock sizeは、有効なALLOCATED rangeを表していなければならない。
+ *
+ * @pre
+ * 呼び出し元は、prev_、next_、list headを含むrange list全体が、
+ * target_の接続後に整合することを保証しなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_はoffsetとblock sizeを保持したまま
+ * ALLOCATED状態となり、prevとnextは指定されたnodeと一致する。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_) {
+    if(NULL == target_) {
+        return;
+    }
+    target_->prev = prev_;
+    target_->next = next_;
+    target_->node_state = NODE_STATE_ALLOCATED;
+}
+
+/**
+ * @brief Range Free Listの内部状態、node pool、およびrange listの整合性を検証する
+ *
+ * @details
+ * range_free_list_のshallowな内部フィールドを検証した後、
+ * FREE／ALLOCATED nodeで構成されるrange listを先頭から走査する。
+ *
+ * range listについて、次の条件を検証する。
+ *
+ * - list headが存在し、先頭nodeのoffsetが0
+ * - list上の各nodeのblock sizeが0ではなく、prevおよびnextが自分自身を参照していない
+ * - list上の各node stateがFREEまたはALLOCATED
+ * - 先頭nodeのprevがNULLであり、2番目以降の各nodeのprevが、nextをたどる走査で直前に処理したnodeを参照している
+ * - 各nodeのoffsetが直前nodeの終端と一致する
+ * - 各rangeがmemory poolの範囲内にあり、終端計算がoverflowしない
+ * - 各nodeのoffsetがbase alignment境界にある
+ * - ALLOCATED nodeのblock sizeがbase alignmentの倍数
+ * - 隣接する2つのnodeが両方FREEではない
+ * - listの走査回数がmax node countを超えない
+ * - range listの末尾がmemory poolの末尾と一致する
+ * - list上のnode数とunused node countの合計がmax node countと一致する
+ * - list上の各nodeが、このRange Free Listのnode poolに所属している
+ *
+ * expected offsetを先頭の0から各nodeの終端へ更新することで、
+ * range間のgap、overlap、およびmemory pool内の未管理rangeを検出する。
+ *
+ * node poolについて、次の条件を検証する。
+ *
+ * - 全nodeがstateに対応する局所的不変条件を満たしている
+ * - public API境界で許可されないTRANSITIONING nodeが存在しない
+ * - NOT_USED node数がunused node countと一致する
+ * - FREE／ALLOCATED node数がrange listの走査node数と一致する
+ * - FREE、ALLOCATED、NOT_USEDの各node数の合計がmax node countと一致する
+ *
+ * range list上の全nodeがnode poolに所属することと、
+ * node pool内のFREE／ALLOCATED node数がrange listの走査node数と
+ * 一致することを照合し、listから切り離された安定状態のnodeが
+ * 存在しないことを検証する。
+ *
+ * @param[in] range_free_list_ 検証するRange Free List。NULLの場合は不正と判定する。
+ *
+ * @retval true shallowな内部状態、node pool、およびrange listが整合している。
+ * @retval false 内部フィールド、node pool、node state、list接続、range、alignment、またはnode数が不正である。
+ *
+ * @note 本関数はrange_free_list_およびnodeを変更しない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) {
+    node_t* node = NULL;
+    node_t* prev = NULL;
+    size_t loop_count = 0;
+    size_t expected_offset = 0;
+    bool found = false;
+
     if(NULL == range_free_list_) {
         return false;
     }
-
-    // NOTE: 以下はfree_listの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
-    node_t* head = range_free_list_->free_block_list_head;
-    node_t* prev = NULL;
-    size_t loop_count = 0;
-    size_t used_count = 0;
-
     if(!range_free_list_is_valid_shallow(range_free_list_)) {
         return false;
     }
 
-    while(NULL != head) {
+    if(NULL == range_free_list_->free_block_list_head) {
+        return false;
+    }
+    node = range_free_list_->free_block_list_head;
+    // NOTE: 以下はfree_listの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
+    while(NULL != node) {
         if(loop_count >= range_free_list_->max_node_count) {
             return false;
         }
-        if(!node_is_valid(head)) {
+        if(!node_is_valid(node)) {
             return false;
         }
-        if(head->prev != prev) {
+        if(NODE_STATE_ALLOCATED != node->node_state && NODE_STATE_FREE != node->node_state) {
             return false;
         }
-        if(!range_is_valid(range_free_list_, head->offset, head->block_size)) {
+        if(node->prev != prev) {
             return false;
         }
-        if(0 != (head->offset % range_free_list_->base_align)) {
+        if(node->offset != expected_offset) {
             return false;
         }
-        if(head->offset + head->block_size != range_free_list_->memory_pool_size && 0 != (head->block_size % range_free_list_->base_align)) {   // memory_pool_sizeはbase_alignの倍数以外を許可しているため、末尾ノードはbase_alignの倍数ではない場合がある
+        if(!range_is_valid(range_free_list_, node->offset, node->block_size)) {
             return false;
         }
-        if(NODE_STATE_CONNECTED != head->state) {
+        if(0 != (node->offset % range_free_list_->base_align)) {
             return false;
         }
-        if(NULL != head->next) {
-            if(!is_non_overlap(head->offset, head->block_size, head->next->offset)) {
+        if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % range_free_list_->base_align)) {
+            return false;
+        }
+        if(NULL != node->prev) {
+            if(NODE_STATE_FREE == node->node_state && NODE_STATE_FREE == node->prev->node_state) {
                 return false;
             }
         }
-        prev = head;
-        head = head->next;
-        used_count++;
+        expected_offset = node->offset + node->block_size;  // range_is_validでOVERFLOWチェック済み
+        prev = node;
+        node = node->next;
         loop_count++;
+        found = false;
     }
-
-    if((range_free_list_->max_node_count - used_count) != range_free_list_->unused_node_count) {
+    if(expected_offset != range_free_list_->memory_pool_size) { // memory_pool全体がALLOCATED / FREEノードで隙間がないため、末尾は必ずmemory_pool_sizeに等しい
         return false;
     }
 
+    size_t allocated_count = 0;
+    size_t free_count = 0;
+    size_t unused_count = 0;
+    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
+        if(!node_is_valid(&range_free_list_->node_pool[i])) {
+            return false;
+        }
+        if(NODE_STATE_TRANSITIONING == range_free_list_->node_pool[i].node_state) {
+            return false;
+        }
+        if(NODE_STATE_ALLOCATED == range_free_list_->node_pool[i].node_state) {
+            allocated_count++;
+        }
+        if(NODE_STATE_FREE == range_free_list_->node_pool[i].node_state) {
+            free_count++;
+        }
+        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i].node_state) {
+            unused_count++;
+        }
+    }
+    if(range_free_list_->unused_node_count != unused_count) {
+        return false;
+    }
+    if((free_count + allocated_count) != loop_count) {
+        return false;
+    }
+    if((free_count + allocated_count + unused_count) != range_free_list_->max_node_count) {
+        return false;
+    }
     return true;
 }
 
@@ -1161,28 +2013,64 @@ static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free
     return true;
 }
 
+/**
+ * @brief node単体のstateと局所フィールドの整合性を検証する
+ *
+ * @details
+ * node_のnode_stateに応じて、node単体で判断可能な次の不変条件を検証する。
+ *
+ * - FREEまたはALLOCATED
+ *   - block sizeが0ではない
+ *   - prevおよびnextが自分自身を参照していない
+ * - TRANSITIONING
+ *   - block sizeが0ではない
+ *   - prevおよびnextがNULLであり、range listから切り離されている
+ * - NOT_USED
+ *   - offsetおよびblock sizeが0
+ *   - prevおよびnextがNULL
+ *
+ * node_stateが定義済みのいずれの状態にも該当しない場合は、不正なnodeとして扱う。
+ *
+ * 本関数はnode単体の局所的な整合性のみを検証する。
+ * node poolへの所属、range listの双方向接続、rangeの順序や重複、
+ * memory poolの範囲、alignment、およびnode数の整合性は検証しない。
+ *
+ * TRANSITIONINGは本関数では有効な局所状態として扱われるが、
+ * public APIの入口および出口で許可される安定状態ではない。
+ *
+ * @param[in] node_ 検証するnode。NULLの場合は不正と判定する。
+ *
+ * @retval true node単体のstateと局所フィールドが整合している。
+ * @retval false node_がNULL、stateが未定義、またはstateに対応する局所フィールドの条件を満たしていない。
+ *
+ * @note 本関数はnode_を変更しない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static bool node_is_valid(const node_t* node_) {
     if(NULL == node_) {
         return false;
     }
-    if(NODE_STATE_CONNECTED == node_->state) {
+    if(NODE_STATE_ALLOCATED == node_->node_state || NODE_STATE_FREE == node_->node_state) {
         if(0 == node_->block_size) {
             return false;
         }
-        if(NULL != node_->prev && node_->prev == node_) {
+        if(NULL != node_->prev && node_->prev == node_) {   // prevが自身と同じ
             return false;
         }
-        if(NULL != node_->next && node_->next == node_) {
+        if(NULL != node_->next && node_->next == node_) {   // nextが自身と同じ
             return false;
         }
-    } else if(NODE_STATE_NOT_CONNECTED == node_->state) {
+    } else if(NODE_STATE_TRANSITIONING == node_->node_state) {
         if(0 == node_->block_size) {
             return false;
         }
         if(NULL != node_->prev || NULL != node_->next) {
             return false;
         }
-    } else if(NODE_STATE_NOT_USED == node_->state) {
+    } else if(NODE_STATE_NOT_USED == node_->node_state) {
         if(NULL != node_->prev || NULL != node_->next) {
             return false;
         }
@@ -1290,5 +2178,20 @@ static const char* rslt_to_str(range_free_list_result_t rslt_) {
         return s_rslt_str_undefined_error;
     default:
         return s_rslt_str_undefined_error;
+    }
+}
+
+static range_free_list_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return RANGE_FREE_LIST_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return RANGE_FREE_LIST_INVALID_ARGUMENT;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return RANGE_FREE_LIST_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return RANGE_FREE_LIST_BAD_OPERATION;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return RANGE_FREE_LIST_NO_MEMORY;
     }
 }

@@ -25,6 +25,7 @@ extern "C" {
 #include <stddef.h>
 
 typedef struct range_free_list range_free_list_t;   /**< Range Free List内部状態管理構造体のopaque型 */
+typedef struct range_free_list_validation_result range_free_list_validation_result_t;   /**< Range Free List validation結果構造体のopaque型 */
 
 typedef enum {
     RANGE_FREE_LIST_SUCCESS = 0,
@@ -37,9 +38,33 @@ typedef enum {
     RANGE_FREE_LIST_UNDEFINED_ERROR,
 } range_free_list_result_t;
 
+/**
+ * @brief Range Free Listから取得したallocationのdescriptor
+ *
+ * @details
+ * allocationの描画範囲情報と、対応するALLOCATED nodeを特定するための
+ * identityを保持する。
+ *
+ * offsetとallocated sizeは、Range Free Listが管理するメモリプール内の
+ * allocation範囲を表す。
+ *
+ * node indexとownerはallocation identityを構成し、free時に対応nodeと
+ * 所有元Range Free Listを検証するために使用する。
+ *
+ * privateなnodeへのポインタは保持しない。
+ *
+ * generationは保持しないため、解放済みnodeが再利用され、identityと
+ * range情報がすべて一致したstale descriptorは検出できない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が内容を確認・修正した。
+ */
 typedef struct range_allocation {
-    size_t offset;
-    size_t allocated_size;
+    size_t offset;                  /**< メモリプール先頭からのallocation開始offset(byte) */
+    size_t allocated_size;          /**< base alignment調整後の実確保サイズ(byte) */
+    size_t node_index;              /**< 対応するALLOCATED nodeのnode pool index */
+    const range_free_list_t* owner; /**< このallocationを行なったRange Free List */
 } range_allocation_t;
 
 typedef struct range_free_list_status {
@@ -54,13 +79,17 @@ typedef struct range_free_list_status {
     size_t max_free_block_size;
 } range_free_list_status_t;
 
-range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_node_count_, size_t base_align_, range_free_list_t** out_range_free_list_);
+range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_free_list_t** out_range_free_list_);
 
 void range_free_list_destroy(range_free_list_t** range_free_list_);
 
 range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
 
 range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, range_allocation_t allocation_);
+
+range_free_list_result_t range_free_list_validate(const range_free_list_t* range_free_list_, range_free_list_validation_result_t* out_validation_result_);
+
+void range_free_list_validation_result_print(const range_free_list_validation_result_t* validation_result_);
 
 void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_);
 
