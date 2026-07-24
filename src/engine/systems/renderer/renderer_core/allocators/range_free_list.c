@@ -197,6 +197,8 @@ static range_free_list_result_t node_adjacent_check_prev(const node_t* node_, bo
 static range_free_list_result_t node_adjacent_check_next(const node_t* node_, bool* out_is_adjacent_);
 static range_free_list_result_t merge_free_block(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
 static range_free_list_result_t node_pool_find_index(const range_free_list_t* range_free_list_, const node_t* node_, size_t* out_index_);
+static range_free_list_result_t allocation_resolve_node(range_free_list_t* range_free_list_, const range_allocation_t* allocation_info_, node_t** out_node_);
+static range_free_list_result_t free_merge_plan_get(const range_free_list_t* range_free_list_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_);
 
 // validation
 static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);            // deep validation
@@ -1653,6 +1655,101 @@ static range_free_list_result_t node_pool_find_index(const range_free_list_t* ra
         goto cleanup;
     }
     *out_index_ = tmp_index;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static range_free_list_result_t allocation_resolve_node(range_free_list_t* range_free_list_, const range_allocation_t* allocation_info_, node_t** out_node_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    node_t* tmp_node = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "allocation_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "*out_node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != range_free_list_->allocation_count, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_", "range_free_list_->allocation_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_info_->allocated_size, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_", "allocation_info_->allocated_size")
+
+    if(range_free_list_ != allocation_info_->owner) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(range_free_list_->max_node_count <= allocation_info_->node_index) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_node = &range_free_list_->node_pool[allocation_info_->node_index];
+
+    if(!node_is_valid(tmp_node)) {
+        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NODE_STATE_ALLOCATED != tmp_node->node_state) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(tmp_node->block_size != allocation_info_->allocated_size) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(tmp_node->offset != allocation_info_->offset) {
+        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_node_ = tmp_node;
+
+    ret = RANGE_FREE_LIST_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static range_free_list_result_t free_merge_plan_get(const range_free_list_t* range_free_list_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_) {
+    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+
+    bool tmp_should_merge_prev = false;
+    bool tmp_should_merge_next = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "range_free_list_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_prev_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_prev_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_next_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_next_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_merge_plan_get", "node_")
+
+    // 前方ノード検証
+    if(NULL != node_->prev && NODE_STATE_FREE == node_->prev->node_state) {
+        if(!node_is_valid(node_->prev)) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("free_merge_plan_get(%s) - free_merge_plan_get failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        tmp_should_merge_prev = true;
+    }
+
+    // 後方ノード検証
+    if(NULL != node_->next && NODE_STATE_FREE == node_->next->node_state) {
+        if(!node_is_valid(node_->next)) {
+            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ERROR_MESSAGE("free_merge_plan_get(%s) - free_merge_plan_get failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        tmp_should_merge_next = true;
+    }
+
+    *out_should_merge_prev_ = tmp_should_merge_prev;
+    *out_should_merge_next_ = tmp_should_merge_next;
 
     ret = RANGE_FREE_LIST_SUCCESS;
 
