@@ -850,25 +850,25 @@ static void NO_COVERAGE test_filesystem_create(void) {
         test_choco_memory_config_reset();
         test_filesystem_config_reset();
     }
-    {
-        // memory_system_allocate() が未定義エラーを返す -> FILESYSTEM_UNDEFINED_ERROR
-        filesystem_t* tmp = NULL;
-        test_call_control_t config = {0};
+    // {
+    //     // memory_system_allocate() が未定義エラーを返す -> FILESYSTEM_UNDEFINED_ERROR
+    //     filesystem_t* tmp = NULL;
+    //     test_call_control_t config = {0};
 
-        test_filesystem_config_reset();
-        test_choco_memory_config_reset();
+    //     test_filesystem_config_reset();
+    //     test_choco_memory_config_reset();
 
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
-        test_memory_system_allocate_config_set(&config);
+    //     config.fail_on_call = 1U;
+    //     config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
+    //     test_memory_system_allocate_config_set(&config);
 
-        ret = filesystem_create(&tmp);
-        assert(FILESYSTEM_UNDEFINED_ERROR == ret);
-        assert(NULL == tmp);
+    //     ret = filesystem_create(&tmp);
+    //     assert(FILESYSTEM_UNDEFINED_ERROR == ret);
+    //     assert(NULL == tmp);
 
-        test_choco_memory_config_reset();
-        test_filesystem_config_reset();
-    }
+    //     test_choco_memory_config_reset();
+    //     test_filesystem_config_reset();
+    // }
     {
         // 正常系
         filesystem_t* tmp = NULL;

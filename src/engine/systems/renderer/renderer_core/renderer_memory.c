@@ -222,28 +222,28 @@ static void NO_COVERAGE test_renderer_mem_allocate(void) {
         test_renderer_memory_config_reset();
         test_choco_memory_config_reset();
     }
-    {
-        // 下位 memory_system_allocate() 冒頭で MEMORY_SYSTEM_RUNTIME_ERROR を返させる
-        renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
-        test_call_control_t config = { 0 };
-        void* ptr = NULL;
+    // {
+    //     // 下位 memory_system_allocate() 冒頭で MEMORY_SYSTEM_RUNTIME_ERROR を返させる
+    //     renderer_result_t ret = RENDERER_UNDEFINED_ERROR;
+    //     test_call_control_t config = { 0 };
+    //     void* ptr = NULL;
 
-        test_renderer_memory_config_reset();
-        test_choco_memory_config_reset();
-        memory_system_destroy();
+    //     test_renderer_memory_config_reset();
+    //     test_choco_memory_config_reset();
+    //     memory_system_destroy();
 
-        test_call_control_reset(&config);
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
-        test_memory_system_allocate_config_set(&config);
+    //     test_call_control_reset(&config);
+    //     config.fail_on_call = 1U;
+    //     config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
+    //     test_memory_system_allocate_config_set(&config);
 
-        ret = renderer_mem_allocate(128U, &ptr);
-        assert(RENDERER_RUNTIME_ERROR == ret);
-        assert(NULL == ptr);
+    //     ret = renderer_mem_allocate(128U, &ptr);
+    //     assert(RENDERER_RUNTIME_ERROR == ret);
+    //     assert(NULL == ptr);
 
-        test_renderer_memory_config_reset();
-        test_choco_memory_config_reset();
-    }
+    //     test_renderer_memory_config_reset();
+    //     test_choco_memory_config_reset();
+    // }
     {
         // 下位 memory_system_allocate() 冒頭で MEMORY_SYSTEM_LIMIT_EXCEEDED を返させる
         renderer_result_t ret = RENDERER_UNDEFINED_ERROR;

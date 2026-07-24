@@ -131,8 +131,6 @@ application_result_t app_rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return APPLICATION_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
     case MEMORY_SYSTEM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
@@ -558,7 +556,6 @@ static void NO_COVERAGE test_app_rslt_convert_mem_sys(void) {
 
     assert(APPLICATION_SUCCESS == app_rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS));
     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_mem_sys(MEMORY_SYSTEM_INVALID_ARGUMENT));
-    assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_mem_sys(MEMORY_SYSTEM_RUNTIME_ERROR));
     assert(APPLICATION_NO_MEMORY == app_rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY));
     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_mem_sys(MEMORY_SYSTEM_LIMIT_EXCEEDED));
     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_mem_sys(MEMORY_SYSTEM_BAD_OPERATION));

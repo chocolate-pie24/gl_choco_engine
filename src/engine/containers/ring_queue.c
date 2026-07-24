@@ -343,8 +343,6 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
         return RING_QUEUE_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return RING_QUEUE_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return RING_QUEUE_RUNTIME_ERROR;
     case MEMORY_SYSTEM_NO_MEMORY:
         return RING_QUEUE_NO_MEMORY;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
@@ -1455,10 +1453,6 @@ static void NO_COVERAGE test_rslt_convert_mem_sys(void) {
     {
         ring_queue_result_t ret = rslt_convert_mem_sys(MEMORY_SYSTEM_INVALID_ARGUMENT);
         assert(RING_QUEUE_INVALID_ARGUMENT == ret);
-    }
-    {
-        ring_queue_result_t ret = rslt_convert_mem_sys(MEMORY_SYSTEM_RUNTIME_ERROR);
-        assert(RING_QUEUE_RUNTIME_ERROR == ret);
     }
     {
         ring_queue_result_t ret = rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY);

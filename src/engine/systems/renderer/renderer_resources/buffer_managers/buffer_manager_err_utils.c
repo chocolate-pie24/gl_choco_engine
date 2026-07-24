@@ -97,8 +97,6 @@ buffer_manager_result_t buffer_manager_rslt_convert_choco_memory(memory_system_r
         return BUFFER_MANAGER_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return BUFFER_MANAGER_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return BUFFER_MANAGER_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return BUFFER_MANAGER_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:

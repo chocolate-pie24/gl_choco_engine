@@ -58,7 +58,6 @@ const char* resource_rslt_to_str(resource_result_t rslt_);
  *
  * @retval RESOURCE_SUCCESS choco_memory実行結果コード:MEMORY_SYSTEM_SUCCESS
  * @retval RESOURCE_INVALID_ARGUMENT choco_memory実行結果コード:MEMORY_SYSTEM_INVALID_ARGUMENT
- * @retval RESOURCE_RUNTIME_ERROR choco_memory実行結果コード:MEMORY_SYSTEM_RUNTIME_ERROR
  * @retval RESOURCE_LIMIT_EXCEEDED choco_memory実行結果コード:MEMORY_SYSTEM_LIMIT_EXCEEDED
  * @retval RESOURCE_BAD_OPERATION choco_memory実行結果コード:MEMORY_SYSTEM_BAD_OPERATION
  * @retval RESOURCE_NO_MEMORY choco_memory実行結果コード:MEMORY_SYSTEM_NO_MEMORY
