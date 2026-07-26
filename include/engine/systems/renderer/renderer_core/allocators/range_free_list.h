@@ -72,11 +72,15 @@ typedef struct range_free_list_status {
     size_t base_align;
 
     size_t max_node_count;
+    size_t max_allocation_count;
+    size_t total_allocated_size;
+    size_t total_free_size;
+
     size_t unused_node_count;
     size_t free_block_count;
 
-    size_t total_free_size;
-    size_t max_free_block_size;
+    size_t used_node_count;
+    size_t allocation_count;
 } range_free_list_status_t;
 
 range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_free_list_t** out_range_free_list_);
@@ -85,7 +89,7 @@ void range_free_list_destroy(range_free_list_t** range_free_list_);
 
 range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
 
-range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, range_allocation_t allocation_);
+range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, const range_allocation_t* allocation_);
 
 range_free_list_result_t range_free_list_validate(const range_free_list_t* range_free_list_, range_free_list_validation_result_t* out_validation_result_);
 
