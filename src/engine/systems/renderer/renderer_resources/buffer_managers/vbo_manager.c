@@ -191,19 +191,16 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
     }
     vbo_bound = false;
 
-    out_allocation_handle_->allocated_size = tmp_allocation.allocated_size;
-    out_allocation_handle_->byte_offset = tmp_allocation.offset;
+    out_allocation_handle_->range_allocation = tmp_allocation;
 
     ret = BUFFER_MANAGER_SUCCESS;
 
 cleanup:
-    // NOTE: allocateで失敗した場合、range_free_list側で解放するサイズが不明(アライメントされるためsize_と異なる場合がある)なためローバック不可
-    // TODO: Range Free Listを、allocateから2-phase allocationに仕様変更し、ロールバック処理を変更する
     if(allocate_success) {
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
-            ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_allocation);
+            ret_allocator = range_free_list_free(vbo_manager_->range_free_list, &tmp_allocation);   // range_free_listの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
             if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_range_free_list(ret_allocator)));
+                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED));
             }
         }
         if(vbo_bound) {
@@ -222,19 +219,14 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vert
 
     range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
 
-    range_allocation_t tmp_range = { 0 };
-
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "range_.allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->range_allocation.allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->range_allocation.allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
 
-    tmp_range.allocated_size = allocation_handle_->allocated_size;
-    tmp_range.offset = allocation_handle_->byte_offset;
-
-    ret_allocator = range_free_list_free(vbo_manager_->range_free_list, tmp_range);
+    ret_allocator = range_free_list_free(vbo_manager_->range_free_list, &allocation_handle_->range_allocation);    // range_free_listの内部データ不整合が発生していなければ成功するはず
     if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
         ERROR_MESSAGE("vbo_manager_free(%s) - vbo_manager_free failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
@@ -293,48 +285,39 @@ void vbo_manager_status_print(const vbo_manager_t* vbo_manager_) {
     const bool valid = vbo_manager_is_valid(vbo_manager_);
 
     flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
-    fprintf(stdout, "\033[1;35m[VBO MANAGER DUMP MESSAGE]\n");
+    fprintf(stdout, "\033[1;35m[VBO MANAGER STATUS]\n");
     if(!valid) {
         fprintf(stdout, "  vbo_manager_is_valid = false\n");
     } else {
-        range_free_list_status_get(vbo_manager_->range_free_list, &status);
         fprintf(stdout, "  vbo_manager_is_valid = true\n");
         fprintf(stdout, "  vbo_size = %zu\n", vbo_manager_->config.vbo_size);
         fprintf(stdout, "  max_node_count = %zu\n", vbo_manager_->config.max_node_count);
         fprintf(stdout, "  buffer_usage = %s\n", BUFFER_USAGE_STATIC == vbo_manager_->config.buffer_usage ? "STATIC" : "DYNAMIC");
-        fprintf(stdout, "  range_free_list status:\n");
-        fprintf(stdout, "    base_align = %zu\n", vbo_manager_->config.base_align);
-        fprintf(stdout, "    memory_pool_size = %zu\n", status.memory_pool_size);
-        fprintf(stdout, "    base_align = %zu\n", status.base_align);
-        fprintf(stdout, "    max_node_count = %zu\n", status.max_node_count);
-        fprintf(stdout, "    unused_node_count = %zu\n", status.unused_node_count);
-        fprintf(stdout, "    free_block_count = %zu\n", status.free_block_count);
-        fprintf(stdout, "    total_free_size = %zu\n", status.total_free_size);
-        fprintf(stdout, "    max_free_block_size = %zu\n", status.max_free_block_size);
-    }
 
+        range_free_list_status_get(vbo_manager_->range_free_list, &status);
+    }
     fprintf(stdout, "\033[0m");
     funlockfile(stdout);
+    if(valid) {
+        range_free_list_status_print(&status);
+    }
 }
 
 void vbo_manager_debug_print(const vbo_manager_t* vbo_manager_) {
-    range_free_list_status_t status = { 0 };
-
     const bool valid = vbo_manager_is_valid(vbo_manager_);
 
     flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
-    fprintf(stdout, "\033[1;35m[VBO MANAGER DUMP MESSAGE]\n");
+    fprintf(stdout, "\033[1;35m[VBO MANAGER DEBUG DUMP]\n");
     if(!valid) {
         fprintf(stdout, "  vbo_manager_is_valid = false\n");
     } else {
-        range_free_list_status_get(vbo_manager_->range_free_list, &status);
         fprintf(stdout, "  vbo_manager_is_valid = true\n");
         fprintf(stdout, "  vbo_size = %zu\n", vbo_manager_->config.vbo_size);
         fprintf(stdout, "  max_node_count = %zu\n", vbo_manager_->config.max_node_count);
+        fprintf(stdout, "  buffer_usage = %s\n", BUFFER_USAGE_STATIC == vbo_manager_->config.buffer_usage ? "STATIC" : "DYNAMIC");
     }
     fprintf(stdout, "\033[0m");
     funlockfile(stdout);
-
     if(valid) {
         range_free_list_debug_print(vbo_manager_->range_free_list);
     }

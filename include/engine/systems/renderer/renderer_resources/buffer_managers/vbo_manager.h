@@ -8,6 +8,7 @@ extern "C" {
 #include <stddef.h>
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
@@ -20,8 +21,7 @@ typedef struct vbo_manager_config {
 
 // NOTE: 将来のvbo_managerの拡張(vbo_pool, pageの導入)を見据え、range_allocation_tとは別に用意する
 typedef struct vertex_allocation {
-    size_t byte_offset;
-    size_t allocated_size;
+    range_allocation_t range_allocation;
 } vertex_allocation_t;
 
 typedef struct vbo_manager vbo_manager_t;                           /**< VBO Managerのopaque型 */

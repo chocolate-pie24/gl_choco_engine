@@ -328,14 +328,14 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
-    if(0 != (tmp_alloc_handle.byte_offset % sizeof(line_vertex_t))) {
+    if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(line_vertex_t))) {
         ret = RENDERER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
 
-    out_buffer_range_->allocation_size = tmp_alloc_handle.allocated_size;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.byte_offset / sizeof(line_vertex_t);
+    out_buffer_range_->allocation_size = tmp_alloc_handle.range_allocation.allocated_size;
+    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.range_allocation.offset / sizeof(line_vertex_t);
     out_buffer_range_->draw_range.vertex_count = vertex_count_;
 
     ret = RENDERER_SUCCESS;
@@ -363,8 +363,8 @@ renderer_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader
         goto cleanup;
     }
 
-    alloc_info.allocated_size = buffer_range_->allocation_size;
-    alloc_info.byte_offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
+    alloc_info.range_allocation.allocated_size = buffer_range_->allocation_size;
+    alloc_info.range_allocation.offset = buffer_range_->draw_range.first_vertex_count * sizeof(line_vertex_t);
 
     ret_buff_mgr = vbo_manager_free(line_mesh_shader_->vbo_manager, &alloc_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {

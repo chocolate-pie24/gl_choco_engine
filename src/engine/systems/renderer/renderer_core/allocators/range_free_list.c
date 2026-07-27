@@ -215,9 +215,9 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);
 static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free_list_);    // shallow validation
 static bool node_is_valid(const node_t* node_);
 static bool range_is_valid(const range_free_list_t* range_free_list_, size_t offset_, size_t block_size_);
-static bool range_align_is_valid(size_t base_align_, size_t offset_, size_t block_size_);
 
 // Utilities
+static void status_print(const range_free_list_status_t* status_);
 static const char* rslt_to_str(range_free_list_result_t rslt_);
 static range_free_list_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
 
@@ -462,6 +462,16 @@ void range_free_list_status_get(const range_free_list_t* range_free_list_, range
     out_status_->allocation_count = range_free_list_->allocation_count;
 }
 
+void range_free_list_status_print(const range_free_list_status_t* status_) {
+    flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
+
+    fprintf(stdout, "\033[1;35m[RANGE FREE LIST STATUS]\n");
+    status_print(status_);
+    fprintf(stdout, "\033[0m");
+
+    funlockfile(stdout);
+}
+
 void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     size_t index = 0;
     size_t max_free_block_size = 0;
@@ -479,28 +489,13 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     }
 
     valid = range_free_list_is_valid(range_free_list_);
-    range_free_list_status_get(range_free_list_, &status);
-
     flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
+    fprintf(stdout, "\033[1;35m[RANGE FREE LIST DEBUG DUMP]\n");
 
-    fprintf(stdout, "\033[1;35m[RANGE FREE LIST DUMP MESSAGE]\n");
+    range_free_list_status_get(range_free_list_, &status);
+    status_print(&status);
+
     fprintf(stdout, "  range_free_list_is_valid = %s\n", valid ? "true" : "false");
-    if(0 != range_free_list_->memory_pool_size) {
-        fprintf(stdout, "  memory_usage_percent = %.2f%%\n", (float)status.total_allocated_size / (float)range_free_list_->memory_pool_size * 100.0f);
-    } else {
-        fprintf(stdout, "  memory_usage_percent = memory_pool is zero.\n");
-    }
-    fprintf(stdout, "  memory_pool_size = %zu\n", status.memory_pool_size);
-    fprintf(stdout, "  base_align = %zu\n", status.base_align);
-    fprintf(stdout, "  max_node_count = %zu\n", status.max_node_count);
-    fprintf(stdout, "  max_allocation_count = %zu\n", status.max_allocation_count);
-    fprintf(stdout, "  total_allocated_size = %zu\n", status.total_allocated_size);
-    fprintf(stdout, "  total_free_size = %zu\n", status.total_free_size);
-    fprintf(stdout, "  unused_node_count = %zu\n", status.unused_node_count);
-    fprintf(stdout, "  free_block_count = %zu\n", status.free_block_count);
-    fprintf(stdout, "  used_node_count = %zu\n", status.used_node_count);
-    fprintf(stdout, "  allocation_count = %zu\n", status.allocation_count);
-
     fprintf(stdout, "  range nodes:\n");
     node = range_free_list_->free_block_list_head;
     while(NULL != node && index < range_free_list_->max_node_count) {
@@ -2227,17 +2222,26 @@ static bool range_is_valid(const range_free_list_t* range_free_list_, size_t off
     return true;
 }
 
-static bool range_align_is_valid(size_t base_align_, size_t offset_, size_t block_size_) {
-    if(0 == base_align_ || !IS_POWER_OF_TWO(base_align_)) {
-        return false;
+static void status_print(const range_free_list_status_t* status_) {
+    if(NULL == status_) {
+        fprintf(stdout, "  Provided range_free_list_status_t instance is null.\n");
+    } else {
+        if(0 != status_->memory_pool_size) {
+            fprintf(stdout, "  memory_usage_percent = %.2lf%%\n", (double)status_->total_allocated_size / (double)status_->memory_pool_size * 100.0);
+        } else {
+            fprintf(stdout, "  memory_usage_percent = memory_pool is zero.\n");
+        }
+        fprintf(stdout, "  memory_pool_size = %zu\n", status_->memory_pool_size);
+        fprintf(stdout, "  base_align = %zu\n", status_->base_align);
+        fprintf(stdout, "  max_node_count = %zu\n", status_->max_node_count);
+        fprintf(stdout, "  max_allocation_count = %zu\n", status_->max_allocation_count);
+        fprintf(stdout, "  total_allocated_size = %zu\n", status_->total_allocated_size);
+        fprintf(stdout, "  total_free_size = %zu\n", status_->total_free_size);
+        fprintf(stdout, "  unused_node_count = %zu\n", status_->unused_node_count);
+        fprintf(stdout, "  free_block_count = %zu\n", status_->free_block_count);
+        fprintf(stdout, "  used_node_count = %zu\n", status_->used_node_count);
+        fprintf(stdout, "  allocation_count = %zu\n", status_->allocation_count);
     }
-    if(0 != (offset_ % base_align_)) {
-        return false;
-    }
-    if(0 == block_size_ || 0 != (block_size_ % base_align_)) {
-        return false;
-    }
-    return true;
 }
 
 static const char* rslt_to_str(range_free_list_result_t rslt_) {

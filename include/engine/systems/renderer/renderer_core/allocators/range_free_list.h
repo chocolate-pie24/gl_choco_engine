@@ -97,6 +97,8 @@ void range_free_list_validation_result_print(const range_free_list_validation_re
 
 void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_);
 
+void range_free_list_status_print(const range_free_list_status_t* status_);
+
 void range_free_list_debug_print(const range_free_list_t* range_free_list_);
 
 #ifdef __cplusplus
