@@ -2279,5 +2279,7 @@ static range_allocator_result_t rslt_convert_choco_memory(memory_system_result_t
         return RANGE_ALLOCATOR_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return RANGE_ALLOCATOR_NO_MEMORY;
+    default:
+        return RANGE_ALLOCATOR_UNDEFINED_ERROR;
     }
 }
