@@ -54,6 +54,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     vertex_buffer_range_t tmp_buffer_range = { 0 };
 
     line_mesh_geometry_t* geometry = NULL;
+    bool vbo_written = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "shader_")
@@ -78,6 +79,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
         goto cleanup;
     }
+    vbo_written = true;
 
     // NOTE: 一時的にverticesが2つ分必要なので、deep copyではなくmoveを検討しても良い
     ret_registry = line_mesh_geometry_registry_register(geometry_registry_, geometry, &tmp_buffer_range, &tmp_geometry_id);
@@ -92,9 +94,15 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
-    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
-    // - registerをreserve -> commit / abort方式の2-phase registerに変更
-    // - range allocatorの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
+    if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
+        ret_renderer = line_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(RENDERER_SUCCESS != ret_renderer) {
+            // NOTE: line_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
+            // line_mesh_geometry_pipeline_import_from_vertices失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - line mesh geometry import failed.", resource_pipeline_rslt_to_str(ret));
+        }
+    }
     line_mesh_geometry_destroy(&geometry);
     return ret;
 }
@@ -112,6 +120,8 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
     line_mesh_geometry_t* geometry = NULL;
     const line_vertex_t* vertices = NULL;
 
+    bool vbo_written = false;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "geometry_registry_")
@@ -126,6 +136,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), name_);
         goto cleanup;
     }
+
     ret_resource = line_mesh_geometry_vertex_count_get(geometry, &vertex_count);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
@@ -145,6 +156,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
         goto cleanup;
     }
+    vbo_written = true;
 
     // NOTE: 一時的にverticesが2つ分必要なので、deep copyではなくmoveを検討しても良い
     ret_registry = line_mesh_geometry_registry_register(geometry_registry_, geometry, &tmp_buffer_range, &tmp_geometry_id);
@@ -159,9 +171,15 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
-    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
-    // - registerをreserve -> commit / abort方式の2-phase registerに変更
-    // - range allocatorの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
+    if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
+        ret_renderer = line_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(RENDERER_SUCCESS != ret_renderer) {
+            // NOTE: line_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
+            // line_mesh_geometry_pipeline_import_from_aabb失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - line mesh geometry import failed.", resource_pipeline_rslt_to_str(ret));
+        }
+    }
     line_mesh_geometry_destroy(&geometry);
     return ret;
 }
@@ -188,14 +206,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_
         goto cleanup;
     }
 
-    ret_renderer = line_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
+    // unregisterに失敗した場合はgeometry_registry_は不変となる。そのため、vbo_freeの後でunregisterに失敗するとgeometry_registry_に解放済みallocationへの参照が残る。よってvbo_freeの前で実行する
     ret_registry = line_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
     if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
         ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
@@ -203,6 +214,14 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_
         goto cleanup;
     } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer = line_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
         ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }

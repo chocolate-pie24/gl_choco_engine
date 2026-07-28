@@ -56,6 +56,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ui_mesh_geometry_t* geometry = NULL;
     ui_vertex_t ui_vertex[6] = { 0 };
     vertex_buffer_range_t tmp_buffer_range = { 0 };
+    bool vbo_written = false;
 
     const size_t vertex_count = 6;
     size_t vertex_offset = 0;
@@ -104,6 +105,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
         goto cleanup;
     }
+    vbo_written = true;
 
     ret_registry = ui_mesh_geometry_registry_register(geometry_registry_, geometry, &tmp_buffer_range, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
@@ -117,9 +119,15 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
-    // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
-    // - registerをreserve -> commit / abort方式の2-phase registerに変更
-    // - range allocatorの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
+    if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
+        ret_renderer = ui_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(RENDERER_SUCCESS != ret_renderer) {
+            // NOTE: ui_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
+            // ui_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - ui mesh geometry import failed.", resource_pipeline_rslt_to_str(ret));
+        }
+    }
     ui_mesh_geometry_destroy(&geometry);
     return ret;
 }
@@ -146,14 +154,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
         goto cleanup;
     }
 
-    ret_renderer = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
+    // unregisterに失敗した場合はgeometry_registry_は不変となる。そのため、vbo_freeの後でunregisterに失敗するとgeometry_registry_に解放済みallocationへの参照が残る。よってvbo_freeの前で実行する
     ret_registry = ui_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
     if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
         ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
@@ -165,10 +166,16 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
         goto cleanup;
     }
 
+    ret_renderer = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(RENDERER_SUCCESS != ret_renderer) {
+        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
+        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
-    // TODO: ui_mesh_geometry_registry_unregisterに失敗した場合、geometry_id_に対応するCPU側リソースが残っているにも関わらず、GPUリソースがない状態になる
-    // Transactio方式に変更する
     return ret;
 }
