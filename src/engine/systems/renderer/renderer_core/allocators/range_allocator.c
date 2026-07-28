@@ -1,6 +1,6 @@
 /**
- * @file range_free_list.c
- * @brief 固定alignmentのメモリプール範囲を管理するRange Free Listの実装
+ * @file range_allocator.c
+ * @brief 固定alignmentのメモリプール範囲を管理するRange Allocatorの実装
  *
  * @details
  * FREE rangeだけでなく、メモリプール全体をFREE／ALLOCATED nodeとして
@@ -67,7 +67,7 @@
  * - allocateとfreeは特に状態変更の影響が大きいため、
  *   動作が安定するまではdeep validationを含む厳格な検査を行う。
  * - 動作安定後は、リリースビルドにおける重い検査の省略を検討する。
- * - private関数ではRange Free List全体のvalidationを繰り返さず、
+ * - private関数ではRange Allocator全体のvalidationを繰り返さず、
  *   呼び出し元が必要なvalidationを完了していることを事前条件とする。
  * - private関数自身は、担当する局所的な引数と状態の整合性を検査する。
  *
@@ -76,7 +76,7 @@
  * プロジェクト作成者が実装との整合性を確認・修正した。
  * 実装コードはプロジェクト作成者が作成し、その内容に責任を負う。
  */
-#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include <stdio.h>  // for fprintf
 #include <string.h> // for memset
@@ -160,10 +160,10 @@ typedef struct node {
 } node_t;
 
 /**
- * @brief Range Free List 内部状態管理構造体
+ * @brief Range Allocator内部状態管理構造体
  *
  */
-struct range_free_list {
+struct range_allocator {
     size_t memory_pool_size;    /**< メモリプール容量(byte) */
     size_t max_node_count;      /**< 最大ノード数(個)(最もノードを消費する配置がALLOCATED / FREEを交互に繰り返す配置であるため、max_node_countの最大値はmax_allocation_count x 2 + 1となる) */
     size_t max_allocation_count;
@@ -172,311 +172,311 @@ struct range_free_list {
     size_t base_align;          /**< メモリプールの先頭アドレスのアライメント */
     size_t total_allocated_size;
 
-    node_t* node_pool;             /**< range_free_listが所有する全ノードへの配列 */
-    node_t* free_block_list_head;   /**< FREE／ALLOCATED range listの先頭nodeで、node_pool配列の要素 */
+    node_t* node_pool;             /**< range_allocatorが所有する全ノードへの配列 */
+    node_t* range_list_head;   /**< FREE／ALLOCATED range listの先頭nodeで、node_pool配列の要素 */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コードRANGE_FREE_LIST_SUCCESS文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コードRANGE_FREE_LIST_INVALID_ARGUMENT文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コードRANGE_FREE_LIST_LIMIT_EXCEEDED文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コードRANGE_FREE_LIST_NO_MEMORY文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コードRANGE_FREE_LIST_DATA_CORRUPTED文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コードRANGE_FREE_LIST_BAD_OPERATION文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_FREE_LIST_OVERFLOW文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_FREE_LIST_UNDEFINED_ERROR文字列 */
+static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コードRANGE_ALLOCATOR_SUCCESS文字列 */
+static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コードRANGE_ALLOCATOR_INVALID_ARGUMENT文字列 */
+static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コードRANGE_ALLOCATOR_LIMIT_EXCEEDED文字列 */
+static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コードRANGE_ALLOCATOR_NO_MEMORY文字列 */
+static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コードRANGE_ALLOCATOR_DATA_CORRUPTED文字列 */
+static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コードRANGE_ALLOCATOR_BAD_OPERATION文字列 */
+static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コードRANGE_ALLOCATOR_OVERFLOW文字列 */
+static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コードRANGE_ALLOCATOR_UNDEFINED_ERROR文字列 */
 
 // Allocate
-static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
-static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_);
-static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_);
+static range_allocator_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
+static range_allocator_result_t find_first_fit_node(const range_allocator_t* range_allocator_, size_t allocation_size_, node_t** out_node_);
+static range_allocator_result_t allocate_from_node(range_allocator_t* range_allocator_, node_t* node_, size_t allocation_size_);
 
 // Free
-static range_free_list_result_t allocation_resolve_node(range_free_list_t* range_free_list_, const range_allocation_t* allocation_info_, node_t** out_node_);
-static range_free_list_result_t free_merge_plan_get(const range_free_list_t* range_free_list_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_);
-static range_free_list_result_t free_from_node(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
-static range_free_list_result_t free_node_without_merge(node_t* node_);
-static range_free_list_result_t free_node_merge_prev(range_free_list_t* range_free_list_, node_t* node_);
-static range_free_list_result_t free_node_merge_next(range_free_list_t* range_free_list_, node_t* node_);
-static range_free_list_result_t free_node_merge_prev_next(range_free_list_t* range_free_list_, node_t* node_);
+static range_allocator_result_t allocation_resolve_node(range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_);
+static range_allocator_result_t free_merge_plan_get(const range_allocator_t* range_allocator_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_);
+static range_allocator_result_t free_from_node(range_allocator_t* range_allocator_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
+static range_allocator_result_t free_node_without_merge(node_t* node_);
+static range_allocator_result_t free_node_merge_prev(range_allocator_t* range_allocator_, node_t* node_);
+static range_allocator_result_t free_node_merge_next(range_allocator_t* range_allocator_, node_t* node_);
+static range_allocator_result_t free_node_merge_prev_next(range_allocator_t* range_allocator_, node_t* node_);
 
 // Node / List Management
-static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, size_t offset_, size_t block_size_, node_t** out_node_);
-static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_);
-static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_);
-static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_);
-static range_free_list_result_t node_pool_find_index(const range_free_list_t* range_free_list_, const node_t* node_, size_t* out_index_);
+static range_allocator_result_t node_acquire(range_allocator_t* range_allocator_, size_t offset_, size_t block_size_, node_t** out_node_);
+static range_allocator_result_t node_insert_between(range_allocator_t* range_allocator_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_);
+static range_allocator_result_t node_remove(range_allocator_t* range_allocator_, node_t* node_);
+static range_allocator_result_t node_release(range_allocator_t* range_allocator_, node_t* node_);
+static range_allocator_result_t node_pool_find_index(const range_allocator_t* range_allocator_, const node_t* node_, size_t* out_index_);
 static void set_node_to_not_used(node_t* target_);
 static void set_node_to_transitioning(node_t* target_, size_t offset_, size_t block_size_);
 static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_);
 static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_);
 
 // Validation
-static bool range_free_list_is_valid(const range_free_list_t* range_free_list_);            // deep validation
-static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free_list_);    // shallow validation
+static bool range_allocator_is_valid(const range_allocator_t* range_allocator_);            // deep validation
+static bool range_allocator_is_valid_shallow(const range_allocator_t* range_allocator_);    // shallow validation
 static bool node_is_valid(const node_t* node_);
-static bool range_is_valid(const range_free_list_t* range_free_list_, size_t offset_, size_t block_size_);
+static bool range_is_valid(const range_allocator_t* range_allocator_, size_t offset_, size_t block_size_);
 
 // Utilities
-static void status_print(const range_free_list_status_t* status_);
-static const char* rslt_to_str(range_free_list_result_t rslt_);
-static range_free_list_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
+static void status_print(const range_allocator_status_t* status_);
+static const char* rslt_to_str(range_allocator_result_t rslt_);
+static range_allocator_result_t rslt_convert_choco_memory(memory_system_result_t rslt_);
 
-range_free_list_result_t range_free_list_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_free_list_t** out_range_free_list_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_allocator_t** out_range_allocator_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    range_free_list_t* tmp_range_free_list = NULL;
+    range_allocator_t* tmp_range_allocator = NULL;
 
     size_t max_node_count = 0;
     size_t node_pool_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "out_range_free_list_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "*out_range_free_list_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "memory_pool_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_allocation_count_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "max_node_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_create", "base_align_")
-    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_create", "base_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "out_range_allocator_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "*out_range_allocator_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "memory_pool_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_allocation_count_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "max_allocation_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "base_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_create", "base_align_")
 
     if(((SIZE_MAX - 1) / 2) < max_allocation_count_) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
-        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
+        ret = RANGE_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("range_allocator_create(%s) - range_allocator_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
     max_node_count = max_allocation_count_ * 2 + 1;
 
     if((SIZE_MAX / max_node_count) < sizeof(node_t)) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
-        ERROR_MESSAGE("range_free_list_create(%s) - Failed to create range free list. reason=node pointer array size exceeds size_t range, max_node_count=%zu, node_pointer_size=%zu, size_max=%zu.", rslt_to_str(ret), max_node_count, sizeof(node_t), SIZE_MAX);
+        ret = RANGE_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=node pointer array size exceeds size_t range, max_node_count=%zu, node_pointer_size=%zu, size_max=%zu.", rslt_to_str(ret), max_node_count, sizeof(node_t), SIZE_MAX);
         goto cleanup;
     }
     node_pool_size = sizeof(node_t) * max_node_count;
 
-    ret_memory = memory_system_allocate(sizeof(range_free_list_t), MEMORY_TAG_RENDERER, (void**)&tmp_range_free_list);
+    ret_memory = memory_system_allocate(sizeof(range_allocator_t), MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = rslt_convert_choco_memory(ret_memory);
-        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_allocator_create(%s) - range_allocator_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_range_free_list, 0, sizeof(range_free_list_t));
+    memset(tmp_range_allocator, 0, sizeof(range_allocator_t));
 
-    ret_memory = memory_system_allocate(node_pool_size, MEMORY_TAG_RENDERER, (void**)&tmp_range_free_list->node_pool);
+    ret_memory = memory_system_allocate(node_pool_size, MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator->node_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = rslt_convert_choco_memory(ret_memory);
-        ERROR_MESSAGE("range_free_list_create(%s) - range_free_list_create failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("range_allocator_create(%s) - range_allocator_create failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_range_free_list->node_pool, 0, node_pool_size);
+    memset(tmp_range_allocator->node_pool, 0, node_pool_size);
 
     for(size_t i = 0; i != max_node_count; ++i) {
-        memset(&tmp_range_free_list->node_pool[i], 0, sizeof(node_t));
-        set_node_to_not_used(&tmp_range_free_list->node_pool[i]);
+        memset(&tmp_range_allocator->node_pool[i], 0, sizeof(node_t));
+        set_node_to_not_used(&tmp_range_allocator->node_pool[i]);
     }
 
-    tmp_range_free_list->max_node_count = max_node_count;
-    tmp_range_free_list->max_allocation_count = max_allocation_count_;
-    tmp_range_free_list->allocation_count = 0;
-    tmp_range_free_list->memory_pool_size = memory_pool_size_;
-    tmp_range_free_list->unused_node_count = max_node_count - 1;
-    tmp_range_free_list->base_align = base_align_;
-    tmp_range_free_list->total_allocated_size = 0;
+    tmp_range_allocator->max_node_count = max_node_count;
+    tmp_range_allocator->max_allocation_count = max_allocation_count_;
+    tmp_range_allocator->allocation_count = 0;
+    tmp_range_allocator->memory_pool_size = memory_pool_size_;
+    tmp_range_allocator->unused_node_count = max_node_count - 1;
+    tmp_range_allocator->base_align = base_align_;
+    tmp_range_allocator->total_allocated_size = 0;
 
-    tmp_range_free_list->free_block_list_head = &tmp_range_free_list->node_pool[0];
-    tmp_range_free_list->free_block_list_head->block_size = memory_pool_size_;
-    tmp_range_free_list->free_block_list_head->offset = 0;
-    set_node_to_free(tmp_range_free_list->free_block_list_head, NULL, NULL);
+    tmp_range_allocator->range_list_head = &tmp_range_allocator->node_pool[0];
+    tmp_range_allocator->range_list_head->block_size = memory_pool_size_;
+    tmp_range_allocator->range_list_head->offset = 0;
+    set_node_to_free(tmp_range_allocator->range_list_head, NULL, NULL);
 
-    *out_range_free_list_ = tmp_range_free_list;
+    *out_range_allocator_ = tmp_range_allocator;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        if(NULL != tmp_range_free_list) {
-            if(NULL != tmp_range_free_list->node_pool) {
-                memory_system_free((void*)tmp_range_free_list->node_pool, node_pool_size, MEMORY_TAG_RENDERER);
-                tmp_range_free_list->node_pool = NULL;
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        if(NULL != tmp_range_allocator) {
+            if(NULL != tmp_range_allocator->node_pool) {
+                memory_system_free((void*)tmp_range_allocator->node_pool, node_pool_size, MEMORY_TAG_RENDERER);
+                tmp_range_allocator->node_pool = NULL;
             }
-            memory_system_free((void*)tmp_range_free_list, sizeof(range_free_list_t), MEMORY_TAG_RENDERER);
-            tmp_range_free_list = NULL;
+            memory_system_free((void*)tmp_range_allocator, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
+            tmp_range_allocator = NULL;
         }
     }
     return ret;
 }
 
-void range_free_list_destroy(range_free_list_t** range_free_list_) {
-    if(NULL == range_free_list_) {
+void range_allocator_destroy(range_allocator_t** range_allocator_) {
+    if(NULL == range_allocator_) {
         return;
     }
-    if(NULL == *range_free_list_) {
+    if(NULL == *range_allocator_) {
         return;
     }
 
-    if(NULL != (*range_free_list_)->node_pool) {
-        memory_system_free((void*)(*range_free_list_)->node_pool, sizeof(node_t) * (*range_free_list_)->max_node_count, MEMORY_TAG_RENDERER);
-        (*range_free_list_)->node_pool = NULL;
+    if(NULL != (*range_allocator_)->node_pool) {
+        memory_system_free((void*)(*range_allocator_)->node_pool, sizeof(node_t) * (*range_allocator_)->max_node_count, MEMORY_TAG_RENDERER);
+        (*range_allocator_)->node_pool = NULL;
     }
 
-    (*range_free_list_)->max_node_count = 0;
-    (*range_free_list_)->memory_pool_size = 0;
+    (*range_allocator_)->max_node_count = 0;
+    (*range_allocator_)->memory_pool_size = 0;
 
-    memory_system_free((void*)*range_free_list_, sizeof(range_free_list_t), MEMORY_TAG_RENDERER);
-    *range_free_list_ = NULL;
+    memory_system_free((void*)*range_allocator_, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
+    *range_allocator_ = NULL;
 }
 
-range_free_list_result_t range_free_list_allocate(range_free_list_t* range_free_list_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+range_allocator_result_t range_allocator_allocate(range_allocator_t* range_allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t allocation_size = 0;
     size_t allocated_index = 0;
     node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "range_free_list_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_is_valid(range_free_list_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "range_free_list_allocate", "range_free_list_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "required_align_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_allocate", "out_allocation_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->base_align == required_align_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_allocate", "required_align_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->allocation_count < range_free_list_->max_allocation_count, ret, RANGE_FREE_LIST_LIMIT_EXCEEDED, rslt_to_str(RANGE_FREE_LIST_LIMIT_EXCEEDED), "range_free_list_allocate", "allocation_count")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "range_allocator_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_is_valid(range_allocator_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "range_allocator_allocate", "range_allocator_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "required_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "required_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "out_allocation_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->base_align == required_align_, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_allocate", "required_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->allocation_count < range_allocator_->max_allocation_count, ret, RANGE_ALLOCATOR_LIMIT_EXCEEDED, rslt_to_str(RANGE_ALLOCATOR_LIMIT_EXCEEDED), "range_allocator_allocate", "allocation_count")
 
-    ret = align_up(range_free_list_->base_align, required_size_, &allocation_size);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to align required size, base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_free_list_->base_align, required_size_);
+    ret = align_up(range_allocator_->base_align, required_size_, &allocation_size);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Failed to allocate range. reason=failed to align required size, base_align=%zu, required_size=%zu.", rslt_to_str(ret), range_allocator_->base_align, required_size_);
         goto cleanup;
     }
 
-    ret = find_first_fit_node(range_free_list_, allocation_size, &node);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to find free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
+    ret = find_first_fit_node(range_allocator_, allocation_size, &node);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Failed to allocate range. reason=failed to find free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
         goto cleanup;
     }
 
-    ret = node_pool_find_index(range_free_list_, node, &allocated_index);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to consume free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
+    ret = node_pool_find_index(range_allocator_, node, &allocated_index);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Failed to allocate range. reason=failed to consume free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
         goto cleanup;
     }
 
-    ret = allocate_from_node(range_free_list_, node, allocation_size);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ERROR_MESSAGE("range_free_list_allocate(%s) - Failed to allocate range. reason=failed to consume free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
+    ret = allocate_from_node(range_allocator_, node, allocation_size);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Failed to allocate range. reason=failed to consume free block, required_size=%zu, allocation_size=%zu.", rslt_to_str(ret), required_size_, allocation_size);
         goto cleanup;
     }
 
     out_allocation_->node_index = allocated_index;
     out_allocation_->allocated_size = allocation_size;
     out_allocation_->offset = node->offset;
-    out_allocation_->owner = range_free_list_;
-    range_free_list_->allocation_count++;
-    range_free_list_->total_allocated_size += allocation_size;
+    out_allocation_->owner = range_allocator_;
+    range_allocator_->allocation_count++;
+    range_allocator_->total_allocated_size += allocation_size;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-range_free_list_result_t range_free_list_free(range_free_list_t* range_free_list_, const range_allocation_t* allocation_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator_, const range_allocation_t* allocation_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     node_t* tmp_node = NULL;
     bool should_merge_prev = false;
     bool should_merge_next = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_free", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_free", "allocation_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->total_allocated_size >= allocation_->allocated_size, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "range_free_list_free", "allocation_->allocated_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < range_free_list_->allocation_count, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_free", "range_free_list_->allocation_count")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "allocation_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->total_allocated_size >= allocation_->allocated_size, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "range_allocator_free", "allocation_->allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < range_allocator_->allocation_count, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_free", "range_allocator_->allocation_count")
 
-    if(!range_free_list_is_valid(range_free_list_)) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+    if(!range_allocator_is_valid(range_allocator_)) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("range_allocator_free(%s) - range_allocator_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = allocation_resolve_node(range_free_list_, allocation_, &tmp_node);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;// range_free_list_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+    ret = allocation_resolve_node(range_allocator_, allocation_, &tmp_node);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;// range_allocator_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
+        ERROR_MESSAGE("range_allocator_free(%s) - range_allocator_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = free_merge_plan_get(range_free_list_, tmp_node, &should_merge_prev, &should_merge_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;// range_free_list_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+    ret = free_merge_plan_get(range_allocator_, tmp_node, &should_merge_prev, &should_merge_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;// range_allocator_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
+        ERROR_MESSAGE("range_allocator_free(%s) - range_allocator_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = free_from_node(range_free_list_, tmp_node, should_merge_prev, should_merge_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;// range_free_list_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
-        ERROR_MESSAGE("range_free_list_free(%s) - range_free_list_free failed.", rslt_to_str(ret));
+    ret = free_from_node(range_allocator_, tmp_node, should_merge_prev, should_merge_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;// range_allocator_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
+        ERROR_MESSAGE("range_allocator_free(%s) - range_allocator_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    range_free_list_->allocation_count--;
-    range_free_list_->total_allocated_size -= allocation_->allocated_size;
-    ret = RANGE_FREE_LIST_SUCCESS;
+    range_allocator_->allocation_count--;
+    range_allocator_->total_allocated_size -= allocation_->allocated_size;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
 }
 
 // このAPIは破損状態でも中身を確認したいため、エラー処理はNULLチェックのみとする
-void range_free_list_status_get(const range_free_list_t* range_free_list_, range_free_list_status_t* out_status_) {
+void range_allocator_status_get(const range_allocator_t* range_allocator_, range_allocator_status_t* out_status_) {
     size_t tmp_used_node_count = 0;
     size_t tmp_free_block_count = 0;
     size_t tmp_total_free_size = 0;
 
-    if(NULL == range_free_list_ || NULL == out_status_) {
+    if(NULL == range_allocator_ || NULL == out_status_) {
         return;
     }
-    out_status_->memory_pool_size = range_free_list_->memory_pool_size;
-    out_status_->base_align = range_free_list_->base_align;
-    out_status_->max_node_count = range_free_list_->max_node_count;
-    out_status_->max_allocation_count = range_free_list_->max_allocation_count;
-    out_status_->total_allocated_size = range_free_list_->total_allocated_size;
-    out_status_->unused_node_count = range_free_list_->unused_node_count;
+    out_status_->memory_pool_size = range_allocator_->memory_pool_size;
+    out_status_->base_align = range_allocator_->base_align;
+    out_status_->max_node_count = range_allocator_->max_node_count;
+    out_status_->max_allocation_count = range_allocator_->max_allocation_count;
+    out_status_->total_allocated_size = range_allocator_->total_allocated_size;
+    out_status_->unused_node_count = range_allocator_->unused_node_count;
 
-    if(range_free_list_->memory_pool_size > out_status_->total_allocated_size) {
-        tmp_total_free_size = range_free_list_->memory_pool_size - out_status_->total_allocated_size;
+    if(range_allocator_->memory_pool_size > out_status_->total_allocated_size) {
+        tmp_total_free_size = range_allocator_->memory_pool_size - out_status_->total_allocated_size;
     } else {
         tmp_total_free_size = 0;
     }
     out_status_->total_free_size = tmp_total_free_size;
 
-    if(range_free_list_->max_node_count > range_free_list_->unused_node_count) {
-        tmp_used_node_count = range_free_list_->max_node_count - range_free_list_->unused_node_count;
+    if(range_allocator_->max_node_count > range_allocator_->unused_node_count) {
+        tmp_used_node_count = range_allocator_->max_node_count - range_allocator_->unused_node_count;
     } else {
         tmp_used_node_count = 0;
     }
     out_status_->used_node_count = tmp_used_node_count;
 
-    if(out_status_->used_node_count > range_free_list_->allocation_count) {
-        tmp_free_block_count = out_status_->used_node_count - range_free_list_->allocation_count;
+    if(out_status_->used_node_count > range_allocator_->allocation_count) {
+        tmp_free_block_count = out_status_->used_node_count - range_allocator_->allocation_count;
     } else {
         tmp_free_block_count = 0;
     }
     out_status_->free_block_count = tmp_free_block_count;
 
-    out_status_->allocation_count = range_free_list_->allocation_count;
+    out_status_->allocation_count = range_allocator_->allocation_count;
 }
 
-void range_free_list_status_print(const range_free_list_status_t* status_) {
+void range_allocator_status_print(const range_allocator_status_t* status_) {
     flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
 
-    fprintf(stdout, "\033[1;35m[RANGE FREE LIST STATUS]\n");
+    fprintf(stdout, "\033[1;35m[RANGE ALLOCATOR STATUS]\n");
     status_print(status_);
     fprintf(stdout, "\033[0m");
 
     funlockfile(stdout);
 }
 
-void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
+void range_allocator_debug_print(const range_allocator_t* range_allocator_) {
     size_t index = 0;
     size_t max_free_block_size = 0;
     const node_t* node = NULL;
-    range_free_list_status_t status = { 0 };
+    range_allocator_status_t status = { 0 };
     bool valid = false;
     static const char* const state_allocated = "ALLOCATED";
     static const char* const state_free = "FREE";
@@ -484,21 +484,21 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     static const char* const state_not_used = "NOT_USED";
     static const char* const state_undefined = "UNDEFINED";
 
-    if(NULL == range_free_list_) {
+    if(NULL == range_allocator_) {
         return;
     }
 
-    valid = range_free_list_is_valid(range_free_list_);
+    valid = range_allocator_is_valid(range_allocator_);
     flockfile(stdout); // 同一ストリームの同時書き込みをまとめる
-    fprintf(stdout, "\033[1;35m[RANGE FREE LIST DEBUG DUMP]\n");
+    fprintf(stdout, "\033[1;35m[RANGE ALLOCATOR DEBUG DUMP]\n");
 
-    range_free_list_status_get(range_free_list_, &status);
+    range_allocator_status_get(range_allocator_, &status);
     status_print(&status);
 
-    fprintf(stdout, "  range_free_list_is_valid = %s\n", valid ? "true" : "false");
+    fprintf(stdout, "  range_allocator_is_valid = %s\n", valid ? "true" : "false");
     fprintf(stdout, "  range nodes:\n");
-    node = range_free_list_->free_block_list_head;
-    while(NULL != node && index < range_free_list_->max_node_count) {
+    node = range_allocator_->range_list_head;
+    while(NULL != node && index < range_allocator_->max_node_count) {
         const char* state_str = NULL;
         if(NODE_STATE_ALLOCATED == node->node_state) {
             state_str = state_allocated;
@@ -521,7 +521,7 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
         index++;
     }
     if(NULL != node) {
-        fprintf(stdout, "  range_node_traversal = TRUNCATED (reached max_node_count=%zu; possible cycle or node-count inconsistency)\n", range_free_list_->max_node_count);
+        fprintf(stdout, "  range_node_traversal = TRUNCATED (reached max_node_count=%zu; possible cycle or node-count inconsistency)\n", range_allocator_->max_node_count);
     }
     fprintf(stdout, "  max_free_block_size = %zu\n", max_free_block_size);
 
@@ -529,17 +529,17 @@ void range_free_list_debug_print(const range_free_list_t* range_free_list_) {
     funlockfile(stdout);
 }
 
-static range_free_list_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t padding = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "out_allocation_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "base_align_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "align_up", "required_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "align_up", "base_align_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "out_allocation_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "base_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "required_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "align_up", "base_align_")
 
-    // このrange_free_listはcreate時に指定されたbase_align固定で範囲を管理する。
+    // このrange_allocatorはcreate時に指定されたbase_align固定で範囲を管理する。
     // そのため、各空き領域ノードのoffsetは常にbase_align境界に整列している必要がある。よって、確保範囲としてpadding分も消費する
     //
     // offsetがbase_align境界に整列している場合、確保後の次の空き領域offsetを
@@ -551,13 +551,13 @@ static range_free_list_result_t align_up(size_t base_align_, size_t required_siz
     }
 
     if((SIZE_MAX - padding) < required_size_) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("align_up(%s) - Failed to align allocation size. reason=required_size plus padding overflows, base_align=%zu, required_size=%zu, padding=%zu.", rslt_to_str(ret), base_align_, required_size_, padding);
         goto cleanup;
     }
     *out_allocation_size_ = required_size_ + padding;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -573,36 +573,36 @@ cleanup:
  * ALLOCATED nodeは検索対象から除外して読み飛ばす。
  * 選択したFREE nodeについては、offsetがbase alignment境界にあることを検証する。
  *
- * range listの末尾まで走査しても適合するFREE nodeが存在しない場合は、RANGE_FREE_LIST_NO_MEMORYを返す。
+ * range listの末尾まで走査しても適合するFREE nodeが存在しない場合は、RANGE_ALLOCATOR_NO_MEMORYを返す。
  *
  * max node countまで走査してもlistの末尾へ到達しない場合は、range listの循環またはnode数の不整合として扱う。
  *
  * 本関数はrange listおよびnodeの状態を変更しない。
  *
- * @param[in] range_free_list_ 検索対象のRange Free List。
+ * @param[in] range_allocator_ 検索対象のRange Allocator。
  * @param[in] allocation_size_ 必要なallocation size。0ではなく、base alignmentの倍数でなければならない。
  * @param[out] out_node_ 検索結果のFREE nodeを受け取る。呼び出し時の*out_node_はNULLでなければならない。
  *
  * @pre
- * range_free_list_に対するshallow validationまたはdeep validationが
+ * range_allocator_に対するshallow validationまたはdeep validationが
  * 呼び出し元によって完了していなければならない。
  *
  * @pre
  * range list上のnode stateはFREEまたはALLOCATEDでなければならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * allocation_size_以上のblock sizeを持つ最初のFREE nodeが見つかった。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_、out_node_がNULL、allocation_size_が0、または呼び出し時の*out_node_がNULLではない。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_、out_node_がNULL、allocation_size_が0、または呼び出し時の*out_node_がNULLではない。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * allocation_size_がbase alignmentの倍数ではない。
  *
- * @retval RANGE_FREE_LIST_NO_MEMORY
+ * @retval RANGE_ALLOCATOR_NO_MEMORY
  * range listの末尾までに、要求を満たすFREE nodeが存在しない。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * list headがNULL、選択したFREE nodeのoffsetがbase alignment境界にない、
  * またはmax node count以内にrange listの走査が終了しない。
  *
@@ -620,26 +620,26 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t find_first_fit_node(const range_free_list_t* range_free_list_, size_t allocation_size_, node_t** out_node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t find_first_fit_node(const range_allocator_t* range_allocator_, size_t allocation_size_, node_t** out_node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t index = 0;
     bool found = false;
     node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "range_free_list_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "find_first_fit_node", "*out_node_")
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_->free_block_list_head, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "find_first_fit_node", "range_free_list_->free_block_list_head")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (allocation_size_ % range_free_list_->base_align), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "find_first_fit_node", "allocation_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "range_allocator_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "*out_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_->range_list_head, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "find_first_fit_node", "range_allocator_->range_list_head")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (allocation_size_ % range_allocator_->base_align), ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "find_first_fit_node", "allocation_size_")
 
-    node = range_free_list_->free_block_list_head;
-    while(NULL != node && index < range_free_list_->max_node_count) {
+    node = range_allocator_->range_list_head;
+    while(NULL != node && index < range_allocator_->max_node_count) {
         if(NODE_STATE_FREE == node->node_state && node->block_size >= allocation_size_) {
-            if(0 != (node->offset % range_free_list_->base_align)) {
-                ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-                ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=free block offset is not aligned to base_align, list_position=%zu, offset=%zu, block_size=%zu, base_align=%zu.", rslt_to_str(ret), index, node->offset, node->block_size, range_free_list_->base_align);
+            if(0 != (node->offset % range_allocator_->base_align)) {
+                ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+                ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit free block. reason=free block offset is not aligned to base_align, list_position=%zu, offset=%zu, block_size=%zu, base_align=%zu.", rslt_to_str(ret), index, node->offset, node->block_size, range_allocator_->base_align);
                 goto cleanup;
             }
             found = true;
@@ -652,18 +652,18 @@ static range_free_list_result_t find_first_fit_node(const range_free_list_t* ran
 
     if(!found) {
         if(NULL == node) {  // 末尾まで走査したが該当ノードなし
-            ret = RANGE_FREE_LIST_NO_MEMORY;
+            ret = RANGE_ALLOCATOR_NO_MEMORY;
             ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit FREE range. reason=no FREE range is large enough, allocation_size=%zu.", rslt_to_str(ret), allocation_size_);
             goto cleanup;
         } else {            // max node countまでにlist走査が終了しなかった
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit FREE range. reason=range list traversal did not terminate within max node count, allocation_size=%zu, max_node_count=%zu.", rslt_to_str(ret), allocation_size_, range_free_list_->max_node_count);
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+            ERROR_MESSAGE("find_first_fit_node(%s) - Failed to find first-fit FREE range. reason=range list traversal did not terminate within max node count, allocation_size=%zu, max_node_count=%zu.", rslt_to_str(ret), allocation_size_, range_allocator_->max_node_count);
             goto cleanup;
         }
     }
     *out_node_ = node;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -706,16 +706,16 @@ cleanup:
  * 本関数はallocation countの更新、およびallocation descriptorの設定を行わない。
  * これらは呼び出し元の責務とする。
  *
- * @param[in,out] range_free_list_ node_を所有するRange Free List。
+ * @param[in,out] range_allocator_ node_を所有するRange Allocator。
  * @param[in,out] node_ allocation対象のFREE node。
  * @param[in] allocation_size_ node_の先頭からallocationするサイズ。
  *
  * @pre
- * range_free_list_に対するshallow validationまたはdeep validationが、
+ * range_allocator_に対するshallow validationまたはdeep validationが、
  * 呼び出し元によって完了していなければならない。
  *
  * @pre
- * node_はrange_free_list_のnode poolに所属し、range listへ
+ * node_はrange_allocator_のnode poolに所属し、range listへ
  * FREEとして接続されていなければならない。
  *
  * @pre
@@ -726,23 +726,23 @@ cleanup:
  * node_のoffsetはbase alignment境界にあり、range list上に
  * 隣接するFREE nodeが存在してはならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * exact fitまたは後方FREE分割によるallocationに成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_またはnode_がNULL、もしくはallocation_size_が0である。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはnode_がNULL、もしくはallocation_size_が0である。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * node_がFREEではない、node_のblock sizeがallocation_size_より小さい、
  * またはnode acquire／insertの操作条件を満たしていない。
  *
- * @retval RANGE_FREE_LIST_LIMIT_EXCEEDED
+ * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
  * 後方FREE nodeに使用できるNOT_USED nodeが存在しない。
  *
- * @retval RANGE_FREE_LIST_OVERFLOW
+ * @retval RANGE_ALLOCATOR_OVERFLOW
  * 後方FREE nodeのoffset計算でsize_tの範囲を超える。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * node_、node pool、range list、またはnode接続に整合性異常がある。
  * または、insert失敗後のrollbackでnew nodeをreleaseできなかった。
  *
@@ -769,9 +769,9 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t allocate_from_node(range_free_list_t* range_free_list_, node_t* node_, size_t allocation_size_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
-    range_free_list_result_t ret_cleanup = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t allocate_from_node(range_allocator_t* range_allocator_, node_t* node_, size_t allocation_size_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
+    range_allocator_result_t ret_cleanup = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     node_t* new_node = NULL;
     size_t new_node_block_size = 0;
@@ -780,26 +780,26 @@ static range_free_list_result_t allocate_from_node(range_free_list_t* range_free
 
     bool acquired = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "node_->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "allocate_from_node", "allocation_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_->block_size >= allocation_size_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "allocate_from_node", "allocation_size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "allocate_from_node", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocate_from_node", "node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "allocation_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_->block_size >= allocation_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocate_from_node", "allocation_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "allocate_from_node", "node_")
 
     if(node_->block_size == allocation_size_) {
         set_node_to_allocated(node_, node_->prev, node_->next);
     } else {
         if((SIZE_MAX - allocation_size_) < node_->offset) {
-            ret = RANGE_FREE_LIST_OVERFLOW;
+            ret = RANGE_ALLOCATOR_OVERFLOW;
             ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
             goto cleanup;
         }
         new_node_offset = node_->offset + allocation_size_;
         new_node_block_size = node_->block_size - allocation_size_;
 
-        ret = node_acquire(range_free_list_, new_node_offset, new_node_block_size, &new_node);
-        if(RANGE_FREE_LIST_SUCCESS != ret) {
+        ret = node_acquire(range_allocator_, new_node_offset, new_node_block_size, &new_node);
+        if(RANGE_ALLOCATOR_SUCCESS != ret) {
             ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
             goto cleanup;
         }
@@ -807,8 +807,8 @@ static range_free_list_result_t allocate_from_node(range_free_list_t* range_free
         block_size_escape = node_->block_size;
         node_->block_size = allocation_size_;
 
-        ret = node_insert_between(range_free_list_, new_node, NODE_STATE_FREE, node_, node_->next);
-        if(RANGE_FREE_LIST_SUCCESS != ret) {
+        ret = node_insert_between(range_allocator_, new_node, NODE_STATE_FREE, node_, node_->next);
+        if(RANGE_ALLOCATOR_SUCCESS != ret) {
             ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
             goto cleanup;
         }
@@ -816,15 +816,15 @@ static range_free_list_result_t allocate_from_node(range_free_list_t* range_free
         set_node_to_allocated(node_, node_->prev, node_->next);
     }
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
         if(acquired) {
             node_->block_size = block_size_escape;
-            ret_cleanup = node_release(range_free_list_, new_node);
-            if(RANGE_FREE_LIST_SUCCESS != ret_cleanup) {
-                ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret_cleanup = node_release(range_allocator_, new_node);
+            if(RANGE_ALLOCATOR_SUCCESS != ret_cleanup) {
+                ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
                 ERROR_MESSAGE("allocate_from_node(%s) - allocate_from_node failed.", rslt_to_str(ret));
                 return ret;
             }
@@ -834,77 +834,77 @@ cleanup:
     return ret;
 }
 
-static range_free_list_result_t allocation_resolve_node(range_free_list_t* range_free_list_, const range_allocation_t* allocation_info_, node_t** out_node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t allocation_resolve_node(range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "allocation_info_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "range_free_list_", "*out_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != range_free_list_->allocation_count, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_", "range_free_list_->allocation_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_info_->allocated_size, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "range_free_list_", "allocation_info_->allocated_size")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "allocation_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "*out_node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != range_allocator_->allocation_count, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_", "range_allocator_->allocation_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_info_->allocated_size, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_", "allocation_info_->allocated_size")
 
-    if(range_free_list_ != allocation_info_->owner) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+    if(range_allocator_ != allocation_info_->owner) {
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    if(range_free_list_->max_node_count <= allocation_info_->node_index) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+    if(range_allocator_->max_node_count <= allocation_info_->node_index) {
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_node = &range_free_list_->node_pool[allocation_info_->node_index];
+    tmp_node = &range_allocator_->node_pool[allocation_info_->node_index];
 
     if(!node_is_valid(tmp_node)) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NODE_STATE_ALLOCATED != tmp_node->node_state) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
     if(tmp_node->block_size != allocation_info_->allocated_size) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
     if(tmp_node->offset != allocation_info_->offset) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("allocation_resolve_node(%s) - allocation_resolve_node failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     *out_node_ = tmp_node;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
 }
 
 // エラー処理についてはスタイルガイド確定後、充実させる
-static range_free_list_result_t free_merge_plan_get(const range_free_list_t* range_free_list_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_merge_plan_get(const range_allocator_t* range_allocator_, const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     bool tmp_should_merge_prev = false;
     bool tmp_should_merge_next = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "node_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_prev_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_prev_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_next_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_next_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_merge_plan_get", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_prev_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_prev_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_next_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_next_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_merge_plan_get", "node_")
 
     // 前方ノード検証
     if(NULL != node_->prev && NODE_STATE_FREE == node_->prev->node_state) {
         if(!node_is_valid(node_->prev)) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("free_merge_plan_get(%s) - free_merge_plan_get failed.", rslt_to_str(ret));
             goto cleanup;
         }
@@ -914,7 +914,7 @@ static range_free_list_result_t free_merge_plan_get(const range_free_list_t* ran
     // 後方ノード検証
     if(NULL != node_->next && NODE_STATE_FREE == node_->next->node_state) {
         if(!node_is_valid(node_->next)) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("free_merge_plan_get(%s) - free_merge_plan_get failed.", rslt_to_str(ret));
             goto cleanup;
         }
@@ -924,159 +924,159 @@ static range_free_list_result_t free_merge_plan_get(const range_free_list_t* ran
     *out_should_merge_prev_ = tmp_should_merge_prev;
     *out_should_merge_next_ = tmp_should_merge_next;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
 }
 
 // エラー処理についてはスタイルガイド確定後、充実させる
-static range_free_list_result_t free_from_node(range_free_list_t* range_free_list_, node_t* node_, bool should_merge_prev_, bool should_merge_next_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_from_node(range_allocator_t* range_allocator_, node_t* node_, bool should_merge_prev_, bool should_merge_next_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_from_node", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_from_node", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_from_node", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_from_node", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_from_node", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_from_node", "node_")
 
     if(!should_merge_prev_ && !should_merge_next_) {
         ret = free_node_without_merge(node_);
     } else if(!should_merge_prev_ && should_merge_next_) {
-        ret = free_node_merge_next(range_free_list_, node_);
+        ret = free_node_merge_next(range_allocator_, node_);
     } else if(should_merge_prev_ && !should_merge_next_) {
-        ret = free_node_merge_prev(range_free_list_, node_);
+        ret = free_node_merge_prev(range_allocator_, node_);
     } else {
-        ret = free_node_merge_prev_next(range_free_list_, node_);
+        ret = free_node_merge_prev_next(range_allocator_, node_);
     }
 
 cleanup:
     return ret;
 }
 
-static range_free_list_result_t free_node_without_merge(node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_node_without_merge(node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_without_merge", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_without_merge", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_without_merge", "node_->node_state")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_without_merge", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_without_merge", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_without_merge", "node_->node_state")
 
     node_->node_state = NODE_STATE_FREE;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
 }
 
-static range_free_list_result_t free_node_merge_prev(range_free_list_t* range_free_list_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_node_merge_prev(range_allocator_t* range_allocator_, node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t tmp_offset = 0;
     size_t new_block_size = 0;
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_prev", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_prev", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_prev", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_prev", "NODE_STATE_ALLOCATED == node_->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->prev), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_prev", "node_->prev")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->prev->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_prev", "node_->prev->node_state")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_prev", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_prev", "NODE_STATE_ALLOCATED == node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->prev), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_prev", "node_->prev")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->prev->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_prev", "node_->prev->node_state")
 
     if(node_ != node_->prev->next) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->prev->offset) < node_->prev->block_size) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     tmp_offset = node_->prev->offset + node_->prev->block_size;
     if(tmp_offset != node_->offset) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->prev->block_size) < node_->block_size) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     new_block_size = node_->prev->block_size + node_->block_size;
     tmp_node = node_->prev;
 
-    ret = node_remove(range_free_list_, node_);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_remove(range_allocator_, node_);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret = node_release(range_free_list_, node_);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_release(range_allocator_, node_);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp_node->block_size = new_block_size;
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    // NOTE: この関数が失敗するのはrange_free_listのデータが破損している場合なのでロールバック不可
+    // NOTE: この関数が失敗するのはrange_allocatorのデータが破損している場合なのでロールバック不可
     return ret;
 }
 
-static range_free_list_result_t free_node_merge_next(range_free_list_t* range_free_list_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_node_merge_next(range_allocator_t* range_allocator_, node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t tmp_offset = 0;
     size_t new_block_size = 0;
     node_t* tmp_next = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_next", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_next", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_next", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_next", "NODE_STATE_ALLOCATED == node_->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->next), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_next", "node_->next")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->next->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_next", "node_->next->node_state")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_next", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_next", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_next", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_next", "NODE_STATE_ALLOCATED == node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->next), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_next", "node_->next")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->next->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_next", "node_->next->node_state")
 
     if(node_ != node_->next->prev) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->offset) < node_->block_size) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     tmp_offset = node_->offset + node_->block_size;
     if(tmp_offset != node_->next->offset) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->next->block_size) < node_->block_size) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     new_block_size = node_->next->block_size + node_->block_size;
 
     tmp_next = node_->next;
-    ret = node_remove(range_free_list_, tmp_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_remove(range_allocator_, tmp_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret = node_release(range_free_list_, tmp_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_release(range_allocator_, tmp_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -1084,15 +1084,15 @@ static range_free_list_result_t free_node_merge_next(range_free_list_t* range_fr
     node_->block_size = new_block_size;
     node_->node_state = NODE_STATE_FREE;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    // NOTE: この関数が失敗するのはrange_free_listのデータが破損している場合なのでロールバック不可
+    // NOTE: この関数が失敗するのはrange_allocatorのデータが破損している場合なのでロールバック不可
     return ret;
 }
 
-static range_free_list_result_t free_node_merge_prev_next(range_free_list_t* range_free_list_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t free_node_merge_prev_next(range_allocator_t* range_allocator_, node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t tmp_offset = 0;
     size_t new_block_size = 0;
@@ -1100,59 +1100,59 @@ static range_free_list_result_t free_node_merge_prev_next(range_free_list_t* ran
     node_t* tmp_node_prev = NULL;
     node_t* tmp_node_next = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_prev_next", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "free_node_merge_prev_next", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_prev_next", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_prev_next", "NODE_STATE_ALLOCATED == node_->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->prev), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_prev_next", "node_->prev")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->next), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "free_node_merge_prev_next", "node_->next")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->prev->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_prev_next", "node_->prev->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->next->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "free_node_merge_prev_next", "node_->next->node_state")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev_next", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev_next", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_prev_next", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_prev_next", "NODE_STATE_ALLOCATED == node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->prev), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_prev_next", "node_->prev")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(node_->next), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "free_node_merge_prev_next", "node_->next")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->prev->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_prev_next", "node_->prev->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->next->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "free_node_merge_prev_next", "node_->next->node_state")
 
     if(node_ != node_->next->prev) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
     if(node_ != node_->prev->next) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->prev->block_size) < node_->prev->offset) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     tmp_offset = node_->prev->offset + node_->prev->block_size;
     if(tmp_offset != node_->offset) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->block_size) < node_->offset) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     tmp_offset = node_->offset + node_->block_size;
     if(tmp_offset != node_->next->offset) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if((SIZE_MAX - node_->prev->block_size) < node_->block_size) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
     new_block_size = node_->prev->block_size + node_->block_size;
 
     if((SIZE_MAX - node_->next->block_size) < new_block_size) {
-        ret = RANGE_FREE_LIST_OVERFLOW;
+        ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev failed.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -1161,35 +1161,35 @@ static range_free_list_result_t free_node_merge_prev_next(range_free_list_t* ran
     tmp_node_prev = node_->prev;
     tmp_node_next = node_->next;
 
-    ret = node_remove(range_free_list_, node_);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_remove(range_allocator_, node_);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret = node_release(range_free_list_, node_);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_release(range_allocator_, node_);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = node_remove(range_free_list_, tmp_node_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_remove(range_allocator_, tmp_node_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
-    ret = node_release(range_free_list_, tmp_node_next);
-    if(RANGE_FREE_LIST_SUCCESS != ret) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+    ret = node_release(range_allocator_, tmp_node_next);
+    if(RANGE_ALLOCATOR_SUCCESS != ret) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - free_node_merge_prev_next failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp_node_prev->block_size = new_block_size;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1210,27 +1210,27 @@ cleanup:
  *
  * 本関数は動的メモリ確保を行わない。
  *
- * @param[in,out] range_free_list_ nodeを所有するRange Free List。
+ * @param[in,out] range_allocator_ nodeを所有するRange Allocator。
  * @param[in] offset_ 取得したnodeへ設定するrange開始offset。
  * @param[in] block_size_ 取得したnodeへ設定するrangeサイズ。
  * @param[out] out_node_ 取得したTRANSITIONING nodeの出力先。呼び出し時にNULLを指していなければならない。
  *
  * @note
- * 呼び出し元は、range_free_list_に対するshallow validationまたはdeep validationを事前に完了させなければならない。
+ * 呼び出し元は、range_allocator_に対するshallow validationまたはdeep validationを事前に完了させなければならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * NOT_USED nodeの取得に成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_またはout_node_がNULL、もしくはout_node_がすでにnodeを指している。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはout_node_がNULL、もしくはout_node_がすでにnodeを指している。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * offset_とblock_size_が有効なrangeを表していない。
  *
- * @retval RANGE_FREE_LIST_LIMIT_EXCEEDED
+ * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
  * unused node countが0であり、取得可能なnodeが存在しない。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * node pool、unused node count、または取得対象nodeの内部状態に整合性異常が検出された。
  *
  * @post
@@ -1247,38 +1247,38 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_, size_t offset_, size_t block_size_, node_t** out_node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t node_acquire(range_allocator_t* range_allocator_, size_t offset_, size_t block_size_, node_t** out_node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     bool found = false;
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_acquire", "*out_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_is_valid(range_free_list_, offset_, block_size_), ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_acquire", "range")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "*out_node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_is_valid(range_allocator_, offset_, block_size_), ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "range")
 
-    if(0 == range_free_list_->unused_node_count) {
-        ret = RANGE_FREE_LIST_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=no unused node available, unused_node_count=%zu, max_node_count=%zu, offset=%zu, block_size=%zu.", rslt_to_str(ret), range_free_list_->unused_node_count, range_free_list_->max_node_count, offset_, block_size_);
+    if(0 == range_allocator_->unused_node_count) {
+        ret = RANGE_ALLOCATOR_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=no unused node available, unused_node_count=%zu, max_node_count=%zu, offset=%zu, block_size=%zu.", rslt_to_str(ret), range_allocator_->unused_node_count, range_allocator_->max_node_count, offset_, block_size_);
         goto cleanup;
     }
 
-    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i].node_state) {
-            tmp_node = &range_free_list_->node_pool[i];
+    for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+        if(NODE_STATE_NOT_USED == range_allocator_->node_pool[i].node_state) {
+            tmp_node = &range_allocator_->node_pool[i];
             found = true;
             break;
         }
     }
 
     if(!found) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=unused_node_count is nonzero but no NOT_USED node was found, unused_node_count=%zu, max_node_count=%zu.", rslt_to_str(ret), range_free_list_->unused_node_count, range_free_list_->max_node_count);
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=unused_node_count is nonzero but no NOT_USED node was found, unused_node_count=%zu, max_node_count=%zu.", rslt_to_str(ret), range_allocator_->unused_node_count, range_allocator_->max_node_count);
         goto cleanup;
     } else {
         if(!node_is_valid(tmp_node)) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("node_acquire(%s) - Failed to acquire free block node. reason=found NOT_USED node is corrupted, offset=%zu, block_size=%zu.", rslt_to_str(ret), tmp_node->offset, tmp_node->block_size);
             goto cleanup;
         }
@@ -1286,10 +1286,10 @@ static range_free_list_result_t node_acquire(range_free_list_t* range_free_list_
 
     set_node_to_transitioning(tmp_node, offset_, block_size_);
 
-    range_free_list_->unused_node_count--;
+    range_allocator_->unused_node_count--;
     *out_node_ = tmp_node;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1314,14 +1314,14 @@ cleanup:
  * また、挿入rangeのaddress orderと隣接rangeとの非重複性は検証しない。
  * これらは呼び出し元が挿入位置を決定する際に検証する。
  *
- * @param[in,out] range_free_list_ insert_node_を接続するRange Free List。
+ * @param[in,out] range_allocator_ insert_node_を接続するRange Allocator。
  * @param[in,out] insert_node_ range listへ接続するTRANSITIONING node。
  * @param[in] next_state_ 挿入後のnode state。FREEまたはALLOCATEDでなければならない。
  * @param[in,out] prev_ insert_node_の直前へ接続するnode。先頭へ挿入する場合はNULL。
  * @param[in,out] next_ insert_node_の直後へ接続するnode。末尾へ挿入する場合はNULL。
  *
  * @note
- * 呼び出し元は、range_free_list_に対するshallow validationまたは
+ * 呼び出し元は、range_allocator_に対するshallow validationまたは
  * deep validationを事前に完了させなければならない。
  *
  * @pre
@@ -1336,17 +1336,17 @@ cleanup:
  * insert_node_のrangeはaddress order上でprev_とnext_の間に位置し、
  * 隣接rangeと重複してはならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * insert_node_の接続と指定stateへの遷移に成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_またはinsert_node_がNULLである。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはinsert_node_がNULLである。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * insert_node_がTRANSITIONINGではない、next_state_がFREE／ALLOCATED
  * ではない、またはprev_とnext_が同じnodeを指している。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * insert_node_、range list、list head、またはprev／nextの
  * 接続関係に整合性異常が検出された。
  *
@@ -1362,39 +1362,39 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t node_insert_between(range_free_list_t* range_free_list_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t node_insert_between(range_allocator_t* range_allocator_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_insert_between", "insert_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_TRANSITIONING == insert_node_->node_state, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "insert_node_->node_state")
-    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == next_state_ || NODE_STATE_FREE == next_state_, ret, RANGE_FREE_LIST_BAD_OPERATION, rslt_to_str(RANGE_FREE_LIST_BAD_OPERATION), "node_insert_between", "next_state_")
-    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(insert_node_), ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_insert_between", "insert_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_insert_between", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_insert_between", "insert_node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_TRANSITIONING == insert_node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_insert_between", "insert_node_->node_state")
+    IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == next_state_ || NODE_STATE_FREE == next_state_, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_insert_between", "next_state_")
+    IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(insert_node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "node_insert_between", "insert_node_")
 
     if(NULL != prev_ && NULL != next_ && prev_ == next_) {
-        ret = RANGE_FREE_LIST_BAD_OPERATION;
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ point to the same node, insert_offset=%zu, insert_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size);
         goto cleanup;
     }
 
     if(NULL == prev_ && NULL == next_) {
-        if(NULL != range_free_list_->free_block_list_head) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=insert position indicates empty list but free_block_list_head is not NULL, insert_offset=%zu, insert_block_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, range_free_list_->free_block_list_head->offset, range_free_list_->free_block_list_head->block_size);
+        if(NULL != range_allocator_->range_list_head) {
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=insert position indicates empty list but range_list_head is not NULL, insert_offset=%zu, insert_block_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, range_allocator_->range_list_head->offset, range_allocator_->range_list_head->block_size);
             goto cleanup;
         }
-        range_free_list_->free_block_list_head = insert_node_;
+        range_allocator_->range_list_head = insert_node_;
     } else if(NULL == prev_ && NULL != next_) {
-        if(next_ != range_free_list_->free_block_list_head || NULL != range_free_list_->free_block_list_head->prev) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        if(next_ != range_allocator_->range_list_head || NULL != range_allocator_->range_list_head->prev) {
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=invalid head insert position, insert_offset=%zu, insert_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
         next_->prev = insert_node_;
-        range_free_list_->free_block_list_head = insert_node_;
+        range_allocator_->range_list_head = insert_node_;
     } else if(NULL != prev_ && NULL != next_) {
         if(prev_->next != next_ || prev_ != next_->prev) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ are not linked, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
@@ -1402,7 +1402,7 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
         next_->prev = insert_node_;
     } else if(NULL != prev_ && NULL == next_) {
         if(NULL != prev_->next) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
             ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ already has next for tail insertion, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size);
             goto cleanup;
         }
@@ -1415,7 +1415,7 @@ static range_free_list_result_t node_insert_between(range_free_list_t* range_fre
         set_node_to_allocated(insert_node_, prev_, next_);
     }
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1440,30 +1440,30 @@ cleanup:
  * 本関数はnode_をnode poolへ返却せず、unused node countも変更しない。
  * node poolへの返却は、切断成功後にnode_release()を使用して行う。
  *
- * @param[in,out] range_free_list_ node_を切断するRange Free List。
+ * @param[in,out] range_allocator_ node_を切断するRange Allocator。
  * @param[in,out] node_ range listから切断するFREEまたはALLOCATED node。
  *
  * @note
- * 呼び出し元は、range_free_list_に対するshallow validationまたは
+ * 呼び出し元は、range_allocator_に対するshallow validationまたは
  * deep validationを事前に完了させなければならない。
  *
  * @pre
  * node_のstateはFREEまたはALLOCATEDでなければならない。
  *
  * @pre
- * node_はrange_free_list_のnode poolに所属し、range listへ
+ * node_はrange_allocator_のnode poolに所属し、range listへ
  * 正しく接続されていなければならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * node_の切断とTRANSITIONINGへの遷移に成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_またはnode_がNULLである。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはnode_がNULLである。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * node_のstateがFREEでもALLOCATEDでもない。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * node_、node pool、list head、またはprev／nextの接続関係に整合性異常が検出された。
  *
  * @post
@@ -1487,17 +1487,17 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t node_remove(range_free_list_t* range_free_list_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t node_remove(range_allocator_t* range_allocator_, node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     bool found = false;
     size_t index = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_remove", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_remove", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_remove", "node_")
 
-    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-        if(&range_free_list_->node_pool[i] == node_) {
+    for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+        if(&range_allocator_->node_pool[i] == node_) {
             found = true;
             index = i;
             break;
@@ -1505,35 +1505,35 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
     }
 
     if(!found) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_free_list_->max_node_count);
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_allocator_->max_node_count);
         goto cleanup;
     }
     if(!node_is_valid(node_)) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("node_remove(%s) - Failed to remove node to pool.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NODE_STATE_FREE != node_->node_state && NODE_STATE_ALLOCATED != node_->node_state) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("node_remove(%s) - Failed to remove node to pool.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if(NULL == node_->prev && NULL == node_->next) {  // node_が唯一のノード
-        if(range_free_list_->free_block_list_head != node_) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev/next but is not free_block_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
+        if(range_allocator_->range_list_head != node_) {
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev/next but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
             goto cleanup;
         }
-        range_free_list_->free_block_list_head = NULL;
+        range_allocator_->range_list_head = NULL;
     } else if(NULL == node_->prev && NULL != node_->next) {   // node_が先頭で、node_の次に別のノードがある
-        if(range_free_list_->free_block_list_head != node_) {
-            ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev but is not free_block_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
+        if(range_allocator_->range_list_head != node_) {
+            ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
             goto cleanup;
         }
-        range_free_list_->free_block_list_head = node_->next;
+        range_allocator_->range_list_head = node_->next;
 
         node_->next->prev = NULL;
     } else if(NULL != node_->prev && NULL != node_->next) {   // node_の前後に別のノードがある
@@ -1546,7 +1546,7 @@ static range_free_list_result_t node_remove(range_free_list_t* range_free_list_,
     // block_size, offsetは保持する
     set_node_to_transitioning(node_, node_->offset, node_->block_size);
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1573,12 +1573,12 @@ cleanup:
  *
  * 本関数は動的メモリ確保を行わない。
  *
- * @param[in,out] range_free_list_ node_を所有するRange Free List。
+ * @param[in,out] range_allocator_ node_を所有するRange Allocator。
  * @param[in,out] node_ node poolへ返却するTRANSITIONING node。
  *
  * @note
  * remove／release処理を開始する前に、呼び出し元は
- * range_free_list_全体を検証しなければならない。
+ * range_allocator_全体を検証しなければならない。
  *
  * node_remove()成功後はrange listが内部遷移中となるため、
  * node_release()呼び出し直前のdeep validationは要求しない。
@@ -1587,22 +1587,22 @@ cleanup:
  * node_のstateはTRANSITIONINGでなければならない。
  *
  * @pre
- * node_はrange_free_list_のnode poolに所属していなければならない。
+ * node_はrange_allocator_のnode poolに所属していなければならない。
  *
  * @pre
  * node_はrange listから切断済みであり、prevとnextはNULLで
  * なければならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * node_のnode poolへの返却に成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_またはnode_がNULLである。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはnode_がNULLである。
  *
- * @retval RANGE_FREE_LIST_BAD_OPERATION
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * node_のstateがTRANSITIONINGではない。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * node_、node pool、unused node count、またはnodeの所属関係に整合性異常が検出された。
  *
  * @post
@@ -1617,18 +1617,18 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t node_release(range_free_list_t* range_free_list_, node_t* node_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t node_release(range_allocator_t* range_allocator_, node_t* node_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     bool found = false;
     size_t index = 0;   // エラーメッセージ用
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_release", "node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_free_list_->unused_node_count < range_free_list_->max_node_count, ret, RANGE_FREE_LIST_DATA_CORRUPTED, rslt_to_str(RANGE_FREE_LIST_DATA_CORRUPTED), "node_release", "unused_node_count")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_release", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_release", "node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->unused_node_count < range_allocator_->max_node_count, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "node_release", "unused_node_count")
 
-    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-        if(&range_free_list_->node_pool[i] == node_) {
+    for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+        if(&range_allocator_->node_pool[i] == node_) {
             found = true;
             index = i;
             break;
@@ -1636,26 +1636,26 @@ static range_free_list_result_t node_release(range_free_list_t* range_free_list_
     }
 
     if(!found) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_free_list_->max_node_count, range_free_list_->unused_node_count);
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_release(%s) - Failed to release node to pool. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu, unused_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_allocator_->max_node_count, range_allocator_->unused_node_count);
         goto cleanup;
     }
     if(!node_is_valid(node_)) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("node_release(%s) - Failed to release node to pool.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NODE_STATE_TRANSITIONING != node_->node_state) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("node_release(%s) - Failed to release node to pool.", rslt_to_str(ret));
         goto cleanup;
     }
 
     set_node_to_not_used(node_);
 
-    range_free_list_->unused_node_count++;
+    range_allocator_->unused_node_count++;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1665,29 +1665,29 @@ cleanup:
  * @brief nodeが所属するnode pool indexを取得する
  *
  * @details
- * range_free_list_が所有するnode poolを先頭から線形探索し、
+ * range_allocator_が所有するnode poolを先頭から線形探索し、
  * node_と同じポインタを保持する要素のindexを取得する。
  *
  * node_がnode poolに所属することをポインタidentityによって
  * 確認した後、node_is_valid()によってnode単体の局所的不変条件を検証する。
  *
- * 本関数はRange Free List、node pool、およびnodeの状態を変更しない。
+ * 本関数はRange Allocator、node pool、およびnodeの状態を変更しない。
  *
- * @param[in] range_free_list_ node poolを所有するRange Free List。
+ * @param[in] range_allocator_ node poolを所有するRange Allocator。
  * @param[in] node_ indexを取得するnode。
  * @param[out] out_index_ node_が格納されているnode pool indexの出力先。
  *
  * @pre
- * range_free_list_に対するshallow validationまたはdeep validationが、
+ * range_allocator_に対するshallow validationまたはdeep validationが、
  * 呼び出し元によって完了していなければならない。
  *
- * @retval RANGE_FREE_LIST_SUCCESS
+ * @retval RANGE_ALLOCATOR_SUCCESS
  * node_の所属確認とindexの取得に成功した。
  *
- * @retval RANGE_FREE_LIST_INVALID_ARGUMENT
- * range_free_list_、node_、またはout_index_がNULLである。
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_、node_、またはout_index_がNULLである。
  *
- * @retval RANGE_FREE_LIST_DATA_CORRUPTED
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * node_がnode poolに所属していない、または所属確認後のnode_が局所的不変条件を満たしていない。
  *
  * @post
@@ -1703,36 +1703,36 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_free_list_result_t node_pool_find_index(const range_free_list_t* range_free_list_, const node_t* node_, size_t* out_index_) {
-    range_free_list_result_t ret = RANGE_FREE_LIST_INVALID_ARGUMENT;
+static range_allocator_result_t node_pool_find_index(const range_allocator_t* range_allocator_, const node_t* node_, size_t* out_index_) {
+    range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     bool found = false;
     size_t tmp_index = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_free_list_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "range_free_list_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "node_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_index_, ret, RANGE_FREE_LIST_INVALID_ARGUMENT, rslt_to_str(RANGE_FREE_LIST_INVALID_ARGUMENT), "node_pool_find_index", "out_index_")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_index_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "out_index_")
 
-    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-        if(&range_free_list_->node_pool[i] == node_) {
+    for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+        if(&range_allocator_->node_pool[i] == node_) {
             tmp_index = i;
             found = true;
             break;
         }
     }
     if(!found) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_pool_find_index(%s) - Failed to find node index. reason=target node does not belong to node pool, max_node_count=%zu.", rslt_to_str(ret), range_free_list_->max_node_count);
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_pool_find_index(%s) - Failed to find node index. reason=target node does not belong to node pool, max_node_count=%zu.", rslt_to_str(ret), range_allocator_->max_node_count);
         goto cleanup;
     }
     if(!node_is_valid(node_)) {
-        ret = RANGE_FREE_LIST_DATA_CORRUPTED;
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("node_pool_find_index(%s) - Failed to find node index. reason=target node is locally invalid, node_index=%zu, node_state=%d, offset=%zu, block_size=%zu.", rslt_to_str(ret), tmp_index, node_->node_state, node_->offset, node_->block_size);
         goto cleanup;
     }
     *out_index_ = tmp_index;
 
-    ret = RANGE_FREE_LIST_SUCCESS;
+    ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
     return ret;
@@ -1939,10 +1939,10 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
 }
 
 /**
- * @brief Range Free Listの内部状態、node pool、およびrange listの整合性を検証する
+ * @brief Range Allocatorの内部状態、node pool、およびrange listの整合性を検証する
  *
  * @details
- * range_free_list_のshallowな内部フィールドを検証した後、
+ * range_allocator_のshallowな内部フィールドを検証した後、
  * FREE／ALLOCATED nodeで構成されるrange listを先頭から走査する。
  *
  * range listについて、次の条件を検証する。
@@ -1959,7 +1959,7 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
  * - listの走査回数がmax node countを超えない
  * - range listの末尾がmemory poolの末尾と一致する
  * - list上のnode数とunused node countの合計がmax node countと一致する
- * - list上の各nodeが、このRange Free Listのnode poolに所属している
+ * - list上の各nodeが、このRange Allocatorのnode poolに所属している
  *
  * expected offsetを先頭の0から各nodeの終端へ更新することで、
  * range間のgap、overlap、およびmemory pool内の未管理rangeを検出する。
@@ -1977,18 +1977,18 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
  * 一致することを照合し、listから切り離された安定状態のnodeが
  * 存在しないことを検証する。
  *
- * @param[in] range_free_list_ 検証するRange Free List。NULLの場合は不正と判定する。
+ * @param[in] range_allocator_ 検証するRange Allocator。NULLの場合は不正と判定する。
  *
  * @retval true shallowな内部状態、node pool、およびrange listが整合している。
  * @retval false 内部フィールド、node pool、node state、list接続、range、alignment、またはnode数が不正である。
  *
- * @note 本関数はrange_free_list_およびnodeを変更しない。
+ * @note 本関数はrange_allocator_およびnodeを変更しない。
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) {
+static bool range_allocator_is_valid(const range_allocator_t* range_allocator_) {
     node_t* node = NULL;
     node_t* prev = NULL;
     size_t loop_count = 0;
@@ -1996,25 +1996,25 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
     size_t expected_total_allocated_size = 0;
     bool found = false;
 
-    if(NULL == range_free_list_) {
+    if(NULL == range_allocator_) {
         return false;
     }
-    if(!range_free_list_is_valid_shallow(range_free_list_)) {
+    if(!range_allocator_is_valid_shallow(range_allocator_)) {
         return false;
     }
 
-    if(NULL == range_free_list_->free_block_list_head) {
+    if(NULL == range_allocator_->range_list_head) {
         return false;
     }
-    node = range_free_list_->free_block_list_head;
-    // NOTE: 以下はfree_listの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
+    node = range_allocator_->range_list_head;
+    // NOTE: 以下はrange_allocatorの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
     while(NULL != node) {
-        if(loop_count >= range_free_list_->max_node_count) {
+        if(loop_count >= range_allocator_->max_node_count) {
             return false;
         }
         found = false;
-        for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-            if(&range_free_list_->node_pool[i] == node) {
+        for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+            if(&range_allocator_->node_pool[i] == node) {
                 found = true;
                 break;
             }
@@ -2034,13 +2034,13 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
         if(node->offset != expected_offset) {
             return false;
         }
-        if(!range_is_valid(range_free_list_, node->offset, node->block_size)) {
+        if(!range_is_valid(range_allocator_, node->offset, node->block_size)) {
             return false;
         }
-        if(0 != (node->offset % range_free_list_->base_align)) {
+        if(0 != (node->offset % range_allocator_->base_align)) {
             return false;
         }
-        if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % range_free_list_->base_align)) {
+        if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % range_allocator_->base_align)) {
             return false;
         }
         if(NULL != node->prev) {
@@ -2060,77 +2060,77 @@ static bool range_free_list_is_valid(const range_free_list_t* range_free_list_) 
         loop_count++;
         found = false;
     }
-    if(expected_offset != range_free_list_->memory_pool_size) { // memory_pool全体がALLOCATED / FREEノードで隙間がないため、末尾は必ずmemory_pool_sizeに等しい
+    if(expected_offset != range_allocator_->memory_pool_size) { // memory_pool全体がALLOCATED / FREEノードで隙間がないため、末尾は必ずmemory_pool_sizeに等しい
         return false;
     }
-    if(expected_total_allocated_size != range_free_list_->total_allocated_size) {
+    if(expected_total_allocated_size != range_allocator_->total_allocated_size) {
         return false;
     }
 
     size_t allocated_count = 0;
     size_t free_count = 0;
     size_t unused_count = 0;
-    for(size_t i = 0; i != range_free_list_->max_node_count; ++i) {
-        if(!node_is_valid(&range_free_list_->node_pool[i])) {
+    for(size_t i = 0; i != range_allocator_->max_node_count; ++i) {
+        if(!node_is_valid(&range_allocator_->node_pool[i])) {
             return false;
         }
-        if(NODE_STATE_TRANSITIONING == range_free_list_->node_pool[i].node_state) {
+        if(NODE_STATE_TRANSITIONING == range_allocator_->node_pool[i].node_state) {
             return false;
         }
-        if(NODE_STATE_ALLOCATED == range_free_list_->node_pool[i].node_state) {
+        if(NODE_STATE_ALLOCATED == range_allocator_->node_pool[i].node_state) {
             allocated_count++;
         }
-        if(NODE_STATE_FREE == range_free_list_->node_pool[i].node_state) {
+        if(NODE_STATE_FREE == range_allocator_->node_pool[i].node_state) {
             free_count++;
         }
-        if(NODE_STATE_NOT_USED == range_free_list_->node_pool[i].node_state) {
+        if(NODE_STATE_NOT_USED == range_allocator_->node_pool[i].node_state) {
             unused_count++;
         }
     }
-    if(allocated_count != range_free_list_->allocation_count) {
+    if(allocated_count != range_allocator_->allocation_count) {
         return false;
     }
-    if(range_free_list_->unused_node_count != unused_count) {
+    if(range_allocator_->unused_node_count != unused_count) {
         return false;
     }
     if((free_count + allocated_count) != loop_count) {
         return false;
     }
-    if((free_count + allocated_count + unused_count) != range_free_list_->max_node_count) {
+    if((free_count + allocated_count + unused_count) != range_allocator_->max_node_count) {
         return false;
     }
     return true;
 }
 
-static bool range_free_list_is_valid_shallow(const range_free_list_t* range_free_list_) {
-    if(NULL == range_free_list_) {
+static bool range_allocator_is_valid_shallow(const range_allocator_t* range_allocator_) {
+    if(NULL == range_allocator_) {
         return false;
     }
-    if(0 == range_free_list_->base_align || !IS_POWER_OF_TWO(range_free_list_->base_align)) {
+    if(0 == range_allocator_->base_align || !IS_POWER_OF_TWO(range_allocator_->base_align)) {
         return false;
     }
-    if(0 == range_free_list_->max_allocation_count) {
+    if(0 == range_allocator_->max_allocation_count) {
         return false;
     }
-    if(range_free_list_->total_allocated_size > range_free_list_->memory_pool_size) {
+    if(range_allocator_->total_allocated_size > range_allocator_->memory_pool_size) {
         return false;
     }
-    if(((SIZE_MAX - 1) / 2) < range_free_list_->max_allocation_count) {
+    if(((SIZE_MAX - 1) / 2) < range_allocator_->max_allocation_count) {
         return false;
     }
-    if((range_free_list_->max_allocation_count * 2 + 1) != range_free_list_->max_node_count) {
+    if((range_allocator_->max_allocation_count * 2 + 1) != range_allocator_->max_node_count) {
         return false;
     }
-    if(range_free_list_->allocation_count > range_free_list_->max_allocation_count) {
+    if(range_allocator_->allocation_count > range_allocator_->max_allocation_count) {
         return false;
     }
-    if(range_free_list_->unused_node_count > range_free_list_->max_node_count) {
+    if(range_allocator_->unused_node_count > range_allocator_->max_node_count) {
         return false;
     }
-    if(0 == range_free_list_->memory_pool_size) {
+    if(0 == range_allocator_->memory_pool_size) {
         return false;
     }
-    if(NULL == range_free_list_->node_pool) {
+    if(NULL == range_allocator_->node_pool) {
         return false;
     }
     return true;
@@ -2206,8 +2206,8 @@ static bool node_is_valid(const node_t* node_) {
     return true;
 }
 
-static bool range_is_valid(const range_free_list_t* range_free_list_, size_t offset_, size_t block_size_) {
-    if(NULL == range_free_list_) {
+static bool range_is_valid(const range_allocator_t* range_allocator_, size_t offset_, size_t block_size_) {
+    if(NULL == range_allocator_) {
         return false;
     }
     if(0 == block_size_) {
@@ -2216,15 +2216,15 @@ static bool range_is_valid(const range_free_list_t* range_free_list_, size_t off
     if((SIZE_MAX - block_size_) < offset_) {
         return false;
     }
-    if(range_free_list_->memory_pool_size < (offset_ + block_size_)) {
+    if(range_allocator_->memory_pool_size < (offset_ + block_size_)) {
         return false;
     }
     return true;
 }
 
-static void status_print(const range_free_list_status_t* status_) {
+static void status_print(const range_allocator_status_t* status_) {
     if(NULL == status_) {
-        fprintf(stdout, "  Provided range_free_list_status_t instance is null.\n");
+        fprintf(stdout, "  Provided range_allocator_status_t instance is null.\n");
     } else {
         if(0 != status_->memory_pool_size) {
             fprintf(stdout, "  memory_usage_percent = %.2lf%%\n", (double)status_->total_allocated_size / (double)status_->memory_pool_size * 100.0);
@@ -2244,40 +2244,40 @@ static void status_print(const range_free_list_status_t* status_) {
     }
 }
 
-static const char* rslt_to_str(range_free_list_result_t rslt_) {
+static const char* rslt_to_str(range_allocator_result_t rslt_) {
     switch(rslt_) {
-    case RANGE_FREE_LIST_SUCCESS:
+    case RANGE_ALLOCATOR_SUCCESS:
         return s_rslt_str_success;
-    case RANGE_FREE_LIST_INVALID_ARGUMENT:
+    case RANGE_ALLOCATOR_INVALID_ARGUMENT:
         return s_rslt_str_invalid_argument;
-    case RANGE_FREE_LIST_LIMIT_EXCEEDED:
+    case RANGE_ALLOCATOR_LIMIT_EXCEEDED:
         return s_rslt_str_limit_exceeded;
-    case RANGE_FREE_LIST_NO_MEMORY:
+    case RANGE_ALLOCATOR_NO_MEMORY:
         return s_rslt_str_no_memory;
-    case RANGE_FREE_LIST_DATA_CORRUPTED:
+    case RANGE_ALLOCATOR_DATA_CORRUPTED:
         return s_rslt_str_data_corrupted;
-    case RANGE_FREE_LIST_BAD_OPERATION:
+    case RANGE_ALLOCATOR_BAD_OPERATION:
         return s_rslt_str_bad_operation;
-    case RANGE_FREE_LIST_OVERFLOW:
+    case RANGE_ALLOCATOR_OVERFLOW:
         return s_rslt_str_overflow;
-    case RANGE_FREE_LIST_UNDEFINED_ERROR:
+    case RANGE_ALLOCATOR_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
         return s_rslt_str_undefined_error;
     }
 }
 
-static range_free_list_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
+static range_allocator_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
-        return RANGE_FREE_LIST_SUCCESS;
+        return RANGE_ALLOCATOR_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return RANGE_FREE_LIST_INVALID_ARGUMENT;
+        return RANGE_ALLOCATOR_INVALID_ARGUMENT;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return RANGE_FREE_LIST_LIMIT_EXCEEDED;
+        return RANGE_ALLOCATOR_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:
-        return RANGE_FREE_LIST_BAD_OPERATION;
+        return RANGE_ALLOCATOR_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
-        return RANGE_FREE_LIST_NO_MEMORY;
+        return RANGE_ALLOCATOR_NO_MEMORY;
     }
 }

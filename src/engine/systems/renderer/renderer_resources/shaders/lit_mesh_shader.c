@@ -336,7 +336,7 @@ renderer_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* ba
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    // TODO: range_free_listの2-phase allocation完成後、ロールバックを追加する
+    // TODO: range_allocatorの2-phase allocation完成後、ロールバックを追加する
     return ret;
 }
 

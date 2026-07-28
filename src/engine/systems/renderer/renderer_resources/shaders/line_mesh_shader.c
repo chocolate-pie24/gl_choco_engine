@@ -29,7 +29,7 @@
 
 #include "engine/systems/renderer/renderer_core/renderer_err_utils.h"
 #include "engine/systems/renderer/renderer_core/renderer_memory.h"
-#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
@@ -341,7 +341,7 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    // TODO: range_free_listの2-phase allocation完成後、ロールバックを追加する
+    // TODO: range_allocatorの2-phase allocation完成後、ロールバックを追加する
     return ret;
 }
 

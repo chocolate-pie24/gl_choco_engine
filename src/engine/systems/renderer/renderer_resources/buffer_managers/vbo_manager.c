@@ -9,7 +9,7 @@
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
@@ -20,7 +20,7 @@
 
 struct vbo_manager {
     vbo_manager_config_t config;
-    range_free_list_t* range_free_list;
+    range_allocator_t* range_allocator;
     renderer_backend_vbo_t* vbo;
 };
 
@@ -29,12 +29,12 @@ static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_);
 buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_context_, const vbo_manager_config_t* config_, vbo_manager_t** out_vbo_manager_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
+    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
-    range_free_list_t* tmp_allocator = NULL;
+    range_allocator_t* tmp_allocator = NULL;
     renderer_backend_vbo_t* tmp_vbo = NULL;
 
     bool vbo_created = false;
@@ -56,9 +56,9 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
         goto cleanup;
     }
 
-    ret_allocator = range_free_list_create(config_->vbo_size, config_->max_allocation_count, config_->base_align, &tmp_allocator);
-    if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
+    ret_allocator = range_allocator_create(config_->vbo_size, config_->max_allocation_count, config_->base_align, &tmp_allocator);
+    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
+        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
         ERROR_MESSAGE("vbo_manager_create(%s) - vbo manager create failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
@@ -95,7 +95,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     vbo_bound = false;
 
     tmp_vbo_manager->config = *config_;
-    tmp_vbo_manager->range_free_list = tmp_allocator;
+    tmp_vbo_manager->range_allocator = tmp_allocator;
     tmp_vbo_manager->vbo = tmp_vbo;
 
     *out_vbo_manager_ = tmp_vbo_manager;
@@ -111,7 +111,7 @@ cleanup:
             renderer_backend_vertex_buffer_destroy(backend_context_, &tmp_vbo);
         }
 
-        range_free_list_destroy(&tmp_allocator);
+        range_allocator_destroy(&tmp_allocator);
         if(NULL != tmp_vbo_manager) {
             memory_system_free(tmp_vbo_manager, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
             tmp_vbo_manager = NULL;
@@ -132,7 +132,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
         return;
     }
     renderer_backend_vertex_buffer_destroy(backend_context_, &(*vbo_manager_)->vbo);
-    range_free_list_destroy(&(*vbo_manager_)->range_free_list);
+    range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
     memory_system_free(*vbo_manager_, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
     *vbo_manager_ = NULL;
@@ -141,7 +141,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
 buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
+    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
 
     range_allocation_t tmp_allocation = { 0 };
@@ -157,9 +157,9 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
     IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_write", "vbo_manager_")
 
-    ret_allocator = range_free_list_allocate(vbo_manager_->range_free_list, size_, vbo_manager_->config.base_align, &tmp_allocation);
-    if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
+    ret_allocator = range_allocator_allocate(vbo_manager_->range_allocator, size_, vbo_manager_->config.base_align, &tmp_allocation);
+    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
+        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
         ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
@@ -196,8 +196,8 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
 cleanup:
     if(allocate_success) {
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
-            ret_allocator = range_free_list_free(vbo_manager_->range_free_list, &tmp_allocation);   // range_free_listの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
+            ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);   // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
+            if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
                 ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED));
             }
         }
@@ -215,15 +215,15 @@ cleanup:
 buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_free_list_result_t ret_allocator = RANGE_FREE_LIST_INVALID_ARGUMENT;
+    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->range_allocation.allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->range_allocation.allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
 
-    ret_allocator = range_free_list_free(vbo_manager_->range_free_list, &allocation_handle_->range_allocation);    // range_free_listの内部データ不整合が発生していなければ成功するはず
-    if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
+    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &allocation_handle_->range_allocation);    // range_allocatorの内部データ不整合が発生していなければ成功するはず
+    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
         ret = BUFFER_MANAGER_DATA_CORRUPTED;
         ERROR_MESSAGE("vbo_manager_free(%s) - vbo_manager_free failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
@@ -278,7 +278,7 @@ cleanup:
 }
 
 void vbo_manager_status_print(const vbo_manager_t* vbo_manager_) {
-    range_free_list_status_t status = { 0 };
+    range_allocator_status_t status = { 0 };
 
     const bool valid = vbo_manager_is_valid(vbo_manager_);
 
@@ -292,12 +292,12 @@ void vbo_manager_status_print(const vbo_manager_t* vbo_manager_) {
         fprintf(stdout, "  max_allocation_count = %zu\n", vbo_manager_->config.max_allocation_count);
         fprintf(stdout, "  buffer_usage = %s\n", BUFFER_USAGE_STATIC == vbo_manager_->config.buffer_usage ? "STATIC" : "DYNAMIC");
 
-        range_free_list_status_get(vbo_manager_->range_free_list, &status);
+        range_allocator_status_get(vbo_manager_->range_allocator, &status);
     }
     fprintf(stdout, "\033[0m");
     funlockfile(stdout);
     if(valid) {
-        range_free_list_status_print(&status);
+        range_allocator_status_print(&status);
     }
 }
 
@@ -317,7 +317,7 @@ void vbo_manager_debug_print(const vbo_manager_t* vbo_manager_) {
     fprintf(stdout, "\033[0m");
     funlockfile(stdout);
     if(valid) {
-        range_free_list_debug_print(vbo_manager_->range_free_list);
+        range_allocator_debug_print(vbo_manager_->range_allocator);
     }
 }
 
@@ -325,7 +325,7 @@ static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_) {
     if(NULL == vbo_manager_) {
         return false;
     }
-    if(NULL == vbo_manager_->range_free_list) {
+    if(NULL == vbo_manager_->range_allocator) {
         return false;
     }
     if(NULL == vbo_manager_->vbo) {

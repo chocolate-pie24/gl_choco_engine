@@ -1,6 +1,6 @@
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.h"
 
-#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
@@ -39,23 +39,23 @@ const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_) {
     }
 }
 
-buffer_manager_result_t buffer_manager_rslt_convert_range_free_list(range_free_list_result_t rslt_) {
+buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_allocator_result_t rslt_) {
     switch(rslt_) {
-    case RANGE_FREE_LIST_SUCCESS:
+    case RANGE_ALLOCATOR_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
-    case RANGE_FREE_LIST_INVALID_ARGUMENT:
+    case RANGE_ALLOCATOR_INVALID_ARGUMENT:
         return BUFFER_MANAGER_INVALID_ARGUMENT;
-    case RANGE_FREE_LIST_LIMIT_EXCEEDED:
+    case RANGE_ALLOCATOR_LIMIT_EXCEEDED:
         return BUFFER_MANAGER_LIMIT_EXCEEDED;
-    case RANGE_FREE_LIST_NO_MEMORY:
+    case RANGE_ALLOCATOR_NO_MEMORY:
         return BUFFER_MANAGER_NO_MEMORY;
-    case RANGE_FREE_LIST_DATA_CORRUPTED:
+    case RANGE_ALLOCATOR_DATA_CORRUPTED:
         return BUFFER_MANAGER_DATA_CORRUPTED;
-    case RANGE_FREE_LIST_BAD_OPERATION:
+    case RANGE_ALLOCATOR_BAD_OPERATION:
         return BUFFER_MANAGER_BAD_OPERATION;
-    case RANGE_FREE_LIST_OVERFLOW:
+    case RANGE_ALLOCATOR_OVERFLOW:
         return BUFFER_MANAGER_OVERFLOW;
-    case RANGE_FREE_LIST_UNDEFINED_ERROR:
+    case RANGE_ALLOCATOR_UNDEFINED_ERROR:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     default:
         return BUFFER_MANAGER_UNDEFINED_ERROR;

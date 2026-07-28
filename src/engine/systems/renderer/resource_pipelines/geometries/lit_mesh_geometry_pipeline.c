@@ -137,7 +137,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
 cleanup:
     // TODO: vbo_writeに成功した後、registerが失敗した場合のロールバックでvbo_freeを使用する必要があるが、vbo_freeが失敗する可能性がある。
     // - registerをreserve -> commit / abort方式の2-phase registerに変更
-    // - range free listの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
+    // - range allocatorの2-phase allocation化も実施する予定なので、vbo_writeの2-phase writeも検討する
     lit_mesh_geometry_destroy(&geometry);
     stl_loader_destroy(&stl_loader);
     if(NULL != vertices) {

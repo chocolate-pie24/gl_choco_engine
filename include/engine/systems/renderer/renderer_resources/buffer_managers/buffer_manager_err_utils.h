@@ -8,13 +8,13 @@ extern "C" {
 #include "engine/core/memory/choco_memory.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
-#include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
+#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
 const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_);
 
-buffer_manager_result_t buffer_manager_rslt_convert_range_free_list(range_free_list_result_t rslt_);
+buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_allocator_result_t rslt_);
 
 buffer_manager_result_t buffer_manager_rslt_convert_renderer(renderer_result_t rslt_);
 
