@@ -198,11 +198,13 @@ cleanup:
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
             ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);   // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
             if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED));
+                ret = BUFFER_MANAGER_DATA_CORRUPTED;
+                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
             }
         }
         if(vbo_bound) {
             ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
+            // NOTE: unbindが失敗した場合はunbindの実行結果コードではなく、vbo_manager_writeの実行結果コードを優先する
             if(RENDERER_SUCCESS != ret_renderer) {
                 ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_renderer(ret_renderer)));
             }
