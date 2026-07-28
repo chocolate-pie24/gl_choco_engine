@@ -11,8 +11,6 @@
 
 #include "engine/systems/renderer/renderer_core/allocators/range_free_list.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
@@ -48,7 +46,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != config_->base_align, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_->base_align")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(config_->base_align), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_->base_align")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != config_->max_node_count, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_->max_node_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != config_->max_allocation_count, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_->max_allocation_count")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != config_->vbo_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_->vbo_size")
 
     ret_memory = memory_system_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
@@ -58,7 +56,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
         goto cleanup;
     }
 
-    ret_allocator = range_free_list_create(config_->vbo_size, config_->max_node_count, config_->base_align, &tmp_allocator);
+    ret_allocator = range_free_list_create(config_->vbo_size, config_->max_allocation_count, config_->base_align, &tmp_allocator);
     if(RANGE_FREE_LIST_SUCCESS != ret_allocator) {
         ret = buffer_manager_rslt_convert_range_free_list(ret_allocator);
         ERROR_MESSAGE("vbo_manager_create(%s) - vbo manager create failed.", buffer_manager_rslt_to_str(ret));
@@ -291,7 +289,7 @@ void vbo_manager_status_print(const vbo_manager_t* vbo_manager_) {
     } else {
         fprintf(stdout, "  vbo_manager_is_valid = true\n");
         fprintf(stdout, "  vbo_size = %zu\n", vbo_manager_->config.vbo_size);
-        fprintf(stdout, "  max_node_count = %zu\n", vbo_manager_->config.max_node_count);
+        fprintf(stdout, "  max_allocation_count = %zu\n", vbo_manager_->config.max_allocation_count);
         fprintf(stdout, "  buffer_usage = %s\n", BUFFER_USAGE_STATIC == vbo_manager_->config.buffer_usage ? "STATIC" : "DYNAMIC");
 
         range_free_list_status_get(vbo_manager_->range_free_list, &status);
@@ -313,7 +311,7 @@ void vbo_manager_debug_print(const vbo_manager_t* vbo_manager_) {
     } else {
         fprintf(stdout, "  vbo_manager_is_valid = true\n");
         fprintf(stdout, "  vbo_size = %zu\n", vbo_manager_->config.vbo_size);
-        fprintf(stdout, "  max_node_count = %zu\n", vbo_manager_->config.max_node_count);
+        fprintf(stdout, "  max_allocation_count = %zu\n", vbo_manager_->config.max_allocation_count);
         fprintf(stdout, "  buffer_usage = %s\n", BUFFER_USAGE_STATIC == vbo_manager_->config.buffer_usage ? "STATIC" : "DYNAMIC");
     }
     fprintf(stdout, "\033[0m");
@@ -336,7 +334,7 @@ static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_) {
     if(0 == vbo_manager_->config.vbo_size) {
         return false;
     }
-    if(0 == vbo_manager_->config.max_node_count) {
+    if(0 == vbo_manager_->config.max_allocation_count) {
         return false;
     }
     if(0 == vbo_manager_->config.base_align || !IS_POWER_OF_TWO(vbo_manager_->config.base_align)) {

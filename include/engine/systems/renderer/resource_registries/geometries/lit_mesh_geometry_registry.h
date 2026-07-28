@@ -27,8 +27,9 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
 
 typedef struct lit_mesh_geometry_registry lit_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
 

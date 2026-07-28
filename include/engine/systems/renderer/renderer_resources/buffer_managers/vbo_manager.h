@@ -14,12 +14,12 @@ extern "C" {
 
 typedef struct vbo_manager_config {
     size_t vbo_size;
-    size_t max_node_count;
+    size_t max_allocation_count;
     size_t base_align;
     buffer_usage_t buffer_usage;
 } vbo_manager_config_t;
 
-// NOTE: 将来のvbo_managerの拡張(vbo_pool, pageの導入)を見据え、range_allocation_tとは別に用意する
+// NOTE: 将来のvbo_managerの拡張(vbo_pool, pageの導入)を見据え、range_allocation_tとは別に構造体を用意する
 typedef struct vertex_allocation {
     range_allocation_t range_allocation;
 } vertex_allocation_t;

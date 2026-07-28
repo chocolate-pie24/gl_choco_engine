@@ -28,8 +28,7 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
-
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */

@@ -53,7 +53,7 @@
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
 
 #include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
@@ -360,7 +360,7 @@ application_result_t application_create(void) {
 
     tmp->ui_mesh_shader_vbo_config.base_align = alignof(float);
     tmp->ui_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->ui_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->ui_mesh_shader_vbo_config.max_allocation_count = 512;
     tmp->ui_mesh_shader_vbo_config.vbo_size = 1024;
     ret_renderer = ui_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, &tmp->ui_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
@@ -391,7 +391,7 @@ application_result_t application_create(void) {
 
     tmp->line_mesh_shader_vbo_config.base_align = alignof(float);
     tmp->line_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->line_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->line_mesh_shader_vbo_config.max_allocation_count = 512;
     tmp->line_mesh_shader_vbo_config.vbo_size = 1024;
     ret_renderer = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, &tmp->line_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
@@ -421,7 +421,7 @@ application_result_t application_create(void) {
     }
     tmp->point_mesh_shader_vbo_config.base_align = alignof(float);
     tmp->point_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    tmp->point_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->point_mesh_shader_vbo_config.max_allocation_count = 128;
     tmp->point_mesh_shader_vbo_config.vbo_size = 1 * KIB;
     ret_renderer = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->point_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {
@@ -451,7 +451,7 @@ application_result_t application_create(void) {
     }
     tmp->lit_mesh_shader_vbo_config.base_align = alignof(float);
     tmp->lit_mesh_shader_vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->lit_mesh_shader_vbo_config.max_node_count = 1024;
+    tmp->lit_mesh_shader_vbo_config.max_allocation_count = 512;
     tmp->lit_mesh_shader_vbo_config.vbo_size = 1 * GIB;
     ret_renderer = lit_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, &tmp->lit_mesh_shader_vbo_config);
     if(RENDERER_SUCCESS != ret_renderer) {

@@ -32,7 +32,7 @@
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_geometry_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
@@ -106,9 +106,7 @@ resource_registry_result_t lit_mesh_geometry_registry_initialize(size_t max_geom
     tmp_registry->max_geometry_count = max_geometry_count_;
     for(size_t i = 0; i != max_geometry_count_; ++i) {
         tmp_geometry_array[i] = NULL;
-        tmp_vertex_ranges[i].allocation_size = 0;
-        tmp_vertex_ranges[i].draw_range.first_vertex_count = 0;
-        tmp_vertex_ranges[i].draw_range.vertex_count = 0;
+        memset(&tmp_vertex_ranges[i], 0, sizeof(vertex_buffer_range_t));
     }
 
     tmp_registry->geometries = tmp_geometry_array;
@@ -129,9 +127,7 @@ void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* regis
     }
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         lit_mesh_geometry_destroy(&registry_->geometries[i]);  // registry_->geometries[i] == NULLになる
-        registry_->vertex_ranges[i].allocation_size = 0;
-        registry_->vertex_ranges[i].draw_range.first_vertex_count = 0;
-        registry_->vertex_ranges[i].draw_range.vertex_count = 0;
+        memset(&registry_->vertex_ranges[i], 0, sizeof(vertex_buffer_range_t));
     }
 }
 
@@ -223,7 +219,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
     IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "lit_mesh_geometry_registry_register", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_buffer_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "vertex_buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_size, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->allocation_info.range_allocation.allocated_size, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_register", "vertex_buffer_range_->allocation_info.range_allocation.allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_buffer_range_->draw_range.vertex_count, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_register", "vertex_buffer_range_->draw_range.vertex_count")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "out_geometry_id_")
 
@@ -296,9 +292,7 @@ resource_registry_result_t lit_mesh_geometry_registry_unregister(lit_mesh_geomet
     }
 
     lit_mesh_geometry_destroy(&registry_->geometries[geometry_id_]);
-    registry_->vertex_ranges[geometry_id_].allocation_size = 0;
-    registry_->vertex_ranges[geometry_id_].draw_range.first_vertex_count = 0;
-    registry_->vertex_ranges[geometry_id_].draw_range.vertex_count = 0;
+    memset(&registry_->vertex_ranges[geometry_id_], 0, sizeof(vertex_buffer_range_t));
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
