@@ -305,6 +305,8 @@ renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* 
     vertex_allocation_t tmp_alloc_handle = { 0 };
     size_t write_size = 0;
 
+    bool vbo_written = false;
+
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "vertices_")
@@ -324,6 +326,8 @@ renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* 
         ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+    vbo_written = true;
+
     if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(point_vertex_t))) {
         ret = RENDERER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
@@ -337,7 +341,15 @@ renderer_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* 
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    // TODO: range_allocatorの2-phase allocation完成後、ロールバックを追加する
+    if(RENDERER_SUCCESS != ret && vbo_written) {
+        // NOTE: vbo_manager_freeが失敗した場合はvbo_managerにデータ不整合が発生しているため、
+        // point_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+        ret_buff_mgr = vbo_manager_free(point_mesh_shader_->vbo_manager, &tmp_alloc_handle);
+        if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+            ret = RENDERER_DATA_CORRUPTED;
+            ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo free failed.", renderer_rslt_to_str(ret));
+        }
+    }
     return ret;
 }
 

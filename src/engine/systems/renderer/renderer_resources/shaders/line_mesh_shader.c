@@ -305,8 +305,8 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     vertex_allocation_t tmp_alloc_handle = { 0 };
-
     size_t write_size = 0;
+    bool vbo_written = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_is_initialized(line_mesh_shader_), ret, RENDERER_INVALID_ARGUMENT, renderer_rslt_to_str(RENDERER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "line_mesh_shader_")
@@ -328,6 +328,8 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
         goto cleanup;
     }
+    vbo_written = true;
+
     if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(line_vertex_t))) {
         ret = RENDERER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", renderer_rslt_to_str(ret));
@@ -341,7 +343,15 @@ renderer_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* b
     ret = RENDERER_SUCCESS;
 
 cleanup:
-    // TODO: range_allocatorの2-phase allocation完成後、ロールバックを追加する
+    if(RENDERER_SUCCESS != ret && vbo_written) {
+        // NOTE: vbo_manager_freeが失敗した場合はvbo_managerにデータ不整合が発生しているため、
+        // line_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+        ret_buff_mgr = vbo_manager_free(line_mesh_shader_->vbo_manager, &tmp_alloc_handle);
+        if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+            ret = RENDERER_DATA_CORRUPTED;
+            ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo free failed.", renderer_rslt_to_str(ret));
+        }
+    }
     return ret;
 }
 
