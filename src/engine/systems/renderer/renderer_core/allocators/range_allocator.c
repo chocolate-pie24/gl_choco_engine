@@ -154,6 +154,13 @@
  * status取得は破損状態でも管理値を観測できるよう、NULL checkだけを行い、
  * range listの走査やdeep validationを実行しない。
  *
+ * @date 2026-07-31
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
