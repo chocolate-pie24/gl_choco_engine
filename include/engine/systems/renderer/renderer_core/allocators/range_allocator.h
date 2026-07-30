@@ -468,7 +468,8 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  * @retval RANGE_ALLOCATOR_OVERFLOW
  * 次のいずれか。
  * - required_size_へalignment paddingを加えるとsize_tの表現可能範囲を超える
- * - FREE range分割時の後方FREE nodeのoffset計算がsize_tの表現可能範囲を超える
+ * - FREE range分割時に後方FREE nodeのoffsetを計算するとsize_tの表現可能範囲を超える
+ * - 後方FREE nodeのoffsetとblock sizeからrange終端を計算するとsize_tの表現可能範囲を超える
  *
  * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * 次のいずれか。
@@ -515,16 +516,402 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  */
 range_allocator_result_t range_allocator_allocate(range_allocator_t* range_allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
 
+/**
+ * @brief allocation descriptorが表すrangeを解放する
+ *
+ * @details
+ * allocation_のowner、node index、offset、およびallocated sizeを検証し、
+ * 対応するALLOCATED nodeを特定してFREE状態へ遷移させる。
+ *
+ * 対象nodeの前後にFREE nodeが存在する場合は、次のいずれかの方法で
+ * 隣接rangeをmergeする。
+ *
+ * - 前後ともFREEではない場合、対象nodeだけをFREEへ遷移させる
+ * - 前方だけがFREEの場合、対象rangeを前方FREE rangeへ統合する
+ * - 後方だけがFREEの場合、対象rangeを後方FREE rangeと統合する
+ * - 前後ともFREEの場合、三つのrangeを一つのFREE rangeへ統合する
+ *
+ * mergeによって不要になったnodeはrange listから切断し、
+ * create時に事前確保されたnode poolへNOT_USED nodeとして返却する。
+ *
+ * @par Free保証
+ * 内部状態が正常であり、range_allocator_allocate()が返した変更されていない
+ * live allocation descriptorを、そのownerであるRange Allocatorへ渡した場合、
+ * 本関数は成功する。
+ *
+ * freeでは新しいnodeの取得、動的メモリ確保、および動的メモリ解放を行わない。
+ * したがって、validなfreeがnode不足やメモリ不足を理由として失敗することはない。
+ *
+ * この保証により、range_allocator_allocate()の成功後に上位処理が失敗した場合、
+ * 確保したrangeを解放してallocate前の状態へrollbackできる。
+ *
+ * @param[in,out] range_allocator_
+ * allocation_のownerであるRange Allocator。
+ * 成功時はrange list、node pool、管理値、およびnodeのstateが更新される。
+ *
+ * @param[in] allocation_
+ * 解放するrangeを表すallocation descriptor。
+ *
+ * 本関数はdescriptor自体を変更しない。
+ * 成功後も各fieldの値は残るが、live allocationを表さなくなるため、
+ * 再度本関数へ渡してはならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * descriptorに対応するrangeの解放と、必要な隣接FREE rangeのmergeに成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはallocation_がNULLである。
+ *
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
+ * 次のいずれか。
+ * - allocation_->allocated_sizeが現在のtotal allocated sizeを超えている
+ * - range_allocator_にlive allocationが存在しない
+ * - allocation_->allocated_sizeが0
+ * - allocation_->ownerがrange_allocator_と一致しない
+ * - allocation_->node_indexがnode poolの範囲外
+ * - 対応nodeのstateがALLOCATEDではない
+ * - 対応nodeのblock sizeがallocation_->allocated_sizeと一致しない
+ * - 対応nodeのoffsetがallocation_->offsetと一致しない
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * 次のいずれか。
+ * - Range Allocatorが内部不変条件を満たしていない
+ * - range listがmax node count以内に終端へ到達しない
+ * - range list上のnodeがnode poolに所属していない
+ * - nodeのstate、range情報、alignment、または接続関係に不整合がある
+ * - node数、allocation count、unused node count、または
+ *   total allocated sizeが実際のnode状態と一致しない
+ * - descriptorに対応するnodeまたは隣接FREE nodeが局所的不変条件を満たしていない
+ * - descriptorの解決後に、merge対象node、range list、range、
+ *   またはnode poolの不整合を検出した
+ * - 隣接rangeの終端またはmerge後のblock size計算でoverflowを検出した
+ * - 不要になったnodeをrange listから切断またはnode poolへ返却できなかった
+ *
+ * @post 成功時は次が成立する。
+ * - allocation_が表していたrangeはFREE rangeへ統合される
+ * - allocation countが1減少する
+ * - total allocated sizeがallocation_->allocated_sizeだけ減少する
+ * - range listに隣接する二つのFREE nodeは存在しない
+ * - range listはmemory pool全体を引き続き隙間なく表現する
+ * - allocation_自体の内容は変更されない
+ *
+ * @post mergeを行わない場合、unused node countは変更されない。
+ *
+ * @post 前方または後方の一方とmergeした場合、
+ *       unused node countが1増加する。
+ *
+ * @post 前後両方とmergeした場合、unused node countが2増加する。
+ *
+ * @post nodeおよびrange listの状態変更を開始する前に失敗した場合、
+ *       Range Allocatorとallocation_の内容は変更されない。
+ *
+ * @warning
+ * range listからnodeを切断した後に内部データ破損が検出された場合、
+ * 呼び出し前の状態へrollbackできない可能性がある。
+ *
+ * この場合はRANGE_ALLOCATOR_DATA_CORRUPTEDを返すが、
+ * allocation countとtotal allocated sizeはcommitされず、
+ * Range Allocatorの内部状態が呼び出し前と異なる可能性がある。
+ *
+ * @warning
+ * descriptorはnode generationを保持しない。
+ * 解放済みnodeが別のallocationへ再利用され、owner、node index、offset、
+ * allocated sizeがすべて一致した場合、stale descriptorを検出できない。
+ *
+ * @note
+ * 本関数はRANGE_ALLOCATOR_NO_MEMORYおよび
+ * RANGE_ALLOCATOR_LIMIT_EXCEEDEDを返さない。
+ *
+ * merge処理中に算術overflowが検出された場合は、
+ * validなrangeでは発生しない内部不整合として
+ * RANGE_ALLOCATOR_DATA_CORRUPTEDを返す。
+ *
+ * @par 計算量
+ * 現在の実装では、API入口でO(n^2)のdeep validationを実行する。
+ *
+ * deep validationを除いた場合、mergeを行わないfreeはO(1)である。
+ * mergeを行うfreeは、nodeの所属確認のためnode poolを線形探索するためO(n)である。
+ * ここでnはmax node countである。
+ *
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @see range_allocator_allocate
+ * @see range_allocation_t
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が内容を確認・修正した。
+ */
 range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator_, const range_allocation_t* allocation_);
 
 // range_allocator_result_t range_allocator_validate(const range_allocator_t* range_allocator_, range_allocator_validation_result_t* out_validation_result_);
 
 // void range_allocator_validation_result_print(const range_allocator_validation_result_t* validation_result_);
 
+/**
+ * @brief Range Allocatorの状態snapshotを取得する
+ *
+ * @details
+ * range_allocator_が保持する容量、alignment、node使用状況、および
+ * allocation状況をrange_allocator_status_tへ格納する。
+ *
+ * 本関数は、内部データが破損している場合でも管理値を観測できるよう、
+ * pointerのNULLチェック以外のvalidationを行わない。
+ * node poolおよびrange listを走査せず、Range Allocatorが保持する
+ * cached管理値だけを使用する。
+ *
+ * 次の値はRange Allocatorが保持する管理値をそのまま取得する。
+ *
+ * - memory pool size
+ * - base alignment
+ * - max node count
+ * - max allocation count
+ * - total allocated size
+ * - unused node count
+ * - allocation count
+ *
+ * 次の値は管理値からO(1)で導出する。
+ *
+ * @code{.c}
+ * total_free_size = memory_pool_size - total_allocated_size;
+ * used_node_count = max_node_count - unused_node_count;
+ * free_block_count = used_node_count - allocation_count;
+ * @endcode
+ *
+ * 内部データの不整合によっていずれかの減算がunderflowする場合は、
+ * 対応する出力値を0へ飽和させる。
+ *
+ * @param[in] range_allocator_
+ * 状態を取得するRange Allocator。
+ * NULLの場合は何も行わない。
+ *
+ * 本関数はRange Allocator、node pool、およびrange listを変更しない。
+ *
+ * @param[out] out_status_
+ * 状態snapshotの格納先。
+ *
+ * range_allocator_とout_status_がともにNULLでない場合、
+ * すべてのfieldが設定される。
+ * NULLの場合は何も行わない。
+ *
+ * @post
+ * range_allocator_とout_status_がともにNULLでない場合、
+ * out_status_は呼び出し時点におけるRange Allocatorの管理値と、
+ * それらから導出した状態値を保持する。
+ *
+ * @post
+ * range_allocator_またはout_status_がNULLの場合、
+ * out_status_の内容は変更されない。
+ *
+ * @post
+ * Range Allocator、node pool、およびrange listの状態は変更されない。
+ *
+ * @note
+ * 本関数はrange listを走査しないため、free_block_countは
+ * FREE nodeを直接数えた値ではない。
+ *
+ * 内部状態が正常であれば、管理値から導出したfree_block_countは
+ * range list上のFREE node数と一致する。
+ *
+ * @note
+ * total_free_sizeはすべてのFREE rangeの合計サイズであり、
+ * 最大の連続FREE rangeサイズではない。
+ *
+ * したがって、total_free_sizeが要求サイズ以上であっても、
+ * 断片化によってallocationに失敗する場合がある。
+ *
+ * @note
+ * 本関数はdeep validationを行わない。
+ * 取得したsnapshotだけでは、node pool、range list、または
+ * cached管理値の整合性を保証できない。
+ *
+ * @par 計算量
+ * node poolおよびrange listを走査しないため、
+ * 時間計算量はO(1)である。
+ *
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @see range_allocator_status_t
+ * @see range_allocator_status_print
+ * @see range_allocator_debug_print
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が内容を確認・修正した。
+ */
 void range_allocator_status_get(const range_allocator_t* range_allocator_, range_allocator_status_t* out_status_);
 
+/**
+ * @brief Range Allocatorの状態snapshotを標準出力へ表示する
+ *
+ * @details
+ * status_が保持する容量、alignment、node使用状況、および
+ * allocation状況をstdoutへ表示する。
+ *
+ * 次の情報を出力する。
+ *
+ * - memory usage percent
+ * - memory pool size
+ * - base alignment
+ * - max node count
+ * - max allocation count
+ * - total allocated size
+ * - total free size
+ * - unused node count
+ * - free block count
+ * - used node count
+ * - allocation count
+ *
+ * memory usage percentは次の式で計算する。
+ *
+ * @code{.c}
+ * memory_usage_percent =
+ *     total_allocated_size / memory_pool_size * 100.0;
+ * @endcode
+ *
+ * memory pool sizeが0の場合は除算を行わず、
+ * memory poolが0であることを示すメッセージを表示する。
+ *
+ * 出力全体をflockfile()とfunlockfile()で囲み、
+ * 同じstdout streamへ協調的に出力する他のthreadとの
+ * 行単位の混在を抑止する。
+ *
+ * 出力には見出しとANSI color sequenceが含まれる。
+ *
+ * @param[in] status_
+ * 表示するRange Allocatorの状態snapshot。
+ *
+ * NULLの場合もno-opにはせず、status_がNULLであることを示す
+ * メッセージをstdoutへ表示する。
+ *
+ * @post
+ * status_の内容は変更されない。
+ *
+ * @note
+ * 本関数はRange Allocatorから状態を取得しない。
+ * 現在の状態を表示する場合は、事前にrange_allocator_status_get()を使用して
+ * status_へsnapshotを取得する必要がある。
+ *
+ * @note
+ * status_内の各fieldの整合性は検証しない。
+ * 内部的に矛盾した値を保持するsnapshotであっても、その内容を表示する。
+ *
+ * @note
+ * fprintf()によるstdoutへの書き込み失敗は呼び出し側へ通知しない。
+ *
+ * @par 計算量
+ * 固定数のfieldを出力するため、時間計算量はO(1)である。
+ *
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @see range_allocator_status_get
+ * @see range_allocator_status_t
+ * @see range_allocator_debug_print
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が内容を確認・修正した。
+ */
 void range_allocator_status_print(const range_allocator_status_t* status_);
 
+/**
+ * @brief Range Allocatorの内部状態を標準出力へdebug表示する
+ *
+ * @details
+ * Range Allocatorの状態snapshot、deep validation結果、および
+ * range list上の各nodeをstdoutへ表示する。
+ *
+ * はじめにrange_allocator_status_get()と同じ状態情報を表示し、
+ * 続いてrange_allocator_is_valid()によるdeep validation結果を
+ * trueまたはfalseで表示する。
+ *
+ * range listについて、先頭nodeからaddress orderで走査し、
+ * 各nodeの次の情報を表示する。
+ *
+ * - range list上の走査index
+ * - node state
+ * - range開始offset
+ * - block size
+ * - range終端
+ *
+ * node stateは次のいずれかの文字列として表示する。
+ *
+ * - ALLOCATED
+ * - FREE
+ * - TRANSITIONING
+ * - NOT_USED
+ * - UNDEFINED
+ *
+ * range終端はoffsetとblock sizeの加算によって求める。
+ * 加算がsize_tの表現可能範囲を超える場合は、演算を行わず
+ * `end = OVERFLOW`と表示する。
+ *
+ * @par Range listの走査制限
+ * range listの走査node数はmax node countを上限とする。
+ *
+ * max node count個のnodeを表示した後も次nodeが存在する場合は走査を打ち切り、
+ * range listのcycleまたはnode数不整合の可能性を示す
+ * `range_node_traversal = TRUNCATED`メッセージを表示する。
+ *
+ * @par 最大FREE block
+ * 走査したFREE nodeのblock sizeからmax free block sizeを求めて表示する。
+ *
+ * FREE nodeが存在しない場合は0となる。
+ * range listの走査が打ち切られた場合は、走査できた範囲だけを対象とした値となる。
+ *
+ * @param[in] range_allocator_
+ * debug表示するRange Allocator。
+ *
+ * NULLの場合は何も表示せずに終了する。
+ * 本関数はRange Allocator、node pool、およびrange listを変更しない。
+ *
+ * @post
+ * range_allocator_がNULLでない場合、状態snapshot、deep validation結果、
+ * range list上の各node、およびmax free block sizeがstdoutへ表示される。
+ *
+ * @post
+ * Range Allocator、node pool、およびrange listの状態は変更されない。
+ *
+ * @note
+ * 状態snapshotはcached管理値からO(1)で取得される。
+ * 内部データの不整合によって減算がunderflowする場合、
+ * 導出値は0へ飽和される。
+ *
+ * @note
+ * stdoutへの出力全体をflockfile()とfunlockfile()で囲み、
+ * 同じstreamへ協調的に出力する他のthreadとの行単位の混在を抑止する。
+ *
+ * stdoutのlockはRange Allocator自体を保護しない。
+ * 本関数の実行中に、別のthreadから同じRange Allocatorを
+ * allocate、free、またはdestroyしてはならない。
+ *
+ * @warning
+ * 本関数はcycleや過剰なnode数による無制限走査を防止するが、
+ * range list内のpointerが参照不可能なaddressを指している状態から
+ * 保護するものではない。
+ *
+ * そのようなpointer破損がある場合、本関数によるnode情報の参照は
+ * 未定義動作となる可能性がある。
+ *
+ * @note
+ * fprintf()によるstdoutへの書き込み失敗は呼び出し側へ通知しない。
+ * 出力には見出しとANSI color sequenceが含まれる。
+ *
+ * @par 計算量
+ * 現在の実装では、最初にO(n^2)のdeep validationを実行する。
+ * その後のrange list走査は最大O(n)であるため、
+ * 本関数全体の最悪時間計算量はO(n^2)である。
+ * ここでnはmax node countである。
+ *
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @see range_allocator_status_get
+ * @see range_allocator_status_print
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が内容を確認・修正した。
+ */
 void range_allocator_debug_print(const range_allocator_t* range_allocator_);
 
 #ifdef __cplusplus

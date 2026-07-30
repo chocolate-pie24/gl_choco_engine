@@ -597,7 +597,7 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
 
     IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "range_allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "allocation_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->total_allocated_size >= allocation_->allocated_size, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, rslt_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "range_allocator_free", "allocation_->allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(range_allocator_->total_allocated_size >= allocation_->allocated_size, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_free", "allocation_->allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(0 < range_allocator_->allocation_count, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_free", "range_allocator_->allocation_count")
 
     if(!range_allocator_is_valid(range_allocator_)) {
@@ -608,7 +608,6 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
 
     ret = allocation_resolve_node(range_allocator_, allocation_, &tmp_node);
     if(RANGE_ALLOCATOR_SUCCESS != ret) {
-        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;// range_allocator_およびallocation_が正常であれば失敗しないはずなのでDATA_CORRUPTED
         ERROR_MESSAGE("range_allocator_free(%s) - range_allocator_free failed.", rslt_to_str(ret));
         goto cleanup;
     }
