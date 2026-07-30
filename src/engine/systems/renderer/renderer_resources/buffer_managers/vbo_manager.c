@@ -105,8 +105,9 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
 cleanup:
     if(BUFFER_MANAGER_SUCCESS != ret) {
         if(vbo_created) {
-            if(vbo_bound) {
-                renderer_backend_vertex_buffer_unbind(backend_context_);
+            if(vbo_bound && RENDERER_SUCCESS != renderer_backend_vertex_buffer_unbind(backend_context_)) {
+                ret = BUFFER_MANAGER_DATA_CORRUPTED;
+                ERROR_MESSAGE("renderer_backend_vertex_buffer_unbind failed.");
             }
             renderer_backend_vertex_buffer_destroy(backend_context_, &tmp_vbo);
         }
@@ -196,17 +197,17 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
 cleanup:
     if(allocate_success) {
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
-            ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);   // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
+            // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
+            if(RANGE_ALLOCATOR_SUCCESS != range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation)) {
                 ret = BUFFER_MANAGER_DATA_CORRUPTED;
                 ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
             }
         }
         if(vbo_bound) {
-            ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-            // NOTE: unbindが失敗した場合はunbindの実行結果コードではなく、vbo_manager_writeの実行結果コードを優先する
-            if(RENDERER_SUCCESS != ret_renderer) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(buffer_manager_rslt_convert_renderer(ret_renderer)));
+            // backend_context_の内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
+            if(RENDERER_SUCCESS != renderer_backend_vertex_buffer_unbind(backend_context_)) {
+                ret = BUFFER_MANAGER_DATA_CORRUPTED;
+                ERROR_MESSAGE("vbo_manager_write(%s) - vbo_manager_write failed.", buffer_manager_rslt_to_str(ret));
             }
         }
     }
@@ -224,9 +225,12 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vert
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->range_allocation.allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->range_allocation.allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
 
-    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &allocation_handle_->range_allocation);    // range_allocatorの内部データ不整合が発生していなければ成功するはず
+    // NOTE:
+    // - range_allocatorの内部データ不整合: DATA_CORRUPTED
+    // - vbo_manager_とallocation_handle_の不整合: BAD_OPERATION
+    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &allocation_handle_->range_allocation);
     if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
         ERROR_MESSAGE("vbo_manager_free(%s) - vbo_manager_free failed.", buffer_manager_rslt_to_str(ret));
         goto cleanup;
     }
@@ -340,6 +344,9 @@ static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_) {
         return false;
     }
     if(0 == vbo_manager_->config.base_align || !IS_POWER_OF_TWO(vbo_manager_->config.base_align)) {
+        return false;
+    }
+    if(BUFFER_USAGE_DYNAMIC != vbo_manager_->config.buffer_usage && BUFFER_USAGE_STATIC != vbo_manager_->config.buffer_usage) {
         return false;
     }
     return true;
