@@ -353,6 +353,8 @@ typedef struct node {
  * - total_allocated_sizeはmemory_pool_size以下である
  * - range list接続node数とunused_node_countの合計はmax_node_countと一致する
  *
+ * @todo Free Blockの最大値としてmax_free_block_sizeを保持する
+ *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
@@ -403,7 +405,7 @@ static range_allocator_result_t find_first_fit_node(const range_allocator_t* ran
 static range_allocator_result_t allocate_from_node(range_allocator_t* range_allocator_, node_t* node_, size_t allocation_size_);
 
 // Free
-static range_allocator_result_t allocation_resolve_node(range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_);
+static range_allocator_result_t allocation_resolve_node(const range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_);
 static range_allocator_result_t free_merge_plan_get(const node_t* node_, bool* out_should_merge_prev_, bool* out_should_merge_next_);
 static range_allocator_result_t free_from_node(range_allocator_t* range_allocator_, node_t* node_, bool should_merge_prev_, bool should_merge_next_);
 static range_allocator_result_t free_node_without_merge(node_t* node_);
@@ -426,7 +428,6 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
 static bool range_allocator_is_valid(const range_allocator_t* range_allocator_);            // deep validation
 static bool range_allocator_is_valid_shallow(const range_allocator_t* range_allocator_);    // shallow validation
 static bool node_is_valid(const node_t* node_);
-static bool range_is_valid(const range_allocator_t* range_allocator_, size_t offset_, size_t block_size_);
 
 // Utilities
 static void status_print(const range_allocator_status_t* status_);
@@ -774,6 +775,7 @@ void range_allocator_debug_print(const range_allocator_t* range_allocator_) {
  *
  * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
  * 次のいずれか。
+ *
  * - out_allocation_size_がNULL
  * - base_align_が0
  * - required_size_が0
@@ -785,17 +787,22 @@ void range_allocator_debug_print(const range_allocator_t* range_allocator_) {
  * この結果は呼び出し元の内部状態または事前検証に不整合があることを示す。
  *
  * @retval RANGE_ALLOCATOR_OVERFLOW
- * required_size_へalignment paddingを加えるとsize_tの表現可能範囲を超える。
+ * required_size_へalignment paddingを加えると
+ * size_tの表現可能範囲を超える。
  *
- * @post 成功時は次が成立する。
+ * @post
+ * 成功時は次が成立する。
+ *
  * - *out_allocation_size_はrequired_size_以上である
  * - *out_allocation_size_はbase_align_の倍数である
  * - *out_allocation_size_とrequired_size_の差はbase_align_未満である
  *
- * @post 失敗時、*out_allocation_size_は変更されない。
+ * @post
+ * 失敗時、*out_allocation_size_は変更されない。
  *
  * @par 計算量
- * 時間計算量および追加空間計算量はO(1)である。
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保を行わない。
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
@@ -1061,7 +1068,9 @@ cleanup:
  * max node countの設計上、この結果は発生しない。
  *
  * @retval RANGE_ALLOCATOR_OVERFLOW
- * node_のoffsetへallocation_size_を加えるとsize_tの表現可能範囲を超える。
+ * 次のいずれか。
+ * - node_のoffsetへallocation_size_を加えるとsize_tの表現可能範囲を超える
+ * - 後方FREE nodeのoffsetとblock sizeからrange終端を計算するとsize_tの表現可能範囲を超える
  *
  * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * 次のいずれか。
@@ -1249,17 +1258,17 @@ cleanup:
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-static range_allocator_result_t allocation_resolve_node(range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_) {
+static range_allocator_result_t allocation_resolve_node(const range_allocator_t* range_allocator_, const range_allocation_t* allocation_info_, node_t** out_node_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "range_allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "allocation_info_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_", "*out_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != range_allocator_->allocation_count, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_", "range_allocator_->allocation_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_info_->allocated_size, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "range_allocator_", "allocation_info_->allocated_size")
+    IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "range_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "allocation_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "out_node_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "*out_node_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != range_allocator_->allocation_count, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocation_resolve_node", "range_allocator_->allocation_count")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_info_->allocated_size, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocation_resolve_node", "allocation_info_->allocated_size")
 
     if(range_allocator_ != allocation_info_->owner) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
@@ -1334,6 +1343,9 @@ cleanup:
  * 後方FREE nodeとmergeする必要がある場合はtrue、
  * それ以外の場合はfalseが格納される。
  * 成功時のみ値が設定され、失敗時は変更されない。
+ *
+ * @pre
+ * node_のstateはNODE_STATE_ALLOCATEDでなければならない。
  *
  * @pre
  * node_->prevおよびnode_->nextがNULLではない場合、
@@ -1469,7 +1481,6 @@ cleanup:
  * 次のいずれか。
  * - node_のstateがALLOCATEDではない
  * - merge対象として指定された隣接nodeがFREEではない
- * - merge方針がnode_の実際の隣接状態と一致していない
  *
  * @retval RANGE_ALLOCATOR_OVERFLOW
  * 隣接rangeの終端またはmerge後のblock size計算が
@@ -1477,10 +1488,9 @@ cleanup:
  *
  * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * 次のいずれか。
- * - node_または隣接nodeが局所的不変条件を満たしていない
- * - node_または隣接nodeがnode poolに所属していない
- * - range listの双方向接続またはrangeの隣接関係に不整合がある
- * - 不要nodeをrange listから切断またはnode poolへreleaseできない
+ * - node_が局所的不変条件を満たしていない
+ * - dispatch先のfree処理がnode、range list、range、または
+ *   node poolの不整合を検出した
  *
  * @post 成功時は、node_と隣接FREE nodeの関係に応じて次が成立する。
  * - mergeなし: node_がFREEへ遷移する
@@ -1645,6 +1655,9 @@ cleanup:
  * @pre
  * 前方FREE nodeの終端はnode_のoffsetと一致していなければならない。
  *
+ * @pre
+ * node_->nextはNULLであるか、FREE以外のstateでなければならない。
+ *
  * @retval RANGE_ALLOCATOR_SUCCESS
  * node_を前方FREE nodeへmergeしてfreeすることに成功した。
  *
@@ -1753,7 +1766,6 @@ static range_allocator_result_t free_node_merge_prev(range_allocator_t* range_al
     ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    // NOTE: この関数が失敗するのはrange_allocatorのデータが破損している場合なのでロールバック不可
     return ret;
 }
 
@@ -1922,7 +1934,6 @@ static range_allocator_result_t free_node_merge_next(range_allocator_t* range_al
     ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
-    // NOTE: この関数が失敗するのはrange_allocatorのデータが破損している場合なのでロールバック不可
     return ret;
 }
 
@@ -2137,6 +2148,69 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief node poolから未使用nodeを取得してTRANSITIONING状態へ遷移させる
+ *
+ * @details
+ * node poolを先頭から走査し、最初に見つかったNOT_USED nodeへ
+ * offset_とblock_size_を設定してTRANSITIONING状態へ遷移させる。
+ *
+ * 成功時はunused node countを1減らし、取得したnodeをout_node_へ設定する。
+ * 取得したnodeはrange listへ接続されておらず、prevとnextはNULLである。
+ *
+ * 本関数はrange list、allocation count、およびtotal allocated sizeを変更しない。
+ * また、動的メモリ確保を行わない。
+ *
+ * @param[in,out] range_allocator_ node poolを所有するRange Allocator。
+ * @param[in] offset_ 取得したnodeへ設定するrange開始offset。
+ * @param[in] block_size_ 取得したnodeへ設定するrangeサイズ。
+ * @param[in,out] out_node_ 取得したTRANSITIONING nodeの出力先。呼び出し時はNULLを保持していなければならない。
+ *
+ * @pre
+ * range_allocator_に対するshallow validationまたはdeep validationが
+ * 呼び出し前に完了していなければならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * NOT_USED nodeの取得に成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはout_node_がNULL、もしくは
+ * out_node_が呼び出し時にNULLを保持していない。
+ *
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
+ * block_size_が0、または指定rangeが管理対象範囲を超えている。
+ *
+ * @retval RANGE_ALLOCATOR_OVERFLOW
+ * offset_とblock_size_の加算がsize_tの表現可能範囲を超える。
+ *
+ * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
+ * unused node countが0であり、取得可能なnodeが存在しない。
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * unused node countが0ではないにもかかわらずNOT_USED nodeが見つからない、
+ * または見つかったNOT_USED nodeの内部状態が不正である。
+ *
+ * @post
+ * 成功時、out_node_は指定されたrangeを保持するTRANSITIONING nodeを指し、
+ * unused node countは呼び出し前から1減少する。
+ *
+ * @post
+ * 失敗時、node pool、range list、unused node count、および
+ * out_node_の内容は変更されない。
+ *
+ * @warning
+ * 成功時に返されるnodeはprivate操作途中の一時的な状態である。
+ * public APIから戻る前にFREE、ALLOCATED、またはNOT_USEDの
+ * 安定状態へ遷移させなければならない。
+ *
+ * @par 計算量
+ * node pool内のnode数をnとしたとき、最悪時間計算量はO(n)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t node_acquire(range_allocator_t* range_allocator_, size_t offset_, size_t block_size_, node_t** out_node_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -2146,7 +2220,18 @@ static range_allocator_result_t node_acquire(range_allocator_t* range_allocator_
     IF_ARG_NULL_GOTO_CLEANUP(range_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "range_allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "out_node_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "*out_node_")
-    IF_ARG_FALSE_GOTO_CLEANUP(range_is_valid(range_allocator_, offset_, block_size_), ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "range")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != block_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, rslt_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "block_size_")
+
+    if((SIZE_MAX - block_size_) < offset_) {
+        ret = RANGE_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("node_acquire(%s) - node_acquire failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(range_allocator_->memory_pool_size < (offset_ + block_size_)) {
+        ret = RANGE_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("node_acquire(%s) - node_acquire failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     if(0 == range_allocator_->unused_node_count) {
         ret = RANGE_ALLOCATOR_LIMIT_EXCEEDED;
@@ -2185,6 +2270,100 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief TRANSITIONING nodeをrange listへ接続して安定stateへ遷移させる
+ *
+ * @details
+ * insert_node_をprev_とnext_の間へ接続し、next_state_で指定された
+ * FREEまたはALLOCATED状態へ遷移させる。
+ *
+ * 次の四つの挿入位置に対応する。
+ *
+ * - prev_とnext_がともにNULL: 空のrange listへ挿入する
+ * - prev_がNULL: range listの先頭へ挿入する
+ * - prev_とnext_がともに非NULL: 隣接する二つのnode間へ挿入する
+ * - next_がNULL: range listの末尾へ挿入する
+ *
+ * 挿入位置の接続関係を検証した後、必要に応じてrange list headと
+ * 隣接nodeを更新し、insert_node_のprev、next、およびstateを設定する。
+ *
+ * 本関数はinsert_node_のoffsetとblock size、unused node count、
+ * allocation count、およびtotal allocated sizeを変更しない。
+ *
+ * insert_node_のrangeがprev_とnext_の間にaddress orderで位置すること、
+ * 隣接rangeと重複しないこと、およびprev_とnext_がnode poolに
+ * 所属することは検証しない。これらは呼び出し元の責務とする。
+ *
+ * @param[in,out] range_allocator_
+ * insert_node_を接続するRange Allocator。
+ *
+ * @param[in,out] insert_node_
+ * range listへ接続するTRANSITIONING node。
+ *
+ * @param[in] next_state_
+ * 挿入後のnode state。NODE_STATE_FREEまたは
+ * NODE_STATE_ALLOCATEDでなければならない。
+ *
+ * @param[in,out] prev_
+ * insert_node_の直前へ接続するnode。
+ * range listの先頭へ挿入する場合はNULL。
+ *
+ * @param[in,out] next_
+ * insert_node_の直後へ接続するnode。
+ * range listの末尾へ挿入する場合はNULL。
+ *
+ * @pre
+ * 本関数を含むprivate操作シーケンスの開始前に、
+ * range_allocator_に対するshallow validationまたはdeep validationが
+ * 完了していなければならない。
+ *
+ * @pre
+ * insert_node_はrange_allocator_のnode poolから取得された
+ * TRANSITIONING nodeであり、有効なrange情報を保持していなければならない。
+ *
+ * @pre
+ * prev_とnext_がNULLでない場合、それぞれinsert_node_とは異なる
+ * range list上のnodeでなければならない。
+ *
+ * @pre
+ * insert_node_のrangeはaddress order上でprev_とnext_の間に位置し、
+ * 隣接rangeと重複してはならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * insert_node_の接続と指定stateへの遷移に成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはinsert_node_がNULLである。
+ *
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
+ * insert_node_がTRANSITIONING状態ではない、next_state_が
+ * FREE／ALLOCATEDではない、またはprev_とnext_が同じnodeを指している。
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * insert_node_の局所状態が不正、または指定された挿入位置と
+ * range list headおよびprev／nextの接続関係が整合していない。
+ *
+ * @post
+ * 成功時、insert_node_はprev_とnext_の間へ接続され、
+ * stateはnext_state_と一致する。
+ *
+ * @post
+ * 成功時、prev_とnext_がNULLでなければ、それぞれinsert_node_を
+ * 隣接nodeとして指す。prev_がNULLの場合はinsert_node_が
+ * range list headとなる。
+ *
+ * @post
+ * 失敗時、range list、range list head、insert_node_、
+ * および隣接nodeの状態は変更されない。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t node_insert_between(range_allocator_t* range_allocator_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -2196,21 +2375,21 @@ static range_allocator_result_t node_insert_between(range_allocator_t* range_all
 
     if(NULL != prev_ && NULL != next_ && prev_ == next_) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ point to the same node, insert_offset=%zu, insert_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size);
+        ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into range list. reason=prev_ and next_ point to the same node, insert_offset=%zu, insert_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size);
         goto cleanup;
     }
 
     if(NULL == prev_ && NULL == next_) {
         if(NULL != range_allocator_->range_list_head) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=insert position indicates empty list but range_list_head is not NULL, insert_offset=%zu, insert_block_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, range_allocator_->range_list_head->offset, range_allocator_->range_list_head->block_size);
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into range list. reason=insert position indicates empty list but range_list_head is not NULL, insert_offset=%zu, insert_block_size=%zu, head_offset=%zu, head_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, range_allocator_->range_list_head->offset, range_allocator_->range_list_head->block_size);
             goto cleanup;
         }
         range_allocator_->range_list_head = insert_node_;
     } else if(NULL == prev_ && NULL != next_) {
         if(next_ != range_allocator_->range_list_head || NULL != range_allocator_->range_list_head->prev) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=invalid head insert position, insert_offset=%zu, insert_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, next_->offset, next_->block_size);
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into range list. reason=invalid head insert position, insert_offset=%zu, insert_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
         next_->prev = insert_node_;
@@ -2218,7 +2397,7 @@ static range_allocator_result_t node_insert_between(range_allocator_t* range_all
     } else if(NULL != prev_ && NULL != next_) {
         if(prev_->next != next_ || prev_ != next_->prev) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ and next_ are not linked, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size, next_->offset, next_->block_size);
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into range list. reason=prev_ and next_ are not linked, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu, next_offset=%zu, next_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size, next_->offset, next_->block_size);
             goto cleanup;
         }
         prev_->next = insert_node_;
@@ -2226,7 +2405,7 @@ static range_allocator_result_t node_insert_between(range_allocator_t* range_all
     } else if(NULL != prev_ && NULL == next_) {
         if(NULL != prev_->next) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into free list. reason=prev_ already has next for tail insertion, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size);
+            ERROR_MESSAGE("node_insert_between(%s) - Failed to insert node into range list. reason=prev_ already has next for tail insertion, insert_offset=%zu, insert_block_size=%zu, prev_offset=%zu, prev_block_size=%zu.", rslt_to_str(ret), insert_node_->offset, insert_node_->block_size, prev_->offset, prev_->block_size);
             goto cleanup;
         }
         prev_->next = insert_node_;
@@ -2244,6 +2423,90 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief FREEまたはALLOCATED nodeをrange listから切断する
+ *
+ * @details
+ * node_がrange_allocator_のnode poolに所属することを確認し、
+ * node単体の局所状態、node state、および隣接nodeとの相互接続を検証する。
+ *
+ * 検証成功後、次の四つの切断位置に応じてrange listを更新する。
+ *
+ * - node_がrange list上の唯一のnode
+ * - node_がrange listの先頭
+ * - node_が二つのnodeの間
+ * - node_がrange listの末尾
+ *
+ * 切断時は、必要に応じてrange list headと隣接nodeの接続情報を更新する。
+ * その後、node_のoffsetとblock sizeを保持したままprevとnextをNULLにし、
+ * stateをTRANSITIONINGへ遷移させる。
+ *
+ * 本関数はnode_をnode poolへ返却せず、unused node count、
+ * allocation count、およびtotal allocated sizeを変更しない。
+ *
+ * @param[in,out] range_allocator_
+ * node_を切断するRange Allocator。
+ *
+ * @param[in,out] node_
+ * range listから切断するFREEまたはALLOCATED node。
+ *
+ * @pre
+ * 本関数を含むprivate操作シーケンスの開始前に、
+ * range_allocator_に対するshallow validationまたはdeep validationが
+ * 完了していなければならない。
+ *
+ * @pre
+ * node_はrange_allocator_のnode poolに所属し、
+ * range listへ接続されていなければならない。
+ *
+ * @pre
+ * node_のstateはNODE_STATE_FREEまたは
+ * NODE_STATE_ALLOCATEDでなければならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * node_の切断とTRANSITIONING状態への遷移に成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはnode_がNULLである。
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * 次のいずれか。
+ *
+ * - node_がrange_allocator_のnode poolに所属していない
+ * - node_の局所状態が不正である
+ * - node_のstateがFREEまたはALLOCATEDではない
+ * - node_と前方または後方nodeとの相互接続が整合していない
+ * - node_がrange listの先頭位置を表しているにもかかわらず、range list headと一致しない
+ *
+ * @post
+ * 成功時、node_はoffsetとblock sizeを保持した
+ * TRANSITIONING nodeとなり、prevとnextはNULLとなる。
+ *
+ * @post
+ * 成功時、node_はrange listから切断され、range list headと
+ * 隣接nodeの接続情報は切断後の状態へ更新される。
+ *
+ * @post
+ * 成功時もunused node countは変更されない。
+ *
+ * @post
+ * 失敗時、range list、range list head、node_、
+ * および隣接nodeの状態は変更されない。
+ *
+ * @warning
+ * 成功時のnode_はprivate操作途中の一時的な状態である。
+ * public APIから戻る前にrange listへ再接続するか、
+ * node poolへ返却して安定状態へ遷移させなければならない。
+ *
+ * @par 計算量
+ * node_のnode pool所属確認で線形探索を行うため、
+ * node pool内のnode数をnとしたとき、時間計算量はO(n)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t node_remove(range_allocator_t* range_allocator_, node_t* node_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -2263,31 +2526,41 @@ static range_allocator_result_t node_remove(range_allocator_t* range_allocator_,
 
     if(!found) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_allocator_->max_node_count);
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list. reason=requested node was not found in node_pool, offset=%zu, block_size=%zu, node_state=%d, max_node_count=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, node_->node_state, range_allocator_->max_node_count);
         goto cleanup;
     }
     if(!node_is_valid(node_)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node to pool.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list.", rslt_to_str(ret));
         goto cleanup;
     }
     if(NODE_STATE_FREE != node_->node_state && NODE_STATE_ALLOCATED != node_->node_state) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("node_remove(%s) - Failed to remove node to pool.", rslt_to_str(ret));
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL != node_->prev && node_->prev->next != node_) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL != node_->next && node_->next->prev != node_) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list.", rslt_to_str(ret));
         goto cleanup;
     }
 
     if(NULL == node_->prev && NULL == node_->next) {  // node_が唯一のノード
         if(range_allocator_->range_list_head != node_) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev/next but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list. reason=node has no prev/next but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
             goto cleanup;
         }
         range_allocator_->range_list_head = NULL;
     } else if(NULL == node_->prev && NULL != node_->next) {   // node_が先頭で、node_の次に別のノードがある
         if(range_allocator_->range_list_head != node_) {
             ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from free list. reason=node has no prev but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
+            ERROR_MESSAGE("node_remove(%s) - Failed to remove node from range list. reason=node has no prev but is not range_list_head, offset=%zu, block_size=%zu, node_index=%zu.", rslt_to_str(ret), node_->offset, node_->block_size, index);
             goto cleanup;
         }
         range_allocator_->range_list_head = node_->next;
@@ -2309,6 +2582,78 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief TRANSITIONING nodeをnode poolへ返却する
+ *
+ * @details
+ * node_がrange_allocator_のnode poolに所属することを確認し、
+ * node単体の局所状態とTRANSITIONING状態であることを検証する。
+ *
+ * 検証成功後、node_を次のNOT_USED状態へ正規化する。
+ *
+ * - offsetは0
+ * - block sizeは0
+ * - prevとnextはNULL
+ * - stateはNODE_STATE_NOT_USED
+ *
+ * その後、unused node countを1増加させる。
+ *
+ * 本関数はrange list、range list head、allocation count、
+ * およびtotal allocated sizeを変更しない。
+ * また、動的に確保されたメモリを解放する処理ではない。
+ *
+ * @param[in,out] range_allocator_
+ * node_を所有するRange Allocator。
+ *
+ * @param[in,out] node_
+ * node poolへ返却するTRANSITIONING node。
+ *
+ * @pre
+ * 本関数を含むprivate操作シーケンスの開始前に、
+ * range_allocator_に対するshallow validationまたはdeep validationが
+ * 完了していなければならない。
+ *
+ * @pre
+ * node_はrange_allocator_のnode poolに所属する
+ * TRANSITIONING nodeでなければならない。
+ *
+ * @pre
+ * node_はrange listから切断され、prevとnextがNULLでなければならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * node_のnode poolへの返却に成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_またはnode_がNULLである。
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * 次のいずれか。
+ *
+ * - unused node countがmax node count以上である
+ * - node_がrange_allocator_のnode poolに所属していない
+ * - node_の局所状態が不正である
+ * - node_のstateがTRANSITIONINGではない
+ *
+ * @post
+ * 成功時、node_はoffsetとblock sizeが0、prevとnextがNULLの
+ * NOT_USED nodeとなる。
+ *
+ * @post
+ * 成功時、unused node countは呼び出し前から1増加する。
+ *
+ * @post
+ * 失敗時、node_、node pool、range list、および
+ * unused node countは変更されない。
+ *
+ * @par 計算量
+ * node_のnode pool所属確認で線形探索を行うため、
+ * node pool内のnode数をnとしたとき、時間計算量はO(n)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t node_release(range_allocator_t* range_allocator_, node_t* node_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -2351,6 +2696,62 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief node pool内におけるnodeのindexを取得する
+ *
+ * @details
+ * range_allocator_が所有するnode poolを先頭から線形探索し、
+ * node_と同じpointer identityを持つ要素のindexを取得する。
+ *
+ * node_のoffset、block size、またはstateによる検索ではなく、
+ * node pool要素のaddressとの一致によって所属とindexを判定する。
+ *
+ * node poolへの所属確認後、node_is_valid()によって
+ * node単体の局所状態を検証する。
+ *
+ * 本関数はnode_がrange listへ接続されていることや、
+ * range list上の接続関係を検証しない。
+ * また、Range Allocator、node pool、およびnodeの状態を変更しない。
+ *
+ * @param[in] range_allocator_
+ * node poolを所有するRange Allocator。
+ *
+ * @param[in] node_
+ * indexを取得するnode。
+ *
+ * @param[out] out_index_
+ * node pool内におけるnode_のindexの格納先。
+ * 成功時のみ値が設定され、失敗時は変更されない。
+ *
+ * @pre
+ * range_allocator_に対するshallow validationまたはdeep validationが
+ * 呼び出し前に完了していなければならない。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * node_のindex取得に成功した。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * range_allocator_、node_、またはout_index_がNULLである。
+ *
+ * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
+ * node_がrange_allocator_のnode poolに所属していない、
+ * またはnode_の局所状態が不正である。
+ *
+ * @post
+ * 成功時、out_index_には0以上max node count未満のindexが格納される。
+ *
+ * @post
+ * 失敗時、out_index_の内容は変更されない。
+ *
+ * @par 計算量
+ * node poolを線形探索するため、node pool内のnode数をnとしたとき、
+ * 最悪時間計算量はO(n)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t node_pool_find_index(const range_allocator_t* range_allocator_, const node_t* node_, size_t* out_index_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -2386,6 +2787,46 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief nodeをNOT_USED状態へ正規化する
+ *
+ * @details
+ * target_がNULLでない場合、すべてのフィールドを
+ * NODE_STATE_NOT_USEDの局所的不変条件に一致する値へ設定する。
+ *
+ * - offsetは0
+ * - block sizeは0
+ * - prevとnextはNULL
+ * - stateはNODE_STATE_NOT_USED
+ *
+ * 遷移元のstateやrange listへの接続状態は検証しない。
+ * また、range list、range list head、およびunused node countを更新しない。
+ *
+ * create時のnode pool初期化と、node_release()による
+ * TRANSITIONING nodeの返却に使用する。
+ *
+ * @param[in,out] target_
+ * NOT_USED状態へ設定するnode。NULLの場合は何も行わない。
+ *
+ * @pre
+ * target_がrange listへ接続されている場合、呼び出し元によって
+ * range listから切断済みでなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_はoffsetとblock sizeが0、
+ * prevとnextがNULLのNOT_USED nodeとなる。
+ *
+ * @note
+ * node poolのunused node countは呼び出し元が更新する。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void set_node_to_not_used(node_t* target_) {
     if(NULL == target_) {
         return;
@@ -2397,6 +2838,59 @@ static void set_node_to_not_used(node_t* target_) {
     target_->node_state = NODE_STATE_NOT_USED;
 }
 
+/**
+ * @brief nodeへrange情報を設定してTRANSITIONING状態へ遷移させる
+ *
+ * @details
+ * target_がNULLでない場合、指定されたoffsetとblock sizeを設定し、
+ * prevとnextをNULLにしてNODE_STATE_TRANSITIONINGへ遷移させる。
+ *
+ * 次の二つの処理で使用する。
+ *
+ * - NOT_USED nodeの取得時(range情報は新しいrange情報を設定する)
+ * - FREEまたはALLOCATED nodeの切断時(既存range情報は保持)
+ *
+ * 遷移元のstate、指定rangeの有効性、およびtarget_がrange listから
+ * 切断されていることは検証しない。
+ *
+ * また、range list、range list head、unused node count、
+ * allocation count、およびtotal allocated sizeを更新しない。
+ *
+ * @param[in,out] target_
+ * TRANSITIONING状態へ設定するnode。NULLの場合は何も行わない。
+ *
+ * @param[in] offset_
+ * target_へ設定するrange開始offset。
+ *
+ * @param[in] block_size_
+ * target_へ設定するrangeサイズ。0以外でなければならない。
+ *
+ * @pre
+ * target_がNULLでない場合、target_はrange listから
+ * 切断されていなければならない。
+ *
+ * @pre
+ * target_がNULLでない場合、offset_とblock_size_は
+ * target_を所有するRange Allocator内の有効なrangeを
+ * 表していなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_は指定されたoffsetとblock sizeを保持する
+ * TRANSITIONING nodeとなり、prevとnextはNULLとなる。
+ *
+ * @warning
+ * TRANSITIONINGはprivate操作途中だけで使用する一時的なstateである。
+ * public APIから戻る前にFREE、ALLOCATED、またはNOT_USEDの
+ * 安定状態へ遷移させなければならない。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void set_node_to_transitioning(node_t* target_, size_t offset_, size_t block_size_) {
     if(NULL == target_) {
         return;
@@ -2408,6 +2902,57 @@ static void set_node_to_transitioning(node_t* target_, size_t offset_, size_t bl
     target_->node_state = NODE_STATE_TRANSITIONING;
 }
 
+/**
+ * @brief nodeをFREE状態へ設定する
+ *
+ * @details
+ * target_がNULLでない場合、指定されたprevとnextを設定し、
+ * nodeをNODE_STATE_FREEへ遷移させる。
+ *
+ * target_が保持するoffsetとblock sizeは変更しない。
+ *
+ * create時にmemory pool全体を表す初期FREE nodeを設定する処理と、
+ * TRANSITIONING nodeをrange listへ挿入してFREE状態へ
+ * 遷移させる処理で使用する。
+ *
+ * 遷移元のstate、target_が保持するrange情報、prev_とnext_の
+ * 局所状態、およびrange listの接続関係は検証しない。
+ *
+ * また、隣接node、range list head、unused node count、
+ * allocation count、およびtotal allocated sizeを更新しない。
+ *
+ * @param[in,out] target_
+ * FREE状態へ設定するnode。NULLの場合は何も行わない。
+ *
+ * @param[in] prev_
+ * target_の直前へ接続するnode。
+ * range listの先頭となる場合はNULL。
+ *
+ * @param[in] next_
+ * target_の直後へ接続するnode。
+ * range listの末尾となる場合はNULL。
+ *
+ * @pre
+ * target_がNULLでない場合、target_のoffsetとblock sizeは
+ * 有効なFREE rangeを表していなければならない。
+ *
+ * @pre
+ * 呼び出し元は、prev_、next_、range list head、および隣接nodeを含む
+ * range list全体が、target_の設定後に整合することを
+ * 保証しなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_はoffsetとblock sizeを保持したまま
+ * FREE状態となり、prevとnextは指定されたnodeと一致する。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_) {
     if(NULL == target_) {
         return;
@@ -2417,6 +2962,53 @@ static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_) {
     target_->node_state = NODE_STATE_FREE;
 }
 
+/**
+ * @brief nodeをALLOCATED状態へ設定する
+ *
+ * @details
+ * target_がNULLでない場合、指定されたprevとnextを設定し、
+ * nodeをNODE_STATE_ALLOCATEDへ遷移させる。
+ *
+ * target_が保持するoffsetとblock sizeは変更しない。
+ *
+ * 遷移元のstate、target_が保持するrange情報、prev_とnext_の
+ * 局所状態、およびrange listの接続関係は検証しない。
+ *
+ * また、隣接node、range list head、unused node count、
+ * allocation count、およびtotal allocated sizeを更新しない。
+ *
+ * @param[in,out] target_
+ * ALLOCATED状態へ設定するnode。NULLの場合は何も行わない。
+ *
+ * @param[in] prev_
+ * target_の直前へ接続するnode。
+ * range listの先頭となる場合はNULL。
+ *
+ * @param[in] next_
+ * target_の直後へ接続するnode。
+ * range listの末尾となる場合はNULL。
+ *
+ * @pre
+ * target_がNULLでない場合、target_のoffsetとblock sizeは
+ * 有効なALLOCATED rangeを表していなければならない。
+ *
+ * @pre
+ * 呼び出し元は、prev_、next_、range list head、および隣接nodeを含む
+ * range list全体が、target_の設定後に整合することを
+ * 保証しなければならない。
+ *
+ * @post
+ * target_がNULLでない場合、target_はoffsetとblock sizeを保持したまま
+ * ALLOCATED状態となり、prevとnextは指定されたnodeと一致する。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_) {
     if(NULL == target_) {
         return;
@@ -2426,6 +3018,77 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
     target_->node_state = NODE_STATE_ALLOCATED;
 }
 
+/**
+ * @brief Range Allocator全体の内部整合性を検証する
+ *
+ * @details
+ * range_allocator_is_valid_shallow()によって基本管理値を検証した後、
+ * range listとnode poolを走査し、両者の内容と管理値が一致することを検証する。
+ *
+ * range listについて、次の条件を検証する。
+ *
+ * - range list headがNULLではない
+ * - list走査node数がmax node countを超えない
+ * - list上の各nodeがnode poolに所属する
+ * - list上の各nodeが局所的不変条件を満たす
+ * - list上の各nodeがFREEまたはALLOCATED状態である
+ * - 各nodeのprevが直前に走査したnodeと一致する
+ * - 先頭nodeのprevがNULLである
+ * - 各nodeのoffsetが直前rangeの終端と一致する
+ * - 各nodeのoffsetがbase alignment境界にある
+ * - range終端の計算がオーバーフローしない
+ * - 各rangeがmemory pool内に収まる
+ * - ALLOCATED nodeのblock sizeがbase alignmentの倍数である
+ * - 隣接する二つのnodeがともにFREEではない
+ * - range listの末尾がmemory poolの末尾と一致する
+ * - ALLOCATED nodeのblock size合計がtotal allocated sizeと一致する
+ *
+ * expected offsetを0から各nodeの終端へ更新することで、
+ * range間のgap、overlap、およびmemory pool内の未管理rangeを検出する。
+ *
+ * node poolについて、次の条件を検証する。
+ *
+ * - 全nodeがstateに対応する局所的不変条件を満たす
+ * - public API境界で許可されないTRANSITIONING nodeが存在しない
+ * - ALLOCATED node数がallocation countと一致する
+ * - NOT_USED node数がunused node countと一致する
+ * - FREE／ALLOCATED node数がrange listの走査node数と一致する
+ * - FREE、ALLOCATED、NOT_USEDの各node数の合計がmax node countと一致する
+ *
+ * range list上の全nodeがnode poolに所属することと、
+ * node pool内のFREE／ALLOCATED node数がrange listの走査node数と
+ * 一致することを照合し、range listから切断された安定状態のnodeが
+ * 存在しないことを検証する。
+ *
+ * @param[in] range_allocator_
+ * 検証するRange Allocator。NULLの場合は不正と判定する。
+ *
+ * @retval true
+ * 基本管理値、node pool、range list、range情報、および各管理値が
+ * 相互に整合している。
+ *
+ * @retval false
+ * range_allocator_がNULL、または内部フィールド、node pool、
+ * node state、range list接続、range、alignment、node数、
+ * allocation数、もしくはtotal allocated sizeに不整合がある。
+ *
+ * @note
+ * 本関数は不整合の種類を結果コードとして区別しない。
+ * public APIはfalseを内部データ破損として扱う。
+ *
+ * @note
+ * 本関数はRange Allocator、node pool、range list、および
+ * 各管理値を変更しない。
+ *
+ * @par 計算量
+ * range list上の各nodeについてnode poolへの所属を線形探索するため、
+ * node pool内のnode数をnとしたとき、最悪時間計算量はO(n^2)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static bool range_allocator_is_valid(const range_allocator_t* range_allocator_) {
     node_t* node = NULL;
     node_t* prev = NULL;
@@ -2472,10 +3135,13 @@ static bool range_allocator_is_valid(const range_allocator_t* range_allocator_) 
         if(node->offset != expected_offset) {
             return false;
         }
-        if(!range_is_valid(range_allocator_, node->offset, node->block_size)) {
+        if(0 != (node->offset % range_allocator_->base_align)) {
             return false;
         }
-        if(0 != (node->offset % range_allocator_->base_align)) {
+        if((SIZE_MAX - node->block_size) < node->offset) {
+            return false;
+        }
+        if(range_allocator_->memory_pool_size < (node->offset + node->block_size)) {
             return false;
         }
         if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % range_allocator_->base_align)) {
@@ -2492,7 +3158,7 @@ static bool range_allocator_is_valid(const range_allocator_t* range_allocator_) 
             }
             expected_total_allocated_size += node->block_size;
         }
-        expected_offset = node->offset + node->block_size;  // range_is_validでOVERFLOWチェック済み
+        expected_offset = node->offset + node->block_size;  // OVERFLOWチェックは直前で完了している
         prev = node;
         node = node->next;
         loop_count++;
@@ -2540,6 +3206,62 @@ static bool range_allocator_is_valid(const range_allocator_t* range_allocator_) 
     return true;
 }
 
+/**
+ * @brief Range Allocatorの基本管理値をshallowに検証する
+ *
+ * @details
+ * range_allocator_が保持する基本フィールドについて、
+ * node poolおよびrange listを走査せず、O(1)で検証可能な次の条件を確認する。
+ *
+ * - base alignmentが0以外の2の冪乗である
+ * - max allocation countが0ではない
+ * - total allocated sizeがmemory pool size以下である
+ * - max allocation countからmax node countを安全に導出できる
+ * - max node countがmax allocation countの2倍+1と一致する
+ * - allocation countがmax allocation count以下である
+ * - unused node countがmax node count以下である
+ * - memory pool sizeが0ではない
+ * - node poolがNULLではない
+ *
+ * max allocation countについて、次の式がsize_tの表現可能範囲を
+ * 超えないことを確認してからmax node countとの一致を検証する。
+ *
+ * @code{.c}
+ * max_node_count = max_allocation_count * 2 + 1;
+ * @endcode
+ *
+ * 本関数はrange list head、node pool内の各node、range listの接続関係、
+ * range情報、各rangeのoffsetおよびALLOCATED rangeのblock sizeが
+ * base alignmentに適合すること、ならびに管理値と実node数の一致を検証しない。
+ * これらの検証はrange_allocator_is_valid()が行う。
+ *
+ * @param[in] range_allocator_
+ * 検証するRange Allocator。NULLの場合は不正と判定する。
+ *
+ * @retval true
+ * O(1)で検証可能な基本管理値が整合している。
+ *
+ * @retval false
+ * range_allocator_がNULL、または基本フィールドのいずれかが
+ * shallowな不変条件を満たしていない。
+ *
+ * @note
+ * trueはRange Allocator全体の整合性を保証しない。
+ * node poolとrange listを含む完全な検証には
+ * range_allocator_is_valid()を使用する。
+ *
+ * @note
+ * 本関数はRange Allocatorおよびnode poolの状態を変更しない。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数はnode poolおよびrange listを走査せず、
+ * 動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static bool range_allocator_is_valid_shallow(const range_allocator_t* range_allocator_) {
     if(NULL == range_allocator_) {
         return false;
@@ -2574,6 +3296,67 @@ static bool range_allocator_is_valid_shallow(const range_allocator_t* range_allo
     return true;
 }
 
+/**
+ * @brief node単体のstateと局所フィールドの整合性を検証する
+ *
+ * @details
+ * node_のnode stateに応じて、node単体で判断可能な次の局所的不変条件を検証する。
+ *
+ * NODE_STATE_FREEまたはNODE_STATE_ALLOCATEDでは、
+ * 次の条件を確認する。
+ *
+ * - block sizeが0ではない
+ * - prevがnode_自身を指していない
+ * - nextがnode_自身を指していない
+ *
+ * NODE_STATE_TRANSITIONINGでは、次の条件を確認する。
+ *
+ * - block sizeが0ではない
+ * - prevとnextがともにNULLである
+ *
+ * NODE_STATE_NOT_USEDでは、次の条件を確認する。
+ *
+ * - offsetとblock sizeがともに0である
+ * - prevとnextがともにNULLである
+ *
+ * node stateが定義済みのいずれの状態にも該当しない場合は、
+ * 不正なnodeと判定する。
+ *
+ * 本関数はnode単体の局所的な整合性だけを検証する。
+ * 次の条件は検証しない。
+ *
+ * - node poolへの所属
+ * - range listへの接続状態
+ * - 隣接nodeとの相互接続
+ * - rangeの順序、連続性、および重複
+ * - memory pool内におけるrangeの有効性
+ * - offsetおよびblock sizeのalignment
+ * - node数および各管理値との一致
+ *
+ * TRANSITIONINGは本関数では有効な局所状態として扱うが、
+ * public APIの入口および正常終了時に許可される安定状態ではない。
+ *
+ * @param[in] node_
+ * 検証するnode。NULLの場合は不正と判定する。
+ *
+ * @retval true
+ * node_のstateと局所フィールドが整合している。
+ *
+ * @retval false
+ * node_がNULL、node stateが未定義、またはstateに対応する
+ * 局所フィールドの条件を満たしていない。
+ *
+ * @note
+ * 本関数はnode_および関連するnodeの状態を変更しない。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static bool node_is_valid(const node_t* node_) {
     if(NULL == node_) {
         return false;
@@ -2608,22 +3391,55 @@ static bool node_is_valid(const node_t* node_) {
     return true;
 }
 
-static bool range_is_valid(const range_allocator_t* range_allocator_, size_t offset_, size_t block_size_) {
-    if(NULL == range_allocator_) {
-        return false;
-    }
-    if(0 == block_size_) {
-        return false;
-    }
-    if((SIZE_MAX - block_size_) < offset_) {
-        return false;
-    }
-    if(range_allocator_->memory_pool_size < (offset_ + block_size_)) {
-        return false;
-    }
-    return true;
-}
-
+/**
+ * @brief Range Allocator statusの各フィールドをstdoutへ出力する
+ *
+ * @details
+ * status_がNULLでない場合、memory usageと
+ * range_allocator_status_tが保持する各フィールドをstdoutへ出力する。
+ *
+ * memory pool sizeが0ではない場合、次の式でmemory usageを計算し、
+ * 小数点以下2桁の百分率として出力する。
+ *
+ * @code{.c}
+ * memory_usage_percent =
+ *     total_allocated_size / memory_pool_size * 100.0;
+ * @endcode
+ *
+ * memory pool sizeが0の場合は除算を行わず、
+ * memory usageを計算できないことを示す文字列を出力する。
+ *
+ * status_がNULLの場合は、statusが指定されていないことを示す
+ * メッセージだけを出力する。
+ *
+ * 本関数はstatus表示の本文だけを担当する。
+ * 表示タイトル、ANSI colorの設定と解除、およびstdoutのlockは
+ * 呼び出し元が担当する。
+ *
+ * status_が保持する各値の整合性は検証せず、
+ * range listおよびnode poolを走査しない。
+ * また、stdoutへの書き込み失敗は呼び出し元へ通知しない。
+ *
+ * @param[in] status_
+ * 出力するRange Allocator status。
+ * NULLの場合はNULLであることを示すメッセージを出力する。
+ *
+ * @pre
+ * 複数行の出力を同一ストリームへ連続して書き込む必要がある場合、
+ * 呼び出し元がstdoutをlockしていなければならない。
+ *
+ * @post
+ * status_の内容は変更されない。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数はrange listおよびnode poolを走査せず、
+ * 動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static void status_print(const range_allocator_status_t* status_) {
     if(NULL == status_) {
         fprintf(stdout, "  Provided range_allocator_status_t instance is null.\n");
@@ -2646,6 +3462,42 @@ static void status_print(const range_allocator_status_t* status_) {
     }
 }
 
+/**
+ * @brief Range Allocatorの結果コードを文字列へ変換する
+ *
+ * @details
+ * rslt_に対応する静的文字列定数を返す。
+ *
+ * 定義済みの各range_allocator_result_tについて、
+ * 結果コード名を表す文字列を返す。
+ *
+ * RANGE_ALLOCATOR_UNDEFINED_ERRORまたは定義されていない値が
+ * 指定された場合は、UNDEFINED_ERRORを表す文字列を返す。
+ *
+ * 返される文字列は静的記憶域期間を持つ。
+ * 呼び出し元へ所有権は移動せず、解放または変更してはならない。
+ *
+ * @param[in] rslt_
+ * 文字列へ変換するRange Allocatorの結果コード。
+ *
+ * @return
+ * rslt_に対応するNULLではない静的文字列。
+ * 定義されていない値の場合はUNDEFINED_ERRORを表す文字列。
+ *
+ * @note
+ * 本関数はRange Allocatorおよび結果コードを変更しない。
+ *
+ * @note
+ * 返される文字列は読み取り専用であり、複数の呼び出し間で共有される。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static const char* rslt_to_str(range_allocator_result_t rslt_) {
     switch(rslt_) {
     case RANGE_ALLOCATOR_SUCCESS:
@@ -2669,6 +3521,61 @@ static const char* rslt_to_str(range_allocator_result_t rslt_) {
     }
 }
 
+/**
+ * @brief Choco Memoryの結果コードをRange Allocatorの結果コードへ変換する
+ *
+ * @details
+ * 下位モジュールであるChoco Memoryが返したmemory_system_result_tを、
+ * 同じ意味を持つrange_allocator_result_tへ変換する。
+ *
+ * 次の対応で変換する。
+ *
+ * - MEMORY_SYSTEM_SUCCESS
+ *   → RANGE_ALLOCATOR_SUCCESS
+ * - MEMORY_SYSTEM_INVALID_ARGUMENT
+ *   → RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * - MEMORY_SYSTEM_LIMIT_EXCEEDED
+ *   → RANGE_ALLOCATOR_LIMIT_EXCEEDED
+ * - MEMORY_SYSTEM_BAD_OPERATION
+ *   → RANGE_ALLOCATOR_BAD_OPERATION
+ * - MEMORY_SYSTEM_NO_MEMORY
+ *   → RANGE_ALLOCATOR_NO_MEMORY
+ *
+ * memory_system_result_tに定義されていない値は、
+ * 意味を安全に変換できないためRANGE_ALLOCATOR_UNDEFINED_ERRORへ変換する。
+ *
+ * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
+ * rollback、およびメモリ操作を行わない。
+ *
+ * @param[in] rslt_
+ * Choco Memoryが返した結果コード。
+ *
+ * @retval RANGE_ALLOCATOR_SUCCESS
+ * rslt_がMEMORY_SYSTEM_SUCCESSである。
+ *
+ * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
+ * rslt_がMEMORY_SYSTEM_INVALID_ARGUMENTである。
+ *
+ * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
+ * rslt_がMEMORY_SYSTEM_LIMIT_EXCEEDEDである。
+ *
+ * @retval RANGE_ALLOCATOR_BAD_OPERATION
+ * rslt_がMEMORY_SYSTEM_BAD_OPERATIONである。
+ *
+ * @retval RANGE_ALLOCATOR_NO_MEMORY
+ * rslt_がMEMORY_SYSTEM_NO_MEMORYである。
+ *
+ * @retval RANGE_ALLOCATOR_UNDEFINED_ERROR
+ * rslt_がmemory_system_result_tに定義されていない値である。
+ *
+ * @par 計算量
+ * 時間計算量はO(1)である。
+ * 本関数は動的メモリ確保および動的メモリ解放を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
 static range_allocator_result_t rslt_convert_choco_memory(memory_system_result_t rslt_) {
     switch(rslt_) {
     case MEMORY_SYSTEM_SUCCESS:
