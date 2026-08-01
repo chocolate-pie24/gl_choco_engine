@@ -202,6 +202,7 @@ cleanup:
 
 renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_) {
     renderer_result_t ret = RENDERER_INVALID_ARGUMENT;
+    renderer_result_t ret_cleanup = RENDERER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
@@ -268,10 +269,18 @@ renderer_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* b
 cleanup:
     if(RENDERER_SUCCESS != ret) {
         if(vbo_bound) {
-            vbo_manager_unbind(backend_context_);
+            ret_buff_mgr = vbo_manager_unbind(backend_context_);
+            if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
+                ERROR_MESSAGE("point_mesh_shader_vao_initialize failed.");
+                ret = RENDERER_DATA_CORRUPTED;
+            }
         }
         if(vao_bound) {
-            renderer_backend_vertex_array_unbind(backend_context_);
+            ret_cleanup = renderer_backend_vertex_array_unbind(backend_context_);
+            if(RENDERER_SUCCESS != ret_cleanup) {
+                ERROR_MESSAGE("point_mesh_shader_vao_initialize failed.");
+                ret = RENDERER_DATA_CORRUPTED;
+            }
         }
         if(vao_created) {
             renderer_backend_vertex_array_destroy(backend_context_, &point_mesh_shader_->vao);
