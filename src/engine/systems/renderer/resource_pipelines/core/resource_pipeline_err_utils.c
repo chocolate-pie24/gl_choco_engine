@@ -3,6 +3,8 @@
 #include "engine/resource/resource_core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
@@ -87,30 +89,30 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_resource(resource_resu
 }
 
 // TODO: シェーダーリソースはパイプラインでは扱わない(シェーダーは各プログラムにつき1個のため、registryを作るまでもない、であればpipelineも作るまでもない)
-resource_pipeline_result_t resource_pipeline_rslt_convert_renderer(renderer_result_t rslt_) {
+resource_pipeline_result_t resource_pipeline_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
     switch(rslt_) {
-    case RENDERER_SUCCESS:
+    case RENDERER_BACKEND_SUCCESS:
         return RESOURCE_PIPELINE_SUCCESS;
-    case RENDERER_INVALID_ARGUMENT:
+    case RENDERER_BACKEND_INVALID_ARGUMENT:
         return RESOURCE_PIPELINE_INVALID_ARGUMENT;
-    case RENDERER_RUNTIME_ERROR:
+    case RENDERER_BACKEND_RUNTIME_ERROR:
         return RESOURCE_PIPELINE_RUNTIME_ERROR;
-    case RENDERER_NO_MEMORY:
+    case RENDERER_BACKEND_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
-    case RENDERER_SHADER_COMPILE_ERROR:
-        return RESOURCE_PIPELINE_UNDEFINED_ERROR;   // リソースパイプラインでシェーダーは扱わないのでundefined error
-    case RENDERER_SHADER_LINK_ERROR:
-        return RESOURCE_PIPELINE_UNDEFINED_ERROR;   // リソースパイプラインでシェーダーは扱わないのでundefined error
-    case RENDERER_LIMIT_EXCEEDED:
+    case RENDERER_BACKEND_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
-    case RENDERER_BAD_OPERATION:
+    case RENDERER_BACKEND_BAD_OPERATION:
         return RESOURCE_PIPELINE_BAD_OPERATION;
-    case RENDERER_DATA_CORRUPTED:
+    case RENDERER_BACKEND_DATA_CORRUPTED:
         return RESOURCE_PIPELINE_DATA_CORRUPTED;
-    case RENDERER_OVERFLOW:
+    case RENDERER_BACKEND_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
-    case RENDERER_UNDEFINED_ERROR:
+    case RENDERER_BACKEND_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+    case RENDERER_BACKEND_SHADER_LINK_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }
@@ -135,6 +137,35 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_resource_registry(reso
     case RESOURCE_REGISTRY_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
     case RESOURCE_REGISTRY_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_shader(shader_result_t rslt_) {
+    switch(rslt_) {
+    case SHADER_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case SHADER_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case SHADER_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case SHADER_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case SHADER_COMPILE_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+    case SHADER_LINK_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+    case SHADER_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case SHADER_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case SHADER_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case SHADER_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case SHADER_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;

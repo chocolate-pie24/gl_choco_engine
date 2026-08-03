@@ -17,7 +17,7 @@
  * 現在は、次の実行結果コードからbuffer_manager_result_tへの変換を提供する。
  *
  * - range_allocator_result_t
- * - renderer_result_t
+ * - renderer_backend_result_t
  * - memory_system_result_t
  *
  * 意味が対応する結果コードは、Buffer Manager層の同等の結果コードへ変換する。
@@ -52,8 +52,9 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
@@ -169,35 +170,35 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
  * @brief Rendererの結果コードをBuffer Managerの結果コードへ変換する
  *
  * @details
- * Renderer Backendから返されたrenderer_result_tを、
+ * Renderer Backendから返されたrenderer_backend_result_tを、
  * 同じ意味を持つbuffer_manager_result_tへ変換する。
  *
  * 次の対応で変換する。
  *
- * - RENDERER_SUCCESS
+ * - RENDERER_BACKEND_SUCCESS
  *   → BUFFER_MANAGER_SUCCESS
- * - RENDERER_INVALID_ARGUMENT
+ * - RENDERER_BACKEND_INVALID_ARGUMENT
  *   → BUFFER_MANAGER_INVALID_ARGUMENT
- * - RENDERER_RUNTIME_ERROR
+ * - RENDERER_BACKEND_RUNTIME_ERROR
  *   → BUFFER_MANAGER_RUNTIME_ERROR
- * - RENDERER_NO_MEMORY
+ * - RENDERER_BACKEND_NO_MEMORY
  *   → BUFFER_MANAGER_NO_MEMORY
- * - RENDERER_LIMIT_EXCEEDED
+ * - RENDERER_BACKEND_LIMIT_EXCEEDED
  *   → BUFFER_MANAGER_LIMIT_EXCEEDED
- * - RENDERER_BAD_OPERATION
+ * - RENDERER_BACKEND_BAD_OPERATION
  *   → BUFFER_MANAGER_BAD_OPERATION
- * - RENDERER_DATA_CORRUPTED
+ * - RENDERER_BACKEND_DATA_CORRUPTED
  *   → BUFFER_MANAGER_DATA_CORRUPTED
- * - RENDERER_OVERFLOW
+ * - RENDERER_BACKEND_OVERFLOW
  *   → BUFFER_MANAGER_OVERFLOW
- * - RENDERER_UNDEFINED_ERROR
+ * - RENDERER_BACKEND_UNDEFINED_ERROR
  *   → BUFFER_MANAGER_UNDEFINED_ERROR
  *
- * RENDERER_SHADER_COMPILE_ERRORおよびRENDERER_SHADER_LINK_ERRORは、
+ * RENDERER_BACKEND_SHADER_COMPILE_ERRORおよびRENDERER_BACKEND_SHADER_LINK_ERRORは、
  * Buffer Managerの処理範囲外であり、対応する結果コードが存在しないため、
  * BUFFER_MANAGER_UNDEFINED_ERRORへ変換する。
  *
- * renderer_result_tに定義されていない値も、意味を安全に変換できないため
+ * renderer_backend_result_tに定義されていない値も、意味を安全に変換できないため
  * BUFFER_MANAGER_UNDEFINED_ERRORへ変換する。
  *
  * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
@@ -207,35 +208,35 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
  * 変換するRendererの結果コード。
  *
  * @retval BUFFER_MANAGER_SUCCESS
- * rslt_がRENDERER_SUCCESSである。
+ * rslt_がRENDERER_BACKEND_SUCCESSである。
  *
  * @retval BUFFER_MANAGER_INVALID_ARGUMENT
- * rslt_がRENDERER_INVALID_ARGUMENTである。
+ * rslt_がRENDERER_BACKEND_INVALID_ARGUMENTである。
  *
  * @retval BUFFER_MANAGER_RUNTIME_ERROR
- * rslt_がRENDERER_RUNTIME_ERRORである。
+ * rslt_がRENDERER_BACKEND_RUNTIME_ERRORである。
  *
  * @retval BUFFER_MANAGER_NO_MEMORY
- * rslt_がRENDERER_NO_MEMORYである。
+ * rslt_がRENDERER_BACKEND_NO_MEMORYである。
  *
  * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * rslt_がRENDERER_LIMIT_EXCEEDEDである。
+ * rslt_がRENDERER_BACKEND_LIMIT_EXCEEDEDである。
  *
  * @retval BUFFER_MANAGER_BAD_OPERATION
- * rslt_がRENDERER_BAD_OPERATIONである。
+ * rslt_がRENDERER_BACKEND_BAD_OPERATIONである。
  *
  * @retval BUFFER_MANAGER_DATA_CORRUPTED
- * rslt_がRENDERER_DATA_CORRUPTEDである。
+ * rslt_がRENDERER_BACKEND_DATA_CORRUPTEDである。
  *
  * @retval BUFFER_MANAGER_OVERFLOW
- * rslt_がRENDERER_OVERFLOWである。
+ * rslt_がRENDERER_BACKEND_OVERFLOWである。
  *
  * @retval BUFFER_MANAGER_UNDEFINED_ERROR
  * 次のいずれか。
- * - rslt_がRENDERER_SHADER_COMPILE_ERRORである
- * - rslt_がRENDERER_SHADER_LINK_ERRORである
- * - rslt_がRENDERER_UNDEFINED_ERRORである
- * - rslt_がrenderer_result_tに定義されていない値である
+ * - rslt_がRENDERER_BACKEND_SHADER_COMPILE_ERRORである
+ * - rslt_がRENDERER_BACKEND_SHADER_LINK_ERRORである
+ * - rslt_がRENDERER_BACKEND_UNDEFINED_ERRORである
+ * - rslt_がrenderer_backend_result_tに定義されていない値である
  *
  * @par 計算量
  * 時間計算量はO(1)である。
@@ -245,7 +246,7 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-buffer_manager_result_t buffer_manager_rslt_convert_renderer(renderer_result_t rslt_);
+buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
 
 /**
  * @brief Memory Systemの結果コードをBuffer Managerの結果コードへ変換する

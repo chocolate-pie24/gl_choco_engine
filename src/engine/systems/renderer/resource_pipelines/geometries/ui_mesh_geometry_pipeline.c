@@ -38,6 +38,7 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
 #include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
@@ -48,9 +49,10 @@
 
 resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* name_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     ui_geom_config_t ui_geometry_config = { 0 };
     ui_mesh_geometry_t* geometry = NULL;
@@ -99,9 +101,9 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
         goto cleanup;
     }
 
-    ret_renderer = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
+    ret_shader = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
         goto cleanup;
     }
@@ -120,8 +122,8 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
 
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
-        ret_renderer = ui_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
-        if(RENDERER_SUCCESS != ret_renderer) {
+        ret_shader = ui_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(SHADER_SUCCESS != ret_shader) {
             // NOTE: ui_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // ui_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
@@ -136,7 +138,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     vertex_buffer_range_t vertex_buffer_range = { 0 };
 
@@ -166,10 +168,9 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
         goto cleanup;
     }
 
-    ret_renderer = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+    ret_shader = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }

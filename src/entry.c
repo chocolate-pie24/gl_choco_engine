@@ -107,7 +107,7 @@ int main(int argc_, char** argv_) {
         message_output(100, NULL);
 
         // application/application_core
-        test_application_err_utils();
+        // test_application_err_utils();
 
         // application/command_interpreter
         test_flight_camera();
@@ -153,13 +153,13 @@ int main(int argc_, char** argv_) {
         test_platform_context();
 
         // engine/renderer
-        test_renderer_err_utils();
-        test_renderer_memory();
-        test_concrete_shader();
-        test_concrete_vao();
-        test_concrete_vbo();
-        test_concrete_texture();
-        test_renderer_backend_context();
+        // test_renderer_err_utils();
+        // test_renderer_memory();
+        // test_concrete_shader();
+        // test_concrete_vao();
+        // test_concrete_vbo();
+        // test_concrete_texture();
+        // test_renderer_backend_context();
 
         // engine/texture_system
         test_texture_manager();

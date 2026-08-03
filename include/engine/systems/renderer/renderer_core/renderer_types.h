@@ -29,24 +29,6 @@ typedef enum {
 } target_graphics_api_t;
 
 /**
- * @brief レンダラーレイヤー実行結果コード定義
- *
- */
-typedef enum {
-    RENDERER_SUCCESS = 0,           /**< 処理成功 */
-    RENDERER_INVALID_ARGUMENT,      /**< 無効な引数 */
-    RENDERER_RUNTIME_ERROR,         /**< 実行時エラー */
-    RENDERER_NO_MEMORY,             /**< メモリ確保失敗 */
-    RENDERER_SHADER_COMPILE_ERROR,  /**< シェーダーコンパイルエラー */
-    RENDERER_SHADER_LINK_ERROR,     /**< シェーダーリンクエラー */
-    RENDERER_LIMIT_EXCEEDED,        /**< システム使用可能範囲上限超過 */
-    RENDERER_BAD_OPERATION,         /**< API誤用 */
-    RENDERER_DATA_CORRUPTED,        /**< メモリ破損,未初期化 */
-    RENDERER_OVERFLOW,              /**< 計算過程でオーバーフロー発生 */
-    RENDERER_UNDEFINED_ERROR,       /**< 不明なエラー */
-} renderer_result_t;
-
-/**
  * @brief 上位層で頂点情報データ種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、頂点情報のデータ種別を定義
  *
  */
@@ -65,13 +47,9 @@ typedef enum {
     RENDERER_TYPE_BYTE,             /**< データ型: GL_BYTE */
 } renderer_type_t;
 
-/**
- * @brief 上位層でシェーダー種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、シェーダー種別リストを定義
- *
- */
 typedef enum {
-    SHADER_TYPE_VERTEX,     /**< バーテックスシェーダー */
-    SHADER_TYPE_FRAGMENT,   /**< フラグメントシェーダー */
+    SHADER_TYPE_VERTEX,
+    SHADER_TYPE_FRAGMENT,
 } shader_type_t;
 
 /**

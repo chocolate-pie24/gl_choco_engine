@@ -90,7 +90,8 @@
 
 #include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
@@ -141,7 +142,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
     memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
@@ -171,33 +172,33 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
         goto cleanup;
     }
 
-    ret_renderer = renderer_backend_vertex_buffer_create(backend_context_, &tmp_vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_create_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_create(backend_context_, &tmp_vbo);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_create_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_created = true;
 
-    ret_renderer = renderer_backend_vertex_buffer_bind(backend_context_, tmp_vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_bind(backend_context_, tmp_vbo);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = true;
 
-    ret_renderer = renderer_backend_vertex_buffer_vertex_load(backend_context_, config_->vbo_size, 0, config_->buffer_usage);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_vertex_load_failed, vbo_size=%zu, buffer_usage=%d, renderer_result=%d", buffer_manager_rslt_to_str(ret), config_->vbo_size, (int)config_->buffer_usage, (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_vertex_load(backend_context_, config_->vbo_size, 0, config_->buffer_usage);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_vertex_load_failed, vbo_size=%zu, buffer_usage=%d, renderer_result=%d", buffer_manager_rslt_to_str(ret), config_->vbo_size, (int)config_->buffer_usage, (int)ret_renderer_backend);
         goto cleanup;
     }
 
-    ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_unbind(backend_context_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vertex_buffer_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = false;
@@ -214,9 +215,9 @@ cleanup:
     if(BUFFER_MANAGER_SUCCESS != ret) {
         if(vbo_created) {
             if(vbo_bound) {
-                ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-                if(RENDERER_SUCCESS != ret_renderer) {
-                    ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vertex_buffer_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+                ret_renderer_backend = renderer_backend_vertex_buffer_unbind(backend_context_);
+                if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+                    ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vertex_buffer_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
                     ret = BUFFER_MANAGER_DATA_CORRUPTED;
                 }
             }
@@ -254,7 +255,7 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     range_allocation_t tmp_allocation = { 0 };
 
@@ -283,26 +284,26 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
     }
     allocate_success = true;
 
-    ret_renderer = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_bind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_bind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = true;
 
-    ret_renderer = renderer_backend_vertex_buffer_vertex_subload(backend_context_, tmp_allocation.offset, size_, write_data_);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_vertex_subload_failed, write_offset=%zu, write_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, size_, (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_vertex_subload(backend_context_, tmp_allocation.offset, size_, write_data_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_vertex_subload_failed, write_offset=%zu, write_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, size_, (int)ret_renderer_backend);
         goto cleanup;
     }
     load_success = true;
 
-    ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_unbind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_unbind(backend_context_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vertex_buffer_unbind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = false;
@@ -323,9 +324,9 @@ cleanup:
         }
         if(vbo_bound) {
             // backend_context_の内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-            if(RENDERER_SUCCESS != ret_renderer) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vertex_buffer_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer);
+            ret_renderer_backend = renderer_backend_vertex_buffer_unbind(backend_context_);
+            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vertex_buffer_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
                 ret = BUFFER_MANAGER_DATA_CORRUPTED;
             }
         }
@@ -363,16 +364,16 @@ cleanup:
 buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_bind", "vbo_manager_")
 
-    ret_renderer = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_bind(%s) - Failed to bind vertex buffer. reason=renderer_backend_vertex_buffer_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_bind(backend_context_, vbo_manager_->vbo);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_bind(%s) - Failed to bind vertex buffer. reason=renderer_backend_vertex_buffer_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
 
@@ -385,14 +386,14 @@ cleanup:
 buffer_manager_result_t vbo_manager_unbind(const renderer_backend_context_t* backend_context_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "backend_context_")
 
-    ret_renderer = renderer_backend_vertex_buffer_unbind(backend_context_);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = buffer_manager_rslt_convert_renderer(ret_renderer);
-        ERROR_MESSAGE("vbo_manager_unbind(%s) - Failed to unbind vertex buffer. reason=renderer_backend_vertex_buffer_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer);
+    ret_renderer_backend = renderer_backend_vertex_buffer_unbind(backend_context_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_unbind(%s) - Failed to unbind vertex buffer. reason=renderer_backend_vertex_buffer_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
 

@@ -51,6 +51,8 @@
 
 #include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
 /**
@@ -126,30 +128,30 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
     }
 }
 
-buffer_manager_result_t buffer_manager_rslt_convert_renderer(renderer_result_t rslt_) {
+buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
     switch(rslt_) {
-    case RENDERER_SUCCESS:
+    case RENDERER_BACKEND_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
-    case RENDERER_INVALID_ARGUMENT:
+    case RENDERER_BACKEND_INVALID_ARGUMENT:
         return BUFFER_MANAGER_INVALID_ARGUMENT;
-    case RENDERER_RUNTIME_ERROR:
+    case RENDERER_BACKEND_RUNTIME_ERROR:
         return BUFFER_MANAGER_RUNTIME_ERROR;
-    case RENDERER_NO_MEMORY:
+    case RENDERER_BACKEND_NO_MEMORY:
         return BUFFER_MANAGER_NO_MEMORY;
-    case RENDERER_SHADER_COMPILE_ERROR:
-        return BUFFER_MANAGER_UNDEFINED_ERROR;  // buffer_managerはシェーダーのコンパイル / リンクは行わないのでUNDEFINED_ERRORに変換
-    case RENDERER_SHADER_LINK_ERROR:
-        return BUFFER_MANAGER_UNDEFINED_ERROR;  // buffer_managerはシェーダーのコンパイル / リンクは行わないのでUNDEFINED_ERRORに変換
-    case RENDERER_LIMIT_EXCEEDED:
+    case RENDERER_BACKEND_LIMIT_EXCEEDED:
         return BUFFER_MANAGER_LIMIT_EXCEEDED;
-    case RENDERER_BAD_OPERATION:
+    case RENDERER_BACKEND_BAD_OPERATION:
         return BUFFER_MANAGER_BAD_OPERATION;
-    case RENDERER_DATA_CORRUPTED:
+    case RENDERER_BACKEND_DATA_CORRUPTED:
         return BUFFER_MANAGER_DATA_CORRUPTED;
-    case RENDERER_OVERFLOW:
+    case RENDERER_BACKEND_OVERFLOW:
         return BUFFER_MANAGER_OVERFLOW;
-    case RENDERER_UNDEFINED_ERROR:
+    case RENDERER_BACKEND_UNDEFINED_ERROR:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
+    case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
+        return BUFFER_MANAGER_RUNTIME_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
+    case RENDERER_BACKEND_SHADER_LINK_ERROR:
+        return BUFFER_MANAGER_RUNTIME_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
     default:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     }

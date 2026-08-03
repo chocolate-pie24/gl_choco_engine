@@ -23,6 +23,8 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
 #include "engine/core/memory/linear_allocator.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< renderer_backend_context内部情報管理構造体前方宣言 */
@@ -33,20 +35,20 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< rendere
  * @param allocator_ メモリ確保用リニアアロケータ
  * @param target_api_ 使用するグラフィックスAPI
  * @param out_renderer_backend_context_ レンダラーバックエンド内部情報管理構造体インスタンスへのダブルポインタ
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - allocator_ == NULL
  * - out_renderer_backend_context_ == NULL
  * - *out_renderer_backend_context_ != NULL
  * - target_api_が既定値外
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_RUNTIME_ERROR 以下のいずれか
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_BACKEND_RUNTIME_ERROR 以下のいずれか
  * - シェーダー用vtable取得失敗
  * - テクスチャ用vtable取得失敗
  * - VAO用vtable取得失敗
  * - VBO用vtable取得失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_);
+renderer_backend_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_);
 
 /**
  * @brief レンダラーバックエンドの終了処理を行う

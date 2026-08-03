@@ -26,15 +26,16 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_createの前方宣言 */
 typedef void (*pfn_vertex_buffer_destroy)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_destroyの前方宣言 */
-typedef renderer_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_);   /**< renderer_vbo_vtableが保持するvertex_buffer_bindの前方宣言 */
-typedef renderer_result_t (*pfn_vertex_buffer_unbind)(void);    /**< renderer_vbo_vtableが保持するvertex_buffer_unbindの前方宣言 */
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_load)(size_t load_size_, const void* load_data_, buffer_usage_t usage_); /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_loadの前方宣言 */
-typedef renderer_result_t (*pfn_vertex_buffer_vertex_subload)(size_t offset_, size_t size_, const void* load_data_);  /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_subloadの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vertex_buffer_bind)(const renderer_backend_vbo_t* vertex_buffer_);   /**< renderer_vbo_vtableが保持するvertex_buffer_bindの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vertex_buffer_unbind)(void);    /**< renderer_vbo_vtableが保持するvertex_buffer_unbindの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vertex_buffer_vertex_load)(size_t load_size_, const void* load_data_, buffer_usage_t usage_); /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_loadの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vertex_buffer_vertex_subload)(size_t offset_, size_t size_, const void* load_data_);  /**< renderer_vbo_vtableが保持するvertex_buffer_vertex_subloadの前方宣言 */
 
 /**
  * @brief VBO機能仮想関数テーブル
@@ -46,14 +47,14 @@ typedef struct renderer_vbo_vtable {
      *
      * @param[out] vertex_buffer_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
      * - vertex_buffer_がNULL
      * - *vertex_buffer_が非NULL
-     * @retval RENDERER_NO_MEMORY メモリ確保失敗
-     * @retval RENDERER_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
-     * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
-     * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+     * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
+     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+     * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vertex_buffer_create vertex_buffer_create;
 
@@ -69,9 +70,9 @@ typedef struct renderer_vbo_vtable {
      *
      * @param[in] vertex_buffer_ bind対象vbo
      *
-     * @retval RENDERER_INVALID_ARGUMENT vertex_buffer_ == NULL
-     * @retval RENDERER_BAD_OPERATION 未初期化のvertex_buffer_が渡された
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT vertex_buffer_ == NULL
+     * @retval RENDERER_BACKEND_BAD_OPERATION 未初期化のvertex_buffer_が渡された
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vertex_buffer_bind vertex_buffer_bind;
 
@@ -80,7 +81,7 @@ typedef struct renderer_vbo_vtable {
      *
      * @note 特定のVBOを指定してunbindするAPIではなく、現在のGL_ARRAY_BUFFER bindingを解除するAPIである
      *
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vertex_buffer_unbind vertex_buffer_unbind;
 
@@ -94,9 +95,9 @@ typedef struct renderer_vbo_vtable {
      * @param[in] load_data_ 転送頂点情報配列へのポインタ
      * @param[in] usage_ バッファ使用方法種別
      *
-     * @retval RENDERER_INVALID_ARGUMENT load_size_ == 0
-     * @retval RENDERER_RUNTIME_ERROR 規定値外のusage_
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT load_size_ == 0
+     * @retval RENDERER_BACKEND_RUNTIME_ERROR 規定値外のusage_
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vertex_buffer_vertex_load vertex_buffer_vertex_load;
 
@@ -109,10 +110,10 @@ typedef struct renderer_vbo_vtable {
      * @param[in] size_ 頂点情報転送サイズ(byte)
      * @param[in] load_data_ 転送する頂点情報配列へのポインタ
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
      * - load_data_ == NULL
      * - size_ == 0
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vertex_buffer_vertex_subload vertex_buffer_vertex_subload;
 } renderer_vbo_vtable_t;

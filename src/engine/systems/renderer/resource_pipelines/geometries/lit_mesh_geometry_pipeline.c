@@ -47,9 +47,10 @@
 
 resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* path_, const char* name_, const char* extension_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     stl_loader_t* stl_loader = NULL;
     point_normal_vertex_t* vertices = NULL;
@@ -109,9 +110,9 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
             goto cleanup;
         }
 
-        ret_renderer = lit_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, vertices, &tmp_buffer_range);
-        if(RENDERER_SUCCESS != ret_renderer) {
-            ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
+        ret_shader = lit_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, vertices, &tmp_buffer_range);
+        if(SHADER_SUCCESS != ret_shader) {
+            ret = resource_pipeline_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
             goto cleanup;
         }
@@ -138,8 +139,8 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
 
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
-        ret_renderer = lit_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
-        if(RENDERER_SUCCESS != ret_renderer) {
+        ret_shader = lit_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(SHADER_SUCCESS != ret_shader) {
             // NOTE: lit_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // lit_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
@@ -159,7 +160,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t*
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     vertex_buffer_range_t vertex_buffer_range = { 0 };
 
@@ -189,10 +190,9 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t*
         goto cleanup;
     }
 
-    ret_renderer = lit_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+    ret_shader = lit_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("lit_mesh_geometry_pipeline_release(%s) - lit_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }

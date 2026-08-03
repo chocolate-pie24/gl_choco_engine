@@ -46,8 +46,9 @@
 
 resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t vertex_offset = 0;
@@ -73,9 +74,9 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
         goto cleanup;
     }
 
-    ret_renderer = point_mesh_shader_vbo_write(backend_context_, shader_, vertex_count_, vertices_, &tmp_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        ret = resource_pipeline_rslt_convert_renderer(ret_renderer);
+    ret_shader = point_mesh_shader_vbo_write(backend_context_, shader_, vertex_count_, vertices_, &tmp_buffer_range);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
         goto cleanup;
     }
@@ -95,8 +96,8 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
 
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
-        ret_renderer = point_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
-        if(RENDERER_SUCCESS != ret_renderer) {
+        ret_shader = point_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        if(SHADER_SUCCESS != ret_shader) {
             // NOTE: point_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // point_mesh_geometry_pipeline_import_from_vertices失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
@@ -111,7 +112,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shade
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     vertex_buffer_range_t vertex_buffer_range = { 0 };
 
@@ -141,10 +142,9 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shade
         goto cleanup;
     }
 
-    ret_renderer = point_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
-    if(RENDERER_SUCCESS != ret_renderer) {
-        // TODO: buffer_manager周りの仕様が安定したら適切なエラーコードに変換する
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+    ret_shader = point_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("point_mesh_geometry_pipeline_release(%s) - point_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }

@@ -33,6 +33,7 @@
 #include "engine/resource/texture/texture.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
 
@@ -62,7 +63,7 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        
 
 static const char* tex_sys_rslt_to_str(texture_system_result_t rslt_);
 static texture_system_result_t tex_sys_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
-static texture_system_result_t tex_sys_rslt_convert_renderer(renderer_result_t rslt_);
+static texture_system_result_t tex_sys_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
 static texture_system_result_t tex_sys_rslt_convert_resource(resource_result_t rslt_);
 
 // #define TEST_BUILD
@@ -214,7 +215,7 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
 #endif
     texture_system_result_t ret = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    renderer_result_t ret_renderer = RENDERER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
     int16_t free_slot = INVALID_TEXTURE_ID;
     texture_t* tmp_cpu_resource = NULL;
     renderer_backend_texture_t* tmp_gpu_resource = NULL;
@@ -271,9 +272,9 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
             goto cleanup;
         }
 
-        ret_renderer = renderer_backend_texture_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp_gpu_resource);
-        if(RENDERER_SUCCESS != ret_renderer) {
-            ret = tex_sys_rslt_convert_renderer(ret_renderer);
+        ret_renderer_backend = renderer_backend_texture_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &tmp_gpu_resource);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = tex_sys_rslt_convert_renderer_backend(ret_renderer_backend);
             ERROR_MESSAGE("texture_manager_register(%s) - Failed to create texture gpu resource. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
@@ -299,16 +300,16 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
             goto cleanup;
         }
 
-        ret_renderer = renderer_backend_texture_bind(backend_context_, tmp_gpu_resource);
-        if(RENDERER_SUCCESS != ret_renderer) {
-            ret = tex_sys_rslt_convert_renderer(ret_renderer);
+        ret_renderer_backend = renderer_backend_texture_bind(backend_context_, tmp_gpu_resource);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = tex_sys_rslt_convert_renderer_backend(ret_renderer_backend);
             ERROR_MESSAGE("texture_manager_register(%s) - Failed to bind texture. texture name = '%s.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
 
-        ret_renderer = renderer_backend_texture_pixel_upload(backend_context_, width, height, channel_count, texture_pixels);
-        if(RENDERER_SUCCESS != ret_renderer) {
-            ret = tex_sys_rslt_convert_renderer(ret_renderer);
+        ret_renderer_backend = renderer_backend_texture_pixel_upload(backend_context_, width, height, channel_count, texture_pixels);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = tex_sys_rslt_convert_renderer_backend(ret_renderer_backend);
             ERROR_MESSAGE("texture_manager_register(%s) - Failed to upload texture pixels. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
             goto cleanup;
         }
@@ -594,29 +595,25 @@ static texture_system_result_t tex_sys_rslt_convert_linear_alloc(linear_allocato
     }
 }
 
-static texture_system_result_t tex_sys_rslt_convert_renderer(renderer_result_t rslt_) {
+static texture_system_result_t tex_sys_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
     switch(rslt_) {
-    case RENDERER_SUCCESS:
+    case RENDERER_BACKEND_SUCCESS:
         return TEXTURE_SYSTEM_SUCCESS;
-    case RENDERER_INVALID_ARGUMENT:
+    case RENDERER_BACKEND_INVALID_ARGUMENT:
         return TEXTURE_SYSTEM_INVALID_ARGUMENT;
-    case RENDERER_RUNTIME_ERROR:
+    case RENDERER_BACKEND_RUNTIME_ERROR:
         return TEXTURE_SYSTEM_RUNTIME_ERROR;
-    case RENDERER_NO_MEMORY:
+    case RENDERER_BACKEND_NO_MEMORY:
         return TEXTURE_SYSTEM_NO_MEMORY;
-    case RENDERER_SHADER_COMPILE_ERROR:
-        return TEXTURE_SYSTEM_RUNTIME_ERROR;
-    case RENDERER_SHADER_LINK_ERROR:
-        return TEXTURE_SYSTEM_RUNTIME_ERROR;
-    case RENDERER_LIMIT_EXCEEDED:
+    case RENDERER_BACKEND_LIMIT_EXCEEDED:
         return TEXTURE_SYSTEM_LIMIT_EXCEEDED;
-    case RENDERER_BAD_OPERATION:
+    case RENDERER_BACKEND_BAD_OPERATION:
         return TEXTURE_SYSTEM_BAD_OPERATION;
-    case RENDERER_DATA_CORRUPTED:
+    case RENDERER_BACKEND_DATA_CORRUPTED:
         return TEXTURE_SYSTEM_DATA_CORRUPTED;
-    case RENDERER_OVERFLOW:
+    case RENDERER_BACKEND_OVERFLOW:
         return TEXTURE_SYSTEM_OVERFLOW;
-    case RENDERER_UNDEFINED_ERROR:
+    case RENDERER_BACKEND_UNDEFINED_ERROR:
         return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     default:
         return TEXTURE_SYSTEM_UNDEFINED_ERROR;
@@ -1235,7 +1232,7 @@ static void NO_COVERAGE test_texture_manager_deinitialize(void) {
         // 正常系: 空のmanagerを未初期化状態へ戻す
         // NOTE: renderer_backend_context_t は opaque なので renderer_backend_initialize() で生成する
         texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
-        renderer_result_t ret_renderer = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_UNDEFINED_ERROR;
         linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
 
         texture_manager_t manager = {0};
@@ -1272,12 +1269,12 @@ static void NO_COVERAGE test_texture_manager_deinitialize(void) {
 
         test_texture_manager_config_reset();
 
-        ret_renderer = renderer_backend_initialize(
+        ret_renderer_backend = renderer_backend_initialize(
             allocator,
             GRAPHICS_API_GL33,
             &backend_context
         );
-        assert(RENDERER_SUCCESS == ret_renderer);
+        assert(RENDERER_BACKEND_SUCCESS == ret_renderer_backend);
         assert(NULL != backend_context);
 
         manager.max_texture_count = 3;
@@ -1307,7 +1304,7 @@ static void NO_COVERAGE test_texture_manager_deinitialize(void) {
     {
         // 正常系: CPU resourceを含むmanagerを破棄し、未初期化状態へ戻す
         // NOTE: GPU resource は NULL のため、有効な backend_context でも renderer_backend_texture_destroy() は no-op
-        renderer_result_t ret_renderer = RENDERER_UNDEFINED_ERROR;
+        renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_UNDEFINED_ERROR;
         linear_allocator_result_t ret_linear = LINEAR_ALLOC_INVALID_ARGUMENT;
         resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
         memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -1352,12 +1349,12 @@ static void NO_COVERAGE test_texture_manager_deinitialize(void) {
         ret_memory = memory_system_create();
         assert(MEMORY_SYSTEM_SUCCESS == ret_memory);
 
-        ret_renderer = renderer_backend_initialize(
+        ret_renderer_backend = renderer_backend_initialize(
             allocator,
             GRAPHICS_API_GL33,
             &backend_context
         );
-        assert(RENDERER_SUCCESS == ret_renderer);
+        assert(RENDERER_BACKEND_SUCCESS == ret_renderer_backend);
         assert(NULL != backend_context);
 
         ret_resource = texture_create("test_texture_red", &cpu_resources[0]);
@@ -3177,18 +3174,16 @@ static void NO_COVERAGE test_tex_sys_rslt_convert_linear_alloc(void) {
 
 // Generated by ChatGPT
 static void NO_COVERAGE test_tex_sys_rslt_convert_renderer(void) {
-    assert(TEXTURE_SYSTEM_SUCCESS == tex_sys_rslt_convert_renderer(RENDERER_SUCCESS));
-    assert(TEXTURE_SYSTEM_INVALID_ARGUMENT == tex_sys_rslt_convert_renderer(RENDERER_INVALID_ARGUMENT));
-    assert(TEXTURE_SYSTEM_RUNTIME_ERROR == tex_sys_rslt_convert_renderer(RENDERER_RUNTIME_ERROR));
-    assert(TEXTURE_SYSTEM_NO_MEMORY == tex_sys_rslt_convert_renderer(RENDERER_NO_MEMORY));
-    assert(TEXTURE_SYSTEM_RUNTIME_ERROR == tex_sys_rslt_convert_renderer(RENDERER_SHADER_COMPILE_ERROR));
-    assert(TEXTURE_SYSTEM_RUNTIME_ERROR == tex_sys_rslt_convert_renderer(RENDERER_SHADER_LINK_ERROR));
-    assert(TEXTURE_SYSTEM_LIMIT_EXCEEDED == tex_sys_rslt_convert_renderer(RENDERER_LIMIT_EXCEEDED));
-    assert(TEXTURE_SYSTEM_BAD_OPERATION == tex_sys_rslt_convert_renderer(RENDERER_BAD_OPERATION));
-    assert(TEXTURE_SYSTEM_DATA_CORRUPTED == tex_sys_rslt_convert_renderer(RENDERER_DATA_CORRUPTED));
-    assert(TEXTURE_SYSTEM_UNDEFINED_ERROR == tex_sys_rslt_convert_renderer(RENDERER_UNDEFINED_ERROR));
+    assert(TEXTURE_SYSTEM_SUCCESS == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_SUCCESS));
+    assert(TEXTURE_SYSTEM_INVALID_ARGUMENT == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_INVALID_ARGUMENT));
+    assert(TEXTURE_SYSTEM_RUNTIME_ERROR == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_RUNTIME_ERROR));
+    assert(TEXTURE_SYSTEM_NO_MEMORY == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_NO_MEMORY));
+    assert(TEXTURE_SYSTEM_LIMIT_EXCEEDED == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_LIMIT_EXCEEDED));
+    assert(TEXTURE_SYSTEM_BAD_OPERATION == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_BAD_OPERATION));
+    assert(TEXTURE_SYSTEM_DATA_CORRUPTED == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_DATA_CORRUPTED));
+    assert(TEXTURE_SYSTEM_UNDEFINED_ERROR == tex_sys_rslt_convert_renderer_backend(RENDERER_BACKEND_UNDEFINED_ERROR));
 
-    assert(TEXTURE_SYSTEM_UNDEFINED_ERROR == tex_sys_rslt_convert_renderer((renderer_result_t)99999));
+    assert(TEXTURE_SYSTEM_UNDEFINED_ERROR == tex_sys_rslt_convert_renderer_backend((renderer_backend_result_t)99999));
 }
 
 // Generated by ChatGPT
