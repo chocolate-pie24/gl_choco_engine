@@ -110,9 +110,9 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_renderer_backend(rende
     case RENDERER_BACKEND_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
-        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためUNDEFINED_ERRORに変換
     case RENDERER_BACKEND_SHADER_LINK_ERROR:
-        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためUNDEFINED_ERRORに変換
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }
@@ -154,9 +154,9 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_shader(shader_result_t
     case SHADER_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
     case SHADER_COMPILE_ERROR:
-        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためUNDEFINED_ERRORに変換
     case SHADER_LINK_ERROR:
-        return RESOURCE_PIPELINE_RUNTIME_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためRUNTIME_ERRORに変換
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR; // Resource Pipelineではシェーダーのコンパイル, リンクを行わないためUNDEFINED_ERRORに変換
     case SHADER_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
     case SHADER_BAD_OPERATION:

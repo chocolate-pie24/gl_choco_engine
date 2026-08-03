@@ -149,9 +149,9 @@ buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_ba
     case RENDERER_BACKEND_UNDEFINED_ERROR:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
-        return BUFFER_MANAGER_RUNTIME_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
+        return BUFFER_MANAGER_UNDEFINED_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
     case RENDERER_BACKEND_SHADER_LINK_ERROR:
-        return BUFFER_MANAGER_RUNTIME_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
+        return BUFFER_MANAGER_UNDEFINED_ERROR;    // Buffer Managerではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
     default:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     }

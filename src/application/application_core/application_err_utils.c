@@ -352,9 +352,9 @@ application_result_t app_rslt_convert_shader(shader_result_t rslt_) {
     case SHADER_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
     case SHADER_COMPILE_ERROR:
-        return APPLICATION_RUNTIME_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
+        return APPLICATION_UNDEFINED_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
     case SHADER_LINK_ERROR:
-        return APPLICATION_RUNTIME_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでRUNTIME_ERRORに変換
+        return APPLICATION_UNDEFINED_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
     case SHADER_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case SHADER_BAD_OPERATION:
