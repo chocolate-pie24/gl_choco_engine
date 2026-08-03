@@ -53,7 +53,7 @@
 #include "engine/systems/platform/platform_core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 #include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"

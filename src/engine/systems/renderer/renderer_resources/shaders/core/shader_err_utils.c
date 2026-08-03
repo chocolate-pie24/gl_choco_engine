@@ -7,7 +7,7 @@
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 

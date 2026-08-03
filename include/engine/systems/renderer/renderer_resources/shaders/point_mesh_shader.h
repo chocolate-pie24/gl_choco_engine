@@ -27,7 +27,7 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
 
 typedef struct point_mesh_shader point_mesh_shader_t;               /**< 点描画用シェーダーリソースのopaque型 */

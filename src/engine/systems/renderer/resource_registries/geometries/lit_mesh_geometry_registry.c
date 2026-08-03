@@ -32,7 +32,7 @@
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"

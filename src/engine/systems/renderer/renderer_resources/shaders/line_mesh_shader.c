@@ -33,7 +33,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
 

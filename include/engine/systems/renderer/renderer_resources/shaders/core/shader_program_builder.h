@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 typedef struct renderer_backend_shader renderer_backend_shader_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
