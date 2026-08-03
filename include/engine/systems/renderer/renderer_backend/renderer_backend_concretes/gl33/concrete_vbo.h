@@ -21,9 +21,7 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h"
+typedef struct renderer_vbo_vtable renderer_vbo_vtable_t;
 
 /**
  * @brief OpenGL3.3用VBO仮想関数テーブル(vtable)を取得する

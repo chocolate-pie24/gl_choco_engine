@@ -23,16 +23,15 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "engine/base/choco_math/math_types.h"
-
-#include "engine/core/geometry_primitive/vertex.h"
-
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 typedef struct ui_mesh_shader ui_mesh_shader_t;                     /**< UI描画用シェーダーリソースのopaque型 */
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
+
+typedef struct mat4x4f mat4x4f_t;
+typedef struct ui_vertex ui_vertex_t;
 
 shader_result_t ui_mesh_shader_create(ui_mesh_shader_t** out_ui_mesh_shader_);
 

@@ -28,13 +28,12 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/core/geometry_primitive/vertex.h"
-
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t;         /**< Renderer Backend Contextのopaque型 */
 typedef struct point_mesh_shader point_mesh_shader_t;                       /**< 点描画用シェーダーリソースのopaque型 */
 typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**< 点描画用ジオメトリレジストリのopaque型 */
+typedef struct point_vertex point_vertex_t;
 
 /**
  * @brief 点描画用頂点データを元にジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う

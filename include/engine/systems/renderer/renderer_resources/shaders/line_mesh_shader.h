@@ -24,16 +24,15 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "engine/base/choco_math/math_types.h"
-
-#include "engine/core/geometry_primitive/vertex.h"
-
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
+
+typedef struct mat4x4f mat4x4f_t;
+typedef struct line_vertex line_vertex_t;
 
 shader_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_shader_);
 

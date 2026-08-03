@@ -24,11 +24,10 @@ extern "C" {
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
-
-#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef renderer_backend_result_t (*pfn_vertex_buffer_create)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_createの前方宣言 */
 typedef void (*pfn_vertex_buffer_destroy)(renderer_backend_vbo_t** vertex_buffer_); /**< renderer_vbo_vtableが保持するvertex_buffer_destroyの前方宣言 */

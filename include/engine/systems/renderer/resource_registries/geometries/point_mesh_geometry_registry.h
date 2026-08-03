@@ -27,14 +27,13 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
 typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**< 点描画用ジオメトリレジストリのopaque型 */
 
 typedef struct linear_alloc linear_alloc_t;                                 /**< リニアアロケータのopaque型 */
 typedef struct point_mesh_geometry point_mesh_geometry_t;                   /**< 点描画用ジオメトリのopaque型 */
+typedef struct vertex_buffer_range vertex_buffer_range_t;
 
 /**
  * @brief 点描画用ジオメトリレジストリ用のメモリを確保し、初期化する

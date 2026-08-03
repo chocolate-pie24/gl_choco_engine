@@ -170,6 +170,7 @@
 
 #include <stdio.h>  // for fprintf
 #include <string.h> // for memset
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 

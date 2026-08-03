@@ -16,8 +16,6 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
 
 #include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
 
 #include <GL/glew.h>
 
@@ -25,6 +23,8 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
+
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
@@ -254,7 +254,6 @@ static renderer_backend_result_t gl33_vbo_unbind(void) {
 
     ret = RENDERER_BACKEND_SUCCESS;
 
-cleanup:
     return ret;
 }
 

@@ -1,5 +1,7 @@
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
 
+#include <stddef.h>
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
@@ -7,13 +9,13 @@
 
 #include "engine/io_utils/fs_utils/fs_utils.h"
 
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
 
 static shader_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_);
 static shader_result_t shader_program_build(renderer_backend_shader_t* shader_, renderer_backend_context_t* backend_context_, const choco_string_t* vertex_shader_source_, const choco_string_t* fragment_shader_source_);

@@ -25,15 +25,12 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 typedef renderer_backend_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_createの前方宣言 */
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_destroyの前方宣言 */

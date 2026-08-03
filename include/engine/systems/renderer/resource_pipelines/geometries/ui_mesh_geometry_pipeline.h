@@ -25,9 +25,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stddef.h>
-
-#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 

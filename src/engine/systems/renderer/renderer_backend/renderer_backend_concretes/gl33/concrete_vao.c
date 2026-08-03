@@ -18,7 +18,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdalign.h>
 
 #include <GL/glew.h>
 
@@ -26,6 +25,8 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
+
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"

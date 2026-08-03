@@ -25,22 +25,23 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/math_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
+
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
+#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 
 // TODO: テスト(lit_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る

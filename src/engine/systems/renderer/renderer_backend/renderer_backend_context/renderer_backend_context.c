@@ -1,15 +1,21 @@
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdalign.h>
 #include <string.h> // for memset
 
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+#include "engine/core/memory/linear_allocator.h"
+
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
@@ -24,11 +30,6 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_texture.h"
-
-#include "engine/core/memory/linear_allocator.h"
-
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
 
 /**
  * @brief RendererBackend内部状態管理構造体

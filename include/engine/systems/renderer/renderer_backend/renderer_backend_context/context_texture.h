@@ -22,7 +22,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 

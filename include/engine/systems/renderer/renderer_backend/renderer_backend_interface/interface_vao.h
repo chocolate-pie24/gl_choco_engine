@@ -27,9 +27,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef renderer_backend_result_t (*pfn_vertex_array_create)(renderer_backend_vao_t** vertex_array_);   /**< renderer_vao_vtableが保持するvertex_array_createの前方宣言 */
 typedef void (*pfn_vertex_array_destroy)(renderer_backend_vao_t** vertex_array_);   /**< renderer_vao_vtableが保持するvertex_array_destroyの前方宣言 */

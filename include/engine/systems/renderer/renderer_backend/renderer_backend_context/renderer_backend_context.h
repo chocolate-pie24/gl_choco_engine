@@ -25,9 +25,9 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/core/memory/linear_allocator.h"
-
 typedef struct renderer_backend_context renderer_backend_context_t; /**< renderer_backend_context内部情報管理構造体前方宣言 */
+
+typedef struct linear_alloc linear_alloc_t;
 
 /**
  * @brief レンダラーバックエンドのメモリを確保し、初期化を行う

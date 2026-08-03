@@ -22,20 +22,13 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/math_types.h"
 
-#include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
-
-#include "engine/containers/choco_string.h"
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/geometry/point_mesh_geometry.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"

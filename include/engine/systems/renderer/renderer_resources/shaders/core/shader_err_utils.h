@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -14,9 +14,8 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
 
 const char* shader_rslt_to_str(shader_result_t rslt_);
 

@@ -24,8 +24,8 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/memory/choco_memory.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -613,6 +613,10 @@ static texture_system_result_t tex_sys_rslt_convert_renderer_backend(renderer_ba
         return TEXTURE_SYSTEM_DATA_CORRUPTED;
     case RENDERER_BACKEND_OVERFLOW:
         return TEXTURE_SYSTEM_OVERFLOW;
+    case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
+        return TEXTURE_SYSTEM_UNDEFINED_ERROR;
+    case RENDERER_BACKEND_SHADER_LINK_ERROR:
+        return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     case RENDERER_BACKEND_UNDEFINED_ERROR:
         return TEXTURE_SYSTEM_UNDEFINED_ERROR;
     default:

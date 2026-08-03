@@ -88,11 +88,10 @@
 
 #include "engine/core/memory/choco_memory.h"
 
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"

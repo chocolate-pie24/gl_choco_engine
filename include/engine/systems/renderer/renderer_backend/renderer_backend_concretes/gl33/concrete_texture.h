@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_texture.h"
+typedef struct renderer_texture_vtable renderer_texture_vtable_t;
 
 /**
  * @brief OpenGL3.3用texture仮想関数テーブル(vtable)を取得する

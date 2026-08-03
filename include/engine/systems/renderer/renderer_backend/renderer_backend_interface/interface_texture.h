@@ -21,12 +21,11 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
 #include <stdint.h>
 
-#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_); /**< renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 */

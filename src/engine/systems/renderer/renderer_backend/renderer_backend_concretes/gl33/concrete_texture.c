@@ -26,6 +26,8 @@
 
 #include "engine/core/memory/choco_memory.h"
 
+#include "engine/systems/renderer/renderer_core/renderer_types.h"
+
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_texture.h"
