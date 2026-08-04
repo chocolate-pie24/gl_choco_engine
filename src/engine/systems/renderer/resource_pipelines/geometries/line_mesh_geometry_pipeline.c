@@ -195,24 +195,16 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "geometry_registry_")
 
     ret_registry = line_mesh_geometry_registry_vertex_buffer_range_get(geometry_registry_, geometry_id_, &vertex_buffer_range);
-    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
 
     // unregisterに失敗した場合はgeometry_registry_は不変となる。そのため、vbo_freeの後でunregisterに失敗するとgeometry_registry_に解放済みallocationへの参照が残る。よってvbo_freeの前で実行する
     ret_registry = line_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
-    if(RESOURCE_REGISTRY_INVALID_ARGUMENT == ret_registry || RESOURCE_REGISTRY_BAD_OPERATION == ret_registry) { // geometry_idが異常
-        ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    } else if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }

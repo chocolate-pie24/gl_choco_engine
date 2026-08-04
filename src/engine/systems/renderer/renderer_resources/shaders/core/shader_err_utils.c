@@ -99,8 +99,8 @@ shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_) {
         return SHADER_RUNTIME_ERROR;
     case CHOCO_STRING_UNDEFINED_ERROR:
         return SHADER_UNDEFINED_ERROR;
-    case CHOCO_STRING_OVERFLOW: // 文字列長さオーバーフローはRUNTIME_ERRORに変換
-        return SHADER_RUNTIME_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return SHADER_OVERFLOW;
     case CHOCO_STRING_LIMIT_EXCEEDED:
         return SHADER_LIMIT_EXCEEDED;
     default:
@@ -122,8 +122,8 @@ shader_result_t shader_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
         return SHADER_NO_MEMORY;
     case FS_UTILS_LIMIT_EXCEEDED:
         return SHADER_LIMIT_EXCEEDED;
-    case FS_UTILS_OVERFLOW: // オーバーフローはRUNTIME_ERRORに変換
-        return SHADER_RUNTIME_ERROR;
+    case FS_UTILS_OVERFLOW:
+        return SHADER_OVERFLOW;
     case FS_UTILS_FILE_OPEN_ERROR:
         return SHADER_RUNTIME_ERROR;
     case FS_UTILS_EOF:
