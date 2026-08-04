@@ -85,7 +85,7 @@ resource_registry_result_t resource_registry_rslt_convert_resource(resource_resu
     case RESOURCE_BAD_OPERATION:
         return RESOURCE_REGISTRY_BAD_OPERATION;
     case RESOURCE_OVERFLOW:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではすでに生成済みのリソースを扱うため、オーバーフローは基本起こり得ないはず
+        return RESOURCE_REGISTRY_OVERFLOW;
     case RESOURCE_LIMIT_EXCEEDED:
         return RESOURCE_REGISTRY_LIMIT_EXCEEDED;
     case RESOURCE_FILE_OPEN_ERROR:

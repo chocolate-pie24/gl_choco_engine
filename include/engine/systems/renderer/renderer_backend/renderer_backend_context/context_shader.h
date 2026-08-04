@@ -26,7 +26,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
@@ -40,16 +40,16 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[out] shader_handle_ リソース確保対象シェーダーハンドル構造体インスタンスへのダブルポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - renderer_backend_context_ == NULL
  * - shader_handle_ == NULL
  * - *shader_handle_ != NULL
- * @retval RENDERER_BAD_OPERATION renderer_backend_context_が未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
- * @retval RENDERER_SUCCESS メモリ確保および初期化に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION renderer_backend_context_が未初期化
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_BACKEND_SUCCESS メモリ確保および初期化に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_);
+renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_);
 
 /**
  * @brief シェーダーハンドル構造体インスタンスを破棄する
@@ -85,21 +85,21 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ コンパイルしたシェーダーオブジェクトへのハンドルを格納する
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - shader_source_ == NULL
  * - shader_handle_ == NULL
  * - shader_type_が無効
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
  * - shader_handle_が保持するシェーダーオブジェクトがコンパイル済み
  * - shader_handle_が保持するシェーダープログラムがリンク済み
  * - メモリシステム未初期化
- * @retval RENDERER_SHADER_COMPILE_ERROR シェーダーオブジェクトのGPU側リソース確保に失敗、またはシェーダーソースのコンパイル失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
- * @retval RENDERER_SUCCESS シェーダーオブジェクトのコンパイルに成功し、正常終了
+ * @retval RENDERER_BACKEND_SHADER_COMPILE_ERROR シェーダーオブジェクトのGPU側リソース確保に失敗、またはシェーダーソースのコンパイル失敗
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_BACKEND_SUCCESS シェーダーオブジェクトのコンパイルに成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
+renderer_backend_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief コンパイル済みのシェーダーオブジェクトをリンクする
@@ -113,20 +113,20 @@ renderer_result_t renderer_backend_shader_compile(shader_type_t shader_type_, co
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ リンクしたプログラム識別子を格納する
  *
- * @retval RENDERER_INVALID_ARGUMENT
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
  * - shader_handle_ == NULL
  * - backend_context_ == NULL
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
  * - プログラムが既にリンク済み
  * - バーテックスシェーダーオブジェクトが未コンパイル
  * - フラグメントシェーダーオブジェクトが未コンパイル
  * - メモリシステム未初期化
- * @retval RENDERER_SHADER_LINK_ERROR シェーダープログラムのGPU側リソース確保に失敗、またはシェーダーリンクエラー
- * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ割り当て失敗
- * @retval RENDERER_SUCCESS シェーダープログラムのリンクに成功し、正常終了
+ * @retval RENDERER_BACKEND_SHADER_LINK_ERROR シェーダープログラムのGPU側リソース確保に失敗、またはシェーダーリンクエラー
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ割り当て失敗
+ * @retval RENDERER_BACKEND_SUCCESS シェーダープログラムのリンクに成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
+renderer_backend_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief シェーダープログラムの使用開始をグラフィックスAPIに伝える
@@ -134,16 +134,16 @@ renderer_result_t renderer_backend_shader_link(renderer_backend_context_t* backe
  * @param[in,out] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] shader_handle_ シェーダープログラムハンドル格納構造体インスタンス
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - shader_handle_ == NULL
  * - backend_context_ == NULL
- * @retval RENDERER_BAD_OPERATION シェーダープログラムが未リンク
- * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+ * @retval RENDERER_BACKEND_BAD_OPERATION シェーダープログラムが未リンク
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED 以下のいずれか
  * - shader_handle_が保持するバーテックスシェーダーオブジェクトが未コンパイル
  * - shader_handle_が保持するフラグメントシェーダーオブジェクトが未コンパイル
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_use(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_);
+renderer_backend_result_t renderer_backend_shader_use(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief シェーダープログラムのユニフォーム変数のLocationを取得する
@@ -153,16 +153,16 @@ renderer_result_t renderer_backend_shader_use(const renderer_backend_context_t* 
  * @param[in] name_ ユニフォーム変数名称
  * @param[out] out_location_ Location格納先
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - shader_handle_ == NULL
  * - name_ == NULL
  * - out_location_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でbackend_context_->shader_vtableがNULL
- * @retval RENDERER_RUNTIME_ERROR ユニフォーム変数のLocation取得に失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化でbackend_context_->shader_vtableがNULL
+ * @retval RENDERER_BACKEND_RUNTIME_ERROR ユニフォーム変数のLocation取得に失敗
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
+renderer_backend_result_t renderer_backend_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 
 /**
  * @brief シェーダープログラムにmat4f型のユニフォーム変数を送信する
@@ -175,13 +175,13 @@ renderer_result_t renderer_backend_shader_uniform_location_get(const renderer_ba
  * @param[in] should_transpose_ true: 送信時に行列を転置する / false: 送信時に行列を転置しない
  * @param[in] data_ 送信データへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - data_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_);
+renderer_backend_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_);
 
 /**
  * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
@@ -193,13 +193,13 @@ renderer_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backe
  * @param[in] location_ ユニフォーム変数のLocation
  * @param[in] data_ 送信データへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - data_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化でshader_vtableがNULL
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_);
+renderer_backend_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_);
 
 #ifdef __cplusplus
 }

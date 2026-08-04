@@ -21,17 +21,17 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
 #include <stdint.h>
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-typedef renderer_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
+typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_); /**< renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
-typedef renderer_result_t (*pfn_renderer_texture_pixel_upload)(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);  /**< renderer_texture_vtableが保持するrenderer_texture_pixel_uploadの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload)(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);  /**< renderer_texture_vtableが保持するrenderer_texture_pixel_uploadの前方宣言 */
 
 /**
  * @brief Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル
@@ -48,7 +48,7 @@ typedef struct renderer_texture_vtable {
      * @param[in] wrap_config_t_axis_ テクスチャがラップする部分の表示設定値(t軸)
      * @param[out] texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
      * - texture_handle_ == NULL
      * - *texture_handle_ != NULL
      * - min_filter_config_が規定値外
@@ -56,10 +56,10 @@ typedef struct renderer_texture_vtable {
      * - wrap_config_s_axis_が規定値外
      * - wrap_config_t_axis_が規定値外
      * - unit_num_ < 0
-     * @retval RENDERER_BAD_OPERATION メモリシステム未初期化
-     * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
-     * @retval RENDERER_NO_MEMORY メモリ確保失敗
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
+     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+     * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_texture_create renderer_texture_create;
 
@@ -78,11 +78,11 @@ typedef struct renderer_texture_vtable {
      *
      * @param[in] texture_handle_ bind対象テクスチャハンドル保有構造体インスタンスへのポインタ
      *
-     * @retval RENDERER_INVALID_ARGUMENT texture_handle_ == NULL
-     * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT texture_handle_ == NULL
+     * @retval RENDERER_BACKEND_DATA_CORRUPTED 以下のいずれか
      * - texture_handle_->handle == 0
      * - texture_handle_->unit_number < 0
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_texture_bind renderer_texture_bind;
 
@@ -91,11 +91,11 @@ typedef struct renderer_texture_vtable {
      *
      * @param[in] texture_handle_ unbind対象テクスチャGPUリソース構造体インスタンスへのポインタ
      *
-     * @retval RENDERER_INVALID_ARGUMENT texture_handle_ == NULL
-     * @retval RENDERER_DATA_CORRUPTED 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT texture_handle_ == NULL
+     * @retval RENDERER_BACKEND_DATA_CORRUPTED 以下のいずれか
      * - texture_handle_->handle == 0
      * - texture_handle_->unit_number < 0
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_texture_unbind renderer_texture_unbind;
 
@@ -109,12 +109,12 @@ typedef struct renderer_texture_vtable {
      * @param channel_count_ 転送ピクセルデータのチャンネルカウント(RGB or RGBAのみ許可)
      * @param pixels_ 転送ピクセルデータ
      *
-     * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
      * - pixels_ == NULL
      * - width_ == 0
      * - height_ == 0
      * - channel_count_が3, 4以外
-     * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_texture_pixel_upload renderer_texture_pixel_upload;
 } renderer_texture_vtable_t;

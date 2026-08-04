@@ -570,8 +570,6 @@ static fs_utils_result_t memory_system_result_convert(memory_system_result_t res
         return FS_UTILS_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return FS_UTILS_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return FS_UTILS_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return FS_UTILS_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:
@@ -2315,7 +2313,6 @@ static void NO_COVERAGE test_memory_system_result_convert(void) {
     {
         assert(FS_UTILS_SUCCESS == memory_system_result_convert(MEMORY_SYSTEM_SUCCESS));
         assert(FS_UTILS_INVALID_ARGUMENT == memory_system_result_convert(MEMORY_SYSTEM_INVALID_ARGUMENT));
-        assert(FS_UTILS_RUNTIME_ERROR == memory_system_result_convert(MEMORY_SYSTEM_RUNTIME_ERROR));
         assert(FS_UTILS_LIMIT_EXCEEDED == memory_system_result_convert(MEMORY_SYSTEM_LIMIT_EXCEEDED));
         assert(FS_UTILS_BAD_OPERATION == memory_system_result_convert(MEMORY_SYSTEM_BAD_OPERATION));
         assert(FS_UTILS_NO_MEMORY == memory_system_result_convert(MEMORY_SYSTEM_NO_MEMORY));

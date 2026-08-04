@@ -74,8 +74,7 @@ typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t; /**< UI描
  */
 resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* name_, int16_t* out_geometry_id_);
 
-// TODO: 実装後にdoxygenコメントを追加する
-resource_pipeline_result_t ui_mesh_geometry_pipeline_release(int16_t geometry_id_);
+resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 
 #ifdef __cplusplus
 }

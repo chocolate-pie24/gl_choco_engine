@@ -93,8 +93,6 @@ camera_result_t camera_rslt_convert_choco_memory(memory_system_result_t rslt_) {
         return CAMERA_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return CAMERA_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return CAMERA_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return CAMERA_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:
@@ -250,9 +248,6 @@ static void NO_COVERAGE test_camera_rslt_convert_choco_memory(void) {
 
     actual = camera_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT);
     assert(actual == CAMERA_INVALID_ARGUMENT);
-
-    actual = camera_rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR);
-    assert(actual == CAMERA_RUNTIME_ERROR);
 
     actual = camera_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED);
     assert(actual == CAMERA_LIMIT_EXCEEDED);

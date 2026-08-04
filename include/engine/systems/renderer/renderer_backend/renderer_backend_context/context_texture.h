@@ -22,11 +22,10 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
@@ -41,7 +40,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * @param[in] wrap_config_t_axis_ テクスチャがラップする部分の表示設定値(t軸)
  * @param[out] texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - texture_handle_ == NULL
  * - *texture_handle_ != NULL
@@ -50,14 +49,14 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - wrap_config_s_axis_が規定値外
  * - wrap_config_t_axis_が規定値外
  * - unit_num_ < 0
- * @retval RENDERER_BAD_OPERATION 以下のいずれか
+ * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
  * - backend_context_->texture_vtableがNULLで未初期化
  * - メモリシステム未初期化
- * @retval RENDERER_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
+renderer_backend_result_t renderer_backend_texture_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
 
 /**
  * @brief テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する
@@ -76,14 +75,14 @@ void renderer_backend_texture_destroy(renderer_backend_context_t* backend_contex
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] texture_handle_ bind対象テクスチャハンドル保有構造体インスタンスへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - texture_handle_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
- * @retval RENDERER_DATA_CORRUPTED texture_handle_内部データ破損
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED texture_handle_内部データ破損
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
+renderer_backend_result_t renderer_backend_texture_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
 /**
  * @brief テクスチャをunbindする
@@ -91,14 +90,14 @@ renderer_result_t renderer_backend_texture_bind(const renderer_backend_context_t
  * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in] texture_handle_ unbind対象テクスチャGPUリソース構造体インスタンスへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - texture_handle_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
- * @retval RENDERER_DATA_CORRUPTED texture_handle_内部データ破損
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED texture_handle_内部データ破損
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_unbind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
+renderer_backend_result_t renderer_backend_texture_unbind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
 /**
  * @brief 現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する
@@ -112,16 +111,16 @@ renderer_result_t renderer_backend_texture_unbind(const renderer_backend_context
  * @param channel_count_ 転送ピクセルデータのチャンネルカウント(RGB or RGBAのみ許可)
  * @param pixels_ 転送ピクセルデータ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - pixels_ == NULL
  * - width_ == 0
  * - height_ == 0
  * - channel_count_が3or4以外
- * @retval RENDERER_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 #ifdef __cplusplus
 }

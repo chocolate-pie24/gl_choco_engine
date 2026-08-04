@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vao.h"
+typedef struct renderer_vao_vtable renderer_vao_vtable_t;
 
 /**
  * @brief OpenGL3.3用VAO仮想関数テーブル(vtable)を取得する

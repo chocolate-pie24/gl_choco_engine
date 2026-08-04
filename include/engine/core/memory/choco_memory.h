@@ -59,7 +59,6 @@ typedef enum {
 typedef enum {
     MEMORY_SYSTEM_SUCCESS = 0,      /**< メモリシステム成功 */
     MEMORY_SYSTEM_INVALID_ARGUMENT, /**< 無効な引数 */
-    MEMORY_SYSTEM_RUNTIME_ERROR,    /**< 実行時エラー */
     MEMORY_SYSTEM_LIMIT_EXCEEDED,   /**< メモリ使用量管理システムの使用量が使用範囲上限を超過 */
     MEMORY_SYSTEM_BAD_OPERATION,    /**< メモリシステムAPI誤用 */
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
@@ -70,7 +69,7 @@ typedef enum {
  *
  * @note
  * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスを初期化する
- * このため、メモリシステムが既に初期化済みであった場合はMEMORY_SYSTEM_RUNTIME_ERRORを返す
+ * このため、メモリシステムが既に初期化済みであった場合はMEMORY_SYSTEM_BAD_OPERATIONを返す
  * memory_system_createを再度実行する際には、memory_system_destroyを呼び出してから使用すること
  *
  * 使用例:
@@ -78,7 +77,7 @@ typedef enum {
  * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理構造体インスタンスが初期化される
  * @endcode
  *
- * @retval MEMORY_SYSTEM_RUNTIME_ERROR メモリシステムが既に初期化済み
+ * @retval MEMORY_SYSTEM_BAD_OPERATION メモリシステムが既に初期化済み
  * @retval MEMORY_SYSTEM_NO_MEMORY     メモリシステム用のメモリ確保に失敗
  * @retval MEMORY_SYSTEM_SUCCESS       メモリシステムの初期化に成功し、正常終了
  *

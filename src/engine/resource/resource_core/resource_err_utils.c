@@ -116,8 +116,6 @@ resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t resu
         return RESOURCE_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         return RESOURCE_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        return RESOURCE_RUNTIME_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return RESOURCE_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:
@@ -355,7 +353,6 @@ static void NO_COVERAGE test_resource_rslt_convert_choco_memory(void) {
 
     assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS));
     assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_RUNTIME_ERROR));
     assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED));
     assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_BAD_OPERATION));
     assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY));

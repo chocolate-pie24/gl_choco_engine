@@ -28,12 +28,16 @@ extern "C" {
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/systems/camera_system/camera_core/camera_types.h"
-#include "engine/systems/platform/platform_core/platform_types.h"
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
-#include "engine/systems/texture_system/texture_manager.h"
-
 #include "engine/resource/resource_core/resource_types.h"
+
+#include "engine/systems/camera_system/camera_core/camera_types.h"
+
+#include "engine/systems/platform/platform_core/platform_types.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+
+#include "engine/systems/texture_system/texture_manager.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
@@ -80,14 +84,7 @@ application_result_t app_rslt_convert_platform(platform_result_t rslt_);
  */
 application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
-/**
- * @brief Rendererレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] rslt_ Rendererレイヤー実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t app_rslt_convert_renderer(renderer_result_t rslt_);
+application_result_t app_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
 
 /**
  * @brief Camera Systemレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
@@ -124,6 +121,8 @@ application_result_t app_rslt_convert_resource(resource_result_t rslt_);
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
+
+application_result_t app_rslt_convert_shader(shader_result_t rslt_);
 
 #ifdef __cplusplus
 }

@@ -25,7 +25,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
@@ -41,16 +41,16 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * @param[in] backend_context_ VBOメモリ確保関数保有構造体インスタンスへのポインタ
  * @param[out] vertex_buffer_ メモリ確保対象VBO構造体インスタンスへのダブルポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - vertex_buffer_ == NULL
  * - *vertex_buffer_ != NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
- * @retval RENDERER_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vertex_buffer_);
+renderer_backend_result_t renderer_backend_vertex_buffer_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vertex_buffer_);
 
 /**
  * @brief VBO内部状態管理構造体インスタンスを破棄する
@@ -72,13 +72,13 @@ void renderer_backend_vertex_buffer_destroy(renderer_backend_context_t* backend_
  * @param[in] backend_context_ bind用vtable保有構造体インスタンスへのポインタ
  * @param[in] vertex_buffer_ bind対象VBOハンドル構造体インスタンスへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - vertex_buffer_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtable == NULL
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtable == NULL
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vertex_buffer_);
+renderer_backend_result_t renderer_backend_vertex_buffer_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vertex_buffer_);
 
 /**
  * @brief VBOをunbindする
@@ -87,11 +87,11 @@ renderer_result_t renderer_backend_vertex_buffer_bind(const renderer_backend_con
  *
  * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT backend_context_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_が未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT backend_context_ == NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_unbind(const renderer_backend_context_t* backend_context_);
+renderer_backend_result_t renderer_backend_vertex_buffer_unbind(const renderer_backend_context_t* backend_context_);
 
 /**
  * @brief GPUの頂点情報格納バッファに頂点情報を転送する
@@ -103,14 +103,14 @@ renderer_result_t renderer_backend_vertex_buffer_unbind(const renderer_backend_c
  * @param[in] load_data_ 転送データ配列への先頭ポインタ
  * @param[in] usage_ バッファ用途 @ref buffer_usage_t
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - load_size_ == 0
  * - backend_context_ == NULL
- * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
- * @retval RENDERER_RUNTIME_ERROR usage_の値が規定範囲外
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_RUNTIME_ERROR usage_の値が規定範囲外
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
+renderer_backend_result_t renderer_backend_vertex_buffer_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
 
 /**
  * @brief 生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する
@@ -122,14 +122,14 @@ renderer_result_t renderer_backend_vertex_buffer_vertex_load(const renderer_back
  * @param[in] size_ 頂点情報転送サイズ(byte)
  * @param[in] load_data_ 転送する頂点情報配列へのポインタ
  *
- * @retval RENDERER_INVALID_ARGUMENT 以下のいずれか
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
  * - load_data_ == NULL
  * - size_ == 0
- * @retval RENDERER_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
- * @retval RENDERER_SUCCESS 処理に成功し、正常終了
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_result_t renderer_backend_vertex_buffer_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_);
+renderer_backend_result_t renderer_backend_vertex_buffer_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_);
 
 #ifdef __cplusplus
 }

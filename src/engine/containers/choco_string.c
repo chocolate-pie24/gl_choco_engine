@@ -729,7 +729,6 @@ static const char* rslt_to_str(choco_string_result_t rslt_) {
  * @retval CHOCO_STRING_LIMIT_EXCEEDED 以下のいずれか
  * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
  * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
- * @retval CHOCO_STRING_RUNTIME_ERROR memory_system_allocateがMEMORY_SYSTEM_RUNTIME_ERRORを返した
  * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
  * @retval CHOCO_STRING_SUCCESS メモリ確保に成功し、正常終了
  */
@@ -762,9 +761,6 @@ static choco_string_result_t choco_string_mem_allocate(size_t size_, void** out_
         goto cleanup;
     case MEMORY_SYSTEM_BAD_OPERATION:
         ret = CHOCO_STRING_BAD_OPERATION;
-        goto cleanup;
-    case MEMORY_SYSTEM_RUNTIME_ERROR:
-        ret = CHOCO_STRING_RUNTIME_ERROR;
         goto cleanup;
     case MEMORY_SYSTEM_SUCCESS:
         ret = CHOCO_STRING_SUCCESS;
@@ -3805,26 +3801,26 @@ static void NO_COVERAGE test_choco_string_mem_allocate(void) {
         test_choco_string_config_reset();
         test_choco_memory_config_reset();
     }
-    {
-        // memory_system_allocate() -> MEMORY_SYSTEM_RUNTIME_ERROR
-        choco_string_result_t ret = CHOCO_STRING_SUCCESS;
-        void* p = NULL;
-        test_call_control_t config = {0};
+    // {
+    //     // memory_system_allocate() -> MEMORY_SYSTEM_RUNTIME_ERROR
+    //     choco_string_result_t ret = CHOCO_STRING_SUCCESS;
+    //     void* p = NULL;
+    //     test_call_control_t config = {0};
 
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
+    //     test_choco_string_config_reset();
+    //     test_choco_memory_config_reset();
 
-        config.fail_on_call = 1U;
-        config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
-        test_memory_system_allocate_config_set(&config);
+    //     config.fail_on_call = 1U;
+    //     config.forced_result = (int)MEMORY_SYSTEM_RUNTIME_ERROR;
+    //     test_memory_system_allocate_config_set(&config);
 
-        ret = choco_string_mem_allocate(16U, &p);
-        assert(CHOCO_STRING_RUNTIME_ERROR == ret);
-        assert(NULL == p);
+    //     ret = choco_string_mem_allocate(16U, &p);
+    //     assert(CHOCO_STRING_RUNTIME_ERROR == ret);
+    //     assert(NULL == p);
 
-        test_choco_string_config_reset();
-        test_choco_memory_config_reset();
-    }
+    //     test_choco_string_config_reset();
+    //     test_choco_memory_config_reset();
+    // }
     {
         // memory_system_allocate() -> 未定義値
         choco_string_result_t ret = CHOCO_STRING_SUCCESS;

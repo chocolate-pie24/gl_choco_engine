@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
+typedef struct renderer_shader_vtable renderer_shader_vtable_t;
 
 /**
  * @brief OpenGL3.3用シェーダー仮想関数テーブル(vtable)を取得する

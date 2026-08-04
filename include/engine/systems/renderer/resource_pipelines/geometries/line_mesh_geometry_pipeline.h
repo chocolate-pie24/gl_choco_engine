@@ -27,14 +27,13 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/geometry_primitive/aabb_3d.h"
-
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t;         /**< Renderer Backend Contextのopaque型 */
 typedef struct line_mesh_shader line_mesh_shader_t;                         /**< 線分描画用シェーダーリソースのopaque型 */
 typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**< 線分描画用ジオメトリレジストリのopaque型 */
+typedef struct line_vertex line_vertex_t;
+typedef struct aabb_3d aabb_3d_t;
 
 /**
  * @brief 線分描画用頂点データを元にジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う
@@ -117,8 +116,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
  */
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_);
 
-// TODO: 実装後にdoxygenコメントを追加する
-resource_pipeline_result_t line_mesh_geometry_pipeline_release(int16_t geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 
 #ifdef __cplusplus
 }
