@@ -13,9 +13,9 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "application/application_core/application_err_utils.h"
+#include "application/core/application_err_utils.h"
 
-#include "application/application_core/application_types.h"
+#include "application/core/application_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
@@ -39,7 +39,7 @@
 // #include "test_controller.h"
 // #include "engine/base/choco_macros.h"
 
-// #include "application/application_core/test_application_err_utils.h"
+// #include "application/core/test_application_err_utils.h"
 
 // // application_err_utils用モジュール専用テスト制御構造体定義
 

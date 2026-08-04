@@ -13,14 +13,14 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_APPLICATION_APPLICATION_CORE_APPLICATION_ERR_UTILS_H
-#define GLCE_APPLICATION_APPLICATION_CORE_APPLICATION_ERR_UTILS_H
+#ifndef GLCE_APPLICATION_CORE_APPLICATION_ERR_UTILS_H
+#define GLCE_APPLICATION_CORE_APPLICATION_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "application/application_core/application_types.h"
+#include "application/core/application_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"

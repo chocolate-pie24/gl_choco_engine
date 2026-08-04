@@ -27,8 +27,8 @@
 
 #include "application/application.h"
 
-#include "application/application_core/application_types.h"
-#include "application/application_core/application_err_utils.h"
+#include "application/core/application_types.h"
+#include "application/core/application_err_utils.h"
 
 #include "application/command_interpreter/flight_camera.h"
 

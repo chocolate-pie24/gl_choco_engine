@@ -20,8 +20,8 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-// test: application/application_core
-#include "application/application_core/test_application_err_utils.h"
+// test: application/core
+#include "application/core/test_application_err_utils.h"
 
 // test: application/command_interpreter
 #include "application/command_interpreter/test_flight_camera.h"
@@ -106,7 +106,7 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
-        // application/application_core
+        // application/core
         // test_application_err_utils();
 
         // application/command_interpreter

@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include "application/application_core/application_types.h"
+#include "application/core/application_types.h"
 
 /**
  * @brief エンジンを構成する各サブシステムを初期化する
