@@ -72,7 +72,7 @@
 #include "engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

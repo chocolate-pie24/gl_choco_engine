@@ -22,7 +22,7 @@ extern "C" {
 
 #include "engine/systems/platform/platform_core/platform_types.h"   // for platform_type_t
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"   // for target_graphics_api_t
+#include "engine/systems/renderer/core/renderer_types.h"   // for target_graphics_api_t
 
 /**
  * @brief アプリケーション実行結果コード定義

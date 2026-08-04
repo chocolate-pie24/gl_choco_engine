@@ -24,7 +24,7 @@
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/platform/platform_core/platform_types.h"
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/texture_system/texture_manager.h"
 
 #include "engine/resource/core/resource_types.h"

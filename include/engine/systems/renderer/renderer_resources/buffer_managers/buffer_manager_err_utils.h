@@ -52,7 +52,7 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
+#include "engine/systems/renderer/core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

@@ -9,7 +9,7 @@
 
 #include "engine/io_utils/fs_utils.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"

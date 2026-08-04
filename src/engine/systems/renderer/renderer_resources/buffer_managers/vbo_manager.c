@@ -88,8 +88,8 @@
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
-#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
+#include "engine/systems/renderer/core/renderer_types.h"
+#include "engine/systems/renderer/core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"

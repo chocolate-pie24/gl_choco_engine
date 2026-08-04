@@ -67,8 +67,8 @@
 #include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
 
 // test: engine/systems/renderer
-#include "engine/systems/renderer/renderer_core/test_renderer_err_utils.h"
-#include "engine/systems/renderer/renderer_core/test_renderer_memory.h"
+#include "engine/systems/renderer/core/test_renderer_err_utils.h"
+#include "engine/systems/renderer/core/test_renderer_memory.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"

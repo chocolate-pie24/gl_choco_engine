@@ -80,8 +80,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
-#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
+#include "engine/systems/renderer/core/renderer_types.h"
+#include "engine/systems/renderer/core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
 

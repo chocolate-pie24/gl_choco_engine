@@ -166,7 +166,7 @@
  * プロジェクト作成者が実装との整合性を確認・修正した。
  * 実装コードはプロジェクト作成者が作成し、その内容に責任を負う。
  */
-#include "engine/systems/renderer/renderer_core/allocators/range_allocator.h"
+#include "engine/systems/renderer/core/allocators/range_allocator.h"
 
 #include <stdio.h>  // for fprintf
 #include <string.h> // for memset
