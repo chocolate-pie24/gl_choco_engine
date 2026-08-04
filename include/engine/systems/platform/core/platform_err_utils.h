@@ -10,14 +10,14 @@
  * @copyright Copyright (c) 2026
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CORE_PLATFORM_ERR_UTILS_H
-#define GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CORE_PLATFORM_ERR_UTILS_H
+#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_CORE_PLATFORM_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_PLATFORM_CORE_PLATFORM_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_types.h"
 
 #include "engine/containers/choco_string.h"
 #include "engine/core/memory/linear_allocator.h"

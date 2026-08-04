@@ -50,7 +50,7 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"

@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "engine/systems/platform/platform_core/platform_types.h"   // for platform_type_t
+#include "engine/systems/platform/core/platform_types.h"   // for platform_type_t
 
 #include "engine/systems/renderer/core/renderer_types.h"   // for target_graphics_api_t
 

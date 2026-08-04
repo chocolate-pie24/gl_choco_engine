@@ -32,7 +32,7 @@ extern "C" {
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"

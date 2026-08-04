@@ -16,8 +16,8 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/systems/platform/platform_core/platform_err_utils.h"
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_err_utils.h"
+#include "engine/systems/platform/core/platform_types.h"
 
 // #define TEST_BUILD
 
@@ -29,7 +29,7 @@
 #include "test_controller.h"
 #include "engine/base/choco_macros.h"
 
-#include "engine/systems/platform/platform_core/test_platform_err_utils.h"
+#include "engine/systems/platform/core/test_platform_err_utils.h"
 
 // platform_err_utils用モジュール専用テスト制御構造体定義
 

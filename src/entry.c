@@ -55,7 +55,7 @@
 #include "engine/resource/geometry/test_ui_mesh_geometry.h"
 
 // test: engine/systems/platform
-#include "engine/systems/platform/platform_core/test_platform_err_utils.h"
+#include "engine/systems/platform/core/test_platform_err_utils.h"
 #include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
 #include "engine/systems/platform/test_platform_context.h"
 

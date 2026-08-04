@@ -29,8 +29,8 @@
 #include "engine/systems/platform/platform_context.h"
 #include "engine/systems/platform/platform_interface.h"
 #include "engine/systems/platform/platform_concretes/platform_glfw.h"
-#include "engine/systems/platform/platform_core/platform_types.h"
-#include "engine/systems/platform/platform_core/platform_err_utils.h"
+#include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform/core/platform_err_utils.h"
 
 // #define TEST_BUILD
 
