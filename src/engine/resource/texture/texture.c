@@ -25,7 +25,7 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
+#include "engine/io_utils/fs_utils.h"
 
 #include "engine/containers/choco_string.h"
 

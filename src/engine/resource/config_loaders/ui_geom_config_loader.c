@@ -25,7 +25,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
+#include "engine/io_utils/fs_utils.h"
 
 #include "engine/resource/resource_core/resource_types.h"
 #include "engine/resource/resource_core/resource_err_utils.h"

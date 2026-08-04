@@ -10,7 +10,7 @@ extern "C" {
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
+#include "engine/io_utils/fs_utils.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

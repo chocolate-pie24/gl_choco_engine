@@ -28,7 +28,7 @@ extern "C" {
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
+#include "engine/io_utils/fs_utils.h"
 
 /**
  * @brief Resourceレイヤー実行結果コードを文字列に変換する

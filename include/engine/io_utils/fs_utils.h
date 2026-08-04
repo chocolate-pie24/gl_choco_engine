@@ -17,8 +17,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_IO_UTILS_FS_UTILS_FS_UTILS_H
-#define GLCE_ENGINE_IO_UTILS_FS_UTILS_FS_UTILS_H
+#ifndef GLCE_ENGINE_IO_UTILS_FS_UTILS_H
+#define GLCE_ENGINE_IO_UTILS_FS_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
