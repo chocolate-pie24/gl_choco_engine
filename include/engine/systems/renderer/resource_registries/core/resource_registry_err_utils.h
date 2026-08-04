@@ -23,7 +23,7 @@ extern "C" {
 
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 

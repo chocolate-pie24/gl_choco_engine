@@ -27,7 +27,7 @@
 #include "engine/systems/renderer/renderer_core/renderer_types.h"
 #include "engine/systems/texture_system/texture_manager.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 // #define TEST_BUILD
 

@@ -29,8 +29,8 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 #include "engine/resource/loaders/bmp_loader.h"
 

@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"
@@ -33,7 +33,7 @@
 
 #include "test_controller.h"
 #include "engine/base/choco_macros.h"
-#include "engine/resource/resource_core/test_resource_err_utils.h"
+#include "engine/resource/core/test_resource_err_utils.h"
 
 // resource_err_utils用モジュール専用テスト制御構造体定義
 

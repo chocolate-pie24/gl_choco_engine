@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"

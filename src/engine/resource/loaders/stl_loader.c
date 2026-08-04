@@ -37,8 +37,8 @@
 
 #include "engine/io_utils/fs_utils.h"
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 // #define TEST_BUILD
 

@@ -13,14 +13,14 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_ERR_UTILS_H
-#define GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_ERR_UTILS_H
+#ifndef GLCE_ENGINE_RESOURCE_CORE_RESOURCE_ERR_UTILS_H
+#define GLCE_ENGINE_RESOURCE_CORE_RESOURCE_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/filesystem/filesystem.h"

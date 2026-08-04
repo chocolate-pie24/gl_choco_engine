@@ -28,7 +28,7 @@ extern "C" {
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 

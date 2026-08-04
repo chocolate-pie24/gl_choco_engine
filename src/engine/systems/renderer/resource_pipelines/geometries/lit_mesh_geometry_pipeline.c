@@ -31,7 +31,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 #include "engine/resource/loaders/stl_loader.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 

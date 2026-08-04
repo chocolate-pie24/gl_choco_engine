@@ -45,7 +45,7 @@
 #include "engine/io_utils/fs_utils/test_fs_utils.h"
 
 // test: engine/resource
-#include "engine/resource/resource_core/test_resource_err_utils.h"
+#include "engine/resource/core/test_resource_err_utils.h"
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
 #include "engine/resource/texture/test_texture.h"

@@ -29,7 +29,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 #include "engine/resource/texture/texture.h"
 
 #include "engine/systems/renderer/renderer_core/renderer_types.h"

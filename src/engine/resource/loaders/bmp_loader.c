@@ -34,8 +34,8 @@
 #include "engine/core/buffer_utils/buffer_utils.h"
 #include "engine/core/filesystem/filesystem.h"
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 // #define TEST_BUILD
 

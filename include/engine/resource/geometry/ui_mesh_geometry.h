@@ -25,7 +25,7 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
 
