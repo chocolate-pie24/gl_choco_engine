@@ -1,9 +1,11 @@
 <map id="include/engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h" name="include/engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h">
-<area shape="rect" id="node1" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="144,5,355,60"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,123,80,148"/>
-<area shape="rect" id="node3" title=" " alt="" coords="104,123,187,148"/>
-<area shape="rect" id="node4" title=" " alt="" coords="253,299,323,324"/>
-<area shape="rect" id="node5" href="$math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="261,211,445,251"/>
-<area shape="rect" id="node6" href="$vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="312,115,477,155"/>
-<area shape="rect" id="node7" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="501,108,685,163"/>
+<area shape="rect" id="node1" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="61,5,271,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="302,431,377,456"/>
+<area shape="rect" id="node3" title=" " alt="" coords="51,335,134,361"/>
+<area shape="rect" id="node4" title=" " alt="" coords="131,123,201,148"/>
+<area shape="rect" id="node5" href="$vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="201,211,400,265"/>
+<area shape="rect" id="node9" href="$shader__resource__types_8h_source.html" title=" " alt="" coords="277,108,497,163"/>
+<area shape="rect" id="node6" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="209,321,393,375"/>
+<area shape="rect" id="node7" href="$range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="417,321,601,375"/>
+<area shape="rect" id="node8" href="$buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="625,313,827,383"/>
 </map>

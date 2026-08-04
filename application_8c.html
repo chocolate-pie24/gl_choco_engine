@@ -94,7 +94,8 @@ $(document).ready(function(){initNavTree('application_8c.html',''); initResizabl
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">application.c File Reference<div class="ingroups"><a class="el" href="group__application.html">Application</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -127,6 +128,7 @@ $(document).ready(function(){initNavTree('application_8c.html',''); initResizabl
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="platform__types_8h_source.html">engine/systems/platform/platform_core/platform_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="platform__context_8h_source.html">engine/systems/platform/platform_context.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="ui__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="line__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="point__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h</a>&quot;</code><br />
@@ -142,7 +144,7 @@ $(document).ready(function(){initNavTree('application_8c.html',''); initResizabl
 <code>#include &quot;<a class="el" href="ui__mesh__geometry__pipeline_8h_source.html">engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="line__mesh__geometry__pipeline_8h_source.html">engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__shader_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h</a>&quot;</code><br />
@@ -169,6 +171,27 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a6c7683f460692f59fb10ab5733fecde4"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a6c7683f460692f59fb10ab5733fecde4">on_window</a> (const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *event_)</td></tr>
+<tr class="memdesc:a6c7683f460692f59fb10ab5733fecde4"><td class="mdescLeft">&#160;</td><td class="mdescRight">event_をウィンドウイベント用リングキューに格納する  <br /></td></tr>
+<tr class="separator:a6c7683f460692f59fb10ab5733fecde4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a921844a501723a8e4165f4d1647018e6"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a921844a501723a8e4165f4d1647018e6">on_key</a> (const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *event_)</td></tr>
+<tr class="memdesc:a921844a501723a8e4165f4d1647018e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">event_をキーボードイベント用リングキューに格納する  <br /></td></tr>
+<tr class="separator:a921844a501723a8e4165f4d1647018e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1124ce3342cc8e51866392fd69ce2d21"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a1124ce3342cc8e51866392fd69ce2d21">on_mouse</a> (const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *event_)</td></tr>
+<tr class="memdesc:a1124ce3342cc8e51866392fd69ce2d21"><td class="mdescLeft">&#160;</td><td class="mdescRight">event_をマウスイベント用リングキューに格納する  <br /></td></tr>
+<tr class="separator:a1124ce3342cc8e51866392fd69ce2d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac15dee87cc40f183a98ac16f42c7fa9d"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d">app_state_update</a> (void)</td></tr>
+<tr class="memdesc:ac15dee87cc40f183a98ac16f42c7fa9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する  <br /></td></tr>
+<tr class="separator:ac15dee87cc40f183a98ac16f42c7fa9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb6785430fba5187b505f1d2b8e1a3a0"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0">app_state_dispatch</a> (void)</td></tr>
+<tr class="memdesc:abb6785430fba5187b505f1d2b8e1a3a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">更新されたアプリケーション状態によって、各サブシステムにイベントを通知する  <br /></td></tr>
+<tr class="separator:abb6785430fba5187b505f1d2b8e1a3a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29e054ced9e162f361558a62d5646ad1"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a29e054ced9e162f361558a62d5646ad1">app_state_clean</a> (void)</td></tr>
+<tr class="memdesc:a29e054ced9e162f361558a62d5646ad1"><td class="mdescLeft">&#160;</td><td class="mdescRight">アプリケーション状態変化フラグの値を元に戻す  <br /></td></tr>
+<tr class="separator:a29e054ced9e162f361558a62d5646ad1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09b71d95fdb42ae080f2534702f82eda"><td class="memItemLeft" align="right" valign="top"><a id="a09b71d95fdb42ae080f2534702f82eda" name="a09b71d95fdb42ae080f2534702f82eda"></a>
+static <a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>point_geometry_create</b> (<a class="el" href="application_8c.html#a1ef3ca30e05aeabe580e27a5c6fdad99">app_state_t</a> *app_state_)</td></tr>
+<tr class="separator:a09b71d95fdb42ae080f2534702f82eda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d98cff72b3ed418fb620bf929f8101e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a5d98cff72b3ed418fb620bf929f8101e">application_create</a> (void)</td></tr>
 <tr class="memdesc:a5d98cff72b3ed418fb620bf929f8101e"><td class="mdescLeft">&#160;</td><td class="mdescRight">エンジンを構成する各サブシステムを初期化する  <br /></td></tr>
 <tr class="separator:a5d98cff72b3ed418fb620bf929f8101e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,11 +201,16 @@ Functions</h2></td></tr>
 <tr class="memitem:a625d4385834abd6a3da348778c08d4f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="application__types_8h.html#a0d87614822b854251c7d55d1accaf44a">application_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a625d4385834abd6a3da348778c08d4f1">application_run</a> (void)</td></tr>
 <tr class="memdesc:a625d4385834abd6a3da348778c08d4f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">アプリケーションメインループ  <br /></td></tr>
 <tr class="separator:a625d4385834abd6a3da348778c08d4f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a774bf922493fea3e466d4bd6d3513b51"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="application_8c.html#a1ef3ca30e05aeabe580e27a5c6fdad99">app_state_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="application_8c.html#a774bf922493fea3e466d4bd6d3513b51">s_app_state</a> = NULL</td></tr>
+<tr class="separator:a774bf922493fea3e466d4bd6d3513b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>application.cのエラー文字列周りを別ファイルに移す</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>application.cのエラー文字列周りを別ファイルに移す</dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-09-20</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
@@ -205,6 +233,91 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a29e054ced9e162f361558a62d5646ad1" name="a29e054ced9e162f361558a62d5646ad1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29e054ced9e162f361558a62d5646ad1">&#9670;&#160;</a></span>app_state_clean()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void app_state_clean </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>アプリケーション状態変化フラグの値を元に戻す </p>
+
+</div>
+</div>
+<a id="abb6785430fba5187b505f1d2b8e1a3a0" name="abb6785430fba5187b505f1d2b8e1a3a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb6785430fba5187b505f1d2b8e1a3a0">&#9670;&#160;</a></span>app_state_dispatch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void app_state_dispatch </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>更新されたアプリケーション状態によって、各サブシステムにイベントを通知する </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする </dd></dl>
+
+</div>
+</div>
+<a id="ac15dee87cc40f183a98ac16f42c7fa9d" name="ac15dee87cc40f183a98ac16f42c7fa9d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac15dee87cc40f183a98ac16f42c7fa9d">&#9670;&#160;</a></span>app_state_update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void app_state_update </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する </p>
+
+</div>
+</div>
 <a id="a5d98cff72b3ed418fb620bf929f8101e" name="a5d98cff72b3ed418fb620bf929f8101e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5d98cff72b3ed418fb620bf929f8101e">&#9670;&#160;</a></span>application_create()</h2>
 
@@ -281,6 +394,135 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>上記以外の実行結果コードはプラットフォーム固有エラー(各プラットフォーム実装依存) </dd></dl>
+
+</div>
+</div>
+<a id="a921844a501723a8e4165f4d1647018e6" name="a921844a501723a8e4165f4d1647018e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a921844a501723a8e4165f4d1647018e6">&#9670;&#160;</a></span>on_key()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void on_key </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *&#160;</td>
+          <td class="paramname"><em>event_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>event_をキーボードイベント用リングキューに格納する </p>
+<dl class="section note"><dt>Note</dt><dd>キーボードイベントコールバック</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">event_</td><td>イベントキューに格納するイベント構造体インスタンスへのポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1124ce3342cc8e51866392fd69ce2d21" name="a1124ce3342cc8e51866392fd69ce2d21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1124ce3342cc8e51866392fd69ce2d21">&#9670;&#160;</a></span>on_mouse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void on_mouse </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *&#160;</td>
+          <td class="paramname"><em>event_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>event_をマウスイベント用リングキューに格納する </p>
+<dl class="section note"><dt>Note</dt><dd>マウスイベントコールバック</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">event_</td><td>イベントキューに格納するイベント構造体インスタンスへのポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6c7683f460692f59fb10ab5733fecde4" name="a6c7683f460692f59fb10ab5733fecde4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c7683f460692f59fb10ab5733fecde4">&#9670;&#160;</a></span>on_window()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void on_window </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *&#160;</td>
+          <td class="paramname"><em>event_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>event_をウィンドウイベント用リングキューに格納する </p>
+<dl class="section note"><dt>Note</dt><dd>ウィンドウイベントコールバック</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">event_</td><td>イベントキューに格納するイベント構造体インスタンスへのポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a774bf922493fea3e466d4bd6d3513b51" name="a774bf922493fea3e466d4bd6d3513b51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a774bf922493fea3e466d4bd6d3513b51">&#9670;&#160;</a></span>s_app_state</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="application_8c.html#a1ef3ca30e05aeabe580e27a5c6fdad99">app_state_t</a>* s_app_state = NULL</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>アプリケーション内部状態およびエンジン各サブシステム内部状態 </p>
 
 </div>
 </div>

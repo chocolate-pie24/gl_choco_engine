@@ -5,5 +5,18 @@ var searchData=
   ['icon_5fwidth_2',['icon_width',['../structui__geom__config.html#aab056b513f7d8bd9644dc085f3749e51',1,'ui_geom_config']]],
   ['icon_5fwidth_5fis_5fvalid_3',['icon_width_is_valid',['../structui__geom__config__state.html#a00dda9b34848b0a832d0d32a922e7d73',1,'ui_geom_config_state']]],
   ['info_5fheader_4',['info_header',['../structbmp__loader.html#af377b3149d011c15034752ddef5a2655',1,'bmp_loader']]],
-  ['initialized_5fglfw_5',['initialized_glfw',['../structplatform__backend.html#ae4dbe095de62b47578e68742e1e35b01',1,'platform_backend']]]
+  ['initialized_5fglfw_5',['initialized_glfw',['../structplatform__backend.html#ae4dbe095de62b47578e68742e1e35b01',1,'platform_backend']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbf_5foff_5fbits_6',['invalid_bmp_file_reason_bf_off_bits',['../bmp__loader_8c.html#aae696ea0f4f7fc0fee32417d8a7e0d5b',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbf_5freserved_7',['invalid_bmp_file_reason_bf_reserved',['../bmp__loader_8c.html#ac94f7e6ba8628ef5cdb9a07f33e3ef79',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbf_5fsize_8',['invalid_bmp_file_reason_bf_size',['../bmp__loader_8c.html#a65cac4a461cc9ab8915206d669f18c72',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbf_5ftype_9',['invalid_bmp_file_reason_bf_type',['../bmp__loader_8c.html#adf23a2d7e6e6cb19c8f5299ff19721f2',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbi_5fplanes_10',['invalid_bmp_file_reason_bi_planes',['../bmp__loader_8c.html#adea6726b42cc0d7a69ad138e27f5ee5c',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fbi_5fsize_11',['invalid_bmp_file_reason_bi_size',['../bmp__loader_8c.html#a767dd57ab95d51f7d39d65b8c3c12cab',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fchannel_5fcount_12',['invalid_bmp_file_reason_channel_count',['../bmp__loader_8c.html#aa289c9c041a929bb4fbdec8cc26bd111',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fcompression_13',['invalid_bmp_file_reason_compression',['../bmp__loader_8c.html#acad69f8ee6d30e2ad2d6ee215c9965b9',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fheight_14',['invalid_bmp_file_reason_height',['../bmp__loader_8c.html#ac0aee2bf4c3583b447fd16cfe4e89893',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fnot_5finitialized_15',['invalid_bmp_file_reason_not_initialized',['../bmp__loader_8c.html#ad49870c2c2fd6494d2fb5d335d4bdc3e',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fundefined_16',['invalid_bmp_file_reason_undefined',['../bmp__loader_8c.html#acbdb30f2f5605b89f258b6079f500cb4',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fvalid_17',['invalid_bmp_file_reason_valid',['../bmp__loader_8c.html#a7fef4bac9c6ca31b675f69a6b2d7957c',1,'bmp_loader.c']]],
+  ['invalid_5fbmp_5ffile_5freason_5fwidth_18',['invalid_bmp_file_reason_width',['../bmp__loader_8c.html#a50305ae2e8a5d85c35f3b77c964cb077',1,'bmp_loader.c']]]
 ];

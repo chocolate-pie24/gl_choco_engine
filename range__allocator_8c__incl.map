@@ -1,0 +1,12 @@
+<map id="src/engine/systems/renderer/renderer_core/allocators/range_allocator.c" name="src/engine/systems/renderer/renderer_core/allocators/range_allocator.c">
+<area shape="rect" id="node1" title="固定alignmentのGPU buffer内rangeを管理するRange Allocatorの実装" alt="" coords="389,5,595,60"/>
+<area shape="rect" id="node2" href="$range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="5,108,189,163"/>
+<area shape="rect" id="node3" title=" " alt="" coords="443,211,517,236"/>
+<area shape="rect" id="node4" title=" " alt="" coords="264,123,331,148"/>
+<area shape="rect" id="node5" title=" " alt="" coords="355,123,426,148"/>
+<area shape="rect" id="node6" title=" " alt="" coords="451,123,533,148"/>
+<area shape="rect" id="node7" title=" " alt="" coords="558,123,629,148"/>
+<area shape="rect" id="node8" href="$choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="835,123,1045,148"/>
+<area shape="rect" id="node9" href="$choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="941,211,1080,236"/>
+<area shape="rect" id="node10" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="653,115,811,155"/>
+</map>

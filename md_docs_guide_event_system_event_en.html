@@ -108,28 +108,35 @@ Event System Overview</h2>
 <ol type="1">
 <li>The platform system polls keyboard, mouse, and window events via <code><a class="el" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1" title="OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す">platform_pump_messages()</a></code>.</li>
 <li>The polled events are pushed into the per-event-type ring queues owned by the application layer, through the event callback functions passed from <code><a class="el" href="application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装">application.c</a></code> to <code><a class="el" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1" title="OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す">platform_pump_messages()</a></code>.</li>
-<li><code>app_state_update()</code> consumes events from the ring queues and updates the state variables managed in <code>s_app_state</code>.</li>
+<li><code><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d" title="イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する">app_state_update()</a></code> consumes events from the ring queues and updates the state variables managed in <code>s_app_state</code>.</li>
 <li>Changes in the state variables in <code>s_app_state</code> are dispatched to each subsystem.</li>
 <li>The “state changed” flags/deltas in <code>s_app_state</code> are cleared (the state variable values themselves are retained).</li>
 </ol>
-<p>Event callbacks are responsible only for enqueuing events into ring queues and must not perform event handling. All event handling is performed in a centralized manner by <code>app_state_update()</code>. This allows <code>app_state_update()</code> to aggregate events into a state representation, so even if the same kind of event occurs multiple times within a single frame, only the final state needs to be applied (e.g., mouse movement).</p>
+<p>Event callbacks are responsible only for enqueuing events into ring queues and must not perform event handling. All event handling is performed in a centralized manner by <code><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d" title="イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する">app_state_update()</a></code>. This allows <code><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d" title="イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する">app_state_update()</a></code> to aggregate events into a state representation, so even if the same kind of event occurs multiple times within a single frame, only the final state needs to be applied (e.g., mouse movement).</p>
 <p>Note that the ring queue implementation discards the oldest data when it becomes full. Therefore, events that must never be dropped are handled without going through a ring queue. At present, the only must-not-drop event is the window close event. However, additional events may be added in the future if they affect the control flow of <code><a class="el" href="application_8h.html#a625d4385834abd6a3da348778c08d4f1" title="アプリケーションメインループ">application_run()</a></code>.</p>
 <p>These steps are executed every frame. The simplified logic can be expressed as follows. (The following is pseudocode; error handling, arguments, and non-event-related code are omitted.)</p>
 <div class="fragment"><div class="line"><a class="code hl_function" href="application_8h.html#a625d4385834abd6a3da348778c08d4f1">application_run</a>() {</div>
-<div class="line">    <span class="keywordflow">while</span>(!s_app_state-&gt;window_should_close) {  <span class="comment">// run until the window is closed</span></div>
-<div class="line">        ret = <a class="code hl_function" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a>(on_window, on_keyboard, on_mouse);</div>
+<div class="line">    <span class="keywordflow">while</span>(!<a class="code hl_variable" href="application_8c.html#a774bf922493fea3e466d4bd6d3513b51">s_app_state</a>-&gt;<a class="code hl_variable" href="structapp__state.html#a3cacec3686969beb558208bfe7a67d64">window_should_close</a>) {  <span class="comment">// run until the window is closed</span></div>
+<div class="line">        ret = <a class="code hl_function" href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a>(<a class="code hl_function" href="application_8c.html#a6c7683f460692f59fb10ab5733fecde4">on_window</a>, on_keyboard, <a class="code hl_function" href="application_8c.html#a1124ce3342cc8e51866392fd69ce2d21">on_mouse</a>);</div>
 <div class="line">        <span class="keywordflow">if</span>(<a class="code hl_enumvalue" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7a3a2a487e33b2eba4a4315d5d2184da7d">PLATFORM_WINDOW_CLOSE</a> == ret) {</div>
-<div class="line">            s_app_state-&gt;window_should_close = <span class="keyword">true</span>;</div>
+<div class="line">            <a class="code hl_variable" href="application_8c.html#a774bf922493fea3e466d4bd6d3513b51">s_app_state</a>-&gt;<a class="code hl_variable" href="structapp__state.html#a3cacec3686969beb558208bfe7a67d64">window_should_close</a> = <span class="keyword">true</span>;</div>
 <div class="line">            <span class="keywordflow">continue</span>;</div>
 <div class="line">        }</div>
-<div class="line">        app_state_update();</div>
-<div class="line">        app_state_dispatch();</div>
-<div class="line">        app_state_clean();</div>
+<div class="line">        <a class="code hl_function" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d">app_state_update</a>();</div>
+<div class="line">        <a class="code hl_function" href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0">app_state_dispatch</a>();</div>
+<div class="line">        <a class="code hl_function" href="application_8c.html#a29e054ced9e162f361558a62d5646ad1">app_state_clean</a>();</div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="aapplication_8h_html_a625d4385834abd6a3da348778c08d4f1"><div class="ttname"><a href="application_8h.html#a625d4385834abd6a3da348778c08d4f1">application_run</a></div><div class="ttdeci">application_result_t application_run(void)</div><div class="ttdoc">アプリケーションメインループ</div><div class="ttdef"><b>Definition:</b> application.c:607</div></div>
+<div class="ttc" id="aapplication_8c_html_a1124ce3342cc8e51866392fd69ce2d21"><div class="ttname"><a href="application_8c.html#a1124ce3342cc8e51866392fd69ce2d21">on_mouse</a></div><div class="ttdeci">static void on_mouse(const mouse_event_t *event_)</div><div class="ttdoc">event_をマウスイベント用リングキューに格納する</div><div class="ttdef"><b>Definition:</b> application.c:1015</div></div>
+<div class="ttc" id="aapplication_8c_html_a29e054ced9e162f361558a62d5646ad1"><div class="ttname"><a href="application_8c.html#a29e054ced9e162f361558a62d5646ad1">app_state_clean</a></div><div class="ttdeci">static void app_state_clean(void)</div><div class="ttdoc">アプリケーション状態変化フラグの値を元に戻す</div><div class="ttdef"><b>Definition:</b> application.c:1299</div></div>
+<div class="ttc" id="aapplication_8c_html_a6c7683f460692f59fb10ab5733fecde4"><div class="ttname"><a href="application_8c.html#a6c7683f460692f59fb10ab5733fecde4">on_window</a></div><div class="ttdeci">static void on_window(const window_event_t *event_)</div><div class="ttdoc">event_をウィンドウイベント用リングキューに格納する</div><div class="ttdef"><b>Definition:</b> application.c:959</div></div>
+<div class="ttc" id="aapplication_8c_html_a774bf922493fea3e466d4bd6d3513b51"><div class="ttname"><a href="application_8c.html#a774bf922493fea3e466d4bd6d3513b51">s_app_state</a></div><div class="ttdeci">static app_state_t * s_app_state</div><div class="ttdef"><b>Definition:</b> application.c:181</div></div>
+<div class="ttc" id="aapplication_8c_html_abb6785430fba5187b505f1d2b8e1a3a0"><div class="ttname"><a href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0">app_state_dispatch</a></div><div class="ttdeci">static void app_state_dispatch(void)</div><div class="ttdoc">更新されたアプリケーション状態によって、各サブシステムにイベントを通知する</div><div class="ttdef"><b>Definition:</b> application.c:1135</div></div>
+<div class="ttc" id="aapplication_8c_html_ac15dee87cc40f183a98ac16f42c7fa9d"><div class="ttname"><a href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d">app_state_update</a></div><div class="ttdeci">static void app_state_update(void)</div><div class="ttdoc">イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する</div><div class="ttdef"><b>Definition:</b> application.c:1041</div></div>
+<div class="ttc" id="aapplication_8h_html_a625d4385834abd6a3da348778c08d4f1"><div class="ttname"><a href="application_8h.html#a625d4385834abd6a3da348778c08d4f1">application_run</a></div><div class="ttdeci">application_result_t application_run(void)</div><div class="ttdoc">アプリケーションメインループ</div><div class="ttdef"><b>Definition:</b> application.c:689</div></div>
 <div class="ttc" id="aplatform__context_8h_html_ab719441d87f981040fedc46aba9c5fd1"><div class="ttname"><a href="platform__context_8h.html#ab719441d87f981040fedc46aba9c5fd1">platform_pump_messages</a></div><div class="ttdeci">platform_result_t platform_pump_messages(platform_context_t *platform_context_, void(*window_event_callback)(const window_event_t *event_), void(*keyboard_event_callback)(const keyboard_event_t *event_), void(*mouse_event_callback)(const mouse_event_t *event_))</div><div class="ttdoc">OSレイヤーからキーボード、マウス、ウィンドウイベントを吸い上げ、各コールバック関数へイベントを渡す</div><div class="ttdef"><b>Definition:</b> platform_context.c:245</div></div>
 <div class="ttc" id="aplatform__types_8h_html_af8313b3164989f0ef2d24d2b299601b7a3a2a487e33b2eba4a4315d5d2184da7d"><div class="ttname"><a href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7a3a2a487e33b2eba4a4315d5d2184da7d">PLATFORM_WINDOW_CLOSE</a></div><div class="ttdeci">@ PLATFORM_WINDOW_CLOSE</div><div class="ttdef"><b>Definition:</b> platform_types.h:38</div></div>
+<div class="ttc" id="astructapp__state_html_a3cacec3686969beb558208bfe7a67d64"><div class="ttname"><a href="structapp__state.html#a3cacec3686969beb558208bfe7a67d64">app_state::window_should_close</a></div><div class="ttdeci">bool window_should_close</div><div class="ttdef"><b>Definition:</b> application.c:102</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md174"></a>
 Event System Data Flow</h2>
 <div class="image">
@@ -158,9 +165,9 @@ Adding an Event Code to an Existing Event Category</h4>
 <li><code>platform_snapshot_process()</code>: convert collected events into event-struct form and pass them to the application layer via event callbacks</li>
 </ul>
 </li>
-<li>Add handling for the newly collected event to <code>app_state_update()</code> (pop from the queue and convert into a state change representation such as flags/deltas).</li>
-<li>Notify subsystems of the resulting application state changes via <code>app_state_dispatch()</code>.</li>
-<li>Add clearing of the corresponding state-change information to <code>app_state_clean()</code>.</li>
+<li>Add handling for the newly collected event to <code><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d" title="イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する">app_state_update()</a></code> (pop from the queue and convert into a state change representation such as flags/deltas).</li>
+<li>Notify subsystems of the resulting application state changes via <code><a class="el" href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0" title="更新されたアプリケーション状態によって、各サブシステムにイベントを通知する">app_state_dispatch()</a></code>.</li>
+<li>Add clearing of the corresponding state-change information to <code><a class="el" href="application_8c.html#a29e054ced9e162f361558a62d5646ad1" title="アプリケーション状態変化フラグの値を元に戻す">app_state_clean()</a></code>.</li>
 </ul>
 <p>As long as the normal event addition stays within the existing event categories (keyboard/mouse/window), no changes to the event callback functions are required.</p>
 <h4><a class="anchor" id="autotoc_md178"></a>
@@ -183,9 +190,9 @@ Introducing a New Event Category</h4>
 <li><code>platform_snapshot_process()</code>: convert collected events into event-struct form and pass them to the application layer via event callbacks</li>
 </ul>
 </li>
-<li>Add handling for the newly collected event to <code>app_state_update()</code> (pop from the queue and convert into a state change representation such as flags/deltas).</li>
-<li>Notify subsystems of the resulting application state changes via <code>app_state_dispatch()</code>.</li>
-<li>Add clearing of the corresponding state-change information to <code>app_state_clean()</code>.</li>
+<li>Add handling for the newly collected event to <code><a class="el" href="application_8c.html#ac15dee87cc40f183a98ac16f42c7fa9d" title="イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する">app_state_update()</a></code> (pop from the queue and convert into a state change representation such as flags/deltas).</li>
+<li>Notify subsystems of the resulting application state changes via <code><a class="el" href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0" title="更新されたアプリケーション状態によって、各サブシステムにイベントを通知する">app_state_dispatch()</a></code>.</li>
+<li>Add clearing of the corresponding state-change information to <code><a class="el" href="application_8c.html#a29e054ced9e162f361558a62d5646ad1" title="アプリケーション状態変化フラグの値を元に戻す">app_state_clean()</a></code>.</li>
 </ul>
 <h3><a class="anchor" id="autotoc_md179"></a>
 Guidelines for Adding Must-Not-Drop Events</h3>

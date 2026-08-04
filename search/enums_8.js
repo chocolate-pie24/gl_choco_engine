@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['platform_5fresult_5ft_0',['platform_result_t',['../platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7',1,'platform_types.h']]],
-  ['platform_5ftype_5ft_1',['platform_type_t',['../platform__types_8h.html#a2ac3ce8ab152a6ec490b8a846ae28905',1,'platform_types.h']]]
+  ['node_5fstate_5ft_0',['node_state_t',['../range__allocator_8c.html#a9e4d376294780120dec95c87c6500c8b',1,'range_allocator.c']]]
 ];

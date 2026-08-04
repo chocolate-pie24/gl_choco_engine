@@ -151,6 +151,24 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a348cacc68e990ab5da98baccbe902565"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#a348cacc68e990ab5da98baccbe902565">camera_frustum_cache_sync</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
+<tr class="memdesc:a348cacc68e990ab5da98baccbe902565"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ視錐台に合わせて以下の行列を更新する  <br /></td></tr>
+<tr class="separator:a348cacc68e990ab5da98baccbe902565"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec23feb12d6c7b884cfc0de11f5119bb"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#aec23feb12d6c7b884cfc0de11f5119bb">camera_posture_cache_sync</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
+<tr class="memdesc:aec23feb12d6c7b884cfc0de11f5119bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ姿勢に合わせて以下の行列を更新する  <br /></td></tr>
+<tr class="separator:aec23feb12d6c7b884cfc0de11f5119bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69b70ffc1980a2d094fe66a077b5c7ba"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#a69b70ffc1980a2d094fe66a077b5c7ba">perspective_matrix_update</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
+<tr class="memdesc:a69b70ffc1980a2d094fe66a077b5c7ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">プロジェクション行列(透視投影)を更新する  <br /></td></tr>
+<tr class="separator:a69b70ffc1980a2d094fe66a077b5c7ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae20be4a9ab19dc78ffd6706f6963c6a7"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#ae20be4a9ab19dc78ffd6706f6963c6a7">camera_to_world_matrix_update</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
+<tr class="memdesc:ae20be4a9ab19dc78ffd6706f6963c6a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ座標系からワールド座標系へ変換する行列を更新する  <br /></td></tr>
+<tr class="separator:ae20be4a9ab19dc78ffd6706f6963c6a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcddfce922425eaed104e807690599e4"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#abcddfce922425eaed104e807690599e4">view_matrix_update</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_)</td></tr>
+<tr class="memdesc:abcddfce922425eaed104e807690599e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">ビュー行列を更新する  <br /></td></tr>
+<tr class="separator:abcddfce922425eaed104e807690599e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae53ee80c7086447e1ac4ee81839e6c5"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#aae53ee80c7086447e1ac4ee81839e6c5">is_valid_frustum</a> (const <a class="el" href="camera_8c.html#abe35d97c2ff178141f8743155e2f8256">viewing_frustum_t</a> *frustum_)</td></tr>
+<tr class="memdesc:aae53ee80c7086447e1ac4ee81839e6c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">視錐台パラメータ有効 / 無効判定を行う  <br /></td></tr>
+<tr class="separator:aae53ee80c7086447e1ac4ee81839e6c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b5b150e8a36ac665517a7a1cbf56f4e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="camera_8c.html#a2b5b150e8a36ac665517a7a1cbf56f4e">camera_create</a> (const char *name_, <a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> **out_camera_)</td></tr>
 <tr class="memdesc:a2b5b150e8a36ac665517a7a1cbf56f4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する  <br /></td></tr>
 <tr class="separator:a2b5b150e8a36ac665517a7a1cbf56f4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -552,6 +570,52 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a348cacc68e990ab5da98baccbe902565" name="a348cacc68e990ab5da98baccbe902565"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a348cacc68e990ab5da98baccbe902565">&#9670;&#160;</a></span>camera_frustum_cache_sync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> camera_frustum_cache_sync </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>カメラ視錐台に合わせて以下の行列を更新する </p>
+<ul>
+<li>透視投影行列</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>行列が最新のカメラ視錐台と同期が取れていれば更新は行わない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>更新対象カメラ構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CAMERA_INVALID_ARGUMENT</td><td>camera_ == NULL </td></tr>
+    <tr><td class="paramname">CAMERA_BAD_OPERATION</td><td>視錐台パラメータ異常 </td></tr>
+    <tr><td class="paramname">CAMERA_SUCCESS</td><td>同期に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="aa2d2da4b7879efe8f232ca4f06fe7947" name="aa2d2da4b7879efe8f232ca4f06fe7947"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa2d2da4b7879efe8f232ca4f06fe7947">&#9670;&#160;</a></span>camera_left_vector_get()</h2>
 
@@ -786,6 +850,53 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aec23feb12d6c7b884cfc0de11f5119bb" name="aec23feb12d6c7b884cfc0de11f5119bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec23feb12d6c7b884cfc0de11f5119bb">&#9670;&#160;</a></span>camera_posture_cache_sync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> camera_posture_cache_sync </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>カメラ姿勢に合わせて以下の行列を更新する </p>
+<ul>
+<li>カメラ座標系からワールド座標系への変換行列</li>
+<li>ビュー行列</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>行列が最新のカメラ姿勢と同期が取れていれば更新は行わない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>更新対象カメラ構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CAMERA_INVALID_ARGUMENT</td><td>camera_ == NULL </td></tr>
+    <tr><td class="paramname">CAMERA_RUNTIME_ERROR</td><td>逆行列計算に失敗 </td></tr>
+    <tr><td class="paramname">CAMERA_SUCCESS</td><td>同期に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ad0c118bdef7db1e8f4df1401e1ac2e06" name="ad0c118bdef7db1e8f4df1401e1ac2e06"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad0c118bdef7db1e8f4df1401e1ac2e06">&#9670;&#160;</a></span>camera_right_vector_get()</h2>
 
@@ -832,6 +943,44 @@ Functions</h2></td></tr>
 </td></tr>
     <tr><td class="paramname">CAMERA_RUNTIME_ERROR</td><td>ビュー行列更新の際の逆行列計算に失敗 </td></tr>
     <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae20be4a9ab19dc78ffd6706f6963c6a7" name="ae20be4a9ab19dc78ffd6706f6963c6a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae20be4a9ab19dc78ffd6706f6963c6a7">&#9670;&#160;</a></span>camera_to_world_matrix_update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void camera_to_world_matrix_update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>カメラ座標系からワールド座標系へ変換する行列を更新する </p>
+<dl class="section warning"><dt>Warning</dt><dd>この関数を呼び出す際は、事前に以下のチェックを必ず行うこと<ul>
+<li>camera_ != NULL</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>座標変換行列取得対象カメラ構造体インスタンスへのポインタ </td></tr>
   </table>
   </dd>
 </dl>
@@ -1011,6 +1160,127 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="aae53ee80c7086447e1ac4ee81839e6c5" name="aae53ee80c7086447e1ac4ee81839e6c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae53ee80c7086447e1ac4ee81839e6c5">&#9670;&#160;</a></span>is_valid_frustum()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool is_valid_frustum </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="camera_8c.html#abe35d97c2ff178141f8743155e2f8256">viewing_frustum_t</a> *&#160;</td>
+          <td class="paramname"><em>frustum_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>視錐台パラメータ有効 / 無効判定を行う </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">frustum_</td><td>判定対象視錐台構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>視錐台パラメータ正常 </td></tr>
+    <tr><td class="paramname">false</td><td>視錐台パラメータ異常 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a69b70ffc1980a2d094fe66a077b5c7ba" name="a69b70ffc1980a2d094fe66a077b5c7ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a69b70ffc1980a2d094fe66a077b5c7ba">&#9670;&#160;</a></span>perspective_matrix_update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void perspective_matrix_update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>プロジェクション行列(透視投影)を更新する </p>
+<dl class="section warning"><dt>Warning</dt><dd>この関数を呼び出す際は、事前に以下のチェックを必ず行うこと<ul>
+<li>camera_ != NULL</li>
+<li>is_valid_frustum(&amp;camera-&gt;frustum) == true</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>プロジェクション行列取得対象カメラ構造体インスタンスへのポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="abcddfce922425eaed104e807690599e4" name="abcddfce922425eaed104e807690599e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcddfce922425eaed104e807690599e4">&#9670;&#160;</a></span>view_matrix_update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool view_matrix_update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ビュー行列を更新する </p>
+<dl class="section warning"><dt>Warning</dt><dd>この関数を呼び出す際は、事前に以下のチェックを必ず行うこと<ul>
+<li>camera_ != NULL</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>ビュー行列取得対象カメラ構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true ビュー行列更新成功 </dd>
+<dd>
+false ビュー行列の更新に失敗(逆行列の計算に失敗) </dd></dl>
 
 </div>
 </div>

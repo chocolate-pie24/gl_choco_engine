@@ -93,50 +93,45 @@ $(document).ready(function(){initNavTree('concrete__vao_8c.html',''); initResiza
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">concrete_vao.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="concrete__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h</a>&quot;</code><br />
+<code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &lt;stdalign.h&gt;</code><br />
 <code>#include &lt;GL/glew.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__err__utils_8h_source.html">engine/systems/renderer/renderer_core/renderer_err_utils.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__memory_8h_source.html">engine/systems/renderer/renderer_core/renderer_memory.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="interface__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vao.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="concrete__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="interface__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vao.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for concrete_vao.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="concrete__vao_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vao_8c" alt=""/></div>
 <map name="asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vao_8c" id="asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vao_8c">
-<area shape="rect" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="569,5,781,75"/>
-<area shape="rect" title=" " alt="" coords="193,431,276,456"/>
-<area shape="rect" title=" " alt="" coords="66,343,137,368"/>
-<area shape="rect" title=" " alt="" coords="1256,431,1331,456"/>
-<area shape="rect" title=" " alt="" coords="129,137,215,163"/>
-<area shape="rect" title=" " alt="" coords="240,137,325,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="549,328,733,383"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="800,123,984,177"/>
-<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="1253,225,1437,280"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="323,328,525,383"/>
-<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="159,225,412,280"/>
-<area shape="rect" href="concrete__vao_8h.html" title="renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="349,123,637,177"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1333,137,1544,163"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1512,240,1651,265"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="864,233,997,273"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="758,335,938,375"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1157,335,1315,375"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1072,233,1229,273"/>
-<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="963,335,1133,375"/>
+<area shape="rect" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="695,5,907,75"/>
+<area shape="rect" href="concrete__vao_8h.html" title="renderer backendがVAO機能をOpenGL3.3で実現できるように、renderer_vao_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="5,123,293,177"/>
+<area shape="rect" title=" " alt="" coords="673,240,756,265"/>
+<area shape="rect" title=" " alt="" coords="781,240,851,265"/>
+<area shape="rect" title=" " alt="" coords="852,328,927,353"/>
+<area shape="rect" title=" " alt="" coords="653,137,739,163"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="368,137,579,163"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="511,240,649,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1537,233,1695,273"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="927,225,1111,280"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1135,225,1332,280"/>
+<area shape="rect" href="renderer__backend__err__utils_8h_source.html" title=" " alt="" coords="1293,123,1507,177"/>
+<area shape="rect" href="interface__vao_8h.html" title="VAOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="864,123,1117,177"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1356,233,1513,273"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -148,9 +143,44 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a33124828d506f240b1e3cb01ca042187"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">renderer_vao_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#a33124828d506f240b1e3cb01ca042187">gl33_vao_vtable_get</a> (void)</td></tr>
+<tr class="memitem:a0a18e72fa4da3b0d3eb04aaa0157aff9"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#a0a18e72fa4da3b0d3eb04aaa0157aff9">gl33_vao_create</a> (<a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memdesc:a0a18e72fa4da3b0d3eb04aaa0157aff9"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する  <br /></td></tr>
+<tr class="separator:a0a18e72fa4da3b0d3eb04aaa0157aff9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa8f429496e495cdcbd8073d916a1ffe"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#aaa8f429496e495cdcbd8073d916a1ffe">gl33_vao_destroy</a> (<a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memdesc:aaa8f429496e495cdcbd8073d916a1ffe"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backend_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する  <br /></td></tr>
+<tr class="separator:aaa8f429496e495cdcbd8073d916a1ffe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac64bf3a85f5bd943cb5368400028af27"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#ac64bf3a85f5bd943cb5368400028af27">gl33_vao_bind</a> (const <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
+<tr class="memdesc:ac64bf3a85f5bd943cb5368400028af27"><td class="mdescLeft">&#160;</td><td class="mdescRight">glBindVertexArray APIのラッパーAPI  <br /></td></tr>
+<tr class="separator:ac64bf3a85f5bd943cb5368400028af27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe3fe2867e2e3200c086a139b18cbdfe"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#abe3fe2867e2e3200c086a139b18cbdfe">gl33_vao_unbind</a> (void)</td></tr>
+<tr class="memdesc:abe3fe2867e2e3200c086a139b18cbdfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOアンバインド処理  <br /></td></tr>
+<tr class="separator:abe3fe2867e2e3200c086a139b18cbdfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a628c964887f7b4335f0c04ac99840b5d"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#a628c964887f7b4335f0c04ac99840b5d">gl33_vao_attribute_set</a> (uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
+<tr class="memdesc:a628c964887f7b4335f0c04ac99840b5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用VAOアトリビュート設定  <br /></td></tr>
+<tr class="separator:a628c964887f7b4335f0c04ac99840b5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08662f4e78710d2d85657a42ac206748"><td class="memItemLeft" align="right" valign="top"><a id="a08662f4e78710d2d85657a42ac206748" name="a08662f4e78710d2d85657a42ac206748"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glGenVertexArrays</b> (GLsizei n_, GLuint *array_)</td></tr>
+<tr class="separator:a08662f4e78710d2d85657a42ac206748"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdeb6e15f72f37696f0805352482dc19"><td class="memItemLeft" align="right" valign="top"><a id="afdeb6e15f72f37696f0805352482dc19" name="afdeb6e15f72f37696f0805352482dc19"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glDeleteVertexArrays</b> (GLsizei n_, GLuint *array_)</td></tr>
+<tr class="separator:afdeb6e15f72f37696f0805352482dc19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae5093c5626e49b75bc4b491b2902490"><td class="memItemLeft" align="right" valign="top"><a id="aae5093c5626e49b75bc4b491b2902490" name="aae5093c5626e49b75bc4b491b2902490"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glBindVertexArray</b> (GLuint array_)</td></tr>
+<tr class="separator:aae5093c5626e49b75bc4b491b2902490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac10f383ac34798a53648962e467639c7"><td class="memItemLeft" align="right" valign="top"><a id="ac10f383ac34798a53648962e467639c7" name="ac10f383ac34798a53648962e467639c7"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glVertexAttribPointer</b> (GLuint index_, GLint size_, GLenum type_, GLboolean normalized_, GLsizei stride_, const void *pointer_)</td></tr>
+<tr class="separator:ac10f383ac34798a53648962e467639c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56180180a06ee152c81cd6de41f7f654"><td class="memItemLeft" align="right" valign="top"><a id="a56180180a06ee152c81cd6de41f7f654" name="a56180180a06ee152c81cd6de41f7f654"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glEnableVertexAttribArray</b> (GLuint index_)</td></tr>
+<tr class="separator:a56180180a06ee152c81cd6de41f7f654"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33124828d506f240b1e3cb01ca042187"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#a33124828d506f240b1e3cb01ca042187">gl33_vao_vtable_get</a> (void)</td></tr>
 <tr class="memdesc:a33124828d506f240b1e3cb01ca042187"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用VAO仮想関数テーブル(vtable)を取得する  <br /></td></tr>
 <tr class="separator:a33124828d506f240b1e3cb01ca042187"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:ac4c067dd37ce5abb97cb6d9bf12eb443"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vao_8c.html#ac4c067dd37ce5abb97cb6d9bf12eb443">s_gl33_vao_vtable</a></td></tr>
+<tr class="separator:ac4c067dd37ce5abb97cb6d9bf12eb443"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装 </p>
@@ -160,6 +190,249 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a628c964887f7b4335f0c04ac99840b5d" name="a628c964887f7b4335f0c04ac99840b5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a628c964887f7b4335f0c04ac99840b5d">&#9670;&#160;</a></span>gl33_vao_attribute_set()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vao_attribute_set </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>layout_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int32_t&#160;</td>
+          <td class="paramname"><em>size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a>&#160;</td>
+          <td class="paramname"><em>type_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>normalized_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>stride_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>OpenGL3.3用VAOアトリビュート設定 </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">layout_</td><td>設定対象変数のlayoutロケーション番号 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>頂点属性のコンポーネントの数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type_</td><td>頂点属性のデータ型 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">normalized_</td><td>true: アクセス時に固定小数点データ値を正規化する / false: 正規化しない </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride_</td><td>連続する頂点属性間のバイトオフセット </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset_</td><td>設定対象頂点属性が格納されているバイトオフセット</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_RUNTIME_ERROR</td><td>type_が規定値外 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac64bf3a85f5bd943cb5368400028af27" name="ac64bf3a85f5bd943cb5368400028af27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac64bf3a85f5bd943cb5368400028af27">&#9670;&#160;</a></span>gl33_vao_bind()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vao_bind </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> *&#160;</td>
+          <td class="paramname"><em>vertex_array_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>glBindVertexArray APIのラッパーAPI </p>
+<dl class="section note"><dt>Note</dt><dd>当面はglGetErrorをAPI個別に実行するつもりはないので成功するが、将来的に個別にエラー処理を行う可能性を考慮し、返り値をエラーコードにする</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_array_</td><td>bind対象vao</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>vertex_array_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>未初期化のvertex_array_が渡された </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0a18e72fa4da3b0d3eb04aaa0157aff9" name="a0a18e72fa4da3b0d3eb04aaa0157aff9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a18e72fa4da3b0d3eb04aaa0157aff9">&#9670;&#160;</a></span>gl33_vao_create()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vao_create </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **&#160;</td>
+          <td class="paramname"><em>vertex_array_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">vertex_array_</td><td>renderer_backend_vao_t構造体インスタンスへのダブルポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>vertex_array_がNULL</li>
+<li>*vertex_array_が非NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_UNDEFINED_ERROR</td><td>メモリ確保時に不明なエラーが発生 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限を超過 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aaa8f429496e495cdcbd8073d916a1ffe" name="aaa8f429496e495cdcbd8073d916a1ffe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa8f429496e495cdcbd8073d916a1ffe">&#9670;&#160;</a></span>gl33_vao_destroy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void gl33_vao_destroy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **&#160;</td>
+          <td class="paramname"><em>vertex_array_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>renderer_backend_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">vertex_array_</td><td>renderer_backend_vao_t構造体インスタンスへのダブルポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="abe3fe2867e2e3200c086a139b18cbdfe" name="abe3fe2867e2e3200c086a139b18cbdfe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe3fe2867e2e3200c086a139b18cbdfe">&#9670;&#160;</a></span>gl33_vao_unbind()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vao_unbind </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>VAOアンバインド処理 </p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a33124828d506f240b1e3cb01ca042187" name="a33124828d506f240b1e3cb01ca042187"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33124828d506f240b1e3cb01ca042187">&#9670;&#160;</a></span>gl33_vao_vtable_get()</h2>
 
@@ -167,7 +440,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">renderer_vao_vtable_t</a> * gl33_vao_vtable_get </td>
+          <td class="memname">const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a> * gl33_vao_vtable_get </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -178,6 +451,42 @@ Functions</h2></td></tr>
 
 <p>OpenGL3.3用VAO仮想関数テーブル(vtable)を取得する </p>
 <dl class="section return"><dt>Returns</dt><dd>const renderer_vao_vtable_t* OpenGL3.3用VAO vtable </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="ac4c067dd37ce5abb97cb6d9bf12eb443" name="ac4c067dd37ce5abb97cb6d9bf12eb443"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4c067dd37ce5abb97cb6d9bf12eb443">&#9670;&#160;</a></span>s_gl33_vao_vtable</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a> s_gl33_vao_vtable</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">    .vertex_array_create = <a class="code hl_function" href="concrete__vao_8c.html#a0a18e72fa4da3b0d3eb04aaa0157aff9">gl33_vao_create</a>,</div>
+<div class="line">    .vertex_array_destroy = <a class="code hl_function" href="concrete__vao_8c.html#aaa8f429496e495cdcbd8073d916a1ffe">gl33_vao_destroy</a>,</div>
+<div class="line">    .vertex_array_bind = <a class="code hl_function" href="concrete__vao_8c.html#ac64bf3a85f5bd943cb5368400028af27">gl33_vao_bind</a>,</div>
+<div class="line">    .vertex_array_unbind = <a class="code hl_function" href="concrete__vao_8c.html#abe3fe2867e2e3200c086a139b18cbdfe">gl33_vao_unbind</a>,</div>
+<div class="line">    .vertex_array_attribute_set = <a class="code hl_function" href="concrete__vao_8c.html#a628c964887f7b4335f0c04ac99840b5d">gl33_vao_attribute_set</a>,</div>
+<div class="line">}</div>
+<div class="ttc" id="aconcrete__vao_8c_html_a0a18e72fa4da3b0d3eb04aaa0157aff9"><div class="ttname"><a href="concrete__vao_8c.html#a0a18e72fa4da3b0d3eb04aaa0157aff9">gl33_vao_create</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t **vertex_array_)</div><div class="ttdoc">VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:131</div></div>
+<div class="ttc" id="aconcrete__vao_8c_html_a628c964887f7b4335f0c04ac99840b5d"><div class="ttname"><a href="concrete__vao_8c.html#a628c964887f7b4335f0c04ac99840b5d">gl33_vao_attribute_set</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vao_attribute_set(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_)</div><div class="ttdoc">OpenGL3.3用VAOアトリビュート設定</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:274</div></div>
+<div class="ttc" id="aconcrete__vao_8c_html_aaa8f429496e495cdcbd8073d916a1ffe"><div class="ttname"><a href="concrete__vao_8c.html#aaa8f429496e495cdcbd8073d916a1ffe">gl33_vao_destroy</a></div><div class="ttdeci">static void gl33_vao_destroy(renderer_backend_vao_t **vertex_array_)</div><div class="ttdoc">renderer_backend_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:177</div></div>
+<div class="ttc" id="aconcrete__vao_8c_html_abe3fe2867e2e3200c086a139b18cbdfe"><div class="ttname"><a href="concrete__vao_8c.html#abe3fe2867e2e3200c086a139b18cbdfe">gl33_vao_unbind</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vao_unbind(void)</div><div class="ttdoc">VAOアンバインド処理</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:243</div></div>
+<div class="ttc" id="aconcrete__vao_8c_html_ac64bf3a85f5bd943cb5368400028af27"><div class="ttname"><a href="concrete__vao_8c.html#ac64bf3a85f5bd943cb5368400028af27">gl33_vao_bind</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vao_bind(const renderer_backend_vao_t *vertex_array_)</div><div class="ttdoc">glBindVertexArray APIのラッパーAPI</div><div class="ttdef"><b>Definition:</b> concrete_vao.c:216</div></div>
+</div><!-- fragment --><p>OpenGL3.3用VAO操作仮想関数テーブル </p>
 
 </div>
 </div>

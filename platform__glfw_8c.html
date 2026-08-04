@@ -94,7 +94,8 @@ $(document).ready(function(){initNavTree('platform__glfw_8c.html',''); initResiz
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">platform_glfw.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__platform.html">Platform</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -158,14 +159,47 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a9bf96579c5a88742b70b43acb2b5d156"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__glfw_8c.html#a9bf96579c5a88742b70b43acb2b5d156">platform_glfw_preinit</a> (size_t *memory_requirement_, size_t *alignment_requirement_)</td></tr>
+<tr class="memdesc:a9bf96579c5a88742b70b43acb2b5d156"><td class="mdescLeft">&#160;</td><td class="mdescRight">プラットフォーム2段階初期化の1段階目でメモリ要件とメモリアライメント要件を取得する  <br /></td></tr>
+<tr class="separator:a9bf96579c5a88742b70b43acb2b5d156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0786f3762ee32694ebaa349da965e07"><td class="memItemLeft" align="right" valign="top"><a id="ad0786f3762ee32694ebaa349da965e07" name="ad0786f3762ee32694ebaa349da965e07"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_glfw_init</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td></tr>
+<tr class="separator:ad0786f3762ee32694ebaa349da965e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b7ca8c769f638592b9309f83a4a0bb4"><td class="memItemLeft" align="right" valign="top"><a id="a2b7ca8c769f638592b9309f83a4a0bb4" name="a2b7ca8c769f638592b9309f83a4a0bb4"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>platform_glfw_destroy</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td></tr>
+<tr class="separator:a2b7ca8c769f638592b9309f83a4a0bb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab89431c6a81b5c203562240a4e39659d"><td class="memItemLeft" align="right" valign="top"><a id="ab89431c6a81b5c203562240a4e39659d" name="ab89431c6a81b5c203562240a4e39659d"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_glfw_window_create</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_, const char *window_label_, int window_width_, int window_height_, int *framebuffer_width_, int *framebuffer_height_)</td></tr>
+<tr class="separator:ab89431c6a81b5c203562240a4e39659d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a438378fbaba336bb8f186ab3dc671bc7"><td class="memItemLeft" align="right" valign="top"><a id="a438378fbaba336bb8f186ab3dc671bc7" name="a438378fbaba336bb8f186ab3dc671bc7"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_snapshot_collect</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td></tr>
+<tr class="separator:a438378fbaba336bb8f186ab3dc671bc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a255161b93bef01d49a6335c30d447057"><td class="memItemLeft" align="right" valign="top"><a id="a255161b93bef01d49a6335c30d447057" name="a255161b93bef01d49a6335c30d447057"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_snapshot_process</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_, void(*window_event_callback)(const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *event_), void(*keyboard_event_callback)(const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *event_), void(*mouse_event_callback)(const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *event_))</td></tr>
+<tr class="separator:a255161b93bef01d49a6335c30d447057"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefc083a86c890dce0fbc509823a31e31"><td class="memItemLeft" align="right" valign="top"><a id="aefc083a86c890dce0fbc509823a31e31" name="aefc083a86c890dce0fbc509823a31e31"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_glfw_pump_messages</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_, void(*window_event_callback)(const <a class="el" href="window__event_8h.html#a98d9edd41cdf4e1474ffc40e14da63fd">window_event_t</a> *event_), void(*keyboard_event_callback)(const <a class="el" href="keyboard__event_8h.html#a79990ba3c18e5e491544be0851ee0f94">keyboard_event_t</a> *event_), void(*mouse_event_callback)(const <a class="el" href="mouse__event_8h.html#a4988f53ab4626eb0a151313a86ec8123">mouse_event_t</a> *event_))</td></tr>
+<tr class="separator:aefc083a86c890dce0fbc509823a31e31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd7bfe9de657305968f6e312e1cc66a4"><td class="memItemLeft" align="right" valign="top"><a id="abd7bfe9de657305968f6e312e1cc66a4" name="abd7bfe9de657305968f6e312e1cc66a4"></a>
+static <a class="el" href="platform__types_8h.html#af8313b3164989f0ef2d24d2b299601b7">platform_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>platform_glfw_swap_buffers</b> (<a class="el" href="platform__interface_8h.html#a5b21ee95514e5f14c066dbbcd6953ea0">platform_backend_t</a> *platform_backend_)</td></tr>
+<tr class="separator:abd7bfe9de657305968f6e312e1cc66a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd1d68398f9034c049bc85a3f5b6f1b9"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__glfw_8c.html#afd1d68398f9034c049bc85a3f5b6f1b9">keycode_to_glfw_keycode</a> (<a class="el" href="keyboard__event_8h.html#a6e68664bf6d0e0a4dac76a07ae630c52">keycode_t</a> keycode_)</td></tr>
+<tr class="memdesc:afd1d68398f9034c049bc85a3f5b6f1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する  <br /></td></tr>
+<tr class="separator:afd1d68398f9034c049bc85a3f5b6f1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46c7631d531bf7f9b4dff673bb0a5878"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="platform__interface_8h.html#a451a85773847bb9686adfac95d35d532">platform_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__glfw_8c.html#a46c7631d531bf7f9b4dff673bb0a5878">platform_glfw_vtable_get</a> (void)</td></tr>
 <tr class="memdesc:a46c7631d531bf7f9b4dff673bb0a5878"><td class="mdescLeft">&#160;</td><td class="mdescRight">GLFWプラットフォームを使用する際の仮想関数テーブルを取得する  <br /></td></tr>
 <tr class="separator:a46c7631d531bf7f9b4dff673bb0a5878"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a4db2d6e4bd88de29ba8729a02a2eb8d0"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="platform__interface_8h.html#a451a85773847bb9686adfac95d35d532">platform_vtable_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="platform__glfw_8c.html#a4db2d6e4bd88de29ba8729a02a2eb8d0">s_glfw_vtable</a></td></tr>
+<tr class="memdesc:a4db2d6e4bd88de29ba8729a02a2eb8d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">GLFW用仮想関数テーブル定義  <br /></td></tr>
+<tr class="separator:a4db2d6e4bd88de29ba8729a02a2eb8d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>GLFW APIで実装されたプラットフォームシステムAPIの実装 </p>
 <dl class="section author"><dt>Author</dt><dd>chocolate-pie24 </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000021">Todo:</a></b></dt><dd><p class="startdd">glfwSetErrorCallback </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000020">Todo:</a></b></dt><dd><p class="startdd">glfwSetErrorCallback </p>
 <p class="enddd">glfwSwapInterval</p>
 </dd></dl>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
@@ -190,6 +224,90 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="afd1d68398f9034c049bc85a3f5b6f1b9" name="afd1d68398f9034c049bc85a3f5b6f1b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd1d68398f9034c049bc85a3f5b6f1b9">&#9670;&#160;</a></span>keycode_to_glfw_keycode()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int keycode_to_glfw_keycode </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="keyboard__event_8h.html#a6e68664bf6d0e0a4dac76a07ae630c52">keycode_t</a>&#160;</td>
+          <td class="paramname"><em>keycode_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>全プラットフォーム共通で使用するキーコードを対応するGLFWキーコードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keycode_</td><td>全プラットフォーム共通キーコード </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>int GLFWキーコード </dd></dl>
+
+</div>
+</div>
+<a id="a9bf96579c5a88742b70b43acb2b5d156" name="a9bf96579c5a88742b70b43acb2b5d156"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bf96579c5a88742b70b43acb2b5d156">&#9670;&#160;</a></span>platform_glfw_preinit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void platform_glfw_preinit </td>
+          <td>(</td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>memory_requirement_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>alignment_requirement_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>プラットフォーム2段階初期化の1段階目でメモリ要件とメモリアライメント要件を取得する </p>
+<dl class="section note"><dt>Note</dt><dd><ul>
+<li>memory_requirement_ == NULL または alignment_requirement_ == NULLの場合は何もしない</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">memory_requirement_</td><td>メモリ要件 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">alignment_requirement_</td><td>メモリアライメント要件 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a46c7631d531bf7f9b4dff673bb0a5878" name="a46c7631d531bf7f9b4dff673bb0a5878"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a46c7631d531bf7f9b4dff673bb0a5878">&#9670;&#160;</a></span>platform_glfw_vtable_get()</h2>
 
@@ -209,6 +327,40 @@ Functions</h2></td></tr>
 <p>GLFWプラットフォームを使用する際の仮想関数テーブルを取得する </p>
 <dl class="section note"><dt>Note</dt><dd>vtableの詳細は <a class="el" href="platform__interface_8h.html#a451a85773847bb9686adfac95d35d532">platform_vtable_t</a> を参照</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>const platform_vtable_t* 仮想関数テーブル </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a4db2d6e4bd88de29ba8729a02a2eb8d0" name="a4db2d6e4bd88de29ba8729a02a2eb8d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4db2d6e4bd88de29ba8729a02a2eb8d0">&#9670;&#160;</a></span>s_glfw_vtable</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="platform__interface_8h.html#a451a85773847bb9686adfac95d35d532">platform_vtable_t</a> s_glfw_vtable</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">    .platform_backend_preinit = <a class="code hl_function" href="platform__glfw_8c.html#a9bf96579c5a88742b70b43acb2b5d156">platform_glfw_preinit</a>,</div>
+<div class="line">    .platform_backend_init = platform_glfw_init,</div>
+<div class="line">    .platform_backend_destroy = platform_glfw_destroy,</div>
+<div class="line">    .platform_backend_window_create = platform_glfw_window_create,</div>
+<div class="line">    .platform_backend_pump_messages = platform_glfw_pump_messages,</div>
+<div class="line">    .platform_backend_swap_buffers = platform_glfw_swap_buffers,</div>
+<div class="line">}</div>
+<div class="ttc" id="aplatform__glfw_8c_html_a9bf96579c5a88742b70b43acb2b5d156"><div class="ttname"><a href="platform__glfw_8c.html#a9bf96579c5a88742b70b43acb2b5d156">platform_glfw_preinit</a></div><div class="ttdeci">static void platform_glfw_preinit(size_t *memory_requirement_, size_t *alignment_requirement_)</div><div class="ttdoc">プラットフォーム2段階初期化の1段階目でメモリ要件とメモリアライメント要件を取得する</div><div class="ttdef"><b>Definition:</b> platform_glfw.c:149</div></div>
+</div><!-- fragment -->
+<p>GLFW用仮想関数テーブル定義 </p>
 
 </div>
 </div>

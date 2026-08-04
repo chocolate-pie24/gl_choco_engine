@@ -154,6 +154,12 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a37b921134983b0813843d746f6854567"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture_8c.html#a37b921134983b0813843d746f6854567">bmp_load</a> (const char *fullpath_, uint16_t *out_width_, uint16_t *out_height_, uint8_t *out_channel_count_, uint8_t **out_pixels_)</td></tr>
+<tr class="memdesc:a37b921134983b0813843d746f6854567"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPファイルを読み込む  <br /></td></tr>
+<tr class="separator:a37b921134983b0813843d746f6854567"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada90cc1dcdf4bb6ffa5976c2bced23fa"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture_8c.html#ada90cc1dcdf4bb6ffa5976c2bced23fa">test_texture_generate</a> (<a class="el" href="texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4">test_texture_t</a> test_texture_color_, uint16_t *out_width_, uint16_t *out_height_, uint8_t *out_channel_count_, uint8_t **out_pixels_)</td></tr>
+<tr class="memdesc:ada90cc1dcdf4bb6ffa5976c2bced23fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">テスト用テクスチャピクセルデータを生成する  <br /></td></tr>
+<tr class="separator:ada90cc1dcdf4bb6ffa5976c2bced23fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd7cbe3729544c3c1b3d6d1aeb949ca1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture_8c.html#afd7cbe3729544c3c1b3d6d1aeb949ca1">texture_create</a> (const char *name_, <a class="el" href="texture_8h.html#a3b624d14c7c5956ff42869ca4381a0ab">texture_t</a> **texture_)</td></tr>
 <tr class="memdesc:afd7cbe3729544c3c1b3d6d1aeb949ca1"><td class="mdescLeft">&#160;</td><td class="mdescRight">texture_tのメモリを確保し、テクスチャ名称を初期化する(名称以外のフィールドは0, NULLで初期化)  <br /></td></tr>
 <tr class="separator:afd7cbe3729544c3c1b3d6d1aeb949ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -209,6 +215,191 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a37b921134983b0813843d746f6854567" name="a37b921134983b0813843d746f6854567"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37b921134983b0813843d746f6854567">&#9670;&#160;</a></span>bmp_load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> bmp_load </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fullpath_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>out_width_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>out_height_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>out_channel_count_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramname"><em>out_pixels_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMPファイルを読み込む </p>
+<dl class="section note"><dt>Note</dt><dd>読み込んだBMPファイルのピクセルデータは以下の形式となる<ul>
+<li>原点は左上</li>
+<li>チャンネルカウントRGBのピクセルデータについてもpaddingは除去される</li>
+<li>BGRではなく、RGBの順でピクセルが格納される</li>
+<li>高さの値は常に正 </li>
+</ul>
+</dd>
+<dd>
+処理に失敗した場合、out引数の状態は全て不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fullpath_</td><td>BMPファイルのフルパス情報 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_width_</td><td>読み込んだBMPファイルの幅格納先 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_height_</td><td>読み込んだBMPファイルの高さ(元画像の原点が左下だった場合、左上に変換される)格納先 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_channel_count_</td><td>BMPファイルのチャンネルカウント(RGB or RGBAのみをサポート)格納先 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_pixels_</td><td>ピクセルデータ格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>fullpath_ == NULL</li>
+<li>out_width_ == NULL</li>
+<li>out_height_ == NULL</li>
+<li>out_channel_count_ == NULL</li>
+<li>out_pixels_ == NULL</li>
+<li>*out_pixels_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステムの使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_OPEN_ERROR</td><td>ファイルオープン失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_CLOSE_ERROR</td><td>ファイルクローズ失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>未定義エラーが発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_READ_ERROR</td><td>ヘッダまたはピクセル情報の読み込みに失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_UNSUPPORTED_FILE</td><td>サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される) </td></tr>
+    <tr><td class="paramname">RESOURCE_OVERFLOW</td><td>計算過程でオーバーフロー発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>ピクセル読み込みサイズ異常 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ada90cc1dcdf4bb6ffa5976c2bced23fa" name="ada90cc1dcdf4bb6ffa5976c2bced23fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada90cc1dcdf4bb6ffa5976c2bced23fa">&#9670;&#160;</a></span>test_texture_generate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> test_texture_generate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4">test_texture_t</a>&#160;</td>
+          <td class="paramname"><em>test_texture_color_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>out_width_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>out_height_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>out_channel_count_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramname"><em>out_pixels_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>テスト用テクスチャピクセルデータを生成する </p>
+<dl class="section note"><dt>Note</dt><dd>処理に失敗した場合、out_width_ / out_height_ / out_channel_count_ / out_pixels_の値は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">test_texture_color_</td><td>生成するテスト用テクスチャ選択値 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_width_</td><td>生成したテクスチャの幅 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_height_</td><td>生成したテクスチャの高さ(原点は左上) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_channel_count_</td><td>チャンネルカウント(当面はテストテクスチャはRGBのみ) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_pixels_</td><td>生成したピクセルデータ格納先(メモリは本関数内で確保する)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>out_width_ == NULL</li>
+<li>out_height_ == NULL</li>
+<li>out_channel_count_ == NULL</li>
+<li>out_pixels_ == NULL</li>
+<li>*out_pixels_ != NULL</li>
+<li>test_texture_color_が規定値外 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステムの使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ割り当て失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="afd7cbe3729544c3c1b3d6d1aeb949ca1" name="afd7cbe3729544c3c1b3d6d1aeb949ca1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd7cbe3729544c3c1b3d6d1aeb949ca1">&#9670;&#160;</a></span>texture_create()</h2>
 

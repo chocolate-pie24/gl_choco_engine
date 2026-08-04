@@ -135,7 +135,7 @@ concrete_shader.c作成手順</h3>
 <p>shader concreteモジュール用実装ファイルには<code>Renderer Backend Interface</code>用仮想関数テーブル(<code>renderer_shader_vtable_t</code>)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。</p>
 <p>各関数の実装においては下記に留意する</p>
 <ul>
-<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code>,<code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code>を使用すること</li>
+<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code>renderer_mem_allocate()</code>,<code>renderer_mem_free()</code>を使用すること</li>
 <li>実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は<code>renderer_core/renderer_err_utils</code>が提供するAPIを使用すること</li>
 </ul>
 <table class="markdownTable">
@@ -173,7 +173,7 @@ concrete_texture.c作成手順</h3>
 <p>Texture concreteモジュール用実装ファイルには<code>Renderer Backend Interface</code>用仮想関数テーブル(<code>renderer_texture_vtable_t</code>)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。</p>
 <p>各関数の実装においては下記に留意する</p>
 <ul>
-<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code>,<code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code>を使用すること</li>
+<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code>renderer_mem_allocate()</code>,<code>renderer_mem_free()</code>を使用すること</li>
 <li>実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は<code>renderer_core/renderer_err_utils</code>が提供するAPIを使用すること</li>
 </ul>
 <table class="markdownTable">
@@ -202,7 +202,7 @@ concrete_vao.c作成手順</h3>
 <p>VAO concreteモジュール用実装ファイルには<code>Renderer Backend Interface</code>用仮想関数テーブル(<code>renderer_vao_vtable_t</code>)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。</p>
 <p>各関数の実装においては下記に留意する</p>
 <ul>
-<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code>,<code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code>を使用すること</li>
+<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code>renderer_mem_allocate()</code>,<code>renderer_mem_free()</code>を使用すること</li>
 <li>実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は<code>renderer_core/renderer_err_utils</code>が提供するAPIを使用すること</li>
 </ul>
 <table class="markdownTable">
@@ -231,7 +231,7 @@ concrete_vbo.c作成手順</h3>
 <p>VBO concreteモジュール用実装ファイルには<code>Renderer Backend Interface</code>用仮想関数テーブル(<code>renderer_vbo_vtable_t</code>)の実装として、以下の機能を実装する(xxxはグラフィックスAPIの名称)。</p>
 <p>各関数の実装においては下記に留意する</p>
 <ul>
-<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code>,<code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code>を使用すること</li>
+<li>メモリ確保が必要な場合は、<code>renderer_core/renderer_memory</code>が提供する<code>renderer_mem_allocate()</code>,<code>renderer_mem_free()</code>を使用すること</li>
 <li>実行結果コードの文字列への変換処理、下位レイヤーの実行結果コードの変換処理は<code>renderer_core/renderer_err_utils</code>が提供するAPIを使用すること</li>
 </ul>
 <table class="markdownTable">
@@ -255,7 +255,7 @@ concrete_vbo.c作成手順</h3>
 </ul>
 <h3><a class="anchor" id="autotoc_md225"></a>
 追加したグラフィックスAPIの指定</h3>
-<p>新規に追加したグラフィックスAPIを使用する場合は、<code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code>内の<code><a class="el" href="renderer__backend__context_8h.html#a8cb4953ce74de55f80c5397ce1d38054" title="レンダラーバックエンドのメモリを確保し、初期化を行う">renderer_backend_initialize()</a></code>でグラフィックスAPI種別を指定する(*1)</p>
+<p>新規に追加したグラフィックスAPIを使用する場合は、<code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code>内の<code><a class="el" href="renderer__backend__context_8h.html#aa0325c9b57c643ebe3c8eb71980c68d5" title="レンダラーバックエンドのメモリを確保し、初期化を行う">renderer_backend_initialize()</a></code>でグラフィックスAPI種別を指定する(*1)</p>
 <p>*1: 将来的にはビルドオプションで指定するように変更予定 </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

@@ -1,0 +1,9 @@
+<map id="src/engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.c" name="src/engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.c">
+<area shape="rect" id="node1" title="Buffer Managerの実行結果コードutility APIの実装" alt="" coords="264,5,507,75"/>
+<area shape="rect" id="node2" href="$buffer__manager__err__utils_8h.html" title="Buffer Managerの実行結果コードに関するutility API." alt="" coords="285,123,486,192"/>
+<area shape="rect" id="node3" href="$choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="5,255,163,295"/>
+<area shape="rect" id="node5" href="$range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="187,247,371,302"/>
+<area shape="rect" id="node6" href="$renderer__backend__types_8h_source.html" title=" " alt="" coords="395,247,592,302"/>
+<area shape="rect" id="node7" href="$buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="617,240,818,309"/>
+<area shape="rect" id="node4" title=" " alt="" coords="144,357,219,383"/>
+</map>

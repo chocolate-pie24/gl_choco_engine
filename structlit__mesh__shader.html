@@ -101,10 +101,14 @@ Collaboration diagram for lit_mesh_shader:</div>
 <div class="dyncontent">
 <div class="center"><img src="structlit__mesh__shader__coll__graph.png" border="0" usemap="#alit__mesh__shader_coll__map" alt="Collaboration graph"/></div>
 <map name="alit__mesh__shader_coll__map" id="alit__mesh__shader_coll__map">
-<area shape="rect" title=" " alt="" coords="239,93,369,119"/>
-<area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,5,195,31"/>
-<area shape="rect" href="structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="219,5,389,31"/>
-<area shape="rect" href="structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="413,5,582,31"/>
+<area shape="rect" title=" " alt="" coords="306,288,435,313"/>
+<area shape="rect" href="structrenderer__backend__shader.html" title="シェーダープログラム／シェーダーオブジェクトのハンドルを保持する構造体" alt="" coords="5,200,195,225"/>
+<area shape="rect" href="structrenderer__backend__vao.html" title="VAOモジュール内部状態管理構造体" alt="" coords="219,200,389,225"/>
+<area shape="rect" href="structvbo__manager.html" title="VBO Managerの内部状態管理構造体" alt="" coords="538,200,649,225"/>
+<area shape="rect" href="structvbo__manager__config.html" title="VBO Managerの生成設定" alt="" coords="356,112,513,137"/>
+<area shape="rect" href="structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="537,112,660,137"/>
+<area shape="rect" href="structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="571,7,626,33"/>
+<area shape="rect" href="structrenderer__backend__vbo.html" title="VBOモジュール内部状態管理構造体" alt="" coords="685,112,854,137"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -116,66 +120,18 @@ Data Fields</h2></td></tr>
 <tr class="separator:a30892f35c054dc5b31b8361a90871448"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57f8fc7af66f84584a5d67598ff2d5ed"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#a57f8fc7af66f84584a5d67598ff2d5ed">projection_matrix_location</a></td></tr>
 <tr class="separator:a57f8fc7af66f84584a5d67598ff2d5ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23a9da0747dc9bf7fe0f8d8fcea5e841"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#a23a9da0747dc9bf7fe0f8d8fcea5e841">shader</a></td></tr>
+<tr class="memitem:a23a9da0747dc9bf7fe0f8d8fcea5e841"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structrenderer__backend__shader.html">renderer_backend_shader_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#a23a9da0747dc9bf7fe0f8d8fcea5e841">shader</a></td></tr>
 <tr class="separator:a23a9da0747dc9bf7fe0f8d8fcea5e841"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d0c60e13b6ec98f7343c9a10af8d681"><td class="memItemLeft" align="right" valign="top"><a id="a9d0c60e13b6ec98f7343c9a10af8d681" name="a9d0c60e13b6ec98f7343c9a10af8d681"></a>
-<a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>lit_mesh_vao</b></td></tr>
-<tr class="separator:a9d0c60e13b6ec98f7343c9a10af8d681"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4ab380d957776472cb557943faef25c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#ac4ab380d957776472cb557943faef25c">lit_mesh_vbo</a></td></tr>
-<tr class="separator:ac4ab380d957776472cb557943faef25c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac433cd5bf4a22b06d3e2367b1e927d50"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#ac433cd5bf4a22b06d3e2367b1e927d50">vertex_buffer_size</a></td></tr>
-<tr class="separator:ac433cd5bf4a22b06d3e2367b1e927d50"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68476e4180c38d3b0a44fc61d8b91735"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#a68476e4180c38d3b0a44fc61d8b91735">current_buffer_offset</a></td></tr>
-<tr class="separator:a68476e4180c38d3b0a44fc61d8b91735"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0397fe792121b0a28b971c4f1a1ef3ec"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#a0397fe792121b0a28b971c4f1a1ef3ec">current_vertex_count</a></td></tr>
-<tr class="separator:a0397fe792121b0a28b971c4f1a1ef3ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1936ca12549ebf15d028a6c06355281"><td class="memItemLeft" align="right" valign="top"><a id="af1936ca12549ebf15d028a6c06355281" name="af1936ca12549ebf15d028a6c06355281"></a>
+<a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>vao</b></td></tr>
+<tr class="separator:af1936ca12549ebf15d028a6c06355281"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdb0e663fddf6049fccce2498046f826"><td class="memItemLeft" align="right" valign="top"><a class="el" href="vbo__manager_8h.html#aeef64b910478a8bb81f422332eb85452">vbo_manager_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlit__mesh__shader.html#afdb0e663fddf6049fccce2498046f826">vbo_manager</a></td></tr>
+<tr class="separator:afdb0e663fddf6049fccce2498046f826"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9de31f156330e164078da04b364f9fb3"><td class="memItemLeft" align="right" valign="top"><a id="a9de31f156330e164078da04b364f9fb3" name="a9de31f156330e164078da04b364f9fb3"></a>
+<a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>vbo_config</b></td></tr>
+<tr class="separator:a9de31f156330e164078da04b364f9fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Field Documentation</h2>
-<a id="a68476e4180c38d3b0a44fc61d8b91735" name="a68476e4180c38d3b0a44fc61d8b91735"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68476e4180c38d3b0a44fc61d8b91735">&#9670;&#160;</a></span>current_buffer_offset</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t lit_mesh_shader::current_buffer_offset</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在バーテックスバッファに転送されているサイズ(=次転送する際のオフセット) </p>
-
-</div>
-</div>
-<a id="a0397fe792121b0a28b971c4f1a1ef3ec" name="a0397fe792121b0a28b971c4f1a1ef3ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0397fe792121b0a28b971c4f1a1ef3ec">&#9670;&#160;</a></span>current_vertex_count</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t lit_mesh_shader::current_vertex_count</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>現在バーテックスバッファに転送されている頂点数 </p>
-
-</div>
-</div>
-<a id="ac4ab380d957776472cb557943faef25c" name="ac4ab380d957776472cb557943faef25c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac4ab380d957776472cb557943faef25c">&#9670;&#160;</a></span>lit_mesh_vbo</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__backend__types_8h.html#ac0887a01242b109b8e245311fdf1b840">renderer_backend_vbo_t</a>* lit_mesh_shader::lit_mesh_vbo</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>シェーダーVAO 頂点情報VBO(point_normal_vertex_t) </p>
-
-</div>
-</div>
 <a id="ae667a2423946efe8305044a926b337e6" name="ae667a2423946efe8305044a926b337e6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae667a2423946efe8305044a926b337e6">&#9670;&#160;</a></span>model_matrix_location</h2>
 
@@ -213,7 +169,7 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__backend__types_8h.html#a4bbc8ae00d7e491f0b5e1b1a5e35d35a">renderer_backend_shader_t</a>* lit_mesh_shader::shader</td>
+          <td class="memname"><a class="el" href="structrenderer__backend__shader.html">renderer_backend_shader_t</a>* lit_mesh_shader::shader</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -221,18 +177,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="ac433cd5bf4a22b06d3e2367b1e927d50" name="ac433cd5bf4a22b06d3e2367b1e927d50"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac433cd5bf4a22b06d3e2367b1e927d50">&#9670;&#160;</a></span>vertex_buffer_size</h2>
+<a id="afdb0e663fddf6049fccce2498046f826" name="afdb0e663fddf6049fccce2498046f826"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afdb0e663fddf6049fccce2498046f826">&#9670;&#160;</a></span>vbo_manager</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">size_t lit_mesh_shader::vertex_buffer_size</td>
+          <td class="memname"><a class="el" href="vbo__manager_8h.html#aeef64b910478a8bb81f422332eb85452">vbo_manager_t</a>* lit_mesh_shader::vbo_manager</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>バーテックスバッファのサイズ </p>
+<p>シェーダーVAO </p>
 
 </div>
 </div>

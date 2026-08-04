@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('choco__string_8c.html',''); initResiza
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">choco_string.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__containers.html">Containers</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -133,6 +134,27 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a7a47524ac3275851ca38ea65671f75ad"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a7a47524ac3275851ca38ea65671f75ad">rslt_to_str</a> (<a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:a7a47524ac3275851ca38ea65671f75ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">実行結果コードを文字列に変換する  <br /></td></tr>
+<tr class="separator:a7a47524ac3275851ca38ea65671f75ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0d8652391ee7b37b527040614555d14"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#ac0d8652391ee7b37b527040614555d14">choco_string_mem_allocate</a> (size_t size_, void **out_ptr_)</td></tr>
+<tr class="memdesc:ac0d8652391ee7b37b527040614555d14"><td class="mdescLeft">&#160;</td><td class="mdescRight">memory_system_allocateのラッパ関数で、指定されたサイズのメモリを確保する  <br /></td></tr>
+<tr class="separator:ac0d8652391ee7b37b527040614555d14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae889f9eb794eccab8ad8344eca6ffdb9"><td class="memItemLeft" align="right" valign="top"><a id="ae889f9eb794eccab8ad8344eca6ffdb9" name="ae889f9eb794eccab8ad8344eca6ffdb9"></a>
+static <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>buffer_reserve</b> (size_t size_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_)</td></tr>
+<tr class="separator:ae889f9eb794eccab8ad8344eca6ffdb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad49f6a5e0e11ccfc7b1db9ac97581182"><td class="memItemLeft" align="right" valign="top"><a id="ad49f6a5e0e11ccfc7b1db9ac97581182" name="ad49f6a5e0e11ccfc7b1db9ac97581182"></a>
+static <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>buffer_resize</b> (size_t size_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_)</td></tr>
+<tr class="separator:ad49f6a5e0e11ccfc7b1db9ac97581182"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac26bcd09300d3d39fc1ee6e1024c18cc"><td class="memItemLeft" align="right" valign="top"><a id="ac26bcd09300d3d39fc1ee6e1024c18cc" name="ac26bcd09300d3d39fc1ee6e1024c18cc"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_string_valid</b> (const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *string_)</td></tr>
+<tr class="separator:ac26bcd09300d3d39fc1ee6e1024c18cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9a53b1ba0cd97f2c7942aa70aaa525d"><td class="memItemLeft" align="right" valign="top"><a id="ac9a53b1ba0cd97f2c7942aa70aaa525d" name="ac9a53b1ba0cd97f2c7942aa70aaa525d"></a>
+static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>mock_strlen</b> (const char *str_)</td></tr>
+<tr class="separator:ac9a53b1ba0cd97f2c7942aa70aaa525d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac465d5abab4470b4e2554dadf6623fb7"><td class="memItemLeft" align="right" valign="top"><a id="ac465d5abab4470b4e2554dadf6623fb7" name="ac465d5abab4470b4e2554dadf6623fb7"></a>
+static int&#160;</td><td class="memItemRight" valign="bottom"><b>mock_strcmp</b> (const char *s1_, const char *s2_)</td></tr>
+<tr class="separator:ac465d5abab4470b4e2554dadf6623fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af01ca795324a4347a1ce80057f71de42"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#af01ca795324a4347a1ce80057f71de42">choco_string_default_create</a> (<a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> **string_)</td></tr>
 <tr class="memdesc:af01ca795324a4347a1ce80057f71de42"><td class="mdescLeft">&#160;</td><td class="mdescRight">空の文字列コンテナを生成する  <br /></td></tr>
 <tr class="separator:af01ca795324a4347a1ce80057f71de42"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,6 +194,27 @@ Functions</h2></td></tr>
 <tr class="memitem:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a9ddb4aaa0d6b1551fcf322c1aa7a62e7">choco_string_key_value_value_get</a> (const char *line_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *out_value_)</td></tr>
 <tr class="memdesc:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">key = valueの文字列からvalueを取り出す  <br /></td></tr>
 <tr class="separator:a9ddb4aaa0d6b1551fcf322c1aa7a62e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
+<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751">s_rslt_str_data_corrupted</a> = &quot;DATA_CORRUPTED&quot;</td></tr>
+<tr class="separator:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a701f3db36b3747bf363e9623f5217775"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a701f3db36b3747bf363e9623f5217775">s_rslt_str_bad_operation</a> = &quot;BAD_OPERATION&quot;</td></tr>
+<tr class="separator:a701f3db36b3747bf363e9623f5217775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
+<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af80cea0f3487047ba34d8b89614ddbc1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#af80cea0f3487047ba34d8b89614ddbc1">s_rslt_str_runtime_error</a> = &quot;RUNTIME_ERROR&quot;</td></tr>
+<tr class="separator:af80cea0f3487047ba34d8b89614ddbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
+<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9607c9be9a0515dee65f769e2add8719"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a9607c9be9a0515dee65f769e2add8719">s_rslt_str_undefined_error</a> = &quot;UNDEFINED_ERROR&quot;</td></tr>
+<tr class="separator:a9607c9be9a0515dee65f769e2add8719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1">s_rslt_str_overflow</a> = &quot;OVERFLOW&quot;</td></tr>
+<tr class="separator:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bc2987276831378c8d6fafff286031"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="choco__string_8c.html#a06bc2987276831378c8d6fafff286031">s_rslt_str_limit_exceeded</a> = &quot;LIMIT_EXCEEDED&quot;</td></tr>
+<tr class="separator:a06bc2987276831378c8d6fafff286031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>文字列を格納するコンテナモジュールAPIの実装 </p>
@@ -811,6 +854,75 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ac0d8652391ee7b37b527040614555d14" name="ac0d8652391ee7b37b527040614555d14"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0d8652391ee7b37b527040614555d14">&#9670;&#160;</a></span>choco_string_mem_allocate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a> choco_string_mem_allocate </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>out_ptr_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>memory_system_allocateのラッパ関数で、指定されたサイズのメモリを確保する </p>
+<dl class="section note"><dt>Note</dt><dd><ul>
+<li>実行結果コードをchoco_stringモジュールの実行結果コードに変換して出力する</li>
+<li>メモリタグはMEMORY_TAG_STRING固定</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>確保するメモリサイズ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_ptr_</td><td>確保したメモリの先頭アドレス</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CHOCO_STRING_INVALID_ARGUMENT</td><td>下記のいずれか<ul>
+<li>out_ptr_ == NULL</li>
+<li>*out_ptr_ != NULL</li>
+<li>memory_system_allocateの実行結果がMEMORY_SYSTEM_INVALID_ARGUMENT </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_LIMIT_EXCEEDED</td><td>以下のいずれか<ul>
+<li>割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過</li>
+<li>割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CHOCO_STRING_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">CHOCO_STRING_SUCCESS</td><td>メモリ確保に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a7d19a1c91dae5c7c1d961169b6f9d577" name="a7d19a1c91dae5c7c1d961169b6f9d577"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7d19a1c91dae5c7c1d961169b6f9d577">&#9670;&#160;</a></span>choco_string_substring_exists()</h2>
 
@@ -856,6 +968,249 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a7a47524ac3275851ca38ea65671f75ad" name="a7a47524ac3275851ca38ea65671f75ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a47524ac3275851ca38ea65671f75ad">&#9670;&#160;</a></span>rslt_to_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static const char * rslt_to_str </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a6db4c5eb14de032dfed5c2d3834e19f7">choco_string_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>実行結果コードを文字列に変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>文字列に変換する実行結果コード </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>const char* 変換された文字列の先頭アドレス </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a701f3db36b3747bf363e9623f5217775" name="a701f3db36b3747bf363e9623f5217775"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a701f3db36b3747bf363e9623f5217775">&#9670;&#160;</a></span>s_rslt_str_bad_operation</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_bad_operation = &quot;BAD_OPERATION&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(API誤用)文字列 </p>
+
+</div>
+</div>
+<a id="a1b07d043f967f7fbfad5cb49c6ebb751" name="a1b07d043f967f7fbfad5cb49c6ebb751"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b07d043f967f7fbfad5cb49c6ebb751">&#9670;&#160;</a></span>s_rslt_str_data_corrupted</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_data_corrupted = &quot;DATA_CORRUPTED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(内部データ整合異常)文字列 </p>
+
+</div>
+</div>
+<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(無効な引数)文字列 </p>
+
+</div>
+</div>
+<a id="a06bc2987276831378c8d6fafff286031" name="a06bc2987276831378c8d6fafff286031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bc2987276831378c8d6fafff286031">&#9670;&#160;</a></span>s_rslt_str_limit_exceeded</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_limit_exceeded = &quot;LIMIT_EXCEEDED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(システム使用範囲上限超過) </p>
+
+</div>
+</div>
+<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(メモリ不足)文字列 </p>
+
+</div>
+</div>
+<a id="a6ad7c5d6169cb4bce8fe50622979bfa1" name="a6ad7c5d6169cb4bce8fe50622979bfa1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad7c5d6169cb4bce8fe50622979bfa1">&#9670;&#160;</a></span>s_rslt_str_overflow</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_overflow = &quot;OVERFLOW&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(計算過程でオーバーフロー発生)文字列 </p>
+
+</div>
+</div>
+<a id="af80cea0f3487047ba34d8b89614ddbc1" name="af80cea0f3487047ba34d8b89614ddbc1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af80cea0f3487047ba34d8b89614ddbc1">&#9670;&#160;</a></span>s_rslt_str_runtime_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_runtime_error = &quot;RUNTIME_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(実行時エラー)文字列 </p>
+
+</div>
+</div>
+<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(成功)文字列 </p>
+
+</div>
+</div>
+<a id="a9607c9be9a0515dee65f769e2add8719" name="a9607c9be9a0515dee65f769e2add8719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9607c9be9a0515dee65f769e2add8719">&#9670;&#160;</a></span>s_rslt_str_undefined_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_undefined_error = &quot;UNDEFINED_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード(未定義エラー)文字列 </p>
 
 </div>
 </div>

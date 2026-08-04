@@ -132,6 +132,9 @@ Include dependency graph for flight_camera_controller.c:</div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:af8035d81458f840c4aa6502d82fd3bcb"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#af8035d81458f840c4aa6502d82fd3bcb">camera_position_movement_apply</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, <a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a> translation_)</td></tr>
+<tr class="memdesc:af8035d81458f840c4aa6502d82fd3bcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">カメラ位置にカメラ移動量を適用する  <br /></td></tr>
+<tr class="separator:af8035d81458f840c4aa6502d82fd3bcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a498dc51ace3904472d5eef1fe5eef1c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flight__camera__controller_8c.html#a498dc51ace3904472d5eef1fe5eef1c2">flight_camera_controller_move_forward</a> (<a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *camera_, float speed_, float delta_time_)</td></tr>
 <tr class="memdesc:a498dc51ace3904472d5eef1fe5eef1c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">フライトカメラを前方に動かす  <br /></td></tr>
 <tr class="separator:a498dc51ace3904472d5eef1fe5eef1c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,6 +174,63 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="af8035d81458f840c4aa6502d82fd3bcb" name="af8035d81458f840c4aa6502d82fd3bcb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8035d81458f840c4aa6502d82fd3bcb">&#9670;&#160;</a></span>camera_position_movement_apply()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="camera__types_8h.html#a6bb5c95a270d59e0a86cc707a3935c85">camera_result_t</a> camera_position_movement_apply </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="camera_8h.html#a5cf69347246ef9b4472276afcc2ec8fc">camera_t</a> *&#160;</td>
+          <td class="paramname"><em>camera_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td>
+          <td class="paramname"><em>translation_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>カメラ位置にカメラ移動量を適用する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">camera_</td><td>更新対象カメラ構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">translation_</td><td>カメラ移動量</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">CAMERA_INVALID_ARGUMENT</td><td>camera_ == NULL </td></tr>
+    <tr><td class="paramname">CAMERA_RUNTIME_ERROR</td><td>以下のいずれか<ul>
+<li>カメラ位置の取得に失敗</li>
+<li>カメラ位置の更新に失敗 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">CAMERA_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="aa47a68add0771a9e9d2893d052b31578" name="aa47a68add0771a9e9d2893d052b31578"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa47a68add0771a9e9d2893d052b31578">&#9670;&#160;</a></span>flight_camera_controller_move_backward()</h2>
 

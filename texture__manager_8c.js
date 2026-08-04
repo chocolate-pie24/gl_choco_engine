@@ -8,5 +8,18 @@ var texture__manager_8c =
     [ "texture_manager_register", "texture__manager_8c.html#ab90eb9eb4aeaba391db74540f2b44fac", null ],
     [ "texture_manager_texture_id_get", "texture__manager_8c.html#a1a3b56ba0ddd6508d9df41345270ae11", null ],
     [ "texture_manager_unregister", "texture__manager_8c.html#a1e2974d0f97d40ef5894056204f65b51", null ],
-    [ "texture_manager_unregister_by_name", "texture__manager_8c.html#a7b6a5618f956a59b94a070d3cbee0a5f", null ]
+    [ "texture_manager_unregister_by_name", "texture__manager_8c.html#a7b6a5618f956a59b94a070d3cbee0a5f", null ],
+    [ "s_rslt_str_bad_operation", "texture__manager_8c.html#a701f3db36b3747bf363e9623f5217775", null ],
+    [ "s_rslt_str_data_corrupted", "texture__manager_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751", null ],
+    [ "s_rslt_str_file_close_error", "texture__manager_8c.html#a6f6594ca394e0eb2537d65b22529d18e", null ],
+    [ "s_rslt_str_file_open_error", "texture__manager_8c.html#ad3196151bfc25d711ce8b8fb2b62ff8f", null ],
+    [ "s_rslt_str_file_read_error", "texture__manager_8c.html#a04fb5618dc2fd94129efd029d5e59ac4", null ],
+    [ "s_rslt_str_invalid_argument", "texture__manager_8c.html#ad513e1a68ecf78755351532812c75359", null ],
+    [ "s_rslt_str_limit_exceeded", "texture__manager_8c.html#a06bc2987276831378c8d6fafff286031", null ],
+    [ "s_rslt_str_no_memory", "texture__manager_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0", null ],
+    [ "s_rslt_str_overflow", "texture__manager_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1", null ],
+    [ "s_rslt_str_runtime_error", "texture__manager_8c.html#af80cea0f3487047ba34d8b89614ddbc1", null ],
+    [ "s_rslt_str_success", "texture__manager_8c.html#a9b05c9aea264bb27d264cedaee3422f1", null ],
+    [ "s_rslt_str_undefined_error", "texture__manager_8c.html#a9607c9be9a0515dee65f769e2add8719", null ],
+    [ "s_rslt_str_unsupported_file", "texture__manager_8c.html#a1e21970fffa713e874acd7237c1e13b3", null ]
 ];

@@ -1,8 +1,9 @@
 var searchData=
 [
-  ['stl_5floader_5fascii_5fload_0',['stl_loader_ascii_load',['../stl__loader_8h.html#a161cb830d51bdabefa81a715db60d6e1',1,'stl_loader_ascii_load(const char *path_, const char *name_, const char *extension_, stl_loader_t *stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#a161cb830d51bdabefa81a715db60d6e1',1,'stl_loader_ascii_load(const char *path_, const char *name_, const char *extension_, stl_loader_t *stl_loader_):&#160;stl_loader.c']]],
-  ['stl_5floader_5fcreate_1',['stl_loader_create',['../stl__loader_8h.html#ac6111db151893d7373fdda32b4e43737',1,'stl_loader_create(stl_loader_t **stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#ac6111db151893d7373fdda32b4e43737',1,'stl_loader_create(stl_loader_t **stl_loader_):&#160;stl_loader.c']]],
-  ['stl_5floader_5fdestroy_2',['stl_loader_destroy',['../stl__loader_8h.html#aa3e1ef8ffd623d1041fa133a2ff4c18c',1,'stl_loader_destroy(stl_loader_t **stl_loader_):&#160;stl_loader.c'],['../stl__loader_8c.html#aa3e1ef8ffd623d1041fa133a2ff4c18c',1,'stl_loader_destroy(stl_loader_t **stl_loader_):&#160;stl_loader.c']]],
-  ['stl_5floader_5fvertices_5fcount_5fget_3',['stl_loader_vertices_count_get',['../stl__loader_8h.html#af8ba382e72a212608045d9f87fe9a1b6',1,'stl_loader_vertices_count_get(const stl_loader_t *stl_loader_, size_t *out_vertex_count_):&#160;stl_loader.c'],['../stl__loader_8c.html#af8ba382e72a212608045d9f87fe9a1b6',1,'stl_loader_vertices_count_get(const stl_loader_t *stl_loader_, size_t *out_vertex_count_):&#160;stl_loader.c']]],
-  ['stl_5floader_5fvertices_5fmove_4',['stl_loader_vertices_move',['../stl__loader_8h.html#a3cc18536584c9ced9ea78293c4a5a816',1,'stl_loader_vertices_move(stl_loader_t *stl_loader_, point_normal_vertex_t **out_vertices_, size_t *out_vertex_count_):&#160;stl_loader.c'],['../stl__loader_8c.html#a3cc18536584c9ced9ea78293c4a5a816',1,'stl_loader_vertices_move(stl_loader_t *stl_loader_, point_normal_vertex_t **out_vertices_, size_t *out_vertex_count_):&#160;stl_loader.c']]]
+  ['node_5facquire_0',['node_acquire',['../range__allocator_8c.html#afdaa7f5299431e30b63b01b79857ed59',1,'range_allocator.c']]],
+  ['node_5finsert_5fbetween_1',['node_insert_between',['../range__allocator_8c.html#a6fe2f9b9c57592c5a8e3ff4c5ab55c85',1,'range_allocator.c']]],
+  ['node_5fis_5fvalid_2',['node_is_valid',['../range__allocator_8c.html#a41f978b065eb81af731851ede66eb437',1,'range_allocator.c']]],
+  ['node_5fpool_5ffind_5findex_3',['node_pool_find_index',['../range__allocator_8c.html#a37a255cb0340bf80a02fd2e4cbee1d22',1,'range_allocator.c']]],
+  ['node_5frelease_4',['node_release',['../range__allocator_8c.html#a485298c3c72bed502a633200e513b167',1,'range_allocator.c']]],
+  ['node_5fremove_5',['node_remove',['../range__allocator_8c.html#afa588cfdeefbcd5d6bebd8debfdd5271',1,'range_allocator.c']]]
 ];

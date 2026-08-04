@@ -5,9 +5,21 @@ var application__err__utils_8c =
     [ "app_rslt_convert_linear_alloc", "application__err__utils_8c.html#a7f7045607239a82cd0ccd9a8ef2fe322", null ],
     [ "app_rslt_convert_mem_sys", "application__err__utils_8c.html#aea87d980f192e01a6bcc1c3d80a19734", null ],
     [ "app_rslt_convert_platform", "application__err__utils_8c.html#a95768cc42a35eb5a9a5335c599486ba8", null ],
-    [ "app_rslt_convert_renderer", "application__err__utils_8c.html#adb151c945f2c560df4c360e020aabd9d", null ],
     [ "app_rslt_convert_resource", "application__err__utils_8c.html#a8bc3aeab1b42a40ef9576c157ce6006c", null ],
     [ "app_rslt_convert_ring_queue", "application__err__utils_8c.html#ad4fb5489e1c8f1bbe3b6bd12d6344078", null ],
     [ "app_rslt_convert_texture_system", "application__err__utils_8c.html#aff588ee227ec17a07f5eb8e9005a2261", null ],
-    [ "app_rslt_to_str", "application__err__utils_8c.html#ab1867856dd7c7d667569eb69e86465ec", null ]
+    [ "app_rslt_to_str", "application__err__utils_8c.html#ab1867856dd7c7d667569eb69e86465ec", null ],
+    [ "s_rslt_str_bad_operation", "application__err__utils_8c.html#a701f3db36b3747bf363e9623f5217775", null ],
+    [ "s_rslt_str_data_corrupted", "application__err__utils_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751", null ],
+    [ "s_rslt_str_file_close_error", "application__err__utils_8c.html#a6f6594ca394e0eb2537d65b22529d18e", null ],
+    [ "s_rslt_str_file_open_error", "application__err__utils_8c.html#ad3196151bfc25d711ce8b8fb2b62ff8f", null ],
+    [ "s_rslt_str_file_read_error", "application__err__utils_8c.html#a04fb5618dc2fd94129efd029d5e59ac4", null ],
+    [ "s_rslt_str_invalid_argument", "application__err__utils_8c.html#ad513e1a68ecf78755351532812c75359", null ],
+    [ "s_rslt_str_limit_exceeded", "application__err__utils_8c.html#a06bc2987276831378c8d6fafff286031", null ],
+    [ "s_rslt_str_no_memory", "application__err__utils_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0", null ],
+    [ "s_rslt_str_overflow", "application__err__utils_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1", null ],
+    [ "s_rslt_str_runtime_error", "application__err__utils_8c.html#af80cea0f3487047ba34d8b89614ddbc1", null ],
+    [ "s_rslt_str_success", "application__err__utils_8c.html#a9b05c9aea264bb27d264cedaee3422f1", null ],
+    [ "s_rslt_str_undefined_error", "application__err__utils_8c.html#a9607c9be9a0515dee65f769e2add8719", null ],
+    [ "s_rslt_str_unsupported_file", "application__err__utils_8c.html#a1e21970fffa713e874acd7237c1e13b3", null ]
 ];

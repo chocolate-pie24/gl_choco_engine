@@ -139,9 +139,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a061fe3eb706f5f372b037a29f161f3d5"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__geometry__pipeline_8h.html#a061fe3eb706f5f372b037a29f161f3d5">lit_mesh_geometry_pipeline_import_from_file</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *shader_, <a class="el" href="lit__mesh__geometry__pipeline_8h.html#a1ffba5f00584c14b783278b9808bbc47">lit_mesh_geometry_registry_t</a> *geometry_registry_, const char *path_, const char *name_, const char *extension_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a061fe3eb706f5f372b037a29f161f3d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">単色ライティング描画用ジオメトリアセットファイルをロードし、ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a061fe3eb706f5f372b037a29f161f3d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a768334f1ca23efe2bfd363b7a50ee69e"><td class="memItemLeft" align="right" valign="top"><a id="a768334f1ca23efe2bfd363b7a50ee69e" name="a768334f1ca23efe2bfd363b7a50ee69e"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>lit_mesh_geometry_pipeline_release</b> (int16_t geometry_id_)</td></tr>
-<tr class="separator:a768334f1ca23efe2bfd363b7a50ee69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78de41bded4fe79b4f1c2e660843376d"><td class="memItemLeft" align="right" valign="top"><a id="a78de41bded4fe79b4f1c2e660843376d" name="a78de41bded4fe79b4f1c2e660843376d"></a>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>lit_mesh_geometry_pipeline_release</b> (<a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *shader_, <a class="el" href="lit__mesh__geometry__pipeline_8h.html#a1ffba5f00584c14b783278b9808bbc47">lit_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+<tr class="separator:a78de41bded4fe79b4f1c2e660843376d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する </p>

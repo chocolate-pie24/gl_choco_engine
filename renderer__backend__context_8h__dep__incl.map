@@ -1,13 +1,5 @@
 <map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h">
-<area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1071,5,1282,75"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,145,209,170"/>
-<area shape="rect" id="node3" href="$line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="234,130,445,185"/>
-<area shape="rect" id="node4" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="469,130,679,185"/>
-<area shape="rect" id="node5" href="$point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="703,130,922,185"/>
-<area shape="rect" id="node6" href="$ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="946,130,1157,185"/>
-<area shape="rect" id="node7" href="$line__mesh__geometry__pipeline_8c.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1181,123,1423,192"/>
-<area shape="rect" id="node8" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1447,123,1677,192"/>
-<area shape="rect" id="node9" href="$point__mesh__geometry__pipeline_8c.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1702,123,1953,192"/>
-<area shape="rect" id="node10" href="$ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1977,123,2206,192"/>
-<area shape="rect" id="node11" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="2230,130,2409,185"/>
+<area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="110,5,321,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
+<area shape="rect" id="node3" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="234,123,413,177"/>
 </map>

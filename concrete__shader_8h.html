@@ -92,6 +92,7 @@ $(document).ready(function(){initNavTree('concrete__shader_8h.html',''); initRes
 
 <div class="header">
   <div class="summary">
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">concrete_shader.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
@@ -99,21 +100,7 @@ $(document).ready(function(){initNavTree('concrete__shader_8h.html',''); initRes
 
 <p>renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="interface__shader_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_shader.h</a>&quot;</code><br />
-</div><div class="textblock"><div class="dynheader">
-Include dependency graph for concrete_shader.h:</div>
-<div class="dyncontent">
-<div class="center"><img src="concrete__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__shader_8h" alt=""/></div>
-<map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__shader_8h" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__shader_8h">
-<area shape="rect" title="renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="114,5,326,75"/>
-<area shape="rect" href="interface__shader_8h.html" title="シェーダープログラム/シェーダーオブジェクトの操作関数をまとめたvtableを定義する" alt="" coords="115,123,325,192"/>
-<area shape="rect" title=" " alt="" coords="5,255,80,280"/>
-<area shape="rect" title=" " alt="" coords="105,255,175,280"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="199,240,401,295"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="425,240,609,295"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
+<div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="concrete__shader_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__shader_8hdep" alt=""/></div>
@@ -125,9 +112,15 @@ This graph shows which files directly or indirectly include this file:</div>
 </div>
 <p><a href="concrete__shader_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:afd6bb305a11c3c8fd7331150c6784be6"><td class="memItemLeft" align="right" valign="top"><a id="afd6bb305a11c3c8fd7331150c6784be6" name="afd6bb305a11c3c8fd7331150c6784be6"></a>
+typedef struct <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>renderer_shader_vtable_t</b></td></tr>
+<tr class="separator:afd6bb305a11c3c8fd7331150c6784be6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a19fecb22b8f747743cf82a443dc9ab56"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__shader_8h.html#a19fecb22b8f747743cf82a443dc9ab56">gl33_shader_vtable_get</a> (void)</td></tr>
+<tr class="memitem:a19fecb22b8f747743cf82a443dc9ab56"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__shader_8h.html#a19fecb22b8f747743cf82a443dc9ab56">gl33_shader_vtable_get</a> (void)</td></tr>
 <tr class="memdesc:a19fecb22b8f747743cf82a443dc9ab56"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用シェーダー仮想関数テーブル(vtable)を取得する  <br /></td></tr>
 <tr class="separator:a19fecb22b8f747743cf82a443dc9ab56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -146,7 +139,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a> * gl33_shader_vtable_get </td>
+          <td class="memname">const <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable_t</a> * gl33_shader_vtable_get </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>

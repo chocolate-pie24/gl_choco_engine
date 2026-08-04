@@ -1,0 +1,8 @@
+<map id="include/engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h" name="include/engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h">
+<area shape="rect" id="node1" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="110,5,350,60"/>
+<area shape="rect" id="node2" title=" " alt="" coords="178,225,252,251"/>
+<area shape="rect" id="node3" title=" " alt="" coords="31,130,114,155"/>
+<area shape="rect" id="node4" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="138,115,322,170"/>
+<area shape="rect" id="node5" href="$range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="346,115,530,170"/>
+<area shape="rect" id="node6" href="$buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="554,108,756,177"/>
+</map>

@@ -1,26 +1,6 @@
 var searchData=
 [
-  ['vao_5fhandle_0',['vao_handle',['../structrenderer__backend__vao.html#a9a51d9e19127effa093dcbf29e70ccbe',1,'renderer_backend_vao']]],
-  ['vao_5fvtable_1',['vao_vtable',['../structrenderer__backend__context.html#accb7186b7d913c2b4a3b1888b6d3ea4e',1,'renderer_backend_context']]],
-  ['vbo_5fhandle_2',['vbo_handle',['../structrenderer__backend__vbo.html#a549e359d443f3aec9f1b3a737eede2a6',1,'renderer_backend_vbo']]],
-  ['vbo_5fvtable_3',['vbo_vtable',['../structrenderer__backend__context.html#aaab43dac09c26b5d52223ca65d16d29e',1,'renderer_backend_context']]],
-  ['vertex_5farray_5fattribute_5fset_4',['vertex_array_attribute_set',['../structrenderer__vao__vtable.html#aaba9afb825ecf45d6a6c3dae47b7b46b',1,'renderer_vao_vtable']]],
-  ['vertex_5farray_5fbind_5',['vertex_array_bind',['../structrenderer__vao__vtable.html#a1da87b31f54bc91a620b4f14b5239f6f',1,'renderer_vao_vtable']]],
-  ['vertex_5farray_5fcreate_6',['vertex_array_create',['../structrenderer__vao__vtable.html#ad55227795de2e69217dda3172750e871',1,'renderer_vao_vtable']]],
-  ['vertex_5farray_5fdestroy_7',['vertex_array_destroy',['../structrenderer__vao__vtable.html#a6f1eb8f75c83dad49fc5436782bc6c38',1,'renderer_vao_vtable']]],
-  ['vertex_5farray_5funbind_8',['vertex_array_unbind',['../structrenderer__vao__vtable.html#a57087bd6aba796d485b1f326d4bd03bf',1,'renderer_vao_vtable']]],
-  ['vertex_5fbuffer_5fbind_9',['vertex_buffer_bind',['../structrenderer__vbo__vtable.html#af68af8ff528e7131163410968c0c232b',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fcreate_10',['vertex_buffer_create',['../structrenderer__vbo__vtable.html#a6152262ed994c636822bc340b96fddbe',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fdestroy_11',['vertex_buffer_destroy',['../structrenderer__vbo__vtable.html#afa43b6f156b63b7e70423768359cb37b',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fsize_12',['vertex_buffer_size',['../structline__mesh__shader.html#aac6ebea04bb33ddd53276e2ad51f27d6',1,'line_mesh_shader::vertex_buffer_size()'],['../structlit__mesh__shader.html#ac433cd5bf4a22b06d3e2367b1e927d50',1,'lit_mesh_shader::vertex_buffer_size()'],['../structui__mesh__shader.html#af4160387ed4b76c4238fe2b934a7a851',1,'ui_mesh_shader::vertex_buffer_size()']]],
-  ['vertex_5fbuffer_5funbind_13',['vertex_buffer_unbind',['../structrenderer__vbo__vtable.html#af7273c51b7e6eea94dc3a4ce3892b211',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fvertex_5fload_14',['vertex_buffer_vertex_load',['../structrenderer__vbo__vtable.html#ad767b9e049e1a283c38442e8e6bca87e',1,'renderer_vbo_vtable']]],
-  ['vertex_5fbuffer_5fvertex_5fsubload_15',['vertex_buffer_vertex_subload',['../structrenderer__vbo__vtable.html#a22e2db04e394ad492d38d89ca1a5311a',1,'renderer_vbo_vtable']]],
-  ['vertex_5fcount_16',['vertex_count',['../structstl__loader.html#aa6b8ebaae8e208ef4ea0da77a38882e2',1,'stl_loader::vertex_count()'],['../structlit__mesh__geometry.html#ab981b21cce6701626c9b7131876552f2',1,'lit_mesh_geometry::vertex_count()'],['../structui__mesh__geometry.html#a9183aae83ce334e225fc542acd515751',1,'ui_mesh_geometry::vertex_count()'],['../structline__mesh__geometry.html#a5fb8c09e16eac25a1eee18ab1c77edf0',1,'line_mesh_geometry::vertex_count()'],['../structpoint__mesh__geometry.html#a8bd83955ed450eb550a5c266cc8495d0',1,'point_mesh_geometry::vertex_count()']]],
-  ['vertex_5foffsets_17',['vertex_offsets',['../structline__mesh__geometry__registry.html#a92b07a9958a1ffc6e413f2529440d75a',1,'line_mesh_geometry_registry::vertex_offsets()'],['../structlit__mesh__geometry__registry.html#ac54b894f7e9617eee18df98298cd0124',1,'lit_mesh_geometry_registry::vertex_offsets()'],['../structpoint__mesh__geometry__registry.html#a0772c40d9e0b44802800a066ac24f1ae',1,'point_mesh_geometry_registry::vertex_offsets()'],['../structui__mesh__geometry__registry.html#a96f6bb068cdeee68f06ea0792cf9492e',1,'ui_mesh_geometry_registry::vertex_offsets()']]],
-  ['vertex_5fshader_5fhandle_18',['vertex_shader_handle',['../structrenderer__backend__shader.html#af18ecb3fcebaf3cf9e70fc1537bea475',1,'renderer_backend_shader']]],
-  ['vertices_19',['vertices',['../structpoint__mesh__geometry.html#acbff194203f9bc3a7dc771483af8dc20',1,'point_mesh_geometry::vertices()'],['../structstl__loader.html#a840810595eecd4645af9f0b19ca6c8ac',1,'stl_loader::vertices()'],['../structui__mesh__geometry.html#a6a1b636d39cb52b9c4c25bc975696a54',1,'ui_mesh_geometry::vertices()'],['../structlit__mesh__geometry.html#ae46f63d990699fc41cf9c055fbc04011',1,'lit_mesh_geometry::vertices()'],['../structline__mesh__geometry.html#a77de5ce69b19b800a1029cb92dd22609',1,'line_mesh_geometry::vertices()']]],
-  ['view_5fmatrix_20',['view_matrix',['../structcamera.html#ae911ff731aad9f8fdfd79fb72a3f128b',1,'camera']]],
-  ['view_5fmatrix_5flocation_21',['view_matrix_location',['../structline__mesh__shader.html#a748bf1d6f0a7ef9caf8b3cd652481454',1,'line_mesh_shader::view_matrix_location()'],['../structlit__mesh__shader.html#a30892f35c054dc5b31b8361a90871448',1,'lit_mesh_shader::view_matrix_location()'],['../structpoint__mesh__shader.html#a03f9a03c41b2f7864e68d195427792e2',1,'point_mesh_shader::view_matrix_location()'],['../structui__mesh__shader.html#a804c83651527edbe473278b499a136f5',1,'ui_mesh_shader::view_matrix_location()']]],
-  ['vtable_22',['vtable',['../structplatform__context.html#a2f20108ccf2232f4ddf7d86710f7e8a7',1,'platform_context']]]
+  ['unit_5fnumber_0',['unit_number',['../structrenderer__backend__texture.html#ad49954eabaa8fb9d1cd4539c775a01c3',1,'renderer_backend_texture']]],
+  ['unused_5fnode_5fcount_1',['unused_node_count',['../structrange__allocator__status.html#a6143dc9fa1eb18c457545487707a6b31',1,'range_allocator_status::unused_node_count()'],['../structrange__allocator.html#aecd4aa5663f4f9ed56b3a20810f91519',1,'range_allocator::unused_node_count()']]],
+  ['used_5fnode_5fcount_2',['used_node_count',['../structrange__allocator__status.html#a3edcc65d7ee83193cc6c45cde57051db',1,'range_allocator_status']]]
 ];

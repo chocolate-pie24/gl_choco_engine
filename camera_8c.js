@@ -10,13 +10,19 @@ var camera_8c =
     [ "camera_euler_get", "camera_8c.html#ae27f1bf6bb98670bb4fef55ee7cd0622", null ],
     [ "camera_euler_update", "camera_8c.html#a96b669733c480eed080cf99a086c0e1d", null ],
     [ "camera_forward_vector_get", "camera_8c.html#a43991a81b18cfdea6105f526b02db3c2", null ],
+    [ "camera_frustum_cache_sync", "camera_8c.html#a348cacc68e990ab5da98baccbe902565", null ],
     [ "camera_left_vector_get", "camera_8c.html#aa2d2da4b7879efe8f232ca4f06fe7947", null ],
     [ "camera_name_get", "camera_8c.html#a0553ca1bb1f88fb426e70348eecdf9fc", null ],
     [ "camera_perspective_matrix_get", "camera_8c.html#a3c26a7032e21ab56d46966b0361549c4", null ],
     [ "camera_position_get", "camera_8c.html#a528107ec16af27d2310f927bd11ef663", null ],
     [ "camera_position_update", "camera_8c.html#a788777b9376816cc5338af2d251ae4ae", null ],
+    [ "camera_posture_cache_sync", "camera_8c.html#aec23feb12d6c7b884cfc0de11f5119bb", null ],
     [ "camera_right_vector_get", "camera_8c.html#ad0c118bdef7db1e8f4df1401e1ac2e06", null ],
+    [ "camera_to_world_matrix_update", "camera_8c.html#ae20be4a9ab19dc78ffd6706f6963c6a7", null ],
     [ "camera_up_vector_get", "camera_8c.html#abe62b8cf2492262a794b80997808c7b7", null ],
     [ "camera_view_matrix_get", "camera_8c.html#a13d7f2cfdfcdbdf00c68f7a47dfa892a", null ],
-    [ "camera_viewing_frustum_update", "camera_8c.html#ac2e3af2af1132c646c55be69f74c13b3", null ]
+    [ "camera_viewing_frustum_update", "camera_8c.html#ac2e3af2af1132c646c55be69f74c13b3", null ],
+    [ "is_valid_frustum", "camera_8c.html#aae53ee80c7086447e1ac4ee81839e6c5", null ],
+    [ "perspective_matrix_update", "camera_8c.html#a69b70ffc1980a2d094fe66a077b5c7ba", null ],
+    [ "view_matrix_update", "camera_8c.html#abcddfce922425eaed104e807690599e4", null ]
 ];

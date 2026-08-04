@@ -102,21 +102,21 @@ $(document).ready(function(){initNavTree('ui__mesh__shader_8h.html',''); initRes
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for ui_mesh_shader.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="ui__mesh__shader_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2ui__mesh__shader_8h" alt=""/></div>
 <map name="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2ui__mesh__shader_8h" id="ainclude_2engine_2systems_2renderer_2renderer__resources_2shaders_2ui__mesh__shader_8h">
-<area shape="rect" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="119,5,329,60"/>
-<area shape="rect" title=" " alt="" coords="5,123,88,148"/>
-<area shape="rect" title=" " alt="" coords="112,123,187,148"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="192,211,376,251"/>
-<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="261,115,427,155"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="451,108,635,163"/>
-<area shape="rect" title=" " alt="" coords="249,299,319,324"/>
+<area shape="rect" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="129,5,340,60"/>
+<area shape="rect" title=" " alt="" coords="149,335,232,361"/>
+<area shape="rect" title=" " alt="" coords="409,431,484,456"/>
+<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="346,211,545,265"/>
+<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="51,108,271,163"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="256,321,440,375"/>
+<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="691,321,875,375"/>
+<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="465,313,666,383"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -139,39 +139,54 @@ Typedefs</h2></td></tr>
 <tr class="separator:a37d2e513d693fc5b89fe92dc87fcb1ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabce7f662bbd82e374beb11c9414c1f8"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrenderer__backend__context.html">renderer_backend_context</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a></td></tr>
 <tr class="separator:aabce7f662bbd82e374beb11c9414c1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac245f862511fd6d75d791d43de7bdc91"><td class="memItemLeft" align="right" valign="top"><a id="ac245f862511fd6d75d791d43de7bdc91" name="ac245f862511fd6d75d791d43de7bdc91"></a>
+typedef struct <a class="el" href="structmat4x4f.html">mat4x4f</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mat4x4f_t</b></td></tr>
+<tr class="separator:ac245f862511fd6d75d791d43de7bdc91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add691ca0ef38ce3ead3655aac8d4ba7d"><td class="memItemLeft" align="right" valign="top"><a id="add691ca0ef38ce3ead3655aac8d4ba7d" name="add691ca0ef38ce3ead3655aac8d4ba7d"></a>
+typedef struct <a class="el" href="structui__vertex.html">ui_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ui_vertex_t</b></td></tr>
+<tr class="separator:add691ca0ef38ce3ead3655aac8d4ba7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a7b5fc7533714dd26d8eeaeda0a00c9b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a7b5fc7533714dd26d8eeaeda0a00c9b4">ui_mesh_shader_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const char *file_path_, const char *name_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **out_ui_mesh_shader_)</td></tr>
-<tr class="memdesc:a7b5fc7533714dd26d8eeaeda0a00c9b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーリソースインスタンスのメモリを確保し初期化する  <br /></td></tr>
-<tr class="separator:a7b5fc7533714dd26d8eeaeda0a00c9b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1fe1a1d290108fbc1ef111ec9ec5bd8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#ad1fe1a1d290108fbc1ef111ec9ec5bd8">ui_mesh_shader_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **ui_mesh_shader_)</td></tr>
-<tr class="memdesc:ad1fe1a1d290108fbc1ef111ec9ec5bd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する  <br /></td></tr>
+<tr class="memitem:a01004da247b6cef45aa192810bd8b7e5"><td class="memItemLeft" align="right" valign="top"><a id="a01004da247b6cef45aa192810bd8b7e5" name="a01004da247b6cef45aa192810bd8b7e5"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_create</b> (<a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **out_ui_mesh_shader_)</td></tr>
+<tr class="separator:a01004da247b6cef45aa192810bd8b7e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1fe1a1d290108fbc1ef111ec9ec5bd8"><td class="memItemLeft" align="right" valign="top"><a id="ad1fe1a1d290108fbc1ef111ec9ec5bd8" name="ad1fe1a1d290108fbc1ef111ec9ec5bd8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **ui_mesh_shader_)</td></tr>
 <tr class="separator:ad1fe1a1d290108fbc1ef111ec9ec5bd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a097e474f6d1e81171dd9cbcecc00323c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a097e474f6d1e81171dd9cbcecc00323c">ui_mesh_shader_vertex_buffer_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> buffer_usage_, size_t buffer_size_)</td></tr>
-<tr class="memdesc:a097e474f6d1e81171dd9cbcecc00323c"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダー用のバーテックスバッファを生成する  <br /></td></tr>
-<tr class="separator:a097e474f6d1e81171dd9cbcecc00323c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade579dc0b43199e465847bb0aab23f2e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#ade579dc0b43199e465847bb0aab23f2e">ui_mesh_shader_vertex_buffer_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
-<tr class="memdesc:ade579dc0b43199e465847bb0aab23f2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーが保持するVAO / VBOを破棄する  <br /></td></tr>
-<tr class="separator:ade579dc0b43199e465847bb0aab23f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ea2fc9f337bdd1fb44010aa44bb9c2d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a1ea2fc9f337bdd1fb44010aa44bb9c2d">ui_mesh_shader_vertex_buffer_append</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, size_t size_, const <a class="el" href="vertex_8h.html#add691ca0ef38ce3ead3655aac8d4ba7d">ui_vertex_t</a> *write_data_, size_t *out_vertex_offset_)</td></tr>
-<tr class="memdesc:a1ea2fc9f337bdd1fb44010aa44bb9c2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend)  <br /></td></tr>
-<tr class="separator:a1ea2fc9f337bdd1fb44010aa44bb9c2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b27550c1bc8a1f5d42aaea39c3cc0d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a8b27550c1bc8a1f5d42aaea39c3cc0d3">ui_mesh_shader_vertex_array_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
-<tr class="memdesc:a8b27550c1bc8a1f5d42aaea39c3cc0d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダーが保持するVAOをbindする  <br /></td></tr>
-<tr class="separator:a8b27550c1bc8a1f5d42aaea39c3cc0d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abaac551f1a3e03d948cdce98608e54ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#abaac551f1a3e03d948cdce98608e54ad">ui_mesh_shader_use</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
-<tr class="memdesc:abaac551f1a3e03d948cdce98608e54ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">UIシェーダープログラムの使用開始をグラフィックスAPIに伝える  <br /></td></tr>
-<tr class="separator:abaac551f1a3e03d948cdce98608e54ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a625b0d2bd126996f02d0e32ab3a804b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a625b0d2bd126996f02d0e32ab3a804b3">ui_mesh_shader_model_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
-<tr class="memdesc:a625b0d2bd126996f02d0e32ab3a804b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにモデル行列を送信する  <br /></td></tr>
-<tr class="separator:a625b0d2bd126996f02d0e32ab3a804b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51d92c2daa742195c1f3d8327b8a50f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a51d92c2daa742195c1f3d8327b8a50f8">ui_mesh_shader_view_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
-<tr class="memdesc:a51d92c2daa742195c1f3d8327b8a50f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにビュー行列を送信する  <br /></td></tr>
-<tr class="separator:a51d92c2daa742195c1f3d8327b8a50f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72de54240a976b2b1ba33faf6180a3d0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__shader_8h.html#a72de54240a976b2b1ba33faf6180a3d0">ui_mesh_shader_projection_matrix_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
-<tr class="memdesc:a72de54240a976b2b1ba33faf6180a3d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPUにプロジェクション行列を送信する  <br /></td></tr>
-<tr class="separator:a72de54240a976b2b1ba33faf6180a3d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bbbf91c34bfc6ade28440f811e29c88"><td class="memItemLeft" align="right" valign="top"><a id="a7bbbf91c34bfc6ade28440f811e29c88" name="a7bbbf91c34bfc6ade28440f811e29c88"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_program_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const char *file_path_, const char *name_)</td></tr>
+<tr class="separator:a7bbbf91c34bfc6ade28440f811e29c88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48add1e68e81d530d2e4582c344f8437"><td class="memItemLeft" align="right" valign="top"><a id="a48add1e68e81d530d2e4582c344f8437" name="a48add1e68e81d530d2e4582c344f8437"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vbo_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *vbo_config_)</td></tr>
+<tr class="separator:a48add1e68e81d530d2e4582c344f8437"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87c0af9a38f7f4b69b3beff95c6d0c18"><td class="memItemLeft" align="right" valign="top"><a id="a87c0af9a38f7f4b69b3beff95c6d0c18" name="a87c0af9a38f7f4b69b3beff95c6d0c18"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vao_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
+<tr class="separator:a87c0af9a38f7f4b69b3beff95c6d0c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcb5210fdb0f75e07710c3bb13121084"><td class="memItemLeft" align="right" valign="top"><a id="afcb5210fdb0f75e07710c3bb13121084" name="afcb5210fdb0f75e07710c3bb13121084"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vao_vbo_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
+<tr class="separator:afcb5210fdb0f75e07710c3bb13121084"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd0ab829b39db9a09848157f4efd2e8a"><td class="memItemLeft" align="right" valign="top"><a id="abd0ab829b39db9a09848157f4efd2e8a" name="abd0ab829b39db9a09848157f4efd2e8a"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vbo_write</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, size_t vertex_count_, const <a class="el" href="vertex_8h.html#add691ca0ef38ce3ead3655aac8d4ba7d">ui_vertex_t</a> *vertices_, <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *out_buffer_range_)</td></tr>
+<tr class="separator:abd0ab829b39db9a09848157f4efd2e8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5722a984956ea5ace2052bf190ad468c"><td class="memItemLeft" align="right" valign="top"><a id="a5722a984956ea5ace2052bf190ad468c" name="a5722a984956ea5ace2052bf190ad468c"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vbo_free</b> (<a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *buffer_range_)</td></tr>
+<tr class="separator:a5722a984956ea5ace2052bf190ad468c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35f47b60ac02d1b80c3d1ff99f6c491c"><td class="memItemLeft" align="right" valign="top"><a id="a35f47b60ac02d1b80c3d1ff99f6c491c" name="a35f47b60ac02d1b80c3d1ff99f6c491c"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_vertex_array_bind</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
+<tr class="separator:a35f47b60ac02d1b80c3d1ff99f6c491c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7900810f79e39f029bb199fd6368fbd4"><td class="memItemLeft" align="right" valign="top"><a id="a7900810f79e39f029bb199fd6368fbd4" name="a7900810f79e39f029bb199fd6368fbd4"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_use</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_)</td></tr>
+<tr class="separator:a7900810f79e39f029bb199fd6368fbd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a917a89f4179d365f83d9f5a02cea1fc4"><td class="memItemLeft" align="right" valign="top"><a id="a917a89f4179d365f83d9f5a02cea1fc4" name="a917a89f4179d365f83d9f5a02cea1fc4"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_model_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
+<tr class="separator:a917a89f4179d365f83d9f5a02cea1fc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6c8f2fb91d8c523129d60b7ac92cf44"><td class="memItemLeft" align="right" valign="top"><a id="ad6c8f2fb91d8c523129d60b7ac92cf44" name="ad6c8f2fb91d8c523129d60b7ac92cf44"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_view_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
+<tr class="separator:ad6c8f2fb91d8c523129d60b7ac92cf44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8611731b1f784f04055b738faebeb5e"><td class="memItemLeft" align="right" valign="top"><a id="ad8611731b1f784f04055b738faebeb5e" name="ad8611731b1f784f04055b738faebeb5e"></a>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_shader_projection_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *ui_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
+<tr class="separator:ad8611731b1f784f04055b738faebeb5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する </p>
@@ -208,659 +223,6 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>UI描画用シェーダーリソースのopaque型 </p>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="a7b5fc7533714dd26d8eeaeda0a00c9b4" name="a7b5fc7533714dd26d8eeaeda0a00c9b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b5fc7533714dd26d8eeaeda0a00c9b4">&#9670;&#160;</a></span>ui_mesh_shader_create()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_create </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file_path_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>name_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **&#160;</td>
-          <td class="paramname"><em>out_ui_mesh_shader_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダーリソースインスタンスのメモリを確保し初期化する </p>
-<p>以下の処理を行う</p><ul>
-<li>out_ui_mesh_shader_自身のリソース確保</li>
-<li>シェーダーソースのコンパイル</li>
-<li>シェーダーモジュールのリンク</li>
-<li>UIシェーダーが扱うモデル行列のLocation取得</li>
-<li>UIシェーダーが扱うビュー行列のLocation取得</li>
-<li>UIシェーダーが扱うプロジェクション行列のLocation取得</li>
-</ul>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">file_path_</td><td>シェーダーソース格納ファイルパス(文字列の最後を'/'にすること) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">name_</td><td>シェーダーソースファイル名称(拡張子は含まない) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_ui_mesh_shader_</td><td>リソース確保対象UIシェーダーリソースへのダブルポインタ</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>file_path_ == NULL</li>
-<li>name_ == NULL</li>
-<li>backend_context_ == NULL</li>
-<li>out_ui_mesh_shader_ == NULL</li>
-<li>*out_ui_mesh_shader_ != NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリシステムのメモリ使用量範囲上限超過 </td></tr>
-    <tr><td class="paramname">RENDERER_RUNTIME_ERROR</td><td>以下のいずれか<ul>
-<li>計算過程でオーバーフロー発生(文字列長さ異常)</li>
-<li>ユニフォーム変数のLocation取得に失敗 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>内部データ破損が発生 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>レンダラーバックエンドが未初期化</li>
-<li>シェーダーソースが既にコンパイル済み</li>
-<li>シェーダーモジュールが既にリンク済み</li>
-<li>メモリシステム未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SHADER_COMPILE_ERROR</td><td>以下のいずれか<ul>
-<li>シェーダーモジュールのGPU側リソース確保に失敗</li>
-<li>シェーダーソースのコンパイルに失敗 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SHADER_LINK_ERROR</td><td>シェーダーモジュールのリンクに失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ad1fe1a1d290108fbc1ef111ec9ec5bd8" name="ad1fe1a1d290108fbc1ef111ec9ec5bd8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad1fe1a1d290108fbc1ef111ec9ec5bd8">&#9670;&#160;</a></span>ui_mesh_shader_destroy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ui_mesh_shader_destroy </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> **&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダーリソースインスタンスが保持するリソースと、自身のメモリを解放する </p>
-<dl class="section note"><dt>Note</dt><dd><ul>
-<li>有効なbackend_context_と有効なui_mesh_shader_が渡された場合、破棄後に*ui_mesh_shader_はNULLに設定される</li>
-<li>引数が無効の場合はWARNINGを出力し、何もしない</li>
-<li>2重デストロイ許可</li>
-<li>GPU側のシェーダープログラムリソースも破棄される</li>
-</ul>
-</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ui_mesh_shader_</td><td>破棄対象UIシェーダーリソースインスタンスへのダブルポインタ </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a625b0d2bd126996f02d0e32ab3a804b3" name="a625b0d2bd126996f02d0e32ab3a804b3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a625b0d2bd126996f02d0e32ab3a804b3">&#9670;&#160;</a></span>ui_mesh_shader_model_matrix_set()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_model_matrix_set </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>model_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>GPUにモデル行列を送信する </p>
-<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ui_mesh_shader_</td><td>UI描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">model_matrix_</td><td>送信するモデル行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>model_matrix_ == NULL</li>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化でshader_vtableがNULL</li>
-<li>ui_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a72de54240a976b2b1ba33faf6180a3d0" name="a72de54240a976b2b1ba33faf6180a3d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a72de54240a976b2b1ba33faf6180a3d0">&#9670;&#160;</a></span>ui_mesh_shader_projection_matrix_set()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_projection_matrix_set </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>projection_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>GPUにプロジェクション行列を送信する </p>
-<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ui_mesh_shader_</td><td>UI描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">projection_matrix_</td><td>送信するプロジェクション行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>projection_matrix_ == NULL</li>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化でshader_vtableがNULL</li>
-<li>ui_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="abaac551f1a3e03d948cdce98608e54ad" name="abaac551f1a3e03d948cdce98608e54ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abaac551f1a3e03d948cdce98608e54ad">&#9670;&#160;</a></span>ui_mesh_shader_use()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_use </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダープログラムの使用開始をグラフィックスAPIに伝える </p>
-<dl class="section note"><dt>Note</dt><dd>処理に成功した場合、現在使用中のプログラム識別子がUIシェーダープログラムに切り替わる</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ui_mesh_shader_</td><td>UIシェーダーリソースインスタンスへのポインタ</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>シェーダープログラムが未リンク</li>
-<li>ui_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>以下のいずれか<ul>
-<li>バーテックスシェーダーオブジェクトが未コンパイル</li>
-<li>フラグメントシェーダーオブジェクトが未コンパイル </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a8b27550c1bc8a1f5d42aaea39c3cc0d3" name="a8b27550c1bc8a1f5d42aaea39c3cc0d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b27550c1bc8a1f5d42aaea39c3cc0d3">&#9670;&#160;</a></span>ui_mesh_shader_vertex_array_bind()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_vertex_array_bind </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダーが保持するVAOをbindする </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ui_mesh_shader_</td><td>VAOを保持するUIシェーダー構造体インスタンスへのポインタ</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>VAOが未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a1ea2fc9f337bdd1fb44010aa44bb9c2d" name="a1ea2fc9f337bdd1fb44010aa44bb9c2d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1ea2fc9f337bdd1fb44010aa44bb9c2d">&#9670;&#160;</a></span>ui_mesh_shader_vertex_buffer_append()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_vertex_buffer_append </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="vertex_8h.html#add691ca0ef38ce3ead3655aac8d4ba7d">ui_vertex_t</a> *&#160;</td>
-          <td class="paramname"><em>write_data_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t *&#160;</td>
-          <td class="paramname"><em>out_vertex_offset_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダーが保持するVBOに頂点情報を転送する(バーテックスバッファへのappend) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ui_mesh_shader_</td><td>転送先VBOを保持するUIシェーダー構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>転送データサイズ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">write_data_</td><td>転送データ </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_vertex_offset_</td><td>転送前にバーテックスバッファに転送されている頂点の数</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL</li>
-<li>write_data_ == NULL</li>
-<li>size_ == 0</li>
-<li>out_vertex_offset_ == NULL</li>
-<li>size_ != sizeof(ui_vertex_t) x 6 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>転送後にバーテックスバッファサイズを超過 </td></tr>
-    <tr><td class="paramname">RENDERER_OVERFLOW</td><td>転送サイズ後のcurrent_buffer_offsetがSIZE_MAXを超過 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>VBO未初期化</li>
-<li>backend_context_が未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a097e474f6d1e81171dd9cbcecc00323c" name="a097e474f6d1e81171dd9cbcecc00323c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a097e474f6d1e81171dd9cbcecc00323c">&#9670;&#160;</a></span>ui_mesh_shader_vertex_buffer_create()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_vertex_buffer_create </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a>&#160;</td>
-          <td class="paramname"><em>buffer_usage_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>buffer_size_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダー用のバーテックスバッファを生成する </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ui_mesh_shader_</td><td>バーテックスバッファ生成対象UIシェーダーリソースインスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">buffer_usage_</td><td>バッファ使用用途(DYNAMIC / STATIC) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">buffer_size_</td><td>バーテックスバッファサイズ(byte)</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL</li>
-<li>buffer_size_ == 0 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化</li>
-<li>ui_mesh_shader_-&gt;ui_vao != NULL</li>
-<li>ui_mesh_shader_-&gt;ui_vbo != NULL</li>
-<li>ui_mesh_shader_-&gt;current_buffer_offset != 0</li>
-<li>ui_mesh_shader_-&gt;current_vertex_count != 0</li>
-<li>メモリシステム未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
-    <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_RUNTIME_ERROR</td><td>buffer_usage_またはbuffer_size_が規定値外 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ade579dc0b43199e465847bb0aab23f2e" name="ade579dc0b43199e465847bb0aab23f2e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ade579dc0b43199e465847bb0aab23f2e">&#9670;&#160;</a></span>ui_mesh_shader_vertex_buffer_destroy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ui_mesh_shader_vertex_buffer_destroy </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>UIシェーダーが保持するVAO / VBOを破棄する </p>
-<dl class="section note"><dt>Note</dt><dd>有効なbackend_context_と有効なui_mesh_shader_が渡された場合、ui_mesh_shader_tの内部状態は以下の状態に初期化される<ul>
-<li>ui_vbo = NULL</li>
-<li>ui_vao = NULL</li>
-<li>current_buffer_offset = 0</li>
-<li>vertex_buffer_size = 0</li>
-</ul>
-</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>Renderer Backendコンテキスト構造体インスタンスへのポインタ </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ui_mesh_shader_</td><td>VAO, VBOリソースを保持するUIシェーダー構造体インスタンスへのポインタ </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a51d92c2daa742195c1f3d8327b8a50f8" name="a51d92c2daa742195c1f3d8327b8a50f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a51d92c2daa742195c1f3d8327b8a50f8">&#9670;&#160;</a></span>ui_mesh_shader_view_matrix_set()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> ui_mesh_shader_view_matrix_set </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
-          <td class="paramname"><em>backend_context_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *&#160;</td>
-          <td class="paramname"><em>ui_mesh_shader_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *&#160;</td>
-          <td class="paramname"><em>view_matrix_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_transpose_</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>GPUにビュー行列を送信する </p>
-<dl class="section warning"><dt>Warning</dt><dd>本APIを呼ぶ前に必ず対象のシェーダープログラムをuseしておくこと</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">backend_context_</td><td>レンダラーバックエンドコンテキストへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ui_mesh_shader_</td><td>UI描画用シェーダーリソースへのポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">view_matrix_</td><td>送信するビュー行列のポインタ </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">should_transpose_</td><td>true: 送信時に行列を転置する, false: 送信時に行列を転置しない</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
-<li>view_matrix_ == NULL</li>
-<li>backend_context_ == NULL</li>
-<li>ui_mesh_shader_ == NULL </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
-<li>backend_context_が未初期化でshader_vtableがNULL</li>
-<li>ui_mesh_shader_が保持するシェーダーハンドルが未初期化 </li>
-</ul>
-</td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

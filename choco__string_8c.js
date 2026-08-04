@@ -13,5 +13,16 @@ var choco__string_8c =
     [ "choco_string_key_value_key_get", "choco__string_8c.html#aeed70d1e90df7364a8b1184654d049d2", null ],
     [ "choco_string_key_value_value_get", "choco__string_8c.html#a9ddb4aaa0d6b1551fcf322c1aa7a62e7", null ],
     [ "choco_string_length", "choco__string_8c.html#a7e48eed3cd7ec393b2d877d39e1c47d6", null ],
-    [ "choco_string_substring_exists", "choco__string_8c.html#a7d19a1c91dae5c7c1d961169b6f9d577", null ]
+    [ "choco_string_mem_allocate", "choco__string_8c.html#ac0d8652391ee7b37b527040614555d14", null ],
+    [ "choco_string_substring_exists", "choco__string_8c.html#a7d19a1c91dae5c7c1d961169b6f9d577", null ],
+    [ "rslt_to_str", "choco__string_8c.html#a7a47524ac3275851ca38ea65671f75ad", null ],
+    [ "s_rslt_str_bad_operation", "choco__string_8c.html#a701f3db36b3747bf363e9623f5217775", null ],
+    [ "s_rslt_str_data_corrupted", "choco__string_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751", null ],
+    [ "s_rslt_str_invalid_argument", "choco__string_8c.html#ad513e1a68ecf78755351532812c75359", null ],
+    [ "s_rslt_str_limit_exceeded", "choco__string_8c.html#a06bc2987276831378c8d6fafff286031", null ],
+    [ "s_rslt_str_no_memory", "choco__string_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0", null ],
+    [ "s_rslt_str_overflow", "choco__string_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1", null ],
+    [ "s_rslt_str_runtime_error", "choco__string_8c.html#af80cea0f3487047ba34d8b89614ddbc1", null ],
+    [ "s_rslt_str_success", "choco__string_8c.html#a9b05c9aea264bb27d264cedaee3422f1", null ],
+    [ "s_rslt_str_undefined_error", "choco__string_8c.html#a9607c9be9a0515dee65f769e2add8719", null ]
 ];

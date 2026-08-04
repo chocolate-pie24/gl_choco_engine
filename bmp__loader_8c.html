@@ -95,7 +95,8 @@ $(document).ready(function(){initNavTree('bmp__loader_8c.html',''); initResizabl
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">bmp_loader.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__resource.html">Resource</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -183,6 +184,39 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a58e9fe85a8c2f71c2de47ccda702a70d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a58e9fe85a8c2f71c2de47ccda702a70d">bmp_loader_pixel_bgr_to_rgb</a> (const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_, uint8_t *pixels_)</td></tr>
+<tr class="memdesc:a58e9fe85a8c2f71c2de47ccda702a70d"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPのピクセルデータをBGRからRGBに変換する  <br /></td></tr>
+<tr class="separator:a58e9fe85a8c2f71c2de47ccda702a70d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a5bc5dc7005d92c7b6764db668c6edd"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a0a5bc5dc7005d92c7b6764db668c6edd">bmp_loader_pixel_flip</a> (const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_, uint8_t *pixels_)</td></tr>
+<tr class="memdesc:a0a5bc5dc7005d92c7b6764db668c6edd"><td class="mdescLeft">&#160;</td><td class="mdescRight">GLCEの画像は左上原点とするため、左下原点の画像を左上原点に直す  <br /></td></tr>
+<tr class="separator:a0a5bc5dc7005d92c7b6764db668c6edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a959ed2e2ef513b23f38eff6fa50e83ff"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a959ed2e2ef513b23f38eff6fa50e83ff">bmp_loader_padding_remove</a> (const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_, size_t stride_, size_t padding_, const uint8_t *src_pixels_, uint8_t **dst_pixels_, size_t *out_new_size_)</td></tr>
+<tr class="memdesc:a959ed2e2ef513b23f38eff6fa50e83ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">読み込んだピクセルデータからpaddingを除去する  <br /></td></tr>
+<tr class="separator:a959ed2e2ef513b23f38eff6fa50e83ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23aab552d7d6e632159f544d004969e5"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a23aab552d7d6e632159f544d004969e5">header_load</a> (const char *fullpath_, <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *file_header_, <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_)</td></tr>
+<tr class="memdesc:a23aab552d7d6e632159f544d004969e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPファイルのヘッダ情報を読み込む  <br /></td></tr>
+<tr class="separator:a23aab552d7d6e632159f544d004969e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad515f05e157c2ed0c69b4553d0817faa"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ad515f05e157c2ed0c69b4553d0817faa">pixel_load</a> (const char *fullpath_, const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *file_header_, <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_, size_t stride_, uint8_t **out_pixels_)</td></tr>
+<tr class="memdesc:ad515f05e157c2ed0c69b4553d0817faa"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPファイルのヘッダ以降のピクセルデータを読み込む  <br /></td></tr>
+<tr class="separator:ad515f05e157c2ed0c69b4553d0817faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a687eb377ade6942d472e92abf7fd29b4"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a687eb377ade6942d472e92abf7fd29b4">file_header_parse</a> (const char header_[54], <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *file_header_)</td></tr>
+<tr class="memdesc:a687eb377ade6942d472e92abf7fd29b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">FILEHEADER情報文字列をパースし、構造体にパラメータを格納する  <br /></td></tr>
+<tr class="separator:a687eb377ade6942d472e92abf7fd29b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad883be3e2a3d13fb83f03168c53678a5"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ad883be3e2a3d13fb83f03168c53678a5">info_header_parse</a> (const char header_[54], <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_)</td></tr>
+<tr class="memdesc:ad883be3e2a3d13fb83f03168c53678a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">INFOHEADER情報文字列をパースし、構造体にパラメータを格納する  <br /></td></tr>
+<tr class="separator:ad883be3e2a3d13fb83f03168c53678a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26515cfe1bdaf2cff7144d6fe6aadcb5"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a26515cfe1bdaf2cff7144d6fe6aadcb5">file_header_copy</a> (const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *src_, <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *dst_)</td></tr>
+<tr class="memdesc:a26515cfe1bdaf2cff7144d6fe6aadcb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">FILEHEADER情報をコピーする  <br /></td></tr>
+<tr class="separator:a26515cfe1bdaf2cff7144d6fe6aadcb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92b637f27d0701c8ada2a9f5c1049ebf"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a92b637f27d0701c8ada2a9f5c1049ebf">info_header_copy</a> (const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *src_, <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *dst_)</td></tr>
+<tr class="memdesc:a92b637f27d0701c8ada2a9f5c1049ebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">INFOHEADER情報をコピーする  <br /></td></tr>
+<tr class="separator:a92b637f27d0701c8ada2a9f5c1049ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b5e6de3a5416bce04b75432b2cf4d8c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9b">bmp_invalid_reason_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a5b5e6de3a5416bce04b75432b2cf4d8c">is_bmp_supported</a> (const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *file_header_, const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *info_header_)</td></tr>
+<tr class="memdesc:a5b5e6de3a5416bce04b75432b2cf4d8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMP FILEHADER, INFOHEADERを見て正常なBMPファイルかを判定する  <br /></td></tr>
+<tr class="separator:a5b5e6de3a5416bce04b75432b2cf4d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad69b9ec474a4f1f6f36afba2a0c10238"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ad69b9ec474a4f1f6f36afba2a0c10238">invalid_reason_to_str</a> (<a class="el" href="bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9b">bmp_invalid_reason_t</a> reason_)</td></tr>
+<tr class="memdesc:ad69b9ec474a4f1f6f36afba2a0c10238"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPファイルの有効 / 無効判定結果の原因を文字列で取得する  <br /></td></tr>
+<tr class="separator:ad69b9ec474a4f1f6f36afba2a0c10238"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05ce5c4936b6ba2203aea4bd4730db60"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a05ce5c4936b6ba2203aea4bd4730db60">bmp_loader_create</a> (<a class="el" href="bmp__loader_8h.html#ab99f39d2ce5480fedbe496d93a034901">bmp_loader_t</a> **bmp_loader_)</td></tr>
 <tr class="memdesc:a05ce5c4936b6ba2203aea4bd4730db60"><td class="mdescLeft">&#160;</td><td class="mdescRight">bmp_loader_t構造体インスタンスのメモリを確保し、フィールドを0, NULL, falseで初期化する  <br /></td></tr>
 <tr class="separator:a05ce5c4936b6ba2203aea4bd4730db60"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -198,6 +232,35 @@ Functions</h2></td></tr>
 <tr class="memitem:ad8304967c962fd921a3f03925e7683d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ad8304967c962fd921a3f03925e7683d7">bmp_loader_bmp_size_get</a> (const <a class="el" href="bmp__loader_8h.html#ab99f39d2ce5480fedbe496d93a034901">bmp_loader_t</a> *bmp_loader_, uint16_t *width_, uint16_t *height_, uint8_t *channel_count_)</td></tr>
 <tr class="memdesc:ad8304967c962fd921a3f03925e7683d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">BMPファイルのサイズ情報を取得する  <br /></td></tr>
 <tr class="separator:ad8304967c962fd921a3f03925e7683d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a7fef4bac9c6ca31b675f69a6b2d7957c"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a7fef4bac9c6ca31b675f69a6b2d7957c">invalid_bmp_file_reason_valid</a> = &quot;valid BMP file&quot;</td></tr>
+<tr class="separator:a7fef4bac9c6ca31b675f69a6b2d7957c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf23a2d7e6e6cb19c8f5299ff19721f2"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#adf23a2d7e6e6cb19c8f5299ff19721f2">invalid_bmp_file_reason_bf_type</a> = &quot;invalid bfType&quot;</td></tr>
+<tr class="separator:adf23a2d7e6e6cb19c8f5299ff19721f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94f7e6ba8628ef5cdb9a07f33e3ef79"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ac94f7e6ba8628ef5cdb9a07f33e3ef79">invalid_bmp_file_reason_bf_reserved</a> = &quot;invalid bfReserved field&quot;</td></tr>
+<tr class="separator:ac94f7e6ba8628ef5cdb9a07f33e3ef79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65cac4a461cc9ab8915206d669f18c72"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a65cac4a461cc9ab8915206d669f18c72">invalid_bmp_file_reason_bf_size</a> = &quot;invalid bfSize&quot;</td></tr>
+<tr class="separator:a65cac4a461cc9ab8915206d669f18c72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae696ea0f4f7fc0fee32417d8a7e0d5b"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#aae696ea0f4f7fc0fee32417d8a7e0d5b">invalid_bmp_file_reason_bf_off_bits</a> = &quot;invalid bfOffBits&quot;</td></tr>
+<tr class="separator:aae696ea0f4f7fc0fee32417d8a7e0d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a767dd57ab95d51f7d39d65b8c3c12cab"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a767dd57ab95d51f7d39d65b8c3c12cab">invalid_bmp_file_reason_bi_size</a> = &quot;invalid biSize&quot;</td></tr>
+<tr class="separator:a767dd57ab95d51f7d39d65b8c3c12cab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adea6726b42cc0d7a69ad138e27f5ee5c"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#adea6726b42cc0d7a69ad138e27f5ee5c">invalid_bmp_file_reason_bi_planes</a> = &quot;invalid biPlanes&quot;</td></tr>
+<tr class="separator:adea6726b42cc0d7a69ad138e27f5ee5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acad69f8ee6d30e2ad2d6ee215c9965b9"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#acad69f8ee6d30e2ad2d6ee215c9965b9">invalid_bmp_file_reason_compression</a> = &quot;invalid biCompression&quot;</td></tr>
+<tr class="separator:acad69f8ee6d30e2ad2d6ee215c9965b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0aee2bf4c3583b447fd16cfe4e89893"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ac0aee2bf4c3583b447fd16cfe4e89893">invalid_bmp_file_reason_height</a> = &quot;invalid biHeight&quot;</td></tr>
+<tr class="separator:ac0aee2bf4c3583b447fd16cfe4e89893"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50305ae2e8a5d85c35f3b77c964cb077"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#a50305ae2e8a5d85c35f3b77c964cb077">invalid_bmp_file_reason_width</a> = &quot;invalid biWidth&quot;</td></tr>
+<tr class="separator:a50305ae2e8a5d85c35f3b77c964cb077"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa289c9c041a929bb4fbdec8cc26bd111"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#aa289c9c041a929bb4fbdec8cc26bd111">invalid_bmp_file_reason_channel_count</a> = &quot;unsupported biBitCount&quot;</td></tr>
+<tr class="separator:aa289c9c041a929bb4fbdec8cc26bd111"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad49870c2c2fd6494d2fb5d335d4bdc3e"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#ad49870c2c2fd6494d2fb5d335d4bdc3e">invalid_bmp_file_reason_not_initialized</a> = &quot;not initialized&quot;</td></tr>
+<tr class="separator:ad49870c2c2fd6494d2fb5d335d4bdc3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbdb30f2f5605b89f258b6079f500cb4"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bmp__loader_8c.html#acbdb30f2f5605b89f258b6079f500cb4">invalid_bmp_file_reason_undefined</a> = &quot;undefined&quot;</td></tr>
+<tr class="separator:acbdb30f2f5605b89f258b6079f500cb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>BMPファイルのロード処理を行うAPIの実装 </p>
@@ -210,7 +273,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2026-05-14</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000017">Todo:</a></b></dt><dd>計算各所のオーバーフローチェック漏れ修正</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>計算各所のオーバーフローチェック漏れ修正</dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2026 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
@@ -503,6 +566,238 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a959ed2e2ef513b23f38eff6fa50e83ff" name="a959ed2e2ef513b23f38eff6fa50e83ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a959ed2e2ef513b23f38eff6fa50e83ff">&#9670;&#160;</a></span>bmp_loader_padding_remove()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> bmp_loader_padding_remove </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>stride_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>padding_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>src_pixels_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramname"><em>dst_pixels_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>out_new_size_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>読み込んだピクセルデータからpaddingを除去する </p>
+<dl class="section warning"><dt>Warning</dt><dd>24bit BMPデータ専用, 32bitではpaddingが発生しないため、呼び出し対象外で、RESOURCE_BAD_OPERATIONを返す </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>処理に失敗した場合、out引数は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">info_header_</td><td>INFOHEADER構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride_</td><td>BMPファイルの各行のサイズ(byte) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">padding_</td><td>パディングサイズ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">src_pixels_</td><td>padding除去前のピクセルデータ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dst_pixels_</td><td>padding除去後のピクセルデータ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_new_size_</td><td>padding除去後のピクセルデータサイズ(byte)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>info_header_ == NULL</li>
+<li>src_pixels_ == NULL</li>
+<li>dst_pixels_ == NULL</li>
+<li>out_new_size_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>stride_ == 0</li>
+<li>padding_ == 0</li>
+<li>info_header_-&gt;bi_width == 0</li>
+<li>info_header_-&gt;bi_height == 0</li>
+<li>info_header_-&gt;bi_bit_count != 24</li>
+<li>メモリシステム未初期化 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_OVERFLOW</td><td>計算過程でオーバーフローが発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステムの使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a58e9fe85a8c2f71c2de47ccda702a70d" name="a58e9fe85a8c2f71c2de47ccda702a70d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58e9fe85a8c2f71c2de47ccda702a70d">&#9670;&#160;</a></span>bmp_loader_pixel_bgr_to_rgb()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> bmp_loader_pixel_bgr_to_rgb </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>pixels_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMPのピクセルデータをBGRからRGBに変換する </p>
+<dl class="section warning"><dt>Warning</dt><dd>この関数は必ずpadding除去後に実行すること </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>処理に失敗した場合は、pixels_の状態は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">info_header_</td><td>INFOHEADER構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pixels_</td><td>変換対象ピクセルデータ配列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>info_header_ == NULL</li>
+<li>pixels_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>info_header_-&gt;bi_width == 0</li>
+<li>info_header_-&gt;bi_height == 0 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_UNSUPPORTED_FILE</td><td>サポート対象外のBMPファイル </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000017">Todo:</a></b></dt><dd>TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する </dd></dl>
+
+</div>
+</div>
+<a id="a0a5bc5dc7005d92c7b6764db668c6edd" name="a0a5bc5dc7005d92c7b6764db668c6edd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a5bc5dc7005d92c7b6764db668c6edd">&#9670;&#160;</a></span>bmp_loader_pixel_flip()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> bmp_loader_pixel_flip </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>pixels_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>GLCEの画像は左上原点とするため、左下原点の画像を左上原点に直す </p>
+<dl class="section warning"><dt>Warning</dt><dd>この関数は必ずpadding除去後に実行すること </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>既に左上原点の場合は何もしないでRESOURCE_SUCCESSを返す </dd>
+<dd>
+処理に失敗した場合は、pixels_の状態は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">info_header_</td><td>INFOHEADER構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pixels_</td><td>座標原点変換対象ピクセル配列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>info_header_ == NULL</li>
+<li>pixels_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>以下のいずれか<ul>
+<li>info_header_-&gt;bi_width == 0</li>
+<li>info_header_-&gt;bi_height == 0 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_UNSUPPORTED_FILE</td><td>RGB、RGBA以外のBMPファイル </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000018">Todo:</a></b></dt><dd>TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する </dd></dl>
+
+</div>
+</div>
 <a id="a8ebd557a06fe1b48926d1e3f405095f9" name="a8ebd557a06fe1b48926d1e3f405095f9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8ebd557a06fe1b48926d1e3f405095f9">&#9670;&#160;</a></span>bmp_loader_pixel_move()</h2>
 
@@ -553,6 +848,790 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a26515cfe1bdaf2cff7144d6fe6aadcb5" name="a26515cfe1bdaf2cff7144d6fe6aadcb5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26515cfe1bdaf2cff7144d6fe6aadcb5">&#9670;&#160;</a></span>file_header_copy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void file_header_copy </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>src_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>dst_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>FILEHEADER情報をコピーする </p>
+<dl class="section note"><dt>Note</dt><dd>src_ == NULL or dst_ == NULLの場合は何もしない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">src_</td><td>コピー元ヘッダ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dst_</td><td>コピー先ヘッダ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a687eb377ade6942d472e92abf7fd29b4" name="a687eb377ade6942d472e92abf7fd29b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a687eb377ade6942d472e92abf7fd29b4">&#9670;&#160;</a></span>file_header_parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> file_header_parse </td>
+          <td>(</td>
+          <td class="paramtype">const char&#160;</td>
+          <td class="paramname"><em>header_</em>[54], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>file_header_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>FILEHEADER情報文字列をパースし、構造体にパラメータを格納する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">header_</td><td>ヘッダ情報文字列(FILEHEADER + INFOHEADER) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">file_header_</td><td>FILEHEADER情報格納先構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>header_ == NULL</li>
+<li>file_header_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a23aab552d7d6e632159f544d004969e5" name="a23aab552d7d6e632159f544d004969e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23aab552d7d6e632159f544d004969e5">&#9670;&#160;</a></span>header_load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> header_load </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fullpath_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>file_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMPファイルのヘッダ情報を読み込む </p>
+<dl class="section note"><dt>Note</dt><dd>処理に失敗した場合、out引数は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fullpath_</td><td>BMPファイルのフルパス </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">file_header_</td><td>FILEHEADER情報格納先 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">info_header_</td><td>INFOHEADER情報格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>fullpath_ == NULL</li>
+<li>file_header_ == NULL</li>
+<li>info_header_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステムの使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_OPEN_ERROR</td><td>ファイルオープン失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_CLOSE_ERROR</td><td>ファイルクローズ失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>未定義エラーが発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_READ_ERROR</td><td>ヘッダ読み込み失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>ヘッダ情報破損 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a92b637f27d0701c8ada2a9f5c1049ebf" name="a92b637f27d0701c8ada2a9f5c1049ebf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92b637f27d0701c8ada2a9f5c1049ebf">&#9670;&#160;</a></span>info_header_copy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void info_header_copy </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>src_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>dst_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>INFOHEADER情報をコピーする </p>
+<dl class="section note"><dt>Note</dt><dd>src_ == NULL or dst_ == NULLの場合は何もしない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">src_</td><td>コピー元ヘッダ </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dst_</td><td>コピー先ヘッダ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad883be3e2a3d13fb83f03168c53678a5" name="ad883be3e2a3d13fb83f03168c53678a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad883be3e2a3d13fb83f03168c53678a5">&#9670;&#160;</a></span>info_header_parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> info_header_parse </td>
+          <td>(</td>
+          <td class="paramtype">const char&#160;</td>
+          <td class="paramname"><em>header_</em>[54], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>INFOHEADER情報文字列をパースし、構造体にパラメータを格納する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">header_</td><td>ヘッダ情報文字列(FILEHEADER + INFOHEADER) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">info_header_</td><td>INFOHEADER情報格納先構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>header_ == NULL</li>
+<li>info_header_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad69b9ec474a4f1f6f36afba2a0c10238" name="ad69b9ec474a4f1f6f36afba2a0c10238"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad69b9ec474a4f1f6f36afba2a0c10238">&#9670;&#160;</a></span>invalid_reason_to_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static const char * invalid_reason_to_str </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9b">bmp_invalid_reason_t</a>&#160;</td>
+          <td class="paramname"><em>reason_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMPファイルの有効 / 無効判定結果の原因を文字列で取得する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">reason_</td><td>BMPファイルの有効 / 無効判定結果の原因</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">valid BMP file</td><td>BMPファイル有効 </td></tr>
+    <tr><td class="paramname">invalid bfType</td><td>無効なBMPファイルの原因: bfType異常 </td></tr>
+    <tr><td class="paramname">invalid bfReserved field</td><td>無効なBMPファイルの原因: bfReserved異常 </td></tr>
+    <tr><td class="paramname">invalid bfSize</td><td>無効なBMPファイルの原因: bfSize異常 </td></tr>
+    <tr><td class="paramname">invalid bfOffBits</td><td>無効なBMPファイルの原因: bfOffBits異常 </td></tr>
+    <tr><td class="paramname">invalid biSize</td><td>無効なBMPファイルの原因: biSize異常 </td></tr>
+    <tr><td class="paramname">invalid biPlanes</td><td>無効なBMPファイルの原因: biPlanes異常 </td></tr>
+    <tr><td class="paramname">invalid biCompression</td><td>無効なBMPファイルの原因: biCompression異常 </td></tr>
+    <tr><td class="paramname">invalid biHeight</td><td>無効なBMPファイルの原因: biHeight異常 </td></tr>
+    <tr><td class="paramname">invalid biWidth</td><td>無効なBMPファイルの原因: biWidth異常 </td></tr>
+    <tr><td class="paramname">unsupported biBitCount</td><td>無効なBMPファイルの原因: biBitCount異常 </td></tr>
+    <tr><td class="paramname">not initialized</td><td>無効なBMPファイルの原因: 未初期化 </td></tr>
+    <tr><td class="paramname">undefined</td><td>無効なBMPファイルの原因: 不明な異常 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5b5e6de3a5416bce04b75432b2cf4d8c" name="a5b5e6de3a5416bce04b75432b2cf4d8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b5e6de3a5416bce04b75432b2cf4d8c">&#9670;&#160;</a></span>is_bmp_supported()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9b">bmp_invalid_reason_t</a> is_bmp_supported </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>file_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMP FILEHADER, INFOHEADERを見て正常なBMPファイルかを判定する </p>
+<dl class="section note"><dt>Note</dt><dd>異常がある場合は原因をメッセージ出力する(DEBUG_BUILD or TEST_BUILD時のみ)</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">file_header_</td><td>BMP FILEHEADER情報 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">info_header_</td><td>BMP INFOHEADER情報</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">BMP_FILE_INVALID_BF_TYPE</td><td>bfTypeが'BM'ではない </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_BF_RESERVED</td><td>bfReserved1(or2)が0ではない </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_BF_SIZE</td><td>bfSizeが54byte以下 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_BF_OFF_BITS</td><td>bfOffBitsが54byte未満もしくはbfSize以上 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_BI_SIZE</td><td>biSizeが40(byte)ではない </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_BI_PLANES</td><td>biPlanesが1以外 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_COMPRESSION</td><td>biCompressionがBI_RGB(非圧縮)以外 </td></tr>
+    <tr><td class="paramname">BMP_FILE_NOT_INITIALIZED</td><td>biBitCount, biHeight, biWidthのいずれかが0で未初期化 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_HEIGHT</td><td>biHeightがint16_tの範囲外 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_WIDTH</td><td>biWidthが0未満もしくはint16_tの範囲外 </td></tr>
+    <tr><td class="paramname">BMP_FILE_INVALID_CHANNEL_COUNT</td><td>biBitCountが24 or 32以外(チャンネルカウントRGB or RGBAのみをサポート) </td></tr>
+    <tr><td class="paramname">BMP_FILE_VALID</td><td>BMPヘッダ情報が正常 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad515f05e157c2ed0c69b4553d0817faa" name="ad515f05e157c2ed0c69b4553d0817faa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad515f05e157c2ed0c69b4553d0817faa">&#9670;&#160;</a></span>pixel_load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> pixel_load </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fullpath_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="bmp__loader_8c.html#ad0716343f279b8bcddc25a21b8d17f03">file_header_t</a> *&#160;</td>
+          <td class="paramname"><em>file_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="bmp__loader_8c.html#a8f053f7ae69a976a33ad0fe0b83a60eb">info_header_t</a> *&#160;</td>
+          <td class="paramname"><em>info_header_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>stride_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramname"><em>out_pixels_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>BMPファイルのヘッダ以降のピクセルデータを読み込む </p>
+<dl class="section note"><dt>Note</dt><dd>引数info_header_はbi_size_imageを更新するため非const(画像変換ツールによっては正しく情報が設定されていない場合があるため) </dd>
+<dd>
+処理に失敗した場合、out引数は不変</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fullpath_</td><td>BMPファイルのフルパス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">file_header_</td><td>FILEHEADER構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">info_header_</td><td>INFOHEADER構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride_</td><td>BMPファイルの各行のサイズ(byte) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_pixels_</td><td>読み込んだピクセルデータの格納先(メモリは本関数内で確保する)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>fullpath_ == NULL</li>
+<li>file_header_ == NULL</li>
+<li>info_header_ == NULL</li>
+<li>out_pixels_ == NULL</li>
+<li>*out_pixels_ != NULL</li>
+<li>stride_ == 0 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステムの使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_OPEN_ERROR</td><td>ファイルオープン失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>未定義エラーが発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_READ_ERROR</td><td>ピクセル読み込み失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>ピクセル読み込みサイズ異常 </td></tr>
+    <tr><td class="paramname">RESOURCE_OVERFLOW</td><td>計算過程でオーバーフロー発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="aae696ea0f4f7fc0fee32417d8a7e0d5b" name="aae696ea0f4f7fc0fee32417d8a7e0d5b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae696ea0f4f7fc0fee32417d8a7e0d5b">&#9670;&#160;</a></span>invalid_bmp_file_reason_bf_off_bits</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bf_off_bits = &quot;invalid bfOffBits&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(bfOffBits異常) </p>
+
+</div>
+</div>
+<a id="ac94f7e6ba8628ef5cdb9a07f33e3ef79" name="ac94f7e6ba8628ef5cdb9a07f33e3ef79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac94f7e6ba8628ef5cdb9a07f33e3ef79">&#9670;&#160;</a></span>invalid_bmp_file_reason_bf_reserved</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bf_reserved = &quot;invalid bfReserved field&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(bfReserved異常) </p>
+
+</div>
+</div>
+<a id="a65cac4a461cc9ab8915206d669f18c72" name="a65cac4a461cc9ab8915206d669f18c72"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65cac4a461cc9ab8915206d669f18c72">&#9670;&#160;</a></span>invalid_bmp_file_reason_bf_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bf_size = &quot;invalid bfSize&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(bfSize異常) </p>
+
+</div>
+</div>
+<a id="adf23a2d7e6e6cb19c8f5299ff19721f2" name="adf23a2d7e6e6cb19c8f5299ff19721f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf23a2d7e6e6cb19c8f5299ff19721f2">&#9670;&#160;</a></span>invalid_bmp_file_reason_bf_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bf_type = &quot;invalid bfType&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(bfType異常) </p>
+
+</div>
+</div>
+<a id="adea6726b42cc0d7a69ad138e27f5ee5c" name="adea6726b42cc0d7a69ad138e27f5ee5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adea6726b42cc0d7a69ad138e27f5ee5c">&#9670;&#160;</a></span>invalid_bmp_file_reason_bi_planes</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bi_planes = &quot;invalid biPlanes&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biPlanes異常) </p>
+
+</div>
+</div>
+<a id="a767dd57ab95d51f7d39d65b8c3c12cab" name="a767dd57ab95d51f7d39d65b8c3c12cab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a767dd57ab95d51f7d39d65b8c3c12cab">&#9670;&#160;</a></span>invalid_bmp_file_reason_bi_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_bi_size = &quot;invalid biSize&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biSize異常) </p>
+
+</div>
+</div>
+<a id="aa289c9c041a929bb4fbdec8cc26bd111" name="aa289c9c041a929bb4fbdec8cc26bd111"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa289c9c041a929bb4fbdec8cc26bd111">&#9670;&#160;</a></span>invalid_bmp_file_reason_channel_count</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_channel_count = &quot;unsupported biBitCount&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biBitCount異常) </p>
+
+</div>
+</div>
+<a id="acad69f8ee6d30e2ad2d6ee215c9965b9" name="acad69f8ee6d30e2ad2d6ee215c9965b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acad69f8ee6d30e2ad2d6ee215c9965b9">&#9670;&#160;</a></span>invalid_bmp_file_reason_compression</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_compression = &quot;invalid biCompression&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biCompression異常) </p>
+
+</div>
+</div>
+<a id="ac0aee2bf4c3583b447fd16cfe4e89893" name="ac0aee2bf4c3583b447fd16cfe4e89893"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0aee2bf4c3583b447fd16cfe4e89893">&#9670;&#160;</a></span>invalid_bmp_file_reason_height</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_height = &quot;invalid biHeight&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biHeight異常) </p>
+
+</div>
+</div>
+<a id="ad49870c2c2fd6494d2fb5d335d4bdc3e" name="ad49870c2c2fd6494d2fb5d335d4bdc3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad49870c2c2fd6494d2fb5d335d4bdc3e">&#9670;&#160;</a></span>invalid_bmp_file_reason_not_initialized</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_not_initialized = &quot;not initialized&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(未初期化) </p>
+
+</div>
+</div>
+<a id="acbdb30f2f5605b89f258b6079f500cb4" name="acbdb30f2f5605b89f258b6079f500cb4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbdb30f2f5605b89f258b6079f500cb4">&#9670;&#160;</a></span>invalid_bmp_file_reason_undefined</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_undefined = &quot;undefined&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(不明な異常) </p>
+
+</div>
+</div>
+<a id="a7fef4bac9c6ca31b675f69a6b2d7957c" name="a7fef4bac9c6ca31b675f69a6b2d7957c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fef4bac9c6ca31b675f69a6b2d7957c">&#9670;&#160;</a></span>invalid_bmp_file_reason_valid</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_valid = &quot;valid BMP file&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(BMPファイル有効) </p>
+
+</div>
+</div>
+<a id="a50305ae2e8a5d85c35f3b77c964cb077" name="a50305ae2e8a5d85c35f3b77c964cb077"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50305ae2e8a5d85c35f3b77c964cb077">&#9670;&#160;</a></span>invalid_bmp_file_reason_width</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const invalid_bmp_file_reason_width = &quot;invalid biWidth&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>無効なBMPファイルの原因文字列(biWidth異常) </p>
 
 </div>
 </div>

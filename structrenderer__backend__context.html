@@ -120,13 +120,13 @@ Collaboration diagram for renderer_backend_context:</div>
 Data Fields</h2></td></tr>
 <tr class="memitem:a8ab221fa50b96f30e5dfbf4f47bbc58e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#aa81b9a1ddd3cf70bab62b07854cbb241">target_graphics_api_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#a8ab221fa50b96f30e5dfbf4f47bbc58e">target_api</a></td></tr>
 <tr class="separator:a8ab221fa50b96f30e5dfbf4f47bbc58e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab532279778c8eebd1cfbe967b1f10d20"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#ab532279778c8eebd1cfbe967b1f10d20">shader_vtable</a></td></tr>
+<tr class="memitem:ab532279778c8eebd1cfbe967b1f10d20"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#ab532279778c8eebd1cfbe967b1f10d20">shader_vtable</a></td></tr>
 <tr class="separator:ab532279778c8eebd1cfbe967b1f10d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accb7186b7d913c2b4a3b1888b6d3ea4e"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">renderer_vao_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#accb7186b7d913c2b4a3b1888b6d3ea4e">vao_vtable</a></td></tr>
+<tr class="memitem:accb7186b7d913c2b4a3b1888b6d3ea4e"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#accb7186b7d913c2b4a3b1888b6d3ea4e">vao_vtable</a></td></tr>
 <tr class="separator:accb7186b7d913c2b4a3b1888b6d3ea4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaab43dac09c26b5d52223ca65d16d29e"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#aaab43dac09c26b5d52223ca65d16d29e">vbo_vtable</a></td></tr>
+<tr class="memitem:aaab43dac09c26b5d52223ca65d16d29e"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#aaab43dac09c26b5d52223ca65d16d29e">vbo_vtable</a></td></tr>
 <tr class="separator:aaab43dac09c26b5d52223ca65d16d29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af78628a25dda29203873de549da87860"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__texture_8h.html#aa36ddeb541b425aef9f4f0cb92022399">renderer_texture_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#af78628a25dda29203873de549da87860">texture_vtable</a></td></tr>
+<tr class="memitem:af78628a25dda29203873de549da87860"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrenderer__backend__context.html#af78628a25dda29203873de549da87860">texture_vtable</a></td></tr>
 <tr class="separator:af78628a25dda29203873de549da87860"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -139,7 +139,7 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__shader_8h.html#afd6bb305a11c3c8fd7331150c6784be6">renderer_shader_vtable_t</a>* renderer_backend_context::shader_vtable</td>
+          <td class="memname">const <a class="el" href="structrenderer__shader__vtable.html">renderer_shader_vtable_t</a>* renderer_backend_context::shader_vtable</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -169,7 +169,7 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__texture_8h.html#aa36ddeb541b425aef9f4f0cb92022399">renderer_texture_vtable_t</a>* renderer_backend_context::texture_vtable</td>
+          <td class="memname">const <a class="el" href="structrenderer__texture__vtable.html">renderer_texture_vtable_t</a>* renderer_backend_context::texture_vtable</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -184,7 +184,7 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__vao_8h.html#a5e84f90b1944196db35490c1b0c7fd33">renderer_vao_vtable_t</a>* renderer_backend_context::vao_vtable</td>
+          <td class="memname">const <a class="el" href="structrenderer__vao__vtable.html">renderer_vao_vtable_t</a>* renderer_backend_context::vao_vtable</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -199,7 +199,7 @@ Data Fields</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a>* renderer_backend_context::vbo_vtable</td>
+          <td class="memname">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a>* renderer_backend_context::vbo_vtable</td>
         </tr>
       </table>
 </div><div class="memdoc">

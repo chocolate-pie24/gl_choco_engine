@@ -1,7 +1,13 @@
 <map id="line_mesh_geometry_registry" name="line_mesh_geometry_registry">
-<area shape="rect" id="node1" title="線分描画用ジオメトリレジストリ内部構造体" alt="" coords="14,269,173,309"/>
-<area shape="rect" id="node2" href="$structline__mesh__geometry.html" title="line_mesh_geometry内部状態管理構造体" alt="" coords="14,181,173,207"/>
-<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,93,109,119"/>
-<area shape="rect" id="node4" href="$structline__vertex.html" title="線分描画用頂点情報構造体" alt="" coords="134,93,229,119"/>
-<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="152,5,211,31"/>
+<area shape="rect" id="node1" title="線分描画用ジオメトリレジストリ内部構造体" alt="" coords="157,464,315,504"/>
+<area shape="rect" id="node2" href="$structline__mesh__geometry.html" title="line_mesh_geometry内部状態管理構造体" alt="" coords="67,376,226,401"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,288,109,313"/>
+<area shape="rect" id="node4" href="$structline__vertex.html" title="線分描画用頂点情報構造体" alt="" coords="134,288,229,313"/>
+<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="152,200,211,225"/>
+<area shape="rect" id="node6" href="$structvertex__buffer__range.html" title=" " alt="" coords="250,376,403,401"/>
+<area shape="rect" id="node7" href="$structdraw__range.html" title=" " alt="" coords="269,288,368,313"/>
+<area shape="rect" id="node8" href="$structvertex__allocation.html" title="VBO Managerから取得したvertex allocationを表すhandle." alt="" coords="393,288,527,313"/>
+<area shape="rect" id="node9" href="$structrange__allocation.html" title="Range Allocatorから取得したallocationを表すdescriptor." alt="" coords="395,200,525,225"/>
+<area shape="rect" id="node10" href="$structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="399,112,521,137"/>
+<area shape="rect" id="node11" href="$structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="433,7,487,33"/>
 </map>

@@ -352,6 +352,7 @@ var NAVTREE =
       [ "Globals", "globals.html", [
         [ "All", "globals.html", "globals_dup" ],
         [ "Functions", "globals_func.html", "globals_func" ],
+        [ "Variables", "globals_vars.html", null ],
         [ "Typedefs", "globals_type.html", null ],
         [ "Enumerations", "globals_enum.html", null ],
         [ "Enumerator", "globals_eval.html", "globals_eval" ],
@@ -364,9 +365,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "aabb__3d_8c.html",
-"group__platform.html",
-"md_docs_guide_renderer_backend_adding_concretes_ja.html#autotoc_md219",
-"structpoint__mesh__shader.html#aeda8739f454110e9aa1de8f73ed168ba"
+"globals_eval_s.html",
+"md_docs_guide_event_system_event_en.html#autotoc_md177",
+"structinfo__header.html#abccaaf6e6990671c7be56055c71156eb",
+"structvec4u8.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

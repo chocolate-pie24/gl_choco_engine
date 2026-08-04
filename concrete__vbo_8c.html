@@ -93,48 +93,41 @@ $(document).ready(function(){initNavTree('concrete__vbo_8c.html',''); initResiza
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">concrete_vbo.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &lt;stdint.h&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="concrete__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h</a>&quot;</code><br />
+<code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;GL/glew.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__err__utils_8h_source.html">engine/systems/renderer/renderer_core/renderer_err_utils.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__memory_8h_source.html">engine/systems/renderer/renderer_core/renderer_memory.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="interface__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="concrete__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="interface__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for concrete_vbo.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="concrete__vbo_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8c" alt=""/></div>
 <map name="asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8c" id="asrc_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8c">
-<area shape="rect" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="497,5,709,75"/>
-<area shape="rect" title=" " alt="" coords="715,431,789,456"/>
-<area shape="rect" title=" " alt="" coords="1332,431,1415,456"/>
-<area shape="rect" title=" " alt="" coords="58,343,129,368"/>
-<area shape="rect" title=" " alt="" coords="1528,137,1613,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="480,328,664,383"/>
-<area shape="rect" href="renderer__err__utils_8h.html" title="renderer_err_utilsは、レンダラーレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="868,123,1052,177"/>
-<area shape="rect" href="renderer__memory_8h.html" title="renderer_memoryは、レンダラーレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する" alt="" coords="565,225,749,280"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="153,328,354,383"/>
-<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="159,225,412,280"/>
-<area shape="rect" href="concrete__vbo_8h.html" title="renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="231,123,519,177"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1136,137,1347,163"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1315,240,1453,265"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="1056,233,1189,273"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="1166,335,1346,375"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="789,335,947,375"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="824,233,981,273"/>
-<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="971,335,1141,375"/>
+<area shape="rect" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="645,5,857,75"/>
+<area shape="rect" href="concrete__vbo_8h.html" title="renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="5,123,293,177"/>
+<area shape="rect" title=" " alt="" coords="916,328,991,353"/>
+<area shape="rect" title=" " alt="" coords="368,137,453,163"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="477,137,688,163"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="348,240,487,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1393,233,1551,273"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="732,225,916,280"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="991,225,1188,280"/>
+<area shape="rect" href="renderer__backend__err__utils_8h_source.html" title=" " alt="" coords="1170,123,1385,177"/>
+<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="813,123,1067,177"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1212,233,1369,273"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -146,9 +139,47 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae347d7db0aeed8399f0155c938bd90ea"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#ae347d7db0aeed8399f0155c938bd90ea">gl33_vbo_vtable_get</a> (void)</td></tr>
+<tr class="memitem:a6bca95635d6505528d18bb19d5a68335"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a6bca95635d6505528d18bb19d5a68335">gl33_vbo_create</a> (<a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
+<tr class="memdesc:a6bca95635d6505528d18bb19d5a68335"><td class="mdescLeft">&#160;</td><td class="mdescRight">VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する  <br /></td></tr>
+<tr class="separator:a6bca95635d6505528d18bb19d5a68335"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a062d5806dbb167ad324ef56f0c9918"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a6a062d5806dbb167ad324ef56f0c9918">gl33_vbo_destroy</a> (<a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> **vertex_buffer_)</td></tr>
+<tr class="memdesc:a6a062d5806dbb167ad324ef56f0c9918"><td class="mdescLeft">&#160;</td><td class="mdescRight">renderer_backend_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する  <br /></td></tr>
+<tr class="separator:a6a062d5806dbb167ad324ef56f0c9918"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92a5b23150c1e40fa67b18c12bd1a79e"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a92a5b23150c1e40fa67b18c12bd1a79e">gl33_vbo_bind</a> (const <a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> *vertex_buffer_)</td></tr>
+<tr class="memdesc:a92a5b23150c1e40fa67b18c12bd1a79e"><td class="mdescLeft">&#160;</td><td class="mdescRight">glBindBuffer APIのラッパーAPI  <br /></td></tr>
+<tr class="separator:a92a5b23150c1e40fa67b18c12bd1a79e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60ed0786dcd33f6047f6f6d0868aafd4"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a60ed0786dcd33f6047f6f6d0868aafd4">gl33_vbo_unbind</a> (void)</td></tr>
+<tr class="memdesc:a60ed0786dcd33f6047f6f6d0868aafd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">VBO unbind処理  <br /></td></tr>
+<tr class="separator:a60ed0786dcd33f6047f6f6d0868aafd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ae0bbf035c19bfea72b4f0492c56989"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a1ae0bbf035c19bfea72b4f0492c56989">gl33_vbo_vertex_load</a> (size_t load_size_, const void *load_data_, <a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a> usage_)</td></tr>
+<tr class="memdesc:a1ae0bbf035c19bfea72b4f0492c56989"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPU側頂点情報格納領域を生成し、頂点情報を転送する  <br /></td></tr>
+<tr class="separator:a1ae0bbf035c19bfea72b4f0492c56989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42ce77187d78fdaba850f3008a4543a8"><td class="memItemLeft" align="right" valign="top">static renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#a42ce77187d78fdaba850f3008a4543a8">gl33_vbo_vertex_subload</a> (size_t offset_, size_t size_, const void *load_data_)</td></tr>
+<tr class="memdesc:a42ce77187d78fdaba850f3008a4543a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する  <br /></td></tr>
+<tr class="separator:a42ce77187d78fdaba850f3008a4543a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ad91bbb2557c0b2f12f58b4bcbf3d21"><td class="memItemLeft" align="right" valign="top"><a id="a2ad91bbb2557c0b2f12f58b4bcbf3d21" name="a2ad91bbb2557c0b2f12f58b4bcbf3d21"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glGenBuffers</b> (GLsizei n_, GLuint *buffer_)</td></tr>
+<tr class="separator:a2ad91bbb2557c0b2f12f58b4bcbf3d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf34b8e5cc5aa8a4c8cef440fbc8d503"><td class="memItemLeft" align="right" valign="top"><a id="acf34b8e5cc5aa8a4c8cef440fbc8d503" name="acf34b8e5cc5aa8a4c8cef440fbc8d503"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glBindBuffer</b> (GLenum target_, GLuint buffer_)</td></tr>
+<tr class="separator:acf34b8e5cc5aa8a4c8cef440fbc8d503"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3d8f61a14db536e56bef778b64c79bf"><td class="memItemLeft" align="right" valign="top"><a id="ac3d8f61a14db536e56bef778b64c79bf" name="ac3d8f61a14db536e56bef778b64c79bf"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glDeleteBuffers</b> (GLsizei n_, const GLuint *buffer_)</td></tr>
+<tr class="separator:ac3d8f61a14db536e56bef778b64c79bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaaa9114b9d06519eeb7f3c32103b10a"><td class="memItemLeft" align="right" valign="top"><a id="afaaa9114b9d06519eeb7f3c32103b10a" name="afaaa9114b9d06519eeb7f3c32103b10a"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glBufferData</b> (GLenum target_, GLsizeiptr size_, const void *data_, GLenum usage_)</td></tr>
+<tr class="separator:afaaa9114b9d06519eeb7f3c32103b10a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72655bf16585dcc2e5897c67e06f5994"><td class="memItemLeft" align="right" valign="top"><a id="a72655bf16585dcc2e5897c67e06f5994" name="a72655bf16585dcc2e5897c67e06f5994"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>mock_glBufferSubData</b> (GLenum target, GLintptr offset_, GLsizeiptr size_, const void *data_)</td></tr>
+<tr class="separator:a72655bf16585dcc2e5897c67e06f5994"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae347d7db0aeed8399f0155c938bd90ea"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#ae347d7db0aeed8399f0155c938bd90ea">gl33_vbo_vtable_get</a> (void)</td></tr>
 <tr class="memdesc:ae347d7db0aeed8399f0155c938bd90ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用VBO仮想関数テーブル(vtable)を取得する  <br /></td></tr>
 <tr class="separator:ae347d7db0aeed8399f0155c938bd90ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:afcfeffce3288cefc1132506ceb416ba2"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8c.html#afcfeffce3288cefc1132506ceb416ba2">s_gl33_vbo_vtable</a></td></tr>
+<tr class="separator:afcfeffce3288cefc1132506ceb416ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装 </p>
@@ -158,6 +189,292 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a92a5b23150c1e40fa67b18c12bd1a79e" name="a92a5b23150c1e40fa67b18c12bd1a79e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92a5b23150c1e40fa67b18c12bd1a79e">&#9670;&#160;</a></span>gl33_vbo_bind()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vbo_bind </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> *&#160;</td>
+          <td class="paramname"><em>vertex_buffer_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>glBindBuffer APIのラッパーAPI </p>
+<dl class="section note"><dt>Note</dt><dd>当面はglGetErrorをAPI個別に実行するつもりはないので成功するが、将来的に個別にエラー処理を行う可能性を考慮し、返り値をエラーコードにする</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex_buffer_</td><td>bind対象vbo</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>vertex_buffer_ == NULL </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>未初期化のvertex_buffer_が渡された </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6bca95635d6505528d18bb19d5a68335" name="a6bca95635d6505528d18bb19d5a68335"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bca95635d6505528d18bb19d5a68335">&#9670;&#160;</a></span>gl33_vbo_create()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vbo_create </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> **&#160;</td>
+          <td class="paramname"><em>vertex_buffer_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">vertex_buffer_</td><td>renderer_backend_vbo_t構造体インスタンスへのダブルポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>vertex_buffer_がNULL</li>
+<li>*vertex_buffer_が非NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_UNDEFINED_ERROR</td><td>メモリ確保時に不明なエラーが発生 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限を超過 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6a062d5806dbb167ad324ef56f0c9918" name="a6a062d5806dbb167ad324ef56f0c9918"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a062d5806dbb167ad324ef56f0c9918">&#9670;&#160;</a></span>gl33_vbo_destroy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void gl33_vbo_destroy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vbo.html">renderer_backend_vbo_t</a> **&#160;</td>
+          <td class="paramname"><em>vertex_buffer_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>renderer_backend_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">vertex_buffer_</td><td>renderer_backend_vbo_t構造体インスタンスへのダブルポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a60ed0786dcd33f6047f6f6d0868aafd4" name="a60ed0786dcd33f6047f6f6d0868aafd4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60ed0786dcd33f6047f6f6d0868aafd4">&#9670;&#160;</a></span>gl33_vbo_unbind()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vbo_unbind </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>VBO unbind処理 </p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1ae0bbf035c19bfea72b4f0492c56989" name="a1ae0bbf035c19bfea72b4f0492c56989"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ae0bbf035c19bfea72b4f0492c56989">&#9670;&#160;</a></span>gl33_vbo_vertex_load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vbo_vertex_load </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>load_size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>load_data_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73">buffer_usage_t</a>&#160;</td>
+          <td class="paramname"><em>usage_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>GPU側頂点情報格納領域を生成し、頂点情報を転送する </p>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼び出す前に必ず対象のVBOをbindしておくこと </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>load_data_ == NULLの場合は頂点情報格納領域の生成のみを行い、頂点情報の転送は行わない</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">load_size_</td><td>頂点情報格納領域サイズ(byte) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">load_data_</td><td>転送頂点情報配列へのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">usage_</td><td>バッファ使用方法種別</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>load_size_ == 0 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_RUNTIME_ERROR</td><td>規定値外のusage_ </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a42ce77187d78fdaba850f3008a4543a8" name="a42ce77187d78fdaba850f3008a4543a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42ce77187d78fdaba850f3008a4543a8">&#9670;&#160;</a></span>gl33_vbo_vertex_subload()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static renderer_backend_result_t gl33_vbo_vertex_subload </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>load_data_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する </p>
+<dl class="section warning"><dt>Warning</dt><dd>本APIを呼び出す前に必ず対象のVBOをbindしておくこと</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset_</td><td>頂点情報格納領域の先頭から転送開始位置までのオフセット(byte) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size_</td><td>頂点情報転送サイズ(byte) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">load_data_</td><td>転送する頂点情報配列へのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>load_data_ == NULL</li>
+<li>size_ == 0 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ae347d7db0aeed8399f0155c938bd90ea" name="ae347d7db0aeed8399f0155c938bd90ea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae347d7db0aeed8399f0155c938bd90ea">&#9670;&#160;</a></span>gl33_vbo_vtable_get()</h2>
 
@@ -165,7 +482,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a> * gl33_vbo_vtable_get </td>
+          <td class="memname">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> * gl33_vbo_vtable_get </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -176,6 +493,44 @@ Functions</h2></td></tr>
 
 <p>OpenGL3.3用VBO仮想関数テーブル(vtable)を取得する </p>
 <dl class="section return"><dt>Returns</dt><dd>const renderer_vbo_vtable_t* OpenGL3.3用VBO vtable </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="afcfeffce3288cefc1132506ceb416ba2" name="afcfeffce3288cefc1132506ceb416ba2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcfeffce3288cefc1132506ceb416ba2">&#9670;&#160;</a></span>s_gl33_vbo_vtable</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> s_gl33_vbo_vtable</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">    .vertex_buffer_create = <a class="code hl_function" href="concrete__vbo_8c.html#a6bca95635d6505528d18bb19d5a68335">gl33_vbo_create</a>,</div>
+<div class="line">    .vertex_buffer_destroy = <a class="code hl_function" href="concrete__vbo_8c.html#a6a062d5806dbb167ad324ef56f0c9918">gl33_vbo_destroy</a>,</div>
+<div class="line">    .vertex_buffer_bind = <a class="code hl_function" href="concrete__vbo_8c.html#a92a5b23150c1e40fa67b18c12bd1a79e">gl33_vbo_bind</a>,</div>
+<div class="line">    .vertex_buffer_unbind = <a class="code hl_function" href="concrete__vbo_8c.html#a60ed0786dcd33f6047f6f6d0868aafd4">gl33_vbo_unbind</a>,</div>
+<div class="line">    .vertex_buffer_vertex_load = <a class="code hl_function" href="concrete__vbo_8c.html#a1ae0bbf035c19bfea72b4f0492c56989">gl33_vbo_vertex_load</a>,</div>
+<div class="line">    .vertex_buffer_vertex_subload = <a class="code hl_function" href="concrete__vbo_8c.html#a42ce77187d78fdaba850f3008a4543a8">gl33_vbo_vertex_subload</a>,</div>
+<div class="line">}</div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a1ae0bbf035c19bfea72b4f0492c56989"><div class="ttname"><a href="concrete__vbo_8c.html#a1ae0bbf035c19bfea72b4f0492c56989">gl33_vbo_vertex_load</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vbo_vertex_load(size_t load_size_, const void *load_data_, buffer_usage_t usage_)</div><div class="ttdoc">GPU側頂点情報格納領域を生成し、頂点情報を転送する</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:274</div></div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a42ce77187d78fdaba850f3008a4543a8"><div class="ttname"><a href="concrete__vbo_8c.html#a42ce77187d78fdaba850f3008a4543a8">gl33_vbo_vertex_subload</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vbo_vertex_subload(size_t offset_, size_t size_, const void *load_data_)</div><div class="ttdoc">生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:320</div></div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a60ed0786dcd33f6047f6f6d0868aafd4"><div class="ttname"><a href="concrete__vbo_8c.html#a60ed0786dcd33f6047f6f6d0868aafd4">gl33_vbo_unbind</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vbo_unbind(void)</div><div class="ttdoc">VBO unbind処理</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:242</div></div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a6a062d5806dbb167ad324ef56f0c9918"><div class="ttname"><a href="concrete__vbo_8c.html#a6a062d5806dbb167ad324ef56f0c9918">gl33_vbo_destroy</a></div><div class="ttdeci">static void gl33_vbo_destroy(renderer_backend_vbo_t **vertex_buffer_)</div><div class="ttdoc">renderer_backend_vbo_t構造体インスタンスのメモリを解放し、OpenGLContext内のVBOも削除する</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:180</div></div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a6bca95635d6505528d18bb19d5a68335"><div class="ttname"><a href="concrete__vbo_8c.html#a6bca95635d6505528d18bb19d5a68335">gl33_vbo_create</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t **vertex_buffer_)</div><div class="ttdoc">VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:133</div></div>
+<div class="ttc" id="aconcrete__vbo_8c_html_a92a5b23150c1e40fa67b18c12bd1a79e"><div class="ttname"><a href="concrete__vbo_8c.html#a92a5b23150c1e40fa67b18c12bd1a79e">gl33_vbo_bind</a></div><div class="ttdeci">static renderer_backend_result_t gl33_vbo_bind(const renderer_backend_vbo_t *vertex_buffer_)</div><div class="ttdoc">glBindBuffer APIのラッパーAPI</div><div class="ttdef"><b>Definition:</b> concrete_vbo.c:215</div></div>
+</div><!-- fragment --><p>OpenGL3.3用VBO操作仮想関数テーブル </p>
 
 </div>
 </div>

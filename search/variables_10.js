@@ -1,6 +1,11 @@
 var searchData=
 [
-  ['ui_5fvao_0',['ui_vao',['../structui__mesh__shader.html#adb40eaffb17ffec92d50d0335074fb71',1,'ui_mesh_shader']]],
-  ['ui_5fvbo_1',['ui_vbo',['../structui__mesh__shader.html#a7f7ef3d9e85e881037fe4a3db111d5e0',1,'ui_mesh_shader']]],
-  ['unit_5fnumber_2',['unit_number',['../structrenderer__backend__texture.html#ad49954eabaa8fb9d1cd4539c775a01c3',1,'renderer_backend_texture']]]
+  ['tail_0',['tail',['../structring__queue.html#a7cc28df4062e48e01554211151e0194f',1,'ring_queue']]],
+  ['target_5fapi_1',['target_api',['../structrenderer__backend__context.html#a8ab221fa50b96f30e5dfbf4f47bbc58e',1,'renderer_backend_context']]],
+  ['tex_5fcoord_2',['tex_coord',['../structui__vertex.html#af8237cbf4c07dba9486bd68aa2bf8650',1,'ui_vertex']]],
+  ['texture_5fvtable_3',['texture_vtable',['../structrenderer__backend__context.html#af78628a25dda29203873de549da87860',1,'renderer_backend_context']]],
+  ['total_5fallocated_4',['total_allocated',['../structmemory__system.html#a5029a9e7fdefd7da6646c3a5f22d5b88',1,'memory_system']]],
+  ['total_5fallocated_5fsize_5',['total_allocated_size',['../structrange__allocator__status.html#af5e5aac0bee3abfd67c640328ba3bbd5',1,'range_allocator_status::total_allocated_size()'],['../structrange__allocator.html#a78239a97777a36dc6037e63955ea0628',1,'range_allocator::total_allocated_size()']]],
+  ['total_5ffree_5fsize_6',['total_free_size',['../structrange__allocator__status.html#a8b8404fa0f1ab116a8f2d5a08e43a87b',1,'range_allocator_status']]],
+  ['type_7',['type',['../structplatform__context.html#adfc5f1d3ec40cbf6e101dd536098302e',1,'platform_context']]]
 ];

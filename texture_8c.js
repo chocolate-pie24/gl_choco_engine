@@ -6,6 +6,8 @@ var texture_8c =
       [ "TEST_TEXTURE_GREEN", "texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4aa8546ea2b4ed0963c9437f6f3a1aa87a", null ],
       [ "TEST_TEXTURE_BLUE", "texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4ab2016bf6bc28218fba79365f924c71c4", null ]
     ] ],
+    [ "bmp_load", "texture_8c.html#a37b921134983b0813843d746f6854567", null ],
+    [ "test_texture_generate", "texture_8c.html#ada90cc1dcdf4bb6ffa5976c2bced23fa", null ],
     [ "texture_create", "texture_8c.html#afd7cbe3729544c3c1b3d6d1aeb949ca1", null ],
     [ "texture_destroy", "texture_8c.html#a989867345661353bf1a9aec609a3e6fa", null ],
     [ "texture_name_get", "texture_8c.html#aca9aa58e0c13ca5d224cf1e2ef845aff", null ],

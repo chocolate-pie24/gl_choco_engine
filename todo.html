@@ -95,10 +95,16 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><dl class="reflist">
+<dt>Global <a class="el" href="application_8c.html#abb6785430fba5187b505f1d2b8e1a3a0">app_state_dispatch</a>  (void)</dt>
+<dd><a class="anchor" id="_todo000011"></a>ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする  </dd>
 <dt>File <a class="el" href="application_8c.html">application.c</a>  </dt>
-<dd><a class="anchor" id="_todo000011"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
+<dd><a class="anchor" id="_todo000010"></a>application.cのエラー文字列周りを別ファイルに移す </dd>
 <dt>File <a class="el" href="bmp__loader_8c.html">bmp_loader.c</a>  </dt>
-<dd><a class="anchor" id="_todo000017"></a>計算各所のオーバーフローチェック漏れ修正 </dd>
+<dd><a class="anchor" id="_todo000016"></a>計算各所のオーバーフローチェック漏れ修正 </dd>
+<dt>Global <a class="el" href="bmp__loader_8c.html#a58e9fe85a8c2f71c2de47ccda702a70d">bmp_loader_pixel_bgr_to_rgb</a>  (const info_header_t *info_header_, uint8_t *pixels_)</dt>
+<dd><a class="anchor" id="_todo000017"></a>TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する  </dd>
+<dt>Global <a class="el" href="bmp__loader_8c.html#a0a5bc5dc7005d92c7b6764db668c6edd">bmp_loader_pixel_flip</a>  (const info_header_t *info_header_, uint8_t *pixels_)</dt>
+<dd><a class="anchor" id="_todo000018"></a>TODO: paddingが除去されていないpixels_が渡された場合、メモリアクセス違反となるため、padding除去済みフラグを引数に追加するか、ピクセルバッファサイズを引数に追加する  </dd>
 <dt>File <a class="el" href="buffer__utils_8h.html">buffer_utils.h</a>  </dt>
 <dd><p class="startdd"><a class="anchor" id="_todo000001"></a>float型、double型のデータ取り出しAPIは必要に応じて追加する </p>
 <p class="interdd"></p>
@@ -115,38 +121,34 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <dt>Global <a class="el" href="filesystem_8c.html#a0e8cf1cd622e3a94e20be47b9c628062">filesystem_open</a>  (const char *fullpath_, filesystem_open_mode_t mode_, filesystem_t *filesystem_)</dt>
 <dd><a class="anchor" id="_todo000002"></a>既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する  </dd>
 <dt>File <a class="el" href="fs__utils_8c.html">fs_utils.c</a>  </dt>
-<dd><a class="anchor" id="_todo000014"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
+<dd><a class="anchor" id="_todo000013"></a>ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える </dd>
 <dt>Global <a class="el" href="fs__utils_8c.html#affe6cb5e85b87975b0017d4e05a8a62f">fs_utils_text_file_read</a>  (fs_utils_t *fs_utils_, choco_string_t *out_string_)</dt>
 <dd><a class="anchor" id="_todo000005"></a>失敗時にout_string_を不変にする  </dd>
-<dt>Class <a class="el" href="structline__mesh__shader.html">line_mesh_shader</a>  </dt>
-<dd><a class="anchor" id="_todo000022"></a>TODO: FreeListを使用したバッファ管理 </dd>
 <dt>Class <a class="el" href="structlinear__alloc.html">linear_alloc</a>  </dt>
-<dd><a class="anchor" id="_todo000013"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
+<dd><a class="anchor" id="_todo000012"></a>必要であればメモリトラッキング追加(現状では入れる予定はなし)  </dd>
 <dt>File <a class="el" href="linear__allocator_8h.html">linear_allocator.h</a>  </dt>
 <dd><a class="anchor" id="_todo000004"></a>linear_allocator_reset追加 </dd>
 <dt>File <a class="el" href="lit__mesh__geometry_8c.html">lit_mesh_geometry.c</a>  </dt>
-<dd><a class="anchor" id="_todo000015"></a>カバレッジ改善 </dd>
+<dd><a class="anchor" id="_todo000014"></a>カバレッジ改善 </dd>
 <dt>File <a class="el" href="lit__mesh__shader_8h.html">lit_mesh_shader.h</a>  </dt>
-<dd><a class="anchor" id="_todo000010"></a>ライティング等の実装後、以下をメンテナンスする<ul>
+<dd><a class="anchor" id="_todo000009"></a>ライティング等の実装後、以下をメンテナンスする<ul>
 <li>docs/layer.md</li>
 <li>docs/architecture/systems/renderer_system/renderer_system_ja(en).md </li>
 </ul>
 </dd>
 <dt>File <a class="el" href="platform__glfw_8c.html">platform_glfw.c</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000021"></a>glfwSetErrorCallback </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000020"></a>glfwSetErrorCallback </p>
 <p class="interdd"></p>
 <p class="enddd">glfwSwapInterval </p>
 </dd>
 <dt>File <a class="el" href="point__mesh__geometry_8c.html">point_mesh_geometry.c</a>  </dt>
-<dd><a class="anchor" id="_todo000016"></a>TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる </dd>
+<dd><a class="anchor" id="_todo000015"></a>TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる </dd>
 <dt>File <a class="el" href="point__mesh__geometry_8h.html">point_mesh_geometry.h</a>  </dt>
 <dd><a class="anchor" id="_todo000006"></a>TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる </dd>
-<dt>Class <a class="el" href="structpoint__mesh__shader.html">point_mesh_shader</a>  </dt>
-<dd><a class="anchor" id="_todo000023"></a>TODO: FreeListを使用したバッファ管理 </dd>
-<dt>Global <a class="el" href="renderer__err__utils_8c.html#adfba520127fecd994a5db7f9bf9fcf10">renderer_rslt_convert_fs_utils</a>  (fs_utils_result_t rslt_)</dt>
-<dd><a class="anchor" id="_todo000009"></a>FS_UTILS_FILE_OPEN_ERRORエラーをRUNTIME_ERRORに変換しているが、IO_ERRORを追加してそちらに変更するかを検討する  </dd>
+<dt>Class <a class="el" href="structrange__allocator.html">range_allocator</a>  </dt>
+<dd><a class="anchor" id="_todo000021"></a>Free Blockの最大値としてmax_free_block_sizeを保持する </dd>
 <dt>File <a class="el" href="stl__loader_8c.html">stl_loader.c</a>  </dt>
-<dd><a class="anchor" id="_todo000020"></a>以下を行う<ul>
+<dd><a class="anchor" id="_todo000019"></a>以下を行う<ul>
 <li>GLCEカスタムフォーマットでの出力機能</li>
 <li>カスタムフォーマットが存在する場合はそちらで読み込み、ない場合は通常STLを読み込みカスタムフォーマットファイルを出力 </li>
 </ul>
@@ -159,8 +161,8 @@ $(document).ready(function(){initNavTree('todo.html',''); initResizable(); });
 <p class="interdd"></p>
 <p class="enddd">現状では法線情報が[-1.0...1.0]の範囲に収まっているかをチェックしているが、この範囲に収まっていても長さが非1.0で正規化されていない場合がある。チェックを厳密化する。 </p>
 </dd>
-<dt>Class <a class="el" href="structui__mesh__shader.html">ui_mesh_shader</a>  </dt>
-<dd><a class="anchor" id="_todo000024"></a>TODO: FreeListを使用したバッファ管理</dd>
+<dt>Global <a class="el" href="vbo__manager_8c.html#acfbd7fd9a0a30334327104f32e750038">vbo_manager_is_valid</a>  (const vbo_manager_t *vbo_manager_)</dt>
+<dd><a class="anchor" id="_todo000022"></a>Range Allocatorのvalidation API公開後、本関数の検証範囲および公開API化を再検討する。</dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

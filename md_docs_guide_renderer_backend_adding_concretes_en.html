@@ -135,7 +135,7 @@ Steps to Create concrete_shader.c</h3>
 <p>In the shader concrete module implementation file, implement the following functionality as the <code>Renderer Backend Interface</code> virtual function table (<code>renderer_shader_vtable_t</code>) (<code>xxx</code> is the name of the graphics API).</p>
 <p>When implementing each function, keep the following in mind:</p>
 <ul>
-<li>If memory allocation is required, use <code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code> and <code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code> provided by <code>renderer_core/renderer_memory</code>.</li>
+<li>If memory allocation is required, use <code>renderer_mem_allocate()</code> and <code>renderer_mem_free()</code> provided by <code>renderer_core/renderer_memory</code>.</li>
 <li>For converting result codes to strings and translating lower-layer result codes, use the APIs provided by <code>renderer_core/renderer_err_utils</code>.</li>
 </ul>
 <table class="markdownTable">
@@ -173,7 +173,7 @@ Steps to Create concrete_texture.c</h3>
 <p>In the texture concrete module implementation file, implement the following functionality as the <code>Renderer Backend Interface</code> virtual function table (<code>renderer_texture_vtable_t</code>) (<code>xxx</code> is the name of the graphics API).</p>
 <p>When implementing each function, keep the following in mind:</p>
 <ul>
-<li>If memory allocation is required, use <code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code> and <code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code> provided by <code>renderer_core/renderer_memory</code>.</li>
+<li>If memory allocation is required, use <code>renderer_mem_allocate()</code> and <code>renderer_mem_free()</code> provided by <code>renderer_core/renderer_memory</code>.</li>
 <li>For converting result codes to strings and translating lower-layer result codes, use the APIs provided by <code>renderer_core/renderer_err_utils</code>.</li>
 </ul>
 <table class="markdownTable">
@@ -202,7 +202,7 @@ Steps to Create concrete_vao.c</h3>
 <p>In the VAO concrete module implementation file, implement the following functionality as the <code>Renderer Backend Interface</code> virtual function table (<code>renderer_vao_vtable_t</code>) (<code>xxx</code> is the name of the graphics API).</p>
 <p>When implementing each function, keep the following in mind:</p>
 <ul>
-<li>If memory allocation is required, use <code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code> and <code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code> provided by <code>renderer_core/renderer_memory</code>.</li>
+<li>If memory allocation is required, use <code>renderer_mem_allocate()</code> and <code>renderer_mem_free()</code> provided by <code>renderer_core/renderer_memory</code>.</li>
 <li>For converting result codes to strings and translating lower-layer result codes, use the APIs provided by <code>renderer_core/renderer_err_utils</code>.</li>
 </ul>
 <table class="markdownTable">
@@ -231,7 +231,7 @@ Steps to Create concrete_vbo.c</h3>
 <p>In the VBO concrete module implementation file, implement the following functionality as the <code>Renderer Backend Interface</code> virtual function table (<code>renderer_vbo_vtable_t</code>) (<code>xxx</code> is the name of the graphics API).</p>
 <p>When implementing each function, keep the following in mind:</p>
 <ul>
-<li>If memory allocation is required, use <code><a class="el" href="renderer__memory_8h.html#a1edbb1ba2d666cdc1679083349b010a4" title="memory_system_allocateのラッパーAPI">renderer_mem_allocate()</a></code> and <code><a class="el" href="renderer__memory_8h.html#a0baac607dfd348651a184729625323c8" title="memory_system_freeのラッパーAPI">renderer_mem_free()</a></code> provided by <code>renderer_core/renderer_memory</code>.</li>
+<li>If memory allocation is required, use <code>renderer_mem_allocate()</code> and <code>renderer_mem_free()</code> provided by <code>renderer_core/renderer_memory</code>.</li>
 <li>For converting result codes to strings and translating lower-layer result codes, use the APIs provided by <code>renderer_core/renderer_err_utils</code>.</li>
 </ul>
 <table class="markdownTable">
@@ -255,7 +255,7 @@ Steps to Create concrete_vbo.c</h3>
 </ul>
 <h3><a class="anchor" id="autotoc_md218"></a>
 Specifying the Newly Added Graphics API</h3>
-<p>To use a newly added graphics API, specify the graphics API type in <code><a class="el" href="renderer__backend__context_8h.html#a8cb4953ce74de55f80c5397ce1d38054" title="レンダラーバックエンドのメモリを確保し、初期化を行う">renderer_backend_initialize()</a></code> inside <code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code> (*1).</p>
+<p>To use a newly added graphics API, specify the graphics API type in <code><a class="el" href="renderer__backend__context_8h.html#aa0325c9b57c643ebe3c8eb71980c68d5" title="レンダラーバックエンドのメモリを確保し、初期化を行う">renderer_backend_initialize()</a></code> inside <code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code> (*1).</p>
 <p>*1: In the future, this will be changed so that the graphics API is specified via a build option. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

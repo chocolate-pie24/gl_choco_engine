@@ -1,4 +1,27 @@
 var searchData=
 [
-  ['window_5fevent_5fresize_0',['WINDOW_EVENT_RESIZE',['../window__event_8h.html#acd09aeb6aa1fb9d992b2fddba3d38dcea1ba39d3e72235c6f4f182c3cc5fd5156',1,'window_event.h']]]
+  ['test_5ftexture_5fblue_0',['TEST_TEXTURE_BLUE',['../texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4ab2016bf6bc28218fba79365f924c71c4',1,'texture.c']]],
+  ['test_5ftexture_5fgreen_1',['TEST_TEXTURE_GREEN',['../texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4aa8546ea2b4ed0963c9437f6f3a1aa87a',1,'texture.c']]],
+  ['test_5ftexture_5fred_2',['TEST_TEXTURE_RED',['../texture_8c.html#aef4b875e4ae29bbebe400b5272d4e4d4a4aedffa4b61818d530cf82fa8bb135ef',1,'texture.c']]],
+  ['texture_5fmag_5ffilter_5fconfig_5flinear_3',['TEXTURE_MAG_FILTER_CONFIG_LINEAR',['../renderer__types_8h.html#ad733323df793a74fca596a530fa86f01a12fcf5e86e83c523719c1c16be6ab2b6',1,'renderer_types.h']]],
+  ['texture_5fmag_5ffilter_5fconfig_5fnearest_4',['TEXTURE_MAG_FILTER_CONFIG_NEAREST',['../renderer__types_8h.html#ad733323df793a74fca596a530fa86f01a5ade1290bb4c086fea3c5331dc550a82',1,'renderer_types.h']]],
+  ['texture_5fmin_5ffilter_5fconfig_5flinear_5',['TEXTURE_MIN_FILTER_CONFIG_LINEAR',['../renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8a77c76a02a2684e6f47d991b114d6b79d',1,'renderer_types.h']]],
+  ['texture_5fmin_5ffilter_5fconfig_5fnearest_6',['TEXTURE_MIN_FILTER_CONFIG_NEAREST',['../renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8a10fb429d1cd8ab210c495518422b39e7',1,'renderer_types.h']]],
+  ['texture_5fsystem_5fbad_5foperation_7',['TEXTURE_SYSTEM_BAD_OPERATION',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a977ed2444bdb3e3ae7d7837f8cf4ac73',1,'texture_manager.h']]],
+  ['texture_5fsystem_5fdata_5fcorrupted_8',['TEXTURE_SYSTEM_DATA_CORRUPTED',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a333bccb51fbe33f46991b448d9cd4a17',1,'texture_manager.h']]],
+  ['texture_5fsystem_5ffile_5fclose_5ferror_9',['TEXTURE_SYSTEM_FILE_CLOSE_ERROR',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a07bd52380cda9f5bd4d54284deacf436',1,'texture_manager.h']]],
+  ['texture_5fsystem_5ffile_5fopen_5ferror_10',['TEXTURE_SYSTEM_FILE_OPEN_ERROR',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854acb42e43e2f69cd599d39182561138874',1,'texture_manager.h']]],
+  ['texture_5fsystem_5ffile_5fread_5ferror_11',['TEXTURE_SYSTEM_FILE_READ_ERROR',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a5bad0c1fff723d5434898b6f84df3c36',1,'texture_manager.h']]],
+  ['texture_5fsystem_5finvalid_5fargument_12',['TEXTURE_SYSTEM_INVALID_ARGUMENT',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a0c456203ec92480a7fed9f8983447751',1,'texture_manager.h']]],
+  ['texture_5fsystem_5flimit_5fexceeded_13',['TEXTURE_SYSTEM_LIMIT_EXCEEDED',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a31433fb96e8c868af873d9aad39bfe4d',1,'texture_manager.h']]],
+  ['texture_5fsystem_5fno_5fmemory_14',['TEXTURE_SYSTEM_NO_MEMORY',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a8cf52d04a5483a21b10420f61cb48a9a',1,'texture_manager.h']]],
+  ['texture_5fsystem_5foverflow_15',['TEXTURE_SYSTEM_OVERFLOW',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a50fb91eddcdbf1cd531bf4d029533ebd',1,'texture_manager.h']]],
+  ['texture_5fsystem_5fruntime_5ferror_16',['TEXTURE_SYSTEM_RUNTIME_ERROR',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a5a5c89b9d20d4b0d50920ffab055c78b',1,'texture_manager.h']]],
+  ['texture_5fsystem_5fsuccess_17',['TEXTURE_SYSTEM_SUCCESS',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854ab2443f9160fd375717c7bde998fab226',1,'texture_manager.h']]],
+  ['texture_5fsystem_5fundefined_5ferror_18',['TEXTURE_SYSTEM_UNDEFINED_ERROR',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854a3600b30663f18a49f1b1738afd6d5578',1,'texture_manager.h']]],
+  ['texture_5fsystem_5funsupported_5ffile_19',['TEXTURE_SYSTEM_UNSUPPORTED_FILE',['../texture__manager_8h.html#ade4f01294359491d24db840b05ccb854ae266cb1dd485f50163cf6ef0aab3de1a',1,'texture_manager.h']]],
+  ['texture_5fwrap_5fconfig_5fclamp_5fto_5fborder_20',['TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER',['../renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a4b7d4dbd7d82804f2c2c00de2c9d1307',1,'renderer_types.h']]],
+  ['texture_5fwrap_5fconfig_5fclamp_5fto_5fedge_21',['TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE',['../renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a090377f61a2818d637e36db68edebd0b',1,'renderer_types.h']]],
+  ['texture_5fwrap_5fconfig_5fmirrored_5frepeat_22',['TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT',['../renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a603abe0c5a3697ae38a11815bf16d34d',1,'renderer_types.h']]],
+  ['texture_5fwrap_5fconfig_5frepeat_23',['TEXTURE_WRAP_CONFIG_REPEAT',['../renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322a60b24183f21c91d6f66ad33d040858bc',1,'renderer_types.h']]]
 ];

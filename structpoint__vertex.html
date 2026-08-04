@@ -106,8 +106,9 @@ Collaboration diagram for point_vertex:</div>
 <div class="dyncontent">
 <div class="center"><img src="structpoint__vertex__coll__graph.png" border="0" usemap="#apoint__vertex_coll__map" alt="Collaboration graph"/></div>
 <map name="apoint__vertex_coll__map" id="apoint__vertex_coll__map">
-<area shape="rect" title="ポイント描画用頂点情報構造体" alt="" coords="5,93,109,119"/>
-<area shape="rect" href="structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="28,5,87,31"/>
+<area shape="rect" title="ポイント描画用頂点情報構造体" alt="" coords="27,93,131,119"/>
+<area shape="rect" href="structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="5,5,64,31"/>
+<area shape="rect" href="structvec4u8.html" title="uint8_t型4次元ベクトル定義" alt="" coords="88,5,157,31"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -115,10 +116,30 @@ Collaboration diagram for point_vertex:</div>
 Data Fields</h2></td></tr>
 <tr class="memitem:a829b0b9e793c464452301139fc245bd1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aad7ebebeea1c75c0b10b1b3c9d900840">vec3f_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__vertex.html#a829b0b9e793c464452301139fc245bd1">position</a></td></tr>
 <tr class="separator:a829b0b9e793c464452301139fc245bd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1623aed1699c5ff07ad32be14287ffb9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__vertex.html#a1623aed1699c5ff07ad32be14287ffb9">color</a></td></tr>
+<tr class="separator:a1623aed1699c5ff07ad32be14287ffb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>ポイント描画用頂点情報構造体 </p>
+<dl class="section note"><dt>Note</dt><dd>当初は、colorをMaterial情報として扱い、座標と色をそれぞれ別のVBOで管理する予定だった。 しかし、座標と色を別VBOに格納する場合でも、両者は同一の論理頂点インデックスに配置する必要がある。</dd></dl>
+<p>そのためcolorをMaterial Subsystemで管理すると、 Geometry Pipelineで確保した頂点範囲をMaterial Pipelineへ引き渡し、同じ頂点範囲へ色情報を書き込まなければならない。</p>
+<p>この依存関係はpoint meshに固有であり、ほかのmeshではGeometryとMaterialを独立して管理できる。 mesh種別間でGeometryとMaterialの責務境界を統一し、両Pipelineを不要に依存させないため、pointごとの色情報はpoint_vertex_tに含める。 </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a id="a1623aed1699c5ff07ad32be14287ffb9" name="a1623aed1699c5ff07ad32be14287ffb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1623aed1699c5ff07ad32be14287ffb9">&#9670;&#160;</a></span>color</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="math__types_8h.html#aedd6edad45917e4364917dac3f837029">vec4u8_t</a> point_vertex::color</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>色情報 </p>
+
+</div>
+</div>
 <a id="a829b0b9e793c464452301139fc245bd1" name="a829b0b9e793c464452301139fc245bd1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a829b0b9e793c464452301139fc245bd1">&#9670;&#160;</a></span>position</h2>
 

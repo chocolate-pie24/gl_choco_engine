@@ -6,5 +6,14 @@ var choco__memory_8c =
     [ "memory_system_create", "choco__memory_8c.html#a2cea61704c0f9bfd202130c7ed569e52", null ],
     [ "memory_system_destroy", "choco__memory_8c.html#ae1118adb36e9654346d1e67d540cd7e3", null ],
     [ "memory_system_free", "choco__memory_8c.html#ad1809307ab820a30f8078e2f73bd9a8a", null ],
-    [ "memory_system_report", "choco__memory_8c.html#a3fee6b34093672dbcf70f443b46c348c", null ]
+    [ "memory_system_report", "choco__memory_8c.html#a3fee6b34093672dbcf70f443b46c348c", null ],
+    [ "rslt_to_str", "choco__memory_8c.html#a29f70ccac70f50a940a4e9097c31bf5f", null ],
+    [ "test_malloc", "choco__memory_8c.html#ab6a9be4f1db3b040eb827962c91e7563", null ],
+    [ "s_mem_sys_ptr", "choco__memory_8c.html#a536e6fba8bdd7f6e341d546addacafca", null ],
+    [ "s_rslt_str_bad_operation", "choco__memory_8c.html#a701f3db36b3747bf363e9623f5217775", null ],
+    [ "s_rslt_str_invalid_argument", "choco__memory_8c.html#ad513e1a68ecf78755351532812c75359", null ],
+    [ "s_rslt_str_limit_exceeded", "choco__memory_8c.html#a06bc2987276831378c8d6fafff286031", null ],
+    [ "s_rslt_str_no_memory", "choco__memory_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0", null ],
+    [ "s_rslt_str_success", "choco__memory_8c.html#a9b05c9aea264bb27d264cedaee3422f1", null ],
+    [ "s_rslt_str_undefined_error", "choco__memory_8c.html#a9607c9be9a0515dee65f769e2add8719", null ]
 ];

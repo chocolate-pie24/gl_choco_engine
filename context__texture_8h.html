@@ -101,19 +101,17 @@ $(document).ready(function(){initNavTree('context__texture_8h.html',''); initRes
 <p>renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdint.h&gt;</code><br />
-<code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for context_texture.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="context__texture_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__texture_8h" alt=""/></div>
 <map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__texture_8h" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__context_2context__texture_8h">
-<area shape="rect" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="120,5,321,75"/>
+<area shape="rect" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="92,5,293,75"/>
 <area shape="rect" title=" " alt="" coords="5,137,76,163"/>
-<area shape="rect" title=" " alt="" coords="101,137,183,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="207,123,391,177"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="416,123,617,177"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="101,123,285,177"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="309,123,506,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -136,21 +134,21 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aaaece882e40108af0c8d1fc8f39581fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#aaaece882e40108af0c8d1fc8f39581fa">renderer_backend_texture_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t unit_num_, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> min_filter_config_, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> mag_filter_config_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_s_axis_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_t_axis_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
-<tr class="memdesc:aaaece882e40108af0c8d1fc8f39581fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャGPU側リソース構造体インスタンスのメモリを確保し、テクスチャ設定を行い初期化する  <br /></td></tr>
-<tr class="separator:aaaece882e40108af0c8d1fc8f39581fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab58ec9d091347f345035c3d0f8456afe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#ab58ec9d091347f345035c3d0f8456afe">renderer_backend_texture_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
+<tr class="memitem:abcb4d0b5fc1cef802e2d23082d56582c"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#abcb4d0b5fc1cef802e2d23082d56582c">renderer_backend_texture_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, int32_t unit_num_, <a class="el" href="renderer__types_8h.html#a699d3c5fd910ef871853f0204b8666c8">texture_min_filter_config_t</a> min_filter_config_, <a class="el" href="renderer__types_8h.html#ad733323df793a74fca596a530fa86f01">texture_mag_filter_config_t</a> mag_filter_config_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_s_axis_, <a class="el" href="renderer__types_8h.html#a5aaf98b89847c19419dc638352ed0322">texture_wrap_config_t</a> wrap_config_t_axis_, <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
+<tr class="memdesc:abcb4d0b5fc1cef802e2d23082d56582c"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャGPU側リソース構造体インスタンスのメモリを確保し、テクスチャ設定を行い初期化する  <br /></td></tr>
+<tr class="separator:abcb4d0b5fc1cef802e2d23082d56582c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab58ec9d091347f345035c3d0f8456afe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#ab58ec9d091347f345035c3d0f8456afe">renderer_backend_texture_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **texture_handle_)</td></tr>
 <tr class="memdesc:ab58ec9d091347f345035c3d0f8456afe"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャGPUリソース構造体が保持するリソースを解放し、自身のメモリも解放する  <br /></td></tr>
 <tr class="separator:ab58ec9d091347f345035c3d0f8456afe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d1ac0b82be27c1800eca4f30470ec7c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#a9d1ac0b82be27c1800eca4f30470ec7c">renderer_backend_texture_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
-<tr class="memdesc:a9d1ac0b82be27c1800eca4f30470ec7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャをactiveにし、bindする  <br /></td></tr>
-<tr class="separator:a9d1ac0b82be27c1800eca4f30470ec7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24b7a2cc3f7a7b51fc027f63bf125327"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#a24b7a2cc3f7a7b51fc027f63bf125327">renderer_backend_texture_unbind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
-<tr class="memdesc:a24b7a2cc3f7a7b51fc027f63bf125327"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャをunbindする  <br /></td></tr>
-<tr class="separator:a24b7a2cc3f7a7b51fc027f63bf125327"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c3a23b01883a569fe43f921f5949193"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#a3c3a23b01883a569fe43f921f5949193">renderer_backend_texture_pixel_upload</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t *pixels_)</td></tr>
-<tr class="memdesc:a3c3a23b01883a569fe43f921f5949193"><td class="mdescLeft">&#160;</td><td class="mdescRight">現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する  <br /></td></tr>
-<tr class="separator:a3c3a23b01883a569fe43f921f5949193"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19c0248c553f1a7971094bb3163e6290"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#a19c0248c553f1a7971094bb3163e6290">renderer_backend_texture_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
+<tr class="memdesc:a19c0248c553f1a7971094bb3163e6290"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャをactiveにし、bindする  <br /></td></tr>
+<tr class="separator:a19c0248c553f1a7971094bb3163e6290"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac799a5ceb18361ae846afbb0cc220bc2"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#ac799a5ceb18361ae846afbb0cc220bc2">renderer_backend_texture_unbind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> *texture_handle_)</td></tr>
+<tr class="memdesc:ac799a5ceb18361ae846afbb0cc220bc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャをunbindする  <br /></td></tr>
+<tr class="separator:ac799a5ceb18361ae846afbb0cc220bc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a217e20239f5ff3439aa299265f3a2ca3"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__texture_8h.html#a217e20239f5ff3439aa299265f3a2ca3">renderer_backend_texture_pixel_upload</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t *pixels_)</td></tr>
+<tr class="memdesc:a217e20239f5ff3439aa299265f3a2ca3"><td class="mdescLeft">&#160;</td><td class="mdescRight">現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する  <br /></td></tr>
+<tr class="separator:a217e20239f5ff3439aa299265f3a2ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する </p>
@@ -176,14 +174,14 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a9d1ac0b82be27c1800eca4f30470ec7c" name="a9d1ac0b82be27c1800eca4f30470ec7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d1ac0b82be27c1800eca4f30470ec7c">&#9670;&#160;</a></span>renderer_backend_texture_bind()</h2>
+<a id="a19c0248c553f1a7971094bb3163e6290" name="a19c0248c553f1a7971094bb3163e6290"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19c0248c553f1a7971094bb3163e6290">&#9670;&#160;</a></span>renderer_backend_texture_bind()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_texture_bind </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_texture_bind </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -191,7 +189,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> *&#160;</td>
           <td class="paramname"><em>texture_handle_</em>&#160;</td>
         </tr>
         <tr>
@@ -212,28 +210,28 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>texture_handle_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>texture_handle_内部データ破損 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_DATA_CORRUPTED</td><td>texture_handle_内部データ破損 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="aaaece882e40108af0c8d1fc8f39581fa" name="aaaece882e40108af0c8d1fc8f39581fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaaece882e40108af0c8d1fc8f39581fa">&#9670;&#160;</a></span>renderer_backend_texture_create()</h2>
+<a id="abcb4d0b5fc1cef802e2d23082d56582c" name="abcb4d0b5fc1cef802e2d23082d56582c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcb4d0b5fc1cef802e2d23082d56582c">&#9670;&#160;</a></span>renderer_backend_texture_create()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_texture_create </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_texture_create </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -271,7 +269,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **&#160;</td>
           <td class="paramname"><em>texture_handle_</em>&#160;</td>
         </tr>
         <tr>
@@ -297,7 +295,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>texture_handle_ == NULL</li>
 <li>*texture_handle_ != NULL</li>
@@ -308,14 +306,14 @@ Functions</h2></td></tr>
 <li>unit_num_ &lt; 0 </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>以下のいずれか<ul>
 <li>backend_context_-&gt;texture_vtableがNULLで未初期化</li>
 <li>メモリシステム未初期化 </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
-    <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
@@ -337,7 +335,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **&#160;</td>
           <td class="paramname"><em>texture_handle_</em>&#160;</td>
         </tr>
         <tr>
@@ -362,14 +360,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3c3a23b01883a569fe43f921f5949193" name="a3c3a23b01883a569fe43f921f5949193"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c3a23b01883a569fe43f921f5949193">&#9670;&#160;</a></span>renderer_backend_texture_pixel_upload()</h2>
+<a id="a217e20239f5ff3439aa299265f3a2ca3" name="a217e20239f5ff3439aa299265f3a2ca3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a217e20239f5ff3439aa299265f3a2ca3">&#9670;&#160;</a></span>renderer_backend_texture_pixel_upload()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_texture_pixel_upload </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_texture_pixel_upload </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -421,7 +419,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>pixels_ == NULL</li>
 <li>width_ == 0</li>
@@ -429,22 +427,22 @@ Functions</h2></td></tr>
 <li>channel_count_が3or4以外 </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a24b7a2cc3f7a7b51fc027f63bf125327" name="a24b7a2cc3f7a7b51fc027f63bf125327"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24b7a2cc3f7a7b51fc027f63bf125327">&#9670;&#160;</a></span>renderer_backend_texture_unbind()</h2>
+<a id="ac799a5ceb18361ae846afbb0cc220bc2" name="ac799a5ceb18361ae846afbb0cc220bc2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac799a5ceb18361ae846afbb0cc220bc2">&#9670;&#160;</a></span>renderer_backend_texture_unbind()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_texture_unbind </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_texture_unbind </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -452,7 +450,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> *&#160;</td>
           <td class="paramname"><em>texture_handle_</em>&#160;</td>
         </tr>
         <tr>
@@ -473,14 +471,14 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>texture_handle_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_DATA_CORRUPTED</td><td>texture_handle_内部データ破損 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>backend_context_-&gt;texture_vtableがNULLで未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_DATA_CORRUPTED</td><td>texture_handle_内部データ破損 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>

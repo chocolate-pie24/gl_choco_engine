@@ -1,0 +1,8 @@
+<map id="vertex_buffer_range" name="vertex_buffer_range">
+<area shape="rect" id="node1" title=" " alt="" coords="34,376,187,401"/>
+<area shape="rect" id="node2" href="$structdraw__range.html" title=" " alt="" coords="5,288,104,313"/>
+<area shape="rect" id="node3" href="$structvertex__allocation.html" title="VBO Managerから取得したvertex allocationを表すhandle." alt="" coords="129,288,263,313"/>
+<area shape="rect" id="node4" href="$structrange__allocation.html" title="Range Allocatorから取得したallocationを表すdescriptor." alt="" coords="131,200,261,225"/>
+<area shape="rect" id="node5" href="$structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="135,112,257,137"/>
+<area shape="rect" id="node6" href="$structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="169,7,223,33"/>
+</map>

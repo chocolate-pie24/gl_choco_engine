@@ -92,6 +92,7 @@ $(document).ready(function(){initNavTree('concrete__vbo_8h.html',''); initResiza
 
 <div class="header">
   <div class="summary">
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">concrete_vbo.h File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__renderer.html">Renderer</a></div></div></div>
 </div><!--header-->
@@ -99,22 +100,7 @@ $(document).ready(function(){initNavTree('concrete__vbo_8h.html',''); initResiza
 
 <p>renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="interface__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h</a>&quot;</code><br />
-</div><div class="textblock"><div class="dynheader">
-Include dependency graph for concrete_vbo.h:</div>
-<div class="dyncontent">
-<div class="center"><img src="concrete__vbo_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8h" alt=""/></div>
-<map name="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8h" id="ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8h">
-<area shape="rect" title="renderer backendがVBO機能をOpenGL3.3で実現できるように、renderer_vbo_vtable_tのOpenGL3.3具体実装を提供する" alt="" coords="18,5,230,75"/>
-<area shape="rect" title=" " alt="" coords="5,240,80,265"/>
-<area shape="rect" href="interface__vbo_8h.html" title="VBOモジュールが提供する機能をグラフィックスAPIによって差し替え可能な仮想関数テーブルを提供する" alt="" coords="80,123,333,177"/>
-<area shape="rect" title=" " alt="" coords="105,240,175,265"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="199,225,401,280"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="425,225,609,280"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
+<div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="concrete__vbo_8h__dep__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2renderer__backend_2renderer__backend__concretes_2gl33_2concrete__vbo_8hdep" alt=""/></div>
@@ -126,9 +112,15 @@ This graph shows which files directly or indirectly include this file:</div>
 </div>
 <p><a href="concrete__vbo_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a916ae232d49db491bf3f9813901d63ee"><td class="memItemLeft" align="right" valign="top"><a id="a916ae232d49db491bf3f9813901d63ee" name="a916ae232d49db491bf3f9813901d63ee"></a>
+typedef struct <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>renderer_vbo_vtable_t</b></td></tr>
+<tr class="separator:a916ae232d49db491bf3f9813901d63ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae347d7db0aeed8399f0155c938bd90ea"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8h.html#ae347d7db0aeed8399f0155c938bd90ea">gl33_vbo_vtable_get</a> (void)</td></tr>
+<tr class="memitem:ae347d7db0aeed8399f0155c938bd90ea"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="concrete__vbo_8h.html#ae347d7db0aeed8399f0155c938bd90ea">gl33_vbo_vtable_get</a> (void)</td></tr>
 <tr class="memdesc:ae347d7db0aeed8399f0155c938bd90ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenGL3.3用VBO仮想関数テーブル(vtable)を取得する  <br /></td></tr>
 <tr class="separator:ae347d7db0aeed8399f0155c938bd90ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -147,7 +139,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="interface__vbo_8h.html#a916ae232d49db491bf3f9813901d63ee">renderer_vbo_vtable_t</a> * gl33_vbo_vtable_get </td>
+          <td class="memname">const <a class="el" href="structrenderer__vbo__vtable.html">renderer_vbo_vtable_t</a> * gl33_vbo_vtable_get </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>

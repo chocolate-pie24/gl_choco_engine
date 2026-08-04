@@ -147,6 +147,9 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:aa037ee38615c3861d078bd2ec401b6d2"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stl__loader_8c.html#aa037ee38615c3861d078bd2ec401b6d2">stl_loader_vertex_count_calc</a> (const char *path_, const char *name_, const char *extension_, size_t *out_vertex_count_)</td></tr>
+<tr class="memdesc:aa037ee38615c3861d078bd2ec401b6d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">STLデータのロードに先立ち、頂点数をカウントする  <br /></td></tr>
+<tr class="separator:aa037ee38615c3861d078bd2ec401b6d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6111db151893d7373fdda32b4e43737"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stl__loader_8c.html#ac6111db151893d7373fdda32b4e43737">stl_loader_create</a> (<a class="el" href="stl__loader_8h.html#a06dab6c9d6b52e7270f73e4880966f5a">stl_loader_t</a> **stl_loader_)</td></tr>
 <tr class="memdesc:ac6111db151893d7373fdda32b4e43737"><td class="mdescLeft">&#160;</td><td class="mdescRight">stl_loader_tのメモリを確保し、内部状態を初期化する  <br /></td></tr>
 <tr class="separator:ac6111db151893d7373fdda32b4e43737"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,7 +172,7 @@ Functions</h2></td></tr>
 <p>以下のSTLファイルをサポートする</p><ul>
 <li>ASCII形式のSTL(BINARY形式は将来的にサポート予定)</li>
 <li><p class="startli">ファイルに含まれる法線情報は[-1.0...1.0]の範囲に正規化されていること</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000020">Todo:</a></b></dt><dd>以下を行う</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000019">Todo:</a></b></dt><dd>以下を行う</dd></dl>
 </li>
 </ul>
 <dl class="section version"><dt>Version</dt><dd>0.1 </dd></dl>
@@ -345,6 +348,93 @@ NULL != (*stl_loader_)-&gt;verticesかつ0 == (*stl_loader_)-&gt;vertex_countの
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">stl_loader_</td><td>リソース解放対象stl_loader_t構造体インスタンスへのダブルポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa037ee38615c3861d078bd2ec401b6d2" name="aa037ee38615c3861d078bd2ec401b6d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa037ee38615c3861d078bd2ec401b6d2">&#9670;&#160;</a></span>stl_loader_vertex_count_calc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> stl_loader_vertex_count_calc </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>extension_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>out_vertex_count_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>STLデータのロードに先立ち、頂点数をカウントする </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">path_</td><td>STLファイルが格納されているパス(最後は'/'が入っていること) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name_</td><td>STLファイル名(拡張子は含まない) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">extension_</td><td>STLファイル拡張子('.'で始まること) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_vertex_count_</td><td>頂点数格納先</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">RESOURCE_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+<li>path_ == NULL</li>
+<li>name_ == NULL</li>
+<li>extension_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_OVERFLOW</td><td>以下のいずれか<ul>
+<li>ファイルフルパス文字列が長すぎる</li>
+<li>STLデータに格納されている頂点の数または法線の数がSIZE_MAXを超過 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>以下のいずれか<ul>
+<li>内部データ破損</li>
+<li>STLデータ不整合(頂点数が法線数の3倍ではない) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_UNDEFINED_ERROR</td><td>ファイル読み込み時に不明なエラーが発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RESOURCE_FILE_OPEN_ERROR</td><td>STLファイルオープン失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_RUNTIME_ERROR</td><td>ファイル読み込みでエラー発生 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>

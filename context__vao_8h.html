@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('context__vao_8h.html',''); initResizab
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__types_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for context_vao.h:</div>
 <div class="dyncontent">
@@ -115,7 +115,7 @@ Include dependency graph for context_vao.h:</div>
 <area shape="rect" title=" " alt="" coords="105,137,175,163"/>
 <area shape="rect" title=" " alt="" coords="200,137,283,163"/>
 <area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="307,123,491,177"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="515,123,717,177"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="515,123,712,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -141,21 +141,21 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a072cb436c9ead181bb4a4b7ad90ba9b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a072cb436c9ead181bb4a4b7ad90ba9b2">renderer_backend_vertex_array_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
-<tr class="memdesc:a072cb436c9ead181bb4a4b7ad90ba9b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO内部状態管理構造体インスタンスのメモリを確保する  <br /></td></tr>
-<tr class="separator:a072cb436c9ead181bb4a4b7ad90ba9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0e5e705386cce083e612ee009926e1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#aa0e5e705386cce083e612ee009926e1a">renderer_backend_vertex_array_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memitem:a7a0f179bc07f2cfefd60a3a5f4a094bb"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a7a0f179bc07f2cfefd60a3a5f4a094bb">renderer_backend_vertex_array_create</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
+<tr class="memdesc:a7a0f179bc07f2cfefd60a3a5f4a094bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO内部状態管理構造体インスタンスのメモリを確保する  <br /></td></tr>
+<tr class="separator:a7a0f179bc07f2cfefd60a3a5f4a094bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0e5e705386cce083e612ee009926e1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#aa0e5e705386cce083e612ee009926e1a">renderer_backend_vertex_array_destroy</a> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **vertex_array_)</td></tr>
 <tr class="memdesc:aa0e5e705386cce083e612ee009926e1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAO内部状態管理構造体インスタンスを破棄する  <br /></td></tr>
 <tr class="separator:aa0e5e705386cce083e612ee009926e1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47d1a205c32635d140936edf700671c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a47d1a205c32635d140936edf700671c0">renderer_backend_vertex_array_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
-<tr class="memdesc:a47d1a205c32635d140936edf700671c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをbindする  <br /></td></tr>
-<tr class="separator:a47d1a205c32635d140936edf700671c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3b858d9c46214a8597df2f604b17309"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#ab3b858d9c46214a8597df2f604b17309">renderer_backend_vertex_array_unbind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
-<tr class="memdesc:ab3b858d9c46214a8597df2f604b17309"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをunbindする  <br /></td></tr>
-<tr class="separator:ab3b858d9c46214a8597df2f604b17309"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a96da05021eafd09d85b7fd2b99f0f3cc">renderer_backend_vertex_array_attribute_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
-<tr class="memdesc:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する  <br /></td></tr>
-<tr class="separator:a96da05021eafd09d85b7fd2b99f0f3cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbb8f07725af94b634d9413c4217c3b2"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#adbb8f07725af94b634d9413c4217c3b2">renderer_backend_vertex_array_bind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> *vertex_array_)</td></tr>
+<tr class="memdesc:adbb8f07725af94b634d9413c4217c3b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをbindする  <br /></td></tr>
+<tr class="separator:adbb8f07725af94b634d9413c4217c3b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c570b1e97804e8fe0057077d1f1d793"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a9c570b1e97804e8fe0057077d1f1d793">renderer_backend_vertex_array_unbind</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_)</td></tr>
+<tr class="memdesc:a9c570b1e97804e8fe0057077d1f1d793"><td class="mdescLeft">&#160;</td><td class="mdescRight">VAOをunbindする  <br /></td></tr>
+<tr class="separator:a9c570b1e97804e8fe0057077d1f1d793"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5969505fff581d0e4f8a64f8a007ee55"><td class="memItemLeft" align="right" valign="top">renderer_backend_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="context__vao_8h.html#a5969505fff581d0e4f8a64f8a007ee55">renderer_backend_vertex_array_attribute_set</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, uint32_t layout_, int32_t size_, <a class="el" href="renderer__types_8h.html#aa882e2da16d8acaccf55892267d48440">renderer_type_t</a> type_, bool normalized_, size_t stride_, size_t offset_)</td></tr>
+<tr class="memdesc:a5969505fff581d0e4f8a64f8a007ee55"><td class="mdescLeft">&#160;</td><td class="mdescRight">現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する  <br /></td></tr>
+<tr class="separator:a5969505fff581d0e4f8a64f8a007ee55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>renderer_backendが保有するVAO機能の窓口を上位層に提供する </p>
@@ -181,14 +181,14 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a96da05021eafd09d85b7fd2b99f0f3cc" name="a96da05021eafd09d85b7fd2b99f0f3cc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96da05021eafd09d85b7fd2b99f0f3cc">&#9670;&#160;</a></span>renderer_backend_vertex_array_attribute_set()</h2>
+<a id="a5969505fff581d0e4f8a64f8a007ee55" name="a5969505fff581d0e4f8a64f8a007ee55"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5969505fff581d0e4f8a64f8a007ee55">&#9670;&#160;</a></span>renderer_backend_vertex_array_attribute_set()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_attribute_set </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_vertex_array_attribute_set </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -267,24 +267,24 @@ Functions</h2></td></tr>
 <div class="line">);</div>
 </div><!-- fragment --><dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_RUNTIME_ERROR</td><td>type_の値が既定値外 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_RUNTIME_ERROR</td><td>type_の値が既定値外 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a47d1a205c32635d140936edf700671c0" name="a47d1a205c32635d140936edf700671c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47d1a205c32635d140936edf700671c0">&#9670;&#160;</a></span>renderer_backend_vertex_array_bind()</h2>
+<a id="adbb8f07725af94b634d9413c4217c3b2" name="adbb8f07725af94b634d9413c4217c3b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbb8f07725af94b634d9413c4217c3b2">&#9670;&#160;</a></span>renderer_backend_vertex_array_bind()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_bind </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_vertex_array_bind </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -292,7 +292,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> *&#160;</td>
           <td class="paramname"><em>vertex_array_</em>&#160;</td>
         </tr>
         <tr>
@@ -313,31 +313,31 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>vertex_array_ == NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>以下のいずれか<ul>
 <li>backend_context_-&gt;vao_vtable == NULL</li>
 <li>VAOが未初期化 </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a072cb436c9ead181bb4a4b7ad90ba9b2" name="a072cb436c9ead181bb4a4b7ad90ba9b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a072cb436c9ead181bb4a4b7ad90ba9b2">&#9670;&#160;</a></span>renderer_backend_vertex_array_create()</h2>
+<a id="a7a0f179bc07f2cfefd60a3a5f4a094bb" name="a7a0f179bc07f2cfefd60a3a5f4a094bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a0f179bc07f2cfefd60a3a5f4a094bb">&#9670;&#160;</a></span>renderer_backend_vertex_array_create()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_create </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_vertex_array_create </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em>, </td>
@@ -345,7 +345,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **&#160;</td>
           <td class="paramname"><em>vertex_array_</em>&#160;</td>
         </tr>
         <tr>
@@ -371,16 +371,16 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>以下のいずれか<ul>
 <li>backend_context_ == NULL</li>
 <li>vertex_array_ == NULL</li>
 <li>*vertex_array_ != NULL </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">RENDERER_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
-    <tr><td class="paramname">RENDERER_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限を超過 </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_LIMIT_EXCEEDED</td><td>メモリ管理システムのシステム使用可能範囲上限を超過 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>メモリシステム未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>
@@ -402,7 +402,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#abf6e156321ad8df166a186da839fa61b">renderer_backend_vao_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__vao.html">renderer_backend_vao_t</a> **&#160;</td>
           <td class="paramname"><em>vertex_array_</em>&#160;</td>
         </tr>
         <tr>
@@ -430,14 +430,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab3b858d9c46214a8597df2f604b17309" name="ab3b858d9c46214a8597df2f604b17309"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3b858d9c46214a8597df2f604b17309">&#9670;&#160;</a></span>renderer_backend_vertex_array_unbind()</h2>
+<a id="a9c570b1e97804e8fe0057077d1f1d793" name="a9c570b1e97804e8fe0057077d1f1d793"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c570b1e97804e8fe0057077d1f1d793">&#9670;&#160;</a></span>renderer_backend_vertex_array_unbind()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="renderer__types_8h.html#ad92ac5e342b05a1be13e789f38f6a1d9">renderer_result_t</a> renderer_backend_vertex_array_unbind </td>
+          <td class="memname">renderer_backend_result_t renderer_backend_vertex_array_unbind </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *&#160;</td>
           <td class="paramname"><em>backend_context_</em></td><td>)</td>
@@ -455,9 +455,9 @@ Functions</h2></td></tr>
 </dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">RENDERER_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
-    <tr><td class="paramname">RENDERER_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
-    <tr><td class="paramname">RENDERER_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_INVALID_ARGUMENT</td><td>backend_context_ == NULL </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_BAD_OPERATION</td><td>backend_context_が未初期化 </td></tr>
+    <tr><td class="paramname">RENDERER_BACKEND_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
   </table>
   </dd>
 </dl>

@@ -102,15 +102,16 @@ $(document).ready(function(){initNavTree('lit__mesh__geometry__pipeline_8c.html'
 <div class="textblock"><code>#include &quot;<a class="el" href="lit__mesh__geometry__pipeline_8h_source.html">engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry_pipeline.h</a>&quot;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
+<code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="resource__types_8h_source.html">engine/resource/resource_core/resource_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="stl__loader_8h_source.html">engine/resource/loaders/stl_loader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="lit__mesh__geometry_8h_source.html">engine/resource/geometry/lit_mesh_geometry.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="lit__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="resource__registry__types_8h_source.html">engine/systems/renderer/resource_registries/core/resource_registry_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="lit__mesh__geometry__registry_8h_source.html">engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h</a>&quot;</code><br />
@@ -121,28 +122,31 @@ Include dependency graph for lit_mesh_geometry_pipeline.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="lit__mesh__geometry__pipeline_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2resource__pipelines_2geometries_2lit__mesh__geometry__pipeline_8c" alt=""/></div>
 <map name="asrc_2engine_2systems_2renderer_2resource__pipelines_2geometries_2lit__mesh__geometry__pipeline_8c" id="asrc_2engine_2systems_2renderer_2resource__pipelines_2geometries_2lit__mesh__geometry__pipeline_8c">
-<area shape="rect" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1209,5,1439,75"/>
-<area shape="rect" href="lit__mesh__geometry__pipeline_8h.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="2280,130,2507,185"/>
-<area shape="rect" title=" " alt="" coords="1783,431,1854,456"/>
-<area shape="rect" href="resource__pipeline__types_8h_source.html" title=" " alt="" coords="2201,240,2397,295"/>
-<area shape="rect" title=" " alt="" coords="609,255,692,280"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="167,145,377,170"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="197,255,336,280"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="5,247,163,287"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="402,137,582,177"/>
-<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="1179,247,1365,287"/>
-<area shape="rect" href="stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="889,137,1068,177"/>
-<area shape="rect" href="lit__mesh__geometry_8h.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="1093,137,1286,177"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1695,240,1879,295"/>
-<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1614,123,1815,192"/>
-<area shape="rect" href="lit__mesh__shader_8h.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="658,130,865,185"/>
-<area shape="rect" href="resource__registry__types_8h.html" title="resource_registries全体で使用されるデータ型を提供する" alt="" coords="1903,240,2097,295"/>
-<area shape="rect" href="lit__mesh__geometry__registry_8h.html" title="単色ライティング描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する" alt="" coords="1362,130,1590,185"/>
-<area shape="rect" href="resource__pipeline__err__utils_8h_source.html" title=" " alt="" coords="1891,130,2104,185"/>
-<area shape="rect" title=" " alt="" coords="759,350,833,375"/>
-<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="900,247,1065,287"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="891,343,1075,383"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1513,247,1671,287"/>
+<area shape="rect" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="1153,5,1383,75"/>
+<area shape="rect" href="lit__mesh__geometry__pipeline_8h.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="5,123,232,177"/>
+<area shape="rect" title=" " alt="" coords="331,453,402,478"/>
+<area shape="rect" href="resource__pipeline__types_8h_source.html" title=" " alt="" coords="86,225,282,280"/>
+<area shape="rect" title=" " alt="" coords="1769,453,1852,478"/>
+<area shape="rect" title=" " alt="" coords="1621,548,1696,573"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1877,137,2088,163"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1899,240,2037,265"/>
+<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="357,233,523,273"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="2368,335,2525,375"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="2163,335,2343,375"/>
+<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="648,233,835,273"/>
+<area shape="rect" href="stl__loader_8h.html" title="STLファイルのロード処理を行うAPIの定義" alt="" coords="471,130,649,170"/>
+<area shape="rect" href="lit__mesh__geometry_8h.html" title="lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの定義" alt="" coords="674,130,867,170"/>
+<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="1081,225,1301,280"/>
+<area shape="rect" href="lit__mesh__shader_8h.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="1235,123,1442,177"/>
+<area shape="rect" href="resource__registry__types_8h.html" title="resource_registries全体で使用されるデータ型を提供する" alt="" coords="1477,225,1672,280"/>
+<area shape="rect" href="lit__mesh__geometry__registry_8h.html" title="単色ライティング描画用ジオメトリの複製と、対応するGPU頂点バッファ上の配置情報をIDで管理するレジストリAPIを提供する" alt="" coords="1523,123,1751,177"/>
+<area shape="rect" href="resource__pipeline__err__utils_8h_source.html" title=" " alt="" coords="945,123,1159,177"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="339,335,523,375"/>
+<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="1203,328,1402,383"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1211,438,1395,493"/>
+<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="1003,438,1187,493"/>
+<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="1419,431,1621,500"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="859,225,1056,280"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -151,9 +155,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a061fe3eb706f5f372b037a29f161f3d5"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lit__mesh__geometry__pipeline_8c.html#a061fe3eb706f5f372b037a29f161f3d5">lit_mesh_geometry_pipeline_import_from_file</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *shader_, <a class="el" href="lit__mesh__geometry__pipeline_8h.html#a1ffba5f00584c14b783278b9808bbc47">lit_mesh_geometry_registry_t</a> *geometry_registry_, const char *path_, const char *name_, const char *extension_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a061fe3eb706f5f372b037a29f161f3d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">単色ライティング描画用ジオメトリアセットファイルをロードし、ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a061fe3eb706f5f372b037a29f161f3d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a768334f1ca23efe2bfd363b7a50ee69e"><td class="memItemLeft" align="right" valign="top"><a id="a768334f1ca23efe2bfd363b7a50ee69e" name="a768334f1ca23efe2bfd363b7a50ee69e"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>lit_mesh_geometry_pipeline_release</b> (int16_t geometry_id_)</td></tr>
-<tr class="separator:a768334f1ca23efe2bfd363b7a50ee69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78de41bded4fe79b4f1c2e660843376d"><td class="memItemLeft" align="right" valign="top"><a id="a78de41bded4fe79b4f1c2e660843376d" name="a78de41bded4fe79b4f1c2e660843376d"></a>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>lit_mesh_geometry_pipeline_release</b> (<a class="el" href="lit__mesh__shader_8h.html#a3528e46fca89fa2d11c6493063c92114">lit_mesh_shader_t</a> *shader_, <a class="el" href="lit__mesh__geometry__pipeline_8h.html#a1ffba5f00584c14b783278b9808bbc47">lit_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+<tr class="separator:a78de41bded4fe79b4f1c2e660843376d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装 </p>

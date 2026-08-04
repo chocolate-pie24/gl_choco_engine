@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('texture__manager_8c.html',''); initRes
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">texture_manager.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__systems.html">Systems</a> &raquo; <a class="el" href="group__texture__system.html">Texture System</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -108,12 +109,13 @@ $(document).ready(function(){initNavTree('texture__manager_8c.html',''); initRes
 <code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="linear__allocator_8h_source.html">engine/core/memory/linear_allocator.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="linear__allocator_8h_source.html">engine/core/memory/linear_allocator.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="resource__types_8h_source.html">engine/resource/resource_core/resource_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="texture_8h_source.html">engine/resource/texture/texture.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderer__backend__context_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__texture_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -121,24 +123,24 @@ Include dependency graph for texture_manager.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="texture__manager_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2texture__system_2texture__manager_8c" alt=""/></div>
 <map name="asrc_2engine_2systems_2texture__system_2texture__manager_8c" id="asrc_2engine_2systems_2texture__system_2texture__manager_8c">
-<area shape="rect" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="780,5,959,60"/>
-<area shape="rect" href="texture__manager_8h.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI定義" alt="" coords="838,123,1042,163"/>
-<area shape="rect" title=" " alt="" coords="1024,240,1094,265"/>
-<area shape="rect" title=" " alt="" coords="574,328,648,353"/>
-<area shape="rect" title=" " alt="" coords="325,130,396,155"/>
-<area shape="rect" title=" " alt="" coords="420,130,506,155"/>
-<area shape="rect" title=" " alt="" coords="759,240,842,265"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="39,130,250,155"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="200,240,339,265"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="1606,233,1763,273"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="468,233,626,273"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="582,123,762,163"/>
-<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="1395,233,1582,273"/>
-<area shape="rect" href="texture_8h.html" title="テクスチャCPU側リソースを操作するモジュールAPIの定義" alt="" coords="1344,123,1521,163"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1787,225,1971,280"/>
-<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1648,108,1849,177"/>
-<area shape="rect" href="context__texture_8h.html" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="1118,108,1320,177"/>
-<area shape="rect" href="renderer__backend__types_8h.html" title="renderer_backend内で共通して使用するデータ構造を提供する" alt="" coords="1118,225,1320,280"/>
+<area shape="rect" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="953,5,1131,60"/>
+<area shape="rect" href="texture__manager_8h.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI定義" alt="" coords="236,123,440,163"/>
+<area shape="rect" title=" " alt="" coords="715,240,785,265"/>
+<area shape="rect" title=" " alt="" coords="937,240,1011,265"/>
+<area shape="rect" title=" " alt="" coords="464,130,535,155"/>
+<area shape="rect" title=" " alt="" coords="559,130,645,155"/>
+<area shape="rect" title=" " alt="" coords="17,240,99,265"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1387,130,1598,155"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1494,240,1633,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1155,123,1313,163"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="721,123,878,163"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="32,123,212,163"/>
+<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="1166,233,1353,273"/>
+<area shape="rect" href="texture_8h.html" title="テクスチャCPU側リソースを操作するモジュールAPIの定義" alt="" coords="953,123,1131,163"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1782,225,1966,280"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1990,225,2187,280"/>
+<area shape="rect" href="renderer__backend__context_8h.html" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="1951,108,2152,177"/>
+<area shape="rect" href="context__texture_8h.html" title="renderer_backendが保有するテクスチャ操作機能の窓口を上位層に提供する" alt="" coords="1673,108,1875,177"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -150,6 +152,18 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a658ebc69254d7e8d945925204128405b"><td class="memItemLeft" align="right" valign="top"><a id="a658ebc69254d7e8d945925204128405b" name="a658ebc69254d7e8d945925204128405b"></a>
+static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>tex_sys_rslt_to_str</b> (<a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a> rslt_)</td></tr>
+<tr class="separator:a658ebc69254d7e8d945925204128405b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a045ff25a37690a149ddac4965f1590c0"><td class="memItemLeft" align="right" valign="top"><a id="a045ff25a37690a149ddac4965f1590c0" name="a045ff25a37690a149ddac4965f1590c0"></a>
+static <a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tex_sys_rslt_convert_linear_alloc</b> (<a class="el" href="linear__allocator_8h.html#a58cc84fc7972203307a7e4b2e7f3a9a6">linear_allocator_result_t</a> rslt_)</td></tr>
+<tr class="separator:a045ff25a37690a149ddac4965f1590c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28685087275aa708dde6bd23202ff9ea"><td class="memItemLeft" align="right" valign="top"><a id="a28685087275aa708dde6bd23202ff9ea" name="a28685087275aa708dde6bd23202ff9ea"></a>
+static <a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tex_sys_rslt_convert_renderer_backend</b> (renderer_backend_result_t rslt_)</td></tr>
+<tr class="separator:a28685087275aa708dde6bd23202ff9ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d41c5a00014891379d96a71c176f4df"><td class="memItemLeft" align="right" valign="top"><a id="a5d41c5a00014891379d96a71c176f4df" name="a5d41c5a00014891379d96a71c176f4df"></a>
+static <a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tex_sys_rslt_convert_resource</b> (<a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> rslt_)</td></tr>
+<tr class="separator:a5d41c5a00014891379d96a71c176f4df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#af15d5a309afbf65d0ca63ba86cbe1fa5">texture_manager_initialize</a> (int16_t max_texture_count_, <a class="el" href="linear__allocator_8h.html#afa4e1278ebfe77080fc395b27f1b38ec">linear_alloc_t</a> *allocator_, <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> **out_texture_manager_)</td></tr>
 <tr class="memdesc:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャ管理システムのメモリを確保し、テクスチャリソース(CPU / GPU)配列の要素を全てNULLで初期化する  <br /></td></tr>
 <tr class="separator:af15d5a309afbf65d0ca63ba86cbe1fa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -168,12 +182,41 @@ Functions</h2></td></tr>
 <tr class="memitem:a1a3b56ba0ddd6508d9df41345270ae11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a1a3b56ba0ddd6508d9df41345270ae11">texture_manager_texture_id_get</a> (const char *name_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, int16_t *out_texture_id_)</td></tr>
 <tr class="memdesc:a1a3b56ba0ddd6508d9df41345270ae11"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ名称に対応するテクスチャ識別子を取得する  <br /></td></tr>
 <tr class="separator:a1a3b56ba0ddd6508d9df41345270ae11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a14cdb9945399cc8feb0cc221045f1fe2">texture_manager_gpu_resource_get</a> (int16_t texture_id_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
+<tr class="memitem:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a14cdb9945399cc8feb0cc221045f1fe2">texture_manager_gpu_resource_get</a> (int16_t texture_id_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
 <tr class="memdesc:a14cdb9945399cc8feb0cc221045f1fe2"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ識別子を指定してGPUリソースを取得する  <br /></td></tr>
 <tr class="separator:a14cdb9945399cc8feb0cc221045f1fe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a06ad4ac2582bf71eebfd874ee8fec198">texture_manager_gpu_resource_get_by_name</a> (const char *name_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
+<tr class="memitem:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture__manager_8h.html#ade4f01294359491d24db840b05ccb854">texture_system_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a06ad4ac2582bf71eebfd874ee8fec198">texture_manager_gpu_resource_get_by_name</a> (const char *name_, const <a class="el" href="texture__manager_8h.html#a12fd0af4283249643448cff6442e2cf5">texture_manager_t</a> *texture_manager_, <a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **out_gpu_resource_)</td></tr>
 <tr class="memdesc:a06ad4ac2582bf71eebfd874ee8fec198"><td class="mdescLeft">&#160;</td><td class="mdescRight">テクスチャリソース管理システムからテクスチャ名称を指定してGPUリソースを取得する  <br /></td></tr>
 <tr class="separator:a06ad4ac2582bf71eebfd874ee8fec198"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
+<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
+<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af80cea0f3487047ba34d8b89614ddbc1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#af80cea0f3487047ba34d8b89614ddbc1">s_rslt_str_runtime_error</a> = &quot;RUNTIME_ERROR&quot;</td></tr>
+<tr class="separator:af80cea0f3487047ba34d8b89614ddbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
+<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751">s_rslt_str_data_corrupted</a> = &quot;DATA_CORRUPTED&quot;</td></tr>
+<tr class="separator:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a701f3db36b3747bf363e9623f5217775"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a701f3db36b3747bf363e9623f5217775">s_rslt_str_bad_operation</a> = &quot;BAD_OPERATION&quot;</td></tr>
+<tr class="separator:a701f3db36b3747bf363e9623f5217775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1">s_rslt_str_overflow</a> = &quot;OVERFLOW&quot;</td></tr>
+<tr class="separator:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bc2987276831378c8d6fafff286031"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a06bc2987276831378c8d6fafff286031">s_rslt_str_limit_exceeded</a> = &quot;LIMIT_EXCEEDED&quot;</td></tr>
+<tr class="separator:a06bc2987276831378c8d6fafff286031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3196151bfc25d711ce8b8fb2b62ff8f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#ad3196151bfc25d711ce8b8fb2b62ff8f">s_rslt_str_file_open_error</a> = &quot;FILE_OPEN_ERROR&quot;</td></tr>
+<tr class="separator:ad3196151bfc25d711ce8b8fb2b62ff8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f6594ca394e0eb2537d65b22529d18e"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a6f6594ca394e0eb2537d65b22529d18e">s_rslt_str_file_close_error</a> = &quot;FILE_CLOSE_ERROR&quot;</td></tr>
+<tr class="separator:a6f6594ca394e0eb2537d65b22529d18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04fb5618dc2fd94129efd029d5e59ac4"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a04fb5618dc2fd94129efd029d5e59ac4">s_rslt_str_file_read_error</a> = &quot;FILE_READ_ERROR&quot;</td></tr>
+<tr class="separator:a04fb5618dc2fd94129efd029d5e59ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e21970fffa713e874acd7237c1e13b3"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a1e21970fffa713e874acd7237c1e13b3">s_rslt_str_unsupported_file</a> = &quot;UNSUPPORTED_FILE&quot;</td></tr>
+<tr class="separator:a1e21970fffa713e874acd7237c1e13b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9607c9be9a0515dee65f769e2add8719"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="texture__manager_8c.html#a9607c9be9a0515dee65f769e2add8719">s_rslt_str_undefined_error</a> = &quot;UNDEFINED_ERROR&quot;</td></tr>
+<tr class="separator:a9607c9be9a0515dee65f769e2add8719"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装 </p>
@@ -249,7 +292,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **&#160;</td>
           <td class="paramname"><em>out_gpu_resource_</em>&#160;</td>
         </tr>
         <tr>
@@ -312,7 +355,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="renderer__backend__types_8h.html#a402991623d5475006eb635ebe3107b61">renderer_backend_texture_t</a> **&#160;</td>
+          <td class="paramtype"><a class="el" href="structrenderer__backend__texture.html">renderer_backend_texture_t</a> **&#160;</td>
           <td class="paramname"><em>out_gpu_resource_</em>&#160;</td>
         </tr>
         <tr>
@@ -696,6 +739,306 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a701f3db36b3747bf363e9623f5217775" name="a701f3db36b3747bf363e9623f5217775"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a701f3db36b3747bf363e9623f5217775">&#9670;&#160;</a></span>s_rslt_str_bad_operation</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_bad_operation = &quot;BAD_OPERATION&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_BAD_OPERATIONの文字列 </p>
+
+</div>
+</div>
+<a id="a1b07d043f967f7fbfad5cb49c6ebb751" name="a1b07d043f967f7fbfad5cb49c6ebb751"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b07d043f967f7fbfad5cb49c6ebb751">&#9670;&#160;</a></span>s_rslt_str_data_corrupted</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_data_corrupted = &quot;DATA_CORRUPTED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_DATA_CORRUPTEDの文字列 </p>
+
+</div>
+</div>
+<a id="a6f6594ca394e0eb2537d65b22529d18e" name="a6f6594ca394e0eb2537d65b22529d18e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f6594ca394e0eb2537d65b22529d18e">&#9670;&#160;</a></span>s_rslt_str_file_close_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_file_close_error = &quot;FILE_CLOSE_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_FILE_CLOSE_ERRORの文字列 </p>
+
+</div>
+</div>
+<a id="ad3196151bfc25d711ce8b8fb2b62ff8f" name="ad3196151bfc25d711ce8b8fb2b62ff8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3196151bfc25d711ce8b8fb2b62ff8f">&#9670;&#160;</a></span>s_rslt_str_file_open_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_file_open_error = &quot;FILE_OPEN_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_FILE_OPEN_ERRORの文字列 </p>
+
+</div>
+</div>
+<a id="a04fb5618dc2fd94129efd029d5e59ac4" name="a04fb5618dc2fd94129efd029d5e59ac4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a04fb5618dc2fd94129efd029d5e59ac4">&#9670;&#160;</a></span>s_rslt_str_file_read_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_file_read_error = &quot;FILE_READ_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_FILE_READ_ERRORの文字列 </p>
+
+</div>
+</div>
+<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_INVALID_ARGUMENTの文字列 </p>
+
+</div>
+</div>
+<a id="a06bc2987276831378c8d6fafff286031" name="a06bc2987276831378c8d6fafff286031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bc2987276831378c8d6fafff286031">&#9670;&#160;</a></span>s_rslt_str_limit_exceeded</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_limit_exceeded = &quot;LIMIT_EXCEEDED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_LIMIT_EXCEEDEDの文字列 </p>
+
+</div>
+</div>
+<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_NO_MEMORYの文字列 </p>
+
+</div>
+</div>
+<a id="a6ad7c5d6169cb4bce8fe50622979bfa1" name="a6ad7c5d6169cb4bce8fe50622979bfa1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad7c5d6169cb4bce8fe50622979bfa1">&#9670;&#160;</a></span>s_rslt_str_overflow</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_overflow = &quot;OVERFLOW&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_OVERFLOWの文字列 </p>
+
+</div>
+</div>
+<a id="af80cea0f3487047ba34d8b89614ddbc1" name="af80cea0f3487047ba34d8b89614ddbc1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af80cea0f3487047ba34d8b89614ddbc1">&#9670;&#160;</a></span>s_rslt_str_runtime_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_runtime_error = &quot;RUNTIME_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_RUNTIME_ERRORの文字列 </p>
+
+</div>
+</div>
+<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_SUCCESSの文字列 </p>
+
+</div>
+</div>
+<a id="a9607c9be9a0515dee65f769e2add8719" name="a9607c9be9a0515dee65f769e2add8719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9607c9be9a0515dee65f769e2add8719">&#9670;&#160;</a></span>s_rslt_str_undefined_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_undefined_error = &quot;UNDEFINED_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_UNDEFINED_ERRORの文字列 </p>
+
+</div>
+</div>
+<a id="a1e21970fffa713e874acd7237c1e13b3" name="a1e21970fffa713e874acd7237c1e13b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e21970fffa713e874acd7237c1e13b3">&#9670;&#160;</a></span>s_rslt_str_unsupported_file</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_unsupported_file = &quot;UNSUPPORTED_FILE&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード: TEXTURE_SYSTEM_UNSUPPORTED_FILEの文字列 </p>
 
 </div>
 </div>

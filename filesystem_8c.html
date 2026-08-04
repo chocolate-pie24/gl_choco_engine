@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('filesystem_8c.html',''); initResizable
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">filesystem.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__core.html">Core</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -131,6 +132,27 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a12a695584fef076b91ccb43b826fe095"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a12a695584fef076b91ccb43b826fe095">rslt_to_str</a> (<a class="el" href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:a12a695584fef076b91ccb43b826fe095"><td class="mdescLeft">&#160;</td><td class="mdescRight">filesystemモジュール実行結果コードを文字列に変換する  <br /></td></tr>
+<tr class="separator:a12a695584fef076b91ccb43b826fe095"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e1115c277ed217c56477ec9a15f4840"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a2e1115c277ed217c56477ec9a15f4840">open_mode_readable</a> (<a class="el" href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3">filesystem_open_mode_t</a> mode_)</td></tr>
+<tr class="memdesc:a2e1115c277ed217c56477ec9a15f4840"><td class="mdescLeft">&#160;</td><td class="mdescRight">mode_がREAD可能なファイルオープンモードかを判定する  <br /></td></tr>
+<tr class="separator:a2e1115c277ed217c56477ec9a15f4840"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a98c3f7eedda0e223f9a943fd1d17fd"><td class="memItemLeft" align="right" valign="top">static FILE *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a3a98c3f7eedda0e223f9a943fd1d17fd">mock_fopen</a> (const char *fullpath_, const char *mode_)</td></tr>
+<tr class="memdesc:a3a98c3f7eedda0e223f9a943fd1d17fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">fopenのモック関数で、fopenの実行結果をテスト設定に合わせて制御する  <br /></td></tr>
+<tr class="separator:a3a98c3f7eedda0e223f9a943fd1d17fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1971347aeda99449319da990bdc68f50"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a1971347aeda99449319da990bdc68f50">mock_fclose</a> (FILE *stream_)</td></tr>
+<tr class="memdesc:a1971347aeda99449319da990bdc68f50"><td class="mdescLeft">&#160;</td><td class="mdescRight">fcloseのモック関数で、fcloseの実行結果をテスト設定に合わせて制御する  <br /></td></tr>
+<tr class="separator:a1971347aeda99449319da990bdc68f50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c646c986b6c4bccbce7f5f2201a2539"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a8c646c986b6c4bccbce7f5f2201a2539">mock_fread</a> (void *ptr_, size_t size_, size_t nmemb_, FILE *stream_)</td></tr>
+<tr class="memdesc:a8c646c986b6c4bccbce7f5f2201a2539"><td class="mdescLeft">&#160;</td><td class="mdescRight">freadのモック関数で、freadの実行結果をテスト設定に合わせて制御する  <br /></td></tr>
+<tr class="separator:a8c646c986b6c4bccbce7f5f2201a2539"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc82173659f320014dedea4ca97b256e"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#afc82173659f320014dedea4ca97b256e">mock_ferror</a> (FILE *stream_)</td></tr>
+<tr class="memdesc:afc82173659f320014dedea4ca97b256e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ferrorのモック関数で、ferrorの実行結果をテスト設定に合わせて制御する  <br /></td></tr>
+<tr class="separator:afc82173659f320014dedea4ca97b256e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7f3461e452d697849665d01565d0853"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ab7f3461e452d697849665d01565d0853">mock_feof</a> (FILE *stream_)</td></tr>
+<tr class="memdesc:ab7f3461e452d697849665d01565d0853"><td class="mdescLeft">&#160;</td><td class="mdescRight">feofのモック関数で、feofの実行結果をテスト設定に合わせて制御する  <br /></td></tr>
+<tr class="separator:ab7f3461e452d697849665d01565d0853"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5799a36131defb3b2effc3388fa410b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#af5799a36131defb3b2effc3388fa410b">filesystem_create</a> (<a class="el" href="filesystem_8h.html#ad16024c6aa37d328b78a38f8c006ac83">filesystem_t</a> **filesystem_)</td></tr>
 <tr class="memdesc:af5799a36131defb3b2effc3388fa410b"><td class="mdescLeft">&#160;</td><td class="mdescRight">filesystem_t構造体インスタンスを生成し、初期化する  <br /></td></tr>
 <tr class="separator:af5799a36131defb3b2effc3388fa410b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,6 +171,53 @@ Functions</h2></td></tr>
 <tr class="memitem:a4317c409d8901cc3c1d9a5e24f0c978e"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a4317c409d8901cc3c1d9a5e24f0c978e">filesystem_open_mode_c_str</a> (<a class="el" href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3">filesystem_open_mode_t</a> mode_)</td></tr>
 <tr class="memdesc:a4317c409d8901cc3c1d9a5e24f0c978e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ファイルオープンモードを文字列に変換する  <br /></td></tr>
 <tr class="separator:a4317c409d8901cc3c1d9a5e24f0c978e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a0334f62872200ab7e54ab4670cae9c9d"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a0334f62872200ab7e54ab4670cae9c9d">s_open_mode_read</a> = &quot;r&quot;</td></tr>
+<tr class="separator:a0334f62872200ab7e54ab4670cae9c9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab88053c3dfb809e0fb2be95b62e3ca0c"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ab88053c3dfb809e0fb2be95b62e3ca0c">s_open_mode_write</a> = &quot;w&quot;</td></tr>
+<tr class="separator:ab88053c3dfb809e0fb2be95b62e3ca0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a846214cf9f601188bef91a0121e539b1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a846214cf9f601188bef91a0121e539b1">s_open_mode_append</a> = &quot;a&quot;</td></tr>
+<tr class="separator:a846214cf9f601188bef91a0121e539b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab75c7b215ec20949c596b0e61166f738"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ab75c7b215ec20949c596b0e61166f738">s_open_mode_read_plus</a> = &quot;r+&quot;</td></tr>
+<tr class="separator:ab75c7b215ec20949c596b0e61166f738"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79229611dd2199865d306b3815af3e8a"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a79229611dd2199865d306b3815af3e8a">s_open_mode_write_plus</a> = &quot;w+&quot;</td></tr>
+<tr class="separator:a79229611dd2199865d306b3815af3e8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8cc9db0aebc860c8afc39984f0a209f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ae8cc9db0aebc860c8afc39984f0a209f">s_open_mode_append_plus</a> = &quot;a+&quot;</td></tr>
+<tr class="separator:ae8cc9db0aebc860c8afc39984f0a209f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1c2b6041120a31b2ade6c0bd5e41b5f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ad1c2b6041120a31b2ade6c0bd5e41b5f">s_open_mode_read_binary</a> = &quot;rb&quot;</td></tr>
+<tr class="separator:ad1c2b6041120a31b2ade6c0bd5e41b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbd82f83ec175113d1d8ae3f118adc5f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#adbd82f83ec175113d1d8ae3f118adc5f">s_open_mode_write_binary</a> = &quot;wb&quot;</td></tr>
+<tr class="separator:adbd82f83ec175113d1d8ae3f118adc5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c1a65d50648d6f5385c3e86687e8f64"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a0c1a65d50648d6f5385c3e86687e8f64">s_open_mode_append_binary</a> = &quot;ab&quot;</td></tr>
+<tr class="separator:a0c1a65d50648d6f5385c3e86687e8f64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca714f8c16d43c7c929027fb7db1316e"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#aca714f8c16d43c7c929027fb7db1316e">s_open_mode_read_plus_binary</a> = &quot;r+b&quot;</td></tr>
+<tr class="separator:aca714f8c16d43c7c929027fb7db1316e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a866e5dd14badba33140fe2ba720675ea"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a866e5dd14badba33140fe2ba720675ea">s_open_mode_write_plus_binary</a> = &quot;w+b&quot;</td></tr>
+<tr class="separator:a866e5dd14badba33140fe2ba720675ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6d25b1f9b979759b6e63c0887d4e21f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#af6d25b1f9b979759b6e63c0887d4e21f">s_open_mode_append_plus_binary</a> = &quot;a+b&quot;</td></tr>
+<tr class="separator:af6d25b1f9b979759b6e63c0887d4e21f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
+<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
+<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af80cea0f3487047ba34d8b89614ddbc1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#af80cea0f3487047ba34d8b89614ddbc1">s_rslt_str_runtime_error</a> = &quot;RUNTIME_ERROR&quot;</td></tr>
+<tr class="separator:af80cea0f3487047ba34d8b89614ddbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
+<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3196151bfc25d711ce8b8fb2b62ff8f"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#ad3196151bfc25d711ce8b8fb2b62ff8f">s_rslt_str_file_open_error</a> = &quot;FILE_OPEN_ERROR&quot;</td></tr>
+<tr class="separator:ad3196151bfc25d711ce8b8fb2b62ff8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f6594ca394e0eb2537d65b22529d18e"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a6f6594ca394e0eb2537d65b22529d18e">s_rslt_str_file_close_error</a> = &quot;FILE_CLOSE_ERROR&quot;</td></tr>
+<tr class="separator:a6f6594ca394e0eb2537d65b22529d18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bc2987276831378c8d6fafff286031"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a06bc2987276831378c8d6fafff286031">s_rslt_str_limit_exceeded</a> = &quot;LIMIT_EXCEEDED&quot;</td></tr>
+<tr class="separator:a06bc2987276831378c8d6fafff286031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a701f3db36b3747bf363e9623f5217775"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a701f3db36b3747bf363e9623f5217775">s_rslt_str_bad_operation</a> = &quot;BAD_OPERATION&quot;</td></tr>
+<tr class="separator:a701f3db36b3747bf363e9623f5217775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9607c9be9a0515dee65f769e2add8719"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#a9607c9be9a0515dee65f769e2add8719">s_rslt_str_undefined_error</a> = &quot;UNDEFINED_ERROR&quot;</td></tr>
+<tr class="separator:a9607c9be9a0515dee65f769e2add8719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7029e43a6aaf00652276944d3de4eec"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filesystem_8c.html#af7029e43a6aaf00652276944d3de4eec">s_rslt_str_eof</a> = &quot;EOF&quot;</td></tr>
+<tr class="separator:af7029e43a6aaf00652276944d3de4eec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>ファイルシステムモジュールAPIの実装 </p>
@@ -476,6 +545,846 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>const char* オープンモード文字列 </dd></dl>
+
+</div>
+</div>
+<a id="a1971347aeda99449319da990bdc68f50" name="a1971347aeda99449319da990bdc68f50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1971347aeda99449319da990bdc68f50">&#9670;&#160;</a></span>mock_fclose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a> mock_fclose </td>
+          <td>(</td>
+          <td class="paramtype">FILE *&#160;</td>
+          <td class="paramname"><em>stream_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>fcloseのモック関数で、fcloseの実行結果をテスト設定に合わせて制御する </p>
+<dl class="section note"><dt>Note</dt><dd>TEST_BUILD時に、mock_fcloseのテストシナリオが有効だった場合には以下の値を返す<ul>
+<li>シナリオ = TEST_SCENARIO_FCLOSE_SUCCESS: 通常のfclose()の返り値</li>
+<li>シナリオ = TEST_SCENARIO_FCLOSE_ERROR: EOF</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stream_</td><td>クローズ対象ファイルハンドル </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>int クローズ結果 </dd></dl>
+
+</div>
+</div>
+<a id="ab7f3461e452d697849665d01565d0853" name="ab7f3461e452d697849665d01565d0853"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7f3461e452d697849665d01565d0853">&#9670;&#160;</a></span>mock_feof()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a> mock_feof </td>
+          <td>(</td>
+          <td class="paramtype">FILE *&#160;</td>
+          <td class="paramname"><em>stream_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>feofのモック関数で、feofの実行結果をテスト設定に合わせて制御する </p>
+<dl class="section note"><dt>Note</dt><dd>TEST_BUILD時に、filesystem_byte_readのテストシナリオが有効だった場合には以下の値を返す<ul>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_EOF: 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_READ_ERROR: 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS: 0</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS_EOF: 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_UNDEFINED_ERROR: 0</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stream_</td><td>EOF判定対象ファイルハンドル </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>EOF以外 </td></tr>
+    <tr><td class="paramname">0以外</td><td>EOF </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="afc82173659f320014dedea4ca97b256e" name="afc82173659f320014dedea4ca97b256e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc82173659f320014dedea4ca97b256e">&#9670;&#160;</a></span>mock_ferror()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a> mock_ferror </td>
+          <td>(</td>
+          <td class="paramtype">FILE *&#160;</td>
+          <td class="paramname"><em>stream_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ferrorのモック関数で、ferrorの実行結果をテスト設定に合わせて制御する </p>
+<dl class="section note"><dt>Note</dt><dd>TEST_BUILD時に、filesystem_byte_readのテストシナリオが有効だった場合には以下の値を返す<ul>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_EOF: 0</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_READ_ERROR: 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS: 0</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS_EOF: 0</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_UNDEFINED_ERROR: 0</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stream_</td><td>ストリームのテスト対象となるファイルハンドル </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>エラーなし </td></tr>
+    <tr><td class="paramname">0以外</td><td>エラーあり </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3a98c3f7eedda0e223f9a943fd1d17fd" name="a3a98c3f7eedda0e223f9a943fd1d17fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a98c3f7eedda0e223f9a943fd1d17fd">&#9670;&#160;</a></span>mock_fopen()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static FILE *<a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a> mock_fopen </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fullpath_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>mode_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>fopenのモック関数で、fopenの実行結果をテスト設定に合わせて制御する </p>
+<dl class="section note"><dt>Note</dt><dd>TEST_BUILD時に、mock_fopenのテストシナリオが有効だった場合には以下の値を返す<ul>
+<li>シナリオ = TEST_SCENARIO_FOPEN_SUCCESS: 通常のfopen()の返り値</li>
+<li>シナリオ = TEST_SCENARIO_FOPEN_OPEN_ERROR: NULL</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fullpath_</td><td>オープン対象ファイルのフルパス </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode_</td><td>ファイルオープンモード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>FILE* オープンされたファイルハンドル </dd></dl>
+
+</div>
+</div>
+<a id="a8c646c986b6c4bccbce7f5f2201a2539" name="a8c646c986b6c4bccbce7f5f2201a2539"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c646c986b6c4bccbce7f5f2201a2539">&#9670;&#160;</a></span>mock_fread()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static size_t <a class="el" href="choco__macros_8h.html#a9bf0dfbd2b73fb252e7e2b3fc5e2ea19">NO_COVERAGE</a> mock_fread </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>ptr_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>nmemb_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILE *&#160;</td>
+          <td class="paramname"><em>stream_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>freadのモック関数で、freadの実行結果をテスト設定に合わせて制御する </p>
+<dl class="section note"><dt>Note</dt><dd>TEST_BUILD時に、filesystem_byte_readのテストシナリオが有効だった場合には以下の値を返す<ul>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_EOF: 0</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_READ_ERROR: nmemb_ - 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS: 通常のfread()の返り値</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_SUCCESS_EOF: nmemb_ - 1</li>
+<li>シナリオ = TEST_SCENARIO_BYTE_READ_UNDEFINED_ERROR: nmemb_ - 1</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptr_</td><td>読み込んだ文字列の格納先バッファ </td></tr>
+    <tr><td class="paramname">size_</td><td>読み込むデータ１つのバイト数 </td></tr>
+    <tr><td class="paramname">nmemb_</td><td>読み込むデータの個数 </td></tr>
+    <tr><td class="paramname">stream_</td><td>読み込み対象ファイルハンドル </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>size_t 読み込んだデータの個数 </dd></dl>
+
+</div>
+</div>
+<a id="a2e1115c277ed217c56477ec9a15f4840" name="a2e1115c277ed217c56477ec9a15f4840"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e1115c277ed217c56477ec9a15f4840">&#9670;&#160;</a></span>open_mode_readable()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool open_mode_readable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="filesystem_8h.html#a244383be71f8d613080cf0f2d8366ef3">filesystem_open_mode_t</a>&#160;</td>
+          <td class="paramname"><em>mode_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>mode_がREAD可能なファイルオープンモードかを判定する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode_</td><td>判定対象モード</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>READ可能 </td></tr>
+    <tr><td class="paramname">false</td><td>READ不可 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a12a695584fef076b91ccb43b826fe095" name="a12a695584fef076b91ccb43b826fe095"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a12a695584fef076b91ccb43b826fe095">&#9670;&#160;</a></span>rslt_to_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static const char * rslt_to_str </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="filesystem_8h.html#a9e2e60a6bb794f175b5bda17a4210796">filesystem_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>filesystemモジュール実行結果コードを文字列に変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>実行結果コード </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>const char* 変換された文字列の先頭アドレス </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a846214cf9f601188bef91a0121e539b1" name="a846214cf9f601188bef91a0121e539b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a846214cf9f601188bef91a0121e539b1">&#9670;&#160;</a></span>s_open_mode_append</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_append = &quot;a&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: APPEND </p>
+
+</div>
+</div>
+<a id="a0c1a65d50648d6f5385c3e86687e8f64" name="a0c1a65d50648d6f5385c3e86687e8f64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c1a65d50648d6f5385c3e86687e8f64">&#9670;&#160;</a></span>s_open_mode_append_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_append_binary = &quot;ab&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: APPEND(Binary) </p>
+
+</div>
+</div>
+<a id="ae8cc9db0aebc860c8afc39984f0a209f" name="ae8cc9db0aebc860c8afc39984f0a209f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8cc9db0aebc860c8afc39984f0a209f">&#9670;&#160;</a></span>s_open_mode_append_plus</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_append_plus = &quot;a+&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: APPEND+ </p>
+
+</div>
+</div>
+<a id="af6d25b1f9b979759b6e63c0887d4e21f" name="af6d25b1f9b979759b6e63c0887d4e21f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af6d25b1f9b979759b6e63c0887d4e21f">&#9670;&#160;</a></span>s_open_mode_append_plus_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_append_plus_binary = &quot;a+b&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: APPEND+(Binary) </p>
+
+</div>
+</div>
+<a id="a0334f62872200ab7e54ab4670cae9c9d" name="a0334f62872200ab7e54ab4670cae9c9d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0334f62872200ab7e54ab4670cae9c9d">&#9670;&#160;</a></span>s_open_mode_read</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_read = &quot;r&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: READ </p>
+
+</div>
+</div>
+<a id="ad1c2b6041120a31b2ade6c0bd5e41b5f" name="ad1c2b6041120a31b2ade6c0bd5e41b5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1c2b6041120a31b2ade6c0bd5e41b5f">&#9670;&#160;</a></span>s_open_mode_read_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_read_binary = &quot;rb&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: READ(Binary) </p>
+
+</div>
+</div>
+<a id="ab75c7b215ec20949c596b0e61166f738" name="ab75c7b215ec20949c596b0e61166f738"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab75c7b215ec20949c596b0e61166f738">&#9670;&#160;</a></span>s_open_mode_read_plus</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_read_plus = &quot;r+&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: READ+ </p>
+
+</div>
+</div>
+<a id="aca714f8c16d43c7c929027fb7db1316e" name="aca714f8c16d43c7c929027fb7db1316e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca714f8c16d43c7c929027fb7db1316e">&#9670;&#160;</a></span>s_open_mode_read_plus_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_read_plus_binary = &quot;r+b&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: READ+(Binary) </p>
+
+</div>
+</div>
+<a id="ab88053c3dfb809e0fb2be95b62e3ca0c" name="ab88053c3dfb809e0fb2be95b62e3ca0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab88053c3dfb809e0fb2be95b62e3ca0c">&#9670;&#160;</a></span>s_open_mode_write</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_write = &quot;w&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: WRITE </p>
+
+</div>
+</div>
+<a id="adbd82f83ec175113d1d8ae3f118adc5f" name="adbd82f83ec175113d1d8ae3f118adc5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbd82f83ec175113d1d8ae3f118adc5f">&#9670;&#160;</a></span>s_open_mode_write_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_write_binary = &quot;wb&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: WRITE(Binary) </p>
+
+</div>
+</div>
+<a id="a79229611dd2199865d306b3815af3e8a" name="a79229611dd2199865d306b3815af3e8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79229611dd2199865d306b3815af3e8a">&#9670;&#160;</a></span>s_open_mode_write_plus</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_write_plus = &quot;w+&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: WRITE+ </p>
+
+</div>
+</div>
+<a id="a866e5dd14badba33140fe2ba720675ea" name="a866e5dd14badba33140fe2ba720675ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a866e5dd14badba33140fe2ba720675ea">&#9670;&#160;</a></span>s_open_mode_write_plus_binary</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_open_mode_write_plus_binary = &quot;w+b&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>ファイルオープンモード文字列: WRITE*(Binary) </p>
+
+</div>
+</div>
+<a id="a701f3db36b3747bf363e9623f5217775" name="a701f3db36b3747bf363e9623f5217775"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a701f3db36b3747bf363e9623f5217775">&#9670;&#160;</a></span>s_rslt_str_bad_operation</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_bad_operation = &quot;BAD_OPERATION&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: API誤用 </p>
+
+</div>
+</div>
+<a id="af7029e43a6aaf00652276944d3de4eec" name="af7029e43a6aaf00652276944d3de4eec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7029e43a6aaf00652276944d3de4eec">&#9670;&#160;</a></span>s_rslt_str_eof</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_eof = &quot;EOF&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: ファイル読み込みEOF </p>
+
+</div>
+</div>
+<a id="a6f6594ca394e0eb2537d65b22529d18e" name="a6f6594ca394e0eb2537d65b22529d18e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f6594ca394e0eb2537d65b22529d18e">&#9670;&#160;</a></span>s_rslt_str_file_close_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_file_close_error = &quot;FILE_CLOSE_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: ファイルクローズ失敗 </p>
+
+</div>
+</div>
+<a id="ad3196151bfc25d711ce8b8fb2b62ff8f" name="ad3196151bfc25d711ce8b8fb2b62ff8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3196151bfc25d711ce8b8fb2b62ff8f">&#9670;&#160;</a></span>s_rslt_str_file_open_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_file_open_error = &quot;FILE_OPEN_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: ファイルオープン失敗 </p>
+
+</div>
+</div>
+<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: 無効な引数 </p>
+
+</div>
+</div>
+<a id="a06bc2987276831378c8d6fafff286031" name="a06bc2987276831378c8d6fafff286031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bc2987276831378c8d6fafff286031">&#9670;&#160;</a></span>s_rslt_str_limit_exceeded</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_limit_exceeded = &quot;LIMIT_EXCEEDED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: システムリソースが使用可能範囲を超過 </p>
+
+</div>
+</div>
+<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: メモリ不足 </p>
+
+</div>
+</div>
+<a id="af80cea0f3487047ba34d8b89614ddbc1" name="af80cea0f3487047ba34d8b89614ddbc1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af80cea0f3487047ba34d8b89614ddbc1">&#9670;&#160;</a></span>s_rslt_str_runtime_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_runtime_error = &quot;RUNTIME_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: 実行時エラー </p>
+
+</div>
+</div>
+<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: 成功 </p>
+
+</div>
+</div>
+<a id="a9607c9be9a0515dee65f769e2add8719" name="a9607c9be9a0515dee65f769e2add8719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9607c9be9a0515dee65f769e2add8719">&#9670;&#160;</a></span>s_rslt_str_undefined_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_undefined_error = &quot;UNDEFINED_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>実行結果コード文字列: 未定義エラー </p>
 
 </div>
 </div>

@@ -1,7 +1,14 @@
 <map id="point_mesh_geometry_registry" name="point_mesh_geometry_registry">
-<area shape="rect" id="node1" title="点描画用ジオメトリレジストリ内部構造体" alt="" coords="23,269,191,309"/>
-<area shape="rect" id="node2" href="$structpoint__mesh__geometry.html" title="point_mesh_geometry内部状態管理構造体" alt="" coords="23,181,191,207"/>
-<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,93,109,119"/>
-<area shape="rect" id="node4" href="$structpoint__vertex.html" title="ポイント描画用頂点情報構造体" alt="" coords="133,93,237,119"/>
-<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="156,5,215,31"/>
+<area shape="rect" id="node1" title="点描画用ジオメトリレジストリ内部構造体" alt="" coords="157,464,325,504"/>
+<area shape="rect" id="node2" href="$structpoint__mesh__geometry.html" title="point_mesh_geometry内部状態管理構造体" alt="" coords="65,376,233,401"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,288,109,313"/>
+<area shape="rect" id="node4" href="$structpoint__vertex.html" title="ポイント描画用頂点情報構造体" alt="" coords="133,288,237,313"/>
+<area shape="rect" id="node5" href="$structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="112,200,171,225"/>
+<area shape="rect" id="node6" href="$structvec4u8.html" title="uint8_t型4次元ベクトル定義" alt="" coords="195,200,264,225"/>
+<area shape="rect" id="node7" href="$structvertex__buffer__range.html" title=" " alt="" coords="258,376,411,401"/>
+<area shape="rect" id="node8" href="$structdraw__range.html" title=" " alt="" coords="277,288,376,313"/>
+<area shape="rect" id="node9" href="$structvertex__allocation.html" title="VBO Managerから取得したvertex allocationを表すhandle." alt="" coords="401,288,535,313"/>
+<area shape="rect" id="node10" href="$structrange__allocation.html" title="Range Allocatorから取得したallocationを表すdescriptor." alt="" coords="403,200,533,225"/>
+<area shape="rect" id="node11" href="$structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="407,112,529,137"/>
+<area shape="rect" id="node12" href="$structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="441,7,495,33"/>
 </map>

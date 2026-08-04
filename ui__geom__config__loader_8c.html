@@ -94,7 +94,8 @@ $(document).ready(function(){initNavTree('ui__geom__config__loader_8c.html','');
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">ui_geom_config_loader.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__resource.html">Resource</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -149,9 +150,25 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ac171ec3a9f7e42881de23fb548c944d2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#ac171ec3a9f7e42881de23fb548c944d2">key_is_valid</a> (const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *key_)</td></tr>
+<tr class="memdesc:ac171ec3a9f7e42881de23fb548c944d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">コンフィグレーションファイルに記載されたkey=valueのkeyが有効な文字列かを判定する  <br /></td></tr>
+<tr class="separator:ac171ec3a9f7e42881de23fb548c944d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f679143cdccd350b76e2f6d69f84afd"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#a2f679143cdccd350b76e2f6d69f84afd">config_loader_initialize</a> (<a class="el" href="ui__geom__config__loader_8c.html#ae7553945ba92755ce63351db05cb4f57">ui_geom_config_state_t</a> *out_loader_)</td></tr>
+<tr class="memdesc:a2f679143cdccd350b76e2f6d69f84afd"><td class="mdescLeft">&#160;</td><td class="mdescRight">ui_geom_config_state_t構造体インスタンスを初期化する  <br /></td></tr>
+<tr class="separator:a2f679143cdccd350b76e2f6d69f84afd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95c90791b0dda784085209348afbdcf2"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#a95c90791b0dda784085209348afbdcf2">line_parse</a> (<a class="el" href="ui__geom__config__loader_8c.html#ae7553945ba92755ce63351db05cb4f57">ui_geom_config_state_t</a> *out_config_, const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *line_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *tmp_key_, <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *tmp_value_)</td></tr>
+<tr class="memdesc:a95c90791b0dda784085209348afbdcf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">設定ファイルの各行をparseする  <br /></td></tr>
+<tr class="separator:a95c90791b0dda784085209348afbdcf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6b9e5f5dd3ab93fd481b78599f7db58"><td class="memItemLeft" align="right" valign="top"><a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#ac6b9e5f5dd3ab93fd481b78599f7db58">ui_geom_config_loader_load</a> (const char *name_, <a class="el" href="ui__geom__config__loader_8h.html#a690e582338a58032099dd33b9caa97aa">ui_geom_config_t</a> *out_config_)</td></tr>
 <tr class="memdesc:ac6b9e5f5dd3ab93fd481b78599f7db58"><td class="mdescLeft">&#160;</td><td class="mdescRight">UI描画用ジオメトリコンフィグレーションファイルをロードし、設定値を取得する  <br /></td></tr>
 <tr class="separator:ac6b9e5f5dd3ab93fd481b78599f7db58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a888d9132366206e2a29985ef8ad4c957"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#a888d9132366206e2a29985ef8ad4c957">s_key_str_icon_width</a> = &quot;icon_width&quot;</td></tr>
+<tr class="separator:a888d9132366206e2a29985ef8ad4c957"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad31fe0462bd628cb13a6e31ebdf21ffb"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__geom__config__loader_8c.html#ad31fe0462bd628cb13a6e31ebdf21ffb">s_key_str_icon_height</a> = &quot;icon_height&quot;</td></tr>
+<tr class="separator:ad31fe0462bd628cb13a6e31ebdf21ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>UI描画用ジオメトリコンフィグレーションファイルのローダーAPI実装 </p>
@@ -178,6 +195,173 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a2f679143cdccd350b76e2f6d69f84afd" name="a2f679143cdccd350b76e2f6d69f84afd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f679143cdccd350b76e2f6d69f84afd">&#9670;&#160;</a></span>config_loader_initialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void config_loader_initialize </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="ui__geom__config__loader_8c.html#ae7553945ba92755ce63351db05cb4f57">ui_geom_config_state_t</a> *&#160;</td>
+          <td class="paramname"><em>out_loader_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ui_geom_config_state_t構造体インスタンスを初期化する </p>
+<dl class="section note"><dt>Note</dt><dd>out_loader_==NULLの場合は何もせずreturnする</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_loader_</td><td>初期化対象ui_geom_config_state_t構造体インスタンスへのポインタ </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac171ec3a9f7e42881de23fb548c944d2" name="ac171ec3a9f7e42881de23fb548c944d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac171ec3a9f7e42881de23fb548c944d2">&#9670;&#160;</a></span>key_is_valid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool key_is_valid </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>key_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>コンフィグレーションファイルに記載されたkey=valueのkeyが有効な文字列かを判定する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">key_</td><td>判定対象key文字列</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>key_が有効な文字列 </td></tr>
+    <tr><td class="paramname">false</td><td>以下のいずれか<ul>
+<li>key_ == NULL</li>
+<li>key_が規定値外の文字列 </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a95c90791b0dda784085209348afbdcf2" name="a95c90791b0dda784085209348afbdcf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95c90791b0dda784085209348afbdcf2">&#9670;&#160;</a></span>line_parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="resource__types_8h.html#a16e17bb02c965b2fc9cdaa159d191382">resource_result_t</a> line_parse </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="ui__geom__config__loader_8c.html#ae7553945ba92755ce63351db05cb4f57">ui_geom_config_state_t</a> *&#160;</td>
+          <td class="paramname"><em>out_config_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>line_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>tmp_key_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="choco__string_8h.html#a05855b943edde72b8e7948755c60735c">choco_string_t</a> *&#160;</td>
+          <td class="paramname"><em>tmp_value_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>設定ファイルの各行をparseする </p>
+<dl class="section note"><dt>Note</dt><dd>コメント行等でconfig取得ができなかった場合も成功とする </dd>
+<dd>
+keyはあるがvalueがない行については、現状では異常だが, 今後の機能拡張によって設定値が空を許可するkeyが出た時のために成功にする </dd>
+<dd>
+key=value形式ではない行は無視される。ただし、未知keyを含むkey=value行は不正な設定行として扱う</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out_config_</td><td>ui_geom_config_state_t構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">line_</td><td>設定ファイルから読み込んだ文字列1行分 </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">tmp_key_</td><td>key処理作業用choco_string_t構造体インスタンスへのポインタ </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">tmp_value_</td><td>value処理作業用choco_string_t構造体インスタンスへのポインタ</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">以下のいずれか</td><td><ul>
+<li>line_ == NULL</li>
+<li>tmp_key_ == NULL</li>
+<li>tmp_value_ == NULL</li>
+<li>out_config_ == NULL </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_DATA_CORRUPTED</td><td>以下のいずれか<ul>
+<li>読み込んだkeyが有効な文字列ではない</li>
+<li>tmp_key_もしくはtmp_value_の内部状態破損</li>
+<li>valueの文字列に数字以外の無効な文字列が混じっている(例: 32abc)</li>
+<li>valueの値が0以下 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">RESOURCE_OVERFLOW</td><td>valueの値がUINT16_MAXを超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_LIMIT_EXCEEDED</td><td>メモリシステム使用可能範囲上限超過 </td></tr>
+    <tr><td class="paramname">RESOURCE_NO_MEMORY</td><td>メモリ確保失敗 </td></tr>
+    <tr><td class="paramname">RESOURCE_SUCCESS</td><td>処理に成功し、正常終了 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ac6b9e5f5dd3ab93fd481b78599f7db58" name="ac6b9e5f5dd3ab93fd481b78599f7db58"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac6b9e5f5dd3ab93fd481b78599f7db58">&#9670;&#160;</a></span>ui_geom_config_loader_load()</h2>
 
@@ -245,6 +429,53 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="ad31fe0462bd628cb13a6e31ebdf21ffb" name="ad31fe0462bd628cb13a6e31ebdf21ffb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad31fe0462bd628cb13a6e31ebdf21ffb">&#9670;&#160;</a></span>s_key_str_icon_height</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_key_str_icon_height = &quot;icon_height&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>設定値(矩形領域形状指定(高さ): key文字列) </p>
+
+</div>
+</div>
+<a id="a888d9132366206e2a29985ef8ad4c957" name="a888d9132366206e2a29985ef8ad4c957"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a888d9132366206e2a29985ef8ad4c957">&#9670;&#160;</a></span>s_key_str_icon_width</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_key_str_icon_width = &quot;icon_width&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>設定値(矩形領域形状指定(幅): key文字列) </p>
 
 </div>
 </div>

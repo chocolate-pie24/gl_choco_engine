@@ -1,10 +1,10 @@
 var context__vbo_8h =
 [
     [ "renderer_backend_context_t", "context__vbo_8h.html#aabce7f662bbd82e374beb11c9414c1f8", null ],
-    [ "renderer_backend_vertex_buffer_bind", "context__vbo_8h.html#abdd4f294f8a9715f345d11c256e0cb65", null ],
-    [ "renderer_backend_vertex_buffer_create", "context__vbo_8h.html#a0dabfd622cab81878fba0dccffa0e184", null ],
+    [ "renderer_backend_vertex_buffer_bind", "context__vbo_8h.html#a3668b55984eef65b02ac35997a406a16", null ],
+    [ "renderer_backend_vertex_buffer_create", "context__vbo_8h.html#af80fb81cdaf1defd8834f205c511ed90", null ],
     [ "renderer_backend_vertex_buffer_destroy", "context__vbo_8h.html#afe23e5aa082c67feae5cdaaab936b66c", null ],
-    [ "renderer_backend_vertex_buffer_unbind", "context__vbo_8h.html#a3e3ff0117999177860cc785d908e447b", null ],
-    [ "renderer_backend_vertex_buffer_vertex_load", "context__vbo_8h.html#ae18537c1cf1d94835ccae8dd20b8b946", null ],
-    [ "renderer_backend_vertex_buffer_vertex_subload", "context__vbo_8h.html#abb2e8301e0b64df5bee5583c62887fb6", null ]
+    [ "renderer_backend_vertex_buffer_unbind", "context__vbo_8h.html#a214d796ccdc6e1ca66480fec2c3228cf", null ],
+    [ "renderer_backend_vertex_buffer_vertex_load", "context__vbo_8h.html#ae0e52ecbf3b8b80ec08aff18700055d5", null ],
+    [ "renderer_backend_vertex_buffer_vertex_subload", "context__vbo_8h.html#abb3e3bb3c0b4282be62e838ee58a7110", null ]
 ];

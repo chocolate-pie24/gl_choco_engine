@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('ring__queue_8c.html',''); initResizabl
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">ring_queue.c File Reference<div class="ingroups"><a class="el" href="group__engine.html">Engine</a> &raquo; <a class="el" href="group__containers.html">Containers</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -135,6 +136,15 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:af41cd95795d39b1159af12fd449b42bc"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#af41cd95795d39b1159af12fd449b42bc">is_ring_queue_corrupted</a> (const <a class="el" href="ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3">ring_queue_t</a> *ring_queue_)</td></tr>
+<tr class="memdesc:af41cd95795d39b1159af12fd449b42bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">リングキュー内部データが破損しているかを判定する  <br /></td></tr>
+<tr class="separator:af41cd95795d39b1159af12fd449b42bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a739e3e6459c543e9e4261114304a079e"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a739e3e6459c543e9e4261114304a079e">rslt_to_str</a> (<a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:a739e3e6459c543e9e4261114304a079e"><td class="mdescLeft">&#160;</td><td class="mdescRight">リングキュー実行結果コードを文字列に変換する  <br /></td></tr>
+<tr class="separator:a739e3e6459c543e9e4261114304a079e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92cec97d4f20953a5694faaeb39c2256"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a92cec97d4f20953a5694faaeb39c2256">rslt_convert_mem_sys</a> (<a class="el" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a> rslt_)</td></tr>
+<tr class="memdesc:a92cec97d4f20953a5694faaeb39c2256"><td class="mdescLeft">&#160;</td><td class="mdescRight">メモリシステム実行結果コードをリングキュー実行結果コードに変換する  <br /></td></tr>
+<tr class="separator:a92cec97d4f20953a5694faaeb39c2256"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56e3ab58551b751a19d98a51b7e6b16e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue_result_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a56e3ab58551b751a19d98a51b7e6b16e">ring_queue_create</a> (size_t max_element_count_, size_t element_size_, size_t element_align_, <a class="el" href="ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3">ring_queue_t</a> **ring_queue_)</td></tr>
 <tr class="memdesc:a56e3ab58551b751a19d98a51b7e6b16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ring_queue_のメモリを確保し、容量max_element_count_で初期化する  <br /></td></tr>
 <tr class="separator:a56e3ab58551b751a19d98a51b7e6b16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,6 +160,29 @@ Functions</h2></td></tr>
 <tr class="memitem:a52ce710c8a44a8108d137f27dcc256e8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a52ce710c8a44a8108d137f27dcc256e8">ring_queue_empty</a> (const <a class="el" href="ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3">ring_queue_t</a> *ring_queue_)</td></tr>
 <tr class="memdesc:a52ce710c8a44a8108d137f27dcc256e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">リングキューが空かを判定する  <br /></td></tr>
 <tr class="separator:a52ce710c8a44a8108d137f27dcc256e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a9b05c9aea264bb27d264cedaee3422f1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a9b05c9aea264bb27d264cedaee3422f1">s_rslt_str_success</a> = &quot;SUCCESS&quot;</td></tr>
+<tr class="separator:a9b05c9aea264bb27d264cedaee3422f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad513e1a68ecf78755351532812c75359"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#ad513e1a68ecf78755351532812c75359">s_rslt_str_invalid_argument</a> = &quot;INVALID_ARGUMENT&quot;</td></tr>
+<tr class="separator:ad513e1a68ecf78755351532812c75359"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a6729ed0e7d97cce49a55e5f8c3a1afa0">s_rslt_str_no_memory</a> = &quot;NO_MEMORY&quot;</td></tr>
+<tr class="separator:a6729ed0e7d97cce49a55e5f8c3a1afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af80cea0f3487047ba34d8b89614ddbc1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#af80cea0f3487047ba34d8b89614ddbc1">s_rslt_str_runtime_error</a> = &quot;RUNTIME_ERROR&quot;</td></tr>
+<tr class="separator:af80cea0f3487047ba34d8b89614ddbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9607c9be9a0515dee65f769e2add8719"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a9607c9be9a0515dee65f769e2add8719">s_rslt_str_undefined_error</a> = &quot;UNDEFINED_ERROR&quot;</td></tr>
+<tr class="separator:a9607c9be9a0515dee65f769e2add8719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bc2987276831378c8d6fafff286031"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a06bc2987276831378c8d6fafff286031">s_rslt_str_limit_exceeded</a> = &quot;LIMIT_EXCEEDED&quot;</td></tr>
+<tr class="separator:a06bc2987276831378c8d6fafff286031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a701f3db36b3747bf363e9623f5217775"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a701f3db36b3747bf363e9623f5217775">s_rslt_str_bad_operation</a> = &quot;BAD_OPERATION&quot;</td></tr>
+<tr class="separator:a701f3db36b3747bf363e9623f5217775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a1b07d043f967f7fbfad5cb49c6ebb751">s_rslt_str_data_corrupted</a> = &quot;DATA_CORRUPTED&quot;</td></tr>
+<tr class="separator:a1b07d043f967f7fbfad5cb49c6ebb751"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a6ad7c5d6169cb4bce8fe50622979bfa1">s_rslt_str_overflow</a> = &quot;OVERFLOW&quot;</td></tr>
+<tr class="separator:a6ad7c5d6169cb4bce8fe50622979bfa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ea8b229c7bc738683290c7bae0da1ea"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ring__queue_8c.html#a9ea8b229c7bc738683290c7bae0da1ea">s_rslt_str_empty</a> = &quot;EMPTY&quot;</td></tr>
+<tr class="separator:a9ea8b229c7bc738683290c7bae0da1ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>ジェネリック型のリングキューモジュールの実装 </p>
@@ -159,6 +192,71 @@ Functions</h2></td></tr>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 chocolate-pie24</dd></dl>
 <dl class="section user"><dt>License</dt><dd>MIT License. See LICENSE file in the project root for full license text. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="af41cd95795d39b1159af12fd449b42bc" name="af41cd95795d39b1159af12fd449b42bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af41cd95795d39b1159af12fd449b42bc">&#9670;&#160;</a></span>is_ring_queue_corrupted()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool is_ring_queue_corrupted </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="ring__queue_8h.html#a9fad807a7d25efced6f9ba8ff39b49b3">ring_queue_t</a> *&#160;</td>
+          <td class="paramname"><em>ring_queue_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>リングキュー内部データが破損しているかを判定する </p>
+<dl class="section warning"><dt>Warning</dt><dd>本関数は内部データ破損判定が目的であるため下記のチェックは行わない<ul>
+<li>引数ring_queue_のNULLチェック</li>
+</ul>
+</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ring_queue_</td><td>判定対象リングキュー</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>以下のいずれか<ul>
+<li>0 == ring_queue_-&gt;element_align</li>
+<li>0 == ring_queue_-&gt;max_element_count</li>
+<li>0 == ring_queue_-&gt;element_size</li>
+<li>0 == ring_queue_-&gt;stride</li>
+<li>0 == ring_queue_-&gt;capacity</li>
+<li>0 != (ring_queue_-&gt;stride % ring_queue_-&gt;element_align)(1要素の格納に必要なメモリ領域は、格納要素のアライメント要件の倍数でなければアライメントできない)</li>
+<li>ring_queue_-&gt;padding &gt;= ring_queue_-&gt;element_align(パディングサイズが要素のアライメント要件を超過することはない、最大でもアライメント要件-1)</li>
+<li>ring_queue_-&gt;stride != (ring_queue_-&gt;element_size + ring_queue_-&gt;padding)(1要素の格納に必要なメモリ領域が要素サイズ+パディングサイズではない)</li>
+<li>0 == ring_queue_-&gt;len &amp;&amp; 0 != ring_queue_-&gt;head(格納している要素数が0の時にheadが0になっていない)</li>
+<li>0 == ring_queue_-&gt;len &amp;&amp; 0 != ring_queue_-&gt;tail(格納している要素数が0の時にtailが0になっていない)</li>
+<li>(0 &lt; ring_queue_-&gt;len &amp;&amp; ring_queue_-&gt;max_element_count &gt; ring_queue_-&gt;len) &amp;&amp; ring_queue_-&gt;head == ring_queue_-&gt;tail(0 &lt; len &lt; max_element_countの時にhead==tailになるのはおかしい)</li>
+<li>ring_queue_-&gt;len == ring_queue_-&gt;max_element_count &amp;&amp; ring_queue_-&gt;head != ring_queue_-&gt;tail(リングキューがfullの状態ではhead==tailになるはず)</li>
+<li>alignof(max_align_t) &lt; ring_queue_-&gt;element_align || !IS_POWER_OF_TWO(ring_queue_-&gt;element_align)(アライメント要件が破損)</li>
+<li>ring_queue_-&gt;head &gt;= ring_queue_-&gt;max_element_count</li>
+<li>ring_queue_-&gt;tail &gt;= ring_queue_-&gt;max_element_count</li>
+<li>ring_queue_-&gt;len &gt; ring_queue_-&gt;max_element_count</li>
+<li>ring_queue_-&gt;capacity != ring_queue_-&gt;stride * ring_queue_-&gt;max_element_count(メモリプール容量異常)</li>
+<li>ring_queue_-&gt;memory_pool == NULL(ring_queue_createでmemory_pool != NULLが保証されるため内部データ破損扱い) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">false</td><td>内部データ破損なし </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a56e3ab58551b751a19d98a51b7e6b16e" name="a56e3ab58551b751a19d98a51b7e6b16e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a56e3ab58551b751a19d98a51b7e6b16e">&#9670;&#160;</a></span>ring_queue_create()</h2>
 
@@ -447,6 +545,307 @@ false リングキューが空ではない </dd></dl>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a92cec97d4f20953a5694faaeb39c2256" name="a92cec97d4f20953a5694faaeb39c2256"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92cec97d4f20953a5694faaeb39c2256">&#9670;&#160;</a></span>rslt_convert_mem_sys()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue_result_t</a> rslt_convert_mem_sys </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1">memory_system_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>メモリシステム実行結果コードをリングキュー実行結果コードに変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>メモリシステム実行結果コード </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ring_queue_result_t 変換されたリングキュー実行結果コード </dd></dl>
+
+</div>
+</div>
+<a id="a739e3e6459c543e9e4261114304a079e" name="a739e3e6459c543e9e4261114304a079e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a739e3e6459c543e9e4261114304a079e">&#9670;&#160;</a></span>rslt_to_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static const char * rslt_to_str </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="ring__queue_8h.html#a81fbe1bb343840c08fe62a5d5ce89417">ring_queue_result_t</a>&#160;</td>
+          <td class="paramname"><em>rslt_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>リングキュー実行結果コードを文字列に変換する </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">rslt_</td><td>リングキュー実行結果コード </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>const char* 変換された文字列 </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a701f3db36b3747bf363e9623f5217775" name="a701f3db36b3747bf363e9623f5217775"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a701f3db36b3747bf363e9623f5217775">&#9670;&#160;</a></span>s_rslt_str_bad_operation</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_bad_operation = &quot;BAD_OPERATION&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(API誤用)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a1b07d043f967f7fbfad5cb49c6ebb751" name="a1b07d043f967f7fbfad5cb49c6ebb751"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b07d043f967f7fbfad5cb49c6ebb751">&#9670;&#160;</a></span>s_rslt_str_data_corrupted</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_data_corrupted = &quot;DATA_CORRUPTED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(内部データ破損)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a9ea8b229c7bc738683290c7bae0da1ea" name="a9ea8b229c7bc738683290c7bae0da1ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ea8b229c7bc738683290c7bae0da1ea">&#9670;&#160;</a></span>s_rslt_str_empty</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_empty = &quot;EMPTY&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(キューが空)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="ad513e1a68ecf78755351532812c75359" name="ad513e1a68ecf78755351532812c75359"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad513e1a68ecf78755351532812c75359">&#9670;&#160;</a></span>s_rslt_str_invalid_argument</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_invalid_argument = &quot;INVALID_ARGUMENT&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(無効な引数)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a06bc2987276831378c8d6fafff286031" name="a06bc2987276831378c8d6fafff286031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bc2987276831378c8d6fafff286031">&#9670;&#160;</a></span>s_rslt_str_limit_exceeded</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_limit_exceeded = &quot;LIMIT_EXCEEDED&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a6729ed0e7d97cce49a55e5f8c3a1afa0" name="a6729ed0e7d97cce49a55e5f8c3a1afa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6729ed0e7d97cce49a55e5f8c3a1afa0">&#9670;&#160;</a></span>s_rslt_str_no_memory</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_no_memory = &quot;NO_MEMORY&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(メモリ不足)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a6ad7c5d6169cb4bce8fe50622979bfa1" name="a6ad7c5d6169cb4bce8fe50622979bfa1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad7c5d6169cb4bce8fe50622979bfa1">&#9670;&#160;</a></span>s_rslt_str_overflow</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_overflow = &quot;OVERFLOW&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="af80cea0f3487047ba34d8b89614ddbc1" name="af80cea0f3487047ba34d8b89614ddbc1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af80cea0f3487047ba34d8b89614ddbc1">&#9670;&#160;</a></span>s_rslt_str_runtime_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_runtime_error = &quot;RUNTIME_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(実行時エラー)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a9b05c9aea264bb27d264cedaee3422f1" name="a9b05c9aea264bb27d264cedaee3422f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b05c9aea264bb27d264cedaee3422f1">&#9670;&#160;</a></span>s_rslt_str_success</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_success = &quot;SUCCESS&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(処理成功)に対応する文字列 </p>
+
+</div>
+</div>
+<a id="a9607c9be9a0515dee65f769e2add8719" name="a9607c9be9a0515dee65f769e2add8719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9607c9be9a0515dee65f769e2add8719">&#9670;&#160;</a></span>s_rslt_str_undefined_error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* const s_rslt_str_undefined_error = &quot;UNDEFINED_ERROR&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>リングキューAPI実行結果コード(未定義エラー)に対応する文字列 </p>
 
 </div>
 </div>

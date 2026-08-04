@@ -139,9 +139,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a78606bfcb8c2e023dbeca514be649c79"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ui__mesh__geometry__pipeline_8h.html#a78606bfcb8c2e023dbeca514be649c79">ui_mesh_geometry_pipeline_import_from_file</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *shader_, <a class="el" href="ui__mesh__geometry__pipeline_8h.html#af0bbe0837d78a31d4e66f754bd7599be">ui_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a78606bfcb8c2e023dbeca514be649c79"><td class="mdescLeft">&#160;</td><td class="mdescRight">UI描画用ジオメトリアセットファイルをロードし、ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a78606bfcb8c2e023dbeca514be649c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f7cdac64b3b9ad75aa4b7d259deb52c"><td class="memItemLeft" align="right" valign="top"><a id="a4f7cdac64b3b9ad75aa4b7d259deb52c" name="a4f7cdac64b3b9ad75aa4b7d259deb52c"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_geometry_pipeline_release</b> (int16_t geometry_id_)</td></tr>
-<tr class="separator:a4f7cdac64b3b9ad75aa4b7d259deb52c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69d2a0928f953c79f9396024de528f87"><td class="memItemLeft" align="right" valign="top"><a id="a69d2a0928f953c79f9396024de528f87" name="a69d2a0928f953c79f9396024de528f87"></a>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>ui_mesh_geometry_pipeline_release</b> (<a class="el" href="ui__mesh__shader_8h.html#a37d2e513d693fc5b89fe92dc87fcb1ff">ui_mesh_shader_t</a> *shader_, <a class="el" href="ui__mesh__geometry__pipeline_8h.html#af0bbe0837d78a31d4e66f754bd7599be">ui_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+<tr class="separator:a69d2a0928f953c79f9396024de528f87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する </p>

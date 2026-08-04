@@ -102,19 +102,16 @@ $(document).ready(function(){initNavTree('point__mesh__geometry__pipeline_8h.htm
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
 <code>#include &quot;engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for point_mesh_geometry_pipeline.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="point__mesh__geometry__pipeline_8h__incl.png" border="0" usemap="#ainclude_2engine_2systems_2renderer_2resource__pipelines_2geometries_2point__mesh__geometry__pipeline_8h" alt=""/></div>
 <map name="ainclude_2engine_2systems_2renderer_2resource__pipelines_2geometries_2point__mesh__geometry__pipeline_8h" id="ainclude_2engine_2systems_2renderer_2resource__pipelines_2geometries_2point__mesh__geometry__pipeline_8h">
-<area shape="rect" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="14,5,265,75"/>
-<area shape="rect" title=" " alt="" coords="22,313,92,339"/>
-<area shape="rect" title=" " alt="" coords="30,137,105,163"/>
-<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="129,130,294,170"/>
-<area shape="rect" href="resource__pipeline__types_8h_source.html" title=" " alt="" coords="319,123,515,177"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="74,225,258,265"/>
+<area shape="rect" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する" alt="" coords="13,5,263,75"/>
+<area shape="rect" title=" " alt="" coords="5,137,76,163"/>
+<area shape="rect" title=" " alt="" coords="101,137,175,163"/>
+<area shape="rect" href="resource__pipeline__types_8h_source.html" title=" " alt="" coords="200,123,396,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -138,15 +135,18 @@ Typedefs</h2></td></tr>
 <tr class="separator:ab7fbe13b506fe92aada8130e80aa3b71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44cd1073ff4a5b18203b7a6ce2400ded"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpoint__mesh__geometry__registry.html">point_mesh_geometry_registry</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a></td></tr>
 <tr class="separator:a44cd1073ff4a5b18203b7a6ce2400ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33c6fd00d3d9c19fd720c0b513bbc635"><td class="memItemLeft" align="right" valign="top"><a id="a33c6fd00d3d9c19fd720c0b513bbc635" name="a33c6fd00d3d9c19fd720c0b513bbc635"></a>
+typedef struct <a class="el" href="structpoint__vertex.html">point_vertex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>point_vertex_t</b></td></tr>
+<tr class="separator:a33c6fd00d3d9c19fd720c0b513bbc635"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="point__mesh__geometry__pipeline_8h.html#a41ca12ceac1b094b71d9540b7cc2abf3">point_mesh_geometry_pipeline_import_from_vertices</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a> *vertices_, size_t vertex_count_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">点描画用頂点データを元にジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab11039a0c31cbf39ec47df0e83a3be9a"><td class="memItemLeft" align="right" valign="top"><a id="ab11039a0c31cbf39ec47df0e83a3be9a" name="ab11039a0c31cbf39ec47df0e83a3be9a"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_geometry_pipeline_release</b> (int16_t geometry_id_)</td></tr>
-<tr class="separator:ab11039a0c31cbf39ec47df0e83a3be9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee4a4df4285c2c4bda7e0fccac19c002"><td class="memItemLeft" align="right" valign="top"><a id="aee4a4df4285c2c4bda7e0fccac19c002" name="aee4a4df4285c2c4bda7e0fccac19c002"></a>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_geometry_pipeline_release</b> (<a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+<tr class="separator:aee4a4df4285c2c4bda7e0fccac19c002"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する </p>

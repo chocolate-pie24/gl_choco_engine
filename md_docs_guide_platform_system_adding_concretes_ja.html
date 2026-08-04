@@ -141,7 +141,7 @@ Platform SystemへのConcreteモジュールの追加方法ガイドライン</h
 <td class="markdownTableBodyNone">Event pipeline   </td><td class="markdownTableBodyNone"><code>platform_pump_messages</code>   </td><td class="markdownTableBodyNone">上位層から渡されたコールバック関数にイベントを渡す   </td></tr>
 </table>
 <ul>
-<li><code><a class="el" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装">platform_context.c</a></code>の<code>platform_vtable_get()</code>に追加したプラットフォーム用vtableを追加</li>
+<li><code><a class="el" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装">platform_context.c</a></code>の<code><a class="el" href="platform__context_8c.html#a94e030cc4647138ec3a5aa67333353e6" title="プラットフォーム(x11, win32, glfw...)の差異を吸収するため、プラットフォームに応じた仮想関数テーブル取得処理">platform_vtable_get()</a></code>に追加したプラットフォーム用vtableを追加</li>
 <li><code><a class="el" href="platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装">platform_context.c</a></code>の<code>platform_type_valid_check()</code>で追加したプラットフォームを有効化する</li>
 <li>新規に追加したプラットフォームを使用する場合は、<code><a class="el" href="application_8h.html#a5d98cff72b3ed418fb620bf929f8101e" title="エンジンを構成する各サブシステムを初期化する">application_create()</a></code>内の<code><a class="el" href="platform__context_8h.html#ad1bd7840aa3cc01e627c1c81ee3edbf7" title="プラットフォームStrategyパターンを初期化する">platform_initialize()</a></code>でプラットフォーム種別を指定する(*1)</li>
 </ul>

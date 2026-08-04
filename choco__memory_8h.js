@@ -3,7 +3,6 @@ var choco__memory_8h =
     [ "memory_system_result_t", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1", [
       [ "MEMORY_SYSTEM_SUCCESS", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1ad474825374cae417c05c0ba97ab0389b", null ],
       [ "MEMORY_SYSTEM_INVALID_ARGUMENT", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a71bd45b8b01e03b5582563642625182d", null ],
-      [ "MEMORY_SYSTEM_RUNTIME_ERROR", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1afb75b996f28338c5c4998891417c4758", null ],
       [ "MEMORY_SYSTEM_LIMIT_EXCEEDED", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a4fffc142c79184ee32ff17af56d245ad", null ],
       [ "MEMORY_SYSTEM_BAD_OPERATION", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a1a67c354d8a2f8dcd4566e93641506c9", null ],
       [ "MEMORY_SYSTEM_NO_MEMORY", "choco__memory_8h.html#a3ce0c36376919f6dbef796dd30d2a8a1a690ac59d895a75e87396c63f5bd6622f", null ]

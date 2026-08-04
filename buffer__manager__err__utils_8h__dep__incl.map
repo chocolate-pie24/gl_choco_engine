@@ -1,0 +1,5 @@
+<map id="include/engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.h" name="include/engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.h">
+<area shape="rect" id="node1" title="Buffer Managerの実行結果コードに関するutility API." alt="" coords="137,5,380,75"/>
+<area shape="rect" id="node2" href="$buffer__manager__err__utils_8c.html" title="Buffer Managerの実行結果コードutility APIの実装" alt="" coords="5,123,248,192"/>
+<area shape="rect" id="node3" href="$vbo__manager_8c.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="273,130,511,185"/>
+</map>

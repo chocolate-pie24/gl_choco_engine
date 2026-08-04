@@ -1,7 +1,13 @@
 <map id="ui_mesh_geometry_registry" name="ui_mesh_geometry_registry">
-<area shape="rect" id="node1" title="UI描画用ジオメトリレジストリ内部構造体" alt="" coords="5,284,209,309"/>
-<area shape="rect" id="node2" href="$structui__mesh__geometry.html" title="ui_mesh_geometry内部状態管理構造体" alt="" coords="34,196,181,221"/>
-<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="9,108,113,133"/>
-<area shape="rect" id="node4" href="$structui__vertex.html" title="ui geometry用頂点情報構造体" alt="" coords="137,108,219,133"/>
-<area shape="rect" id="node5" href="$structvec2f.html" title="float型2次元ベクトル定義" alt="" coords="149,5,207,31"/>
+<area shape="rect" id="node1" title="UI描画用ジオメトリレジストリ内部構造体" alt="" coords="127,479,331,504"/>
+<area shape="rect" id="node2" href="$structui__mesh__geometry.html" title="ui_mesh_geometry内部状態管理構造体" alt="" coords="69,391,216,416"/>
+<area shape="rect" id="node3" href="$structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,303,109,328"/>
+<area shape="rect" id="node4" href="$structui__vertex.html" title="ui geometry用頂点情報構造体" alt="" coords="133,303,216,328"/>
+<area shape="rect" id="node5" href="$structvec2f.html" title="float型2次元ベクトル定義" alt="" coords="145,200,204,225"/>
+<area shape="rect" id="node6" href="$structvertex__buffer__range.html" title=" " alt="" coords="241,391,394,416"/>
+<area shape="rect" id="node7" href="$structdraw__range.html" title=" " alt="" coords="259,303,357,328"/>
+<area shape="rect" id="node8" href="$structvertex__allocation.html" title="VBO Managerから取得したvertex allocationを表すhandle." alt="" coords="382,303,517,328"/>
+<area shape="rect" id="node9" href="$structrange__allocation.html" title="Range Allocatorから取得したallocationを表すdescriptor." alt="" coords="384,200,515,225"/>
+<area shape="rect" id="node10" href="$structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="388,112,511,137"/>
+<area shape="rect" id="node11" href="$structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="422,7,477,33"/>
 </map>

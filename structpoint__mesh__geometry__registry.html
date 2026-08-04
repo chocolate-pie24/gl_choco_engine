@@ -104,11 +104,18 @@ Collaboration diagram for point_mesh_geometry_registry:</div>
 <div class="dyncontent">
 <div class="center"><img src="structpoint__mesh__geometry__registry__coll__graph.png" border="0" usemap="#apoint__mesh__geometry__registry_coll__map" alt="Collaboration graph"/></div>
 <map name="apoint__mesh__geometry__registry_coll__map" id="apoint__mesh__geometry__registry_coll__map">
-<area shape="rect" title="点描画用ジオメトリレジストリ内部構造体" alt="" coords="23,269,191,309"/>
-<area shape="rect" href="structpoint__mesh__geometry.html" title="point_mesh_geometry内部状態管理構造体" alt="" coords="23,181,191,207"/>
-<area shape="rect" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,93,109,119"/>
-<area shape="rect" href="structpoint__vertex.html" title="ポイント描画用頂点情報構造体" alt="" coords="133,93,237,119"/>
-<area shape="rect" href="structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="156,5,215,31"/>
+<area shape="rect" title="点描画用ジオメトリレジストリ内部構造体" alt="" coords="157,464,325,504"/>
+<area shape="rect" href="structpoint__mesh__geometry.html" title="point_mesh_geometry内部状態管理構造体" alt="" coords="65,376,233,401"/>
+<area shape="rect" href="structchoco__string.html" title="文字列コンテナ内部状態管理構造体" alt="" coords="5,288,109,313"/>
+<area shape="rect" href="structpoint__vertex.html" title="ポイント描画用頂点情報構造体" alt="" coords="133,288,237,313"/>
+<area shape="rect" href="structvec3f.html" title="float型3次元ベクトル定義" alt="" coords="112,200,171,225"/>
+<area shape="rect" href="structvec4u8.html" title="uint8_t型4次元ベクトル定義" alt="" coords="195,200,264,225"/>
+<area shape="rect" href="structvertex__buffer__range.html" title=" " alt="" coords="258,376,411,401"/>
+<area shape="rect" href="structdraw__range.html" title=" " alt="" coords="277,288,376,313"/>
+<area shape="rect" href="structvertex__allocation.html" title="VBO Managerから取得したvertex allocationを表すhandle." alt="" coords="401,288,535,313"/>
+<area shape="rect" href="structrange__allocation.html" title="Range Allocatorから取得したallocationを表すdescriptor." alt="" coords="403,200,533,225"/>
+<area shape="rect" href="structrange__allocator.html" title="Range Allocatorの内部状態を保持する" alt="" coords="407,112,529,137"/>
+<area shape="rect" href="structnode.html" title="論理メモリプール内の一つの連続rangeを表すnode" alt="" coords="441,7,495,33"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -118,8 +125,9 @@ Data Fields</h2></td></tr>
 <tr class="separator:a6571a58a729f0e94f2434980a097fed8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3729d204dd1475821f4e2175be09601"><td class="memItemLeft" align="right" valign="top"><a class="el" href="point__mesh__geometry_8h.html#a81e45de17697b82c27b47c2fdac37c85">point_mesh_geometry_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__mesh__geometry__registry.html#ae3729d204dd1475821f4e2175be09601">geometries</a></td></tr>
 <tr class="separator:ae3729d204dd1475821f4e2175be09601"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0772c40d9e0b44802800a066ac24f1ae"><td class="memItemLeft" align="right" valign="top">size_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoint__mesh__geometry__registry.html#a0772c40d9e0b44802800a066ac24f1ae">vertex_offsets</a></td></tr>
-<tr class="separator:a0772c40d9e0b44802800a066ac24f1ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad74e016d0979547c901a6375d79cc649"><td class="memItemLeft" align="right" valign="top"><a id="ad74e016d0979547c901a6375d79cc649" name="ad74e016d0979547c901a6375d79cc649"></a>
+<a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>vertex_ranges</b></td></tr>
+<tr class="separator:ad74e016d0979547c901a6375d79cc649"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>点描画用ジオメトリレジストリ内部構造体 </p>
@@ -151,21 +159,6 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>レジストリに登録可能な最大ジオメトリ数(0は許可しない. 点描画を使用しなくても1以上にする) </p>
-
-</div>
-</div>
-<a id="a0772c40d9e0b44802800a066ac24f1ae" name="a0772c40d9e0b44802800a066ac24f1ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0772c40d9e0b44802800a066ac24f1ae">&#9670;&#160;</a></span>vertex_offsets</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t* point_mesh_geometry_registry::vertex_offsets</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>各ジオメトリに対応するGPU頂点バッファ上の先頭頂点オフセット配列。単位は頂点の数 </p>
 
 </div>
 </div>

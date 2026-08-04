@@ -13,6 +13,15 @@ var searchData=
   ['bmp_5ffile_5fnot_5finitialized_10',['BMP_FILE_NOT_INITIALIZED',['../bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9ba596186edcdcdc38b41d1baa048ab912b',1,'bmp_loader.c']]],
   ['bmp_5ffile_5fundefined_11',['BMP_FILE_UNDEFINED',['../bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9ba41c4bbff15de083ae449a2b54648b6fa',1,'bmp_loader.c']]],
   ['bmp_5ffile_5fvalid_12',['BMP_FILE_VALID',['../bmp__loader_8c.html#acffcf73fe3b279d6aa3912d00464bb9ba0653be21c2253573eefb8a0f5f28b522',1,'bmp_loader.c']]],
-  ['buffer_5fusage_5fdynamic_13',['BUFFER_USAGE_DYNAMIC',['../renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a',1,'renderer_types.h']]],
-  ['buffer_5fusage_5fstatic_14',['BUFFER_USAGE_STATIC',['../renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add',1,'renderer_types.h']]]
+  ['buffer_5fmanager_5fbad_5foperation_13',['BUFFER_MANAGER_BAD_OPERATION',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3aa7e532ffb18fb4f629d16de022a89e17',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5fdata_5fcorrupted_14',['BUFFER_MANAGER_DATA_CORRUPTED',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3a2b38e5b086697e7d86b6f047a1076bb0',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5finvalid_5fargument_15',['BUFFER_MANAGER_INVALID_ARGUMENT',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3ab7f868b7f72a80c4c28bcd969a979fb0',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5flimit_5fexceeded_16',['BUFFER_MANAGER_LIMIT_EXCEEDED',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3a6f99064c7fcbb5b95c5570f507005715',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5fno_5fmemory_17',['BUFFER_MANAGER_NO_MEMORY',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3a7555206a8c0a3381c1bf5e9630e78f20',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5foverflow_18',['BUFFER_MANAGER_OVERFLOW',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3a2fc8c2671137edadf86c55b0674ce441',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5fruntime_5ferror_19',['BUFFER_MANAGER_RUNTIME_ERROR',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3afeacea5a95f54a1b177845527774c6b6',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5fsuccess_20',['BUFFER_MANAGER_SUCCESS',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3a8d7821801e768db9e5551a95a107bb56',1,'buffer_manager_types.h']]],
+  ['buffer_5fmanager_5fundefined_5ferror_21',['BUFFER_MANAGER_UNDEFINED_ERROR',['../buffer__manager__types_8h.html#ad2c8ffc35baee493d284d19ae11faec3ad9e1f5b217d7aa1931ac5ab15c11454b',1,'buffer_manager_types.h']]],
+  ['buffer_5fusage_5fdynamic_22',['BUFFER_USAGE_DYNAMIC',['../renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73af195ea995cfb8a62a113d3c0378f370a',1,'renderer_types.h']]],
+  ['buffer_5fusage_5fstatic_23',['BUFFER_USAGE_STATIC',['../renderer__types_8h.html#adc07856cc34b268911b09149cbad9f73aadf023d148377376a27c16d1a0fc0add',1,'renderer_types.h']]]
 ];
