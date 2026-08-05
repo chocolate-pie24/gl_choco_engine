@@ -9,7 +9,7 @@
  * これらの処理には可変長文字列バッファのリソース管理が必要で、choco_stringモジュールを使用したい。
  * choco_stringモジュールを使用するとなると、containersレイヤーよりも上層にfilesystemを位置づける必要がある。
  * 一方で、ファイルI/Oについての基本的な処理はcoreレイヤーに置きたい。このため、高度な処理と基本的な処理を分け、基本的な処理はcore/filesystemに置くことにする。
- * なお、高度な処理は、io_utils/fs_utils/fs_utilsに格納する。
+ * なお、高度な処理は、io_utils/fs_utilsに格納する。
  *
  * @version 0.1
  * @date 2025-12-23
