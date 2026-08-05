@@ -1,4 +1,4 @@
-<map id="src/engine/io_utils/fs_utils/fs_utils.c" name="src/engine/io_utils/fs_utils/fs_utils.c">
+<map id="src/engine/io_utils/fs_utils.c" name="src/engine/io_utils/fs_utils.c">
 <area shape="rect" id="node1" title="ファイル処理に関するユーティリティAPIの実装" alt="" coords="391,5,531,45"/>
 <area shape="rect" id="node2" title=" " alt="" coords="5,101,76,126"/>
 <area shape="rect" id="node3" title=" " alt="" coords="527,269,602,295"/>

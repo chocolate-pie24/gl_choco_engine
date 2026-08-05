@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: include/engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h Source File</title>
+<title>GL CHOCO ENGINE: include/engine/systems/renderer/resources/buffer_managers/vbo_manager.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -95,8 +95,8 @@ $(document).ready(function(){initNavTree('vbo__manager_8h_source.html',''); init
 </div><!--header-->
 <div class="contents">
 <a href="vbo__manager_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_VBO_MANAGER_H</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_VBO_MANAGER_H</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_VBO_MANAGER_H</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_VBO_MANAGER_H</span></div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="preprocessor">#ifdef __cplusplus</span></div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
@@ -105,10 +105,10 @@ $(document).ready(function(){initNavTree('vbo__manager_8h_source.html',''); init
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="preprocessor">#include &lt;stddef.h&gt;</span></div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="preprocessor">#include &quot;<a class="code" href="renderer__types_8h.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="preprocessor">#include &quot;<a class="code" href="range__allocator_8h.html">engine/systems/renderer/renderer_core/allocators/range_allocator.h</a>&quot;</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="preprocessor">#include &quot;<a class="code" href="renderer__types_8h.html">engine/systems/renderer/core/renderer_types.h</a>&quot;</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="preprocessor">#include &quot;<a class="code" href="range__allocator_8h.html">engine/systems/renderer/core/allocators/range_allocator.h</a>&quot;</span></div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="preprocessor">#include &quot;<a class="code" href="buffer__manager__types_8h.html">engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h</a>&quot;</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="preprocessor">#include &quot;<a class="code" href="buffer__manager__types_8h.html">engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h</a>&quot;</span></div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
 <div class="line"><a id="l00142" name="l00142"></a><span class="lineno"><a class="line" href="structvbo__manager__config.html">  142</a></span><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code hl_struct" href="structvbo__manager__config.html">vbo_manager_config</a> {</div>
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="structvbo__manager__config.html#a66a3fa3924654c16bb03ccac92248ad5">  143</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvbo__manager__config.html#a66a3fa3924654c16bb03ccac92248ad5">vbo_size</a>;                </div>
@@ -177,7 +177,7 @@ $(document).ready(function(){initNavTree('vbo__manager_8h_source.html',''); init
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e30dfff12da3d0a227234e949c491947.html">renderer_resources</a></li><li class="navelem"><a class="el" href="dir_434a7589bac230da5434b272b3a1cda8.html">buffer_managers</a></li><li class="navelem"><a class="el" href="vbo__manager_8h.html">vbo_manager.h</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_a7f531b1c37460085cedd304cb8df01d.html">engine</a></li><li class="navelem"><a class="el" href="dir_5798507e9d2e7b8ffcab32c1ad4b7742.html">systems</a></li><li class="navelem"><a class="el" href="dir_cf43b88f1d1c3390ff9f4d354a0812fa.html">renderer</a></li><li class="navelem"><a class="el" href="dir_8a1e40711434b80dc37011fdb6a055ec.html">resources</a></li><li class="navelem"><a class="el" href="dir_b753cdf5c9015c17da490dd3786dadbf.html">buffer_managers</a></li><li class="navelem"><a class="el" href="vbo__manager_8h.html">vbo_manager.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

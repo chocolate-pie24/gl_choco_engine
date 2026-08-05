@@ -1,5 +1,5 @@
 <map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h">
 <area shape="rect" id="node1" title="renderer_backend内部情報管理構造体のリソース管理APIを提供する" alt="" coords="99,5,309,75"/>
-<area shape="rect" id="node2" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,123,189,177"/>
+<area shape="rect" id="node2" href="$renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="5,130,189,170"/>
 <area shape="rect" id="node3" href="$renderer__backend__types_8h_source.html" title=" " alt="" coords="213,123,411,177"/>
 </map>

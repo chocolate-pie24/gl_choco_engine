@@ -1,5 +1,5 @@
 <map id="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h" name="include/engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h">
-<area shape="rect" id="node1" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="129,5,331,75"/>
-<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,137,209,163"/>
-<area shape="rect" id="node3" href="$vbo__manager_8c.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="233,123,472,177"/>
+<area shape="rect" id="node1" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="111,5,312,75"/>
+<area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,145,209,170"/>
+<area shape="rect" id="node3" href="$vbo__manager_8c.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="233,123,397,192"/>
 </map>

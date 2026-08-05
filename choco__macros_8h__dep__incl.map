@@ -1,5 +1,5 @@
 <map id="include/engine/base/choco_macros.h" name="include/engine/base/choco_macros.h">
-<area shape="rect" id="node1" title="全レイヤーで使用される共通マクロ定義" alt="" coords="4215,5,4367,45"/>
+<area shape="rect" id="node1" title="全レイヤーで使用される共通マクロ定義" alt="" coords="4206,5,4358,45"/>
 <area shape="rect" id="node2" href="$application_8c.html" title="プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装" alt="" coords="5,115,209,141"/>
 <area shape="rect" id="node3" href="$flight__camera_8c.html" title="アプリケーションからのイベント情報をもとにフライトカメラを制御するAPIの実装" alt="" coords="234,108,437,148"/>
 <area shape="rect" id="node4" href="$choco__math_8c.html" title="GLCE以外のプロジェクトでも使用可能な数学演算実装" alt="" coords="461,108,628,148"/>
@@ -21,25 +21,25 @@
 <area shape="rect" id="node20" href="$camera_8c.html" title="カメラモジュール実装" alt="" coords="3649,101,3832,155"/>
 <area shape="rect" id="node21" href="$flight__camera__controller_8c.html" title="空間内を自由に移動する飛行型カメラの制御機能の実装" alt="" coords="3857,93,4041,163"/>
 <area shape="rect" id="node22" href="$camera__manager_8c.html" title="カメラ管理システムで、カメラ構造体インスタンスの追加 / 削除 / 取得APIの実装" alt="" coords="4065,101,4280,155"/>
-<area shape="rect" id="node23" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="4304,101,4516,155"/>
-<area shape="rect" id="node24" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="4540,108,4749,148"/>
-<area shape="rect" id="node25" href="$platform__err__utils_8c.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="4773,101,4951,155"/>
-<area shape="rect" id="node26" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="4975,93,5187,163"/>
-<area shape="rect" id="node27" href="$concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="5211,93,5423,163"/>
-<area shape="rect" id="node28" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="5447,93,5659,163"/>
-<area shape="rect" id="node29" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="5683,93,5895,163"/>
-<area shape="rect" id="node30" href="$range__allocator_8c.html" title="固定alignmentのGPU buffer内rangeを管理するRange Allocatorの実装" alt="" coords="5919,101,6125,155"/>
-<area shape="rect" id="node31" href="$vbo__manager_8c.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="6149,101,6388,155"/>
-<area shape="rect" id="node32" href="$line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="6413,101,6623,155"/>
-<area shape="rect" id="node33" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="6647,101,6858,155"/>
-<area shape="rect" id="node34" href="$point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="6882,101,7101,155"/>
-<area shape="rect" id="node35" href="$ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="7125,101,7335,155"/>
-<area shape="rect" id="node36" href="$line__mesh__geometry__pipeline_8c.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="7360,93,7601,163"/>
-<area shape="rect" id="node37" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="7625,93,7856,163"/>
-<area shape="rect" id="node38" href="$point__mesh__geometry__pipeline_8c.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="7881,93,8131,163"/>
-<area shape="rect" id="node39" href="$ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="8155,93,8385,163"/>
-<area shape="rect" id="node40" href="$line__mesh__geometry__registry_8c.html" title="線分描画用ジオメトリレジストリAPIの実装" alt="" coords="8409,93,8651,163"/>
-<area shape="rect" id="node41" href="$lit__mesh__geometry__registry_8c.html" title="単色ライティング描画用ジオメトリレジストリAPIの実装" alt="" coords="8675,93,8905,163"/>
-<area shape="rect" id="node42" href="$ui__mesh__geometry__registry_8c.html" title="UI描画用ジオメトリレジストリAPIの実装" alt="" coords="8930,93,9159,163"/>
-<area shape="rect" id="node43" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="9183,101,9362,155"/>
+<area shape="rect" id="node23" href="$platform__err__utils_8c.html" title="プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装" alt="" coords="4304,101,4479,155"/>
+<area shape="rect" id="node24" href="$platform__glfw_8c.html" title="GLFW APIで実装されたプラットフォームシステムAPIの実装" alt="" coords="4503,101,4715,155"/>
+<area shape="rect" id="node25" href="$platform__context_8c.html" title="プラットフォームシステムのStrategy Contextモジュールの実装" alt="" coords="4739,108,4948,148"/>
+<area shape="rect" id="node26" href="$range__allocator_8c.html" title="固定alignmentのGPU buffer内rangeを管理するRange Allocatorの実装" alt="" coords="4973,101,5154,155"/>
+<area shape="rect" id="node27" href="$concrete__shader_8c.html" title="OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装" alt="" coords="5179,93,5391,163"/>
+<area shape="rect" id="node28" href="$concrete__texture_8c.html" title="OpenGL3.3用のテクスチャ操作関数の実装" alt="" coords="5415,93,5627,163"/>
+<area shape="rect" id="node29" href="$concrete__vao_8c.html" title="OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装" alt="" coords="5651,93,5863,163"/>
+<area shape="rect" id="node30" href="$concrete__vbo_8c.html" title="OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装" alt="" coords="5887,93,6099,163"/>
+<area shape="rect" id="node31" href="$line__mesh__geometry__pipeline_8c.html" title="line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="6123,93,6364,163"/>
+<area shape="rect" id="node32" href="$lit__mesh__geometry__pipeline_8c.html" title="単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="6388,93,6619,163"/>
+<area shape="rect" id="node33" href="$point__mesh__geometry__pipeline_8c.html" title="点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="6643,93,6894,163"/>
+<area shape="rect" id="node34" href="$ui__mesh__geometry__pipeline_8c.html" title="UI描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装" alt="" coords="6918,93,7147,163"/>
+<area shape="rect" id="node35" href="$line__mesh__geometry__registry_8c.html" title="線分描画用ジオメトリレジストリAPIの実装" alt="" coords="7172,93,7413,163"/>
+<area shape="rect" id="node36" href="$lit__mesh__geometry__registry_8c.html" title="単色ライティング描画用ジオメトリレジストリAPIの実装" alt="" coords="7437,93,7668,163"/>
+<area shape="rect" id="node37" href="$ui__mesh__geometry__registry_8c.html" title="UI描画用ジオメトリレジストリAPIの実装" alt="" coords="7693,93,7922,163"/>
+<area shape="rect" id="node38" href="$vbo__manager_8c.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="7947,93,8111,163"/>
+<area shape="rect" id="node39" href="$line__mesh__shader_8c.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="8135,101,8344,155"/>
+<area shape="rect" id="node40" href="$lit__mesh__shader_8c.html" title="光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="8368,101,8567,155"/>
+<area shape="rect" id="node41" href="$point__mesh__shader_8c.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="8591,101,8810,155"/>
+<area shape="rect" id="node42" href="$ui__mesh__shader_8c.html" title="UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="8834,101,9031,155"/>
+<area shape="rect" id="node43" href="$texture__manager_8c.html" title="テクスチャリソース(CPU / GPU)管理システムモジュールAPI実装" alt="" coords="9055,101,9234,155"/>
 </map>

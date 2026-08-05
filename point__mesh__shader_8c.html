@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/renderer/resources/shaders/point_mesh_shader.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('point__mesh__shader_8c.html',''); init
 
 <p>ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="point__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="point__mesh__shader_8h_source.html">engine/systems/renderer/resources/shaders/point_mesh_shader.h</a>&quot;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
@@ -111,45 +111,45 @@ $(document).ready(function(){initNavTree('point__mesh__shader_8c.html',''); init
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/core/renderer_types.h</a>&quot;</code><br />
 <code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__shader_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_resource_types.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_err_utils.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_program_builder.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for point_mesh_shader.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="point__mesh__shader_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2point__mesh__shader_8c" alt=""/></div>
-<map name="asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2point__mesh__shader_8c" id="asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2point__mesh__shader_8c">
-<area shape="rect" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1288,5,1507,60"/>
-<area shape="rect" href="point__mesh__shader_8h.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="838,108,1045,163"/>
-<area shape="rect" title=" " alt="" coords="731,548,805,573"/>
-<area shape="rect" title=" " alt="" coords="1064,453,1147,478"/>
-<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="839,328,1038,383"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1435,438,1619,493"/>
-<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="238,431,439,500"/>
-<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="590,218,810,273"/>
-<area shape="rect" title=" " alt="" coords="1962,343,2033,368"/>
-<area shape="rect" title=" " alt="" coords="2271,123,2358,148"/>
-<area shape="rect" title=" " alt="" coords="2382,123,2453,148"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1221,123,1432,148"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1272,233,1411,258"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="2072,225,2256,265"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="99,225,256,265"/>
-<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="2081,115,2247,155"/>
-<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1523,328,1720,383"/>
-<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="1795,211,1997,280"/>
-<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="1435,218,1669,273"/>
-<area shape="rect" href="shader__err__utils_8h_source.html" title=" " alt="" coords="305,108,511,163"/>
-<area shape="rect" href="shader__program__builder_8h_source.html" title=" " alt="" coords="536,108,763,163"/>
-<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="805,438,989,493"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="5,445,163,485"/>
+<div class="center"><img src="point__mesh__shader_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2resources_2shaders_2point__mesh__shader_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2renderer_2resources_2shaders_2point__mesh__shader_8c" id="asrc_2engine_2systems_2renderer_2resources_2shaders_2point__mesh__shader_8c">
+<area shape="rect" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1285,5,1504,60"/>
+<area shape="rect" href="point__mesh__shader_8h.html" title="ポイント描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="859,108,1043,163"/>
+<area shape="rect" title=" " alt="" coords="728,533,803,559"/>
+<area shape="rect" title=" " alt="" coords="1061,445,1144,471"/>
+<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="840,328,1043,383"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1527,438,1711,478"/>
+<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="237,431,440,485"/>
+<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="614,218,802,273"/>
+<area shape="rect" title=" " alt="" coords="1959,343,2030,368"/>
+<area shape="rect" title=" " alt="" coords="2269,123,2355,148"/>
+<area shape="rect" title=" " alt="" coords="2379,123,2450,148"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1219,123,1429,148"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1269,233,1408,258"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="2069,225,2253,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="123,225,280,265"/>
+<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="2079,115,2244,155"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1520,328,1717,383"/>
+<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="1793,211,1994,280"/>
+<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="1432,218,1667,273"/>
+<area shape="rect" href="shader__err__utils_8h_source.html" title=" " alt="" coords="380,108,564,163"/>
+<area shape="rect" href="shader__program__builder_8h_source.html" title=" " alt="" coords="589,108,784,163"/>
+<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="803,431,987,485"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="5,438,163,478"/>
 <area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="534,335,714,375"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="381,225,515,265"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="405,225,539,265"/>
 <area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="339,335,509,375"/>
 </map>
 </div>
@@ -166,46 +166,46 @@ Functions</h2></td></tr>
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>vbo_config_is_valid</b> (const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *config_)</td></tr>
 <tr class="separator:a289855f2b92ab412d32b4e98740d0a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95e77401b30e27e23470ddbe561ea320"><td class="memItemLeft" align="right" valign="top"><a id="a95e77401b30e27e23470ddbe561ea320" name="a95e77401b30e27e23470ddbe561ea320"></a>
-static bool&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_is_initialized</b> (const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_is_initialized</b> (const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
 <tr class="separator:a95e77401b30e27e23470ddbe561ea320"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac145bfbbcb6a821ca5bada13aadd2b3a"><td class="memItemLeft" align="right" valign="top"><a id="ac145bfbbcb6a821ca5bada13aadd2b3a" name="ac145bfbbcb6a821ca5bada13aadd2b3a"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_create</b> (<a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> **out_point_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_create</b> (<a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> **out_point_mesh_shader_)</td></tr>
 <tr class="separator:ac145bfbbcb6a821ca5bada13aadd2b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30f2f71ef9bac15f76207e097d7b7f5c"><td class="memItemLeft" align="right" valign="top"><a id="a30f2f71ef9bac15f76207e097d7b7f5c" name="a30f2f71ef9bac15f76207e097d7b7f5c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> **point_mesh_shader_)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> **point_mesh_shader_)</td></tr>
 <tr class="separator:a30f2f71ef9bac15f76207e097d7b7f5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4aed8fce6760dabbd64445dad4e93c44"><td class="memItemLeft" align="right" valign="top"><a id="a4aed8fce6760dabbd64445dad4e93c44" name="a4aed8fce6760dabbd64445dad4e93c44"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_program_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const char *file_path_, const char *name_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_program_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const char *file_path_, const char *name_)</td></tr>
 <tr class="separator:a4aed8fce6760dabbd64445dad4e93c44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e4281c0957ffc944f59410578d15f49"><td class="memItemLeft" align="right" valign="top"><a id="a6e4281c0957ffc944f59410578d15f49" name="a6e4281c0957ffc944f59410578d15f49"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *vbo_config_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *vbo_config_)</td></tr>
 <tr class="separator:a6e4281c0957ffc944f59410578d15f49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e556a255203a10556c0dd3a28bbd4e"><td class="memItemLeft" align="right" valign="top"><a id="a07e556a255203a10556c0dd3a28bbd4e" name="a07e556a255203a10556c0dd3a28bbd4e"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vao_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vao_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
 <tr class="separator:a07e556a255203a10556c0dd3a28bbd4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa13b4f69d60f987995cb7c5755fd31a"><td class="memItemLeft" align="right" valign="top"><a id="aaa13b4f69d60f987995cb7c5755fd31a" name="aaa13b4f69d60f987995cb7c5755fd31a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vao_vbo_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vao_vbo_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
 <tr class="separator:aaa13b4f69d60f987995cb7c5755fd31a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae44121fb63a70ad0499672eaceec6a79"><td class="memItemLeft" align="right" valign="top"><a id="ae44121fb63a70ad0499672eaceec6a79" name="ae44121fb63a70ad0499672eaceec6a79"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_write</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, size_t vertex_count_, const <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a> *vertices_, <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *out_buffer_range_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_write</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, size_t vertex_count_, const <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a> *vertices_, <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *out_buffer_range_)</td></tr>
 <tr class="separator:ae44121fb63a70ad0499672eaceec6a79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af62aee5c9220c39d9671c3869e90689a"><td class="memItemLeft" align="right" valign="top"><a id="af62aee5c9220c39d9671c3869e90689a" name="af62aee5c9220c39d9671c3869e90689a"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_free</b> (<a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *buffer_range_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vbo_free</b> (<a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *buffer_range_)</td></tr>
 <tr class="separator:af62aee5c9220c39d9671c3869e90689a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41874c2bf56661f3596994a66e1d1592"><td class="memItemLeft" align="right" valign="top"><a id="a41874c2bf56661f3596994a66e1d1592" name="a41874c2bf56661f3596994a66e1d1592"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vertex_array_bind</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_vertex_array_bind</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
 <tr class="separator:a41874c2bf56661f3596994a66e1d1592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad167a46b6cee696c36cb55c768deb56c"><td class="memItemLeft" align="right" valign="top"><a id="ad167a46b6cee696c36cb55c768deb56c" name="ad167a46b6cee696c36cb55c768deb56c"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_use</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_use</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_)</td></tr>
 <tr class="separator:ad167a46b6cee696c36cb55c768deb56c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a47335325271e59b4bb0963c8b436f229"><td class="memItemLeft" align="right" valign="top"><a id="a47335325271e59b4bb0963c8b436f229" name="a47335325271e59b4bb0963c8b436f229"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_model_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_model_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:a47335325271e59b4bb0963c8b436f229"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6926952b42eeff471b2ffdc676ee4ecd"><td class="memItemLeft" align="right" valign="top"><a id="a6926952b42eeff471b2ffdc676ee4ecd" name="a6926952b42eeff471b2ffdc676ee4ecd"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_view_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_view_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:a6926952b42eeff471b2ffdc676ee4ecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7a22395ce168cad5056e92c02055be8"><td class="memItemLeft" align="right" valign="top"><a id="ad7a22395ce168cad5056e92c02055be8" name="ad7a22395ce168cad5056e92c02055be8"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_projection_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_shader_projection_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *point_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:ad7a22395ce168cad5056e92c02055be8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -220,7 +220,7 @@ shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_69632f8fd8e85f651507e9318a26d26e.html">renderer_resources</a></li><li class="navelem"><a class="el" href="dir_f7213e2c3b443fb406b140f0fbfc0a13.html">shaders</a></li><li class="navelem"><a class="el" href="point__mesh__shader_8c.html">point_mesh_shader.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e6d81178e0ef2684d792260b5f66dcfe.html">resources</a></li><li class="navelem"><a class="el" href="dir_18d9f0af2c4d15903e2f37fe1833528f.html">shaders</a></li><li class="navelem"><a class="el" href="point__mesh__shader_8c.html">point_mesh_shader.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

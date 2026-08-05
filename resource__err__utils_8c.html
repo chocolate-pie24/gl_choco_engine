@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/resource/resource_core/resource_err_utils.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/resource/core/resource_err_utils.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,28 +100,28 @@ $(document).ready(function(){initNavTree('resource__err__utils_8c.html',''); ini
 
 <p>Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="resource__types_8h_source.html">engine/resource/resource_core/resource_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="resource__err__utils_8h_source.html">engine/resource/resource_core/resource_err_utils.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="resource__types_8h_source.html">engine/resource/core/resource_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="resource__err__utils_8h_source.html">engine/resource/core/resource_err_utils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="filesystem_8h_source.html">engine/core/filesystem/filesystem.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="geometry__primitive__types_8h_source.html">engine/core/geometry_primitive/geometry_primitive_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__string_8h_source.html">engine/containers/choco_string.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="fs__utils_8h_source.html">engine/io_utils/fs_utils/fs_utils.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="fs__utils_8h_source.html">engine/io_utils/fs_utils.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for resource_err_utils.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="resource__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2resource_2resource__core_2resource__err__utils_8c" alt=""/></div>
-<map name="asrc_2engine_2resource_2resource__core_2resource__err__utils_8c" id="asrc_2engine_2resource_2resource__core_2resource__err__utils_8c">
-<area shape="rect" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="387,5,565,60"/>
-<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="237,203,424,243"/>
-<area shape="rect" href="resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="381,108,571,148"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="5,203,163,243"/>
-<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="331,299,501,339"/>
-<area shape="rect" href="geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="707,196,928,251"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="526,299,706,339"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="549,203,683,243"/>
-<area shape="rect" title=" " alt="" coords="379,387,453,412"/>
-<area shape="rect" title=" " alt="" coords="575,387,657,412"/>
+<div class="center"><img src="resource__err__utils_8c__incl.png" border="0" usemap="#asrc_2engine_2resource_2core_2resource__err__utils_8c" alt=""/></div>
+<map name="asrc_2engine_2resource_2core_2resource__err__utils_8c" id="asrc_2engine_2resource_2core_2resource__err__utils_8c">
+<area shape="rect" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装" alt="" coords="351,5,537,45"/>
+<area shape="rect" href="resource__types_8h.html" title="Resourceレイヤー内で共通して使用するデータ型を提供する" alt="" coords="238,189,397,229"/>
+<area shape="rect" href="resource__err__utils_8h.html" title="Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する" alt="" coords="365,93,523,133"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="5,189,163,229"/>
+<area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="304,284,475,324"/>
+<area shape="rect" href="geometry__primitive__types_8h.html" title="geometry_primitive内で共通して使用するデータ型を提供する" alt="" coords="680,181,901,236"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="499,284,679,324"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="523,189,656,229"/>
+<area shape="rect" title=" " alt="" coords="352,372,427,397"/>
+<area shape="rect" title=" " alt="" coords="548,372,631,397"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -746,7 +746,7 @@ Variables</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_650920c15906aeff35ba7376f5bea154.html">resource</a></li><li class="navelem"><a class="el" href="dir_6c3d51db670cc0d27c318e9fbadfd029.html">resource_core</a></li><li class="navelem"><a class="el" href="resource__err__utils_8c.html">resource_err_utils.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_650920c15906aeff35ba7376f5bea154.html">resource</a></li><li class="navelem"><a class="el" href="dir_06de7a24c0dde06fbd9c53f511cc621e.html">core</a></li><li class="navelem"><a class="el" href="resource__err__utils_8c.html">resource_err_utils.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

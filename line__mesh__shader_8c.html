@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/renderer/resources/shaders/line_mesh_shader.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('line__mesh__shader_8c.html',''); initR
 
 <p>線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="line__mesh__shader_8h_source.html">engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="line__mesh__shader_8h_source.html">engine/systems/renderer/resources/shaders/line_mesh_shader.h</a>&quot;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
@@ -111,45 +111,45 @@ $(document).ready(function(){initNavTree('line__mesh__shader_8c.html',''); initR
 <code>#include &quot;<a class="el" href="math__types_8h_source.html">engine/base/choco_math/math_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="vertex_8h_source.html">engine/core/geometry_primitive/vertex.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/core/renderer_types.h</a>&quot;</code><br />
 <code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__shader_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__vao_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h&quot;</code><br />
-<code>#include &quot;engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_resource_types.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_err_utils.h&quot;</code><br />
+<code>#include &quot;engine/systems/renderer/resources/shaders/core/shader_program_builder.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for line_mesh_shader.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="line__mesh__shader_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2line__mesh__shader_8c" alt=""/></div>
-<map name="asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2line__mesh__shader_8c" id="asrc_2engine_2systems_2renderer_2renderer__resources_2shaders_2line__mesh__shader_8c">
-<area shape="rect" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1263,5,1473,60"/>
-<area shape="rect" href="line__mesh__shader_8h.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="859,108,1066,163"/>
-<area shape="rect" title=" " alt="" coords="780,548,855,573"/>
-<area shape="rect" title=" " alt="" coords="1035,453,1117,478"/>
-<area shape="rect" title=" " alt="" coords="1919,343,1990,368"/>
-<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="762,328,961,383"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1696,438,1880,493"/>
-<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="327,431,529,500"/>
-<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="571,218,791,273"/>
-<area shape="rect" title=" " alt="" coords="2302,123,2389,148"/>
-<area shape="rect" title=" " alt="" coords="2413,123,2483,148"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1192,123,1403,148"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1243,233,1381,258"/>
-<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="1992,225,2176,265"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="29,225,187,265"/>
-<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="1783,115,1948,155"/>
-<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1269,328,1467,383"/>
-<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="1715,211,1917,280"/>
-<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="1456,218,1691,273"/>
-<area shape="rect" href="shader__err__utils_8h_source.html" title=" " alt="" coords="275,108,482,163"/>
-<area shape="rect" href="shader__program__builder_8h_source.html" title=" " alt="" coords="557,108,784,163"/>
-<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="725,438,909,493"/>
-<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="145,445,303,485"/>
-<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="507,335,687,375"/>
-<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="312,225,445,265"/>
+<div class="center"><img src="line__mesh__shader_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2resources_2shaders_2line__mesh__shader_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2renderer_2resources_2shaders_2line__mesh__shader_8c" id="asrc_2engine_2systems_2renderer_2resources_2shaders_2line__mesh__shader_8c">
+<area shape="rect" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装" alt="" coords="1268,5,1477,60"/>
+<area shape="rect" href="line__mesh__shader_8h.html" title="線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する" alt="" coords="887,108,1071,163"/>
+<area shape="rect" title=" " alt="" coords="784,533,859,559"/>
+<area shape="rect" title=" " alt="" coords="1039,445,1122,471"/>
+<area shape="rect" title=" " alt="" coords="1924,343,1994,368"/>
+<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="763,328,966,383"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="1663,438,1847,478"/>
+<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="327,431,530,485"/>
+<area shape="rect" href="shader__resource__types_8h_source.html" title=" " alt="" coords="624,218,812,273"/>
+<area shape="rect" title=" " alt="" coords="2306,123,2393,148"/>
+<area shape="rect" title=" " alt="" coords="2417,123,2488,148"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1196,123,1407,148"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1247,233,1386,258"/>
+<area shape="rect" href="math__types_8h.html" title="GLCE以外のプロジェクトでも使用可能な数学型定義" alt="" coords="1996,225,2180,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="30,225,187,265"/>
+<area shape="rect" href="vertex_8h.html" title="形状データを構成する基本的な幾何情報構造体定義" alt="" coords="1787,115,1952,155"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="1262,328,1459,383"/>
+<area shape="rect" href="context__shader_8h.html" title="renderer_backendが保有するシェーダーオブジェクト/シェーダープログラム操作機能の窓口を上位層に提供する" alt="" coords="1720,211,1921,280"/>
+<area shape="rect" href="context__vao_8h.html" title="renderer_backendが保有するVAO機能の窓口を上位層に提供する" alt="" coords="1460,218,1695,273"/>
+<area shape="rect" href="shader__err__utils_8h_source.html" title=" " alt="" coords="348,108,532,163"/>
+<area shape="rect" href="shader__program__builder_8h_source.html" title=" " alt="" coords="618,108,812,163"/>
+<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="730,431,914,485"/>
+<area shape="rect" href="linear__allocator_8h.html" title="サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの定義" alt="" coords="146,438,303,478"/>
+<area shape="rect" href="choco__string_8h.html" title="文字列を格納するコンテナモジュールAPIの定義" alt="" coords="508,335,688,375"/>
+<area shape="rect" href="fs__utils_8h.html" title="ファイル処理に関するユーティリティAPIを提供する" alt="" coords="364,225,498,265"/>
 <area shape="rect" href="filesystem_8h.html" title="ファイルシステムモジュールAPIの提供" alt="" coords="312,335,483,375"/>
 </map>
 </div>
@@ -166,49 +166,49 @@ Functions</h2></td></tr>
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>vbo_config_is_valid</b> (const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *config_)</td></tr>
 <tr class="separator:a289855f2b92ab412d32b4e98740d0a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11a0b281d2dcede643804ae0d3499fcb"><td class="memItemLeft" align="right" valign="top"><a id="a11a0b281d2dcede643804ae0d3499fcb" name="a11a0b281d2dcede643804ae0d3499fcb"></a>
-static bool&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_is_initialized</b> (const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_is_initialized</b> (const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
 <tr class="separator:a11a0b281d2dcede643804ae0d3499fcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a78d609dc02a93c788102472e9a0c7d68"><td class="memItemLeft" align="right" valign="top"><a id="a78d609dc02a93c788102472e9a0c7d68" name="a78d609dc02a93c788102472e9a0c7d68"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_create</b> (<a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> **out_line_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_create</b> (<a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> **out_line_mesh_shader_)</td></tr>
 <tr class="separator:a78d609dc02a93c788102472e9a0c7d68"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90a29faea9e453571dae92f7f8a78c98"><td class="memItemLeft" align="right" valign="top"><a id="a90a29faea9e453571dae92f7f8a78c98" name="a90a29faea9e453571dae92f7f8a78c98"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> **line_mesh_shader_)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> **line_mesh_shader_)</td></tr>
 <tr class="separator:a90a29faea9e453571dae92f7f8a78c98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d0af138ed3388a1a0567fd8d796faca"><td class="memItemLeft" align="right" valign="top"><a id="a0d0af138ed3388a1a0567fd8d796faca" name="a0d0af138ed3388a1a0567fd8d796faca"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_program_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const char *file_path_, const char *name_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_program_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const char *file_path_, const char *name_)</td></tr>
 <tr class="separator:a0d0af138ed3388a1a0567fd8d796faca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac311fc4ee69eea425fb4ab1ffa177b26"><td class="memItemLeft" align="right" valign="top"><a id="ac311fc4ee69eea425fb4ab1ffa177b26" name="ac311fc4ee69eea425fb4ab1ffa177b26"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *vbo_config_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="vbo__manager_8h.html#aaa9c5830a28fe10649104b5348420251">vbo_manager_config_t</a> *vbo_config_)</td></tr>
 <tr class="separator:ac311fc4ee69eea425fb4ab1ffa177b26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e894604d30858566a39eec97a5fbe30"><td class="memItemLeft" align="right" valign="top"><a id="a3e894604d30858566a39eec97a5fbe30" name="a3e894604d30858566a39eec97a5fbe30"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_initialize</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
 <tr class="separator:a3e894604d30858566a39eec97a5fbe30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9afab3abf39561be316aa0da1bdaf46"><td class="memItemLeft" align="right" valign="top"><a id="aa9afab3abf39561be316aa0da1bdaf46" name="aa9afab3abf39561be316aa0da1bdaf46"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_vbo_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_vbo_destroy</b> (<a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
 <tr class="separator:aa9afab3abf39561be316aa0da1bdaf46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f9aadfafbc9a95ed9918132200673ef"><td class="memItemLeft" align="right" valign="top"><a id="a7f9aadfafbc9a95ed9918132200673ef" name="a7f9aadfafbc9a95ed9918132200673ef"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_write</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, size_t vertex_count_, const <a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a> *vertices_, <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *out_buffer_range_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_write</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, size_t vertex_count_, const <a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a> *vertices_, <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *out_buffer_range_)</td></tr>
 <tr class="separator:a7f9aadfafbc9a95ed9918132200673ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf17814f9dfb5909678105b398efab36"><td class="memItemLeft" align="right" valign="top"><a id="abf17814f9dfb5909678105b398efab36" name="abf17814f9dfb5909678105b398efab36"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_free</b> (<a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *buffer_range_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vbo_free</b> (<a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="structvertex__buffer__range.html">vertex_buffer_range_t</a> *buffer_range_)</td></tr>
 <tr class="separator:abf17814f9dfb5909678105b398efab36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fc7652bb43dfd3d5a5470137e3f36c8"><td class="memItemLeft" align="right" valign="top"><a id="a8fc7652bb43dfd3d5a5470137e3f36c8" name="a8fc7652bb43dfd3d5a5470137e3f36c8"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_bind</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_vao_bind</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
 <tr class="separator:a8fc7652bb43dfd3d5a5470137e3f36c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57a20c1b1459af7454a03e468974a3ac"><td class="memItemLeft" align="right" valign="top"><a id="a57a20c1b1459af7454a03e468974a3ac" name="a57a20c1b1459af7454a03e468974a3ac"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_use</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_use</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_)</td></tr>
 <tr class="separator:a57a20c1b1459af7454a03e468974a3ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2210cabcd0abe9fe3dab56f3c188312f"><td class="memItemLeft" align="right" valign="top"><a id="a2210cabcd0abe9fe3dab56f3c188312f" name="a2210cabcd0abe9fe3dab56f3c188312f"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_model_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_model_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *model_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:a2210cabcd0abe9fe3dab56f3c188312f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abba81c9de96d1f0c128f4e15761384be"><td class="memItemLeft" align="right" valign="top"><a id="abba81c9de96d1f0c128f4e15761384be" name="abba81c9de96d1f0c128f4e15761384be"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_view_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_view_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *view_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:abba81c9de96d1f0c128f4e15761384be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d0a2674f3dd74d23616d825398182a5"><td class="memItemLeft" align="right" valign="top"><a id="a1d0a2674f3dd74d23616d825398182a5" name="a1d0a2674f3dd74d23616d825398182a5"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_projection_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_projection_matrix_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const <a class="el" href="math__types_8h.html#ac245f862511fd6d75d791d43de7bdc91">mat4x4f_t</a> *projection_matrix_, bool should_transpose_)</td></tr>
 <tr class="separator:a1d0a2674f3dd74d23616d825398182a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11c66e7140c56f0e54d99378a0105c61"><td class="memItemLeft" align="right" valign="top"><a id="a11c66e7140c56f0e54d99378a0105c61" name="a11c66e7140c56f0e54d99378a0105c61"></a>
-shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_color_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const uint8_t color_[4])</td></tr>
+shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_shader_color_set</b> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, const <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *line_mesh_shader_, const uint8_t color_[4])</td></tr>
 <tr class="separator:a11c66e7140c56f0e54d99378a0105c61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -223,7 +223,7 @@ shader_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_69632f8fd8e85f651507e9318a26d26e.html">renderer_resources</a></li><li class="navelem"><a class="el" href="dir_f7213e2c3b443fb406b140f0fbfc0a13.html">shaders</a></li><li class="navelem"><a class="el" href="line__mesh__shader_8c.html">line_mesh_shader.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e6d81178e0ef2684d792260b5f66dcfe.html">resources</a></li><li class="navelem"><a class="el" href="dir_18d9f0af2c4d15903e2f37fe1833528f.html">shaders</a></li><li class="navelem"><a class="el" href="line__mesh__shader_8c.html">line_mesh_shader.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

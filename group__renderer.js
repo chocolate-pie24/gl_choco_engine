@@ -1,5 +1,6 @@
 var group__renderer =
 [
+    [ "renderer_types.h", "renderer__types_8h.html", null ],
     [ "concrete_shader.h", "concrete__shader_8h.html", null ],
     [ "concrete_texture.h", "concrete__texture_8h.html", null ],
     [ "concrete_vao.h", "concrete__vao_8h.html", null ],
@@ -13,11 +14,6 @@ var group__renderer =
     [ "interface_texture.h", "interface__texture_8h.html", null ],
     [ "interface_vao.h", "interface__vao_8h.html", null ],
     [ "interface_vbo.h", "interface__vbo_8h.html", null ],
-    [ "renderer_types.h", "renderer__types_8h.html", null ],
-    [ "line_mesh_shader.h", "line__mesh__shader_8h.html", null ],
-    [ "lit_mesh_shader.h", "lit__mesh__shader_8h.html", null ],
-    [ "point_mesh_shader.h", "point__mesh__shader_8h.html", null ],
-    [ "ui_mesh_shader.h", "ui__mesh__shader_8h.html", null ],
     [ "line_mesh_geometry_pipeline.h", "line__mesh__geometry__pipeline_8h.html", null ],
     [ "lit_mesh_geometry_pipeline.h", "lit__mesh__geometry__pipeline_8h.html", null ],
     [ "point_mesh_geometry_pipeline.h", "point__mesh__geometry__pipeline_8h.html", null ],
@@ -28,14 +24,14 @@ var group__renderer =
     [ "lit_mesh_geometry_registry.h", "lit__mesh__geometry__registry_8h.html", null ],
     [ "point_mesh_geometry_registry.h", "point__mesh__geometry__registry_8h.html", null ],
     [ "ui_mesh_geometry_registry.h", "ui__mesh__geometry__registry_8h.html", null ],
+    [ "line_mesh_shader.h", "line__mesh__shader_8h.html", null ],
+    [ "lit_mesh_shader.h", "lit__mesh__shader_8h.html", null ],
+    [ "point_mesh_shader.h", "point__mesh__shader_8h.html", null ],
+    [ "ui_mesh_shader.h", "ui__mesh__shader_8h.html", null ],
     [ "concrete_shader.c", "concrete__shader_8c.html", null ],
     [ "concrete_texture.c", "concrete__texture_8c.html", null ],
     [ "concrete_vao.c", "concrete__vao_8c.html", null ],
     [ "concrete_vbo.c", "concrete__vbo_8c.html", null ],
-    [ "line_mesh_shader.c", "line__mesh__shader_8c.html", null ],
-    [ "lit_mesh_shader.c", "lit__mesh__shader_8c.html", null ],
-    [ "point_mesh_shader.c", "point__mesh__shader_8c.html", null ],
-    [ "ui_mesh_shader.c", "ui__mesh__shader_8c.html", null ],
     [ "line_mesh_geometry_pipeline.c", "line__mesh__geometry__pipeline_8c.html", null ],
     [ "lit_mesh_geometry_pipeline.c", "lit__mesh__geometry__pipeline_8c.html", null ],
     [ "point_mesh_geometry_pipeline.c", "point__mesh__geometry__pipeline_8c.html", null ],
@@ -44,5 +40,9 @@ var group__renderer =
     [ "line_mesh_geometry_registry.c", "line__mesh__geometry__registry_8c.html", null ],
     [ "lit_mesh_geometry_registry.c", "lit__mesh__geometry__registry_8c.html", null ],
     [ "lit_mesh_geometry_registry.c", "lit__mesh__geometry__registry_8c.html", null ],
-    [ "ui_mesh_geometry_registry.c", "ui__mesh__geometry__registry_8c.html", null ]
+    [ "ui_mesh_geometry_registry.c", "ui__mesh__geometry__registry_8c.html", null ],
+    [ "line_mesh_shader.c", "line__mesh__shader_8c.html", null ],
+    [ "lit_mesh_shader.c", "lit__mesh__shader_8c.html", null ],
+    [ "point_mesh_shader.c", "point__mesh__shader_8c.html", null ],
+    [ "ui_mesh_shader.c", "ui__mesh__shader_8c.html", null ]
 ];

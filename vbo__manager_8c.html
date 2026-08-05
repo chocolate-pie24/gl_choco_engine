@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GL CHOCO ENGINE: src/engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.c File Reference</title>
+<title>GL CHOCO ENGINE: src/engine/systems/renderer/resources/buffer_managers/vbo_manager.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,38 +100,38 @@ $(document).ready(function(){initNavTree('vbo__manager_8c.html',''); initResizab
 
 <p>GPU側VBOとその内部rangeを管理するVBO Managerの実装  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="vbo__manager_8h_source.html">engine/systems/renderer/resources/buffer_managers/vbo_manager.h</a>&quot;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stddef.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="choco__macros_8h_source.html">engine/base/choco_macros.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__message_8h_source.html">engine/base/choco_message.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="choco__memory_8h_source.html">engine/core/memory/choco_memory.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/renderer_core/renderer_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="range__allocator_8h_source.html">engine/systems/renderer/renderer_core/allocators/range_allocator.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="renderer__types_8h_source.html">engine/systems/renderer/core/renderer_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="range__allocator_8h_source.html">engine/systems/renderer/core/allocators/range_allocator.h</a>&quot;</code><br />
 <code>#include &quot;engine/systems/renderer/renderer_backend/core/renderer_backend_types.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="context__vbo_8h_source.html">engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="buffer__manager__err__utils_8h_source.html">engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="buffer__manager__types_8h_source.html">engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="buffer__manager__err__utils_8h_source.html">engine/systems/renderer/resources/buffer_managers/buffer_manager_err_utils.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for vbo_manager.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="vbo__manager_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2renderer__resources_2buffer__managers_2vbo__manager_8c" alt=""/></div>
-<map name="asrc_2engine_2systems_2renderer_2renderer__resources_2buffer__managers_2vbo__manager_8c" id="asrc_2engine_2systems_2renderer_2renderer__resources_2buffer__managers_2vbo__manager_8c">
-<area shape="rect" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="677,5,915,60"/>
-<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="181,115,379,170"/>
-<area shape="rect" title=" " alt="" coords="911,343,985,368"/>
-<area shape="rect" title=" " alt="" coords="5,247,88,273"/>
-<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="163,233,347,287"/>
-<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="648,233,832,287"/>
-<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="422,225,623,295"/>
-<area shape="rect" title=" " alt="" coords="763,130,829,155"/>
-<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1360,130,1571,155"/>
-<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1309,247,1448,273"/>
-<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1077,240,1235,280"/>
-<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="856,233,1053,287"/>
-<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="403,115,637,170"/>
-<area shape="rect" href="buffer__manager__err__utils_8h.html" title="Buffer Managerの実行結果コードに関するutility API." alt="" coords="854,108,1055,177"/>
+<div class="center"><img src="vbo__manager_8c__incl.png" border="0" usemap="#asrc_2engine_2systems_2renderer_2resources_2buffer__managers_2vbo__manager_8c" alt=""/></div>
+<map name="asrc_2engine_2systems_2renderer_2resources_2buffer__managers_2vbo__manager_8c" id="asrc_2engine_2systems_2renderer_2resources_2buffer__managers_2vbo__manager_8c">
+<area shape="rect" title="GPU側VBOとその内部rangeを管理するVBO Managerの実装" alt="" coords="714,5,878,75"/>
+<area shape="rect" href="vbo__manager_8h.html" title="GPU側VBOとその内部rangeを管理するVBO Managerの公開API." alt="" coords="176,123,379,177"/>
+<area shape="rect" title=" " alt="" coords="911,328,985,353"/>
+<area shape="rect" title=" " alt="" coords="5,240,88,265"/>
+<area shape="rect" href="renderer__types_8h.html" title="レンダラーレイヤー全体で使用されるデータ型を提供する" alt="" coords="163,233,347,273"/>
+<area shape="rect" href="range__allocator_8h.html" title="GPU buffer内の固定alignment rangeを管理するRange Allocatorの公開API." alt="" coords="648,225,832,280"/>
+<area shape="rect" href="buffer__manager__types_8h.html" title="Buffer Manager層で共通使用するデータ型を定義する" alt="" coords="421,225,624,280"/>
+<area shape="rect" title=" " alt="" coords="763,137,829,163"/>
+<area shape="rect" href="choco__macros_8h.html" title="全レイヤーで使用される共通マクロ定義" alt="" coords="1360,137,1571,163"/>
+<area shape="rect" href="choco__message_8h.html" title="stdout, stderrへの色付きメッセージ出力機能APIの定義" alt="" coords="1309,240,1448,265"/>
+<area shape="rect" href="choco__memory_8h.html" title="不定期に発生するメモリ確保、解放に対応するメモリアロケータモジュールの定義" alt="" coords="1077,233,1235,273"/>
+<area shape="rect" href="renderer__backend__types_8h_source.html" title=" " alt="" coords="856,225,1053,280"/>
+<area shape="rect" href="context__vbo_8h.html" title="renderer_backendが保有するVBO機能の窓口を上位層に提供する" alt="" coords="403,123,637,177"/>
+<area shape="rect" href="buffer__manager__err__utils_8h.html" title="Buffer Managerの実行結果コードに関するutility API." alt="" coords="853,123,1056,177"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -955,7 +955,7 @@ rollbackに失敗してBUFFER_MANAGER_DATA_CORRUPTEDを返した場合、 Range 
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_69632f8fd8e85f651507e9318a26d26e.html">renderer_resources</a></li><li class="navelem"><a class="el" href="dir_2abe9e8f3a3a3e3fbff5da37d29273f7.html">buffer_managers</a></li><li class="navelem"><a class="el" href="vbo__manager_8c.html">vbo_manager.c</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_2052808828190f934b76e979ee65af8a.html">engine</a></li><li class="navelem"><a class="el" href="dir_8488218f49b0dc014cee82abfcce0d30.html">systems</a></li><li class="navelem"><a class="el" href="dir_fa49913612c26fc203f3cdacb8a39a6b.html">renderer</a></li><li class="navelem"><a class="el" href="dir_e6d81178e0ef2684d792260b5f66dcfe.html">resources</a></li><li class="navelem"><a class="el" href="dir_6838f1c98aba53a64efaa9555dc56be1.html">buffer_managers</a></li><li class="navelem"><a class="el" href="vbo__manager_8c.html">vbo_manager.c</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

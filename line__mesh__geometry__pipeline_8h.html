@@ -144,14 +144,14 @@ typedef struct <a class="el" href="structaabb__3d.html">aabb_3d</a>&#160;</td><t
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a835827f8b2616668001d86907e486a11"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a835827f8b2616668001d86907e486a11">line_mesh_geometry_pipeline_import_from_vertices</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a> *vertices_, size_t vertex_count_, int16_t *out_geometry_id_)</td></tr>
+<tr class="memitem:a835827f8b2616668001d86907e486a11"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a835827f8b2616668001d86907e486a11">line_mesh_geometry_pipeline_import_from_vertices</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="vertex_8h.html#a647d61322b94715778b1c66851fa3033">line_vertex_t</a> *vertices_, size_t vertex_count_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a835827f8b2616668001d86907e486a11"><td class="mdescLeft">&#160;</td><td class="mdescRight">線分描画用頂点データを元にジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a835827f8b2616668001d86907e486a11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d586095e5c565d6e9886b515a4f856c"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a2d586095e5c565d6e9886b515a4f856c">line_mesh_geometry_pipeline_import_from_aabb</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="aabb__3d_8h.html#a256f40b25e0c8bc6e4ec15d8ef90a5e9">aabb_3d_t</a> *aabb_, int16_t *out_geometry_id_)</td></tr>
+<tr class="memitem:a2d586095e5c565d6e9886b515a4f856c"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a2d586095e5c565d6e9886b515a4f856c">line_mesh_geometry_pipeline_import_from_aabb</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="aabb__3d_8h.html#a256f40b25e0c8bc6e4ec15d8ef90a5e9">aabb_3d_t</a> *aabb_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a2d586095e5c565d6e9886b515a4f856c"><td class="mdescLeft">&#160;</td><td class="mdescRight">AABB(3D)を使用して線分描画用ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a2d586095e5c565d6e9886b515a4f856c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfa1cecab41241bbc346469b7456a34f"><td class="memItemLeft" align="right" valign="top"><a id="adfa1cecab41241bbc346469b7456a34f" name="adfa1cecab41241bbc346469b7456a34f"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_geometry_pipeline_release</b> (<a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_mesh_geometry_pipeline_release</b> (<a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *shader_, <a class="el" href="line__mesh__geometry__pipeline_8h.html#a6816c8c571585b03edc71953468f14ad">line_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
 <tr class="separator:adfa1cecab41241bbc346469b7456a34f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -187,7 +187,7 @@ GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef struct <a class="el" href="structline__mesh__shader.html">line_mesh_shader</a> <a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a></td>
+          <td class="memname">typedef struct <a class="el" href="structline__mesh__shader.html">line_mesh_shader</a> <a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -226,7 +226,7 @@ GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *&#160;</td>
           <td class="paramname"><em>shader_</em>, </td>
         </tr>
         <tr>
@@ -330,7 +330,7 @@ GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="line__mesh__shader_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="line__mesh__geometry__pipeline_8h.html#a82225c2013a8fa730da53a0c5a665064">line_mesh_shader_t</a> *&#160;</td>
           <td class="paramname"><em>shader_</em>, </td>
         </tr>
         <tr>

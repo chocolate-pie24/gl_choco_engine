@@ -141,11 +141,11 @@ typedef struct <a class="el" href="structpoint__vertex.html">point_vertex</a>&#1
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="point__mesh__geometry__pipeline_8h.html#a41ca12ceac1b094b71d9540b7cc2abf3">point_mesh_geometry_pipeline_import_from_vertices</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a> *vertices_, size_t vertex_count_, int16_t *out_geometry_id_)</td></tr>
+<tr class="memitem:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="memItemLeft" align="right" valign="top">resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="point__mesh__geometry__pipeline_8h.html#a41ca12ceac1b094b71d9540b7cc2abf3">point_mesh_geometry_pipeline_import_from_vertices</a> (const <a class="el" href="context__shader_8h.html#aabce7f662bbd82e374beb11c9414c1f8">renderer_backend_context_t</a> *backend_context_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, const char *name_, const <a class="el" href="vertex_8h.html#a33c6fd00d3d9c19fd720c0b513bbc635">point_vertex_t</a> *vertices_, size_t vertex_count_, int16_t *out_geometry_id_)</td></tr>
 <tr class="memdesc:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">点描画用頂点データを元にジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う  <br /></td></tr>
 <tr class="separator:a41ca12ceac1b094b71d9540b7cc2abf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee4a4df4285c2c4bda7e0fccac19c002"><td class="memItemLeft" align="right" valign="top"><a id="aee4a4df4285c2c4bda7e0fccac19c002" name="aee4a4df4285c2c4bda7e0fccac19c002"></a>
-resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_geometry_pipeline_release</b> (<a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
+resource_pipeline_result_t&#160;</td><td class="memItemRight" valign="bottom"><b>point_mesh_geometry_pipeline_release</b> (<a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *shader_, <a class="el" href="point__mesh__geometry__pipeline_8h.html#a44cd1073ff4a5b18203b7a6ce2400ded">point_mesh_geometry_registry_t</a> *geometry_registry_, int16_t geometry_id_)</td></tr>
 <tr class="separator:aee4a4df4285c2c4bda7e0fccac19c002"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -183,7 +183,7 @@ GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef struct <a class="el" href="structpoint__mesh__shader.html">point_mesh_shader</a> <a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a></td>
+          <td class="memname">typedef struct <a class="el" href="structpoint__mesh__shader.html">point_mesh_shader</a> <a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -222,7 +222,7 @@ GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="point__mesh__shader_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="point__mesh__geometry__pipeline_8h.html#ab7fbe13b506fe92aada8130e80aa3b71">point_mesh_shader_t</a> *&#160;</td>
           <td class="paramname"><em>shader_</em>, </td>
         </tr>
         <tr>
