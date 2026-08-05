@@ -31,12 +31,12 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 #include "engine/resource/loaders/stl_loader.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"

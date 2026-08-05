@@ -28,7 +28,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 typedef struct bmp_loader bmp_loader_t; /**< BMPローダー内部状態管理構造体前方宣言 */
 

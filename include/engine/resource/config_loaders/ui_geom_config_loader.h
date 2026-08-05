@@ -33,7 +33,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 /**
  * @brief UI描画用ジオメトリ設定値格納構造体

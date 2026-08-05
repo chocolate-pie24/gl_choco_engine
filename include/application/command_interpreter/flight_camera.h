@@ -40,7 +40,7 @@ extern "C" {
 #include "engine/systems/camera_system/camera/camera.h"
 #include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"
 
-#include "application/application_core/application_types.h"
+#include "application/core/application_types.h"
 
 /**
  * @brief フライトカメラ制御コマンドリスト

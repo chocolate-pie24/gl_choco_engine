@@ -35,10 +35,10 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/io_utils/fs_utils/fs_utils.h"
+#include "engine/io_utils/fs_utils.h"
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 // #define TEST_BUILD
 
@@ -66,7 +66,7 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
 
 #include "engine/containers/test_choco_string.h"
 
-#include "engine/io_utils/fs_utils/test_fs_utils.h"
+#include "engine/io_utils/test_fs_utils.h"
 
 // bmp_loader用モジュール専用テスト制御構造体定義
 

@@ -20,8 +20,8 @@
 
 #ifdef TEST_BUILD   // TODO: test用のmainを用意して別に移す
 
-// test: application/application_core
-#include "application/application_core/test_application_err_utils.h"
+// test: application/core
+#include "application/core/test_application_err_utils.h"
 
 // test: application/command_interpreter
 #include "application/command_interpreter/test_flight_camera.h"
@@ -42,10 +42,10 @@
 #include "engine/containers/test_ring_queue.h"
 
 // test: engine/io_utils
-#include "engine/io_utils/fs_utils/test_fs_utils.h"
+#include "engine/io_utils/test_fs_utils.h"
 
 // test: engine/resource
-#include "engine/resource/resource_core/test_resource_err_utils.h"
+#include "engine/resource/core/test_resource_err_utils.h"
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
 #include "engine/resource/texture/test_texture.h"
@@ -55,7 +55,7 @@
 #include "engine/resource/geometry/test_ui_mesh_geometry.h"
 
 // test: engine/systems/platform
-#include "engine/systems/platform/platform_core/test_platform_err_utils.h"
+#include "engine/systems/platform/core/test_platform_err_utils.h"
 #include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
 #include "engine/systems/platform/test_platform_context.h"
 
@@ -67,8 +67,7 @@
 #include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
 
 // test: engine/systems/renderer
-#include "engine/systems/renderer/renderer_core/test_renderer_err_utils.h"
-#include "engine/systems/renderer/renderer_core/test_renderer_memory.h"
+#include "engine/systems/renderer/core/test_renderer_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
@@ -106,7 +105,7 @@ int main(int argc_, char** argv_) {
     for(uint8_t i = 0; i != 200; ++i) {
         message_output(100, NULL);
 
-        // application/application_core
+        // application/core
         // test_application_err_utils();
 
         // application/command_interpreter

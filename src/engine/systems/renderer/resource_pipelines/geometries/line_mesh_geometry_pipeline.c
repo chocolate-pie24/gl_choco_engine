@@ -29,11 +29,11 @@
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 #include "engine/resource/geometry/line_mesh_geometry.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.h"

@@ -20,8 +20,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "engine/resource/resource_core/resource_types.h"
-#include "engine/resource/resource_core/resource_err_utils.h"
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 #include "engine/containers/choco_string.h"
 

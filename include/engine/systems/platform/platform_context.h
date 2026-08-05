@@ -30,7 +30,7 @@ extern "C" {
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_types.h"
 
 /**
  * @brief プラットフォームコンテキスト構造体前方宣言

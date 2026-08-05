@@ -23,7 +23,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 
 typedef struct texture texture_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
 

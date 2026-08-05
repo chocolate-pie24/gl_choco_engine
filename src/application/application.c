@@ -27,8 +27,8 @@
 
 #include "application/application.h"
 
-#include "application/application_core/application_types.h"
-#include "application/application_core/application_err_utils.h"
+#include "application/core/application_types.h"
+#include "application/core/application_err_utils.h"
 
 #include "application/command_interpreter/flight_camera.h"
 
@@ -50,15 +50,15 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
-#include "engine/systems/platform/platform_core/platform_types.h"
+#include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
-#include "engine/systems/renderer/renderer_resources/shaders/line_mesh_shader.h"
-#include "engine/systems/renderer/renderer_resources/shaders/point_mesh_shader.h"
-#include "engine/systems/renderer/renderer_resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
@@ -72,7 +72,7 @@
 #include "engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

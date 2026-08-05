@@ -29,10 +29,10 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/resource_core/resource_types.h"
+#include "engine/resource/core/resource_types.h"
 #include "engine/resource/texture/texture.h"
 
-#include "engine/systems/renderer/renderer_core/renderer_types.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
