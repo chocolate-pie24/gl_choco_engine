@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_TYPES_H
-#define GLCE_ENGINE_RESOURCE_RESOURCE_CORE_RESOURCE_TYPES_H
+#ifndef GLCE_ENGINE_RESOURCE_CORE_RESOURCE_TYPES_H
+#define GLCE_ENGINE_RESOURCE_CORE_RESOURCE_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {
