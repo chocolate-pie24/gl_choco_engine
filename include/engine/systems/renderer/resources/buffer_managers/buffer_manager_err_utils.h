@@ -43,8 +43,8 @@
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_ERR_UTILS_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_ERR_UTILS_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +56,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
 
 /**
  * @brief Buffer Managerの結果コードを文字列へ変換する

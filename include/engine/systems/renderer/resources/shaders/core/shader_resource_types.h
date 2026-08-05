@@ -1,5 +1,5 @@
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_RESOURCE_TYPES_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_RESOURCE_TYPES_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_RESOURCE_TYPES_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_RESOURCE_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 
 typedef enum {
     SHADER_SUCCESS = 0,

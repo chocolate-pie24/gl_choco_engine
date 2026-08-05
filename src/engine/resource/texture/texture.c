@@ -74,7 +74,7 @@ static resource_result_t test_texture_generate(test_texture_t test_texture_color
 
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/containers/test_choco_string.h"
-#include "engine/io_utils/fs_utils/test_fs_utils.h"
+#include "engine/io_utils/test_fs_utils.h"
 #include "engine/resource/loaders/test_bmp_loader.h"
 
 // texture用モジュール専用テスト制御構造体定義

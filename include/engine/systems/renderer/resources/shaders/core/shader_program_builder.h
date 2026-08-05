@@ -1,11 +1,11 @@
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_PROGRAM_BUILDER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_PROGRAM_BUILDER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_PROGRAM_BUILDER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_PROGRAM_BUILDER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 typedef struct renderer_backend_shader renderer_backend_shader_t;
 typedef struct renderer_backend_context renderer_backend_context_t;

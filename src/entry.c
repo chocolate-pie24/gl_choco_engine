@@ -42,7 +42,7 @@
 #include "engine/containers/test_ring_queue.h"
 
 // test: engine/io_utils
-#include "engine/io_utils/fs_utils/test_fs_utils.h"
+#include "engine/io_utils/test_fs_utils.h"
 
 // test: engine/resource
 #include "engine/resource/core/test_resource_err_utils.h"
@@ -68,7 +68,6 @@
 
 // test: engine/systems/renderer
 #include "engine/systems/renderer/core/test_renderer_err_utils.h"
-#include "engine/systems/renderer/core/test_renderer_memory.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"

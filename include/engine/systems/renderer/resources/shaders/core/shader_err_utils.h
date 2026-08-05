@@ -1,5 +1,5 @@
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_ERR_UTILS_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_CORE_SHADER_ERR_UTILS_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_CORE_SHADER_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,8 +14,8 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 const char* shader_rslt_to_str(shader_result_t rslt_);
 

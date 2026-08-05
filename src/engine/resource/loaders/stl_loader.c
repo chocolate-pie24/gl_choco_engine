@@ -66,7 +66,7 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
 
 #include "engine/containers/test_choco_string.h"
 
-#include "engine/io_utils/fs_utils/test_fs_utils.h"
+#include "engine/io_utils/test_fs_utils.h"
 
 // bmp_loader用モジュール専用テスト制御構造体定義
 

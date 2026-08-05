@@ -47,7 +47,7 @@
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_err_utils.h"
+#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_err_utils.h"
 
 #include "engine/core/memory/choco_memory.h"
 
@@ -55,7 +55,7 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
 
 /**
  * @name Buffer Manager実行結果コード文字列

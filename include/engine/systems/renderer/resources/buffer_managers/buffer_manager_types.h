@@ -3,7 +3,7 @@
  * @brief Buffer Manager層で共通使用するデータ型を定義する
  *
  * @details
- * renderer_resources/buffer_managers以下の各モジュールで共有するデータ型を提供する。
+ * resources/buffer_managers以下の各モジュールで共有するデータ型を提供する。
  *
  * 現在は、Buffer Managerの公開APIが処理結果を上位層へ通知するための
  * buffer_manager_result_tを定義する。
@@ -23,8 +23,8 @@
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_TYPES_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_TYPES_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_TYPES_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_BUFFER_MANAGERS_BUFFER_MANAGER_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {

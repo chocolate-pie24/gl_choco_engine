@@ -13,8 +13,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LINE_MESH_SHADER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_RESOURCES_SHADERS_LINE_MESH_SHADER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_LINE_MESH_SHADER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_LINE_MESH_SHADER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,8 +24,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 typedef struct line_mesh_shader line_mesh_shader_t;                 /**< 線分描画用シェーダーリソースのopaque型 */
 

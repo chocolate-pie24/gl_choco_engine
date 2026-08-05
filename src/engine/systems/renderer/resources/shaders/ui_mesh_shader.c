@@ -13,7 +13,7 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "engine/systems/renderer/renderer_resources/shaders/ui_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -34,12 +34,12 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
 
-#include "engine/systems/renderer/renderer_resources/buffer_managers/buffer_manager_types.h"
-#include "engine/systems/renderer/renderer_resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_err_utils.h"
-#include "engine/systems/renderer/renderer_resources/shaders/core/shader_program_builder.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_program_builder.h"
 
 // TODO: テスト(ui_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
