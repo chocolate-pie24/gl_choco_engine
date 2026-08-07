@@ -7,3 +7,4 @@ docs/doxygen/html
 node_modules
 package-lock.json
 package.json
+default.profraw
