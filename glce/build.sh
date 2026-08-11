@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # build.shで途中のコマンドが失敗したら、後続処理を続けず即座に終了させる
 set -eu
@@ -74,7 +74,7 @@ esac
 
 case "$COMMAND_TYPE" in
   make)
-    if [ "$COMMAND" == "clean" ]; then
+    if [ "$COMMAND" = "clean" ]; then
       "$MAKE_COMMAND" -C "$GLCE_DIR" -f "$MAKEFILE" "$MAKE_TARGET"
     else
       "$MAKE_COMMAND" -C "$GLCE_DIR" -f "$MAKEFILE" "$MAKE_TARGET" BUILD_MODE="$BUILD_MODE"

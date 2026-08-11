@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # valgrind.shで途中のコマンドが失敗したら、後続処理を続けず即座に終了させる
 set -eu
@@ -12,7 +12,7 @@ if [ -z "${GLCE_DIR:-}" ] ||
 fi
 
 case "$OS_NAME" in
-  Linux)
+  Linux|FreeBSD)
     ;;
   *)
     echo "Valgrind workflow is supported on Linux only."

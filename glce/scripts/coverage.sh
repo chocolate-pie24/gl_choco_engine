@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # coverage.shで途中のコマンドが失敗したら、後続処理を続けず即座に終了させる
 set -eu

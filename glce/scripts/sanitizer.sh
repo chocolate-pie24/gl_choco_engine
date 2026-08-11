@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # sanitizer.shで途中のコマンドが失敗したら、後続処理を続けず即座に終了させる
 set -eu
@@ -16,10 +16,10 @@ cd "$GLCE_DIR" || exit 1
 # Sanitizers
 # Leak checking (LSan) is performed on Linux only.
 SAN_CFLAGS="-fsanitize=address,undefined"
-SAN_CFLAGS+=" -fno-sanitize-recover=all"
-SAN_CFLAGS+=" -fno-omit-frame-pointer"
-SAN_CFLAGS+=" -fsanitize-address-use-after-scope"
-SAN_CFLAGS+=" -O1"
+SAN_CFLAGS="$SAN_CFLAGS -fno-sanitize-recover=all"
+SAN_CFLAGS="$SAN_CFLAGS -fno-omit-frame-pointer"
+SAN_CFLAGS="$SAN_CFLAGS -fsanitize-address-use-after-scope"
+SAN_CFLAGS="$SAN_CFLAGS -O1"
 
 SAN_LDFLAGS="-fsanitize=address,undefined"
 
