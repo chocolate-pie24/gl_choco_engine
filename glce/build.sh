@@ -66,6 +66,10 @@ case "$OS_NAME" in
     MAKE_COMMAND="make"
     MAKEFILE="make/linux.mk"
     ;;
+  FreeBSD)
+    MAKE_COMMAND="gmake"
+    MAKEFILE="make/freebsd.mk"
+    ;;
   *)
     echo "Your platform ($OS_NAME) is not supported."
     exit 1

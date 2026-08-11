@@ -13,8 +13,6 @@ fi
 
 cd "$GLCE_DIR" || exit 1
 
-# Sanitizers
-# Leak checking (LSan) is performed on Linux only.
 SAN_CFLAGS="-fsanitize=address,undefined"
 SAN_CFLAGS="$SAN_CFLAGS -fno-sanitize-recover=all"
 SAN_CFLAGS="$SAN_CFLAGS -fno-omit-frame-pointer"
@@ -23,12 +21,14 @@ SAN_CFLAGS="$SAN_CFLAGS -O1"
 
 SAN_LDFLAGS="-fsanitize=address,undefined"
 
+# LeakSanitizerはLinuxとmacOSで有効化する。
+# FreeBSDでは未サポートのため無効化する。
 case "$OS_NAME" in
-  Darwin)
-    DETECT_LEAKS=0
-    ;;
-  Linux)
+  Darwin|Linux)
     DETECT_LEAKS=1
+    ;;
+  FreeBSD)
+    DETECT_LEAKS=0
     ;;
   *)
     echo "Your platform ($OS_NAME) is not supported."

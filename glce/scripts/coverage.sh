@@ -21,7 +21,7 @@ case "$OS_NAME" in
     LLVM_PROFDATA="$LLVM_PREFIX/bin/llvm-profdata"
     LLVM_COV="$LLVM_PREFIX/bin/llvm-cov"
     ;;
-  Linux)
+  Linux|FreeBSD)
     LLVM_PROFDATA="$(command -v llvm-profdata || true)"
     LLVM_COV="$(command -v llvm-cov || true)"
     ;;
