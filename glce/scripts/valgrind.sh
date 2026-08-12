@@ -15,7 +15,7 @@ case "$OS_NAME" in
   Linux|FreeBSD)
     ;;
   *)
-    echo "Valgrind workflow is supported on Linux only."
+    echo "Valgrind workflow is supported on Linux and FreeBSD only."
     exit 1
     ;;
 esac
