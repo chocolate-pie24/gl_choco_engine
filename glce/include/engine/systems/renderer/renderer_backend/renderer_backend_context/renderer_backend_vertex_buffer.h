@@ -1,7 +1,7 @@
 /**
  * @ingroup renderer
  *
- * @file context_vbo.h
+ * @file renderer_backend_vertex_buffer.h
  * @author chocolate-pie24
  * @brief renderer_backendが保有するVBO機能の窓口を上位層に提供する
  *
@@ -14,8 +14,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_VBO_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_CONTEXT_VBO_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VERTEX_BUFFER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VERTEX_BUFFER_H
 
 #ifdef __cplusplus
 extern "C" {

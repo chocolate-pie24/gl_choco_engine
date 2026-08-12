@@ -92,7 +92,7 @@
 #include "engine/systems/renderer/core/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vertex_buffer.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/buffer_manager_err_utils.h"
