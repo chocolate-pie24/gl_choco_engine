@@ -79,7 +79,7 @@ static texture_system_result_t tex_sys_rslt_convert_resource(resource_result_t r
 #include "engine/systems/texture_system/test_texture_manager.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_texture.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
+// #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 #include "engine/resource/texture/test_texture.h"
 
