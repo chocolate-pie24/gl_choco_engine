@@ -34,7 +34,7 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vertex_array.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
