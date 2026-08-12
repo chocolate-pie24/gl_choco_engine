@@ -35,7 +35,7 @@
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/context_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_texture.h"
 
 /**
  * @brief テクスチャリソース(CPU / GPU)リソース管理システム構造体定義
@@ -77,9 +77,6 @@ static texture_system_result_t tex_sys_rslt_convert_resource(resource_result_t r
 #include "engine/core/memory/test_linear_allocator.h"
 
 #include "engine/systems/texture_system/test_texture_manager.h"
-
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_context_texture.h"
-// #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 #include "engine/resource/texture/test_texture.h"
 
