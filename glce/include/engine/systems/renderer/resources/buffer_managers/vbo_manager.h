@@ -83,7 +83,7 @@ extern "C" {
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/core/allocators/range_allocator.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 
 /**
  * @brief VBO Managerの生成設定

@@ -94,8 +94,8 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_err_utils.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_err_utils.h"
 
 /**
  * @brief VBO Managerの内部状態管理構造体

@@ -14,7 +14,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 const char* shader_rslt_to_str(shader_result_t rslt_);

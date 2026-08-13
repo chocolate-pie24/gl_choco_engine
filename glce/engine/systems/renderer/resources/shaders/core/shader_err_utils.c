@@ -9,7 +9,7 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 static const char* const s_rslt_str_success = "SUCCESS";

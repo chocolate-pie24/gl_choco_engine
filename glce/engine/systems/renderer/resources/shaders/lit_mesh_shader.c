@@ -36,7 +36,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
