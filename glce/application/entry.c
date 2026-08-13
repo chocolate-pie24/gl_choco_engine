@@ -67,7 +67,6 @@
 #include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
 
 // test: engine/systems/renderer
-#include "engine/systems/renderer/core/test_renderer_err_utils.h"
 
 // test: engine/systems/texture_system
 #include "engine/systems/texture_system/test_texture_manager.h"
@@ -143,13 +142,6 @@ int main(int argc_, char** argv_) {
         test_platform_context();
 
         // engine/renderer
-        // test_renderer_err_utils();
-        // test_renderer_memory();
-        // test_concrete_shader();
-        // test_concrete_vao();
-        // test_concrete_vbo();
-        // test_concrete_texture();
-        // test_renderer_backend_context();
 
         // engine/texture_system
         test_texture_manager();
