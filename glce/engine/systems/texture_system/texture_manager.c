@@ -34,8 +34,8 @@
 
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
 /**
  * @brief テクスチャリソース(CPU / GPU)リソース管理システム構造体定義

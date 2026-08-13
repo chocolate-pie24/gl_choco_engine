@@ -1,6 +1,6 @@
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/internal/renderer_backend_context_internal.h"
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

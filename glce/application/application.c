@@ -76,11 +76,11 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
 #include "engine/systems/camera_system/camera_manager/camera_manager.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
