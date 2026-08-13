@@ -166,7 +166,7 @@
  * プロジェクト作成者が実装との整合性を確認・修正した。
  * 実装コードはプロジェクト作成者が作成し、その内容に責任を負う。
  */
-#include "engine/systems/renderer/core/allocators/range_allocator.h"
+#include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 #include <stdio.h>  // for fprintf
 #include <string.h> // for memset
@@ -178,6 +178,8 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
+
+#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
 
 /**
  * @brief nodeの利用状態、range用途、およびlist接続状態を表す

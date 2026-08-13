@@ -81,7 +81,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/renderer/core/allocators/range_allocator.h"
+#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 
