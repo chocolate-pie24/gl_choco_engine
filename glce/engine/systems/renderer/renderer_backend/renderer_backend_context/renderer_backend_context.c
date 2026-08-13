@@ -17,15 +17,15 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_texture.h"
+#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_shader_vtable.h"
+#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vao_vtable.h"
+#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vbo_vtable.h"
+#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_texture_vtable.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/concrete_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_texture.h"
 
 static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
 static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);

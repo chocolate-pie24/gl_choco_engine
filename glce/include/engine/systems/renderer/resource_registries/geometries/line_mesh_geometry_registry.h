@@ -33,7 +33,7 @@ typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**<
 
 typedef struct linear_alloc linear_alloc_t;                                 /**< リニアアロケータのopaque型 */
 typedef struct line_mesh_geometry line_mesh_geometry_t;                     /**< 線分描画用ジオメトリのopaque型 */
-typedef struct vertex_buffer_range vertex_buffer_range_t;
+typedef struct vbo_range vbo_range_t;
 
 /**
  * @brief 線分描画用ジオメトリレジストリ用のメモリを確保し、初期化する
@@ -141,7 +141,7 @@ resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_ge
 //  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_にgeometry_id_のジオメトリが登録されていない
 //  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
 //  */
-resource_registry_result_t line_mesh_geometry_registry_vertex_buffer_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_);
+resource_registry_result_t line_mesh_geometry_registry_vbo_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vbo_range_t* out_vbo_range_);
 
 // /**
 //  * @brief geometry_の複製と対応する頂点オフセットをregistry_に登録し、ジオメトリidを取得する
@@ -174,7 +174,7 @@ resource_registry_result_t line_mesh_geometry_registry_vertex_buffer_range_get(c
 //  * - registry_に空きスロットが見つからない
 //  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
 //  */
-resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const line_mesh_geometry_t* geometry_, const vertex_buffer_range_t* vertex_buffer_range_, int16_t* out_geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const line_mesh_geometry_t* geometry_, const vbo_range_t* vbo_range_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する

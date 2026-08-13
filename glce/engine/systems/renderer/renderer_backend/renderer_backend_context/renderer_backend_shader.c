@@ -6,7 +6,7 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_interface/interface_shader.h"
+#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_shader_vtable.h"
 
 renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;

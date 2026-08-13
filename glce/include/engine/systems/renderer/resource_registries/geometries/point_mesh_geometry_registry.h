@@ -33,7 +33,7 @@ typedef struct point_mesh_geometry_registry point_mesh_geometry_registry_t; /**<
 
 typedef struct linear_alloc linear_alloc_t;                                 /**< リニアアロケータのopaque型 */
 typedef struct point_mesh_geometry point_mesh_geometry_t;                   /**< 点描画用ジオメトリのopaque型 */
-typedef struct vertex_buffer_range vertex_buffer_range_t;
+typedef struct vbo_range vbo_range_t;
 
 /**
  * @brief 点描画用ジオメトリレジストリ用のメモリを確保し、初期化する
@@ -119,9 +119,9 @@ const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const poi
  */
 resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_);
 
-resource_registry_result_t point_mesh_geometry_registry_vertex_buffer_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vertex_buffer_range_t* out_vertex_buffer_range_);
+resource_registry_result_t point_mesh_geometry_registry_vbo_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_, vbo_range_t* out_vbo_range_);
 
-resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const point_mesh_geometry_t* geometry_, const vertex_buffer_range_t* vertex_buffer_range_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const point_mesh_geometry_t* geometry_, const vbo_range_t* vbo_range_, int16_t* out_geometry_id_);
 
 /**
  * @brief registry_からgeometry_id_のジオメトリを登録解除する

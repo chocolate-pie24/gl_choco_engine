@@ -68,10 +68,6 @@
 
 // test: engine/systems/renderer
 #include "engine/systems/renderer/core/test_renderer_err_utils.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/test_concrete_texture.h"
 // #include "engine/systems/renderer/renderer_backend/renderer_backend_context/test_renderer_backend_context.h"
 
 // test: engine/systems/texture_system

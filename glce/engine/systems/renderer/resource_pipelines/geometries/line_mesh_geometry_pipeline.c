@@ -49,7 +49,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     int16_t tmp_geometry_id = 0;
-    vertex_buffer_range_t tmp_buffer_range = { 0 };
+    vbo_range_t tmp_buffer_range = { 0 };
 
     line_mesh_geometry_t* geometry = NULL;
     bool vbo_written = false;
@@ -74,7 +74,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     ret_shader = line_mesh_shader_vbo_write(backend_context_, shader_, vertex_count_, vertices_, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count_);
         goto cleanup;
     }
     vbo_written = true;
@@ -114,7 +114,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
 
     size_t vertex_count = 0;
     int16_t tmp_geometry_id = 0;
-    vertex_buffer_range_t tmp_buffer_range = { 0 };
+    vbo_range_t tmp_buffer_range = { 0 };
 
     line_mesh_geometry_t* geometry = NULL;
     const line_vertex_t* vertices = NULL;
@@ -152,7 +152,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
     ret_shader = line_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, vertices, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_count);
         goto cleanup;
     }
     vbo_written = true;
@@ -189,12 +189,12 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    vertex_buffer_range_t vertex_buffer_range = { 0 };
+    vbo_range_t vbo_range = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    ret_registry = line_mesh_geometry_registry_vertex_buffer_range_get(geometry_registry_, geometry_id_, &vertex_buffer_range);
+    ret_registry = line_mesh_geometry_registry_vbo_range_get(geometry_registry_, geometry_id_, &vbo_range);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
@@ -209,7 +209,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_
         goto cleanup;
     }
 
-    ret_shader = line_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    ret_shader = line_mesh_shader_vbo_free(shader_, &vbo_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));

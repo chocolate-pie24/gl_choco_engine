@@ -1,7 +1,7 @@
 /**
  * @ingroup renderer
  *
- * @file interface_texture.h
+ * @file renderer_backend_texture_vtable.h
  * @author chocolate-pie24
  * @brief テクスチャ操作関数をまとめたvtableを定義する
  *
@@ -14,8 +14,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_INTERFACE_TEXTURE_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_INTERFACE_INTERFACE_TEXTURE_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_VTABLES_RENDERER_BACKEND_TEXTURE_VTABLE_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_VTABLES_RENDERER_BACKEND_TEXTURE_VTABLE_H
 
 #ifdef __cplusplus
 extern "C" {

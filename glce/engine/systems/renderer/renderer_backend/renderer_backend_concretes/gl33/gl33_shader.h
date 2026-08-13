@@ -1,7 +1,7 @@
 /**
  * @ingroup renderer
  *
- * @file concrete_shader.h
+ * @file gl33_shader.h
  * @author chocolate-pie24
  * @brief renderer backendがシェーダー機能をOpenGL3.3で実現できるように、renderer_shader_vtable_tのOpenGL3.3具体実装を提供する
  *
@@ -14,8 +14,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_CONCRETE_SHADER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_CONCRETE_SHADER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_SHADER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONCRETES_GL33_GL33_SHADER_H
 
 #ifdef __cplusplus
 extern "C" {

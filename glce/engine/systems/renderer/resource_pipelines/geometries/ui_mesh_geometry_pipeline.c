@@ -49,7 +49,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ui_geom_config_t ui_geometry_config = { 0 };
     ui_mesh_geometry_t* geometry = NULL;
     ui_vertex_t ui_vertex[6] = { 0 };
-    vertex_buffer_range_t tmp_buffer_range = { 0 };
+    vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
 
     const size_t vertex_count = 6;
@@ -96,7 +96,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ret_shader = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vertex_buffer_append_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, 6);
         goto cleanup;
     }
     vbo_written = true;
@@ -132,12 +132,12 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    vertex_buffer_range_t vertex_buffer_range = { 0 };
+    vbo_range_t vbo_range = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_release", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    ret_registry = ui_mesh_geometry_registry_vertex_buffer_range_get(geometry_registry_, geometry_id_, &vertex_buffer_range);
+    ret_registry = ui_mesh_geometry_registry_vbo_range_get(geometry_registry_, geometry_id_, &vbo_range);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
@@ -152,7 +152,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* s
         goto cleanup;
     }
 
-    ret_shader = ui_mesh_shader_vbo_free(shader_, &vertex_buffer_range);
+    ret_shader = ui_mesh_shader_vbo_free(shader_, &vbo_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_release(%s) - ui_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));

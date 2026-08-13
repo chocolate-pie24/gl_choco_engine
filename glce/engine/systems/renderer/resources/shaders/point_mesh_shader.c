@@ -32,7 +32,7 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_shader.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vertex_array.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context/renderer_backend_vao.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
@@ -227,7 +227,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->vao")
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->vbo_manager, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vao_initialize", "point_mesh_shader_->vbo_manager")
 
-    ret_renderer_backend = renderer_backend_vertex_array_create(backend_context_, &point_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_create(backend_context_, &point_mesh_shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to create point mesh vao.", shader_rslt_to_str(ret));
@@ -235,7 +235,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     }
     vao_created = true;
 
-    ret_renderer_backend = renderer_backend_vertex_array_bind(backend_context_, point_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_bind(backend_context_, point_mesh_shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to bind vertex array.", shader_rslt_to_str(ret));
@@ -251,17 +251,17 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     }
     vbo_bound = true;
 
-    ret_renderer_backend = renderer_backend_vertex_array_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), offsetof(point_vertex_t, position));  // 頂点座標(layout = 0)
+    ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), offsetof(point_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(position).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(position).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_vertex_array_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), offsetof(point_vertex_t, color));    // 色情報(layout = 1)
+    ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), offsetof(point_vertex_t, color));    // 色情報(layout = 1)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("point_mesh_shader_vertex_buffer_create(%s) - Failed to set vertex array attribute(color).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(color).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -273,7 +273,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     }
     vbo_bound = false;
 
-    ret_renderer_backend = renderer_backend_vertex_array_unbind(backend_context_);
+    ret_renderer_backend = renderer_backend_vao_unbind(backend_context_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to unbind vertex array.", shader_rslt_to_str(ret));
@@ -294,7 +294,7 @@ cleanup:
             }
         }
         if(vao_bound) {
-            ret_renderer_backend = renderer_backend_vertex_array_unbind(backend_context_);
+            ret_renderer_backend = renderer_backend_vao_unbind(backend_context_);
             if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
                 ret_cleanup = shader_rslt_convert_renderer_backend(ret_renderer_backend);
                 ERROR_MESSAGE("point_mesh_shader_vao_initialize failed.");
@@ -302,7 +302,7 @@ cleanup:
             }
         }
         if(vao_created) {
-            renderer_backend_vertex_array_destroy(backend_context_, &point_mesh_shader_->vao);
+            renderer_backend_vao_destroy(backend_context_, &point_mesh_shader_->vao);
         }
     }
     return ret;
@@ -321,11 +321,11 @@ void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_conte
         vbo_manager_destroy(&point_mesh_shader_->vbo_manager, backend_context_);
     }
     if(NULL != point_mesh_shader_->vao) {
-        renderer_backend_vertex_array_destroy(backend_context_, &point_mesh_shader_->vao);
+        renderer_backend_vao_destroy(backend_context_, &point_mesh_shader_->vao);
     }
 }
 
-shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t vertex_count_, const point_vertex_t* vertices_, vertex_buffer_range_t* out_buffer_range_) {
+shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, size_t vertex_count_, const point_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -381,7 +381,7 @@ cleanup:
     return ret;
 }
 
-shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shader_, const vertex_buffer_range_t* buffer_range_) {
+shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shader_, const vbo_range_t* buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -404,19 +404,19 @@ cleanup:
     return ret;
 }
 
-shader_result_t point_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const point_mesh_shader_t* point_mesh_shader_) {
+shader_result_t point_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const point_mesh_shader_t* point_mesh_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vertex_array_bind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vertex_array_bind", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vertex_array_bind", "vao")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vao_bind", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vao_bind", "point_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vao_bind", "vao")
 
-    ret_renderer_backend = renderer_backend_vertex_array_bind(backend_context_, point_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_bind(backend_context_, point_mesh_shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("point_mesh_shader_vertex_array_bind(%s) - Failed to bind vertex array.", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 

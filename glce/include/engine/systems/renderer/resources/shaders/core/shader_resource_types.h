@@ -28,10 +28,10 @@ typedef struct draw_range {
     size_t vertex_count;
 } draw_range_t;
 
-typedef struct vertex_buffer_range {
+typedef struct vbo_range {
     draw_range_t draw_range;
     vertex_allocation_t allocation_info;
-} vertex_buffer_range_t;
+} vbo_range_t;
 
 #ifdef __cplusplus
 }

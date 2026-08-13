@@ -1,7 +1,7 @@
 /**
  * @ingroup renderer
  *
- * @file renderer_backend_vertex_array.h
+ * @file renderer_backend_vao.h
  * @author chocolate-pie24
  * @brief renderer_backendが保有するVAO機能の窓口を上位層に提供する
  *
@@ -14,8 +14,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VERTEX_ARRAY_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VERTEX_ARRAY_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VAO_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_CONTEXT_RENDERER_BACKEND_VAO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,55 +34,55 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 /**
  * @brief VAO内部状態管理構造体インスタンスのメモリを確保する
  *
- * @note 確保されたリソースは @ref renderer_backend_vertex_array_destroy を使用して破棄する
+ * @note 確保されたリソースは @ref renderer_backend_vao_destroy を使用して破棄する
  *
  * @details
  * - backend_context_が保有する仮想関数テーブルの関数を使用しメモリ確保を行う
  * - 構造体インスタンスのメモリ確保に成功した場合、VAOのGPU側リソースも確保される
  *
  * @param[in] backend_context_ VAOメモリ確保関数保有構造体インスタンスへのポインタ
- * @param[out] vertex_array_ メモリ確保対象VAO構造体インスタンスへのダブルポインタ
+ * @param[out] vao_ メモリ確保対象VAO構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - vertex_array_ == NULL
- * - *vertex_array_ != NULL
+ * - vao_ == NULL
+ * - *vao_ != NULL
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vertex_array_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_);
+renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vao_);
 
 /**
  * @brief VAO内部状態管理構造体インスタンスを破棄する
  *
  * @details
  * - VAOのGPU側リソースの解放も行う
- * - 本関数実行後、vertex_array_ == NULLになる
- * - 既に解放済みのvertex_array_に対しては何もしない
+ * - 本関数実行後、vao_ == NULLになる
+ * - 既に解放済みのvao_に対しては何もしない
  * - backend_context_ == NULLの場合は何もしない
  *
  * @param[in] backend_context_ リソース破棄用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_array_ 破棄対象インスタンスへのダブルポインタ
+ * @param[in] vao_ 破棄対象インスタンスへのダブルポインタ
  */
-void renderer_backend_vertex_array_destroy(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vertex_array_);
+void renderer_backend_vao_destroy(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vao_);
 
 /**
  * @brief VAOをbindする
  *
  * @param[in] backend_context_ bind用vtable保有構造体インスタンスへのポインタ
- * @param[in] vertex_array_ bind対象VAOハンドル構造体インスタンスへのポインタ
+ * @param[in] vao_ bind対象VAOハンドル構造体インスタンスへのポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - vertex_array_ == NULL
+ * - vao_ == NULL
  * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
  * - backend_context_->vao_vtable == NULL
  * - VAOが未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vertex_array_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vertex_array_);
+renderer_backend_result_t renderer_backend_vao_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vao_);
 
 /**
  * @brief VAOをunbindする
@@ -93,7 +93,7 @@ renderer_backend_result_t renderer_backend_vertex_array_bind(const renderer_back
  * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vertex_array_unbind(const renderer_backend_context_t* backend_context_);
+renderer_backend_result_t renderer_backend_vao_unbind(const renderer_backend_context_t* backend_context_);
 
  /**
  * @brief 現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する
@@ -110,7 +110,7 @@ renderer_backend_result_t renderer_backend_vertex_array_unbind(const renderer_ba
  *
  * メモ:
  * @code{.c}
- * static const GLfloat vertex_buffer_data[] = {
+ * static const GLfloat vbo_data[] = {
  * -1.0f, -1.0f, 0.0f,
  * 1.0f, -1.0f, 0.0f,
  * 0.0f,  1.0f, 0.0f,
@@ -131,7 +131,7 @@ renderer_backend_result_t renderer_backend_vertex_array_unbind(const renderer_ba
  * @retval RENDERER_BACKEND_RUNTIME_ERROR type_の値が既定値外
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vertex_array_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
+renderer_backend_result_t renderer_backend_vao_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
 #ifdef __cplusplus
 }

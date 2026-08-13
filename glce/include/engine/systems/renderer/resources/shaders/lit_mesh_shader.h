@@ -50,11 +50,11 @@ shader_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* backe
 
 void lit_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
 
-shader_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vertex_buffer_range_t* out_buffer_range_);
+shader_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
 
-shader_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, const vertex_buffer_range_t* buffer_range_);
+shader_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, const vbo_range_t* buffer_range_);
 
-shader_result_t lit_mesh_shader_vertex_array_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
+shader_result_t lit_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
 
 shader_result_t lit_mesh_shader_use(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
 
