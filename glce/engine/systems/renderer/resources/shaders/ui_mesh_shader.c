@@ -251,14 +251,14 @@ shader_result_t ui_mesh_shader_vao_initialize(renderer_backend_context_t* backen
     ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("ui_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(vertex).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(vertex).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, tex_coord));    // テクスチャuv座標(layout = 1)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("ui_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(texture).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(texture).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -333,7 +333,7 @@ shader_result_t ui_mesh_shader_vbo_write(const renderer_backend_context_t* backe
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(ui_mesh_shader_is_initialized(ui_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "ui_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(6 == vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(6 == vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "out_buffer_range_")
 
     write_size = 6 * sizeof(ui_vertex_t);

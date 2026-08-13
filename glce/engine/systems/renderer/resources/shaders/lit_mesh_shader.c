@@ -334,13 +334,13 @@ shader_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* back
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(lit_mesh_shader_is_initialized(lit_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "lit_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "out_buffer_range_")
 
     if((SIZE_MAX / sizeof(point_normal_vertex_t) < vertex_count_)) {
         ret = SHADER_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - line_mesh_shader_vbo_write failed.", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - lit_mesh_shader_vbo_write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
     write_size = sizeof(point_normal_vertex_t) * vertex_count_;
@@ -355,7 +355,7 @@ shader_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* back
 
     if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(point_normal_vertex_t))) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 

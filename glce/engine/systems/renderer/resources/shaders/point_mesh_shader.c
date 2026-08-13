@@ -254,14 +254,14 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 0, 3, RENDERER_TYPE_FLOAT, false, sizeof(point_vertex_t), offsetof(point_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("point_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(position).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(position).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(point_vertex_t), offsetof(point_vertex_t, color));    // 色情報(layout = 1)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("point_mesh_shader_vbo_create(%s) - Failed to set vertex array attribute(color).", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to set vertex array attribute(color).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -335,11 +335,11 @@ shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* ba
 
     bool vbo_written = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "point_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_point_write", "out_buffer_range_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_write", "backend_context_")
+    IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_write", "point_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_write", "vertices_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_write", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_write", "out_buffer_range_")
 
     if((SIZE_MAX / sizeof(point_vertex_t) < vertex_count_)) {
         ret = SHADER_OVERFLOW;

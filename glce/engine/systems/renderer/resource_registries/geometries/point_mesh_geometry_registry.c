@@ -1,6 +1,6 @@
 /** @ingroup renderer
  *
- * @file lit_mesh_geometry_registry.c
+ * @file point_mesh_geometry_registry.c
  * @author chocolate-pie24
  *
  * @brief 点描画用ジオメトリレジストリAPIの実装

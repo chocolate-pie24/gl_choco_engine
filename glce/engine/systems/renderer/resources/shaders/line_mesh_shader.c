@@ -339,8 +339,8 @@ shader_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* bac
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_shader_is_initialized(line_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "size_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_write", "out_buffer_range_")
 
     if((SIZE_MAX / sizeof(line_vertex_t) < vertex_count_)) {
