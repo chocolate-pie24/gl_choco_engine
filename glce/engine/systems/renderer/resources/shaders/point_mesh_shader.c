@@ -351,14 +351,14 @@ shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* ba
     ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, backend_context_, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
     vbo_written = true;
 
     if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(point_vertex_t))) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
