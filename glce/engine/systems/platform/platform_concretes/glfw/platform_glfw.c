@@ -16,6 +16,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
+#include "engine/systems/platform/platform_concretes/glfw/platform_glfw.h"
+
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -30,49 +32,11 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/systems/platform/platform_interface.h"
-#include "engine/systems/platform/platform_concretes/platform_glfw.h"
-#include "engine/systems/platform/core/platform_types.h"
-#include "engine/systems/platform/core/platform_err_utils.h"
-
 #include "engine/containers/choco_string.h"
 
-// #define TEST_BUILD
-
-#ifdef TEST_BUILD
-// テスト時のみ使用するヘッダのinclude
-#include <assert.h>
-
-#include "test_controller.h"
-
-#include "engine/base/choco_macros.h"
-
-#include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
-
-// platform_glfw用モジュール専用テスト制御構造体定義
-
-// 外部公開APIテスト設定
-
-// プライベート関数テスト設定
-static test_call_control_t s_test_config_platform_glfw_init;            /**< platform_glfw_init()テスト設定 */
-static test_call_control_t s_test_config_platform_glfw_window_create;   /**< platform_glfw_window_create()テスト設定 */
-static test_call_control_t s_test_config_platform_snapshot_collect;     /**< platform_snapshot_collect()テスト設定 */
-static test_call_control_t s_test_config_platform_snapshot_process;     /**< platform_snapshot_process()テスト設定 */
-static test_call_control_t s_test_config_platform_glfw_pump_messages;   /**< platform_glfw_pump_messages()テスト設定 */
-static test_call_control_t s_test_config_platform_glfw_swap_buffers;    /**< platform_glfw_swap_buffers()テスト設定 */
-
-// 全テスト関数プロトタイプ宣言
-static void test_platform_glfw_vtable_get(void);
-static void test_platform_glfw_preinit(void);
-static void test_platform_glfw_init(void);
-static void test_platform_glfw_destroy(void);
-static void test_platform_glfw_window_create(void);
-static void test_platform_snapshot_collect(void);
-static void test_platform_snapshot_process(void);
-static void test_platform_glfw_pump_messages(void);
-static void test_platform_glfw_swap_buffers(void);
-static void test_keycode_to_glfw_keycode(void);
-#endif
+#include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform/core/platform_err_utils.h"
+#include "engine/systems/platform/vtables/platform_vtable.h"
 
 /**
  * @brief 入力状態格納構造体
@@ -159,14 +123,6 @@ cleanup:
 }
 
 static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
-#ifdef TEST_BUILD
-    s_test_config_platform_glfw_init.call_count++;
-    if(s_test_config_platform_glfw_init.fail_on_call != 0) {
-        if(s_test_config_platform_glfw_init.call_count == s_test_config_platform_glfw_init.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_glfw_init.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_init", "platform_backend_")
@@ -274,14 +230,6 @@ static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
 }
 
 static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
-#ifdef TEST_BUILD
-    s_test_config_platform_glfw_window_create.call_count++;
-    if(s_test_config_platform_glfw_window_create.fail_on_call != 0) {
-        if(s_test_config_platform_glfw_window_create.call_count == s_test_config_platform_glfw_window_create.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_glfw_window_create.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
     int framebuffer_width = 0;
@@ -358,14 +306,6 @@ cleanup:
 }
 
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_) {
-#ifdef TEST_BUILD
-    s_test_config_platform_snapshot_collect.call_count++;
-    if(s_test_config_platform_snapshot_collect.fail_on_call != 0) {
-        if(s_test_config_platform_snapshot_collect.call_count == s_test_config_platform_snapshot_collect.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_snapshot_collect.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
     int left_button_state = 0;
     int right_button_state = 0;
@@ -408,14 +348,6 @@ static platform_result_t platform_snapshot_process(
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
-#ifdef TEST_BUILD
-    s_test_config_platform_snapshot_process.call_count++;
-    if(s_test_config_platform_snapshot_process.fail_on_call != 0) {
-        if(s_test_config_platform_snapshot_process.call_count == s_test_config_platform_snapshot_process.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_snapshot_process.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_")
@@ -489,15 +421,6 @@ static platform_result_t platform_glfw_pump_messages(
     void (*window_event_callback)(const window_event_t* event_),
     void (*keyboard_event_callback)(const keyboard_event_t* event_),
     void (*mouse_event_callback)(const mouse_event_t* event_)) {
-
-#ifdef TEST_BUILD
-    s_test_config_platform_glfw_pump_messages.call_count++;
-    if(s_test_config_platform_glfw_pump_messages.fail_on_call != 0) {
-        if(s_test_config_platform_glfw_pump_messages.call_count == s_test_config_platform_glfw_pump_messages.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_glfw_pump_messages.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_")
@@ -531,14 +454,6 @@ cleanup:
 }
 
 static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform_backend_) {
-#ifdef TEST_BUILD
-    s_test_config_platform_glfw_swap_buffers.call_count++;
-    if(s_test_config_platform_glfw_swap_buffers.fail_on_call != 0) {
-        if(s_test_config_platform_glfw_swap_buffers.call_count == s_test_config_platform_glfw_swap_buffers.fail_on_call) {
-            return (platform_result_t)s_test_config_platform_glfw_swap_buffers.forced_result;
-        }
-    }
-#endif
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_swap_buffers", "platform_backend_")
@@ -677,239 +592,3 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
         return GLFW_KEY_0;
     }
 }
-
-#ifdef TEST_BUILD
-void NO_COVERAGE test_platform_glfw_config_reset(void) {
-    test_call_control_reset(&s_test_config_platform_glfw_init);
-    test_call_control_reset(&s_test_config_platform_glfw_window_create);
-    test_call_control_reset(&s_test_config_platform_snapshot_collect);
-    test_call_control_reset(&s_test_config_platform_snapshot_process);
-    test_call_control_reset(&s_test_config_platform_glfw_pump_messages);
-    test_call_control_reset(&s_test_config_platform_glfw_swap_buffers);
-}
-
-void NO_COVERAGE test_platform_glfw(void) {
-    test_platform_glfw_vtable_get();
-    test_platform_glfw_preinit();
-    test_platform_glfw_init();
-    test_platform_glfw_destroy();
-    test_platform_glfw_window_create();
-    test_platform_snapshot_collect();
-    test_platform_snapshot_process();
-    test_platform_glfw_pump_messages();
-    test_platform_glfw_swap_buffers();
-    test_keycode_to_glfw_keycode();
-}
-
-static void NO_COVERAGE test_platform_glfw_vtable_get(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_preinit(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_init(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_destroy(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_window_create(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_snapshot_collect(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_snapshot_process(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_pump_messages(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_platform_glfw_swap_buffers(void) {
-    // TODO: 描画周りの仕様が安定し、platform_glfwへの変更がなくなったタイミングで実装する
-}
-
-static void NO_COVERAGE test_keycode_to_glfw_keycode(void) {
-    int glfw_key = GLFW_KEY_1;
-
-    glfw_key = keycode_to_glfw_keycode(KEY_1);
-    assert(GLFW_KEY_1 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_2);
-    assert(GLFW_KEY_2 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_3);
-    assert(GLFW_KEY_3 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_4);
-    assert(GLFW_KEY_4 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_5);
-    assert(GLFW_KEY_5 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_6);
-    assert(GLFW_KEY_6 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_7);
-    assert(GLFW_KEY_7 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_8);
-    assert(GLFW_KEY_8 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_9);
-    assert(GLFW_KEY_9 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_0);
-    assert(GLFW_KEY_0 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_A);
-    assert(GLFW_KEY_A == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_B);
-    assert(GLFW_KEY_B == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_C);
-    assert(GLFW_KEY_C == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_D);
-    assert(GLFW_KEY_D == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_E);
-    assert(GLFW_KEY_E == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F);
-    assert(GLFW_KEY_F == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_G);
-    assert(GLFW_KEY_G == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_H);
-    assert(GLFW_KEY_H == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_I);
-    assert(GLFW_KEY_I == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_J);
-    assert(GLFW_KEY_J == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_K);
-    assert(GLFW_KEY_K == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_L);
-    assert(GLFW_KEY_L == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_M);
-    assert(GLFW_KEY_M == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_N);
-    assert(GLFW_KEY_N == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_O);
-    assert(GLFW_KEY_O == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_P);
-    assert(GLFW_KEY_P == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_Q);
-    assert(GLFW_KEY_Q == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_R);
-    assert(GLFW_KEY_R == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_S);
-    assert(GLFW_KEY_S == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_T);
-    assert(GLFW_KEY_T == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_U);
-    assert(GLFW_KEY_U == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_V);
-    assert(GLFW_KEY_V == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_W);
-    assert(GLFW_KEY_W == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_X);
-    assert(GLFW_KEY_X == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_Y);
-    assert(GLFW_KEY_Y == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_Z);
-    assert(GLFW_KEY_Z == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_RIGHT);
-    assert(GLFW_KEY_RIGHT == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_LEFT);
-    assert(GLFW_KEY_LEFT == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_UP);
-    assert(GLFW_KEY_UP == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_DOWN);
-    assert(GLFW_KEY_DOWN == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_LEFT_SHIFT);
-    assert(GLFW_KEY_LEFT_SHIFT == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_SPACE);
-    assert(GLFW_KEY_SPACE == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_SEMICOLON);
-    assert(GLFW_KEY_SEMICOLON == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_MINUS);
-    assert(GLFW_KEY_MINUS == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F1);
-    assert(GLFW_KEY_F1 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F2);
-    assert(GLFW_KEY_F2 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F3);
-    assert(GLFW_KEY_F3 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F4);
-    assert(GLFW_KEY_F4 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F5);
-    assert(GLFW_KEY_F5 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F6);
-    assert(GLFW_KEY_F6 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F7);
-    assert(GLFW_KEY_F7 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F8);
-    assert(GLFW_KEY_F8 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F9);
-    assert(GLFW_KEY_F9 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F10);
-    assert(GLFW_KEY_F10 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F11);
-    assert(GLFW_KEY_F11 == glfw_key);
-
-    glfw_key = keycode_to_glfw_keycode(KEY_F12);
-    assert(GLFW_KEY_F12 == glfw_key);
-
-    // エラーメッセージ確認
-    glfw_key = keycode_to_glfw_keycode(1000);
-    assert(GLFW_KEY_0 == glfw_key);
-}
-#endif

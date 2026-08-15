@@ -13,15 +13,13 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CONCRETES_PLATFORM_GLFW_H
-#define GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CONCRETES_PLATFORM_GLFW_H
+#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CONCRETES_GLFW_PLATFORM_GLFW_H
+#define GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CONCRETES_GLFW_PLATFORM_GLFW_H
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
-#include "engine/systems/platform/platform_interface.h"
+#include "engine/systems/platform/vtables/platform_vtable.h"
 
 /**
  * @brief GLFWプラットフォームを使用する際の仮想関数テーブルを取得する

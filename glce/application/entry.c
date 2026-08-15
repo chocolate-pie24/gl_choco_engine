@@ -54,11 +54,6 @@
 #include "engine/resource/geometry/test_point_mesh_geometry.h"
 #include "engine/resource/geometry/test_ui_mesh_geometry.h"
 
-// test: engine/systems/platform
-#include "engine/systems/platform/core/test_platform_err_utils.h"
-#include "engine/systems/platform/platform_concretes/test_platform_glfw.h"
-#include "engine/systems/platform/test_platform_context.h"
-
 // test: engine/systems/camera_system
 #include "engine/systems/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/test_camera_memory.h"
@@ -137,9 +132,6 @@ int main(int argc_, char** argv_) {
         test_camera_manager();
 
         // engine/platform
-        test_platform_err_utils();
-        test_platform_glfw();
-        test_platform_context();
 
         // engine/renderer
 

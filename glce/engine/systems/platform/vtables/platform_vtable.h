@@ -1,6 +1,6 @@
 /** @ingroup platform
  *
- * @file platform_interface.h
+ * @file platform_vtable.h
  * @author chocolate-pie24
  * @brief プラットフォームシステムのInterface構造体を提供する
  *
@@ -17,8 +17,8 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_INTERFACE_H
-#define GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_INTERFACE_H
+#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_VTABLES_PLATFORM_VTABLE_H
+#define GLCE_ENGINE_SYSTEMS_PLATFORM_VTABLES_PLATFORM_VTABLE_H
 
 #ifdef __cplusplus
 extern "C" {
