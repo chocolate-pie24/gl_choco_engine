@@ -253,13 +253,6 @@ texture_system_result_t texture_manager_register(renderer_backend_context_t* bac
             goto cleanup;
         }
 
-        ret_resource = texture_pixel_unload(tmp_cpu_resource);
-        if(RESOURCE_SUCCESS != ret_resource) {
-            ret = tex_sys_rslt_convert_resource(ret_resource);
-            ERROR_MESSAGE("texture_manager_register(%s) - Failed to unload texture pixels. texture name = '%s'.", tex_sys_rslt_to_str(ret), texture_name_);
-            goto cleanup;
-        }
-
         texture_manager_->cpu_resources[free_slot] = tmp_cpu_resource;
         texture_manager_->gpu_resources[free_slot] = tmp_gpu_resource;
         *out_texture_id_ = free_slot;
