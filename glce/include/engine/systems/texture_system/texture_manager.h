@@ -200,7 +200,7 @@ texture_system_result_t texture_manager_texture_id_get(const char* name_, const 
  * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
  * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
  */
-texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
+texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, const texture_manager_t* texture_manager_, const renderer_backend_texture_t** out_gpu_resource_);
 
 /**
  * @brief テクスチャリソース管理システムからテクスチャ名称を指定してGPUリソースを取得する
@@ -221,7 +221,7 @@ texture_system_result_t texture_manager_gpu_resource_get(int16_t texture_id_, co
  * @retval TEXTURE_SYSTEM_DATA_CORRUPTED 管理システムのデータ不整合
  * @retval TEXTURE_SYSTEM_SUCCESS 処理に成功し、正常終了
  */
-texture_system_result_t texture_manager_gpu_resource_get_by_name(const char* name_, const texture_manager_t* texture_manager_, renderer_backend_texture_t** out_gpu_resource_);
+texture_system_result_t texture_manager_gpu_resource_get_by_name(const char* name_, const texture_manager_t* texture_manager_, const renderer_backend_texture_t** out_gpu_resource_);
 
 #ifdef __cplusplus
 }

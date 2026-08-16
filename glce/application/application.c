@@ -50,11 +50,12 @@
 #include "engine/containers/ring_queue.h"
 #include "engine/containers/choco_string.h"
 
+#include "engine/resource/core/resource_types.h"
+
 #include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
@@ -88,7 +89,6 @@
 
 #include "engine/systems/texture_system/texture_manager.h"
 
-#include "engine/resource/texture/texture.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
 /**
@@ -698,7 +698,7 @@ application_result_t application_run(void) {
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
     int16_t tex_id_green = 0;
-    renderer_backend_texture_t* tex_gpu_resource = NULL;
+    const renderer_backend_texture_t* tex_gpu_resource = NULL;
 
     // penguin AABB
     const lit_mesh_geometry_t* penguin_geometry = NULL;

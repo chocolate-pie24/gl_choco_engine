@@ -48,7 +48,6 @@
 #include "engine/resource/core/test_resource_err_utils.h"
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
-#include "engine/resource/texture/test_texture.h"
 #include "engine/resource/geometry/test_lit_mesh_geometry.h"
 #include "engine/resource/geometry/test_line_mesh_geometry.h"
 #include "engine/resource/geometry/test_point_mesh_geometry.h"
@@ -60,11 +59,6 @@
 #include "engine/systems/camera_system/camera/test_camera.h"
 #include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
 #include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
-
-// test: engine/systems/renderer
-
-// test: engine/systems/texture_system
-#include "engine/systems/texture_system/test_texture_manager.h"
 
 #endif
 
@@ -118,7 +112,6 @@ int main(int argc_, char** argv_) {
         test_resource_err_utils();
         test_bmp_loader();
         test_stl_loader();
-        test_texture();
         test_lit_mesh_geometry();
         test_line_mesh_geometry();
         test_point_mesh_geometry();
@@ -130,13 +123,6 @@ int main(int argc_, char** argv_) {
         test_camera();
         test_flight_camera_controller();
         test_camera_manager();
-
-        // engine/platform
-
-        // engine/renderer
-
-        // engine/texture_system
-        test_texture_manager();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

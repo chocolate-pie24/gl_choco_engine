@@ -25,10 +25,10 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
-typedef struct texture texture_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
+typedef struct texture_cpu_resource texture_cpu_resource_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
 
 /**
- * @brief texture_tのメモリを確保し、テクスチャ名称を初期化する(名称以外のフィールドは0, NULLで初期化)
+ * @brief texture_cpu_resource_tのメモリを確保し、テクスチャ名称を初期化する(名称以外のフィールドは0, NULLで初期化)
  *
  * @note 処理に失敗した場合、texture_の状態は不変
  *
@@ -45,7 +45,7 @@ typedef struct texture texture_t; /**< テクスチャCPU側リソース内部�
  * @retval RESOURCE_OVERFLOW 計算過程でオーバーフロー発生(名称文字列が長すぎる)
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t texture_create(const char* name_, texture_t** texture_);
+resource_result_t texture_create(const char* name_, texture_cpu_resource_t** texture_);
 
 /**
  * @brief texture_が保持するリソースと、自身のメモリを解放し、NULLで初期化する
@@ -55,7 +55,7 @@ resource_result_t texture_create(const char* name_, texture_t** texture_);
  *
  * @param[in,out] texture_ リソース解放対象構造体インスタンスへのダブルポインタ
  */
-void texture_destroy(texture_t** texture_);
+void texture_destroy(texture_cpu_resource_t** texture_);
 
 /**
  * @brief テクスチャピクセルデータをロードする
@@ -90,7 +90,7 @@ void texture_destroy(texture_t** texture_);
  * @retval RESOURCE_UNSUPPORTED_FILE サポート対象外のBMPファイル(DEBUG_BUILD or TEST_BUILDで詳細なログが出力される)
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t texture_pixel_load(texture_t* texture_, const char* filepath_, const char* extension_);
+resource_result_t texture_pixel_load(texture_cpu_resource_t* texture_, const char* filepath_, const char* extension_);
 
 /**
  * @brief texture_が保持するピクセルデータのメモリを解放し、テクスチャ情報をNULL, 0で初期化する
@@ -108,12 +108,12 @@ resource_result_t texture_pixel_load(texture_t* texture_, const char* filepath_,
  * - texture_->pixels == NULL
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t texture_pixel_unload(texture_t* texture_);
+resource_result_t texture_pixel_unload(texture_cpu_resource_t* texture_);
 
 /**
  * @brief texture_が保持するピクセルデータへのポインタを取得する(委譲ではない)
  *
- * @warning 返されるポインタの所有権はtexture_tが保持する。呼び出し側は解放してはならない
+ * @warning 返されるポインタの所有権はtexture_cpu_resource_tが保持する。呼び出し側は解放してはならない
  * @note 処理に失敗した場合、out_pixels_の状態は不変
  *
  * @param[in] texture_ ピクセルデータを保持するテクスチャ構造体インスタンスへのポインタ
@@ -130,7 +130,7 @@ resource_result_t texture_pixel_unload(texture_t* texture_);
  * @retval RESOURCE_DATA_CORRUPTED texture_->name == NULL
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t texture_pixel_get(const texture_t* texture_, uint8_t** out_pixels_);
+resource_result_t texture_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_);
 
 /**
  * @brief テクスチャのピクセルサイズを取得する
@@ -155,7 +155,7 @@ resource_result_t texture_pixel_get(const texture_t* texture_, uint8_t** out_pix
  * @retval RESOURCE_DATA_CORRUPTED texture_->name == NULL
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-resource_result_t texture_pixel_size_get(const texture_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_);
+resource_result_t texture_pixel_size_get(const texture_cpu_resource_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_);
 
 /**
  * @brief texture_が保持するテクスチャ名称をchar*型文字列で取得する
@@ -167,7 +167,7 @@ resource_result_t texture_pixel_size_get(const texture_t* texture_, uint16_t* wi
  *
  * @return const char* テクスチャ名称文字列
  */
-const char* texture_name_get(const texture_t* texture_);
+const char* texture_name_get(const texture_cpu_resource_t* texture_);
 
 #ifdef __cplusplus
 }
