@@ -1,6 +1,6 @@
 /** @ingroup resource
  *
- * @file texture.c
+ * @file texture_cpu_resource.c
  * @author chocolate-pie24
  * @brief テクスチャCPU側リソースを操作するモジュールAPIの実装
  *
@@ -13,7 +13,7 @@
  * MIT License. See LICENSE file in the project root for full license text.
  *
  */
-#include "engine/resource/texture/texture.h"
+#include "engine/resource/texture/texture_cpu_resource.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -23,9 +23,6 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/filesystem/filesystem.h"
-
-#include "engine/io_utils/fs_utils.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -49,47 +46,35 @@ typedef enum {
  *
  */
 struct texture_cpu_resource {
-    choco_string_t* name;   /**< テクスチャCPU側リソース名称 */
-
     uint16_t width;         /**< テクスチャ幅 */
     uint16_t height;        /**< テクスチャ高さ(左上原点の画像を基準にする) */
     uint8_t channel_count;  /**< チャンネルカウント(RGB or RGBAのみサポート) */
-
     uint8_t* pixels;        /**< テクスチャピクセルデータ */
 };
 
 static resource_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
 static resource_result_t test_texture_generate(test_texture_color_t test_texture_color_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
+static bool texture_cpu_resource_is_unloaded(const texture_cpu_resource_t* texture_);
 
-resource_result_t texture_create(const char* name_, texture_cpu_resource_t** texture_) {
+resource_result_t texture_cpu_resource_create(texture_cpu_resource_t** texture_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_create", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_create", "texture_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_create", "*texture_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "texture_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "*texture_")
 
     ret_mem = memory_system_allocate(sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
-        ERROR_MESSAGE("texture_create(%s) - Failed to allocate memory for texture_cpu_resource_t.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Failed to allocate memory for texture_cpu_resource_t.", resource_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp_cpu_resource->name = NULL;
     tmp_cpu_resource->channel_count = 0;
     tmp_cpu_resource->height = 0;
     tmp_cpu_resource->width = 0;
     tmp_cpu_resource->pixels = NULL;
-
-    ret_string = choco_string_create_from_c_string(name_, &tmp_cpu_resource->name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("texture_create(%s) - Failed to create texture name.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     *texture_ = tmp_cpu_resource;
     ret = RESOURCE_SUCCESS;
@@ -97,9 +82,6 @@ resource_result_t texture_create(const char* name_, texture_cpu_resource_t** tex
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
         if(NULL != tmp_cpu_resource) {
-            if(NULL != tmp_cpu_resource->name) {
-                choco_string_destroy(&tmp_cpu_resource->name);
-            }
             memory_system_free(tmp_cpu_resource, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
             tmp_cpu_resource = NULL;
         }
@@ -107,7 +89,7 @@ cleanup:
     return ret;
 }
 
-void texture_destroy(texture_cpu_resource_t** texture_) {
+void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
     if(NULL == texture_) {
         return;
@@ -116,97 +98,61 @@ void texture_destroy(texture_cpu_resource_t** texture_) {
         return;
     }
     if(NULL != (*texture_)->pixels) {
-        ret = texture_pixel_unload(*texture_);
+        ret = texture_cpu_resource_pixel_unload(*texture_);
         if(RESOURCE_SUCCESS != ret) {
-            const char* texture_name = NULL;
-            if(NULL == (*texture_)->name) {
-                texture_name = "corrupted";
-            } else {
-                texture_name = choco_string_c_str((*texture_)->name);
-            }
-            WARN_MESSAGE("texture_destroy(%s) - Failed to unload texture pixels during destroy. texture_name = '%s'. Continue destroying texture object.", resource_rslt_to_str(ret), texture_name);
+            WARN_MESSAGE("texture_cpu_resource_destroy(%s) - Failed to unload texture pixels during destroy. Continue destroying texture object.", resource_rslt_to_str(ret));
         }
-    }
-    if(NULL != (*texture_)->name) {
-        choco_string_destroy(&(*texture_)->name);
     }
 
     memory_system_free(*texture_, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
     *texture_ = NULL;
 }
 
-resource_result_t texture_pixel_load(texture_cpu_resource_t* texture_, const char* filepath_, const char* extension_) {
+// NOTE: test_texture以外はtexture_source_にはBMPファイルのフルパスを渡す
+resource_result_t texture_cpu_resource_pixel_load(texture_cpu_resource_t* texture_, const char* texture_source_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     uint16_t tmp_width = 0;
     uint16_t tmp_height = 0;
     uint8_t tmp_channel_count = 0;
     uint8_t* tmp_pixels = NULL;
 
-    fs_utils_t* fs_utils = NULL;
-    choco_string_t* fullpath = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_load", "texture_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->name, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "texture_pixel_load", "texture_->name")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_load", "texture_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == texture_->channel_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_load", "0 != texture_->channel_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == texture_->width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_load", "0 != texture_->width")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_load", "0 != texture_->height")
-
-    if(choco_string_equal("test_texture_red", choco_string_c_str(texture_->name))) {
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_load", "texture_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_source_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_load", "texture_source_")
+    if(!texture_cpu_resource_is_valid(texture_)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - Provided texture is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(texture_cpu_resource_is_loaded(texture_)) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - provided texture is already loaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(choco_string_equal("test_texture_red", texture_source_)) {
         ret = test_texture_generate(TEST_TEXTURE_RED, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
         if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create red test texture.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - Failed to create red test texture.", resource_rslt_to_str(ret));
             goto cleanup;
         }
-    } else if(choco_string_equal("test_texture_green", choco_string_c_str(texture_->name))) {
+    } else if(choco_string_equal("test_texture_green", texture_source_)) {
         ret = test_texture_generate(TEST_TEXTURE_GREEN, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
         if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create green test texture.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - Failed to create green test texture.", resource_rslt_to_str(ret));
             goto cleanup;
         }
-    } else if(choco_string_equal("test_texture_blue", choco_string_c_str(texture_->name))) {
+    } else if(choco_string_equal("test_texture_blue", texture_source_)) {
         ret = test_texture_generate(TEST_TEXTURE_BLUE, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
         if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create blue test texture.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - Failed to create blue test texture.", resource_rslt_to_str(ret));
             goto cleanup;
         }
-    } else if(choco_string_equal(".bmp", extension_)) { // NOTE: choco_string_equalは引数 == NULLでfalse
-        ret_fs_utils = fs_utils_create(filepath_, choco_string_c_str(texture_->name), extension_, FILESYSTEM_MODE_READ, &fs_utils);
-        if(FS_UTILS_SUCCESS != ret_fs_utils) {
-            ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create fs_utils.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_string = choco_string_default_create(&fullpath);
-        if(CHOCO_STRING_SUCCESS != ret_string) {
-            ret = resource_rslt_convert_choco_string(ret_string);
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create fullpath.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_fs_utils = fs_utils_fullpath_get(fs_utils, fullpath);
-        if(FS_UTILS_SUCCESS != ret_fs_utils) {
-            ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to create fullpath.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = bmp_load(choco_string_c_str(fullpath), &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("texture_pixel_load(%s) - Failed to load BMP texture.", resource_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        choco_string_destroy(&fullpath);
-        fs_utils_destroy(&fs_utils);
     } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("texture_pixel_load(%s) - Unsupported file type.", resource_rslt_to_str(ret));
-        goto cleanup;
+        ret = bmp_load(texture_source_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
+        if(RESOURCE_SUCCESS != ret) {
+            ERROR_MESSAGE("texture_cpu_resource_pixel_load(%s) - Failed to load BMP texture.", resource_rslt_to_str(ret));
+            goto cleanup;
+        }
     }
 
     texture_->channel_count = tmp_channel_count;
@@ -218,23 +164,23 @@ resource_result_t texture_pixel_load(texture_cpu_resource_t* texture_, const cha
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        choco_string_destroy(&fullpath);
-        fs_utils_destroy(&fs_utils);
-    }
     return ret;
 }
 
-resource_result_t texture_pixel_unload(texture_cpu_resource_t* texture_) {
+resource_result_t texture_cpu_resource_pixel_unload(texture_cpu_resource_t* texture_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_unload", "texture_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->name, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "texture_pixel_unload", "texture_->name")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->channel_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->channel_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->height")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->width")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_unload", "texture_->pixels")
-
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_unload", "texture_")
+    if(texture_cpu_resource_is_unloaded(texture_)) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_unload(%s) - provided texture_ is unloaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!texture_cpu_resource_is_valid(texture_)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_unload(%s) - provided texture_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
     memory_system_free(texture_->pixels, (size_t)texture_->width * (size_t)texture_->height * (size_t)texture_->channel_count, MEMORY_TAG_TEXTURE);
     texture_->pixels = NULL;
     texture_->channel_count = 0;
@@ -247,17 +193,22 @@ cleanup:
     return ret;
 }
 
-resource_result_t texture_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_) {
+resource_result_t texture_cpu_resource_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_get", "texture_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_get", "out_pixels_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->channel_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_get", "texture_->channel_count")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_get", "texture_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_get", "texture_->width")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_get", "texture_->height")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->name, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "texture_pixel_get", "texture_->name")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_get", "texture_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_get", "out_pixels_")
 
+    if(texture_cpu_resource_is_unloaded(texture_)) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_get(%s) - provided texture_ is unloaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!texture_cpu_resource_is_valid(texture_)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_get(%s) - provided texture_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
     *out_pixels_ = texture_->pixels;
 
     ret = RESOURCE_SUCCESS;
@@ -266,18 +217,24 @@ cleanup:
     return ret;
 }
 
-resource_result_t texture_pixel_size_get(const texture_cpu_resource_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
+resource_result_t texture_cpu_resource_pixel_size_get(const texture_cpu_resource_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_size_get", "texture_")
-    IF_ARG_NULL_GOTO_CLEANUP(width_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_size_get", "width_")
-    IF_ARG_NULL_GOTO_CLEANUP(height_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_size_get", "height_")
-    IF_ARG_NULL_GOTO_CLEANUP(channel_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_pixel_size_get", "channel_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->channel_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_size_get", "texture_->channel_count")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_size_get", "texture_->pixels")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->width, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_size_get", "texture_->width")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_->height, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "texture_pixel_size_get", "texture_->height")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_->name, ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "texture_pixel_size_get", "texture_->name")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "texture_")
+    IF_ARG_NULL_GOTO_CLEANUP(width_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "width_")
+    IF_ARG_NULL_GOTO_CLEANUP(height_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "height_")
+    IF_ARG_NULL_GOTO_CLEANUP(channel_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "channel_count_")
+
+    if(!texture_cpu_resource_is_valid(texture_)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_size_get(%s) - provided texture_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(texture_cpu_resource_is_unloaded(texture_)) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_cpu_resource_pixel_size_get(%s) - provided texture_ is unloaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *width_ = texture_->width;
     *height_ = texture_->height;
@@ -289,15 +246,27 @@ cleanup:
     return ret;
 }
 
-const char* texture_name_get(const texture_cpu_resource_t* texture_) {
+bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_) {
     if(NULL == texture_) {
-        return NULL;
+        return false;
     }
-    if(NULL == texture_->name) {
-        WARN_MESSAGE("texture_name_get - Provided texture is corrupted.");
-        return NULL;
+    if(texture_cpu_resource_is_unloaded(texture_) || texture_cpu_resource_is_loaded(texture_)) {
+        return true;
     }
-    return choco_string_c_str(texture_->name);
+    return false;
+}
+
+bool texture_cpu_resource_is_loaded(const texture_cpu_resource_t* texture_) {
+    if(NULL == texture_) {
+        return false;
+    }
+    if(0 == texture_->height || 0 == texture_->width || NULL == texture_->pixels) {
+        return false;
+    }
+    if(3 != texture_->channel_count && 4 != texture_->channel_count) {
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -472,4 +441,15 @@ cleanup:
         }
     }
     return ret;
+}
+
+static bool texture_cpu_resource_is_unloaded(const texture_cpu_resource_t* texture_) {
+    if(NULL == texture_) {
+        return false;
+    }
+    if(0 == texture_->width && 0 == texture_->height && 0 == texture_->channel_count && NULL == texture_->pixels) {
+        return true;
+    } else {
+        return false;
+    }
 }

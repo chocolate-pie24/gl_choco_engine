@@ -13,7 +13,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/texture/texture.h"
+#include "engine/resource/texture/texture_cpu_resource.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
@@ -341,7 +341,7 @@ static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry
         return;
     }
     choco_string_destroy(&registry_entry_->resource_name);
-    texture_destroy(&registry_entry_->cpu_resource);
+    texture_cpu_resource_destroy(&registry_entry_->cpu_resource);
     texture_gpu_resource_destroy(backend_context_, &registry_entry_->gpu_resource);
 }
 
