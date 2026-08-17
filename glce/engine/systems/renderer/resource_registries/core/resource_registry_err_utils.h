@@ -25,6 +25,8 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
+#include "engine/containers/choco_string.h"
+
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
 /**
@@ -53,6 +55,8 @@ resource_registry_result_t resource_registry_rslt_convert_linear_alloc(linear_al
  * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
  */
 resource_registry_result_t resource_registry_rslt_convert_resource(resource_result_t rslt_);
+
+resource_registry_result_t resource_registry_rslt_convert_choco_string(choco_string_result_t rslt_);
 
 #ifdef __cplusplus
 }

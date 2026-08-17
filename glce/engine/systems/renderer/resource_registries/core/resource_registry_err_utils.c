@@ -18,6 +18,8 @@
 
 #include "engine/core/memory/linear_allocator.h"
 
+#include "engine/containers/choco_string.h"
+
 #include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
@@ -98,6 +100,31 @@ resource_registry_result_t resource_registry_rslt_convert_resource(resource_resu
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
     case RESOURCE_UNDEFINED_ERROR:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_REGISTRY_UNDEFINED_ERROR;
+    }
+}
+
+resource_registry_result_t resource_registry_rslt_convert_choco_string(choco_string_result_t rslt_) {
+    switch(rslt_) {
+    case CHOCO_STRING_SUCCESS:
+        return RESOURCE_REGISTRY_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return RESOURCE_REGISTRY_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return RESOURCE_REGISTRY_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return RESOURCE_REGISTRY_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return RESOURCE_REGISTRY_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return RESOURCE_REGISTRY_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return RESOURCE_REGISTRY_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return RESOURCE_REGISTRY_LIMIT_EXCEEDED;
     default:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;
     }
