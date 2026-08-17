@@ -90,7 +90,12 @@ texture_gpu_resource_result_t texture_gpu_resource_bind(const renderer_backend_c
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_->backend_texture, ret, TEXTURE_GPU_RESOURCE_DATA_CORRUPTED, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED), "texture_gpu_resource_bind", "texture_gpu_resource_->backend_texture")
+
+    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+        ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_renderer_backend = renderer_backend_texture_bind(backend_context_, texture_gpu_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -112,7 +117,12 @@ texture_gpu_resource_result_t texture_gpu_resource_unbind(const renderer_backend
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_->backend_texture, ret, TEXTURE_GPU_RESOURCE_DATA_CORRUPTED, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED), "texture_gpu_resource_unbind", "texture_gpu_resource_->backend_texture")
+
+    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+        ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, texture_gpu_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -127,7 +137,7 @@ cleanup:
     return ret;
 }
 
-texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend_context_t* backend_context_, const texture_gpu_resource_t* texture_gpu_resource_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend_context_t* backend_context_, texture_gpu_resource_t* texture_gpu_resource_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -136,8 +146,13 @@ texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_upload", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_upload", "texture_gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_->backend_texture, ret, TEXTURE_GPU_RESOURCE_DATA_CORRUPTED, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED), "texture_gpu_resource_upload", "texture_gpu_resource_->backend_texture")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_upload", "pixels_")
+
+    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+        ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_gpu_resource_upload(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     if(3 != channel_count_ && 4 != channel_count_) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
@@ -184,4 +199,15 @@ cleanup:
         }
     }
     return ret;
+}
+
+// TODO: renderer_backend_texture_tのvalidator追加
+bool texture_gpu_resource_is_valid(const texture_gpu_resource_t* texture_gpu_resource_) {
+    if(NULL == texture_gpu_resource_) {
+        return false;
+    }
+    if(NULL == texture_gpu_resource_->backend_texture) {
+        return false;
+    }
+    return true;
 }

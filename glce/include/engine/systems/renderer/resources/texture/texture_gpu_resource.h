@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -18,7 +19,8 @@ texture_gpu_resource_result_t texture_gpu_resource_create(renderer_backend_conte
 void texture_gpu_resource_destroy(renderer_backend_context_t* backend_context_, texture_gpu_resource_t** texture_gpu_resource_);
 texture_gpu_resource_result_t texture_gpu_resource_bind(const renderer_backend_context_t* backend_context_, const texture_gpu_resource_t* texture_gpu_resource_);
 texture_gpu_resource_result_t texture_gpu_resource_unbind(const renderer_backend_context_t* backend_context_, const texture_gpu_resource_t* texture_gpu_resource_);
-texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend_context_t* backend_context_, const texture_gpu_resource_t* texture_gpu_resource_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend_context_t* backend_context_, texture_gpu_resource_t* texture_gpu_resource_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+bool texture_gpu_resource_is_valid(const texture_gpu_resource_t* texture_gpu_resource_);
 
 #ifdef __cplusplus
 }
