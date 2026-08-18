@@ -33,7 +33,7 @@ resource_registry_result_t texture_registry_id_get(const texture_registry_t* reg
 
 resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, int16_t* out_texture_id_);
 
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, renderer_backend_context_t* backend_context_, int16_t geometry_id_);
+resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, renderer_backend_context_t* backend_context_, int16_t texture_id_);
 
 #ifdef __cplusplus
 }
