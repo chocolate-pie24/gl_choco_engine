@@ -7,8 +7,13 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
+#include "engine/containers/choco_string.h"
+
+#include "engine/io_utils/fs_utils.h"
+
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
@@ -21,6 +26,12 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_renderer_backend(rende
 resource_pipeline_result_t resource_pipeline_rslt_convert_resource_registry(resource_registry_result_t rslt_);
 
 resource_pipeline_result_t resource_pipeline_rslt_convert_shader(shader_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_choco_string(choco_string_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_fs_utils(fs_utils_result_t rslt_);
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_texture_gpu_resource(texture_gpu_resource_result_t rslt_);
 
 #ifdef __cplusplus
 }

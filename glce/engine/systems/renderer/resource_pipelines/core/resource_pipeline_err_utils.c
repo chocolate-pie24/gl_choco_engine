@@ -170,3 +170,82 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_shader(shader_result_t
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }
 }
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_choco_string(choco_string_result_t rslt_) {
+    switch(rslt_) {
+    case CHOCO_STRING_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
+    switch(rslt_) {
+    case FS_UTILS_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case FS_UTILS_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case FS_UTILS_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case FS_UTILS_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case FS_UTILS_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case FS_UTILS_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case FS_UTILS_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case FS_UTILS_FILE_OPEN_ERROR:
+        return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
+    case FS_UTILS_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case FS_UTILS_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    case FS_UTILS_EOF:
+        return RESOURCE_PIPELINE_FILE_READ_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_texture_gpu_resource(texture_gpu_resource_result_t rslt_) {
+    switch(rslt_) {
+    case TEXTURE_GPU_RESOURCE_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case TEXTURE_GPU_RESOURCE_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case TEXTURE_GPU_RESOURCE_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case TEXTURE_GPU_RESOURCE_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case TEXTURE_GPU_RESOURCE_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case TEXTURE_GPU_RESOURCE_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}

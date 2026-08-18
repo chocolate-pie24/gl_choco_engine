@@ -36,7 +36,6 @@ static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry
 
 static bool texture_id_is_valid(const texture_registry_t* registry_, int16_t texture_id_);
 static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
-static bool internal_state_is_valid(const texture_registry_t* registry_);
 
 static bool find_by_name(const texture_registry_t* registry_, const char* name_, size_t* out_index_);
 
@@ -98,7 +97,7 @@ void texture_registry_deinitialize(texture_registry_t* registry_, renderer_backe
         ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ or backend_context_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ERROR_MESSAGE("texture_registry_deinitialize(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return;
     }
@@ -114,7 +113,7 @@ bool texture_registry_find(const texture_registry_t* registry_, const char* name
     if(NULL == registry_ || NULL == name_) {
         return false;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ERROR_MESSAGE("texture_registry_find(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
@@ -131,7 +130,7 @@ const char* texture_registry_name_get(const texture_registry_t* registry_, int16
         ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
@@ -150,7 +149,7 @@ const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_re
         ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
@@ -167,7 +166,7 @@ const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_re
         ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
@@ -188,7 +187,7 @@ resource_registry_result_t texture_registry_id_get(const texture_registry_t* reg
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "out_texture_id_")
 
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("texture_registry_id_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
         goto cleanup;
@@ -237,7 +236,7 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
         ERROR_MESSAGE("texture_registry_register(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!internal_state_is_valid(registry_)) {
+    if(!texture_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("texture_registry_register(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
         goto cleanup;
@@ -319,7 +318,7 @@ resource_registry_result_t texture_registry_unregister(texture_registry_t* regis
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(internal_state_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "texture_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "texture_registry_unregister", "registry_")
     IF_ARG_FALSE_GOTO_CLEANUP(texture_id_is_valid(registry_, texture_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "texture_id_")
 
     if(NULL == registry_->entries[texture_id_].resource_name) {
@@ -334,6 +333,24 @@ resource_registry_result_t texture_registry_unregister(texture_registry_t* regis
 
 cleanup:
     return ret;
+}
+
+bool texture_registry_is_valid(const texture_registry_t* registry_) {
+    if(NULL == registry_) {
+        return false;
+    }
+    if(0 == registry_->max_texture_count || INT16_MAX < registry_->max_texture_count) {
+        return false;
+    }
+    if(NULL == registry_->entries) {
+        return false;
+    }
+    for(size_t i = 0; i != registry_->max_texture_count; ++i) {
+        if(!registry_entry_is_valid(&registry_->entries[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // NOTE: registry_entry_のvalidationを上位側で実行しておくこと
@@ -386,24 +403,6 @@ static bool registry_entry_is_valid(const texture_registry_entry_t* entry_) {
     }
     if(!texture_gpu_resource_is_uploaded(entry_->gpu_resource)) {   // 登録済みで未アップロード状態は異常
         return false;
-    }
-    return true;
-}
-
-static bool internal_state_is_valid(const texture_registry_t* registry_) {
-    if(NULL == registry_) {
-        return false;
-    }
-    if(0 == registry_->max_texture_count || INT16_MAX < registry_->max_texture_count) {
-        return false;
-    }
-    if(NULL == registry_->entries) {
-        return false;
-    }
-    for(size_t i = 0; i != registry_->max_texture_count; ++i) {
-        if(!registry_entry_is_valid(&registry_->entries[i])) {
-            return false;
-        }
     }
     return true;
 }

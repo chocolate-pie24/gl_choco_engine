@@ -35,6 +35,8 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
 
 resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, renderer_backend_context_t* backend_context_, int16_t texture_id_);
 
+bool texture_registry_is_valid(const texture_registry_t* registry_);
+
 #ifdef __cplusplus
 }
 #endif
