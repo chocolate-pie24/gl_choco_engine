@@ -60,18 +60,22 @@
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
 #include "engine/systems/renderer/resource_registries/geometries/point_mesh_geometry_registry.h"
 #include "engine/systems/renderer/resource_registries/geometries/ui_mesh_geometry_registry.h"
 #include "engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resource_registries/texture/texture_registry.h"
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry_pipeline.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resource_pipelines/texture/texture_pipeline.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -86,8 +90,6 @@
 #include "engine/systems/camera_system/camera_manager/camera_manager.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/camera_system/camera/camera.h"
-
-#include "engine/systems/texture_system/texture_manager.h"
 
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
@@ -139,7 +141,7 @@ typedef struct app_state {
     int16_t active_camera_id;
     command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
 
-    texture_manager_t* texture_manager;
+    texture_registry_t* texture_registry;
     // end
 
     // begin temporary TODO: remove this!!
@@ -201,7 +203,6 @@ application_result_t application_create(void) {
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
@@ -316,14 +317,14 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("camera manager initialized successfully.");
 
-    // texture system.
-    ret_tex_sys = texture_manager_initialize(128, tmp->linear_alloc, &tmp->texture_manager);
-    if(TEXTURE_SYSTEM_SUCCESS != ret_tex_sys) {
-        ret = app_rslt_convert_texture_system(ret_tex_sys);
-        ERROR_MESSAGE("application_create(%s) - Failed to create texture system.", app_rslt_to_str(ret));
+    // texture registry.
+    ret_registry = texture_registry_initialize(128, tmp->linear_alloc, &tmp->texture_registry);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = APPLICATION_RUNTIME_ERROR;  // TODO: エラーコード返還
+        ERROR_MESSAGE("application_create(%s) - Failed to create texture registry.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("texture manager initialized successfully.");
+    INFO_MESSAGE("texture registry initialized successfully.");
     // end Simulation -> launch all systems.
 
     // end Simulation
@@ -354,7 +355,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_shader = ui_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, "assets/shaders/test_shader/", "ui_mesh_shader");
+    ret_shader = ui_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, "../assets/shaders/test_shader/", "ui_mesh_shader");
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
@@ -385,7 +386,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_shader = line_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, "assets/shaders/test_shader/", "line_mesh_shader");
+    ret_shader = line_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, "../assets/shaders/test_shader/", "line_mesh_shader");
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
@@ -416,7 +417,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_shader = point_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, "assets/shaders/test_shader/", "point_mesh_shader");
+    ret_shader = point_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, "../assets/shaders/test_shader/", "point_mesh_shader");
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
@@ -446,7 +447,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_shader = lit_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, "assets/shaders/test_shader/", "lit_mesh_shader");
+    ret_shader = lit_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, "../assets/shaders/test_shader/", "lit_mesh_shader");
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
@@ -629,8 +630,8 @@ void application_destroy(void) {
     if(NULL != s_app_state->point_mesh_geometry_registry) {
         point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry);
     }
-    if(NULL != s_app_state->texture_manager) {
-        texture_manager_deinitialize(s_app_state->renderer_backend_context, s_app_state->texture_manager);
+    if(NULL != s_app_state->texture_registry) {
+        texture_registry_deinitialize(s_app_state->texture_registry, s_app_state->renderer_backend_context);
     }
     if(NULL != s_app_state->camera_manager) {
         camera_manager_deinitialize(s_app_state->camera_manager);
@@ -689,7 +690,6 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
-    texture_system_result_t ret_tex_sys = TEXTURE_SYSTEM_INVALID_ARGUMENT;
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
@@ -698,7 +698,7 @@ application_result_t application_run(void) {
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
     int16_t tex_id_green = 0;
-    const renderer_backend_texture_t* tex_gpu_resource = NULL;
+    const texture_gpu_resource_t* tex_gpu_resource = NULL;
 
     // penguin AABB
     const lit_mesh_geometry_t* penguin_geometry = NULL;
@@ -753,16 +753,16 @@ application_result_t application_run(void) {
     lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
     lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
 
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "rabbit_512", s_app_state->texture_manager, &tex_id_rabbit);
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "frog_512", s_app_state->texture_manager, &tex_id_frog);
-    ret_tex_sys = texture_manager_register(s_app_state->renderer_backend_context, 0, "test_texture_green", s_app_state->texture_manager, &tex_id_green);
+    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "rabbit_512", &tex_id_rabbit);
+    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "frog_512", &tex_id_frog);
+    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "test_texture_green", &tex_id_green);
 
     // ペンギンSTL pipeline import
     ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
         s_app_state->renderer_backend_context,
         s_app_state->lit_mesh_shader,
         s_app_state->lit_mesh_geometry_registry,
-        "./assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl",
+        "../assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl",
         &s_app_state->geometry_id_penguin);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;    // temporary
@@ -876,33 +876,33 @@ application_result_t application_run(void) {
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
-            texture_manager_gpu_resource_get(tex_id_rabbit, s_app_state->texture_manager, &tex_gpu_resource);
-            renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_rabbit);
+            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
-            renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             // テストテクスチャ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
-            texture_manager_gpu_resource_get(tex_id_green, s_app_state->texture_manager, &tex_gpu_resource);
-            renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_green);
+            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
-            renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
 
         ret_resource_registy = ui_mesh_geometry_registry_vbo_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon, &s_app_state->large_icon_buffer_range);
         if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
-            texture_manager_gpu_resource_get(tex_id_frog, s_app_state->texture_manager, &tex_gpu_resource);
-            renderer_backend_texture_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_frog);
+            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, s_app_state->large_icon_buffer_range.draw_range.first_vertex_count, s_app_state->large_icon_buffer_range.draw_range.vertex_count);
 
-            renderer_backend_texture_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 

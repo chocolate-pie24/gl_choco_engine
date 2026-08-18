@@ -68,7 +68,7 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
 
     config_loader_initialize(&tmp_state);
 
-    ret_fs_utils = fs_utils_create("assets/geometries/", name_, ".ui_geom", FILESYSTEM_MODE_READ, &fs_utils);
+    ret_fs_utils = fs_utils_create("../assets/geometries/", name_, ".ui_geom", FILESYSTEM_MODE_READ, &fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = resource_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_utils_create_failed, config_name='%s'", resource_rslt_to_str(ret), name_);

@@ -188,7 +188,7 @@ static resource_pipeline_result_t resolve_texture_source(const char* texture_nam
             goto cleanup;
         }
     } else {
-        ret_fs_utils = fs_utils_create("assets/textures/", texture_name_, ".bmp", FILESYSTEM_MODE_READ, &tmp_fs_utils);
+        ret_fs_utils = fs_utils_create("../assets/textures/", texture_name_, ".bmp", FILESYSTEM_MODE_READ, &tmp_fs_utils);
         if(FS_UTILS_SUCCESS != ret_fs_utils) {
             ret = resource_pipeline_rslt_convert_fs_utils(ret_fs_utils);
             ERROR_MESSAGE("resolve_texture_source(%s) - fs_utils_create failed.", resource_pipeline_rslt_to_str(ret));

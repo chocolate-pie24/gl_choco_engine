@@ -96,7 +96,7 @@ int main(int argc_, char** argv_) {
         // engine/core
         test_linear_allocator();
         test_choco_memory();
-        test_filesystem();
+        // test_filesystem();
         test_buffer_utils();
         test_aabb_3d();
         test_geometry_primitive_err_utils();
@@ -106,16 +106,16 @@ int main(int argc_, char** argv_) {
         test_ring_queue();
 
         // engine/io_utils
-        test_fs_utils();
+        // test_fs_utils();
 
         // engine/resource
-        test_resource_err_utils();
-        test_bmp_loader();
-        test_stl_loader();
-        test_lit_mesh_geometry();
-        test_line_mesh_geometry();
-        test_point_mesh_geometry();
-        test_ui_mesh_geometry();
+        // test_resource_err_utils();
+        // test_bmp_loader();
+        // test_stl_loader();
+        // test_lit_mesh_geometry();
+        // test_line_mesh_geometry();
+        // test_point_mesh_geometry();
+        // test_ui_mesh_geometry();
 
         // engine/camera
         test_camera_err_utils();

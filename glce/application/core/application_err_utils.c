@@ -25,49 +25,8 @@
 #include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/texture_system/texture_manager.h"
 
 #include "engine/resource/core/resource_types.h"
-
-// #define TEST_BUILD
-
-// #ifdef TEST_BUILD
-// // テスト時のみ使用するヘッダのinclude
-// #include <assert.h>
-// #include <string.h>
-
-// #include "test_controller.h"
-// #include "engine/base/choco_macros.h"
-
-// #include "application/core/test_application_err_utils.h"
-
-// // application_err_utils用モジュール専用テスト制御構造体定義
-
-// // 外部公開APIテスト設定
-// static test_call_control_t s_test_config_app_rslt_convert_mem_sys;              /**< app_rslt_convert_mem_sys()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_linear_alloc;         /**< app_rslt_convert_linear_alloc()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_platform;             /**< app_rslt_convert_platform()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_ring_queue;           /**< app_rslt_convert_ring_queue()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_renderer;             /**< app_rslt_convert_renderer()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_camera;               /**< app_rslt_convert_camera()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_texture_system;       /**< app_rslt_convert_texture_system()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_resource;             /**< app_rslt_convert_resource()テスト設定 */
-// static test_call_control_t s_test_config_app_rslt_convert_geometry_primitive;   /**< app_rslt_convert_geometry_primitive()テスト設定 */
-
-// // プライベート関数テスト設定
-
-// // 全テスト関数プロトタイプ宣言
-// static void test_app_rslt_to_str(void);
-// static void test_app_rslt_convert_mem_sys(void);
-// static void test_app_rslt_convert_linear_alloc(void);
-// static void test_app_rslt_convert_platform(void);
-// static void test_app_rslt_convert_ring_queue(void);
-// static void test_app_rslt_convert_renderer(void);
-// static void test_app_rslt_convert_camera(void);
-// static void test_app_rslt_convert_texture_system(void);
-// static void test_app_rslt_convert_resource(void);
-// static void test_app_rslt_convert_geometry_primitive(void);
-// #endif
 
 static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -246,39 +205,6 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
     case CAMERA_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
     case CAMERA_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t app_rslt_convert_texture_system(texture_system_result_t rslt_) {
-    switch(rslt_) {
-    case TEXTURE_SYSTEM_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case TEXTURE_SYSTEM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case TEXTURE_SYSTEM_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case TEXTURE_SYSTEM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case TEXTURE_SYSTEM_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case TEXTURE_SYSTEM_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case TEXTURE_SYSTEM_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case TEXTURE_SYSTEM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case TEXTURE_SYSTEM_FILE_OPEN_ERROR:
-        return APPLICATION_FILE_OPEN_ERROR;
-    case TEXTURE_SYSTEM_FILE_READ_ERROR:
-        return APPLICATION_FILE_READ_ERROR;
-    case TEXTURE_SYSTEM_FILE_CLOSE_ERROR:
-        return APPLICATION_FILE_CLOSE_ERROR;
-    case TEXTURE_SYSTEM_UNSUPPORTED_FILE:
-        return APPLICATION_UNSUPPORTED_FILE;
-    case TEXTURE_SYSTEM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
