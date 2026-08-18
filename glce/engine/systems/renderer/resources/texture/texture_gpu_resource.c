@@ -17,6 +17,7 @@
 
 struct texture_gpu_resource {
     renderer_backend_texture_t* backend_texture;
+    bool uploaded;
 };
 
 texture_gpu_resource_result_t texture_gpu_resource_create(renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, texture_gpu_resource_t** out_texture_gpu_resource_) {
@@ -47,6 +48,8 @@ texture_gpu_resource_result_t texture_gpu_resource_create(renderer_backend_conte
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_gpu_resource_rslt_to_str(ret));
         goto cleanup;
     }
+    tmp_texture_gpu_resource->uploaded = false;
+
     texture_created = true;
 
     *out_texture_gpu_resource_ = tmp_texture_gpu_resource;
@@ -83,6 +86,7 @@ void texture_gpu_resource_destroy(renderer_backend_context_t* backend_context_, 
     *texture_gpu_resource_ = NULL;
 }
 
+// NOTE: アップロード済みのtextureのみbindを許可、未アップロード状態の場合はBAD_OPERATION
 texture_gpu_resource_result_t texture_gpu_resource_bind(const renderer_backend_context_t* backend_context_, const texture_gpu_resource_t* texture_gpu_resource_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
@@ -94,6 +98,11 @@ texture_gpu_resource_result_t texture_gpu_resource_bind(const renderer_backend_c
     if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!texture_gpu_resource_is_uploaded(texture_gpu_resource_)) {
+        ret = TEXTURE_GPU_RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is not uploaded.", texture_gpu_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -153,6 +162,11 @@ texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend
         ERROR_MESSAGE("texture_gpu_resource_upload(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
         goto cleanup;
     }
+    if(texture_gpu_resource_->uploaded) {
+        ret = TEXTURE_GPU_RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("texture_gpu_resource_upload(%s) - provided texture_gpu_resource_ is already uploaded.", texture_gpu_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     if(3 != channel_count_ && 4 != channel_count_) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
@@ -188,6 +202,8 @@ texture_gpu_resource_result_t texture_gpu_resource_upload(const renderer_backend
     }
     texture_bound = false;
 
+    texture_gpu_resource_->uploaded = true;
+
     ret = TEXTURE_GPU_RESOURCE_SUCCESS;
 
 cleanup:
@@ -210,4 +226,11 @@ bool texture_gpu_resource_is_valid(const texture_gpu_resource_t* texture_gpu_res
         return false;
     }
     return true;
+}
+
+bool texture_gpu_resource_is_uploaded(const texture_gpu_resource_t* texture_gpu_resource_) {
+    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+        return false;
+    }
+    return texture_gpu_resource_->uploaded;
 }
