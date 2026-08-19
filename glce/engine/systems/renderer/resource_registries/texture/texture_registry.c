@@ -92,6 +92,7 @@ cleanup:
     return ret;
 }
 
+// NOTE: このAPIを呼んだ後はmax_texture_countが0になるためregistryは再利用不可となる。再利用を前提で初期化する場合はregistry_reset APIを追加する
 void texture_registry_deinitialize(texture_registry_t* registry_, renderer_backend_context_t* backend_context_) {
     if(NULL == registry_ || NULL == backend_context_) {
         ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ or backend_context_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
