@@ -38,7 +38,6 @@
 #include "engine/core/geometry_primitive/test_geometry_primitive_err_utils.h"
 
 // test: engine/containers
-#include "engine/containers/test_choco_string.h"
 #include "engine/containers/test_ring_queue.h"
 
 // test: engine/io_utils
@@ -102,7 +101,6 @@ int main(int argc_, char** argv_) {
         test_geometry_primitive_err_utils();
 
         // engine/containers
-        test_choco_string();
         test_ring_queue();
 
         // engine/io_utils

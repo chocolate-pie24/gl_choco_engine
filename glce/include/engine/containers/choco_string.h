@@ -50,268 +50,33 @@ typedef enum {
     CHOCO_STRING_LIMIT_EXCEEDED,    /**< システム使用可能範囲上限超過 */
 } choco_string_result_t;
 
-/**
- * @brief 空の文字列コンテナを生成する
- *
- * @note
- * - 文字列長さ0で初期化されたchoco_string_tインスタンスを生成する
- * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
- *
- * @param[out] string_ 初期化対象文字列コンテナ
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - string_ == NULL
- * - *string_ != NULL
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
- */
 choco_string_result_t choco_string_default_create(choco_string_t** string_);
 
-/**
- * @brief const char*型文字列src_で文字列コンテナを生成する
- *
- * @note
- * - string_が管理する文字列バッファはsrc_の文字列長さ+1(終端文字)のサイズで初期化される
- * - 生成したインスタンスは @ref choco_string_destroy で破棄すること
- *
- * @param[in] src_ 初期化文字列
- * @param[out] string_ 初期化対象文字列コンテナ
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - string_ == NULL
- * - *string_ != NULL
- * - src_ == NULL
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの最大値を超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS 初期化に成功し,正常終了
- * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
- */
 choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** string_);
 
-/**
- * @brief string_が管理しているメモリと自身のメモリを解放し、*string_=NULLにする
- *
- * @note
- * - 2重デストロイ許可
- * - string_ == NULLの場合はno-op
- * - *string_ == NULLの場合はno-op
- *
- * @param[in,out] string_ 破棄対象構造体インスタンス
- */
 void choco_string_destroy(choco_string_t** string_);
 
-/**
- * @brief 文字列コンテナsrc_が管理する文字列をdst_にコピーする
- *
- * @note dst_のバッファサイズにより下記の動作をする
- * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
- * - dst_のバッファサイズがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
- * - dst_のバッファサイズとsrc_の文字列長さ+1(終端文字)が等しい: dst_のバッファサイズは変更せず,文字列をコピー
- *
- * @param[in] src_ コピー元文字列コンテナ
- * @param[in,out] dst_ コピー先文字列コンテナ
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - dst_ == NULL
- * - src_ == NULL
- * @retval CHOCO_STRING_DATA_CORRUPTED 以下のいずれか
- * - dst_内部データが破損(アドレスへの不正アクセス等により発生)
- * - src_内部データが破損(アドレスへの不正アクセス等により発生)
- * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの最大値を超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
- * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
- */
 choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string_t* dst_);
 
-/**
- * @brief const char*型文字列src_をdst_にコピーする
- *
- * @note dst_のバッファサイズにより下記の動作をする
- * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも小さい: dst_のバッファサイズをsrc_の文字列長さ+1(終端文字)に拡張
- * - dst_のバッファがsrc_の文字列長さ+1(終端文字)よりも大きい: dst_のバッファサイズは変更せず,文字列をコピー
- * - dst_のバッファとsrc_の文字列長さ+1(終端文字)に等しい: dst_のバッファサイズは変更せず,文字列をコピー
- *
- * @param[in] src_ コピー元文字列
- * @param[in,out] dst_ コピー先文字列コンテナ
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - dst_がNULL
- * - src_がNULL
- * @retval CHOCO_STRING_DATA_CORRUPTED dst_の内部データが破損(アドレスへの不正アクセス等により発生)
- * @retval CHOCO_STRING_OVERFLOW src_の文字列長さ+1(終端文字)がsize_tの上限を超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS コピーに成功し,正常終了
- * @warning 上記以外のエラーは,テストなどで意図的に発生させない限り起こり得ないエラーで確実にバグ
- */
 choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_string_t* dst_);
 
-/**
- * @brief 文字列コンテナstring_が管理する文字列をdst_の末尾に連結する
- *
- * @note
- * - 自己連結(dst_にdst_を連結する)ことは禁止する(内部バッファ管理を簡便にするため)
- * - string_が管理する文字列が""の場合は何もしない
- * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
- *
- * @param[in] string_ 連結元文字列
- * @param[in,out] dst_ 連結先文字列
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - dst_ == NULL
- * - string_ == NULL
- * @retval CHOCO_STRING_BAD_OPERATION 以下のいずれか
- * - 連結先文字列と連結元文字列の先頭アドレスが等しい(自己連結は禁止する)
- * - メモリシステム未初期化
- * @retval CHOCO_STRING_DATA_CORRUPTED 以下のいずれか
- * - string_の内部データが破損(アドレスへの不正アクセス等により発生)
- * - dst_の内部データが破損(アドレスへの不正アクセス等により発生)
- * @retval CHOCO_STRING_OVERFLOW 連結後の文字列長さがsize_tの上限を超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_SUCCESS 文字列の連結に成功し,正常終了
- */
 choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_string_t* dst_);
 
-/**
- * @brief const char*型文字列string_をdst_の末尾に連結する
- *
- * @note
- * - string_が""の場合は何もしない
- * - dst_が管理するバッファの容量が足りない場合は,新規にバッファを取得し直す
- *
- * @param[in] string_ 連結元文字列
- * @param[in,out] dst_ 連結先文字列
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - dst_ == NULL
- * - string_ == NULL
- *
- * @retval CHOCO_STRING_DATA_CORRUPTED dst_の内部データが破損(アドレスへの不正アクセス等により発生)
- * @retval CHOCO_STRING_OVERFLOW 連結後の文字列長さがsize_tの上限を超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリ管理システムの管理変数が使用可能範囲を超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS 文字列の連結に成功し,正常終了
- */
 choco_string_result_t choco_string_concat_from_c_string(const char* string_, choco_string_t* dst_);
 
-/**
- * @brief 文字列コンテナstring_が管理する文字列の長さを取得する
- *
- * @note
- * - string_がNULLまたはstring_内部管理バッファサイズが0の場合は0を返す
- * - 終端文字を含まない長さが返される
- *
- * @param[in] string_ 文字列長さ取得元構造体インスタンス
- *
- * @return size_t 文字列長さ
- */
 size_t choco_string_length(const choco_string_t* string_);
 
-/**
- * @brief 文字列コンテナstring_が管理する文字列の先頭アドレスを取得する
- *
- * @note
- * - string_がNULLまたは内部管理バッファがNULLで空の文字列を返す
- * - 取得したconst char*は @ref choco_string_destroy でstring_が破棄されるまで有効
- *
- * @param[in] string_ 文字列先頭アドレス取得元構造体インスタンス
- *
- * @return const char* 文字列先頭アドレス
- */
 const char* choco_string_c_str(const choco_string_t* string_);
 
-/**
- * @brief 2つの文字列が等しいかを判定する
- *
- * @param[in] str1_ 比較文字列1
- * @param[in] str2_ 比較文字列2
- *
- * @retval true 2つの文字列が等しい
- * @retval false 以下のいずれか
- * - str1_またはstr2_がNULL
- * - 2つの文字列が等しくない
- */
 bool choco_string_equal(const char* str1_, const char* str2_);
 
-/**
- * @brief str_内に部分文字列target_が存在するかを判定する
- *
- * @param[in] str_ 部分文字列target_を検索する文字列
- * @param[in] target_ 検索する部分文字列
- *
- * @retval true 部分文字列target_が見つかった、もしくはtarget_が空文字列
- * @retval false 以下のいずれか
- * - str_ == NULL or target_ == NULL
- * - 部分文字列が見つからなかった
- */
 bool choco_string_substring_exists(const char* str_, const char* target_);
 
-/**
- * @brief key = valueの文字列からkeyを取り出す
- *
- * @note choco_string_copy_from_c_stringに失敗した場合、out_key_の状態は不変ではない場合がある
- *
- * @note スペースは以下のようにtrimされる
- * - keyの前方スペースはtrimされる
- * - keyの末尾スペースはtrimされる
- * - k eyのように途中のスペースは有効
- * - =の後に有効文字(スペース以外)がない場合も成功とする
- *
- * @param[in] line_ key = valueの文字列
- * @param[in,out] out_key_ key格納先
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - line_ == NULL
- * - out_key_ == NULL
- * @retval CHOCO_STRING_DATA_CORRUPTED out_key_の内部状態が破損
- * @retval CHOCO_STRING_BAD_OPERATION 以下のいずれか
- * - line_に=が含まれない
- * - = の前に有効文字(スペース以外)がない
- * - メモリシステム未初期化
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_SUCCESS 処理に成功し、正常終了
- */
 choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_string_t* out_key_);
 
-/**
- * @brief key = valueの文字列からvalueを取り出す
- *
- * @note choco_string_copy_from_c_stringに失敗した場合、out_value_の状態は不変ではない場合がある
- *
- * @note スペースは以下のようにtrimされる
- * - valueの前方スペースはtrimされる
- * - valueの末尾スペースはtrimされる
- * - val ueのように途中のスペースは有効
- *
- * @param[in] line_ key = valueの文字列
- * @param[in,out] out_value_ value格納先
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 以下のいずれか
- * - line_ == NULL
- * - out_value_ == NULL
- * @retval CHOCO_STRING_DATA_CORRUPTED out_value_の内部状態が破損
- * @retval CHOCO_STRING_BAD_OPERATION 以下のいずれか
- * - = が存在しない
- * - = が先頭にある
- * - = が末尾にある
- * - = の後にスペース以外の有効文字がない
- * - メモリシステム未初期化
- * @retval CHOCO_STRING_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_SUCCESS 処理に成功し、正常終了
- */
 choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_string_t* out_value_);
+
+bool choco_string_is_valid(const choco_string_t* string_);
 
 #ifdef __cplusplus
 }
