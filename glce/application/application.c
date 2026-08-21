@@ -551,7 +551,7 @@ cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp) {
             if(NULL != tmp->line_mesh_geometry_registry) {
-                line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry);
+                line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry, tmp->line_mesh_shader);
             }
             if(NULL != tmp->ui_mesh_geometry_registry) {
                 ui_mesh_geometry_registry_deinitialize(tmp->ui_mesh_geometry_registry);
@@ -619,7 +619,7 @@ void application_destroy(void) {
 
     // begin cleanup all systems.
     if(NULL != s_app_state->line_mesh_geometry_registry) {
-        line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry);
+        line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry, s_app_state->line_mesh_shader);
     }
     if(NULL != s_app_state->ui_mesh_geometry_registry) {
         ui_mesh_geometry_registry_deinitialize(s_app_state->ui_mesh_geometry_registry);
@@ -707,6 +707,8 @@ application_result_t application_run(void) {
     aabb_3d_t penguin_aabb = { 0 };
 
     line_vertex_t tmp_vertices[2] = { 0 };
+
+    const draw_range_t* tmp_draw_range = NULL;
 
     struct timespec  req = {0, 1000000};
 
@@ -879,7 +881,7 @@ application_result_t application_run(void) {
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_rabbit);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
@@ -888,7 +890,7 @@ application_result_t application_run(void) {
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_green);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, s_app_state->small_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->small_icon_buffer_range.draw_range.vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
@@ -900,7 +902,7 @@ application_result_t application_run(void) {
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_frog);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, s_app_state->large_icon_buffer_range.draw_range.first_vertex_count, s_app_state->large_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->large_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->large_icon_buffer_range.draw_range.vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
@@ -909,15 +911,15 @@ application_result_t application_run(void) {
         // 線分描画
         line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
         line_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
-        ret_resource_registy = line_mesh_geometry_registry_vbo_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb, &s_app_state->penguin_aabb_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb);
+        if(NULL != tmp_draw_range) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
-            glDrawArrays(GL_LINES, s_app_state->penguin_aabb_buffer_range.draw_range.first_vertex_count, s_app_state->penguin_aabb_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
-        ret_resource_registy = line_mesh_geometry_registry_vbo_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line, &s_app_state->test_line_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line);
+        if(NULL != tmp_draw_range) {
             line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
-            glDrawArrays(GL_LINES, s_app_state->test_line_buffer_range.draw_range.first_vertex_count, s_app_state->test_line_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 
@@ -927,7 +929,7 @@ application_result_t application_run(void) {
             point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
             point_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
 
-            glDrawArrays(GL_POINTS, s_app_state->test_points_buffer_range.draw_range.first_vertex_count, s_app_state->test_points_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_POINTS, (GLint)s_app_state->test_points_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->test_points_buffer_range.draw_range.vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
         }
 
@@ -937,7 +939,7 @@ application_result_t application_run(void) {
             lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
             lit_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
-            glDrawArrays(GL_TRIANGLES, s_app_state->penguin_buffer_range.draw_range.first_vertex_count, s_app_state->penguin_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->penguin_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->penguin_buffer_range.draw_range.vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
         }
 

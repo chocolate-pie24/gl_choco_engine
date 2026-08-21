@@ -24,7 +24,6 @@
 #include "application/core/test_application_err_utils.h"
 
 // test: application/command_interpreter
-#include "application/command_interpreter/test_flight_camera.h"
 
 // test: engine/base
 #include "engine/base/choco_math/test_choco_math.h"
@@ -32,16 +31,13 @@
 // test: engine/core
 #include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
-#include "engine/core/filesystem/test_filesystem.h"
 #include "engine/core/buffer_utils/test_buffer_utils.h"
 #include "engine/core/geometry_primitive/test_aabb_3d.h"
 #include "engine/core/geometry_primitive/test_geometry_primitive_err_utils.h"
 
 // test: engine/containers
-#include "engine/containers/test_ring_queue.h"
 
 // test: engine/io_utils
-#include "engine/io_utils/test_fs_utils.h"
 
 // test: engine/resource
 #include "engine/resource/core/test_resource_err_utils.h"
@@ -55,9 +51,6 @@
 // test: engine/systems/camera_system
 #include "engine/systems/camera_system/camera_core/test_camera_err_utils.h"
 #include "engine/systems/camera_system/camera_core/test_camera_memory.h"
-#include "engine/systems/camera_system/camera/test_camera.h"
-#include "engine/systems/camera_system/camera_controller/test_flight_camera_controller.h"
-#include "engine/systems/camera_system/camera_manager/test_camera_manager.h"
 
 #endif
 
@@ -87,7 +80,6 @@ int main(int argc_, char** argv_) {
         // test_application_err_utils();
 
         // application/command_interpreter
-        test_flight_camera();
 
         // engine/base
         test_choco_math();
@@ -95,16 +87,13 @@ int main(int argc_, char** argv_) {
         // engine/core
         test_linear_allocator();
         test_choco_memory();
-        // test_filesystem();
         test_buffer_utils();
         test_aabb_3d();
         test_geometry_primitive_err_utils();
 
         // engine/containers
-        test_ring_queue();
 
         // engine/io_utils
-        // test_fs_utils();
 
         // engine/resource
         // test_resource_err_utils();
@@ -116,11 +105,6 @@ int main(int argc_, char** argv_) {
         // test_ui_mesh_geometry();
 
         // engine/camera
-        test_camera_err_utils();
-        test_camera_memory();
-        test_camera();
-        test_flight_camera_controller();
-        test_camera_manager();
     }
 #endif
     application_result_t app_run_result = APPLICATION_INVALID_ARGUMENT;

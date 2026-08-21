@@ -34,6 +34,7 @@ typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**<
 typedef struct linear_alloc linear_alloc_t;                                 /**< リニアアロケータのopaque型 */
 typedef struct line_mesh_geometry line_mesh_geometry_t;                     /**< 線分描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
+typedef struct draw_range draw_range_t;
 typedef struct line_mesh_shader line_mesh_shader_t;
 
 /**
