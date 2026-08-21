@@ -155,6 +155,8 @@ resource_result_t resource_rslt_convert_filesystem(filesystem_result_t result_) 
         return RESOURCE_LIMIT_EXCEEDED;
     case FILESYSTEM_BAD_OPERATION:
         return RESOURCE_BAD_OPERATION;
+    case FILESYSTEM_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
     case FILESYSTEM_EOF:
         return RESOURCE_FILE_READ_ERROR;
     default:
