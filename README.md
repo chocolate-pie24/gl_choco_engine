@@ -55,12 +55,10 @@ Leaving these areas out allows GLCE to provide the basic functionality needed fo
 
 ## Documentation
 
-- [Build System](docs/build_system.md)
-- [API Reference](https://chocolate-pie24.github.io/gl_choco_engine/)
+- [Build System(Japanese)](docs/build_system_ja.md)
+- [Build System(English)](docs/build_system_en.md)
 
 The Build System document describes the internal build architecture, including `build.sh`, Make configuration, build modes, OS-specific settings, analysis workflows, and VS Code integration.
-
-The API Reference is generated from Japanese Doxygen comments.
 
 ## Contributing
 
