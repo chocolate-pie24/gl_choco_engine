@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief ファイルシステムモジュール内部状態管理構造体前方宣言(内部データ構造は外部非公開)
@@ -49,6 +50,7 @@ typedef enum {
     FILESYSTEM_UNDEFINED_ERROR,     /**< 実行結果コード: 未定義エラー */
     FILESYSTEM_LIMIT_EXCEEDED,      /**< 実行結果コード: システムリソースが使用可能範囲を超過 */
     FILESYSTEM_BAD_OPERATION,       /**< 実行結果コード: API誤用 */
+    FILESYSTEM_DATA_CORRUPTED,      /**< 実行結果コード: 内部データ破損 */
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
 
@@ -218,6 +220,8 @@ filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* files
  * @return const char* オープンモード文字列
  */
 const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_);
+
+bool filesystem_is_valid(const filesystem_t* filesystem_);
 
 #ifdef __cplusplus
 }
