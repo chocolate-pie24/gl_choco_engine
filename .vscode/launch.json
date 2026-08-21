@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch (Debug)",
+      "name": "Launch GLCE",
       "type": "lldb",
       "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "program": "${workspaceFolder}/bin/gl_choco_engine"
+      "cwd": "${workspaceFolder}/glce",
+      "program": "${workspaceFolder}/glce/bin/gl_choco_engine"
     }
   ]
 }

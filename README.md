@@ -3,24 +3,15 @@
 </p>
 
 - [GL CHOCO ENGINE](#gl-choco-engine)
-  - [Motivation / Positioning](#motivation--positioning)
-    - [Non-goals](#non-goals)
-    - [Who it’s for](#who-its-for)
-  - [Inspired by](#inspired-by)
+  - [Non-goals](#non-goals)
+  - [Who It Is For](#who-it-is-for)
   - [Documentation](#documentation)
-    - [Architecture / Layering](#architecture--layering)
-      - [Renderer System](#renderer-system)
-      - [Renderer Backend](#renderer-backend)
-      - [Platform System](#platform-system)
-      - [Camera System](#camera-system)
-      - [Resource](#resource)
-    - [Guide](#guide)
-    - [API Reference](#api-reference)
   - [Contributing](#contributing)
-  - [Directory layout](#directory-layout)
+  - [Directory Layout](#directory-layout)
   - [Setup](#setup)
     - [macOS](#macos)
     - [Linux](#linux)
+    - [FreeBSD](#freebsd)
   - [Build](#build)
   - [Run](#run)
   - [License](#license)
@@ -28,302 +19,229 @@
 
 # GL CHOCO ENGINE
 
-GL CHOCO ENGINE (GLCE) is a C/OpenGL engine focused on clarity, controllability,
-and long-term maintainability.
+GL CHOCO ENGINE (GLCE) is a lightweight C/OpenGL rendering and application framework primarily aimed at visualization and debugging tools for robotics, industrial systems, and embedded-adjacent environments.
 
-It uses GLFW to keep the platform subsystem portable across desktop environments, while keeping dependencies intentionally small.
+It provides the core functionality needed to build graphics applications while leaving out heavyweight rendering features, large-scale physics simulation, integrated editors, and other large subsystems.
 
-The codebase is written with a quality-first mindset—explicit architecture, predictable low-level behavior,
-and a preference for testable, well-documented modules—so engineers outside the graphics domain can still understand, modify, and extend it with confidence.
+By keeping the feature set focused, GLCE aims to remain small enough for developers to understand the structure and behavior of the entire engine and maintain it over the long term.
 
-GLCE is written in C by design. While C++ offers many valid styles and abstractions, maintaining a consistent, uniform codebase over a long period typically requires strict and continuously enforced conventions. For a small, long-lived project that prioritizes readability and predictable low-level behavior, C’s narrower surface area helps keep the code coherent and reviewable.
+GLCE also keeps external library dependencies to a minimum so that setup and maintenance remain straightforward.
 
-The goal is a practical baseline you can own end-to-end, rather than a full-featured alternative to Unity or Unreal.
+GLCE is implemented in C.
 
-## Motivation / Positioning
+C++ provides many useful abstractions and design approaches, but maintaining a consistent codebase over a long period typically requires strict and continuously enforced conventions.
 
-GL CHOCO ENGINE is designed as a lightweight, dependency-minimal C/OpenGL engine that you can understand and own end-to-end.
+For a small, long-lived project that prioritizes readability and predictable low-level behavior, C's relatively limited language surface helps keep the codebase consistent and easier to review.
 
-In addition to “game engine” use cases, the project targets practical visualization and tooling scenarios often seen in robotics, industrial systems, and embedded-adjacent environments—where you may not want (or cannot afford) large middleware stacks or heavyweight engines.
+## Non-goals
 
-Typical use cases include:
+GLCE does not aim to provide the following:
 
-- Robotics / industrial visualization (lightweight 2D/3D viewers)
-- Sensor overlays (camera HUD / annotation rendering)
-- Point cloud viewers (e.g., LiDAR data inspection)
-- Lightweight tooling and debug viewers for embedded-adjacent systems
-
-Lower-power devices such as Raspberry Pi-class boards are a longer-term target, so the feature set is intentionally scoped.
-
-### Non-goals
-
-- Heavy visual effects and advanced rendering (e.g., complex post-processing, high-end lighting)
+- Heavyweight rendering features such as advanced post-processing or high-end lighting
 - Large-scale physics simulation
-- A full editor ecosystem or massive asset pipeline
-- “All-in-one” frameworks with large dependency surfaces
-- Unicode / multibyte text support (ASCII-only)
+- A full-featured GUI editor
+- A large asset pipeline
+- All-in-one frameworks with large dependency surfaces
+- Unicode / multibyte text support (ASCII only)
 
-### Who it’s for
+Leaving these areas out allows GLCE to provide the basic functionality needed for graphics applications while keeping the overall engine small enough to understand as a whole.
 
-- Engineers who want a small, readable rendering/application baseline in C/OpenGL
-- Teams who need “just enough” 2D / lightweight 3D visualization without Unity/Unreal/ROS2
-- Developers who want to learn and control the full stack rather than rely on middleware
+## Who It Is For
 
-## Inspired by
-
-This project was originally inspired by Kohi Game Engine and Travis Vroman’s work.
-I’m grateful for the motivation and the educational value of seeing an engine built from the ground up.
-GL CHOCO ENGINE is an independent codebase with its own architecture and design decisions, evolving according to its goals and constraints.
+- Engineers looking for a small and readable C/OpenGL rendering framework
+- Developers who need lightweight visualization for robotics, industrial systems, or embedded-adjacent environments
+- Developers who want sufficient rendering functionality without introducing Unity, Unreal Engine, ROS2, or similarly large systems
+- Developers who prefer to understand and control the full system rather than hide it behind middleware
 
 ## Documentation
 
-### Architecture / Layering
+- [Build System](docs/build_system.md)
+- [API Reference](https://chocolate-pie24.github.io/gl_choco_engine/)
 
-- [Overview](docs/layer.md)
+The Build System document describes the internal build architecture, including `build.sh`, Make configuration, build modes, OS-specific settings, analysis workflows, and VS Code integration.
 
-#### Renderer System
-
-- [Renderer System(English)](docs/architecture/systems/renderer_system/renderer_system_en.md)
-- [Renderer System(Japanese)](docs/architecture/systems/renderer_system/renderer_system_ja.md)
-
-#### Renderer Backend
-
-- [Renderer Backend(English)](docs/architecture/systems/renderer_system/renderer_backend/architecture_en.md)
-- [Renderer Backend(Japanese)](docs/architecture/systems/renderer_system/renderer_backend/architecture_ja.md)
-
-#### Platform System
-
-- [Platform System(English)](docs/architecture/systems/platform_system/architecture_en.md)
-- [Platform System(Japanese)](docs/architecture/systems/platform_system/architecture_ja.md)
-
-#### Camera System
-
-- [Camera System(English)](docs/architecture/systems/camera_system/architecture_en.md)
-- [Camera System(Japanese)](docs/architecture/systems/camera_system/architecture_ja.md)
-
-#### Resource
-
-- [Resource(English)](docs/architecture/resource/architecture_en.md)
-- [Resource(Japanese)](docs/architecture/resource/architecture_ja.md)
-
-### Guide
-
-Provides guidelines for engine developers to safely use the event system.
-
-- [Event System Guide(English)](docs/guide/event_system/event_en.md)
-- [Event System Guide(Japanese)](docs/guide/event_system/event_ja.md)
-
-Provides guidelines for engine developers to safely add support for new platforms.
-
-- [Platform System Guide(English)](docs/guide/platform_system/adding_concretes_en.md)
-- [Platform System Guide(Japanese)](docs/guide/platform_system/adding_concretes_ja.md)
-
-Provides guidelines for engine developers to safely add support for new renderer backends.
-
-- [Renderer Backend Guide(English)](docs/guide/renderer_backend/adding_concretes_en.md)
-- [Renderer Backend Guide(Japanese)](docs/guide/renderer_backend/adding_concretes_ja.md)
-
-Provides internal development standards for implementing and maintaining GLCE modules.
-
-- [Unit Test Implementation Guide(English)](docs/guide/glce_style/test/unit_test_en.md)
-- [Unit Test Implementation Guide(Japanese)](docs/guide/glce_style/test/unit_test_ja.md)
-
-### API Reference
-
-- [API reference (generated from Japanese Doxygen comments)](https://chocolate-pie24.github.io/gl_choco_engine/)
+The API Reference is generated from Japanese Doxygen comments.
 
 ## Contributing
 
-GL CHOCO ENGINE is currently maintained by a single developer,
-and I’m not accepting pull requests at this time.
+GL CHOCO ENGINE is currently developed and maintained by a single developer.
 
-If you find a bug, have a question, or want to suggest an improvement, please open an Issue.
-Feedback from users is very welcome.
+Pull requests are not accepted at this time.
 
-Forks are welcome for your own experiments and use.
+If you find a bug, have a question, or would like to suggest an improvement, please open an Issue.
+Feedback from users is welcome.
 
-## Directory layout
+Forks are welcome for your own experiments and development.
 
-<details>
-<summary>Show directory tree</summary>
+## Directory Layout
 
-```console
-.
-├── assets
-│   ├── shaders
-│   │   └── test_shader
-│   └── textures
-├── docs
-│   ├── architecture
-│   │   ├── systems
-│   │   │   ├── camera_system
-│   │   │   ├── platform
-│   │   │   ├── renderer
-│   │   │   └── texture_system
-│   │   └── resource
-│   │       └── texture
-│   ├── guide
-│   │   ├── event_system
-│   │   ├── glce_style
-│   │   ├── platform_system
-│   │   └── renderer_backend
-│   └── layer.md
-├── include
-│   ├── application
-│   │   ├── application_core
-│   │   └── command_interpreter
-│   └── engine
-│       ├── base
-│       ├── containers
-│       │   ├── choco_string.h
-│       │   └── ring_queue.h
-│       ├── core
-│       │   ├── buffer_utils
-│       │   ├── event
-│       │   ├── filesystem
-│       │   ├── geometry_primitive
-│       │   └── memory
-│       ├── io_utils
-│       │   └── fs_utils
-│       ├── resource
-│       │   ├── loaders
-│       │   ├── resource_core
-│       │   └── texture
-│       └── systems
-│           ├── camera_system
-│           │   ├── camera
-│           │   │   └── camera.h
-│           │   ├── camera_controller
-│           │   │   └── flight_camera_controller.h
-│           │   ├── camera_core
-│           │   └── camera_manager
-│           ├── platform
-│           ├── renderer
-│           │   ├── renderer_backend
-│           │   ├── renderer_core
-│           │   └── renderer_resources
-│           └── texture_system
-└── src
-    ├── application
-    │   ├── application_core
-    │   └── command_interpreter
-    ├── engine
-    │   ├── base
-    │   ├── containers
-    │   │   ├── choco_string.c
-    │   │   └── ring_queue.c
-    │   ├── core
-    │   │   ├── buffer_utils
-    │   │   ├── filesystem
-    │   │   └── memory
-    │   ├── io_utils
-    │   │   └── fs_utils
-    │   ├── resource
-    │   │   ├── loaders
-    │   │   ├── resource_core
-    │   │   └── texture
-    │   └── systems
-    │       ├── camera_system
-    │       │   ├── camera
-    │       │   │   └── camera.c
-    │       │   ├── camera_controller
-    │       │   │   └── flight_camera_controller.c
-    │       │   ├── camera_core
-    │       │   └── camera_manager
-    │       │
-    │       ├── platform
-    │       ├── renderer
-    │       │   ├── renderer_backend
-    │       │   ├── renderer_core
-    │       │   └── renderer_resources
-    │       └── texture_system
-    └── entry.c
+GLCE separates the Engine itself from the Application code that uses it.
+
+The Application uses the public API exposed by the Engine.
+The Engine does not depend on the Application.
+
+```text
+Application
+    │
+    │ Public API
+    ▼
+include/engine/
+    │
+    ▼
+Engine
 ```
 
-</details>
+The main repository layout is:
+
+```text
+.
+├── application/
+├── assets/
+├── docs/
+├── engine/
+├── include/
+│   └── engine/
+├── make/
+│   ├── common.mk
+│   ├── linux.mk
+│   ├── macos.mk
+│   └── freebsd.mk
+├── scripts/
+│   ├── coverage.sh
+│   ├── sanitizer.sh
+│   └── valgrind.sh
+├── test/
+│   ├── include/
+│   └── src/
+└── build.sh
+```
+
+The responsibilities of the main directories are:
+
+| Directory | Responsibility |
+|---|---|
+| `application/` | Application-side source code that uses the GLCE Engine |
+| `include/engine/` | Public API exposed by the Engine |
+| `engine/` | Engine source code and internal headers |
+| `assets/` | Runtime resources such as shaders and textures |
+| `test/` | Test source files and headers |
+| `make/` | Common and OS-specific Make configuration |
+| `scripts/` | Development workflows such as Coverage, Sanitizer, and Valgrind |
+| `docs/` | Design and development documentation |
+
+Directories such as `bin/`, `obj/`, and `cov/` are generated as needed during builds or analysis workflows.
 
 ## Setup
 
+GLCE currently supports:
+
+- macOS
+- Linux
+- FreeBSD
+
+The supported entry point for building GLCE is `build.sh`.
+
+OS-specific compiler, include path, library path, and linker settings are selected automatically by `build.sh` and the files under `make/`.
+
 ### macOS
 
-Tested on
-
-```bash
-% sw_vers
-ProductName:		macOS
-ProductVersion:		15.5
-BuildVersion:		24F74
-
-% /opt/homebrew/opt/llvm/bin/clang --version
-Homebrew clang version 20.1.8
-Target: arm64-apple-darwin24.5.0
-Thread model: posix
-InstalledDir: /opt/homebrew/Cellar/llvm/20.1.8/bin
-Configuration file: /opt/homebrew/etc/clang/arm64-apple-darwin24.cfg
-```
-
-Install Compiler
+Install LLVM and the OpenGL-related dependencies with Homebrew:
 
 ```bash
 brew install llvm
-echo 'export PATH="$(brew --prefix llvm)/bin:$PATH"' >> ~/.zshrc
-exec $SHELL -l
-```
-
-Install Dependencies
-
-```bash
 brew install glfw
 brew install glew
 ```
 
 ### Linux
 
-Tested on
+Install Clang and the OpenGL development packages.
 
-```bash
-$ uname -a
-Linux chocolate-pie24 6.14.0-33-generic #33~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 19 17:02:30 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
-
-$ clang --version
-Ubuntu clang version 18.1.3 (1ubuntu1)
-Target: x86_64-pc-linux-gnu
-Thread model: posix
-InstalledDir: /usr/bin
-```
-
-Install Compiler
+Example for Ubuntu:
 
 ```bash
 sudo apt install clang lldb lld
-```
-
-Install Dependencies
-
-```bash
 sudo apt install libglew-dev
 sudo apt install libglfw3-dev
 ```
 
-## Build
+Package names may differ between Linux distributions.
+
+### FreeBSD
+
+Install GNU Make and the OpenGL-related dependencies as root:
 
 ```bash
-chmod +x ./build.sh
-./build.sh all DEBUG_BUILD    # Debug build
-./build.sh all RELEASE_BUILD  # Release build
-./build.sh all TEST_BUILD     # Test build
-./build.sh clean              # Clean
+pkg install gmake glew glfw
 ```
 
+GLCE uses the Clang compiler provided by the FreeBSD base system.
+
+Because FreeBSD's standard `make` is BSD make, GLCE uses GNU Make as `gmake`.
+When `build.sh` detects FreeBSD, it selects `gmake` automatically.
+
+## Build
+
+If necessary, make the shell scripts executable:
+
+```bash
+chmod +x build.sh
+chmod +x scripts/*.sh
+```
+
+The same `build.sh` interface is used on macOS, Linux, and FreeBSD.
+
+Debug build:
+
+```bash
+./build.sh build debug
+```
+
+Release build:
+
+```bash
+./build.sh build release
+```
+
+Test build:
+
+```bash
+./build.sh build test
+```
+
+Remove generated files:
+
+```bash
+./build.sh clean
+```
+
+Debug, Release, and Test builds currently share the same `bin/` and `obj/` directories.
+
+Run `clean` before switching build modes.
+
+For details, see [Build System](docs/build_system.md).
+
 ## Run
+
+After building GLCE, run it from the repository root:
 
 ```bash
 ./bin/gl_choco_engine
 ```
 
+The executable is generated at:
+
+```text
+bin/gl_choco_engine
+```
+
+Some runtime resources are currently resolved using relative paths, so the GLCE repository root should be used as the current working directory.
+
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is released under the MIT License.
+
+See [LICENSE](LICENSE) for details.
 
 ## Author
 

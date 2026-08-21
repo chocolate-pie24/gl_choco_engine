@@ -1,0 +1,137 @@
+/**
+ * @ingroup renderer
+ *
+ * @file renderer_backend_vbo.h
+ * @author chocolate-pie24
+ * @brief renderer_backendが保有するVBO機能の窓口を上位層に提供する
+ *
+ * @version 0.1
+ * @date 2026-02-23
+ *
+ * @copyright Copyright (c) 2026 chocolate-pie24
+ *
+ * @par License
+ * MIT License. See LICENSE file in the project root for full license text.
+ *
+ */
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_VBO_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_RENDERER_BACKEND_VBO_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stddef.h>
+
+#include "engine/systems/renderer/core/renderer_types.h"
+
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
+typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
+
+/**
+ * @brief VBO内部状態管理構造体インスタンスのメモリを確保する
+ *
+ * @note 確保されたリソースは @ref renderer_backend_vbo_destroy を使用して破棄する
+ *
+ * @details
+ * - backend_context_が保有する仮想関数テーブルの関数を使用しメモリ確保を行う
+ * - 構造体インスタンスのメモリ確保に成功した場合、VBOのGPU側リソースも確保される
+ *
+ * @param[in] backend_context_ VBOメモリ確保関数保有構造体インスタンスへのポインタ
+ * @param[out] vbo_ メモリ確保対象VBO構造体インスタンスへのダブルポインタ
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - vbo_ == NULL
+ * - *vbo_ != NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ */
+renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vbo_);
+
+/**
+ * @brief VBO内部状態管理構造体インスタンスを破棄する
+ *
+ * @details
+ * - VBOのGPU側リソースの解放も行う
+ * - 本関数実行後、vbo_ == NULLになる
+ * - 既に解放済みのvbo_に対しては何もしない
+ * - backend_context_ == NULLの場合は何もしない
+ *
+ * @param[in] backend_context_ リソース破棄用vtable保有構造体インスタンスへのポインタ
+ * @param[in,out] vbo_ 破棄対象インスタンスへのダブルポインタ
+ */
+void renderer_backend_vbo_destroy(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vbo_);
+
+/**
+ * @brief VBOをbindする
+ *
+ * @param[in] backend_context_ bind用vtable保有構造体インスタンスへのポインタ
+ * @param[in] vbo_ bind対象VBOハンドル構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - vbo_ == NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtable == NULL
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ */
+renderer_backend_result_t renderer_backend_vbo_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_);
+
+/**
+ * @brief VBOをunbindする
+ *
+ * @note 特定のVBOを指定してunbindするAPIではなく、現在のGL_ARRAY_BUFFER bindingを解除するAPIである
+ *
+ * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT backend_context_ == NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ */
+renderer_backend_result_t renderer_backend_vbo_unbind(const renderer_backend_context_t* backend_context_);
+
+/**
+ * @brief GPUの頂点情報格納バッファに頂点情報を転送する
+ *
+ * @warning 本APIを呼び出す前に対象のVBOをbindしておくこと
+ *
+ * @param[in] backend_context_ 転送用vtable保有構造体インスタンスへのポインタ
+ * @param[in] load_size_ 転送サイズ(byte)
+ * @param[in] load_data_ 転送データ配列への先頭ポインタ
+ * @param[in] usage_ バッファ用途 @ref buffer_usage_t
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - load_size_ == 0
+ * - backend_context_ == NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_RUNTIME_ERROR usage_の値が規定範囲外
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ */
+renderer_backend_result_t renderer_backend_vbo_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_);
+
+/**
+ * @brief 生成済みのGPU側頂点情報格納領域に対し、転送位置を指定して頂点情報を転送する
+ *
+ * @warning 本APIを呼び出す前に対象のVBOをbindしておくこと
+ *
+ * @param[in] backend_context_ 転送用vtable保有構造体インスタンスへのポインタ
+ * @param[in] offset_ 頂点情報格納領域の先頭から転送開始位置までのオフセット(byte)
+ * @param[in] size_ 頂点情報転送サイズ(byte)
+ * @param[in] load_data_ 転送する頂点情報配列へのポインタ
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - backend_context_ == NULL
+ * - load_data_ == NULL
+ * - size_ == 0
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->vbo_vtableがNULLで未初期化
+ * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ */
+renderer_backend_result_t renderer_backend_vbo_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

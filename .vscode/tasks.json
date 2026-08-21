@@ -4,25 +4,76 @@
         {
             "type": "shell",
             "label": "build_debug",
-            "command": "${workspaceFolder}/build.sh all DEBUG_BUILD",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "build",
+                "debug"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
             "group": "build"
         },
         {
             "type": "shell",
             "label": "build_release",
-            "command": "${workspaceFolder}/build.sh all RELEASE_BUILD",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "build",
+                "release"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
             "group": "build"
         },
         {
             "type": "shell",
             "label": "build_test",
-            "command": "${workspaceFolder}/build.sh all TEST_BUILD",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "build",
+                "test"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "clean",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "clean"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -30,11 +81,65 @@
         },
         {
             "type": "shell",
-            "label": "clean",
-            "command": "${workspaceFolder}/build.sh clean",
+            "label": "sanitize",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "sanitize"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "coverage",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "coverage"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "valgrind",
+            "command": "${workspaceFolder}/glce/build.sh",
+            "args": [
+                "valgrind"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/glce"
+                    ]
+                }
+            ],
             "group": "build"
         }
     ]
