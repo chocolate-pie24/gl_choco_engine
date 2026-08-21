@@ -174,6 +174,8 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
  */
 bool ring_queue_empty(const ring_queue_t* ring_queue_);
 
+bool ring_queue_is_valid(const ring_queue_t* ring_queue_);
+
 #ifdef __cplusplus
 }
 #endif
