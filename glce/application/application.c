@@ -19,11 +19,11 @@
 #include <stddef.h> // for NULL
 #include <string.h> // for memset
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
 #include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
-#include <GLFW/glfw3.h> // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
 
 #include "application/application.h"
 
@@ -44,11 +44,11 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
+#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/ring_queue.h"
-#include "engine/containers/choco_string.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -60,8 +60,8 @@
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resources/texture/texture_gpu_resource.h"
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
@@ -82,10 +82,7 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
-#include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
 #include "engine/systems/camera_system/camera_manager/camera_manager.h"
 #include "engine/systems/camera_system/camera_core/camera_types.h"
@@ -147,25 +144,19 @@ typedef struct app_state {
     // begin temporary TODO: remove this!!
     point_mesh_geometry_registry_t* point_mesh_geometry_registry;
     int16_t geometry_id_test_points;
-    vbo_range_t test_points_buffer_range;
 
     lit_mesh_geometry_registry_t* lit_mesh_geometry_registry;
     int16_t geometry_id_penguin;
-    vbo_range_t penguin_buffer_range;
     bool should_draw_penguin_aabb;
 
     ui_mesh_geometry_registry_t* ui_mesh_geometry_registry;
     int16_t geometry_id_small_icon;
     int16_t geometry_id_large_icon;
-    vbo_range_t small_icon_buffer_range;
-    vbo_range_t large_icon_buffer_range;
 
     line_mesh_geometry_registry_t* line_mesh_geometry_registry;
     int16_t geometry_id_penguin_aabb;
-    vbo_range_t penguin_aabb_buffer_range;
     vec4u8_t penguin_aabb_color;
     int16_t geometry_id_test_line;
-    vbo_range_t test_line_buffer_range;
     vec4u8_t test_line_color;
 
     mat4x4f_t rabbit_mesh_model_mat;
@@ -554,13 +545,13 @@ cleanup:
                 line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry, tmp->line_mesh_shader);
             }
             if(NULL != tmp->ui_mesh_geometry_registry) {
-                ui_mesh_geometry_registry_deinitialize(tmp->ui_mesh_geometry_registry);
+                ui_mesh_geometry_registry_deinitialize(tmp->ui_mesh_geometry_registry, tmp->ui_mesh_shader);
             }
             if(NULL != tmp->lit_mesh_geometry_registry) {
-                lit_mesh_geometry_registry_deinitialize(tmp->lit_mesh_geometry_registry);
+                lit_mesh_geometry_registry_deinitialize(tmp->lit_mesh_geometry_registry, tmp->lit_mesh_shader);
             }
             if(NULL != tmp->point_mesh_geometry_registry) {
-                point_mesh_geometry_registry_deinitialize(tmp->point_mesh_geometry_registry);
+                point_mesh_geometry_registry_deinitialize(tmp->point_mesh_geometry_registry, tmp->point_mesh_shader);
             }
             if(NULL != tmp->camera_manager) {
                 camera_manager_deinitialize(tmp->camera_manager);
@@ -622,13 +613,13 @@ void application_destroy(void) {
         line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry, s_app_state->line_mesh_shader);
     }
     if(NULL != s_app_state->ui_mesh_geometry_registry) {
-        ui_mesh_geometry_registry_deinitialize(s_app_state->ui_mesh_geometry_registry);
+        ui_mesh_geometry_registry_deinitialize(s_app_state->ui_mesh_geometry_registry, s_app_state->ui_mesh_shader);
     }
     if(NULL != s_app_state->lit_mesh_geometry_registry) {
-        lit_mesh_geometry_registry_deinitialize(s_app_state->lit_mesh_geometry_registry);
+        lit_mesh_geometry_registry_deinitialize(s_app_state->lit_mesh_geometry_registry, s_app_state->lit_mesh_shader);
     }
     if(NULL != s_app_state->point_mesh_geometry_registry) {
-        point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry);
+        point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry, s_app_state->point_mesh_shader);
     }
     if(NULL != s_app_state->texture_registry) {
         texture_registry_deinitialize(s_app_state->texture_registry, s_app_state->renderer_backend_context);
@@ -693,7 +684,6 @@ application_result_t application_run(void) {
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
     geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-    resource_registry_result_t ret_resource_registy = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     int16_t tex_id_rabbit = 0;
     int16_t tex_id_frog = 0;
@@ -874,14 +864,14 @@ application_result_t application_run(void) {
         // UI描画
         ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
         ui_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
-        ret_resource_registy = ui_mesh_geometry_registry_vbo_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon, &s_app_state->small_icon_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon);
+        if(NULL != tmp_draw_range) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_rabbit);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->small_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
@@ -890,19 +880,19 @@ application_result_t application_run(void) {
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_green);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->small_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->small_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
 
-        ret_resource_registy = ui_mesh_geometry_registry_vbo_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon, &s_app_state->large_icon_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon);
+        if(NULL != tmp_draw_range) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_frog);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
-            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->large_icon_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->large_icon_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
             texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
         }
@@ -924,22 +914,22 @@ application_result_t application_run(void) {
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 
         // ポイント描画
-        ret_resource_registy = point_mesh_geometry_registry_vbo_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points, &s_app_state->test_points_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = point_mesh_geometry_registry_draw_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points);
+        if(NULL != tmp_draw_range) {
             point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
             point_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
 
-            glDrawArrays(GL_POINTS, (GLint)s_app_state->test_points_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->test_points_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_POINTS, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
         }
 
         // STL描画
-        ret_resource_registy = lit_mesh_geometry_registry_vbo_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin, &s_app_state->penguin_buffer_range);
-        if(RESOURCE_REGISTRY_SUCCESS == ret_resource_registy) {
+        tmp_draw_range = lit_mesh_geometry_registry_draw_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin);
+        if(NULL != tmp_draw_range) {
             lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
             lit_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
 
-            glDrawArrays(GL_TRIANGLES, (GLint)s_app_state->penguin_buffer_range.draw_range.first_vertex_count, (GLint)s_app_state->penguin_buffer_range.draw_range.vertex_count);
+            glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
         }
 
