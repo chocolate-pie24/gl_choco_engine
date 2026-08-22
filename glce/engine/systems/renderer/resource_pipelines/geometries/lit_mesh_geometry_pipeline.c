@@ -119,8 +119,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
         memory_system_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
         vertices = NULL;
 
-        // NOTE: 一時的にverticesが2つ分必要なので、deep copyではなくmoveを検討しても良い
-        ret_registry = lit_mesh_geometry_registry_register(geometry_registry_, geometry, &tmp_buffer_range, &tmp_geometry_id);
+        ret_registry = lit_mesh_geometry_registry_register(geometry_registry_, name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
             ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
             ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_rslt_to_str(ret), name_, vertex_offset, vertex_count);
@@ -159,31 +158,14 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t*
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    vbo_range_t vbo_range = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_release", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    ret_registry = lit_mesh_geometry_registry_vbo_range_get(geometry_registry_, geometry_id_, &vbo_range);
-    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("lit_mesh_geometry_pipeline_release(%s) - lit_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
     // unregisterに失敗した場合はgeometry_registry_は不変となる。そのため、vbo_freeの後でunregisterに失敗するとgeometry_registry_に解放済みallocationへの参照が残る。よってvbo_freeの前で実行する
-    ret_registry = lit_mesh_geometry_registry_unregister(geometry_registry_, geometry_id_);
+    ret_registry = lit_mesh_geometry_registry_unregister(geometry_registry_, shader_, geometry_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("lit_mesh_geometry_pipeline_release(%s) - lit_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = lit_mesh_shader_vbo_free(shader_, &vbo_range);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("lit_mesh_geometry_pipeline_release(%s) - lit_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
