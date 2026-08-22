@@ -417,7 +417,7 @@ bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_) {
     if(0 == config_->base_align || !IS_POWER_OF_TWO(config_->base_align)) {
         return false;
     }
-    if(BUFFER_USAGE_DYNAMIC != config_->buffer_usage && BUFFER_USAGE_STATIC != config_->buffer_usage) {
+    if(!buffer_usage_is_valid(config_->buffer_usage)) {
         return false;
     }
     return true;

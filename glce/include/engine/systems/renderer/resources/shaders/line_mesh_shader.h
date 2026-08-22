@@ -34,13 +34,15 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 typedef struct mat4x4f mat4x4f_t;
 typedef struct line_vertex line_vertex_t;
 
+typedef struct renderer_config renderer_config_t;
+
 shader_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_shader_);
 
 void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t** line_mesh_shader_);
 
 shader_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_);
 
-shader_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const vbo_manager_config_t* vbo_config_);
+shader_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const renderer_config_t* renderer_config_);
 
 shader_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_);
 

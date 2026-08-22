@@ -29,6 +29,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
+#include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
@@ -66,7 +67,6 @@ struct point_mesh_shader {
 };
 
 // validation
-static bool vbo_config_is_valid(const vbo_manager_config_t* config_);
 static bool point_mesh_shader_is_initialized(const point_mesh_shader_t* point_mesh_shader_);
 
 shader_result_t point_mesh_shader_create(point_mesh_shader_t** out_point_mesh_shader_) {
@@ -176,28 +176,38 @@ cleanup:
     return ret;
 }
 
-shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* vbo_config_) {
+shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const renderer_config_t* config_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
+    vbo_manager_config_t vbo_config = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "point_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vbo_manager, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vbo_manager")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "vbo_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "vbo_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "config_")
+    if(!renderer_config_is_valid(config_)) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - Provided config_ is not valid.", shader_rslt_to_str(SHADER_INVALID_ARGUMENT));
+        goto cleanup;
+    }
 
-    ret_buff_mgr = vbo_manager_create(backend_context_, vbo_config_, &tmp_vbo_manager);
+    vbo_config.base_align = alignof(float);
+    vbo_config.buffer_usage = config_->point_mesh_shader_buffer_usage;
+    vbo_config.max_allocation_count = config_->point_mesh_shader_max_allocation_count;
+    vbo_config.vbo_size = config_->point_mesh_shader_vbo_size;
+
+    ret_buff_mgr = vbo_manager_create(backend_context_, &vbo_config, &tmp_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - buffer manager create failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    point_mesh_shader_->vbo_config = *vbo_config_;
+    point_mesh_shader_->vbo_config = vbo_config;
     point_mesh_shader_->vbo_manager = tmp_vbo_manager;
 
     ret = SHADER_SUCCESS;
@@ -515,25 +525,6 @@ shader_result_t point_mesh_shader_projection_matrix_set(const renderer_backend_c
 
 cleanup:
     return ret;
-}
-
-static bool vbo_config_is_valid(const vbo_manager_config_t* config_) {
-    if(NULL == config_) {
-        return false;
-    }
-    if(0 == config_->vbo_size) {
-        return false;
-    }
-    if(0 == config_->max_allocation_count) {
-        return false;
-    }
-    if(BUFFER_USAGE_DYNAMIC != config_->buffer_usage && BUFFER_USAGE_STATIC != config_->buffer_usage) {
-        return false;
-    }
-    if(alignof(float) != config_->base_align) {
-        return false;
-    }
-    return true;
 }
 
 static bool point_mesh_shader_is_initialized(const point_mesh_shader_t* point_mesh_shader_) {

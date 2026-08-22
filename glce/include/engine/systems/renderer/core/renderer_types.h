@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 /**
  * @brief GraphicsAPI種別リスト
  *
@@ -85,6 +87,8 @@ typedef enum {
     TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE,      /**< GL_CLAMP_TO_EDGE相当: 端のtexelを引き延ばすように扱う。境界のにじみを避けたいときによく使用する */
     TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
 } texture_wrap_config_t;
+
+bool buffer_usage_is_valid(buffer_usage_t usage_);
 
 #ifdef __cplusplus
 }
