@@ -13,7 +13,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 

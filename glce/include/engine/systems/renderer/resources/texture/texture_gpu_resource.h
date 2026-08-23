@@ -10,7 +10,7 @@ extern "C" {
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
 
 typedef struct texture_gpu_resource texture_gpu_resource_t;
 typedef struct renderer_backend_context renderer_backend_context_t;

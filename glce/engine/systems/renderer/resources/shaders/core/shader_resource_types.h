@@ -5,9 +5,11 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
+#include <stdbool.h>
 
-#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
+#include "engine/systems/renderer/core/renderer_types.h"
+
+#include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 typedef enum {
     SHADER_SUCCESS = 0,
@@ -23,15 +25,12 @@ typedef enum {
     SHADER_UNDEFINED_ERROR,
 } shader_result_t;
 
-typedef struct draw_range {
-    size_t first_vertex_count;
-    size_t vertex_count;
-} draw_range_t;
-
 typedef struct vbo_range {
     draw_range_t draw_range;
-    vertex_allocation_t allocation_info;
+    range_allocation_t allocation_info;
 } vbo_range_t;
+
+bool vbo_range_is_valid(const vbo_range_t* vbo_range_);
 
 #ifdef __cplusplus
 }

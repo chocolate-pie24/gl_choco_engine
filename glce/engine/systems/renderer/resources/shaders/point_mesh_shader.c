@@ -28,7 +28,6 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -176,7 +175,7 @@ cleanup:
     return ret;
 }
 
-shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const renderer_config_t* config_) {
+shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const point_mesh_shader_config_t* config_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -189,16 +188,16 @@ shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* bac
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(point_mesh_shader_->vbo_manager, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_initialize", "point_mesh_shader_->vbo_manager")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_initialize", "config_")
-    if(!renderer_config_is_valid(config_)) {
+    if(!point_mesh_shader_config_is_valid(config_)) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("point_mesh_shader_vbo_initialize(%s) - Provided config_ is not valid.", shader_rslt_to_str(SHADER_INVALID_ARGUMENT));
         goto cleanup;
     }
 
     vbo_config.base_align = alignof(float);
-    vbo_config.buffer_usage = config_->point_mesh_shader_buffer_usage;
-    vbo_config.max_allocation_count = config_->point_mesh_shader_max_allocation_count;
-    vbo_config.vbo_size = config_->point_mesh_shader_vbo_size;
+    vbo_config.buffer_usage = config_->buffer_usage;
+    vbo_config.max_allocation_count = config_->max_allocation_count;
+    vbo_config.vbo_size = config_->vbo_size;
 
     ret_buff_mgr = vbo_manager_create(backend_context_, &vbo_config, &tmp_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
@@ -340,7 +339,7 @@ shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* ba
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    vertex_allocation_t tmp_alloc_handle = { 0 };
+    range_allocation_t tmp_alloc_handle = { 0 };
     size_t write_size = 0;
 
     bool vbo_written = false;
@@ -366,14 +365,14 @@ shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* ba
     }
     vbo_written = true;
 
-    if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(point_vertex_t))) {
+    if(0 != (tmp_alloc_handle.offset % sizeof(point_vertex_t))) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
     out_buffer_range_->allocation_info = tmp_alloc_handle;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.range_allocation.offset / sizeof(point_vertex_t);
+    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.offset / sizeof(point_vertex_t);
     out_buffer_range_->draw_range.vertex_count = vertex_count_;
 
     ret = SHADER_SUCCESS;
@@ -398,8 +397,12 @@ shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shade
 
     IF_ARG_FALSE_GOTO_CLEANUP(point_mesh_shader_is_initialized(point_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_info.range_allocation.allocated_size, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_free", "buffer_range_->allocation_info.range_allocation.allocated_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_vbo_free", "buffer_range_->draw_range.vertex_count")
+
+    if(!vbo_range_is_valid(buffer_range_)) {
+        ret = SHADER_BAD_OPERATION;
+        ERROR_MESSAGE("point_mesh_shader_vbo_free(%s) - Provided buffer_range_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_buff_mgr = vbo_manager_free(point_mesh_shader_->vbo_manager, &buffer_range_->allocation_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {

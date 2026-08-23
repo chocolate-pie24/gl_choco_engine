@@ -17,7 +17,7 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resources/texture/texture_gpu_resource.h"
 
 #include "engine/systems/renderer/resource_registries/texture/texture_registry.h"

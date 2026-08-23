@@ -26,7 +26,7 @@
  * 切り上げた実確保サイズである。GPUへ転送するデータサイズは呼び出し側が
  * 指定した要求サイズであり、alignment padding部分への転送は行わない。
  *
- * write成功時には、確保したrangeを表すvertex_allocation_tを呼び出し側へ返す。
+ * write成功時には、確保したrangeを表すrange_allocation_tを呼び出し側へ返す。
  * このallocation handleは、対応するVBO Managerが生存し、
  * allocationがfreeされるまで有効である。
  *
@@ -56,8 +56,7 @@
  * VBO Managerは、内部のRange AllocatorおよびRenderer Backend VBOを所有する。
  * これらのリソースはvbo_manager_destroy()によってVBO Managerとともに破棄される。
  *
- * VBO Managerを破棄すると、そのVBO Managerから取得したすべての
- * vertex_allocation_tは無効となる。
+ * VBO Managerを破棄すると、そのVBO Managerから取得したすべてのrange_allocation_tは無効となる。
  *
  * @date 2026-07-31
  *
@@ -81,9 +80,10 @@ extern "C" {
 #include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
+
+typedef struct range_allocation range_allocation_t;
 
 /**
  * @brief VBO Managerの生成設定
@@ -145,56 +145,6 @@ typedef struct vbo_manager_config {
     size_t base_align;              /**< 全allocationへ適用する固定base alignment(byte) */
     buffer_usage_t buffer_usage;    /**< Renderer Backendへ指定するbuffer usage */
 } vbo_manager_config_t;
-
-/**
- * @brief VBO Managerから取得したvertex allocationを表すhandle
- *
- * @details
- * vbo_manager_write()によって確保されたVBO内rangeの位置、実確保サイズ、
- * allocation identity、および生成元Range Allocatorを保持する。
- *
- * 現在はrange_allocation_tを内包し、VBO内rangeの管理を
- * Range Allocatorへ委譲している。
- *
- * @par Handleの使用
- * range_allocationのoffsetはVBO先頭からデータ転送開始位置までの
- * byte offsetを表し、allocated_sizeはbase alignment調整後に
- * Range Allocatorが占有している実確保サイズを表す。
- *
- * 本handleはvbo_manager_free()へ渡すまで変更してはならない。
- * 内部fieldを変更すると、対応するlive allocationを解決できなくなる。
- *
- * @par 生存期間
- * 本handleは、生成元VBO Managerが生存し、対応するallocationが
- * freeされるまで有効である。
- *
- * vbo_manager_free()はhandle自体を変更しない。
- * free成功後も各fieldの値は残るが、live allocationを表さなくなるため、
- * 再度vbo_manager_free()へ渡してはならない。
- *
- * VBO Managerを破棄した場合、そのVBO Managerから取得した
- * すべてのvertex_allocation_tは無効となる。
- *
- * @par Handleの複製
- * 本handleを値として複製しても、VBO内のallocationは複製されない。
- * 複数のhandleから同じallocationをfreeするとdouble freeになる。
- *
- * @par 将来拡張
- * 将来VBO poolまたはVBO pageを導入した場合に、対象VBOやpageを
- * 識別する情報を追加できるよう、range_allocation_tを公開APIで
- * 直接使用せず、独立したvertex_allocation_tとして定義する。
- *
- * @see range_allocation_t
- * @see vbo_manager_write
- * @see vbo_manager_free
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が内容を確認・修正した。
- */
-typedef struct vertex_allocation {
-    range_allocation_t range_allocation;    /**< VBO内rangeのallocation descriptor */
-} vertex_allocation_t;
 
 /**
  * @brief VBO Managerの内部状態を保持するopaque型
@@ -344,8 +294,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
  * およびVBO Manager本体を解放し、*vbo_manager_へNULLを設定する。
  *
  * live allocationが存在する状態でもVBO Managerを破棄できる。
- * 破棄後は、このVBO Managerから取得したすべての
- * vertex_allocation_tが無効となる。
+ * 破棄後は、このVBO Managerから取得したすべてのrange_allocation_tが無効となる。
  *
  * backend_context_がNULLの場合は、エラーメッセージを出力し、
  * リソースを破棄せずに終了する。この場合、*vbo_manager_は変更されない。
@@ -416,8 +365,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
  * VBO Managerは、write_data_が完全なvertexまたはelement単位で
  * 構成されているか検証しない。この条件は上位層が保証する。
  *
- * 転送成功後にVBOをunbindし、確保したrangeを表す
- * vertex_allocation_tをout_allocation_handle_へ格納する。
+ * 転送成功後にVBOをunbindし、確保したrangeを表すrange_allocation_tをout_allocation_handle_へ格納する。
  *
  * @par 処理順序
  * 次の順序でrangeの確保とデータ転送を行う。
@@ -557,14 +505,14 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
  * 本関数は動的メモリ確保および動的メモリ解放を行わない。
  *
  * @see vbo_manager_free
- * @see vertex_allocation_t
+ * @see range_allocation_t
  * @see range_allocator_allocate
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_);
+buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_);
 
 /**
  * @brief vertex allocationが表すVBO内rangeを解放する
@@ -682,14 +630,14 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
  * 本関数は動的メモリ確保および動的メモリ解放を行わない。
  *
  * @see vbo_manager_write
- * @see vertex_allocation_t
+ * @see range_allocation_t
  * @see range_allocator_free
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_);
+buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const range_allocation_t* allocation_handle_);
 
 /**
  * @brief VBO Managerが所有するRenderer Backend VBOをbindする

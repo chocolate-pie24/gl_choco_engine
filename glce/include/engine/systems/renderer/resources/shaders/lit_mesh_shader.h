@@ -28,7 +28,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
@@ -37,8 +36,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 
 typedef struct mat4x4f mat4x4f_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
-
-typedef struct renderer_config renderer_config_t;
+typedef struct lit_mesh_shader_config lit_mesh_shader_config_t;
 
 shader_result_t lit_mesh_shader_create(lit_mesh_shader_t** out_lit_mesh_shader_);
 
@@ -46,7 +44,7 @@ void lit_mesh_shader_destroy(renderer_backend_context_t* backend_context_, lit_m
 
 shader_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const char* file_path_, const char* name_);
 
-shader_result_t lit_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const renderer_config_t* renderer_config_);
+shader_result_t lit_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const lit_mesh_shader_config_t* config_);
 
 shader_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
 

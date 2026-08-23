@@ -32,8 +32,6 @@ static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_
 static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
 static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
 
-static bool graphics_api_is_valid(target_graphics_api_t target_api_);
-
 renderer_backend_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -43,7 +41,7 @@ renderer_backend_result_t renderer_backend_initialize(linear_alloc_t* allocator_
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_initialize", "out_renderer_backend_context_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_initialize", "*out_renderer_backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(graphics_api_is_valid(target_api_), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_initialize", "target_api_")
+    IF_ARG_FALSE_GOTO_CLEANUP(target_graphics_api_is_valid(target_api_), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_initialize", "target_api_")
 
     // Simulation.
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_context);
@@ -145,17 +143,4 @@ static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t
     default:
         return NULL;
     }
-}
-
-static bool graphics_api_is_valid(target_graphics_api_t target_api_) {
-    bool ret = false;
-    switch(target_api_) {
-    case GRAPHICS_API_GL33:
-        ret = true;
-        break;
-    default:
-        ret = false;
-        break;
-    }
-    return ret;
 }

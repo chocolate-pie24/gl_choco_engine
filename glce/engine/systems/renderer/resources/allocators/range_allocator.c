@@ -179,8 +179,6 @@
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
-
 /**
  * @brief nodeの利用状態、range用途、およびlist接続状態を表す
  *
@@ -749,6 +747,22 @@ void range_allocator_debug_print(const range_allocator_t* range_allocator_) {
 
     fprintf(stdout, "\033[0m");
     funlockfile(stdout);
+}
+
+bool range_allocation_is_valid(const range_allocation_t* range_allocation_) {
+    if(NULL == range_allocation_) {
+        return false;
+    }
+    if((SIZE_MAX - range_allocation_->allocated_size) < range_allocation_->offset) {
+        return false;
+    }
+    if(0 == range_allocation_->allocated_size) {
+        return false;
+    }
+    if(NULL == range_allocation_->owner) {
+        return false;
+    }
+    return true;
 }
 
 /**

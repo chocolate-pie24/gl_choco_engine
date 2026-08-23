@@ -1,11 +1,11 @@
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_TEXTURE_CORE_TEXTURE_GPU_RESOURCE_ERR_UTILS_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_TEXTURE_CORE_TEXTURE_GPU_RESOURCE_ERR_UTILS_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_TEXTURE_TEXTURE_GPU_RESOURCE_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_TEXTURE_TEXTURE_GPU_RESOURCE_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
 
 #include "engine/core/memory/choco_memory.h"
 

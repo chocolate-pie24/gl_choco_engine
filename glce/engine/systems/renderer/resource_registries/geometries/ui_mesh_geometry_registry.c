@@ -29,7 +29,6 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/core/resource_types.h"
 #include "engine/resource/geometry/ui_mesh_geometry.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
@@ -374,16 +373,16 @@ static bool registry_entry_is_empty(const registry_entry_t* registry_entry_) {
     if(NULL != registry_entry_->cpu_resource || NULL != registry_entry_->resource_name) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.range_allocation.allocated_size) {
+    if(0 != registry_entry_->allocation_descriptor.allocation_info.allocated_size) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.range_allocation.node_index) {
+    if(0 != registry_entry_->allocation_descriptor.allocation_info.node_index) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.range_allocation.offset) {
+    if(0 != registry_entry_->allocation_descriptor.allocation_info.offset) {
         return false;
     }
-    if(NULL != registry_entry_->allocation_descriptor.allocation_info.range_allocation.owner) {
+    if(NULL != registry_entry_->allocation_descriptor.allocation_info.owner) {
         return false;
     }
     if(0 != registry_entry_->allocation_descriptor.draw_range.first_vertex_count) {
@@ -408,14 +407,11 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
         return false;
     }
 
-    // 登録済みentryの検査 TODO: cpu_resource, allocation descriptorのvalidation APIを追加
+    // 登録済みentryの検査 TODO: cpu_resourceのvalidation APIを追加
     if(0 == choco_string_length(entry_->resource_name)) {
         return false;
     }
-
-    if(0 == entry_->allocation_descriptor.allocation_info.range_allocation.allocated_size ||
-       NULL == entry_->allocation_descriptor.allocation_info.range_allocation.owner ||
-       0 == entry_->allocation_descriptor.draw_range.vertex_count) {
+    if(!vbo_range_is_valid(&entry_->allocation_descriptor)) {
         return false;
     }
 

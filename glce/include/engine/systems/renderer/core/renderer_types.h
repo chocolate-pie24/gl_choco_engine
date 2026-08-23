@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 
 /**
  * @brief GraphicsAPI種別リスト
@@ -38,21 +39,6 @@ typedef enum {
     BUFFER_USAGE_STATIC,    /**< データ種別: 頻繁に書き換わることのないデータ */
     BUFFER_USAGE_DYNAMIC,   /**< データ種別: 頻繁に書き換わるデータ */
 } buffer_usage_t;
-
-/**
- * @brief 上位層でグラフィックスAPI固有の変数型を使用しないで済むよう、グラフィックスAPI固有型を定義
- *
- */
-typedef enum {
-    RENDERER_TYPE_FLOAT,            /**< データ型: GLfloat */
-    RENDERER_TYPE_UNSIGNED_BYTE,    /**< データ型: GL_UNSIGNED_BYTE */
-    RENDERER_TYPE_BYTE,             /**< データ型: GL_BYTE */
-} renderer_type_t;
-
-typedef enum {
-    SHADER_TYPE_VERTEX,
-    SHADER_TYPE_FRAGMENT,
-} shader_type_t;
 
 /**
  * @brief 画像を拡大表示した際の表示設定
@@ -88,7 +74,22 @@ typedef enum {
     TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
 } texture_wrap_config_t;
 
+typedef struct draw_range {
+    size_t first_vertex_count;
+    size_t vertex_count;
+} draw_range_t;
+
+bool target_graphics_api_is_valid(target_graphics_api_t graphics_api_);
+
 bool buffer_usage_is_valid(buffer_usage_t usage_);
+
+bool texture_mag_filter_config_is_valid(texture_mag_filter_config_t config_);
+
+bool texture_min_filter_config_is_valid(texture_min_filter_config_t config_);
+
+bool texture_wrap_config_is_valid(texture_wrap_config_t config_);
+
+bool draw_range_is_valid(const draw_range_t* draw_range_);
 
 #ifdef __cplusplus
 }

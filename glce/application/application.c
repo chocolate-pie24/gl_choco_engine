@@ -55,7 +55,11 @@
 #include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
 
+// NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
+// Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
+// 将来Renderer Frontendを導入し、Shaderおよびその内部型をApplicationから隠した時点で削除する予定。
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
 #include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
@@ -350,22 +354,22 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    tmp->renderer_config.ui_mesh_shader_buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.ui_mesh_shader_max_allocation_count = 512;
-    tmp->renderer_config.ui_mesh_shader_vbo_size = 1024;
+    tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
+    tmp->renderer_config.ui_mesh_shader_config.vbo_size = 1024;
 
-    tmp->renderer_config.line_mesh_shader_buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.line_mesh_shader_max_allocation_count = 512;
-    tmp->renderer_config.line_mesh_shader_vbo_size = 1024;
+    tmp->renderer_config.line_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->renderer_config.line_mesh_shader_config.max_allocation_count = 512;
+    tmp->renderer_config.line_mesh_shader_config.vbo_size = 1024;
 
-    tmp->renderer_config.point_mesh_shader_buffer_usage = BUFFER_USAGE_DYNAMIC;
-    tmp->renderer_config.point_mesh_shader_max_allocation_count = 128;
-    tmp->renderer_config.point_mesh_shader_vbo_size = 1 * KIB;
+    tmp->renderer_config.point_mesh_shader_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
+    tmp->renderer_config.point_mesh_shader_config.max_allocation_count = 128;
+    tmp->renderer_config.point_mesh_shader_config.vbo_size = 1 * KIB;
 
-    tmp->renderer_config.lit_mesh_shader_buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.lit_mesh_shader_max_allocation_count = 512;
-    tmp->renderer_config.lit_mesh_shader_vbo_size = 1 * GIB;
-    ret_shader = ui_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, &tmp->renderer_config);
+    tmp->renderer_config.lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    tmp->renderer_config.lit_mesh_shader_config.max_allocation_count = 512;
+    tmp->renderer_config.lit_mesh_shader_config.vbo_size = 1 * GIB;
+    ret_shader = ui_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, &tmp->renderer_config.ui_mesh_shader_config);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
@@ -392,7 +396,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    ret_shader = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, &tmp->renderer_config);
+    ret_shader = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, &tmp->renderer_config.line_mesh_shader_config);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create line vertex buffer.", app_rslt_to_str(ret));
@@ -419,7 +423,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    ret_shader = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->renderer_config);
+    ret_shader = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->renderer_config.point_mesh_shader_config);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create point mesh vertex buffer.", app_rslt_to_str(ret));
@@ -446,7 +450,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    ret_shader = lit_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, &tmp->renderer_config);
+    ret_shader = lit_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, &tmp->renderer_config.lit_mesh_shader_config);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("application_create(%s) - Failed to create lit vertex buffer.", app_rslt_to_str(ret));
