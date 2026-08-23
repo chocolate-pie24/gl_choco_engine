@@ -53,7 +53,7 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
+#include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 

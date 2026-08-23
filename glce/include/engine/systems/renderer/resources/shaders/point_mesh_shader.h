@@ -23,7 +23,6 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 typedef struct point_mesh_shader point_mesh_shader_t;               /**< 点描画用シェーダーリソースのopaque型 */
@@ -32,6 +31,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 
 typedef struct mat4x4f mat4x4f_t;
 typedef struct point_vertex point_vertex_t;
+typedef struct point_mesh_shader_config point_mesh_shader_config_t;
 
 shader_result_t point_mesh_shader_create(point_mesh_shader_t** out_point_mesh_shader_);
 
@@ -39,7 +39,7 @@ void point_mesh_shader_destroy(renderer_backend_context_t* backend_context_, poi
 
 shader_result_t point_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const char* file_path_, const char* name_);
 
-shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const vbo_manager_config_t* vbo_config_);
+shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const point_mesh_shader_config_t* config_);
 
 shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_);
 

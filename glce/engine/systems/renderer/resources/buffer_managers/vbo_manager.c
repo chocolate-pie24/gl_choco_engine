@@ -93,7 +93,6 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
 
-#include "engine/systems/renderer/resources/allocators/core/range_allocator_types.h"
 #include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
@@ -252,7 +251,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
     *vbo_manager_ = NULL;
 }
 
-buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, vertex_allocation_t* out_allocation_handle_) {
+buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
@@ -309,7 +308,7 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const ren
     }
     vbo_bound = false;
 
-    out_allocation_handle_->range_allocation = tmp_allocation;
+    *out_allocation_handle_ = tmp_allocation;
 
     ret = BUFFER_MANAGER_SUCCESS;
 
@@ -336,23 +335,23 @@ cleanup:
     return ret;
 }
 
-buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const vertex_allocation_t* allocation_handle_) {
+buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const range_allocation_t* allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->range_allocation.allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->range_allocation.allocated_size")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->allocated_size")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
 
     // NOTE:
     // - range_allocatorの内部データ不整合: DATA_CORRUPTED
     // - vbo_manager_とallocation_handle_の不整合: BAD_OPERATION
-    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &allocation_handle_->range_allocation);
+    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, allocation_handle_);
     if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
         ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_free(%s) - Failed to free vertex allocation. reason=range_allocator_free_failed, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(ret), allocation_handle_->range_allocation.offset, allocation_handle_->range_allocation.allocated_size, (int)ret_allocator);
+        ERROR_MESSAGE("vbo_manager_free(%s) - Failed to free vertex allocation. reason=range_allocator_free_failed, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(ret), allocation_handle_->offset, allocation_handle_->allocated_size, (int)ret_allocator);
         goto cleanup;
     }
 
@@ -417,7 +416,7 @@ bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_) {
     if(0 == config_->base_align || !IS_POWER_OF_TWO(config_->base_align)) {
         return false;
     }
-    if(BUFFER_USAGE_DYNAMIC != config_->buffer_usage && BUFFER_USAGE_STATIC != config_->buffer_usage) {
+    if(!buffer_usage_is_valid(config_->buffer_usage)) {
         return false;
     }
     return true;

@@ -28,7 +28,7 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
+#include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
@@ -62,7 +62,6 @@ struct ui_mesh_shader {
 };
 
 // validation
-static bool vbo_config_is_valid(const vbo_manager_config_t* config_);
 static bool ui_mesh_shader_is_initialized(const ui_mesh_shader_t* ui_mesh_shader_);
 
 shader_result_t ui_mesh_shader_create(ui_mesh_shader_t** out_ui_mesh_shader_) {
@@ -172,28 +171,38 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, ui_mesh_shader_t* ui_mesh_shader_, const vbo_manager_config_t* vbo_config_) {
+shader_result_t ui_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, ui_mesh_shader_t* ui_mesh_shader_, const ui_mesh_shader_config_t* config_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
+    vbo_manager_config_t vbo_config = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_initialize", "ui_mesh_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(ui_mesh_shader_->vao, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_vbo_initialize", "ui_mesh_shader_->vao")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(ui_mesh_shader_->vbo_manager, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_vbo_initialize", "ui_mesh_shader_->vbo_manager")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_config_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_initialize", "vbo_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_config_is_valid(vbo_config_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_initialize", "vbo_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_initialize", "config_")
+    if(!ui_mesh_shader_config_is_valid(config_)) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("ui_mesh_shader_vbo_initialize(%s) - Provided config_ is not valid.", shader_rslt_to_str(SHADER_INVALID_ARGUMENT));
+        goto cleanup;
+    }
 
-    ret_buff_mgr = vbo_manager_create(backend_context_, vbo_config_, &tmp_vbo_manager);
+    vbo_config.base_align = alignof(float);
+    vbo_config.buffer_usage = config_->buffer_usage;
+    vbo_config.max_allocation_count = config_->max_allocation_count;
+    vbo_config.vbo_size = config_->vbo_size;
+
+    ret_buff_mgr = vbo_manager_create(backend_context_, &vbo_config, &tmp_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("ui_mesh_shader_vbo_initialize(%s) - buffer manager create failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ui_mesh_shader_->vbo_config = *vbo_config_;
+    ui_mesh_shader_->vbo_config = vbo_config;
     ui_mesh_shader_->vbo_manager = tmp_vbo_manager;
 
     ret = SHADER_SUCCESS;
@@ -326,7 +335,7 @@ shader_result_t ui_mesh_shader_vbo_write(const renderer_backend_context_t* backe
 
     buffer_manager_result_t ret_buff_mgr = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    vertex_allocation_t tmp_alloc_handle = { 0 };
+    range_allocation_t tmp_alloc_handle = { 0 };
     size_t write_size = 0;
     bool vbo_written = false;
 
@@ -345,14 +354,14 @@ shader_result_t ui_mesh_shader_vbo_write(const renderer_backend_context_t* backe
     }
     vbo_written = true;
 
-    if(0 != (tmp_alloc_handle.range_allocation.offset % sizeof(ui_vertex_t))) {
+    if(0 != (tmp_alloc_handle.offset % sizeof(ui_vertex_t))) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
     out_buffer_range_->allocation_info = tmp_alloc_handle;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.range_allocation.offset / sizeof(ui_vertex_t);
+    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.offset / sizeof(ui_vertex_t);
     out_buffer_range_->draw_range.vertex_count = vertex_count_;
 
     ret = SHADER_SUCCESS;
@@ -377,8 +386,12 @@ shader_result_t ui_mesh_shader_vbo_free(ui_mesh_shader_t* ui_mesh_shader_, const
 
     IF_ARG_FALSE_GOTO_CLEANUP(ui_mesh_shader_is_initialized(ui_mesh_shader_), ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_free", "ui_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_free", "buffer_range_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->allocation_info.range_allocation.allocated_size, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_vbo_free", "buffer_range_->allocation_info.range_allocation.allocated_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != buffer_range_->draw_range.vertex_count, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_vbo_free", "buffer_range_->draw_range.vertex_count")
+
+    if(!vbo_range_is_valid(buffer_range_)) {
+        ret = SHADER_BAD_OPERATION;
+        ERROR_MESSAGE("ui_mesh_shader_vbo_free(%s) - Provided buffer_range_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_buff_mgr = vbo_manager_free(ui_mesh_shader_->vbo_manager, &buffer_range_->allocation_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
@@ -504,25 +517,6 @@ shader_result_t ui_mesh_shader_projection_matrix_set(const renderer_backend_cont
 
 cleanup:
     return ret;
-}
-
-static bool vbo_config_is_valid(const vbo_manager_config_t* config_) {
-    if(NULL == config_) {
-        return false;
-    }
-    if(0 == config_->vbo_size) {
-        return false;
-    }
-    if(0 == config_->max_allocation_count) {
-        return false;
-    }
-    if(BUFFER_USAGE_DYNAMIC != config_->buffer_usage && BUFFER_USAGE_STATIC != config_->buffer_usage) {
-        return false;
-    }
-    if(alignof(float) != config_->base_align) {
-        return false;
-    }
-    return true;
 }
 
 static bool ui_mesh_shader_is_initialized(const ui_mesh_shader_t* ui_mesh_shader_) {

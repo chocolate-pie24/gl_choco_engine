@@ -35,6 +35,10 @@ extern "C" {
 #include "engine/systems/platform/core/platform_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+
+// NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
+// Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
+// 将来Renderer Frontendを導入し、Shaderおよびその内部型をApplicationから隠した時点で削除する予定。
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 /**

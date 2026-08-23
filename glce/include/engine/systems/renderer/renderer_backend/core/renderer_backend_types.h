@@ -24,6 +24,21 @@ typedef enum {
     RENDERER_BACKEND_UNDEFINED_ERROR,
 } renderer_backend_result_t;
 
+/**
+ * @brief 上位層でグラフィックスAPI固有の変数型を使用しないで済むよう、グラフィックスAPI固有型を定義
+ *
+ */
+typedef enum {
+    RENDERER_TYPE_FLOAT,            /**< データ型: GLfloat */
+    RENDERER_TYPE_UNSIGNED_BYTE,    /**< データ型: GL_UNSIGNED_BYTE */
+    RENDERER_TYPE_BYTE,             /**< データ型: GL_BYTE */
+} renderer_type_t;
+
+typedef enum {
+    SHADER_TYPE_VERTEX,
+    SHADER_TYPE_FRAGMENT,
+} shader_type_t;
+
 #ifdef __cplusplus
 }
 #endif

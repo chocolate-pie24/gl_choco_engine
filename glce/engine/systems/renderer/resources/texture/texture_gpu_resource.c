@@ -12,8 +12,8 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_types.h"
-#include "engine/systems/renderer/resources/texture/core/texture_gpu_resource_err_utils.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/texture/texture_gpu_resource_err_utils.h"
 
 struct texture_gpu_resource {
     renderer_backend_texture_t* backend_texture;
