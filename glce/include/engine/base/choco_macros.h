@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup base
  *
  * @file choco_macros.h
  * @author chocolate-pie24
  * @brief 全レイヤーで使用される共通マクロ定義
  *
- * @version 0.1
  * @date 2025-09-20
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_BASE_CHOCO_MACROS_H

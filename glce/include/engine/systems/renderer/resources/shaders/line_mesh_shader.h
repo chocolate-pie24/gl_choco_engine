@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file line_mesh_shader.h
  * @author chocolate-pie24
  * @brief 線分描画用シェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する
  *
- * @version 0.1
  * @date 2026-05-28
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_LINE_MESH_SHADER_H

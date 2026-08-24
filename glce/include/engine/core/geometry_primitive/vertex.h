@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup core
  *
  * @file vertex.h
  * @author chocolate-pie24
  * @brief 形状データを構成する基本的な幾何情報構造体定義
  *
- * @version 0.1
  * @date 2026-05-14
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_VERTEX_H

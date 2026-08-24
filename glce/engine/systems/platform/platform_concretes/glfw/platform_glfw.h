@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup platform
  *
  * @file platform_glfw.h
  * @author chocolate-pie24
  * @brief GLFW APIで実装されたプラットフォームシステムAPIを提供する
  *
- * @version 0.1
  * @date 2025-10-14
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_PLATFORM_CONCRETES_GLFW_PLATFORM_GLFW_H

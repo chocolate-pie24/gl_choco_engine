@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file lit_mesh_shader.c
@@ -6,13 +9,7 @@
  *
  * @note ライティング等がまだ未実装なので、当面は単色描画となる
  *
- * @version 0.1
  * @date 2026-06-03
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"

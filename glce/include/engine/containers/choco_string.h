@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup containers
  *
  * @file choco_string.h
@@ -11,13 +14,8 @@
  * このため、choco_string_t型で変数を宣言することはできない。
  * 使用の際は、choco_string_t*型で宣言すること
  *
- * @version 0.1
  * @date 2025-09-26
  *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  */
 #ifndef GLCE_ENGINE_CONTAINERS_CHOCO_STRING_H
 #define GLCE_ENGINE_CONTAINERS_CHOCO_STRING_H

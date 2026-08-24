@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/resource_pipelines/texture/texture_pipeline.h"
 
 #include <stdint.h>

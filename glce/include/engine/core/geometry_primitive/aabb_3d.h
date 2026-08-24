@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup core
  *
  * @file aabb_3d.h
  * @author chocolate-pie24
  * @brief 3次元AABB幾何情報構造体, API定義
  *
- * @version 0.1
  * @date 2026-06-09
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_AABB_3D_H

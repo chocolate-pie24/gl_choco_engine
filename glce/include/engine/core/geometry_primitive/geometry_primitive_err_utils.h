@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup core
  *
  * @file geometry_primitive_err_utils.h
  * @author chocolate-pie24
  * @brief geometry_primitive内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
  *
- * @version 0.1
  * @date 2026-06-09
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_GEOMETRY_PRIMITIVE_ERR_UTILS_H

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file lit_mesh_shader.h
@@ -9,13 +12,7 @@
  * - docs/layer.md
  * - docs/architecture/systems/renderer_system/renderer_system_ja(en).md
  *
- * @version 0.1
  * @date 2026-06-03
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_SHADERS_LIT_MESH_SHADER_H

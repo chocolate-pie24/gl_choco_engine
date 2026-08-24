@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/config/renderer_config.h"
 
 #include <stdbool.h>

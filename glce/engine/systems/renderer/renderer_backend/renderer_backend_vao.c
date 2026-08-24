@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
 
 #include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"

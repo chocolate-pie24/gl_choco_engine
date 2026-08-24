@@ -1,18 +1,15 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup io_utils
  *
  * @file fs_utils.c
  * @author chocolate-pie24
  * @brief ファイル処理に関するユーティリティAPIの実装
  *
- * @version 0.1
  * @date 2025-12-26
  *
  * @todo ターゲットコントローラに応じてFS_READ_UNIT_SIZEを変える
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <string.h> // for memset

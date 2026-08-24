@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file ui_mesh_geometry.h
@@ -7,13 +10,7 @@
  * @note ui_mesh_shader: 2D矩形領域にテクスチャを貼った描画を行う, 描画単位は矩形領域ごとに描画する
  * @note ui_mesh_geometryは矩形領域のテクスチャuv座標、矩形領域座標のみを保持する
  *
- * @version 0.1
  * @date 2026-06-12
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_RESOURCE_GEOMETRY_UI_MESH_GEOMETRY_H

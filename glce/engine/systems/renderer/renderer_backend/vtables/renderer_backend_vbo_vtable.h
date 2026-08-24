@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup renderer
  *
@@ -10,10 +13,7 @@
  *
  * @note 本モジュールのリソース管理責務はモジュールが負う。ユーザー側でのメモリ確保、解放は行わないこと。
  *
- * @version 0.1
  * @date 2026-02-06
- *
- * @copyright Copyright (c) 2026
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_VTABLES_RENDERER_BACKEND_VBO_VTABLE_H

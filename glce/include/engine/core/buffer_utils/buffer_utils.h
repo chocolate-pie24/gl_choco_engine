@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup core
  *
  * @file buffer_utils.h
@@ -7,13 +10,7 @@
  * @todo float型、double型のデータ取り出しAPIは必要に応じて追加する
  * @todo バッファへのデータ書き込みAPIは必要に応じて追加する
  *
- * @version 0.1
  * @date 2026-05-14
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_BUFFER_UTILS_BUFFER_UTILS_H

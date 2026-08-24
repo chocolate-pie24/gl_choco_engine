@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup renderer
  *
@@ -5,13 +8,7 @@
  * @author chocolate-pie24
  * @brief テクスチャ操作関数をまとめたvtableを定義する
  *
- * @version 0.1
  * @date 2026-05-18
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_VTABLES_RENDERER_BACKEND_TEXTURE_VTABLE_H

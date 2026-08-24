@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup core
  *
  * @file geometry_primitive_types.h
  * @author chocolate-pie24
  * @brief geometry_primitive内で共通して使用するデータ型を提供する
  *
- * @version 0.1
  * @date 2026-06-09
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_GEOMETRY_PRIMITIVE_GEOMETRY_PRIMITIVE_TYPES_H

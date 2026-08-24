@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file bmp_loader.c
@@ -10,15 +13,9 @@
  * - 画像の高さがint16_tに収まること
  * - 画像の幅がが0より大きく、かつint16_tに収まること
  *
- * @version 0.1
  * @date 2026-05-14
  *
  * @todo 計算各所のオーバーフローチェック漏れ修正
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stdint.h>

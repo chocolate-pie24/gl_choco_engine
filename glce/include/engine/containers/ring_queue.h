@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup containers
  *
  * @file ring_queue.h
@@ -18,13 +21,7 @@
  * @note
  * ring_queue_tはジェネリック型のデータを格納可能であるが、複数のデータ型を混在して格納することはできない
  *
- * @version 0.1
  * @date 2025-10-14
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CONTAINERS_RING_QUEUE_H

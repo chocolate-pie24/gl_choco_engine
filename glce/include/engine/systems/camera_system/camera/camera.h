@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup camera_system
  * @file camera.h
@@ -7,13 +10,7 @@
  * - カメラ視錐台パラメータ更新
  * - ビュー / プロジェクション行列の取得
  *
- * @version 0.1
  * @date 2026-03-09
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_CAMERA_SYSTEM_CAMERA_CAMERA_H

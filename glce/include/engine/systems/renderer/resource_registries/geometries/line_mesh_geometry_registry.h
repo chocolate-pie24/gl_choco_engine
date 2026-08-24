@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file line_mesh_geometry_registry.h
@@ -7,13 +10,7 @@
  *
  * @note GPU頂点バッファ自体はshader resourceが所有し、本レジストリは所有しない
  *
- * @version 0.1
  * @date 2026-06-20
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_GEOMETRIES_LINE_MESH_GEOMETRY_REGISTRY_H

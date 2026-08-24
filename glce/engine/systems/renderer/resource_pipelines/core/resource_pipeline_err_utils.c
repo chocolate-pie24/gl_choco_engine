@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
 #include "engine/resource/core/resource_types.h"

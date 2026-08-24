@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup camera_system
  *
  * @file camera_memory.h
  * @author chocolate-pie24
  * @brief カメラシステムレイヤー内でのメモリ確保/解放における実行結果コードと、メモリタグを統一化するため、choco_memoryモジュールのラップAPIを提供する
  *
- * @version 0.1
  * @date 2026-03-19
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_CAMERA_SYSTEM_CAMERA_CORE_CAMERA_MEMORY_H
