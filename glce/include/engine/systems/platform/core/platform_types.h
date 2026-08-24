@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /**
  * @ingroup platform
  *
@@ -5,13 +8,7 @@
  * @author chocolate-pie24
  * @brief プラットフォームシステムで共通に使用されるデータ型を提供する
  *
- * @version 0.1
  * @date 2025-10-14
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_CORE_PLATFORM_TYPES_H

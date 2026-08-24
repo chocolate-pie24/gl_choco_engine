@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file ui_mesh_geometry_pipeline.h
@@ -8,13 +11,7 @@
  * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
  * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
  *
- * @version 0.1
  * @date 2026-06-30
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_PIPELINES_GEOMETRIES_UI_MESH_GEOMETRY_PIPELINE_H
@@ -35,7 +32,6 @@ typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t; /**< UI描
 /**
  * @brief UI描画用ジオメトリアセットファイルをロードし、ジオメトリの生成、GPU頂点バッファへの転送、描画範囲のレジストリ登録を行う
  *
- * @note VBOへのappend成功後の後続処理で失敗した場合、shader_に追加された頂点データは巻き戻されない
  * @note 現状はassets/geometries/以下の.ui_geomコンフィグレーションファイルから矩形サイズを読み込み、6頂点のUI矩形ジオメトリを生成する
  *
  * @param[in] backend_context_ Renderer Backend Context構造体インスタンスへのポインタ

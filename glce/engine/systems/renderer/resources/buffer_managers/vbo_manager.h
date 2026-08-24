@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @file vbo_manager.h
  * @brief GPU側VBOとその内部rangeを管理するVBO Managerの公開API
@@ -59,11 +62,6 @@
  * VBO Managerを破棄すると、そのVBO Managerから取得したすべてのrange_allocation_tは無効となる。
  *
  * @date 2026-07-31
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file point_mesh_geometry.h
@@ -9,13 +12,7 @@
  *
  * @todo TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる
  *
- * @version 0.1
  * @date 2026-06-06
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_RESOURCE_GEOMETRY_POINT_MESH_GEOMETRY_H

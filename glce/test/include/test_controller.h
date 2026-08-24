@@ -3,7 +3,6 @@
  * @author chocolate-pie24
  * @brief 各API単体テスト時に使用モジュールの実行結果を制御するための失敗注入機能の定義
  *
- * @version 0.1
  * @date 2026-03-13
  *
  * @copyright Copyright (c) 2026 chocolate-pie24

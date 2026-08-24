@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file line_mesh_geometry.h
@@ -7,13 +10,7 @@
  * @note line_mesh_shader: 複数の線分を描画する。色情報はuniform変数で扱い、RGB(4byte目はpadding)で指定する。このため、全ての線分が指定した色で描画される
  * @note line_mesh_geometryは線分の幾何情報のみを保持し、色情報はline_mesh_geometryを保持する親構造体で扱う
  *
- * @version 0.1
  * @date 2026-06-04
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_RESOURCE_GEOMETRY_LINE_MESH_GEOMETRY_H

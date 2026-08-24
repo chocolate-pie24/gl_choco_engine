@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file resource_registry_err_utils.h
@@ -5,13 +8,7 @@
  *
  * @brief resource_registry_err_utilsは、resource_registries内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
  *
- * @version 0.1
  * @date 2026-06-20
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_CORE_RESOURCE_REGISTRY_ERR_UTILS_H

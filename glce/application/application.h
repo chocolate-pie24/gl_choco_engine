@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup application
  *
  * @file application.h
@@ -8,13 +11,7 @@
  * - アプリケーションメインループ
  * @details システムの起動時から終了時まで常駐
  *
- * @version 0.1
  * @date 2025-09-20
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_APPLICATION_APPLICATION_H

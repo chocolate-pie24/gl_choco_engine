@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup camera_system
  *
  * @file camera_err_utils.h
  * @author chocolate-pie24
  * @brief カメラシステムレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
  *
- * @version 0.1
  * @date 2026-03-19
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_CAMERA_SYSTEM_CAMERA_CORE_CAMERA_ERR_UTILS_H

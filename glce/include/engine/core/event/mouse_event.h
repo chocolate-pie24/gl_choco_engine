@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup core
  *
  * @file mouse_event.h
  * @author chocolate-pie24
  * @brief 全プラットフォーム共通で使用可能なマウスボタン定義と、マウスイベント構造体定義
  *
- * @version 0.1
  * @date 2025-10-14
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_EVENT_MOUSE_EVENT_H

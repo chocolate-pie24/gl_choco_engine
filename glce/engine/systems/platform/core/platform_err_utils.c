@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup platform
  *
  * @file platform_err_utils.c
  * @author chocolate-pie24
  * @brief プラットフォームレイヤーのエラー処理を統一するため、下位モジュールの実行結果コードの変換と、実行結果コードの文字列化処理の実装
- * @version 0.1
- * @date 2026-02-13
  *
- * @copyright Copyright (c) 2026
+ * @date 2026-02-13
  *
  */
 #include "engine/systems/platform/core/platform_err_utils.h"

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup application
  *
  * @file flight_camera.h
@@ -16,13 +19,7 @@
  * - KEY_LEFT: カメラヨー方向(+)回転
  * - KEY_RIGHT: カメラヨー方向(-)回転
  *
- * @version 0.1
  * @date 2026-03-25
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_APPLICATION_COMMAND_INTERPRETER_FLIGHT_CAMERA_H

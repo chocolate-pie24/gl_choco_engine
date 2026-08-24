@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file line_mesh_geometry_registry.c
@@ -5,13 +8,7 @@
  *
  * @brief 線分描画用ジオメトリレジストリAPIの実装
  *
- * @version 0.1
  * @date 2026-06-20
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.h"

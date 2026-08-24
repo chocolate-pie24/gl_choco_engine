@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 #include <stdbool.h>

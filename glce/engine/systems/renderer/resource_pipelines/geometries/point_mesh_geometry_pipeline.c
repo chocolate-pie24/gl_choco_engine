@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file point_mesh_geometry_pipeline.c
@@ -5,13 +8,7 @@
  *
  * @brief 点描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装
  *
- * @version 0.1
  * @date 2026-06-30
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/resource_pipelines/geometries/point_mesh_geometry_pipeline.h"

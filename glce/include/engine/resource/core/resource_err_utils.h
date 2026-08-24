@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file resource_err_utils.h
  * @author chocolate-pie24
  * @brief Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
  *
- * @version 0.1
  * @date 2026-05-05
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_RESOURCE_CORE_RESOURCE_ERR_UTILS_H

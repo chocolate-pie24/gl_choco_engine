@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup renderer
  *
@@ -9,13 +12,7 @@
  * - シェーダープログラム: シェーダーオブジェクトをリンクしたプログラム
  * - シェーダーオブジェクト: コンパイルされた各シェーダーステージごとのオブジェクト
  *
- * @version 0.1
  * @date 2026-02-23
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RENDERER_BACKEND_VTABLES_RENDERER_BACKEND_SHADER_VTABLE_H

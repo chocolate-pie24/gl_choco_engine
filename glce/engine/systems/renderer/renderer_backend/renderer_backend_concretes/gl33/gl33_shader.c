@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file gl33_shader.c
  * @author chocolate-pie24
  * @brief OpenGL3.3用のシェーダーオブジェクト/シェーダープログラム操作関数の実装
  *
- * @version 0.1
  * @date 2026-01-03
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 #include "engine/systems/renderer/resources/texture/texture_gpu_resource.h"
 
 #include <stdbool.h>

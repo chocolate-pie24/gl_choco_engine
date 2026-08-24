@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file gl33_texture.c
  * @author chocolate-pie24
  * @brief OpenGL3.3用のテクスチャ操作関数の実装
  *
- * @version 0.1
  * @date 2026-05-15
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_texture.h"

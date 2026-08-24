@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file lit_mesh_geometry_pipeline.c
@@ -8,13 +11,7 @@
  * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
  * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
  *
- * @version 0.1
  * @date 2026-06-30
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry_pipeline.h"

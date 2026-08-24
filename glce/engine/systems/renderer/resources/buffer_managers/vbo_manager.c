@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @file vbo_manager.c
  * @brief GPU側VBOとその内部rangeを管理するVBO Managerの実装
@@ -67,11 +70,6 @@
  * 対するdeep validationは行わない。
  *
  * @date 2026-07-31
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
@@ -342,8 +340,17 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const rang
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_handle_->allocated_size, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_free", "allocation_handle_->allocated_size")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_free", "vbo_manager_")
+
+    if(!range_allocation_is_valid(allocation_handle_)) {
+        ret = BUFFER_MANAGER_BAD_OPERATION;
+        ERROR_MESSAGE("vbo_manager_free(%s) - Provided allocation_handle_ is not valid.", buffer_manager_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!vbo_manager_is_valid(vbo_manager_)) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_free(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // NOTE:
     // - range_allocatorの内部データ不整合: DATA_CORRUPTED

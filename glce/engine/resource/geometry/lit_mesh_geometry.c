@@ -1,20 +1,17 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file lit_mesh_geometry.c
  * @author chocolate-pie24
  * @brief lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
- * 
+ *
  * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
  *
  * @todo カバレッジ改善
  *
- * @version 0.1
  * @date 2026-06-04
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/resource/geometry/lit_mesh_geometry.h"

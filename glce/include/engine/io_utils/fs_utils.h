@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup io_utils
  *
  * @file fs_utils.h
@@ -8,13 +11,7 @@
  * - ファイルのオープン/クローズ/バイト単位での読み取りについては @ref filesystem.h を参照のこと
  * - ファイルのオープン/クローズは呼び出し側のコード量を少なくするため,fs_utils_create, fs_utils_destroyにて自動的に行う.ユーザーがオープン/クローズ操作は行わない
  *
- * @version 0.1
  * @date 2025-12-26
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_IO_UTILS_FS_UTILS_H

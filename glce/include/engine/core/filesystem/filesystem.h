@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup core
  *
  * @file filesystem.h
@@ -11,13 +14,7 @@
  * 一方で、ファイルI/Oについての基本的な処理はcoreレイヤーに置きたい。このため、高度な処理と基本的な処理を分け、基本的な処理はcore/filesystemに置くことにする。
  * なお、高度な処理は、io_utils/fs_utilsに格納する。
  *
- * @version 0.1
  * @date 2025-12-23
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_CORE_FILESYSTEM_FILESYSTEM_H

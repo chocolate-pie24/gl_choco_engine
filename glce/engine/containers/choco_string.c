@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup containers
  *
  * @file choco_string.c
  * @author chocolate-pie24
  * @brief 文字列を格納するコンテナモジュールAPIの実装
  *
- * @version 0.1
  * @date 2025-09-26
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <string.h>

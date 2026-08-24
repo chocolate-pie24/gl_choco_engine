@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /**
  * @ingroup camera_system
  * @file flight_camera_controller.c
  * @author chocolate-pie24
  * @brief 空間内を自由に移動する飛行型カメラの制御機能の実装
  *
- * @version 0.1
  * @date 2026-03-19
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/camera_system/camera_controller/flight_camera_controller.h"

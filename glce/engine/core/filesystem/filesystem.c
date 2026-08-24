@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup core
  *
  * @file filesystem.c
  * @author chocolate-pie24
  * @brief ファイルシステムモジュールAPIの実装
  *
- * @version 0.1
  * @date 2025-12-23
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stddef.h>

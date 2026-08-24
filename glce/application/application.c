@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup application
  *
  * @file application.c
@@ -6,13 +9,7 @@
  *
  * @todo application.cのエラー文字列周りを別ファイルに移す
  *
- * @version 0.1
  * @date 2025-09-20
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include <stdalign.h>

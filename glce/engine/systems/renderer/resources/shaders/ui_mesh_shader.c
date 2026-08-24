@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file ui_mesh_shader.c
  * @author chocolate-pie24
  * @brief UIシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
  *
- * @version 0.1
  * @date 2026-03-11
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"

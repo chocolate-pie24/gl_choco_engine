@@ -1,16 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file gl33_vao.c
  * @author chocolate-pie24
  * @brief OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装
  *
- * @version 0.1
  * @date 2025-12-19
- *
- * @copyright Copyright (c) 2025 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"

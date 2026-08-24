@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup resource
  *
  * @file stl_loader.h
@@ -13,13 +16,7 @@
  * - カスタムフォーマットが存在する場合はそちらで読み込み、ない場合は通常STLを読み込みカスタムフォーマットファイルを出力
  * @todo 現状では法線情報が[-1.0...1.0]の範囲に収まっているかをチェックしているが、この範囲に収まっていても長さが非1.0で正規化されていない場合がある。チェックを厳密化する。
  *
- * @version 0.1
  * @date 2026-06-02
- *
- * @copyright Copyright (c) 2026 chocolate-pie24
- *
- * @par License
- * MIT License. See LICENSE file in the project root for full license text.
  *
  */
 #ifndef GLCE_ENGINE_RESOURCE_LOADERS_STL_LOADER_H
