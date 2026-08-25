@@ -29,6 +29,7 @@ typedef enum {
 } fs_stream_result_t;
 
 typedef struct fs_stream fs_stream_t;
+typedef struct choco_string choco_string_t;
 
 fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_);
 
@@ -39,6 +40,10 @@ fs_stream_result_t fs_stream_open(fs_stream_t* fs_stream_, const char* fullpath_
 fs_stream_result_t fs_stream_close(fs_stream_t* fs_stream_);
 
 fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_bytes_, size_t* result_n_, char* buffer_);
+
+fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_string_t* out_string_);
+
+fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_string_t* out_string_);
 
 bool fs_stream_is_valid(const fs_stream_t* fs_stream_);
 

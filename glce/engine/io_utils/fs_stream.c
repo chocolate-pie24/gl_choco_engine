@@ -14,6 +14,11 @@
 #include "engine/core/filesystem/filesystem.h"
 #include "engine/core/file_io/fs_types.h"
 
+#include "engine/containers/choco_string.h"
+
+#define FS_STREAM_READ_UNIT_SIZE 512  /**< ファイル読み込みの際に一度に読み込むバイト数(メモリの動的確保回数を減らすため,固定値にした) */
+#define FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE 1024    /**< 改行コードを除く1行本文の最大長は1023bytes(改行コードがCRLFの場合は1022bytesとなる) */
+
 struct fs_stream {
     filesystem_t* filesystem;
 };
@@ -34,6 +39,7 @@ static const char* const s_rslt_str_eof = "EOF";                              /*
 static const char* rslt_to_str(fs_stream_result_t rslt_);
 static fs_stream_result_t filesystem_result_convert(filesystem_result_t result_);
 static fs_stream_result_t memory_system_result_convert(memory_system_result_t result_);
+static fs_stream_result_t choco_string_result_convert(choco_string_result_t result_);
 
 fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
@@ -218,6 +224,124 @@ bool fs_stream_is_valid(const fs_stream_t* fs_stream_) {
     return true;
 }
 
+fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_string_t* out_string_) {
+    fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
+
+    bool complete = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "out_string_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!choco_string_is_valid(out_string_)) {
+        ret = FS_STREAM_DATA_CORRUPTED;
+        ERROR_MESSAGE("fs_stream_text_file_read(%s) - Precondition validation failed for 'out_string_'.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!fs_stream_is_valid(fs_stream_)) {
+        ret = FS_STREAM_DATA_CORRUPTED;
+        ERROR_MESSAGE("fs_stream_text_file_read(%s) - Precondition validation failed for 'fs_stream_'.", rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    while(!complete) {
+        char tmp_buffer[FS_STREAM_READ_UNIT_SIZE + 1] = { 0 };
+        size_t result = 0;
+        ret = fs_stream_byte_read(fs_stream_, FS_STREAM_READ_UNIT_SIZE, &result, tmp_buffer);
+        if(FS_STREAM_EOF == ret) {
+            complete = true;
+        } else if(FS_STREAM_SUCCESS == ret) {
+            ret_str = choco_string_concat_from_c_string(tmp_buffer, out_string_);
+            if(CHOCO_STRING_SUCCESS != ret_str) {
+                ret = choco_string_result_convert(ret_str);
+                ERROR_MESSAGE("fs_stream_text_file_read(%s) - Failed to append to output string.", rslt_to_str(ret));
+                goto cleanup;
+            }
+            if(FS_STREAM_READ_UNIT_SIZE > result) {
+                complete = true;
+            }
+        } else {
+            ERROR_MESSAGE("fs_stream_text_file_read(%s) - fs_stream_byte_read failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    ret = FS_STREAM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_string_t* out_string_) {
+    fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_str = CHOCO_STRING_INVALID_ARGUMENT;
+
+    bool complete = false;
+    size_t read_byte = 0;
+    char tmp_buffer[FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE] = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "out_string_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!choco_string_is_valid(out_string_)) {
+        ret = FS_STREAM_DATA_CORRUPTED;
+        ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Precondition validation failed for 'out_string_'.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!fs_stream_is_valid(fs_stream_)) {
+        ret = FS_STREAM_DATA_CORRUPTED;
+        ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Precondition validation failed for 'fs_stream_'.", rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    while(!complete) {
+        char tmp = 0;   // 改行コードは文字数カウントに含めないため、一時的にtmpにコピーし、改行コード以外だったらtmp_bufferにコピー
+        size_t result = 0;
+        ret = fs_stream_byte_read(fs_stream_, 1, &result, &tmp);
+        if(FS_STREAM_EOF == ret) {
+            complete = true;
+            if(0 == read_byte) {
+                ret = FS_STREAM_EOF;
+                goto cleanup;
+            }
+        } else if(FS_STREAM_SUCCESS == ret) {
+            if('\n' == tmp) {
+                complete = true;
+            } else {
+                tmp_buffer[read_byte] = tmp;
+                read_byte++;
+            }
+            if(read_byte == FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE) {
+                ret = FS_STREAM_LIMIT_EXCEEDED;
+                ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Line length exceeded. Max body length is 1023 bytes for LF/EOF lines, or 1022 bytes for CRLF lines.", rslt_to_str(ret));
+                goto cleanup;
+            }
+        } else {
+            ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Failed to read 1 byte while reading a text line.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    if(read_byte != 0 && '\r' == tmp_buffer[read_byte - 1]) {
+        tmp_buffer[read_byte - 1] = '\0';
+    }
+
+    ret_str = choco_string_copy_from_c_string(tmp_buffer, out_string_);
+    if(CHOCO_STRING_SUCCESS != ret_str) {
+        ret = choco_string_result_convert(ret_str);
+        ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Failed to copy the read line to out_string_.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret = FS_STREAM_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static const char* rslt_to_str(fs_stream_result_t rslt_) {
     switch(rslt_) {
     case FS_STREAM_SUCCESS:
@@ -283,13 +407,38 @@ static fs_stream_result_t memory_system_result_convert(memory_system_result_t re
     case MEMORY_SYSTEM_SUCCESS:
         return FS_STREAM_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return FS_STREAM_INVALID_ARGUMENT;
+        return FS_STREAM_UNDEFINED_ERROR;
     case MEMORY_SYSTEM_LIMIT_EXCEEDED:
         return FS_STREAM_LIMIT_EXCEEDED;
     case MEMORY_SYSTEM_BAD_OPERATION:
         return FS_STREAM_BAD_OPERATION;
     case MEMORY_SYSTEM_NO_MEMORY:
         return FS_STREAM_NO_MEMORY;
+    default:
+        return FS_STREAM_UNDEFINED_ERROR;
+    }
+}
+
+static fs_stream_result_t choco_string_result_convert(choco_string_result_t result_) {
+    switch(result_) {
+    case CHOCO_STRING_SUCCESS:
+        return FS_STREAM_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return FS_STREAM_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return FS_STREAM_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return FS_STREAM_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return FS_STREAM_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return FS_STREAM_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return FS_STREAM_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return FS_STREAM_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return FS_STREAM_LIMIT_EXCEEDED;
     default:
         return FS_STREAM_UNDEFINED_ERROR;
     }
