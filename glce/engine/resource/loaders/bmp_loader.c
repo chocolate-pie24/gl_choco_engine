@@ -689,7 +689,7 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
         goto cleanup;
     }
 
-    ret_fs = filesystem_byte_read(54, filesystem, &read_size, header_buf);
+    ret_fs = filesystem_byte_read(filesystem, 54, &read_size, header_buf);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("header_load(%s) - Failed to read BMP file header.", resource_rslt_to_str(ret));
@@ -801,7 +801,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_fs = filesystem_byte_read(file_header_->bf_size, filesystem, &read_size_all, (char*)tmp_buffer);
+    ret_fs = filesystem_byte_read(filesystem, file_header_->bf_size, &read_size_all, (char*)tmp_buffer);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("pixel_load(%s) - Failed to read BMP file(%s).", resource_rslt_to_str(ret), fullpath_);

@@ -204,7 +204,7 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
     while(!complete) {
         char tmp_buffer[FS_READ_UNIT_SIZE + 1] = { 0 };
         size_t result = 0;
-        ret_fs = filesystem_byte_read(FS_READ_UNIT_SIZE, fs_utils_->filesystem, &result, tmp_buffer);
+        ret_fs = filesystem_byte_read(fs_utils_->filesystem, FS_READ_UNIT_SIZE, &result, tmp_buffer);
         if(FILESYSTEM_INVALID_ARGUMENT == ret_fs) {
             ret = FS_UTILS_INVALID_ARGUMENT;
             ERROR_MESSAGE("fs_utils_text_file_read(%s) - Failed to read from file.", rslt_to_str(ret));
@@ -276,7 +276,7 @@ fs_utils_result_t fs_utils_text_file_line_read(fs_utils_t* fs_utils_, choco_stri
     while(!complete) {
         char tmp = 0;   // 改行コードは文字数カウントに含めないため、一時的にtmpにコピーし、改行コード以外だったらtmp_bufferにコピー
         size_t result = 0;
-        ret_fs = filesystem_byte_read(1, fs_utils_->filesystem, &result, &tmp);
+        ret_fs = filesystem_byte_read(fs_utils_->filesystem, 1, &result, &tmp);
         if(FILESYSTEM_EOF == ret_fs) {
             complete = true;
             if(0 == read_byte) {

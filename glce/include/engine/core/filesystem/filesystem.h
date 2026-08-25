@@ -145,48 +145,7 @@ filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_,
  */
 filesystem_result_t filesystem_close(filesystem_t* filesystem_);
 
-/**
- * @brief ファイルからバイト単位でデータを読み込む
- *
- * @note
- * - 本APIは、成功した場合のみ引数のポインタにデータを書き込むのではなく、失敗した場合でもデータが書き込まれる。
- * これは、ロールバックするためには本API内部でread_bytes_サイズの一時バッファを確保しなければならず、パフォーマンスが低下するため、
- * readの結果は引数のbuffer_に直接書き込むことにする。このため、返り値がエラーとなった場合にはbuffer_の中身を利用してはいけない。
- * なお、result_n_については、エラー発生時は値に0が代入される。
- * - ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを返す。
- * このため、呼び出し側は必ず実行結果コードと合わせて実際に読み込んだバイト数を見て処理を行うこと。
- * - 本APIを使用するためには、下記のいずれかのモードでfilesystem_openを行ったファイルハンドルを使用すること。
- *   - FILESYSTEM_MODE_READ
- *   - FILESYSTEM_MODE_READ_PLUS
- *   - FILESYSTEM_MODE_WRITE_PLUS
- *   - FILESYSTEM_MODE_APPEND_PLUS
- *   - FILESYSTEM_MODE_READ_BINARY
- *   - FILESYSTEM_MODE_READ_PLUS_BINARY
- *   - FILESYSTEM_MODE_WRITE_PLUS_BINARY
- *   - FILESYSTEM_MODE_APPEND_PLUS_BINARY
- * @note 返り値FILESYSTEM_UNDEFINED_ERRORは基本的に起こり得ない。未実装の分岐をなくすため追加している
- *
- * @param[in] read_bytes_ 読み込みバイト数
- * @param[out] result_n_ 実際に読み込みに成功したバイト数
- * @param[in,out] filesystem_ 読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ
- * @param[out] buffer_ データ格納先バッファ(バッファサイズはread_bytes_以上であること)
- *
- * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
- * - filesystem_がNULL
- * - result_n_がNULL
- * - buffer_がNULL
- * - read_bytes_が0
- * @retval FILESYSTEM_RUNTIME_ERROR 以下のいずれか
- * - 無効なファイルハンドル(== NULL)が渡された
- * - ファイル読み込みでエラーが発生
- * - ファイルオープンモードが読み込み可能モードではない(本APIのnoteを参照)
- * @retval FILESYSTEM_EOF 読み込んだ結果EOFで読み取りバイト数ゼロ
- * @retval FILESYSTEM_SUCCESS 以下のいずれか
- * - 読み込んだ結果EOFとなり指定バイト数未満を読み込み
- * - 指定したバイト数の読み込みに成功し、正常終了
- * @retval FILESYSTEM_UNDEFINED_ERROR 要求バイト数未満の読み取り結果になったにもかかわらず、EOFまたは読み取りエラーとして判定できない場合
- */
-filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_);
+filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_);
 
 bool filesystem_is_valid(const filesystem_t* filesystem_);
 

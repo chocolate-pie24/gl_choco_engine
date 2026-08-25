@@ -62,7 +62,7 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
 
     mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp_filesystem);
     if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {
-        ret = FILESYSTEM_INVALID_ARGUMENT;
+        ret = FILESYSTEM_UNDEFINED_ERROR;
         ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT.", rslt_to_str(ret));
         goto cleanup;
     } else if(MEMORY_SYSTEM_NO_MEMORY == mem_result) {
@@ -135,6 +135,11 @@ filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_,
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
+    if('\0' == fullpath_[0]) {
+        ret = FILESYSTEM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("filesystem_open(%s) - Provided fullpath_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!filesystem_is_valid(filesystem_)) {
         ret = FILESYSTEM_DATA_CORRUPTED;
@@ -147,6 +152,7 @@ filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_,
         ERROR_MESSAGE("filesystem_open(%s) - File is already open; close it before opening another file.", rslt_to_str(ret));
         goto cleanup;
     }
+
     open_mode_str = fs_open_mode_c_str(mode_);
     if(NULL == open_mode_str) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
@@ -187,7 +193,7 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
     }
 #endif
     if(NULL == filesystem_->file_handle) {
-        ret = FILESYSTEM_RUNTIME_ERROR;
+        ret = FILESYSTEM_BAD_OPERATION;
         ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -213,7 +219,7 @@ cleanup:
     return ret;
 }
 
-filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_) {
+filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
@@ -221,7 +227,7 @@ filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* files
     IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
     if(0 == read_bytes_) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_byte_read(%s) - provided read_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("filesystem_byte_read(%s) - provided read_bytes_ is not valid.", rslt_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -259,7 +265,7 @@ filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* files
             }
         }
     } else {
-        ret = FILESYSTEM_RUNTIME_ERROR;
+        ret = FILESYSTEM_BAD_OPERATION;
         ERROR_MESSAGE("filesystem_byte_read(%s) - File is not opened in a readable mode (mode=%d).", rslt_to_str(ret), filesystem_->mode);
         goto cleanup;
     }
