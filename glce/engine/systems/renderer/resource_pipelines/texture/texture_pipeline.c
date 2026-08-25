@@ -11,8 +11,6 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
-
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/texture/texture_cpu_resource.h"
 
@@ -153,10 +151,8 @@ static resource_pipeline_result_t resolve_texture_source(const char* texture_nam
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
 
     choco_string_t* texture_source = NULL;
-    fs_utils_t* tmp_fs_utils = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resolve_texture_source", "texture_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_source_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "resolve_texture_source", "out_texture_source_")
@@ -191,18 +187,11 @@ static resource_pipeline_result_t resolve_texture_source(const char* texture_nam
             goto cleanup;
         }
     } else {
-        ret_fs_utils = fs_utils_create("../assets/textures/", texture_name_, ".bmp", FS_OPEN_MODE_READ, &tmp_fs_utils);
-        if(FS_UTILS_SUCCESS != ret_fs_utils) {
-            ret = resource_pipeline_rslt_convert_fs_utils(ret_fs_utils);
-            ERROR_MESSAGE("resolve_texture_source(%s) - fs_utils_create failed.", resource_pipeline_rslt_to_str(ret));
-            goto cleanup;
-        }
-        ret_fs_utils = fs_utils_fullpath_get(tmp_fs_utils, texture_source);
-        if(FS_UTILS_SUCCESS != ret_fs_utils) {
-            ret = resource_pipeline_rslt_convert_fs_utils(ret_fs_utils);
-            ERROR_MESSAGE("resolve_texture_source(%s) - fs_utils_fullpath_get failed.", resource_pipeline_rslt_to_str(ret));
-            goto cleanup;
-        }
+        // begin fs_pathができるまでの暫定コード
+        ret_string = choco_string_copy_from_c_string("../assets/textures/", texture_source);
+        ret_string = choco_string_concat_from_c_string(texture_name_, texture_source);
+        ret_string = choco_string_concat_from_c_string(".bmp", texture_source);
+        // end fs_pathができるまでの暫定コード
     }
 
     *out_texture_source_ = texture_source;
@@ -213,7 +202,6 @@ cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
         choco_string_destroy(&texture_source);
     }
-    fs_utils_destroy(&tmp_fs_utils);
     return ret;
 }
 

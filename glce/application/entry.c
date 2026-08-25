@@ -37,7 +37,6 @@
 // test: engine/io_utils
 
 // test: engine/resource
-#include "engine/resource/core/test_resource_err_utils.h"
 #include "engine/resource/loaders/test_bmp_loader.h"
 #include "engine/resource/loaders/test_stl_loader.h"
 #include "engine/resource/geometry/test_lit_mesh_geometry.h"

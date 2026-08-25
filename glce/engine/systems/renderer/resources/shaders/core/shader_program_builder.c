@@ -10,7 +10,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -84,10 +84,11 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
 
-    fs_utils_t* fs_utils = NULL;
+    fs_stream_t* fs_stream = NULL;
     choco_string_t* shader_source = NULL;
+    choco_string_t* tmp_path_string = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "file_path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "name_")
@@ -103,23 +104,31 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
         goto cleanup;
     }
 
-    // シェーダーソース読み込み用fs_utils生成
-    ret_fs_utils = fs_utils_create(file_path_, name_, extension_, FS_OPEN_MODE_READ, &fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = shader_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("shader_source_load(%s) - Failed to create fs_utils for shader_source.", shader_rslt_to_str(ret));
+    // シェーダーソース読み込み用fs_stream生成
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = shader_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("shader_source_load(%s) - fs_stream_create failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
+    // begin fs_pathができるまでの暫定コード
+    ret_string = choco_string_create_from_c_string(file_path_, &tmp_path_string);
+    ret_string = choco_string_concat_from_c_string(name_, tmp_path_string);
+    ret_string = choco_string_concat_from_c_string(extension_, tmp_path_string);
+    ret_fs_stream = fs_stream_open(fs_stream, choco_string_c_str(tmp_path_string), FS_OPEN_MODE_READ);
+    choco_string_destroy(&tmp_path_string);
+    // end fs_pathができるまでの暫定コード
+
     // シェーダープログラムロード
-    ret_fs_utils = fs_utils_text_file_read(fs_utils, shader_source);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = shader_rslt_convert_fs_utils(ret_fs_utils);
+    ret_fs_stream = fs_stream_text_file_read(fs_stream, shader_source);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = shader_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("shader_source_load(%s) - Failed to read shader source.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    fs_utils_destroy(&fs_utils);
+    fs_stream_destroy(&fs_stream);
 
     *out_shader_source_ = shader_source;
 
@@ -127,8 +136,8 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
 
 cleanup:
     if(SHADER_SUCCESS != ret) {
-        if(NULL != fs_utils) {
-            fs_utils_destroy(&fs_utils);
+        if(NULL != fs_stream) {
+            fs_stream_destroy(&fs_stream);
         }
         if(NULL != shader_source) {
             choco_string_destroy(&shader_source);

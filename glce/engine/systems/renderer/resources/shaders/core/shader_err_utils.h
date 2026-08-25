@@ -13,7 +13,7 @@ extern "C" {
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
@@ -28,7 +28,7 @@ shader_result_t shader_rslt_convert_choco_memory(memory_system_result_t rslt_);
 
 shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_);
 
-shader_result_t shader_rslt_convert_fs_utils(fs_utils_result_t rslt_);
+shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_);
 
 shader_result_t shader_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
 

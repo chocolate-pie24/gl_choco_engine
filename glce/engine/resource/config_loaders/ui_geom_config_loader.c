@@ -22,7 +22,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
@@ -46,10 +46,12 @@ static const char* const s_key_str_icon_height = "icon_height";     /**< 設定�
 
 resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t* out_config_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
+
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    fs_utils_t* fs_utils = NULL;
+    fs_stream_t* fs_stream = NULL;
+    choco_string_t* tmp_path_string = NULL;
     choco_string_t* line_string = NULL;
     choco_string_t* key_string = NULL;
     choco_string_t* value_string = NULL;
@@ -65,10 +67,10 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
 
     config_loader_initialize(&tmp_state);
 
-    ret_fs_utils = fs_utils_create("../assets/geometries/", name_, ".ui_geom", FS_OPEN_MODE_READ, &fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_utils_create_failed, config_name='%s'", resource_rslt_to_str(ret), name_);
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_name='%s'", resource_rslt_to_str(ret), name_);
         goto cleanup;
     }
 
@@ -93,11 +95,18 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
         goto cleanup;
     }
 
+    // begin fs_pathができるまでの暫定コード
+    ret_string = choco_string_create_from_c_string("../assets/geometries/", &tmp_path_string);
+    ret_string = choco_string_concat_from_c_string(name_, tmp_path_string);
+    ret_string = choco_string_concat_from_c_string(".ui_geom", tmp_path_string);
+    ret_fs_stream = fs_stream_open(fs_stream, choco_string_c_str(tmp_path_string), FS_OPEN_MODE_READ);
+    // end fs_pathができるまでの暫定コード
+
     while(!complete) {
-        ret_fs_utils = fs_utils_text_file_line_read(fs_utils, line_string);
-        if(FS_UTILS_EOF == ret_fs_utils) {
+        ret_fs_stream = fs_stream_text_file_line_read(fs_stream, line_string);
+        if(FS_STREAM_EOF == ret_fs_stream) {
             complete = true;
-        } else if(FS_UTILS_SUCCESS == ret_fs_utils) {
+        } else if(FS_STREAM_SUCCESS == ret_fs_stream) {
             if((SIZE_MAX - 1) < line_count) {
                 ret = RESOURCE_OVERFLOW;
                 ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_count_overflow, config_name='%s', line_count=%zu", resource_rslt_to_str(ret), name_, line_count);
@@ -111,12 +120,12 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
                 goto cleanup;
             }
         } else {
-            if(FS_UTILS_RUNTIME_ERROR == ret_fs_utils || FS_UTILS_UNDEFINED_ERROR == ret_fs_utils) {
+            if(FS_STREAM_RUNTIME_ERROR == ret_fs_stream || FS_STREAM_UNDEFINED_ERROR == ret_fs_stream) {
                 ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
             } else {
-                ret = resource_rslt_convert_fs_utils(ret_fs_utils);
+                ret = resource_rslt_convert_fs_stream(ret_fs_stream);
             }
-            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_utils_text_file_line_read_failed, config_name='%s', next_line=%zu", resource_rslt_to_str(ret), name_, line_count + 1);
+            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_text_file_line_read_failed, config_name='%s', next_line=%zu", resource_rslt_to_str(ret), name_, line_count + 1);
             goto cleanup;
         }
     }
@@ -138,8 +147,8 @@ resource_result_t ui_geom_config_loader_load(const char* name_, ui_geom_config_t
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(NULL != fs_utils) {
-        fs_utils_destroy(&fs_utils);
+    if(NULL != fs_stream) {
+        fs_stream_destroy(&fs_stream);
     }
     if(NULL != line_string) {
         choco_string_destroy(&line_string);
@@ -149,6 +158,9 @@ cleanup:
     }
     if(NULL != value_string) {
         choco_string_destroy(&value_string);
+    }
+    if(NULL != tmp_path_string) {
+        choco_string_destroy(&tmp_path_string);
     }
     return ret;
 }
