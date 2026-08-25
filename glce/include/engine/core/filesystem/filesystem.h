@@ -27,6 +27,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "engine/core/file_io/fs_types.h"
+
 /**
  * @brief ファイルシステムモジュール内部状態管理構造体前方宣言(内部データ構造は外部非公開)
  *
@@ -50,26 +52,6 @@ typedef enum {
     FILESYSTEM_DATA_CORRUPTED,      /**< 実行結果コード: 内部データ破損 */
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
-
-/**
- * @brief ファイルオープンモードリスト
- *
- */
-typedef enum {
-    FILESYSTEM_MODE_NONE = 0,               /**< オープンモード: デフォルト(未オープン) */
-    FILESYSTEM_MODE_READ,                   /**< オープンモード: 読み取り */
-    FILESYSTEM_MODE_WRITE,                  /**< オープンモード: 書き込み */
-    FILESYSTEM_MODE_APPEND,                 /**< オープンモード: 追記 */
-    FILESYSTEM_MODE_READ_PLUS,              /**< オープンモード: 読み書き可(既存ファイルの内容は消さない、ファイルがなければ失敗) */
-    FILESYSTEM_MODE_WRITE_PLUS,             /**< オープンモード: 読み書き可(新規作成or既存ファイルの中身を消去) */
-    FILESYSTEM_MODE_APPEND_PLUS,            /**< オープンモード: 読み書き可(既存ファイルがあれば追記、ファイルがなければ新規作成) */
-    FILESYSTEM_MODE_READ_BINARY,            /**< オープンモード: 読み取り(バイナリファイル) */
-    FILESYSTEM_MODE_WRITE_BINARY,           /**< オープンモード: 書き込み(バイナリファイル) */
-    FILESYSTEM_MODE_APPEND_BINARY,          /**< オープンモード: 追記(バイナリファイル) */
-    FILESYSTEM_MODE_READ_PLUS_BINARY,       /**< オープンモード: 読み書き可(既存ファイルの内容は消さない、ファイルがなければ失敗)(バイナリファイル) */
-    FILESYSTEM_MODE_WRITE_PLUS_BINARY,      /**< オープンモード: 読み書き可(新規作成or既存ファイルの中身を消去)(バイナリファイル) */
-    FILESYSTEM_MODE_APPEND_PLUS_BINARY,     /**< オープンモード: 読み書き可(既存ファイルがあれば追記、ファイルがなければ新規作成)(バイナリファイル) */
-} filesystem_open_mode_t;
 
 /**
  * @brief filesystem_t構造体インスタンスを生成し、初期化する
@@ -128,7 +110,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  * @brief filesystem_が保持するファイルハンドルをオープンする
  *
  * @param[in] fullpath_ オープンするファイルのフルパス
- * @param[in] mode_ ファイルオープンモード @ref filesystem_open_mode_t
+ * @param[in] mode_ ファイルオープンモード @ref fs_open_mode_t
  * @param[in,out] filesystem_ オープン対象ファイルシステムモジュール構造体インスタンスへのポインタ
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
@@ -141,7 +123,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  *
  * @todo 既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する
  */
-filesystem_result_t filesystem_open(const char* fullpath_, filesystem_open_mode_t mode_, filesystem_t* filesystem_);
+filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_, filesystem_t* filesystem_);
 
 /**
  * @brief filesystem_が保持するファイルハンドルをクローズする
@@ -205,18 +187,6 @@ filesystem_result_t filesystem_close(filesystem_t* filesystem_);
  * @retval FILESYSTEM_UNDEFINED_ERROR 要求バイト数未満の読み取り結果になったにもかかわらず、EOFまたは読み取りエラーとして判定できない場合
  */
 filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_);
-
-/**
- * @brief ファイルオープンモードを文字列に変換する
- *
- * @note 以下の場合はNULLが返される
- * - mode_ == FILESYSTEM_MODE_NONE
- * - mode_が規定値外
- *
- * @param mode_ ファイルオープンモード
- * @return const char* オープンモード文字列
- */
-const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_);
 
 bool filesystem_is_valid(const filesystem_t* filesystem_);
 

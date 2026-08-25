@@ -158,7 +158,7 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
         goto cleanup;
     }
 
-    ret_fs_utils = fs_utils_create(path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
+    ret_fs_utils = fs_utils_create(path_, name_, extension_, FS_OPEN_MODE_READ, &fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = resource_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to create fs_utils for ASCII STL file reading.", resource_rslt_to_str(ret));
@@ -390,7 +390,7 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
     IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "extension_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "out_vertex_count_")
 
-    ret_fs_utils = fs_utils_create(path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
+    ret_fs_utils = fs_utils_create(path_, name_, extension_, FS_OPEN_MODE_READ, &fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = resource_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - Failed to open ASCII STL file via fs_utils.", resource_rslt_to_str(ret));

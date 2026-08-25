@@ -39,7 +39,7 @@ struct fs_utils {
     choco_string_t* filepath;       /**< ファイルパス文字列格納コンテナ */
     choco_string_t* filename;       /**< ファイル名文字列格納コンテナ */
     choco_string_t* extension;      /**< ファイル拡張子文字列格納コンテナ */
-    filesystem_open_mode_t mode;    /**< ファイルオープンモード */
+    fs_open_mode_t mode;    /**< ファイルオープンモード */
 };
 
 static const char* const s_rslt_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
@@ -60,7 +60,7 @@ static fs_utils_result_t filesystem_result_convert(filesystem_result_t result_);
 static fs_utils_result_t choco_string_result_convert(choco_string_result_t result_);
 static fs_utils_result_t memory_system_result_convert(memory_system_result_t result_);
 
-fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, filesystem_open_mode_t open_mode_, fs_utils_t** fs_utils_) {
+fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, const char* extension_, fs_open_mode_t open_mode_, fs_utils_t** fs_utils_) {
     fs_utils_result_t ret = FS_UTILS_INVALID_ARGUMENT;
 
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -78,7 +78,7 @@ fs_utils_result_t fs_utils_create(const char* filepath_, const char* filename_, 
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_utils_, ret, FS_UTILS_INVALID_ARGUMENT, rslt_to_str(FS_UTILS_INVALID_ARGUMENT), "fs_utils_create", "*fs_utils_")
     // extensionはない場合があるのでNULLを許可
 
-    open_mode_str = filesystem_open_mode_c_str(open_mode_);
+    open_mode_str = fs_open_mode_c_str(open_mode_);
     if(NULL == open_mode_str) {
         ret = FS_UTILS_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_utils_create(%s) - Provided file open mode is not valid.", rslt_to_str(ret));
@@ -195,7 +195,7 @@ fs_utils_result_t fs_utils_text_file_read(fs_utils_t* fs_utils_, choco_string_t*
     }
 
     // APPEND_PLUSはオープンした際のファイル位置がEOFになるため、想定した動作を行うことができないため禁止
-    if(fs_utils_->mode != FILESYSTEM_MODE_READ && fs_utils_->mode != FILESYSTEM_MODE_READ_PLUS ) {
+    if(fs_utils_->mode != FS_OPEN_MODE_READ && fs_utils_->mode != FS_OPEN_MODE_READ_PLUS ) {
         ret = FS_UTILS_BAD_OPERATION;
         ERROR_MESSAGE("fs_utils_text_file_read(%s) - Invalid open mode for text file read.", rslt_to_str(ret));
         goto cleanup;
@@ -267,9 +267,9 @@ fs_utils_result_t fs_utils_text_file_line_read(fs_utils_t* fs_utils_, choco_stri
     }
 
     // APPEND_PLUSはオープンした際のファイル位置がEOFになるため、想定した動作を行うことができないため禁止
-    if(fs_utils_->mode != FILESYSTEM_MODE_READ && fs_utils_->mode != FILESYSTEM_MODE_READ_PLUS ) {
+    if(fs_utils_->mode != FS_OPEN_MODE_READ && fs_utils_->mode != FS_OPEN_MODE_READ_PLUS ) {
         ret = FS_UTILS_BAD_OPERATION;
-        ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - text line read requires READ or READ_PLUS, but current mode is '%s'.", rslt_to_str(ret), filesystem_open_mode_c_str(fs_utils_->mode));
+        ERROR_MESSAGE("fs_utils_text_file_line_read(%s) - text line read requires READ or READ_PLUS, but current mode is '%s'.", rslt_to_str(ret), fs_open_mode_c_str(fs_utils_->mode));
         goto cleanup;
     }
 
@@ -416,7 +416,7 @@ static bool fs_utils_valid_check(const fs_utils_t* fs_utils_) {
         return false;
     } else if(NULL == fs_utils_->filesystem) {
         return false;
-    } else if(FILESYSTEM_MODE_NONE == fs_utils_->mode) {
+    } else if(FS_OPEN_MODE_NONE == fs_utils_->mode) {
         return false;
     } else {
         return true;

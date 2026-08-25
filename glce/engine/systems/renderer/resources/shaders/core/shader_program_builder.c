@@ -104,7 +104,7 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
     }
 
     // シェーダーソース読み込み用fs_utils生成
-    ret_fs_utils = fs_utils_create(file_path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
+    ret_fs_utils = fs_utils_create(file_path_, name_, extension_, FS_OPEN_MODE_READ, &fs_utils);
     if(FS_UTILS_SUCCESS != ret_fs_utils) {
         ret = shader_rslt_convert_fs_utils(ret_fs_utils);
         ERROR_MESSAGE("shader_source_load(%s) - Failed to create fs_utils for shader_source.", shader_rslt_to_str(ret));

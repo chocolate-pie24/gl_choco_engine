@@ -682,7 +682,7 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
+    ret_fs = filesystem_open(fullpath_, FS_OPEN_MODE_READ_BINARY, filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("header_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
@@ -794,7 +794,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
+    ret_fs = filesystem_open(fullpath_, FS_OPEN_MODE_READ_BINARY, filesystem);
     if(FILESYSTEM_SUCCESS != ret_fs) {
         ret = resource_rslt_convert_filesystem(ret_fs);
         ERROR_MESSAGE("pixel_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
