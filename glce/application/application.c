@@ -186,6 +186,11 @@ static application_result_t point_geometry_create(app_state_t* app_state_);     
 static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
 static application_result_t lit_mesh_geometry_import(app_state_t* app_state_);
 
+static application_result_t line_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t point_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_);
+
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
 
@@ -343,16 +348,9 @@ application_result_t application_create(void) {
     }
 
     // UI Shader
-    ret_shader = ui_mesh_shader_create(&tmp->ui_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = ui_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, "../assets/shaders/test_shader/", "ui_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+    ret = ui_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - ui_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -385,16 +383,9 @@ application_result_t application_create(void) {
     }
 
     // Line Shader
-    ret_shader = line_mesh_shader_create(&tmp->line_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = line_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, "../assets/shaders/test_shader/", "line_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+    ret = line_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - line_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -412,16 +403,9 @@ application_result_t application_create(void) {
     }
 
     // Point Shader
-    ret_shader = point_mesh_shader_create(&tmp->point_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = point_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, "../assets/shaders/test_shader/", "point_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+    ret = point_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - point_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -439,16 +423,9 @@ application_result_t application_create(void) {
     }
 
     // Lit Mesh Shader
-    ret_shader = lit_mesh_shader_create(&tmp->lit_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = lit_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, "../assets/shaders/test_shader/", "lit_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+    ret = lit_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - lit_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -1417,6 +1394,198 @@ static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
 
 cleanup:
     fs_path_destroy(&penguin_path);
+
+    return ret;
+}
+
+static application_result_t line_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "line_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "line_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "line_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_create(&app_state_->line_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->line_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "lit_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "lit_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_create(&app_state_->lit_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t point_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "point_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "point_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = point_mesh_shader_create(&app_state_->point_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = point_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->point_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "ui_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "ui_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = ui_mesh_shader_create(&app_state_->ui_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = ui_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->ui_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
 
     return ret;
 }

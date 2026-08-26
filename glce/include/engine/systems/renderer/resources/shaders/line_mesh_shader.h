@@ -35,7 +35,7 @@ shader_result_t line_mesh_shader_create(line_mesh_shader_t** out_line_mesh_shade
 
 void line_mesh_shader_destroy(renderer_backend_context_t* backend_context_, line_mesh_shader_t** line_mesh_shader_);
 
-shader_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* file_path_, const char* name_);
+shader_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
 
 shader_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* line_mesh_shader_, const line_mesh_shader_config_t* config_);
 

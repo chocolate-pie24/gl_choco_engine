@@ -20,10 +20,10 @@
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 
-static shader_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_);
+static shader_result_t shader_source_load(const char* shader_fullpath_, choco_string_t** out_shader_source_);
 static shader_result_t shader_program_build(renderer_backend_shader_t* shader_, renderer_backend_context_t* backend_context_, const choco_string_t* vertex_shader_source_, const choco_string_t* fragment_shader_source_);
 
-shader_result_t shader_program_builder_create_from_files(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, renderer_backend_shader_t** out_shader_) {
+shader_result_t shader_program_builder_create_from_files(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -34,19 +34,29 @@ shader_result_t shader_program_builder_create_from_files(renderer_backend_contex
     renderer_backend_shader_t* tmp_shader = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "file_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "vertex_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "fragment_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "out_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "*out_shader_")
+    if('\0' == vertex_shader_fullpath_[0]) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if('\0' == fragment_shader_fullpath_[0]) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // シェーダーソースロード
-    ret = shader_source_load(file_path_, name_, ".frag", &frag_shader_source);
+    ret = shader_source_load(fragment_shader_fullpath_, &frag_shader_source);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to load fragment shader source.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = shader_source_load(file_path_, name_, ".vert", &vert_shader_source);
+    ret = shader_source_load(vertex_shader_fullpath_, &vert_shader_source);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Failed to load vertex shader source.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -80,7 +90,8 @@ cleanup:
     return ret;
 }
 
-static shader_result_t shader_source_load(const char* file_path_, const char* name_, const char* extension_, choco_string_t** out_shader_source_) {
+// NOTE: shader_fullpath_[0]の空文字列判定は上位関数でチェック済みであること
+static shader_result_t shader_source_load(const char* shader_fullpath_, choco_string_t** out_shader_source_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -88,11 +99,8 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
 
     fs_stream_t* fs_stream = NULL;
     choco_string_t* shader_source = NULL;
-    choco_string_t* tmp_path_string = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "file_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "extension_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "out_shader_source_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "*out_shader_source_")
 
@@ -112,13 +120,12 @@ static shader_result_t shader_source_load(const char* file_path_, const char* na
         goto cleanup;
     }
 
-    // begin fs_pathができるまでの暫定コード
-    ret_string = choco_string_create_from_c_string(file_path_, &tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(name_, tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(extension_, tmp_path_string);
-    ret_fs_stream = fs_stream_open(fs_stream, choco_string_c_str(tmp_path_string), FS_OPEN_MODE_READ);
-    choco_string_destroy(&tmp_path_string);
-    // end fs_pathができるまでの暫定コード
+    ret_fs_stream = fs_stream_open(fs_stream, shader_fullpath_, FS_OPEN_MODE_READ);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = shader_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("shader_source_load(%s) - fs_stream_open failed.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // シェーダープログラムロード
     ret_fs_stream = fs_stream_text_file_read(fs_stream, shader_source);

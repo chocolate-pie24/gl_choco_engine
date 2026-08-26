@@ -105,7 +105,7 @@ void lit_mesh_shader_destroy(renderer_backend_context_t* backend_context_, lit_m
     *lit_mesh_shader_ = NULL;
 }
 
-shader_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const char* file_path_, const char* name_) {
+shader_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -117,12 +117,26 @@ shader_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* b
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "lit_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(file_path_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "file_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "name_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(lit_mesh_shader_->shader, ret, SHADER_BAD_OPERATION, shader_rslt_to_str(SHADER_BAD_OPERATION), "lit_mesh_shader_program_initialize", "lit_mesh_shader_->shader")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "vertex_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "fragment_shader_fullpath_")
+    if('\0' == vertex_shader_fullpath_[0]) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_shader_program_initialize(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if('\0' == fragment_shader_fullpath_[0]) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_shader_program_initialize(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == lit_mesh_shader_->shader) {
+        ret = SHADER_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_shader_program_initialize(%s) - Provided lit_mesh_shader_ is already initialized.", shader_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     // シェーダープログラムビルド
-    ret = shader_program_builder_create_from_files(backend_context_, file_path_, name_, &tmp_shader);
+    ret = shader_program_builder_create_from_files(backend_context_, vertex_shader_fullpath_, fragment_shader_fullpath_, &tmp_shader);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_shader_program_initialize(%s) - Failed to build shader program.", shader_rslt_to_str(ret));
         goto cleanup;

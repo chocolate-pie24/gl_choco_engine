@@ -34,7 +34,7 @@ shader_result_t point_mesh_shader_create(point_mesh_shader_t** out_point_mesh_sh
 
 void point_mesh_shader_destroy(renderer_backend_context_t* backend_context_, point_mesh_shader_t** point_mesh_shader_);
 
-shader_result_t point_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const char* file_path_, const char* name_);
+shader_result_t point_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
 
 shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, point_mesh_shader_t* point_mesh_shader_, const point_mesh_shader_config_t* config_);
 
