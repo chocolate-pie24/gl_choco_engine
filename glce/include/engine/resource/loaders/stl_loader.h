@@ -65,46 +65,7 @@ resource_result_t stl_loader_create(stl_loader_t** stl_loader_);
  */
 void stl_loader_destroy(stl_loader_t** stl_loader_);
 
-/**
- * @brief ASCII形式のSTLファイルを読み込む
- *
- * @note ロード可能なSTLデータは法線情報が-1.0...1.0に正規化されている必要がある(されていない場合はRESOURCE_DATA_CORRUPTEDを返す)
- * @note 失敗時にはstl_loader_の状態は不変
- *
- * @param[in] path_ STLファイルが格納されているパス(最後は'/'が入っていること)
- * @param[in] name_ STLファイル名(拡張子は含まない)
- * @param[in] extension_ STLファイル拡張子('.'で始まること)
- * @param[in,out] stl_loader_ stl_loader_t構造体インスタンスへのポインタ
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - path_ == NULL
- * - name_ == NULL
- * - extension_ == NULL
- * - stl_loader_ == NULL
- * @retval RESOURCE_BAD_OPERATION 以下のいずれか
- * - 0 != stl_loader_->vertex_count
- * - stl_loader_->vertices != NULL
- * - メモリシステム未初期化
- * @retval RESOURCE_FILE_OPEN_ERROR STLファイルオープン失敗
- * @retval RESOURCE_UNDEFINED_ERROR ファイル読み込み時に不明なエラーが発生
- * @retval RESOURCE_DATA_CORRUPTED 以下のいずれか
- * - 内部データ破損
- * - STLデータ不整合
- * - 頂点情報、法線情報のパース失敗
- * - 法線情報が[-1.0...1.0]の範囲外、またはNaN、Infが含まれる
- * - 頂点情報にNaN、Infが含まれる
- * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_OVERFLOW 以下のいずれか
- * - ファイルフルパス文字列が長すぎる
- * - STLデータに格納されている頂点の数または法線の数がSIZE_MAXを超過
- * - 頂点配列確保サイズの計算でoverflowが発生
- * @retval RESOURCE_RUNTIME_ERROR 以下のいずれか
- * - 1回目の頂点数カウント結果と2回目の読み込み結果が一致しない(STLファイルが読み込み中に変更された可能性がある)
- * - ファイル読み込みでエラー発生
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_);
+resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl_loader_);
 
 /**
  * @brief stl_loader_が保有する頂点配列情報の所有権をAPI呼び出し側へ委譲する

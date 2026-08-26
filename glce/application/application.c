@@ -46,6 +46,9 @@
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/ring_queue.h"
+#include "engine/containers/choco_string.h"
+
+#include "engine/io_utils/fs_path.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -180,6 +183,8 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 
 static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
+static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
+static application_result_t lit_mesh_geometry_import(app_state_t* app_state_);
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -748,15 +753,9 @@ application_result_t application_run(void) {
     ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "frog_512", &tex_id_frog);
     ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "test_texture_green", &tex_id_green);
 
-    // ペンギンSTL pipeline import
-    ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->lit_mesh_shader,
-        s_app_state->lit_mesh_geometry_registry,
-        "../assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl",
-        &s_app_state->geometry_id_penguin);
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+    ret = lit_mesh_geometry_import(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
         goto cleanup;
     }
@@ -811,29 +810,10 @@ application_result_t application_run(void) {
 
     // UI pipeline import
     // アイコンサイズはUI描画用projection, viewができたら整える
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->ui_mesh_shader,
-        s_app_state->ui_mesh_geometry_registry,
-        "small_icon",
-        &s_app_state->geometry_id_small_icon
-    );
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(small icon).");
-        goto cleanup;
-    }
-
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->ui_mesh_shader,
-        s_app_state->ui_mesh_geometry_registry,
-        "large_icon",
-        &s_app_state->geometry_id_large_icon
-    );
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(large icon).");
+    ret = ui_mesh_geometry_import(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry.");
         goto cleanup;
     }
 
@@ -1335,5 +1315,108 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
+    return ret;
+}
+
+static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* small_icon_path = NULL;
+    fs_path_t* large_icon_path = NULL;
+
+    static const char* const small_icon_name = "small_icon";
+    static const char* const large_icon_name = "large_icon";
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "app_state_")
+
+    ret_fs_path = fs_path_create(&small_icon_path, "../assets/geometries/", small_icon_name, "ui_geom");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->ui_mesh_shader,
+        app_state_->ui_mesh_geometry_registry,
+        small_icon_name,
+        fs_path_fullpath_get(small_icon_path),
+        &app_state_->geometry_id_small_icon
+    );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("ui_mesh_geometry_import - Failed to import ui mesh geometry(small icon).");
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&large_icon_path, "../assets/geometries/", large_icon_name, "ui_geom");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->ui_mesh_shader,
+        app_state_->ui_mesh_geometry_registry,
+        large_icon_name,
+        fs_path_fullpath_get(large_icon_path),
+        &app_state_->geometry_id_large_icon
+    );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("ui_mesh_geometry_import - Failed to import ui mesh geometry(large icon).");
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&small_icon_path);
+    fs_path_destroy(&large_icon_path);
+
+    return ret;
+}
+
+static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* penguin_path = NULL;
+
+    static const char* const penguin_name = "glce_lowpoly_penguin_ascii";
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_geometry_import", "app_state_")
+
+    ret_fs_path = fs_path_create(&penguin_path, "../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // ペンギンSTL pipeline import
+    ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->lit_mesh_shader,
+        app_state_->lit_mesh_geometry_registry,
+        penguin_name,
+        fs_path_fullpath_get(penguin_path),
+        &app_state_->geometry_id_penguin);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("lit_mesh_geometry_import - Failed to import lit mesh geometry.");
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&penguin_path);
+
     return ret;
 }

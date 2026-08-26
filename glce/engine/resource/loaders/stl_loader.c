@@ -48,7 +48,7 @@ struct stl_loader {
     size_t vertex_count;                /**< 頂点数 */
 };
 
-static resource_result_t stl_loader_vertex_count_calc(const char* path_, const char* name_, const char* extension_, size_t* out_vertex_count_);
+static resource_result_t stl_loader_vertex_count_calc(const char* fullpath_, size_t* out_vertex_count_);
 
 resource_result_t stl_loader_create(stl_loader_t** stl_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
@@ -102,7 +102,7 @@ void stl_loader_destroy(stl_loader_t** stl_loader_) {
     *stl_loader_ = NULL;
 }
 
-resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_) {
+resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
@@ -110,7 +110,6 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     fs_stream_t* fs_stream = NULL;
-    choco_string_t* tmp_path_string = NULL;
     choco_string_t* string = NULL;
     point_normal_vertex_t* tmp_vertices = NULL;
 
@@ -130,19 +129,21 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     vec3f_t tmp_normal = { 0 };
     vec3f_t tmp_vertex = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "extension_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(stl_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "stl_loader_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == stl_loader_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertex_count")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(stl_loader_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertices")
-
-    ret = stl_loader_vertex_count_calc(path_, name_, extension_, &vertex_count);
-    if(0 == vertex_count) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("stl_loader_ascii_load(%s) - ASCII STL has no vertices.", resource_rslt_to_str(ret));
+    if('\0' == fullpath_[0]) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - Provided fullpath_ is not valid.", resource_rslt_to_str(ret));
         goto cleanup;
     }
+    if(0 != stl_loader_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - Provided stl_loader_->vertex_count is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = stl_loader_vertex_count_calc(fullpath_, &vertex_count);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to calculate vertex count for ASCII STL file.", resource_rslt_to_str(ret));
         goto cleanup;
@@ -167,12 +168,12 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
         goto cleanup;
     }
 
-    // begin fs_pathができるまでの暫定コード
-    ret_string = choco_string_create_from_c_string(path_, &tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(name_, tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(extension_, tmp_path_string);
-    ret_fs_stream = fs_stream_open(fs_stream, choco_string_c_str(tmp_path_string), FS_OPEN_MODE_READ);
-    // end fs_pathができるまでの暫定コード
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_string = choco_string_default_create(&string);
     if(CHOCO_STRING_SUCCESS != ret_string) {
@@ -309,9 +310,6 @@ cleanup:
     if(NULL != string) {
         choco_string_destroy(&string);
     }
-    if(NULL != tmp_path_string) {
-        choco_string_destroy(&tmp_path_string);
-    }
     if(RESOURCE_SUCCESS != ret && NULL != tmp_vertices) {
         memory_system_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
@@ -357,14 +355,13 @@ cleanup:
     return ret;
 }
 
-static resource_result_t stl_loader_vertex_count_calc(const char* path_, const char* name_, const char* extension_, size_t* out_vertex_count_) {
+static resource_result_t stl_loader_vertex_count_calc(const char* fullpath_, size_t* out_vertex_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     fs_stream_t* fs_stream = NULL;
-    choco_string_t* tmp_path_string = NULL;
     choco_string_t* string = NULL;
 
     size_t line_count = 0;
@@ -373,10 +370,13 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
 
     bool complete = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "extension_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "out_vertex_count_")
+    if('\0' == fullpath_[0]) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - Provided fullpath_ is not valid.", resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT));
+        goto cleanup;
+    }
 
     ret_fs_stream = fs_stream_create(&fs_stream);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
@@ -385,12 +385,12 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
         goto cleanup;
     }
 
-    // begin fs_pathができるまでの暫定コード
-    ret_string = choco_string_create_from_c_string(path_, &tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(name_, tmp_path_string);
-    ret_string = choco_string_concat_from_c_string(extension_, tmp_path_string);
-    ret_fs_stream = fs_stream_open(fs_stream, choco_string_c_str(tmp_path_string), FS_OPEN_MODE_READ);
-    // end fs_pathができるまでの暫定コード
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_string = choco_string_default_create(&string);
     if(CHOCO_STRING_SUCCESS != ret_string) {
@@ -450,9 +450,6 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
 cleanup:
     if(NULL != string) {
         choco_string_destroy(&string);
-    }
-    if(NULL != tmp_path_string) {
-        choco_string_destroy(&tmp_path_string);
     }
     if(NULL != fs_stream) {
         fs_stream_destroy(&fs_stream);
