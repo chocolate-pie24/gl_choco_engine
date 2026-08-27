@@ -250,11 +250,6 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
         ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is corrupted.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!texture_cpu_resource_is_loaded(*cpu_resource_)) {
-        ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is not loaded.", resource_registry_rslt_to_str(ret));
-        goto cleanup;
-    }
     if(!texture_gpu_resource_is_valid(*gpu_resource_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("texture_registry_register(%s) - provided GPU resource is corrupted.", resource_registry_rslt_to_str(ret));
@@ -397,9 +392,6 @@ static bool registry_entry_is_valid(const texture_registry_entry_t* entry_) {
         return false;
     }
     if(!texture_cpu_resource_is_valid(entry_->cpu_resource)) {
-        return false;
-    }
-    if(!texture_cpu_resource_is_loaded(entry_->cpu_resource)) { // 登録済みで未ロード状態は異常
         return false;
     }
     if(!texture_gpu_resource_is_valid(entry_->gpu_resource)) {

@@ -140,6 +140,9 @@ typedef struct app_state {
     command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
 
     texture_registry_t* texture_registry;
+    int16_t tex_id_rabbit;
+    int16_t tex_id_frog;
+    int16_t tex_id_green;
     // end
 
     // begin temporary TODO: remove this!!
@@ -190,6 +193,8 @@ static application_result_t line_mesh_shader_initialize(app_state_t* app_state_)
 static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_);
 static application_result_t point_mesh_shader_initialize(app_state_t* app_state_);
 static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_);
+
+static application_result_t texture_initialize(app_state_t* app_state_);
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -666,9 +671,6 @@ application_result_t application_run(void) {
     geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    int16_t tex_id_rabbit = 0;
-    int16_t tex_id_frog = 0;
-    int16_t tex_id_green = 0;
     const texture_gpu_resource_t* tex_gpu_resource = NULL;
 
     // penguin AABB
@@ -726,9 +728,12 @@ application_result_t application_run(void) {
     lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
     lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
 
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "rabbit_512", &tex_id_rabbit);
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "frog_512", &tex_id_frog);
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "test_texture_green", &tex_id_green);
+    ret = texture_initialize(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run - texture_initialize failed.");
+        goto cleanup;
+    }
 
     ret = lit_mesh_geometry_import(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
@@ -824,7 +829,7 @@ application_result_t application_run(void) {
         if(NULL != tmp_draw_range) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_rabbit);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_rabbit);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
@@ -833,7 +838,7 @@ application_result_t application_run(void) {
 
             // テストテクスチャ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_green);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_green);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
@@ -845,7 +850,7 @@ application_result_t application_run(void) {
         if(NULL != tmp_draw_range) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_frog);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_frog);
             texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
@@ -1586,6 +1591,59 @@ static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
 cleanup:
     fs_path_destroy(&vertex_shader_path);
     fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t texture_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    fs_path_t* rabbit_path = NULL;
+    fs_path_t* frog_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "texture_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&rabbit_path, "../assets/textures/", "rabbit_512", "bmp");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &app_state_->tex_id_rabbit);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&frog_path, "../assets/textures/", "frog_512", "bmp");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "frog_512", fs_path_fullpath_get(frog_path), &app_state_->tex_id_frog);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_resource_pipeline = texture_pipeline_import_from_solid_color(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "test_texture_green", 0, 255, 0, &app_state_->tex_id_green);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_solid_color failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&frog_path);
+    fs_path_destroy(&rabbit_path);
 
     return ret;
 }

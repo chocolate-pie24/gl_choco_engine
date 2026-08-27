@@ -136,7 +136,7 @@ shader_result_t line_mesh_shader_program_initialize(renderer_backend_context_t* 
         ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_rslt_to_str(ret));
         goto cleanup;
     }
-    if(NULL == line_mesh_shader_->shader) {
+    if(NULL != line_mesh_shader_->shader) {
         ret = SHADER_BAD_OPERATION;
         ERROR_MESSAGE("line_mesh_shader_program_initialize(%s) - Provided line_mesh_shader_ is already initialized.", shader_rslt_to_str(ret));
         goto cleanup;

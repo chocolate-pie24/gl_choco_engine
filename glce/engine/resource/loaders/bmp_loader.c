@@ -322,15 +322,21 @@ cleanup:
     return ret;
 }
 
-resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_) {
+resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_, size_t* out_pixel_data_size_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "bmp_loader_")
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixels_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_move", "bmp_loader_->pixels")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixel_data_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixel_data_size_")
+    if(NULL == bmp_loader_->pixels || 0 == bmp_loader_->info_header.bi_size_image) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("bmp_loader_pixel_move(%s) - pixel is not loaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_pixels_ = bmp_loader_->pixels;
+    *out_pixel_data_size_ = bmp_loader_->info_header.bi_size_image;
     bmp_loader_->pixels = NULL;
 
     ret = RESOURCE_SUCCESS;

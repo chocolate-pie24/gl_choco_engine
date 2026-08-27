@@ -25,21 +25,15 @@ extern "C" {
 
 typedef struct texture_cpu_resource texture_cpu_resource_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
 
-resource_result_t texture_cpu_resource_create(texture_cpu_resource_t** texture_);
+resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_, uint8_t channel_count_, size_t pixel_data_size_, uint8_t** pixels_, texture_cpu_resource_t** texture_);
 
 void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_);
-
-resource_result_t texture_cpu_resource_pixel_load(texture_cpu_resource_t* texture_, const char* texture_source_);
-
-resource_result_t texture_cpu_resource_pixel_unload(texture_cpu_resource_t* texture_);
 
 resource_result_t texture_cpu_resource_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_);
 
 resource_result_t texture_cpu_resource_pixel_size_get(const texture_cpu_resource_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_);
 
 bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_);
-
-bool texture_cpu_resource_is_loaded(const texture_cpu_resource_t* texture_);
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,8 @@
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
+#include "engine/core/memory/choco_memory.h"
+
 #include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -250,6 +252,23 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_texture_gpu_resource(t
         return RESOURCE_PIPELINE_OVERFLOW;
     case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_choco_memory(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }
