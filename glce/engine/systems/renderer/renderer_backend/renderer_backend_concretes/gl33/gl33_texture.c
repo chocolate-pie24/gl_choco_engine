@@ -48,6 +48,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_);
 
 static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
 static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
@@ -69,6 +70,7 @@ static const renderer_texture_vtable_t s_gl33_texture_vtable = {
     .renderer_texture_bind = gl33_texture_bind,
     .renderer_texture_unbind = gl33_texture_unbind,
     .renderer_texture_pixel_upload = gl33_texture_pixel_upload,
+    .renderer_texture_is_valid = gl33_texture_is_valid,
 };  /**< OpenGL3.3用テクスチャ操作仮想関数テーブル */
 
 const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
@@ -274,6 +276,31 @@ cleanup:
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     }
     return ret;
+}
+
+static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_) {
+    if(NULL == texture_handle_) {
+        return false;
+    }
+    if(0 > texture_handle_->unit_number) {
+        return false;
+    }
+    if(0 == texture_handle_->handle) {
+        return false;
+    }
+    if(!texture_min_filter_config_is_valid(texture_handle_->min_filter_config)) {
+        return false;
+    }
+    if(!texture_mag_filter_config_is_valid(texture_handle_->mag_filter_config)) {
+        return false;
+    }
+    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_s_axis)) {
+        return false;
+    }
+    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_t_axis)) {
+        return false;
+    }
+    return true;
 }
 
 /**

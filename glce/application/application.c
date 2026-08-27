@@ -608,7 +608,7 @@ void application_destroy(void) {
         point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry, s_app_state->point_mesh_shader);
     }
     if(NULL != s_app_state->texture_registry) {
-        texture_registry_deinitialize(s_app_state->texture_registry, s_app_state->renderer_backend_context);
+        texture_registry_deinitialize(s_app_state->texture_registry);
     }
     if(NULL != s_app_state->camera_manager) {
         camera_manager_deinitialize(s_app_state->camera_manager);
@@ -830,20 +830,20 @@ application_result_t application_run(void) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_rabbit);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
 
             // テストテクスチャ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_green);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
         }
 
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon);
@@ -851,11 +851,11 @@ application_result_t application_run(void) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_frog);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
         }
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 

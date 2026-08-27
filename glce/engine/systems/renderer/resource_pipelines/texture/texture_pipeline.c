@@ -31,7 +31,7 @@
 static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 
-resource_pipeline_result_t texture_pipeline_import_from_bmp(renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, int16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, int16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -93,16 +93,10 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(renderer_backend_con
     }
 
     // GPU側リソース生成
-    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &gpu_resource);
+    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
     if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
         ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
         ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_gpu_resource = texture_gpu_resource_upload(backend_context_, gpu_resource, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
-        ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_upload failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -124,14 +118,13 @@ cleanup:
             memory_system_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
             tmp_pixels = NULL;
         }
-        // backend_context_ == NULLの場合はtexture_gpu_resource_destroyはNo-opになるためチェック不要
-        texture_gpu_resource_destroy(backend_context_, &gpu_resource);
+        texture_gpu_resource_destroy(&gpu_resource);
         texture_cpu_resource_destroy(&cpu_resource);
     }
     return ret;
 }
 
-resource_pipeline_result_t texture_pipeline_import_from_solid_color(renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, int16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, int16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -187,16 +180,10 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(renderer_bac
     }
 
     // GPU側リソース生成
-    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &gpu_resource);
+    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
     if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
         ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
         ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_gpu_resource = texture_gpu_resource_upload(backend_context_, gpu_resource, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
-        ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_upload failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -218,19 +205,17 @@ cleanup:
             memory_system_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
             tmp_pixels = NULL;
         }
-        // backend_context_ == NULLの場合はtexture_gpu_resource_destroyはNo-opになるためチェック不要
-        texture_gpu_resource_destroy(backend_context_, &gpu_resource);
+        texture_gpu_resource_destroy(&gpu_resource);
         texture_cpu_resource_destroy(&cpu_resource);
     }
     return ret;
 }
 
-resource_pipeline_result_t texture_pipeline_release(renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int16_t texture_id_) {
+resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_registry_, int16_t texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "texture_registry_")
     if(!texture_registry_is_valid(texture_registry_)) {
         ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
@@ -238,7 +223,7 @@ resource_pipeline_result_t texture_pipeline_release(renderer_backend_context_t* 
         goto cleanup;
     }
 
-    ret_registry = texture_registry_unregister(texture_registry_, backend_context_, texture_id_);
+    ret_registry = texture_registry_unregister(texture_registry_, texture_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
         ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
         ERROR_MESSAGE("texture_pipeline_release(%s) - texture_registry_unregister failed.", resource_pipeline_rslt_to_str(ret));

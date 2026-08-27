@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 typedef struct renderer_texture_vtable renderer_texture_vtable_t;
 
 /**
