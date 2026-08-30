@@ -24,7 +24,7 @@ typedef enum {
     FS_PATH_UNDEFINED_ERROR,   /**< 実行結果コード: 想定していないエラーが発生 */
 } fs_path_result_t;
 
-fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* path_, const char* name_, const char* extension_);
+fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* executable_directory_, const char* path_, const char* name_, const char* extension_);
 
 fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_path_);
 

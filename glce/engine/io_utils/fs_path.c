@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <string.h>
+#include <string.h> // for strlen, memset
 #include <stdint.h>
 
 #if defined(__APPLE__)
@@ -62,11 +62,11 @@ static fs_path_result_t rslt_convert_choco_string(choco_string_result_t rslt_);
 static bool is_valid_shallow(const fs_path_t* fs_path_);
 
 // NOTE:
-// - path_の末尾は'/'
 // - path_のseparatorはplatformによらず'/'
 // - extension_はNULLを許可
 // - extension_ != NULLの場合, 先頭に'.'は含まない
-fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* path_, const char* name_, const char* extension_) {
+// - path_はbase_path_からの相対パスを指定
+fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* base_path_, const char* path_, const char* name_, const char* extension_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -74,13 +74,26 @@ fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* path_, const c
 
     fs_path_t* tmp_fs_path = NULL;
     choco_string_t* tmp_fullpath = NULL;
+    size_t length = 0;
+
+#ifdef _WIN32
+    ret = FS_PATH_RUNTIME_ERROR;
+    ERROR_MESSAGE("fs_path_create(%s) - Platform windows is not supported yet.", rslt_to_str(ret));
+    goto cleanup;
+#endif
 
     // Preconditions
     IF_ARG_NULL_GOTO_CLEANUP(fs_path_, ret, FS_PATH_INVALID_ARGUMENT, rslt_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "fs_path_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_path_, ret, FS_PATH_INVALID_ARGUMENT, rslt_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "*fs_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(base_path_, ret, FS_PATH_INVALID_ARGUMENT, rslt_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "base_path_")
     IF_ARG_NULL_GOTO_CLEANUP(path_, ret, FS_PATH_INVALID_ARGUMENT, rslt_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, FS_PATH_INVALID_ARGUMENT, rslt_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "name_")
-    if('\0' == path_[0]) {
+    if('\0' == base_path_[0]) {
+        ret = FS_PATH_INVALID_ARGUMENT;
+        ERROR_MESSAGE("fs_path_create(%s) - Provided base_path_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if('\0' == path_[0] || '/' == path_[0]) {
         ret = FS_PATH_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_path_create(%s) - Provided path_ is not valid.", rslt_to_str(ret));
         goto cleanup;
@@ -97,11 +110,35 @@ fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* path_, const c
     }
 
     // fullpath生成
-    ret_string = choco_string_create_from_c_string(path_, &tmp_fullpath);
+    ret_string = choco_string_create_from_c_string(base_path_, &tmp_fullpath);
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = rslt_convert_choco_string(ret_string);
         ERROR_MESSAGE("fs_path_create(%s) - choco_string_create_from_c_string failed.", rslt_to_str(ret));
         goto cleanup;
+    }
+    length = strlen(base_path_);
+    if('/' != base_path_[length - 1]) {
+        ret_string = choco_string_concat_from_c_string("/", tmp_fullpath);
+        if(CHOCO_STRING_SUCCESS != ret_string) {
+            ret = rslt_convert_choco_string(ret_string);
+            ERROR_MESSAGE("fs_path_create(%s) - choco_string_concat_from_c_string failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+    ret_string = choco_string_concat_from_c_string(path_, tmp_fullpath);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("fs_path_create(%s) - choco_string_concat_from_c_string failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    length = strlen(path_);
+    if('/' != path_[length - 1]) {
+        ret_string = choco_string_concat_from_c_string("/", tmp_fullpath);
+        if(CHOCO_STRING_SUCCESS != ret_string) {
+            ret = rslt_convert_choco_string(ret_string);
+            ERROR_MESSAGE("fs_path_create(%s) - choco_string_concat_from_c_string failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
     }
     ret_string = choco_string_concat_from_c_string(name_, tmp_fullpath);
     if(CHOCO_STRING_SUCCESS != ret_string) {
@@ -160,6 +197,8 @@ cleanup:
     return ret;
 }
 
+// NOTE:
+// - executable_directoryの文字列の末尾に'/'は付加されない
 fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_path_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 

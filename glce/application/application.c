@@ -109,6 +109,9 @@ typedef struct app_state {
     int framebuffer_width;      /**< フレームバッファサイズ(幅) */
     int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
+    // 実行ファイルパス
+    fs_path_t* executable_directory;
+
     // core/memory/linear_allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
     size_t linear_alloc_align_req;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
@@ -196,6 +199,8 @@ static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_);
 
 static application_result_t texture_initialize(app_state_t* app_state_);
 
+static application_result_t executable_directory_get(app_state_t* app_state_);
+
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
 
@@ -232,6 +237,12 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
+
+    ret = executable_directory_get(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
@@ -572,6 +583,9 @@ cleanup:
             if(NULL != tmp->platform_context) {
                 platform_destroy(tmp->platform_context);
             }
+            if(NULL != tmp->executable_directory) {
+                fs_path_destroy(&tmp->executable_directory);
+            }
             if(NULL != tmp->linear_alloc_pool) {
                 memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
             }
@@ -642,6 +656,9 @@ void application_destroy(void) {
     }
     if(NULL != s_app_state->platform_context) {
         platform_destroy(s_app_state->platform_context);
+    }
+    if(NULL != s_app_state->executable_directory) {
+        fs_path_destroy(&s_app_state->executable_directory);
     }
     if(NULL != s_app_state->linear_alloc_pool) {
         memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
@@ -1314,7 +1331,7 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "app_state_")
 
-    ret_fs_path = fs_path_create(&small_icon_path, "../assets/geometries/", small_icon_name, "ui_geom");
+    ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1334,7 +1351,7 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&large_icon_path, "../assets/geometries/", large_icon_name, "ui_geom");
+    ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1375,7 +1392,7 @@ static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_geometry_import", "app_state_")
 
-    ret_fs_path = fs_path_create(&penguin_path, "../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
+    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
         ERROR_MESSAGE("lit_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1414,14 +1431,14 @@ static application_result_t line_mesh_shader_initialize(app_state_t* app_state_)
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "line_mesh_shader_initialize", "app_state_")
 
-    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "line_mesh_shader", "vert");
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "line_mesh_shader", "frag");
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1462,14 +1479,14 @@ static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_) 
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_shader_initialize", "app_state_")
 
-    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "lit_mesh_shader", "vert");
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "lit_mesh_shader", "frag");
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1510,14 +1527,14 @@ static application_result_t point_mesh_shader_initialize(app_state_t* app_state_
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_shader_initialize", "app_state_")
 
-    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "point_mesh_shader", "vert");
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "point_mesh_shader", "frag");
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1558,14 +1575,14 @@ static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_shader_initialize", "app_state_")
 
-    ret_fs_path = fs_path_create(&vertex_shader_path, "../assets/shaders/test_shader/", "ui_mesh_shader", "vert");
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&fragment_shader_path, "../assets/shaders/test_shader/", "ui_mesh_shader", "frag");
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1606,7 +1623,7 @@ static application_result_t texture_initialize(app_state_t* app_state_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "texture_initialize", "app_state_")
 
-    ret_fs_path = fs_path_create(&rabbit_path, "../assets/textures/", "rabbit_512", "bmp");
+    ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1619,7 +1636,7 @@ static application_result_t texture_initialize(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&frog_path, "../assets/textures/", "frog_512", "bmp");
+    ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
@@ -1645,5 +1662,25 @@ cleanup:
     fs_path_destroy(&frog_path);
     fs_path_destroy(&rabbit_path);
 
+    return ret;
+}
+
+static application_result_t executable_directory_get(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "executable_directory_get", "app_state_")
+
+    ret_fs_path = fs_path_create_from_executable_directory(&app_state_->executable_directory);
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
     return ret;
 }
