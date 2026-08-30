@@ -26,6 +26,8 @@ typedef enum {
 
 fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* path_, const char* name_, const char* extension_);
 
+fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_path_);
+
 void fs_path_destroy(fs_path_t** fs_path_);
 
 const char* fs_path_fullpath_get(const fs_path_t* fs_path_);
