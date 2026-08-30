@@ -46,7 +46,6 @@
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/ring_queue.h"
-#include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_path.h"
 
