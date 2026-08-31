@@ -8,7 +8,7 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
@@ -111,29 +111,31 @@ shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_) {
     }
 }
 
-shader_result_t shader_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
+shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_) {
     switch(rslt_) {
-    case FS_UTILS_SUCCESS:
+    case FS_STREAM_SUCCESS:
         return SHADER_SUCCESS;
-    case FS_UTILS_INVALID_ARGUMENT:
+    case FS_STREAM_INVALID_ARGUMENT:
         return SHADER_INVALID_ARGUMENT;
-    case FS_UTILS_BAD_OPERATION:
+    case FS_STREAM_BAD_OPERATION:
         return SHADER_BAD_OPERATION;
-    case FS_UTILS_DATA_CORRUPTED:
+    case FS_STREAM_DATA_CORRUPTED:
         return SHADER_DATA_CORRUPTED;
-    case FS_UTILS_NO_MEMORY:
+    case FS_STREAM_NO_MEMORY:
         return SHADER_NO_MEMORY;
-    case FS_UTILS_LIMIT_EXCEEDED:
+    case FS_STREAM_LIMIT_EXCEEDED:
         return SHADER_LIMIT_EXCEEDED;
-    case FS_UTILS_OVERFLOW:
+    case FS_STREAM_OVERFLOW:
         return SHADER_OVERFLOW;
-    case FS_UTILS_FILE_OPEN_ERROR:
+    case FS_STREAM_FILE_OPEN_ERROR:
         return SHADER_RUNTIME_ERROR;
-    case FS_UTILS_EOF:
+    case FS_STREAM_FILE_CLOSE_ERROR:
         return SHADER_RUNTIME_ERROR;
-    case FS_UTILS_RUNTIME_ERROR:
+    case FS_STREAM_EOF:
         return SHADER_RUNTIME_ERROR;
-    case FS_UTILS_UNDEFINED_ERROR:
+    case FS_STREAM_RUNTIME_ERROR:
+        return SHADER_RUNTIME_ERROR;
+    case FS_STREAM_UNDEFINED_ERROR:
         return SHADER_UNDEFINED_ERROR;
     default:
         return SHADER_UNDEFINED_ERROR;

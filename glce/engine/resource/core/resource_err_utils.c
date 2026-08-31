@@ -14,43 +14,11 @@
 #include "engine/resource/core/resource_err_utils.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/filesystem/filesystem.h"
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
-
-// #define TEST_BUILD
-
-#ifdef TEST_BUILD
-// テスト時のみ使用するヘッダのinclude
-#include <assert.h>
-#include <string.h>
-
-#include "test_controller.h"
-#include "engine/base/choco_macros.h"
-#include "engine/resource/core/test_resource_err_utils.h"
-
-// resource_err_utils用モジュール専用テスト制御構造体定義
-
-// 外部公開APIテスト設定
-static test_call_control_t s_test_config_resource_rslt_convert_choco_memory;        /**< resource_rslt_convert_choco_memory()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_filesystem;          /**< resource_rslt_convert_filesystem()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_fs_utils;            /**< resource_rslt_convert_fs_utils()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_choco_string;        /**< resource_rslt_convert_choco_string()テスト設定 */
-static test_call_control_t s_test_config_resource_rslt_convert_geometry_primitive;  /**< resource_rslt_convert_geometry_primitive()テスト設定 */
-
-// プライベート関数テスト設定
-
-// 全テスト関数プロトタイプ宣言
-static void test_resource_rslt_to_str(void);
-static void test_resource_rslt_convert_choco_memory(void);
-static void test_resource_rslt_convert_filesystem(void);
-static void test_resource_rslt_convert_fs_utils(void);
-static void test_resource_rslt_convert_choco_string(void);
-static void test_resource_rslt_convert_geometry_primitive(void);
-#endif
+#include "engine/io_utils/fs_stream.h"
 
 static const char* const s_rslt_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
@@ -100,14 +68,6 @@ const char* resource_rslt_to_str(resource_result_t rslt_) {
 }
 
 resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t result_) {
-#ifdef TEST_BUILD
-    s_test_config_resource_rslt_convert_choco_memory.call_count++;
-    if(s_test_config_resource_rslt_convert_choco_memory.fail_on_call != 0) {
-        if(s_test_config_resource_rslt_convert_choco_memory.call_count == s_test_config_resource_rslt_convert_choco_memory.fail_on_call) {
-            return (resource_result_t)s_test_config_resource_rslt_convert_choco_memory.forced_result;
-        }
-    }
-#endif
     switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RESOURCE_SUCCESS;
@@ -124,74 +84,31 @@ resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t resu
     }
 }
 
-resource_result_t resource_rslt_convert_filesystem(filesystem_result_t result_) {
-#ifdef TEST_BUILD
-    s_test_config_resource_rslt_convert_filesystem.call_count++;
-    if(s_test_config_resource_rslt_convert_filesystem.fail_on_call != 0) {
-        if(s_test_config_resource_rslt_convert_filesystem.call_count == s_test_config_resource_rslt_convert_filesystem.fail_on_call) {
-            return (resource_result_t)s_test_config_resource_rslt_convert_filesystem.forced_result;
-        }
-    }
-#endif
+resource_result_t resource_rslt_convert_fs_stream(fs_stream_result_t result_) {
     switch(result_) {
-    case FILESYSTEM_SUCCESS:
+    case FS_STREAM_SUCCESS:
         return RESOURCE_SUCCESS;
-    case FILESYSTEM_INVALID_ARGUMENT:
+    case FS_STREAM_INVALID_ARGUMENT:
         return RESOURCE_INVALID_ARGUMENT;
-    case FILESYSTEM_RUNTIME_ERROR:
-        return RESOURCE_RUNTIME_ERROR;
-    case FILESYSTEM_NO_MEMORY:
-        return RESOURCE_NO_MEMORY;
-    case FILESYSTEM_FILE_OPEN_ERROR:
-        return RESOURCE_FILE_OPEN_ERROR;
-    case FILESYSTEM_FILE_CLOSE_ERROR:
-        return RESOURCE_FILE_CLOSE_ERROR;
-    case FILESYSTEM_UNDEFINED_ERROR:
-        return RESOURCE_UNDEFINED_ERROR;
-    case FILESYSTEM_LIMIT_EXCEEDED:
-        return RESOURCE_LIMIT_EXCEEDED;
-    case FILESYSTEM_BAD_OPERATION:
+    case FS_STREAM_BAD_OPERATION:
         return RESOURCE_BAD_OPERATION;
-    case FILESYSTEM_DATA_CORRUPTED:
+    case FS_STREAM_DATA_CORRUPTED:
         return RESOURCE_DATA_CORRUPTED;
-    case FILESYSTEM_EOF:
-        return RESOURCE_FILE_READ_ERROR;
-    default:
-        return RESOURCE_UNDEFINED_ERROR;
-    }
-}
-
-resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t result_) {
-#ifdef TEST_BUILD
-    s_test_config_resource_rslt_convert_fs_utils.call_count++;
-    if(s_test_config_resource_rslt_convert_fs_utils.fail_on_call != 0) {
-        if(s_test_config_resource_rslt_convert_fs_utils.call_count == s_test_config_resource_rslt_convert_fs_utils.fail_on_call) {
-            return (resource_result_t)s_test_config_resource_rslt_convert_fs_utils.forced_result;
-        }
-    }
-#endif
-    switch(result_) {
-    case FS_UTILS_SUCCESS:
-        return RESOURCE_SUCCESS;
-    case FS_UTILS_INVALID_ARGUMENT:
-        return RESOURCE_INVALID_ARGUMENT;
-    case FS_UTILS_BAD_OPERATION:
-        return RESOURCE_BAD_OPERATION;
-    case FS_UTILS_DATA_CORRUPTED:
-        return RESOURCE_DATA_CORRUPTED;
-    case FS_UTILS_NO_MEMORY:
+    case FS_STREAM_NO_MEMORY:
         return RESOURCE_NO_MEMORY;
-    case FS_UTILS_LIMIT_EXCEEDED:
+    case FS_STREAM_LIMIT_EXCEEDED:
         return RESOURCE_LIMIT_EXCEEDED;
-    case FS_UTILS_OVERFLOW:
+    case FS_STREAM_OVERFLOW:
         return RESOURCE_OVERFLOW;
-    case FS_UTILS_FILE_OPEN_ERROR:
+    case FS_STREAM_FILE_OPEN_ERROR:
         return RESOURCE_FILE_OPEN_ERROR;
-    case FS_UTILS_RUNTIME_ERROR:
+    case FS_STREAM_FILE_CLOSE_ERROR:
+        return RESOURCE_FILE_CLOSE_ERROR;
+    case FS_STREAM_RUNTIME_ERROR:
         return RESOURCE_RUNTIME_ERROR;
-    case FS_UTILS_EOF:
+    case FS_STREAM_EOF:
         return RESOURCE_RUNTIME_ERROR;  // 基本的にEOFをそのまま伝播させることはないのでとりあえずRUNTIME_ERRORに変換する
-    case FS_UTILS_UNDEFINED_ERROR:
+    case FS_STREAM_UNDEFINED_ERROR:
         return RESOURCE_UNDEFINED_ERROR;
     default:
         return RESOURCE_UNDEFINED_ERROR;
@@ -199,14 +116,6 @@ resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t result_) {
 }
 
 resource_result_t resource_rslt_convert_choco_string(choco_string_result_t result_) {
-#ifdef TEST_BUILD
-    s_test_config_resource_rslt_convert_choco_string.call_count++;
-    if(s_test_config_resource_rslt_convert_choco_string.fail_on_call != 0) {
-        if(s_test_config_resource_rslt_convert_choco_string.call_count == s_test_config_resource_rslt_convert_choco_string.fail_on_call) {
-            return (resource_result_t)s_test_config_resource_rslt_convert_choco_string.forced_result;
-        }
-    }
-#endif
     switch(result_) {
     case CHOCO_STRING_SUCCESS:
         return RESOURCE_SUCCESS;
@@ -232,14 +141,6 @@ resource_result_t resource_rslt_convert_choco_string(choco_string_result_t resul
 }
 
 resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_) {
-#ifdef TEST_BUILD
-    s_test_config_resource_rslt_convert_geometry_primitive.call_count++;
-    if(s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call != 0) {
-        if(s_test_config_resource_rslt_convert_geometry_primitive.call_count == s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call) {
-            return (resource_result_t)s_test_config_resource_rslt_convert_geometry_primitive.forced_result;
-        }
-    }
-#endif
     switch(rslt_) {
     case GEOMETRY_PRIMITIVE_SUCCESS:
         return RESOURCE_SUCCESS;
@@ -261,233 +162,3 @@ resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_re
         return RESOURCE_UNDEFINED_ERROR;
     }
 }
-
-#ifdef TEST_BUILD
-void NO_COVERAGE test_resource_rslt_convert_choco_memory_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_resource_rslt_convert_choco_memory.fail_on_call = config_->fail_on_call;
-    s_test_config_resource_rslt_convert_choco_memory.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_resource_rslt_convert_filesystem_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_resource_rslt_convert_filesystem.fail_on_call = config_->fail_on_call;
-    s_test_config_resource_rslt_convert_filesystem.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_resource_rslt_convert_fs_utils_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_resource_rslt_convert_fs_utils.fail_on_call = config_->fail_on_call;
-    s_test_config_resource_rslt_convert_fs_utils.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_resource_rslt_convert_choco_string_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_resource_rslt_convert_choco_string.fail_on_call = config_->fail_on_call;
-    s_test_config_resource_rslt_convert_choco_string.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_resource_rslt_convert_geometry_primitive_config_set(const test_call_control_t* config_) {
-    if(NULL == config_) {
-        assert(false);
-        return;
-    }
-    s_test_config_resource_rslt_convert_geometry_primitive.fail_on_call = config_->fail_on_call;
-    s_test_config_resource_rslt_convert_geometry_primitive.forced_result = config_->forced_result;
-}
-
-void NO_COVERAGE test_resource_err_utils_config_reset(void) {
-    test_call_control_reset(&s_test_config_resource_rslt_convert_choco_memory);
-    test_call_control_reset(&s_test_config_resource_rslt_convert_filesystem);
-    test_call_control_reset(&s_test_config_resource_rslt_convert_fs_utils);
-    test_call_control_reset(&s_test_config_resource_rslt_convert_choco_string);
-    test_call_control_reset(&s_test_config_resource_rslt_convert_geometry_primitive);
-}
-
-void NO_COVERAGE test_resource_err_utils(void) {
-    test_resource_rslt_to_str();
-    test_resource_rslt_convert_choco_memory();
-    test_resource_rslt_convert_filesystem();
-    test_resource_rslt_convert_fs_utils();
-    test_resource_rslt_convert_choco_string();
-    test_resource_rslt_convert_geometry_primitive();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_to_str(void) {
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_SUCCESS), "SUCCESS"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_NO_MEMORY), "NO_MEMORY"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_RUNTIME_ERROR), "RUNTIME_ERROR"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "INVALID_ARGUMENT"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "DATA_CORRUPTED"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_BAD_OPERATION), "BAD_OPERATION"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_OVERFLOW), "OVERFLOW"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_LIMIT_EXCEEDED), "LIMIT_EXCEEDED"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_FILE_READ_ERROR), "FILE_READ_ERROR"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_FILE_CLOSE_ERROR), "FILE_CLOSE_ERROR"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_UNSUPPORTED_FILE), "UNSUPPORTED_FILE"));
-    assert(0 == strcmp(resource_rslt_to_str(RESOURCE_UNDEFINED_ERROR), "UNDEFINED_ERROR"));
-
-    assert(0 == strcmp(resource_rslt_to_str((resource_result_t)-1), "UNDEFINED_ERROR"));
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_convert_choco_memory(void) {
-    test_call_control_t config = {0};
-
-    test_resource_err_utils_config_reset();
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS));
-    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_INVALID_ARGUMENT));
-    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_LIMIT_EXCEEDED));
-    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_BAD_OPERATION));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_NO_MEMORY));
-
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_choco_memory((memory_system_result_t)-1));
-
-    test_resource_err_utils_config_reset();
-
-    config.fail_on_call = 2U;
-    config.forced_result = RESOURCE_NO_MEMORY;
-    test_resource_rslt_convert_choco_memory_config_set(&config);
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_memory(MEMORY_SYSTEM_SUCCESS));
-
-    test_resource_err_utils_config_reset();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_convert_filesystem(void) {
-    test_call_control_t config = {0};
-
-    test_resource_err_utils_config_reset();
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_filesystem(FILESYSTEM_SUCCESS));
-    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_filesystem(FILESYSTEM_INVALID_ARGUMENT));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_filesystem(FILESYSTEM_RUNTIME_ERROR));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_filesystem(FILESYSTEM_NO_MEMORY));
-    assert(RESOURCE_FILE_OPEN_ERROR == resource_rslt_convert_filesystem(FILESYSTEM_FILE_OPEN_ERROR));
-    assert(RESOURCE_FILE_CLOSE_ERROR == resource_rslt_convert_filesystem(FILESYSTEM_FILE_CLOSE_ERROR));
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_filesystem(FILESYSTEM_UNDEFINED_ERROR));
-    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_filesystem(FILESYSTEM_LIMIT_EXCEEDED));
-    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_filesystem(FILESYSTEM_BAD_OPERATION));
-    assert(RESOURCE_FILE_READ_ERROR == resource_rslt_convert_filesystem(FILESYSTEM_EOF));
-
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_filesystem((filesystem_result_t)-1));
-
-    test_resource_err_utils_config_reset();
-
-    config.fail_on_call = 2U;
-    config.forced_result = RESOURCE_NO_MEMORY;
-    test_resource_rslt_convert_filesystem_config_set(&config);
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_filesystem(FILESYSTEM_SUCCESS));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_filesystem(FILESYSTEM_SUCCESS));
-
-    test_resource_err_utils_config_reset();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_convert_fs_utils(void) {
-    test_call_control_t config = {0};
-
-    test_resource_err_utils_config_reset();
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_fs_utils(FS_UTILS_SUCCESS));
-    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_fs_utils(FS_UTILS_INVALID_ARGUMENT));
-    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_fs_utils(FS_UTILS_BAD_OPERATION));
-    assert(RESOURCE_DATA_CORRUPTED == resource_rslt_convert_fs_utils(FS_UTILS_DATA_CORRUPTED));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_fs_utils(FS_UTILS_NO_MEMORY));
-    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_fs_utils(FS_UTILS_LIMIT_EXCEEDED));
-    assert(RESOURCE_OVERFLOW == resource_rslt_convert_fs_utils(FS_UTILS_OVERFLOW));
-    assert(RESOURCE_FILE_OPEN_ERROR == resource_rslt_convert_fs_utils(FS_UTILS_FILE_OPEN_ERROR));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_fs_utils(FS_UTILS_RUNTIME_ERROR));
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_fs_utils(FS_UTILS_UNDEFINED_ERROR));
-
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_fs_utils((fs_utils_result_t)-1));
-
-    test_resource_err_utils_config_reset();
-
-    config.fail_on_call = 2U;
-    config.forced_result = RESOURCE_NO_MEMORY;
-    test_resource_rslt_convert_fs_utils_config_set(&config);
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_fs_utils(FS_UTILS_SUCCESS));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_fs_utils(FS_UTILS_SUCCESS));
-
-    test_resource_err_utils_config_reset();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_convert_choco_string(void) {
-    test_call_control_t config = {0};
-
-    test_resource_err_utils_config_reset();
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
-    assert(RESOURCE_DATA_CORRUPTED == resource_rslt_convert_choco_string(CHOCO_STRING_DATA_CORRUPTED));
-    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_choco_string(CHOCO_STRING_BAD_OPERATION));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_string(CHOCO_STRING_NO_MEMORY));
-    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_choco_string(CHOCO_STRING_INVALID_ARGUMENT));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_choco_string(CHOCO_STRING_RUNTIME_ERROR));
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_choco_string(CHOCO_STRING_UNDEFINED_ERROR));
-    assert(RESOURCE_OVERFLOW == resource_rslt_convert_choco_string(CHOCO_STRING_OVERFLOW));
-    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_choco_string(CHOCO_STRING_LIMIT_EXCEEDED));
-
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_choco_string((choco_string_result_t)-1));
-
-    test_resource_err_utils_config_reset();
-
-    config.fail_on_call = 2U;
-    config.forced_result = RESOURCE_NO_MEMORY;
-    test_resource_rslt_convert_choco_string_config_set(&config);
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_choco_string(CHOCO_STRING_SUCCESS));
-
-    test_resource_err_utils_config_reset();
-}
-
-// Generated by ChatGPT
-static void NO_COVERAGE test_resource_rslt_convert_geometry_primitive(void) {
-    test_call_control_t config;
-
-    test_resource_err_utils_config_reset();
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-    assert(RESOURCE_INVALID_ARGUMENT == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_RUNTIME_ERROR));
-    assert(RESOURCE_LIMIT_EXCEEDED == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED));
-    assert(RESOURCE_BAD_OPERATION == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_BAD_OPERATION));
-    assert(RESOURCE_NO_MEMORY == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_NO_MEMORY));
-    assert(RESOURCE_DATA_CORRUPTED == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_DATA_CORRUPTED));
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_UNDEFINED_ERROR));
-
-    assert(RESOURCE_UNDEFINED_ERROR == resource_rslt_convert_geometry_primitive((geometry_primitive_result_t)-1));
-
-    test_resource_err_utils_config_reset();
-
-    config.fail_on_call = 2;
-    config.forced_result = RESOURCE_RUNTIME_ERROR;
-    test_resource_rslt_convert_geometry_primitive_config_set(&config);
-
-    assert(RESOURCE_SUCCESS == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-    assert(RESOURCE_RUNTIME_ERROR == resource_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-
-    test_resource_err_utils_config_reset();
-}
-#endif

@@ -35,7 +35,7 @@ struct texture_registry {
     texture_registry_entry_t* entries;
 };
 
-static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_, renderer_backend_context_t* backend_context_);
+static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_);
 
 static bool texture_id_is_valid(const texture_registry_t* registry_, int16_t texture_id_);
 static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
@@ -96,9 +96,9 @@ cleanup:
 }
 
 // NOTE: このAPIを呼んだ後はmax_texture_countが0になるためregistryは再利用不可となる。再利用を前提で初期化する場合はregistry_reset APIを追加する
-void texture_registry_deinitialize(texture_registry_t* registry_, renderer_backend_context_t* backend_context_) {
-    if(NULL == registry_ || NULL == backend_context_) {
-        ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ or backend_context_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+void texture_registry_deinitialize(texture_registry_t* registry_) {
+    if(NULL == registry_) {
+        ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
     if(!texture_registry_is_valid(registry_)) {
@@ -106,7 +106,7 @@ void texture_registry_deinitialize(texture_registry_t* registry_, renderer_backe
         return;
     }
     for(size_t i = 0; i != registry_->max_texture_count; ++i) {
-        registry_entry_deinitialize(&registry_->entries[i], backend_context_);
+        registry_entry_deinitialize(&registry_->entries[i]);
     }
     registry_->max_texture_count = 0;
 }
@@ -250,19 +250,9 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
         ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is corrupted.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!texture_cpu_resource_is_loaded(*cpu_resource_)) {
-        ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is not loaded.", resource_registry_rslt_to_str(ret));
-        goto cleanup;
-    }
     if(!texture_gpu_resource_is_valid(*gpu_resource_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("texture_registry_register(%s) - provided GPU resource is corrupted.", resource_registry_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(!texture_gpu_resource_is_uploaded(*gpu_resource_)) {
-        ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided GPU resource is not uploaded.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -317,11 +307,10 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, renderer_backend_context_t* backend_context_, int16_t texture_id_) {
+resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, int16_t texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "backend_context_")
     IF_ARG_FALSE_GOTO_CLEANUP(texture_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "texture_registry_unregister", "registry_")
     IF_ARG_FALSE_GOTO_CLEANUP(texture_id_is_valid(registry_, texture_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "texture_id_")
 
@@ -331,7 +320,7 @@ resource_registry_result_t texture_registry_unregister(texture_registry_t* regis
         goto cleanup;
     }
 
-    registry_entry_deinitialize(&registry_->entries[texture_id_], backend_context_);
+    registry_entry_deinitialize(&registry_->entries[texture_id_]);
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -358,13 +347,13 @@ bool texture_registry_is_valid(const texture_registry_t* registry_) {
 }
 
 // NOTE: registry_entry_のvalidationを上位側で実行しておくこと
-static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_, renderer_backend_context_t* backend_context_) {
-    if(NULL == registry_entry_ || NULL == backend_context_) {
+static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_) {
+    if(NULL == registry_entry_) {
         return;
     }
     choco_string_destroy(&registry_entry_->resource_name);
     texture_cpu_resource_destroy(&registry_entry_->cpu_resource);
-    texture_gpu_resource_destroy(backend_context_, &registry_entry_->gpu_resource);
+    texture_gpu_resource_destroy(&registry_entry_->gpu_resource);
 }
 
 static bool texture_id_is_valid(const texture_registry_t* registry_, int16_t texture_id_) {
@@ -399,13 +388,7 @@ static bool registry_entry_is_valid(const texture_registry_entry_t* entry_) {
     if(!texture_cpu_resource_is_valid(entry_->cpu_resource)) {
         return false;
     }
-    if(!texture_cpu_resource_is_loaded(entry_->cpu_resource)) { // 登録済みで未ロード状態は異常
-        return false;
-    }
     if(!texture_gpu_resource_is_valid(entry_->gpu_resource)) {
-        return false;
-    }
-    if(!texture_gpu_resource_is_uploaded(entry_->gpu_resource)) {   // 登録済みで未アップロード状態は異常
         return false;
     }
     return true;

@@ -29,7 +29,8 @@
 
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/buffer_utils/buffer_utils.h"
-#include "engine/core/filesystem/filesystem.h"
+
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
@@ -321,15 +322,21 @@ cleanup:
     return ret;
 }
 
-resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_) {
+resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_, size_t* out_pixel_data_size_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "bmp_loader_")
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixels_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_pixel_move", "bmp_loader_->pixels")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixel_data_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixel_data_size_")
+    if(NULL == bmp_loader_->pixels || 0 == bmp_loader_->info_header.bi_size_image) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("bmp_loader_pixel_move(%s) - pixel is not loaded.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_pixels_ = bmp_loader_->pixels;
+    *out_pixel_data_size_ = bmp_loader_->info_header.bi_size_image;
     bmp_loader_->pixels = NULL;
 
     ret = RESOURCE_SUCCESS;
@@ -637,34 +644,12 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief BMPファイルのヘッダ情報を読み込む
- *
- * @note 処理に失敗した場合、out引数は不変
- *
- * @param[in] fullpath_ BMPファイルのフルパス
- * @param[out] file_header_ FILEHEADER情報格納先
- * @param[out] info_header_ INFOHEADER情報格納先
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - fullpath_ == NULL
- * - file_header_ == NULL
- * - info_header_ == NULL
- * @retval RESOURCE_LIMIT_EXCEEDED メモリシステムの使用可能範囲上限超過
- * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
- * @retval RESOURCE_FILE_OPEN_ERROR ファイルオープン失敗
- * @retval RESOURCE_FILE_CLOSE_ERROR ファイルクローズ失敗
- * @retval RESOURCE_UNDEFINED_ERROR 未定義エラーが発生
- * @retval RESOURCE_FILE_READ_ERROR ヘッダ読み込み失敗
- * @retval RESOURCE_DATA_CORRUPTED ヘッダ情報破損
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
 static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
 
-    filesystem_t* filesystem = NULL;
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
+
+    fs_stream_t* fs_stream = NULL;
     size_t read_size = 0;
     char header_buf[54] = { 0 };
 
@@ -675,23 +660,23 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
     IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "file_header_")
     IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "info_header_")
 
-    ret_fs = filesystem_create(&filesystem);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
-        ERROR_MESSAGE("header_load(%s) - Failed to create filesystem.", resource_rslt_to_str(ret));
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("header_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
-        ERROR_MESSAGE("header_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("header_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs = filesystem_byte_read(54, filesystem, &read_size, header_buf);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
+    ret_fs_stream = fs_stream_byte_read(fs_stream, 54, &read_size, header_buf);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("header_load(%s) - Failed to read BMP file header.", resource_rslt_to_str(ret));
         goto cleanup;
     } else if(54 != read_size) {
@@ -711,14 +696,14 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
         goto cleanup;
     }
 
-    ret_fs = filesystem_close(filesystem);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
+    ret_fs_stream = fs_stream_close(fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("header_load(%s) - Failed to close BMP file.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    filesystem_destroy(&filesystem);
+    fs_stream_destroy(&fs_stream);
 
     file_header_copy(&tmp_file_header, file_header_);
     info_header_copy(&tmp_info_header, info_header_);
@@ -727,7 +712,7 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        filesystem_destroy(&filesystem);
+        fs_stream_destroy(&fs_stream);
     }
     return ret;
 }
@@ -763,10 +748,11 @@ cleanup:
  */
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
-    filesystem_result_t ret_fs = FILESYSTEM_INVALID_ARGUMENT;
 
-    filesystem_t* filesystem = NULL;
+    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
+
+    fs_stream_t* fs_stream = NULL;
     uint8_t* tmp_buffer = NULL;
     uint8_t* tmp_pixels = NULL;
     size_t read_size_all = 0;
@@ -787,23 +773,23 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_fs = filesystem_create(&filesystem);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
-        ERROR_MESSAGE("pixel_load(%s) - Failed to create filesystem.", resource_rslt_to_str(ret));
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("pixel_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs = filesystem_open(fullpath_, FILESYSTEM_MODE_READ_BINARY, filesystem);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("pixel_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
         goto cleanup;
     }
 
-    ret_fs = filesystem_byte_read(file_header_->bf_size, filesystem, &read_size_all, (char*)tmp_buffer);
-    if(FILESYSTEM_SUCCESS != ret_fs) {
-        ret = resource_rslt_convert_filesystem(ret_fs);
+    ret_fs_stream = fs_stream_byte_read(fs_stream, file_header_->bf_size, &read_size_all, (char*)tmp_buffer);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("pixel_load(%s) - Failed to read BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
         goto cleanup;
     } else if(file_header_->bf_size != read_size_all) {
@@ -849,7 +835,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         tmp_pixels[i] = tmp_buffer[i + file_header_->bf_off_bits];
     }
 
-    filesystem_destroy(&filesystem);
+    fs_stream_destroy(&fs_stream);
     memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
     tmp_buffer = NULL;
 
@@ -859,7 +845,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        filesystem_destroy(&filesystem);
+        fs_stream_destroy(&fs_stream);
         if(NULL != tmp_buffer) {
             memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
             tmp_buffer = NULL;

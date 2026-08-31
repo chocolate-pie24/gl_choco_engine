@@ -32,7 +32,7 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
@@ -48,7 +48,7 @@ struct stl_loader {
     size_t vertex_count;                /**< 頂点数 */
 };
 
-static resource_result_t stl_loader_vertex_count_calc(const char* path_, const char* name_, const char* extension_, size_t* out_vertex_count_);
+static resource_result_t stl_loader_vertex_count_calc(const char* fullpath_, size_t* out_vertex_count_);
 
 resource_result_t stl_loader_create(stl_loader_t** stl_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
@@ -102,13 +102,14 @@ void stl_loader_destroy(stl_loader_t** stl_loader_) {
     *stl_loader_ = NULL;
 }
 
-resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, const char* extension_, stl_loader_t* stl_loader_) {
+resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl_loader_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
+
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    fs_utils_t* fs_utils = NULL;
+    fs_stream_t* fs_stream = NULL;
     choco_string_t* string = NULL;
     point_normal_vertex_t* tmp_vertices = NULL;
 
@@ -128,19 +129,21 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     vec3f_t tmp_normal = { 0 };
     vec3f_t tmp_vertex = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "extension_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(stl_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_ascii_load", "stl_loader_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == stl_loader_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertex_count")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(stl_loader_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "stl_loader_ascii_load", "stl_loader_->vertices")
-
-    ret = stl_loader_vertex_count_calc(path_, name_, extension_, &vertex_count);
-    if(0 == vertex_count) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("stl_loader_ascii_load(%s) - ASCII STL has no vertices.", resource_rslt_to_str(ret));
+    if('\0' == fullpath_[0]) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - Provided fullpath_ is not valid.", resource_rslt_to_str(ret));
         goto cleanup;
     }
+    if(0 != stl_loader_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - Provided stl_loader_->vertex_count is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = stl_loader_vertex_count_calc(fullpath_, &vertex_count);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to calculate vertex count for ASCII STL file.", resource_rslt_to_str(ret));
         goto cleanup;
@@ -158,10 +161,17 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
         goto cleanup;
     }
 
-    ret_fs_utils = fs_utils_create(path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to create fs_utils for ASCII STL file reading.", resource_rslt_to_str(ret));
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_ascii_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -173,10 +183,10 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     }
 
     while(!complete) {
-        ret_fs_utils = fs_utils_text_file_line_read(fs_utils, string);
-        if(FS_UTILS_EOF == ret_fs_utils) {
+        ret_fs_stream = fs_stream_text_file_line_read(fs_stream, string);
+        if(FS_STREAM_EOF == ret_fs_stream) {
             complete = true;
-        } else if(FS_UTILS_SUCCESS == ret_fs_utils) {
+        } else if(FS_STREAM_SUCCESS == ret_fs_stream) {
             if((SIZE_MAX - 1) < line_count) {
                 ret = RESOURCE_OVERFLOW;
                 ERROR_MESSAGE("stl_loader_ascii_load(%s) - ASCII STL line count overflowed size_t while loading.", resource_rslt_to_str(ret));
@@ -271,7 +281,7 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
                 facet_vertex_count = 0;
             }
         } else {
-            ret = resource_rslt_convert_fs_utils(ret_fs_utils);
+            ret = resource_rslt_convert_fs_stream(ret_fs_stream);
             ERROR_MESSAGE("stl_loader_ascii_load(%s) - Failed to read ASCII STL line. expected_line = %zu.", resource_rslt_to_str(ret), line_count + 1);
             goto cleanup;
         }
@@ -294,8 +304,8 @@ resource_result_t stl_loader_ascii_load(const char* path_, const char* name_, co
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(NULL != fs_utils) {
-        fs_utils_destroy(&fs_utils);
+    if(NULL != fs_stream) {
+        fs_stream_destroy(&fs_stream);
     }
     if(NULL != string) {
         choco_string_destroy(&string);
@@ -345,38 +355,13 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief STLデータのロードに先立ち、頂点数をカウントする
- *
- * @param[in] path_ STLファイルが格納されているパス(最後は'/'が入っていること)
- * @param[in] name_ STLファイル名(拡張子は含まない)
- * @param[in] extension_ STLファイル拡張子('.'で始まること)
- * @param[out] out_vertex_count_ 頂点数格納先
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - path_ == NULL
- * - name_ == NULL
- * - extension_ == NULL
- * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_OVERFLOW 以下のいずれか
- * - ファイルフルパス文字列が長すぎる
- * - STLデータに格納されている頂点の数または法線の数がSIZE_MAXを超過
- * @retval RESOURCE_DATA_CORRUPTED 以下のいずれか
- * - 内部データ破損
- * - STLデータ不整合(頂点数が法線数の3倍ではない)
- * @retval RESOURCE_UNDEFINED_ERROR ファイル読み込み時に不明なエラーが発生
- * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
- * @retval RESOURCE_FILE_OPEN_ERROR STLファイルオープン失敗
- * @retval RESOURCE_RUNTIME_ERROR ファイル読み込みでエラー発生
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-static resource_result_t stl_loader_vertex_count_calc(const char* path_, const char* name_, const char* extension_, size_t* out_vertex_count_) {
+static resource_result_t stl_loader_vertex_count_calc(const char* fullpath_, size_t* out_vertex_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    fs_utils_result_t ret_fs_utils = FS_UTILS_INVALID_ARGUMENT;
+
+    fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    fs_utils_t* fs_utils = NULL;
+    fs_stream_t* fs_stream = NULL;
     choco_string_t* string = NULL;
 
     size_t line_count = 0;
@@ -385,15 +370,25 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
 
     bool complete = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(extension_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "extension_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "stl_loader_vertex_count_calc", "out_vertex_count_")
+    if('\0' == fullpath_[0]) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - Provided fullpath_ is not valid.", resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT));
+        goto cleanup;
+    }
 
-    ret_fs_utils = fs_utils_create(path_, name_, extension_, FILESYSTEM_MODE_READ, &fs_utils);
-    if(FS_UTILS_SUCCESS != ret_fs_utils) {
-        ret = resource_rslt_convert_fs_utils(ret_fs_utils);
-        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - Failed to open ASCII STL file via fs_utils.", resource_rslt_to_str(ret));
+    ret_fs_stream = fs_stream_create(&fs_stream);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
+    if(FS_STREAM_SUCCESS != ret_fs_stream) {
+        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -405,10 +400,10 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
     }
 
     while(!complete) {
-        ret_fs_utils = fs_utils_text_file_line_read(fs_utils, string);
-        if(FS_UTILS_EOF == ret_fs_utils) {
+        ret_fs_stream = fs_stream_text_file_line_read(fs_stream, string);
+        if(FS_STREAM_EOF == ret_fs_stream) {
             complete = true;
-        } else if(FS_UTILS_SUCCESS == ret_fs_utils) {
+        } else if(FS_STREAM_SUCCESS == ret_fs_stream) {
             if((SIZE_MAX - 1) < line_count) {
                 ret = RESOURCE_OVERFLOW;
                 ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - ASCII STL line count overflowed size_t while loading.", resource_rslt_to_str(ret));
@@ -431,7 +426,7 @@ static resource_result_t stl_loader_vertex_count_calc(const char* path_, const c
                 vertex_count++;
             }
         } else {
-            ret = resource_rslt_convert_fs_utils(ret_fs_utils);
+            ret = resource_rslt_convert_fs_stream(ret_fs_stream);
             ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - Failed to read ASCII STL line while counting vertices. expected_line = %zu.", resource_rslt_to_str(ret), line_count + 1);
             goto cleanup;
         }
@@ -456,8 +451,8 @@ cleanup:
     if(NULL != string) {
         choco_string_destroy(&string);
     }
-    if(NULL != fs_utils) {
-        fs_utils_destroy(&fs_utils);
+    if(NULL != fs_stream) {
+        fs_stream_destroy(&fs_stream);
     }
     return ret;
 }

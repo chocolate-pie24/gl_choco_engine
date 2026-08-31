@@ -3,6 +3,8 @@
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
+#include "engine/core/memory/choco_memory.h"
+
 #include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -199,29 +201,31 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_choco_string(choco_str
     }
 }
 
-resource_pipeline_result_t resource_pipeline_rslt_convert_fs_utils(fs_utils_result_t rslt_) {
+resource_pipeline_result_t resource_pipeline_rslt_convert_fs_stream(fs_stream_result_t rslt_) {
     switch(rslt_) {
-    case FS_UTILS_SUCCESS:
+    case FS_STREAM_SUCCESS:
         return RESOURCE_PIPELINE_SUCCESS;
-    case FS_UTILS_INVALID_ARGUMENT:
+    case FS_STREAM_INVALID_ARGUMENT:
         return RESOURCE_PIPELINE_INVALID_ARGUMENT;
-    case FS_UTILS_BAD_OPERATION:
+    case FS_STREAM_BAD_OPERATION:
         return RESOURCE_PIPELINE_BAD_OPERATION;
-    case FS_UTILS_DATA_CORRUPTED:
+    case FS_STREAM_DATA_CORRUPTED:
         return RESOURCE_PIPELINE_DATA_CORRUPTED;
-    case FS_UTILS_NO_MEMORY:
+    case FS_STREAM_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
-    case FS_UTILS_LIMIT_EXCEEDED:
+    case FS_STREAM_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
-    case FS_UTILS_OVERFLOW:
+    case FS_STREAM_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
-    case FS_UTILS_FILE_OPEN_ERROR:
+    case FS_STREAM_FILE_OPEN_ERROR:
         return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
-    case FS_UTILS_RUNTIME_ERROR:
+    case FS_STREAM_FILE_CLOSE_ERROR:
+        return RESOURCE_PIPELINE_FILE_CLOSE_ERROR;
+    case FS_STREAM_RUNTIME_ERROR:
         return RESOURCE_PIPELINE_RUNTIME_ERROR;
-    case FS_UTILS_UNDEFINED_ERROR:
+    case FS_STREAM_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
-    case FS_UTILS_EOF:
+    case FS_STREAM_EOF:
         return RESOURCE_PIPELINE_FILE_READ_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
@@ -248,6 +252,23 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_texture_gpu_resource(t
         return RESOURCE_PIPELINE_OVERFLOW;
     case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_rslt_convert_choco_memory(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }

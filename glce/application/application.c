@@ -47,6 +47,8 @@
 
 #include "engine/containers/ring_queue.h"
 
+#include "engine/io_utils/fs_path.h"
+
 #include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/platform/core/platform_types.h"
@@ -106,6 +108,9 @@ typedef struct app_state {
     int framebuffer_width;      /**< フレームバッファサイズ(幅) */
     int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
+    // 実行ファイルパス
+    fs_path_t* executable_directory;
+
     // core/memory/linear_allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
     size_t linear_alloc_align_req;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
@@ -137,6 +142,9 @@ typedef struct app_state {
     command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
 
     texture_registry_t* texture_registry;
+    int16_t tex_id_rabbit;
+    int16_t tex_id_frog;
+    int16_t tex_id_green;
     // end
 
     // begin temporary TODO: remove this!!
@@ -180,6 +188,17 @@ static void app_state_dispatch(void);
 static void app_state_clean(void);
 
 static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
+static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
+static application_result_t lit_mesh_geometry_import(app_state_t* app_state_);
+
+static application_result_t line_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t point_mesh_shader_initialize(app_state_t* app_state_);
+static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_);
+
+static application_result_t texture_initialize(app_state_t* app_state_);
+
+static application_result_t executable_directory_get(app_state_t* app_state_);
 
 application_result_t application_create(void) {
     app_state_t* tmp = NULL;
@@ -217,6 +236,12 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
+
+    ret = executable_directory_get(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
@@ -338,16 +363,9 @@ application_result_t application_create(void) {
     }
 
     // UI Shader
-    ret_shader = ui_mesh_shader_create(&tmp->ui_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = ui_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, "../assets/shaders/test_shader/", "ui_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+    ret = ui_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - ui_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -380,16 +398,9 @@ application_result_t application_create(void) {
     }
 
     // Line Shader
-    ret_shader = line_mesh_shader_create(&tmp->line_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = line_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, "../assets/shaders/test_shader/", "line_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+    ret = line_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - line_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -407,16 +418,9 @@ application_result_t application_create(void) {
     }
 
     // Point Shader
-    ret_shader = point_mesh_shader_create(&tmp->point_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create point shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = point_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, "../assets/shaders/test_shader/", "point_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+    ret = point_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - point_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -434,16 +438,9 @@ application_result_t application_create(void) {
     }
 
     // Lit Mesh Shader
-    ret_shader = lit_mesh_shader_create(&tmp->lit_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = lit_mesh_shader_program_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, "../assets/shaders/test_shader/", "lit_mesh_shader");
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+    ret = lit_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - lit_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -585,6 +582,9 @@ cleanup:
             if(NULL != tmp->platform_context) {
                 platform_destroy(tmp->platform_context);
             }
+            if(NULL != tmp->executable_directory) {
+                fs_path_destroy(&tmp->executable_directory);
+            }
             if(NULL != tmp->linear_alloc_pool) {
                 memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
             }
@@ -621,7 +621,7 @@ void application_destroy(void) {
         point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry, s_app_state->point_mesh_shader);
     }
     if(NULL != s_app_state->texture_registry) {
-        texture_registry_deinitialize(s_app_state->texture_registry, s_app_state->renderer_backend_context);
+        texture_registry_deinitialize(s_app_state->texture_registry);
     }
     if(NULL != s_app_state->camera_manager) {
         camera_manager_deinitialize(s_app_state->camera_manager);
@@ -656,6 +656,9 @@ void application_destroy(void) {
     if(NULL != s_app_state->platform_context) {
         platform_destroy(s_app_state->platform_context);
     }
+    if(NULL != s_app_state->executable_directory) {
+        fs_path_destroy(&s_app_state->executable_directory);
+    }
     if(NULL != s_app_state->linear_alloc_pool) {
         memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc_pool = NULL;
@@ -684,9 +687,6 @@ application_result_t application_run(void) {
     geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    int16_t tex_id_rabbit = 0;
-    int16_t tex_id_frog = 0;
-    int16_t tex_id_green = 0;
     const texture_gpu_resource_t* tex_gpu_resource = NULL;
 
     // penguin AABB
@@ -744,19 +744,16 @@ application_result_t application_run(void) {
     lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
     lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
 
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "rabbit_512", &tex_id_rabbit);
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "frog_512", &tex_id_frog);
-    ret_resource_pipeline = texture_pipeline_import_from_file(s_app_state->renderer_backend_context, s_app_state->texture_registry, 0, "test_texture_green", &tex_id_green);
+    ret = texture_initialize(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run - texture_initialize failed.");
+        goto cleanup;
+    }
 
-    // ペンギンSTL pipeline import
-    ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->lit_mesh_shader,
-        s_app_state->lit_mesh_geometry_registry,
-        "../assets/stl/glce_lowpoly_animal_stl_ascii/", "glce_lowpoly_penguin_ascii", ".stl",
-        &s_app_state->geometry_id_penguin);
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+    ret = lit_mesh_geometry_import(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
         goto cleanup;
     }
@@ -811,29 +808,10 @@ application_result_t application_run(void) {
 
     // UI pipeline import
     // アイコンサイズはUI描画用projection, viewができたら整える
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->ui_mesh_shader,
-        s_app_state->ui_mesh_geometry_registry,
-        "small_icon",
-        &s_app_state->geometry_id_small_icon
-    );
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(small icon).");
-        goto cleanup;
-    }
-
-    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        s_app_state->renderer_backend_context,
-        s_app_state->ui_mesh_shader,
-        s_app_state->ui_mesh_geometry_registry,
-        "large_icon",
-        &s_app_state->geometry_id_large_icon
-    );
-    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = APPLICATION_RUNTIME_ERROR;    // temporary
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry(large icon).");
+    ret = ui_mesh_geometry_import(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry.");
         goto cleanup;
     }
 
@@ -867,33 +845,33 @@ application_result_t application_run(void) {
         if(NULL != tmp_draw_range) {
             // ウサギ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_rabbit);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_rabbit);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
 
             // テストテクスチャ
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_green);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_green);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
         }
 
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon);
         if(NULL != tmp_draw_range) {
             // カエル
             ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
-            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, tex_id_frog);
-            texture_gpu_resource_bind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_frog);
+            texture_gpu_resource_bind(tex_gpu_resource);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
 
-            texture_gpu_resource_unbind(s_app_state->renderer_backend_context, tex_gpu_resource);
+            texture_gpu_resource_unbind(tex_gpu_resource);
         }
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 
@@ -1329,6 +1307,374 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->renderer_backend_context, app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ERROR_MESSAGE("point_geometry_create - Failed to import point mesh geometry.");
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* small_icon_path = NULL;
+    fs_path_t* large_icon_path = NULL;
+
+    static const char* const small_icon_name = "small_icon";
+    static const char* const large_icon_name = "large_icon";
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "app_state_")
+
+    ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->ui_mesh_shader,
+        app_state_->ui_mesh_geometry_registry,
+        small_icon_name,
+        fs_path_fullpath_get(small_icon_path),
+        &app_state_->geometry_id_small_icon
+    );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("ui_mesh_geometry_import - Failed to import ui mesh geometry(small icon).");
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->ui_mesh_shader,
+        app_state_->ui_mesh_geometry_registry,
+        large_icon_name,
+        fs_path_fullpath_get(large_icon_path),
+        &app_state_->geometry_id_large_icon
+    );
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("ui_mesh_geometry_import - Failed to import ui mesh geometry(large icon).");
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&small_icon_path);
+    fs_path_destroy(&large_icon_path);
+
+    return ret;
+}
+
+static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* penguin_path = NULL;
+
+    static const char* const penguin_name = "glce_lowpoly_penguin_ascii";
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_geometry_import", "app_state_")
+
+    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    // ペンギンSTL pipeline import
+    ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
+        app_state_->renderer_backend_context,
+        app_state_->lit_mesh_shader,
+        app_state_->lit_mesh_geometry_registry,
+        penguin_name,
+        fs_path_fullpath_get(penguin_path),
+        &app_state_->geometry_id_penguin);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;    // temporary
+        ERROR_MESSAGE("lit_mesh_geometry_import - Failed to import lit mesh geometry.");
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&penguin_path);
+
+    return ret;
+}
+
+static application_result_t line_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "line_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_create(&app_state_->line_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->line_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_create(&app_state_->lit_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t point_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = point_mesh_shader_create(&app_state_->point_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = point_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->point_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    fs_path_t* vertex_shader_path = NULL;
+    fs_path_t* fragment_shader_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_shader_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "vert");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "frag");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = ui_mesh_shader_create(&app_state_->ui_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = ui_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->ui_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = app_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&vertex_shader_path);
+    fs_path_destroy(&fragment_shader_path);
+
+    return ret;
+}
+
+static application_result_t texture_initialize(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    fs_path_t* rabbit_path = NULL;
+    fs_path_t* frog_path = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "texture_initialize", "app_state_")
+
+    ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &app_state_->tex_id_rabbit);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "frog_512", fs_path_fullpath_get(frog_path), &app_state_->tex_id_frog);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_resource_pipeline = texture_pipeline_import_from_solid_color(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "test_texture_green", 0, 255, 0, &app_state_->tex_id_green);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_solid_color failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    fs_path_destroy(&frog_path);
+    fs_path_destroy(&rabbit_path);
+
+    return ret;
+}
+
+static application_result_t executable_directory_get(app_state_t* app_state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "executable_directory_get", "app_state_")
+
+    ret_fs_path = fs_path_create_from_executable_directory(&app_state_->executable_directory);
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

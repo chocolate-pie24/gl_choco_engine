@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -29,6 +30,7 @@ typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** textur
 typedef renderer_backend_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload)(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);  /**< renderer_texture_vtableが保持するrenderer_texture_pixel_uploadの前方宣言 */
+typedef bool (*pfn_renderer_texture_is_valid)(const renderer_backend_texture_t* texture_handle_);
 
 /**
  * @brief Renderer Backend GPU側テクスチャリソース操作用仮想関数テーブル
@@ -114,6 +116,8 @@ typedef struct renderer_texture_vtable {
      * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_texture_pixel_upload renderer_texture_pixel_upload;
+
+    pfn_renderer_texture_is_valid renderer_texture_is_valid;
 } renderer_texture_vtable_t;
 
 #ifdef __cplusplus

@@ -20,12 +20,11 @@ extern "C" {
 #include "engine/resource/core/resource_types.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/filesystem/filesystem.h"
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/io_utils/fs_utils.h"
+#include "engine/io_utils/fs_stream.h"
 
 /**
  * @brief Resourceレイヤー実行結果コードを文字列に変換する
@@ -62,45 +61,7 @@ const char* resource_rslt_to_str(resource_result_t rslt_);
  */
 resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t rslt_);
 
-/**
- * @brief filesystemモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
- *
- * @param[in] rslt_ filesystemモジュール実行結果コード
- *
- * @retval RESOURCE_SUCCESS file_system実行結果コード:FILESYSTEM_SUCCESS
- * @retval RESOURCE_INVALID_ARGUMENT file_system実行結果コード:FILESYSTEM_INVALID_ARGUMENT
- * @retval RESOURCE_RUNTIME_ERROR file_system実行結果コード:FILESYSTEM_RUNTIME_ERROR
- * @retval RESOURCE_NO_MEMORY file_system実行結果コード:FILESYSTEM_NO_MEMORY
- * @retval RESOURCE_FILE_OPEN_ERROR file_system実行結果コード:FILESYSTEM_FILE_OPEN_ERROR
- * @retval RESOURCE_FILE_CLOSE_ERROR file_system実行結果コード:FILESYSTEM_FILE_CLOSE_ERROR
- * @retval RESOURCE_LIMIT_EXCEEDED file_system実行結果コード:FILESYSTEM_LIMIT_EXCEEDED
- * @retval RESOURCE_BAD_OPERATION file_system実行結果コード:FILESYSTEM_BAD_OPERATION
- * @retval RESOURCE_FILE_READ_ERROR file_system実行結果コード:FILESYSTEM_EOF
- * @retval RESOURCE_UNDEFINED_ERROR 以下のいずれか
- * - file_system実行結果コード:FILESYSTEM_UNDEFINED_ERROR
- * - 未定義のfile_system実行結果コード
- */
-resource_result_t resource_rslt_convert_filesystem(filesystem_result_t rslt_);
-
-/**
- * @brief fs_utilsモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
- *
- * @param[in] rslt_ fs_utilsモジュール実行結果コード
- *
- * @retval RESOURCE_SUCCESS fs_utils実行結果コード:FS_UTILS_SUCCESS
- * @retval RESOURCE_INVALID_ARGUMENT fs_utils実行結果コード:FS_UTILS_INVALID_ARGUMENT
- * @retval RESOURCE_BAD_OPERATION fs_utils実行結果コード:FS_UTILS_BAD_OPERATION
- * @retval RESOURCE_DATA_CORRUPTED fs_utils実行結果コード:FS_UTILS_DATA_CORRUPTED
- * @retval RESOURCE_NO_MEMORY fs_utils実行結果コード:FS_UTILS_NO_MEMORY
- * @retval RESOURCE_LIMIT_EXCEEDED fs_utils実行結果コード:FS_UTILS_LIMIT_EXCEEDED
- * @retval RESOURCE_OVERFLOW fs_utils実行結果コード:FS_UTILS_OVERFLOW
- * @retval RESOURCE_FILE_OPEN_ERROR fs_utils実行結果コード:FS_UTILS_FILE_OPEN_ERROR
- * @retval RESOURCE_RUNTIME_ERROR fs_utils実行結果コード:FS_UTILS_RUNTIME_ERROR
- * @retval RESOURCE_UNDEFINED_ERROR 以下のいずれか
- * - fs_utils実行結果コード:FS_UTILS_UNDEFINED_ERROR
- * - 未定義のfs_utils実行結果コード
- */
-resource_result_t resource_rslt_convert_fs_utils(fs_utils_result_t rslt_);
+resource_result_t resource_rslt_convert_fs_stream(fs_stream_result_t rslt_);
 
 /**
  * @brief choco_stringモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する

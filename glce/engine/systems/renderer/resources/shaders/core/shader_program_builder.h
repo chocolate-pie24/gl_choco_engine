@@ -13,7 +13,7 @@ extern "C" {
 typedef struct renderer_backend_shader renderer_backend_shader_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 
-shader_result_t shader_program_builder_create_from_files(renderer_backend_context_t* backend_context_, const char* file_path_, const char* name_, renderer_backend_shader_t** out_shader_);
+shader_result_t shader_program_builder_create_from_files(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_shader_t** out_shader_);
 
 #ifdef __cplusplus
 }

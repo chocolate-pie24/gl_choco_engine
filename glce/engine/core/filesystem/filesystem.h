@@ -12,7 +12,7 @@
  * これらの処理には可変長文字列バッファのリソース管理が必要で、choco_stringモジュールを使用したい。
  * choco_stringモジュールを使用するとなると、containersレイヤーよりも上層にfilesystemを位置づける必要がある。
  * 一方で、ファイルI/Oについての基本的な処理はcoreレイヤーに置きたい。このため、高度な処理と基本的な処理を分け、基本的な処理はcore/filesystemに置くことにする。
- * なお、高度な処理は、io_utils/fs_utilsに格納する。
+ * なお、高度な処理は、io_utils/fs_streamに格納する。
  *
  * @date 2025-12-23
  *
@@ -26,6 +26,8 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdbool.h>
+
+#include "engine/core/file_io/fs_types.h"
 
 /**
  * @brief ファイルシステムモジュール内部状態管理構造体前方宣言(内部データ構造は外部非公開)
@@ -50,26 +52,6 @@ typedef enum {
     FILESYSTEM_DATA_CORRUPTED,      /**< 実行結果コード: 内部データ破損 */
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
-
-/**
- * @brief ファイルオープンモードリスト
- *
- */
-typedef enum {
-    FILESYSTEM_MODE_NONE = 0,               /**< オープンモード: デフォルト(未オープン) */
-    FILESYSTEM_MODE_READ,                   /**< オープンモード: 読み取り */
-    FILESYSTEM_MODE_WRITE,                  /**< オープンモード: 書き込み */
-    FILESYSTEM_MODE_APPEND,                 /**< オープンモード: 追記 */
-    FILESYSTEM_MODE_READ_PLUS,              /**< オープンモード: 読み書き可(既存ファイルの内容は消さない、ファイルがなければ失敗) */
-    FILESYSTEM_MODE_WRITE_PLUS,             /**< オープンモード: 読み書き可(新規作成or既存ファイルの中身を消去) */
-    FILESYSTEM_MODE_APPEND_PLUS,            /**< オープンモード: 読み書き可(既存ファイルがあれば追記、ファイルがなければ新規作成) */
-    FILESYSTEM_MODE_READ_BINARY,            /**< オープンモード: 読み取り(バイナリファイル) */
-    FILESYSTEM_MODE_WRITE_BINARY,           /**< オープンモード: 書き込み(バイナリファイル) */
-    FILESYSTEM_MODE_APPEND_BINARY,          /**< オープンモード: 追記(バイナリファイル) */
-    FILESYSTEM_MODE_READ_PLUS_BINARY,       /**< オープンモード: 読み書き可(既存ファイルの内容は消さない、ファイルがなければ失敗)(バイナリファイル) */
-    FILESYSTEM_MODE_WRITE_PLUS_BINARY,      /**< オープンモード: 読み書き可(新規作成or既存ファイルの中身を消去)(バイナリファイル) */
-    FILESYSTEM_MODE_APPEND_PLUS_BINARY,     /**< オープンモード: 読み書き可(既存ファイルがあれば追記、ファイルがなければ新規作成)(バイナリファイル) */
-} filesystem_open_mode_t;
 
 /**
  * @brief filesystem_t構造体インスタンスを生成し、初期化する
@@ -128,7 +110,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  * @brief filesystem_が保持するファイルハンドルをオープンする
  *
  * @param[in] fullpath_ オープンするファイルのフルパス
- * @param[in] mode_ ファイルオープンモード @ref filesystem_open_mode_t
+ * @param[in] mode_ ファイルオープンモード @ref fs_open_mode_t
  * @param[in,out] filesystem_ オープン対象ファイルシステムモジュール構造体インスタンスへのポインタ
  *
  * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
@@ -141,7 +123,7 @@ void filesystem_destroy(filesystem_t** filesystem_);
  *
  * @todo 既にオープン済のファイルハンドルが渡された場合の実行結果コードをBAD_OPERATIONに変更する
  */
-filesystem_result_t filesystem_open(const char* fullpath_, filesystem_open_mode_t mode_, filesystem_t* filesystem_);
+filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_, filesystem_t* filesystem_);
 
 /**
  * @brief filesystem_が保持するファイルハンドルをクローズする
@@ -163,60 +145,7 @@ filesystem_result_t filesystem_open(const char* fullpath_, filesystem_open_mode_
  */
 filesystem_result_t filesystem_close(filesystem_t* filesystem_);
 
-/**
- * @brief ファイルからバイト単位でデータを読み込む
- *
- * @note
- * - 本APIは、成功した場合のみ引数のポインタにデータを書き込むのではなく、失敗した場合でもデータが書き込まれる。
- * これは、ロールバックするためには本API内部でread_bytes_サイズの一時バッファを確保しなければならず、パフォーマンスが低下するため、
- * readの結果は引数のbuffer_に直接書き込むことにする。このため、返り値がエラーとなった場合にはbuffer_の中身を利用してはいけない。
- * なお、result_n_については、エラー発生時は値に0が代入される。
- * - ファイルが末尾に到達し、指定したバイト数に満たないバイト数を読み込んだ場合でも、FILESYSTEM_SUCCESSを返す。
- * このため、呼び出し側は必ず実行結果コードと合わせて実際に読み込んだバイト数を見て処理を行うこと。
- * - 本APIを使用するためには、下記のいずれかのモードでfilesystem_openを行ったファイルハンドルを使用すること。
- *   - FILESYSTEM_MODE_READ
- *   - FILESYSTEM_MODE_READ_PLUS
- *   - FILESYSTEM_MODE_WRITE_PLUS
- *   - FILESYSTEM_MODE_APPEND_PLUS
- *   - FILESYSTEM_MODE_READ_BINARY
- *   - FILESYSTEM_MODE_READ_PLUS_BINARY
- *   - FILESYSTEM_MODE_WRITE_PLUS_BINARY
- *   - FILESYSTEM_MODE_APPEND_PLUS_BINARY
- * @note 返り値FILESYSTEM_UNDEFINED_ERRORは基本的に起こり得ない。未実装の分岐をなくすため追加している
- *
- * @param[in] read_bytes_ 読み込みバイト数
- * @param[out] result_n_ 実際に読み込みに成功したバイト数
- * @param[in,out] filesystem_ 読み込み対象ファイルハンドルを持つ構造体インスタンスへのポインタ
- * @param[out] buffer_ データ格納先バッファ(バッファサイズはread_bytes_以上であること)
- *
- * @retval FILESYSTEM_INVALID_ARGUMENT 以下のいずれか
- * - filesystem_がNULL
- * - result_n_がNULL
- * - buffer_がNULL
- * - read_bytes_が0
- * @retval FILESYSTEM_RUNTIME_ERROR 以下のいずれか
- * - 無効なファイルハンドル(== NULL)が渡された
- * - ファイル読み込みでエラーが発生
- * - ファイルオープンモードが読み込み可能モードではない(本APIのnoteを参照)
- * @retval FILESYSTEM_EOF 読み込んだ結果EOFで読み取りバイト数ゼロ
- * @retval FILESYSTEM_SUCCESS 以下のいずれか
- * - 読み込んだ結果EOFとなり指定バイト数未満を読み込み
- * - 指定したバイト数の読み込みに成功し、正常終了
- * @retval FILESYSTEM_UNDEFINED_ERROR 要求バイト数未満の読み取り結果になったにもかかわらず、EOFまたは読み取りエラーとして判定できない場合
- */
-filesystem_result_t filesystem_byte_read(size_t read_bytes_, filesystem_t* filesystem_, size_t* result_n_, char* buffer_);
-
-/**
- * @brief ファイルオープンモードを文字列に変換する
- *
- * @note 以下の場合はNULLが返される
- * - mode_ == FILESYSTEM_MODE_NONE
- * - mode_が規定値外
- *
- * @param mode_ ファイルオープンモード
- * @return const char* オープンモード文字列
- */
-const char* filesystem_open_mode_c_str(filesystem_open_mode_t mode_);
+filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_);
 
 bool filesystem_is_valid(const filesystem_t* filesystem_);
 
