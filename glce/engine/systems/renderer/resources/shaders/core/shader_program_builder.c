@@ -113,17 +113,10 @@ static shader_result_t shader_source_load(const char* shader_fullpath_, choco_st
     }
 
     // シェーダーソース読み込み用fs_stream生成
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, shader_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = shader_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("shader_source_load(%s) - fs_stream_create failed.", shader_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, shader_fullpath_, FS_OPEN_MODE_READ);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = shader_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("shader_source_load(%s) - fs_stream_open failed.", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -135,7 +128,8 @@ static shader_result_t shader_source_load(const char* shader_fullpath_, choco_st
         goto cleanup;
     }
 
-    fs_stream_destroy(&fs_stream);
+    // close失敗はfs_stream_destroy内でERROR_MESSAGEを出力するのみとし、エラー処理は行わない
+    fs_stream_destroy(&fs_stream, NULL);
 
     *out_shader_source_ = shader_source;
 
@@ -144,7 +138,7 @@ static shader_result_t shader_source_load(const char* shader_fullpath_, choco_st
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(NULL != fs_stream) {
-            fs_stream_destroy(&fs_stream);
+            fs_stream_destroy(&fs_stream, NULL);
         }
         if(NULL != shader_source) {
             choco_string_destroy(&shader_source);

@@ -22,7 +22,6 @@ typedef enum {
     FS_STREAM_LIMIT_EXCEEDED,    /**< 実行結果コード: システム使用可能範囲上限超過 */
     FS_STREAM_OVERFLOW,          /**< 実行結果コード: 計算過程でオーバーフロー発生 */
     FS_STREAM_FILE_OPEN_ERROR,   /**< 実行結果コード: ファイルオープンエラー */
-    FS_STREAM_FILE_CLOSE_ERROR,  /**< 実行結果コード: ファイルクローズエラー */
     FS_STREAM_RUNTIME_ERROR,     /**< 実行結果コード: 実行時エラー */
     FS_STREAM_UNDEFINED_ERROR,   /**< 実行結果コード: 想定していないエラーが発生 */
     FS_STREAM_EOF,               /**< 実行結果コード: ファイルを読み込んだ結果がEOF */
@@ -31,13 +30,9 @@ typedef enum {
 typedef struct fs_stream fs_stream_t;
 typedef struct choco_string choco_string_t;
 
-fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_);
+fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fullpath_, fs_open_mode_t mode_);
 
-void fs_stream_destroy(fs_stream_t** fs_stream_);
-
-fs_stream_result_t fs_stream_open(fs_stream_t* fs_stream_, const char* fullpath_, fs_open_mode_t open_mode_);
-
-fs_stream_result_t fs_stream_close(fs_stream_t* fs_stream_);
+void fs_stream_destroy(fs_stream_t** fs_stream_, bool* out_close_succeeded_);
 
 fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_bytes_, size_t* result_n_, char* buffer_);
 

@@ -71,7 +71,7 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
 
     config_loader_initialize(&tmp_state);
 
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
@@ -96,13 +96,6 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
     if(CHOCO_STRING_SUCCESS != ret_string) {
         ret = resource_rslt_convert_choco_string(ret_string);
         ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(value_string), config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -152,7 +145,7 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
 
 cleanup:
     if(NULL != fs_stream) {
-        fs_stream_destroy(&fs_stream);
+        fs_stream_destroy(&fs_stream, NULL);
     }
     if(NULL != line_string) {
         choco_string_destroy(&line_string);

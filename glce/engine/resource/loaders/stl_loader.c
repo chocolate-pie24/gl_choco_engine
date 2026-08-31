@@ -161,17 +161,10 @@ resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl
         goto cleanup;
     }
 
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("stl_loader_ascii_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("stl_loader_ascii_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -305,7 +298,7 @@ resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl
 
 cleanup:
     if(NULL != fs_stream) {
-        fs_stream_destroy(&fs_stream);
+        fs_stream_destroy(&fs_stream, NULL);
     }
     if(NULL != string) {
         choco_string_destroy(&string);
@@ -378,17 +371,10 @@ static resource_result_t stl_loader_vertex_count_calc(const char* fullpath_, siz
         goto cleanup;
     }
 
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("stl_loader_vertex_count_calc(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -452,7 +438,7 @@ cleanup:
         choco_string_destroy(&string);
     }
     if(NULL != fs_stream) {
-        fs_stream_destroy(&fs_stream);
+        fs_stream_destroy(&fs_stream, NULL);
     }
     return ret;
 }

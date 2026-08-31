@@ -36,7 +36,6 @@ typedef enum {
     APPLICATION_LIMIT_EXCEEDED,     /**< システム使用可能範囲上限超過 */
     APPLICATION_UNSUPPORTED_FILE,   /**< 未対応のファイル形式 */
     APPLICATION_FILE_OPEN_ERROR,    /**< ファイルオープンエラー */
-    APPLICATION_FILE_CLOSE_ERROR,   /**< ファイルクローズエラー */
     APPLICATION_FILE_READ_ERROR,    /**< ファイル読み込みエラー */
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;

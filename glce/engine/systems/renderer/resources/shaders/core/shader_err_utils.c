@@ -129,8 +129,6 @@ shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_) {
         return SHADER_OVERFLOW;
     case FS_STREAM_FILE_OPEN_ERROR:
         return SHADER_RUNTIME_ERROR;
-    case FS_STREAM_FILE_CLOSE_ERROR:
-        return SHADER_RUNTIME_ERROR;
     case FS_STREAM_EOF:
         return SHADER_RUNTIME_ERROR;
     case FS_STREAM_RUNTIME_ERROR:

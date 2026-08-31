@@ -660,17 +660,10 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
     IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "file_header_")
     IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "info_header_")
 
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("header_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("header_load(%s) - fs_stream_open failed.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -696,14 +689,8 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
         goto cleanup;
     }
 
-    ret_fs_stream = fs_stream_close(fs_stream);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("header_load(%s) - Failed to close BMP file.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    fs_stream_destroy(&fs_stream);
+    // close失敗はfs_stream_destroy内のERROR_MESSAGEを出力するのみとし、エラー処理は行わない
+    fs_stream_destroy(&fs_stream, NULL);
 
     file_header_copy(&tmp_file_header, file_header_);
     info_header_copy(&tmp_info_header, info_header_);
@@ -712,7 +699,7 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        fs_stream_destroy(&fs_stream);
+        fs_stream_destroy(&fs_stream, NULL);
     }
     return ret;
 }
@@ -773,17 +760,10 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_fs_stream = fs_stream_create(&fs_stream);
+    ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = resource_rslt_convert_fs_stream(ret_fs_stream);
         ERROR_MESSAGE("pixel_load(%s) - fs_stream_create failed.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_stream = fs_stream_open(fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
-    if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("pixel_load(%s) - Failed to open BMP file(%s).", resource_rslt_to_str(ret), fullpath_);
         goto cleanup;
     }
 
@@ -835,7 +815,8 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         tmp_pixels[i] = tmp_buffer[i + file_header_->bf_off_bits];
     }
 
-    fs_stream_destroy(&fs_stream);
+    // close失敗はfs_stream_destroyないのERROR_MESSAGEを出力するのみとし、エラー処理は行わない
+    fs_stream_destroy(&fs_stream, NULL);
     memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
     tmp_buffer = NULL;
 
@@ -845,7 +826,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        fs_stream_destroy(&fs_stream);
+        fs_stream_destroy(&fs_stream, NULL);
         if(NULL != tmp_buffer) {
             memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
             tmp_buffer = NULL;

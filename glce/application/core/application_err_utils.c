@@ -34,7 +34,6 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**<
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";  /**< アプリケーション実行結果コード(ファイルクローズエラー)に対応する文字列 */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
@@ -60,8 +59,6 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_unsupported_file;
     case APPLICATION_FILE_OPEN_ERROR:
         return s_rslt_str_file_open_error;
-    case APPLICATION_FILE_CLOSE_ERROR:
-        return s_rslt_str_file_close_error;
     case APPLICATION_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
     case APPLICATION_UNDEFINED_ERROR:
@@ -229,8 +226,6 @@ application_result_t app_rslt_convert_resource(resource_result_t rslt_) {
         return APPLICATION_FILE_OPEN_ERROR;
     case RESOURCE_FILE_READ_ERROR:
         return APPLICATION_FILE_READ_ERROR;
-    case RESOURCE_FILE_CLOSE_ERROR:
-        return APPLICATION_FILE_CLOSE_ERROR;
     case RESOURCE_UNSUPPORTED_FILE:
         return APPLICATION_UNSUPPORTED_FILE;
     case RESOURCE_UNDEFINED_ERROR:

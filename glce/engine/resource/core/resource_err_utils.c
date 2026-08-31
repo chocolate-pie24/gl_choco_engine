@@ -30,7 +30,6 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                    /*
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲上限超過 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";      /**< 実行結果コード文字列: ファイル読み込みエラー */
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";    /**< 実行結果コード文字列: ファイルクローズエラー */
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";    /**< 実行結果コード文字列: 未対応のファイル形式エラー */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 未定義エラー */
 
@@ -56,8 +55,6 @@ const char* resource_rslt_to_str(resource_result_t rslt_) {
         return s_rslt_str_file_open_error;
     case RESOURCE_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
-    case RESOURCE_FILE_CLOSE_ERROR:
-        return s_rslt_str_file_close_error;
     case RESOURCE_UNSUPPORTED_FILE:
         return s_rslt_str_unsupported_file;
     case RESOURCE_UNDEFINED_ERROR:
@@ -102,8 +99,6 @@ resource_result_t resource_rslt_convert_fs_stream(fs_stream_result_t result_) {
         return RESOURCE_OVERFLOW;
     case FS_STREAM_FILE_OPEN_ERROR:
         return RESOURCE_FILE_OPEN_ERROR;
-    case FS_STREAM_FILE_CLOSE_ERROR:
-        return RESOURCE_FILE_CLOSE_ERROR;
     case FS_STREAM_RUNTIME_ERROR:
         return RESOURCE_RUNTIME_ERROR;
     case FS_STREAM_EOF:

@@ -16,8 +16,6 @@ static const char* const s_open_mode_append_binary = "ab";        /**< ファイ
 
 const char* fs_open_mode_c_str(fs_open_mode_t mode_) {
     switch(mode_) {
-    case FS_OPEN_MODE_NONE:
-        return NULL;
     case FS_OPEN_MODE_READ:
         return s_open_mode_read;
     case FS_OPEN_MODE_WRITE:
@@ -37,8 +35,6 @@ const char* fs_open_mode_c_str(fs_open_mode_t mode_) {
 
 bool fs_open_mode_is_readable(fs_open_mode_t mode_) {
     switch(mode_) {
-    case FS_OPEN_MODE_NONE:
-        return false;
     case FS_OPEN_MODE_READ:
         return true;
     case FS_OPEN_MODE_WRITE:
@@ -58,8 +54,6 @@ bool fs_open_mode_is_readable(fs_open_mode_t mode_) {
 
 bool fs_open_mode_is_writable(fs_open_mode_t mode_) {
     switch(mode_) {
-    case FS_OPEN_MODE_NONE:
-        return false;
     case FS_OPEN_MODE_READ:
         return false;
     case FS_OPEN_MODE_WRITE:
@@ -79,8 +73,6 @@ bool fs_open_mode_is_writable(fs_open_mode_t mode_) {
 
 bool fs_open_mode_is_valid(fs_open_mode_t mode_) {
     switch(mode_) {
-    case FS_OPEN_MODE_NONE:
-        return true;    // 初期化直後の状態はvalid
     case FS_OPEN_MODE_READ:
         return true;
     case FS_OPEN_MODE_WRITE:
