@@ -22,8 +22,6 @@
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/memory/choco_memory.h"
 
@@ -35,14 +33,13 @@
  *
  */
 struct lit_mesh_geometry {
-    choco_string_t* name;               /**< lit_mesh_geometry CPU側リソース名称 */
-
     size_t vertex_count;                /**< lit_mesh_geometryが所有する頂点数 */
     point_normal_vertex_t* vertices;    /**< lit_mesh_geometryが所有する頂点配列 */
 };
 
 resource_result_t lit_mesh_geometry_default_create(lit_mesh_geometry_t** geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     lit_mesh_geometry_t* tmp_geometry = NULL;
@@ -57,25 +54,23 @@ resource_result_t lit_mesh_geometry_default_create(lit_mesh_geometry_t** geometr
         goto cleanup;
     }
 
-    tmp_geometry->name = NULL;
     tmp_geometry->vertex_count = 0;
     tmp_geometry->vertices = NULL;
 
     *geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_geometry) {
-            memory_system_free(tmp_geometry, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
-            tmp_geometry = NULL;
-        }
+    if(NULL != tmp_geometry) {
+        memory_system_free(tmp_geometry, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+        tmp_geometry = NULL;
     }
     return ret;
 }
 
-resource_result_t lit_mesh_geometry_create(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_) {
+resource_result_t lit_mesh_geometry_create(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     lit_mesh_geometry_t* tmp_geometry = NULL;
@@ -83,10 +78,11 @@ resource_result_t lit_mesh_geometry_create(const char* name_, size_t vertex_coun
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "*geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create", "name_[0]")
+    if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_geometry_create(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = lit_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -94,18 +90,19 @@ resource_result_t lit_mesh_geometry_create(const char* name_, size_t vertex_coun
         goto cleanup;
     }
 
-    ret = lit_mesh_geometry_initialize(name_, vertex_count_, vertices_, tmp_geometry);
+    ret = lit_mesh_geometry_initialize(vertex_count_, vertices_, tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_geometry_create(%s) - Failed to initialize lit_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
     *geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_SUCCESS != ret) {
+    if(NULL != tmp_geometry) {
         lit_mesh_geometry_destroy(&tmp_geometry);
     }
     return ret;
@@ -117,9 +114,6 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     }
     if(NULL == *geometry_) {
         return;
-    }
-    if(NULL != (*geometry_)->name) {
-        choco_string_destroy(&(*geometry_)->name);
     }
 
     if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
@@ -136,28 +130,24 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     *geometry_ = NULL;
 }
 
-resource_result_t lit_mesh_geometry_initialize(const char* name_, size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_) {
+resource_result_t lit_mesh_geometry_initialize(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    choco_string_t* tmp_name = NULL;
     point_normal_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "name_[0]")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->name")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_initialize", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_initialize", "vertex_count_")
-
-    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - Failed to create lit mesh geometry name string.", resource_rslt_to_str(ret));
+    if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_initialize(%s) - Provided geometry_ is already initialized.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -177,7 +167,6 @@ resource_result_t lit_mesh_geometry_initialize(const char* name_, size_t vertex_
         tmp_vertices[i] = vertices_[i];
     }
 
-    geometry_->name = tmp_name;
     geometry_->vertex_count = vertex_count_;
     geometry_->vertices = tmp_vertices;
 
@@ -185,9 +174,6 @@ resource_result_t lit_mesh_geometry_initialize(const char* name_, size_t vertex_
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_name) {
-            choco_string_destroy(&tmp_name);
-        }
         if(NULL != tmp_vertices) {
             memory_system_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
             tmp_vertices = NULL;
@@ -199,9 +185,6 @@ cleanup:
 void lit_mesh_geometry_deinitialize(lit_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return;
-    }
-    if(NULL != geometry_->name) {
-        choco_string_destroy(&geometry_->name);
     }
     if(NULL != geometry_->vertices && 0 == geometry_->vertex_count) {
         ERROR_MESSAGE("lit_mesh_geometry_deinitialize(%s) - lit_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
@@ -218,7 +201,6 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     lit_mesh_geometry_t* tmp_geometry = NULL;
-    const char* tmp_name = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_clone", "src_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_clone", "out_geometry_")
@@ -229,10 +211,6 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is 0 but vertices is not NULL.", resource_rslt_to_str(ret));
         goto cleanup;
-    } else if(0 != src_->vertex_count && NULL == src_->name) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is NULL.", resource_rslt_to_str(ret));
-        goto cleanup;
     } else if(0 != src_->vertex_count && NULL == src_->vertices) {
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but vertices = NULL.", resource_rslt_to_str(ret));
@@ -240,10 +218,6 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
     } else if(0 != (src_->vertex_count % 3)) {
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is not multiple of 3.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(0 == choco_string_length(src_->name) && 0 != src_->vertex_count) {    // src_->name == NULL or src_->nameが空
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is empty.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -254,11 +228,10 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
         goto cleanup;
     }
     if(0 != src_->vertex_count) {
-        tmp_name = choco_string_c_str(src_->name);
-        ret = lit_mesh_geometry_initialize(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        ret = lit_mesh_geometry_initialize(src_->vertex_count, src_->vertices, tmp_geometry);
         if(RESOURCE_OVERFLOW == ret) {
             ret = RESOURCE_DATA_CORRUPTED;
-            ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying vertices.", resource_rslt_to_str(ret));
             goto cleanup;
         } else if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("lit_mesh_geometry_clone(%s) - Failed to initialize clone instance from src_ geometry data.", resource_rslt_to_str(ret));
@@ -267,24 +240,15 @@ resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_m
     }
 
     *out_geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_SUCCESS != ret) {
+    if(NULL != tmp_geometry) {
         lit_mesh_geometry_destroy(&tmp_geometry);
     }
     return ret;
-}
-
-const char* lit_mesh_geometry_name_get(const lit_mesh_geometry_t* geometry_) {
-    if(NULL == geometry_) {
-        return NULL;
-    }
-    if(NULL == geometry_->name) {
-        return NULL;
-    }
-    return choco_string_c_str(geometry_->name);
 }
 
 resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_) {
@@ -293,10 +257,17 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "out_vertices_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertices_get", "geometry_->vertex_count")
+    if(0 == geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != (geometry_->vertex_count % 3)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_vertices_ = geometry_->vertices;
 
@@ -311,10 +282,17 @@ resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* 
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertex_count_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertex_count_get", "out_vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 3), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "lit_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
+    if(0 == geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("lit_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != (geometry_->vertex_count % 3)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_vertex_count_ = geometry_->vertex_count;
 

@@ -20,8 +20,6 @@
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/geometry_primitive_err_utils.h"
 #include "engine/core/memory/choco_memory.h"
@@ -34,14 +32,13 @@
  *
  */
 struct line_mesh_geometry {
-    choco_string_t* name;       /**< line_mesh_geometry CPU側リソース名称 */
-
     size_t vertex_count;        /**< line_mesh_geometryが所有する頂点数(線分の端点をverticesには格納するので、必ず2の倍数) */
     line_vertex_t* vertices;    /**< line_mesh_geometryが所有する頂点配列(線分1-p1, 線分1-p2, 線分2-p1, 線分2-p2...) */
 };
 
 resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     line_mesh_geometry_t* tmp_geometry = NULL;
@@ -56,11 +53,11 @@ resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geome
         goto cleanup;
     }
 
-    tmp_geometry->name = NULL;
     tmp_geometry->vertex_count = 0;
     tmp_geometry->vertices = NULL;
 
     *geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
@@ -74,18 +71,19 @@ cleanup:
     return ret;
 }
 
-resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** geometry_) {
+resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     line_mesh_geometry_t* tmp_geometry = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "name_[0]")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertex_count_")
+    if(0 == vertex_count_ || 0 != (vertex_count_ % 2)) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = line_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -93,13 +91,14 @@ resource_result_t line_mesh_geometry_create_from_vertices(const char* name_, siz
         goto cleanup;
     }
 
-    ret = line_mesh_geometry_initialize_from_vertices(name_, vertex_count_, vertices_, tmp_geometry);
+    ret = line_mesh_geometry_initialize_from_vertices(vertex_count_, vertices_, tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Failed to initialize line_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
     *geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
@@ -110,17 +109,19 @@ cleanup:
     return ret;
 }
 
-resource_result_t line_mesh_geometry_create_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** geometry_) {
+resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     line_mesh_geometry_t* tmp_geometry = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "geometry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "name_[0]")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabb_count_")
     IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabbs_")
+    if(0 == aabb_count_) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Provided aabb_count_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = line_mesh_geometry_default_create(&tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
@@ -128,13 +129,14 @@ resource_result_t line_mesh_geometry_create_from_aabbs(const char* name_, size_t
         goto cleanup;
     }
 
-    ret = line_mesh_geometry_initialize_from_aabbs(name_, aabb_count_, aabbs_, tmp_geometry);
+    ret = line_mesh_geometry_initialize_from_aabbs(aabb_count_, aabbs_, tmp_geometry);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Failed to initialize line_mesh_geometry_t instance.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
     *geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
@@ -152,9 +154,6 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
     if(NULL == *geometry_) {
         return;
     }
-    if(NULL != (*geometry_)->name) {
-        choco_string_destroy(&(*geometry_)->name);
-    }
 
     if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
         ERROR_MESSAGE("line_mesh_geometry_destroy(%s) - line_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
@@ -170,28 +169,24 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
     *geometry_ = NULL;
 }
 
-resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_, size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t* geometry_) {
+resource_result_t line_mesh_geometry_initialize_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t* geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    choco_string_t* tmp_name = NULL;
     line_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "name_[0]")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "vertex_count_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_vertices", "geometry_->name")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_vertices", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_vertices", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_vertices", "vertex_count_")
-
-    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("line_mesh_geometry_initialize_from_vertices(%s) - Failed to create line mesh geometry name string.", resource_rslt_to_str(ret));
+    if(0 != geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_vertices(%s) - Provided geometry_->vertex_count is not zero.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 == vertex_count_ || 0 != (vertex_count_ % 2)) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -211,17 +206,14 @@ resource_result_t line_mesh_geometry_initialize_from_vertices(const char* name_,
         tmp_vertices[i] = vertices_[i];
     }
 
-    geometry_->name = tmp_name;
     geometry_->vertex_count = vertex_count_;
     geometry_->vertices = tmp_vertices;
+    tmp_vertices = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_name) {
-            choco_string_destroy(&tmp_name);
-        }
         if(NULL != tmp_vertices) {
             memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
             tmp_vertices = NULL;
@@ -230,30 +222,26 @@ cleanup:
     return ret;
 }
 
-resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_) {
+resource_result_t line_mesh_geometry_initialize_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+
     memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
     geometry_primitive_result_t ret_geometry = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
 
-    choco_string_t* tmp_name = NULL;
     line_vertex_t* tmp_vertices = NULL;
-
     size_t vertex_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_")
-    IF_ARG_FALSE_GOTO_CLEANUP('\0' != name_[0], ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "name_[0]")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != aabb_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabb_count_")
     IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "aabbs_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_initialize_from_aabbs", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->name")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_initialize_from_aabbs", "geometry_->vertex_count")
-
-    ret_string = choco_string_create_from_c_string(name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Failed to create line mesh geometry name string.", resource_rslt_to_str(ret));
+    if(0 == aabb_count_) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Provided aabb_count_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("line_mesh_geometry_initialize_from_aabbs(%s) - Provided geometry_->vertex_count is not zero.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -301,17 +289,14 @@ resource_result_t line_mesh_geometry_initialize_from_aabbs(const char* name_, si
         tmp_vertices[ii + 22].position = aabb_vertices[7]; tmp_vertices[ii + 23].position = aabb_vertices[4]; // p7 - p4
     }
 
-    geometry_->name = tmp_name;
     geometry_->vertex_count = vertex_count;
     geometry_->vertices = tmp_vertices;
+    tmp_vertices = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_name) {
-            choco_string_destroy(&tmp_name);
-        }
         if(NULL != tmp_vertices) {
             memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
             tmp_vertices = NULL;
@@ -323,9 +308,6 @@ cleanup:
 void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return;
-    }
-    if(NULL != geometry_->name) {
-        choco_string_destroy(&geometry_->name);
     }
     if(NULL != geometry_->vertices && 0 == geometry_->vertex_count) {
         ERROR_MESSAGE("line_mesh_geometry_deinitialize(%s) - line_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
@@ -342,7 +324,6 @@ resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, lin
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     line_mesh_geometry_t* tmp_geometry = NULL;
-    const char* tmp_name = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_clone", "src_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_clone", "out_geometry_")
@@ -353,10 +334,6 @@ resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, lin
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is 0 but vertices is not NULL.", resource_rslt_to_str(ret));
         goto cleanup;
-    } else if(0 != src_->vertex_count && NULL == src_->name) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is NULL.", resource_rslt_to_str(ret));
-        goto cleanup;
     } else if(0 != src_->vertex_count && NULL == src_->vertices) {
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but vertices = NULL.", resource_rslt_to_str(ret));
@@ -364,10 +341,6 @@ resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, lin
     } else if(0 != (src_->vertex_count % 2)) {
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count is not multiple of 2.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(0 == choco_string_length(src_->name) && 0 != src_->vertex_count) {    // src_->name == NULL or src_->nameが空
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: vertex count != 0, but geometry name is empty.", resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -378,11 +351,10 @@ resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, lin
         goto cleanup;
     }
     if(0 != src_->vertex_count) {
-        tmp_name = choco_string_c_str(src_->name);
-        ret = line_mesh_geometry_initialize_from_vertices(tmp_name, src_->vertex_count, src_->vertices, tmp_geometry);
+        ret = line_mesh_geometry_initialize_from_vertices(src_->vertex_count, src_->vertices, tmp_geometry);
         if(RESOURCE_OVERFLOW == ret) {
             ret = RESOURCE_DATA_CORRUPTED;
-            ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying name or vertices.", resource_rslt_to_str(ret));
+            ERROR_MESSAGE("line_mesh_geometry_clone(%s) - src_ internal state is corrupted: overflow occurred while deep-copying vertices.", resource_rslt_to_str(ret));
             goto cleanup;
         } else if(RESOURCE_SUCCESS != ret) {
             ERROR_MESSAGE("line_mesh_geometry_clone(%s) - Failed to initialize clone instance from src_ geometry data.", resource_rslt_to_str(ret));
@@ -391,6 +363,7 @@ resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, lin
     }
 
     *out_geometry_ = tmp_geometry;
+    tmp_geometry = NULL;
 
     ret = RESOURCE_SUCCESS;
 
@@ -401,26 +374,23 @@ cleanup:
     return ret;
 }
 
-const char* line_mesh_geometry_name_get(const line_mesh_geometry_t* geometry_) {
-    if(NULL == geometry_) {
-        return NULL;
-    }
-    if(NULL == geometry_->name) {
-        return NULL;
-    }
-    return choco_string_c_str(geometry_->name);
-}
-
 resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "out_vertices_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertices_get", "geometry_->vertex_count")
+    if(0 == geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("line_mesh_geometry_vertices_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != (geometry_->vertex_count % 2)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_vertices_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_vertices_ = geometry_->vertices;
 
@@ -435,10 +405,17 @@ resource_result_t line_mesh_geometry_vertex_count_get(const line_mesh_geometry_t
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertex_count_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertex_count_get", "out_vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->name, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->name")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->vertices")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != geometry_->vertex_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (geometry_->vertex_count % 2), ret, RESOURCE_DATA_CORRUPTED, resource_rslt_to_str(RESOURCE_DATA_CORRUPTED), "line_mesh_geometry_vertex_count_get", "geometry_->vertex_count")
+    if(0 == geometry_->vertex_count) {
+        ret = RESOURCE_BAD_OPERATION;
+        ERROR_MESSAGE("line_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 != (geometry_->vertex_count % 2)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     *out_vertex_count_ = geometry_->vertex_count;
 

@@ -70,7 +70,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(cons
     }
 
     // Geometry CPUリソース生成
-    ret_resource = line_mesh_geometry_create_from_vertices(resource_name_, vertex_count_, vertices_, &geometry);
+    ret_resource = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);
@@ -143,7 +143,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const re
     }
 
     // Geometry CPUリソース生成
-    ret_resource = line_mesh_geometry_create_from_aabbs(resource_name_, 1, aabb_, &geometry);
+    ret_resource = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), resource_name_);
