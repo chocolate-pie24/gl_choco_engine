@@ -91,8 +91,6 @@ resource_registry_result_t resource_registry_rslt_convert_resource(resource_resu
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
     case RESOURCE_FILE_READ_ERROR:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
-    case RESOURCE_FILE_CLOSE_ERROR:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
     case RESOURCE_UNSUPPORTED_FILE:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
     case RESOURCE_UNDEFINED_ERROR:

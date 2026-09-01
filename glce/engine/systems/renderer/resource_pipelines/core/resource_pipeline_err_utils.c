@@ -22,7 +22,6 @@ static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**<
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用可能範囲上限超過)文字列 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< 実行結果コード(ファイルオープン失敗)文字列 */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< 実行結果コード(ファイル読み込み失敗)文字列 */
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";  /**< 実行結果コード(ファイルクローズ失敗)文字列 */
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< 実行結果コード(未対応ファイル形式)文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
 
@@ -48,8 +47,6 @@ const char* resource_pipeline_rslt_to_str(resource_pipeline_result_t rslt_) {
         return s_rslt_str_file_open_error;
     case RESOURCE_PIPELINE_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
-    case RESOURCE_PIPELINE_FILE_CLOSE_ERROR:
-        return s_rslt_str_file_close_error;
     case RESOURCE_PIPELINE_UNSUPPORTED_FILE:
         return s_rslt_str_unsupported_file;
     case RESOURCE_PIPELINE_UNDEFINED_ERROR:
@@ -81,8 +78,6 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_resource(resource_resu
         return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
     case RESOURCE_FILE_READ_ERROR:
         return RESOURCE_PIPELINE_FILE_READ_ERROR;
-    case RESOURCE_FILE_CLOSE_ERROR:
-        return RESOURCE_PIPELINE_FILE_CLOSE_ERROR;
     case RESOURCE_UNSUPPORTED_FILE:
         return RESOURCE_PIPELINE_UNSUPPORTED_FILE;
     case RESOURCE_UNDEFINED_ERROR:
@@ -219,8 +214,6 @@ resource_pipeline_result_t resource_pipeline_rslt_convert_fs_stream(fs_stream_re
         return RESOURCE_PIPELINE_OVERFLOW;
     case FS_STREAM_FILE_OPEN_ERROR:
         return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
-    case FS_STREAM_FILE_CLOSE_ERROR:
-        return RESOURCE_PIPELINE_FILE_CLOSE_ERROR;
     case FS_STREAM_RUNTIME_ERROR:
         return RESOURCE_PIPELINE_RUNTIME_ERROR;
     case FS_STREAM_UNDEFINED_ERROR:

@@ -15,8 +15,7 @@ extern "C" {
  *
  */
 typedef enum {
-    FS_OPEN_MODE_NONE = 0,               /**< オープンモード: デフォルト(未オープン) */
-    FS_OPEN_MODE_READ,                   /**< オープンモード: 読み取り */
+    FS_OPEN_MODE_READ = 0,                   /**< オープンモード: 読み取り */
     FS_OPEN_MODE_WRITE,                  /**< オープンモード: 書き込み */
     FS_OPEN_MODE_APPEND,                 /**< オープンモード: 追記 */
     FS_OPEN_MODE_READ_BINARY,            /**< オープンモード: 読み取り(バイナリファイル) */

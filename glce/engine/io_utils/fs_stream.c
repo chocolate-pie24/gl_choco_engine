@@ -31,7 +31,6 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";                  /*
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲超過 */
 static const char* const s_rslt_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算オーバーフロー */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";    /**< 実行結果コード文字列: ファイルクローズエラー */
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
 static const char* const s_rslt_str_eof = "EOF";                              /**< 実行結果コード文字列: EOF */
@@ -41,7 +40,7 @@ static fs_stream_result_t filesystem_result_convert(filesystem_result_t result_)
 static fs_stream_result_t memory_system_result_convert(memory_system_result_t result_);
 static fs_stream_result_t choco_string_result_convert(choco_string_result_t result_);
 
-fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_) {
+fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fullpath_, fs_open_mode_t mode_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -51,6 +50,17 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_) {
 
     IF_ARG_NULL_GOTO_CLEANUP(out_fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_fs_stream_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "*out_fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "fullpath_")
+    if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
+        ret = FS_STREAM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("fs_stream_create(%s) - Provided fullpath_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!fs_open_mode_is_valid(mode_)) {
+        ret = FS_STREAM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("fs_stream_create(%s) - Provided mode_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_memory_system = memory_system_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_stream);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
@@ -60,7 +70,7 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_) {
     }
     memset(tmp_fs_stream, 0, sizeof(fs_stream_t));
 
-    ret_filesystem = filesystem_create(&tmp_fs_stream->filesystem);
+    ret_filesystem = filesystem_create(&tmp_fs_stream->filesystem, fullpath_, mode_);
     if(FILESYSTEM_SUCCESS != ret_filesystem) {
         ret = filesystem_result_convert(ret_filesystem);
         ERROR_MESSAGE("fs_stream_create(%s) - filesystem_create failed.", rslt_to_str(ret));
@@ -82,94 +92,23 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_) {
 
 cleanup:
     if(NULL != tmp_fs_stream) {
-        filesystem_destroy(&tmp_fs_stream->filesystem);
+        filesystem_destroy(&tmp_fs_stream->filesystem, NULL);
         memory_system_free(tmp_fs_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
         tmp_fs_stream = NULL;
     }
     return ret;
 }
 
-void fs_stream_destroy(fs_stream_t** fs_stream_) {
+void fs_stream_destroy(fs_stream_t** fs_stream_, bool* out_close_succeeded_) {
     if(NULL == fs_stream_) {
         return;
     }
     if(NULL == *fs_stream_) {
         return;
     }
-    filesystem_destroy(&(*fs_stream_)->filesystem);
+    filesystem_destroy(&(*fs_stream_)->filesystem, out_close_succeeded_);
     memory_system_free(*fs_stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
     *fs_stream_ = NULL;
-}
-
-fs_stream_result_t fs_stream_open(fs_stream_t* fs_stream_, const char* fullpath_, fs_open_mode_t open_mode_) {
-    fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
-
-    filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_open", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_open", "fullpath_")
-    if('\0' == fullpath_[0]) {
-        ret = FS_STREAM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("fs_stream_open(%s) - Provided fullpath_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(!fs_open_mode_is_valid(open_mode_) || FS_OPEN_MODE_NONE == open_mode_) {
-        ret = FS_STREAM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("fs_stream_open(%s) - Provided open_mode_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_stream_is_valid(fs_stream_)) {
-        ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_open(%s) - Precondition validation failed for 'fs_stream_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
-    ret_filesystem = filesystem_open(fullpath_, open_mode_, fs_stream_->filesystem);
-    if(FILESYSTEM_SUCCESS != ret_filesystem) {
-        ret = filesystem_result_convert(ret_filesystem);
-        ERROR_MESSAGE("fs_stream_open(%s) - filesystem_open failed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // 下位filesystemが成功時postconditionを保証し、fs_stream固有fieldは変更されない
-
-    ret = FS_STREAM_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-fs_stream_result_t fs_stream_close(fs_stream_t* fs_stream_) {
-    fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
-
-    filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, rslt_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_close", "fs_stream_")
-
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_stream_is_valid(fs_stream_)) {
-        ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_close(%s) - Precondition validation failed for 'fs_stream_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
-    ret_filesystem = filesystem_close(fs_stream_->filesystem);
-    if(FILESYSTEM_SUCCESS != ret_filesystem) {
-        ret = filesystem_result_convert(ret_filesystem);
-        ERROR_MESSAGE("fs_stream_close(%s) - filesystem_close failed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // 下位filesystemが成功時postconditionを保証し、fs_stream固有fieldは変更されない
-
-    ret = FS_STREAM_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
 fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
@@ -360,8 +299,6 @@ static const char* rslt_to_str(fs_stream_result_t rslt_) {
         return s_rslt_str_overflow;
     case FS_STREAM_FILE_OPEN_ERROR:
         return s_rslt_str_file_open_error;
-    case FS_STREAM_FILE_CLOSE_ERROR:
-        return s_rslt_str_file_close_error;
     case FS_STREAM_RUNTIME_ERROR:
         return s_rslt_str_runtime_error;
     case FS_STREAM_UNDEFINED_ERROR:
@@ -393,8 +330,6 @@ static fs_stream_result_t filesystem_result_convert(filesystem_result_t result_)
         return FS_STREAM_BAD_OPERATION;
     case FILESYSTEM_EOF:
         return FS_STREAM_EOF;
-    case FILESYSTEM_FILE_CLOSE_ERROR:
-        return FS_STREAM_FILE_CLOSE_ERROR;
     case FILESYSTEM_DATA_CORRUPTED:
         return FS_STREAM_DATA_CORRUPTED;
     default:

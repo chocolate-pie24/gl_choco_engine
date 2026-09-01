@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -32,6 +33,8 @@ struct filesystem {
 };
 
 static const char* rslt_to_str(filesystem_result_t rslt_);
+static filesystem_result_t memory_system_result_convert(memory_system_result_t rslt_);
+
 static FILE* mock_fopen(const char* fullpath_, const char* mode_);
 static int mock_fclose(FILE* stream_);
 static size_t mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_);
@@ -43,48 +46,56 @@ static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";      
 static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";            /**< 実行結果コード文字列: 実行時エラー */
 static const char* const s_rslt_str_no_memory = "NO_MEMORY";                    /**< 実行結果コード文字列: メモリ不足 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";        /**< 実行結果コード文字列: ファイルオープン失敗 */
-static const char* const s_rslt_str_file_close_error = "FILE_CLOSE_ERROR";      /**< 実行結果コード文字列: ファイルクローズ失敗 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";          /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
 static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";            /**< 実行結果コード文字列: API誤用 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード文字列: 未定義エラー */
 static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";          /**< 実行結果コード文字列: 内部データ破損 */
 static const char* const s_rslt_str_eof = "EOF";                                /**< 実行結果コード文字列: ファイル読み込みEOF */
 
-filesystem_result_t filesystem_create(filesystem_t** filesystem_) {
+filesystem_result_t filesystem_create(filesystem_t** filesystem_, const char* fullpath_, fs_open_mode_t mode_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
-    memory_system_result_t mem_result = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     filesystem_t* tmp_filesystem = NULL;
 
+    const char* open_mode_str = NULL;
+
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
-
-    mem_result = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp_filesystem);
-    if(MEMORY_SYSTEM_INVALID_ARGUMENT == mem_result) {
-        ret = FILESYSTEM_UNDEFINED_ERROR;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned INVALID_ARGUMENT.", rslt_to_str(ret));
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "fullpath_")
+    if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
+        ret = FILESYSTEM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("filesystem_create(%s) - Provided fullpath_ is not valid.", rslt_to_str(ret));
         goto cleanup;
-    } else if(MEMORY_SYSTEM_NO_MEMORY == mem_result) {
-        ret = FILESYSTEM_NO_MEMORY;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate returned NO_MEMORY.", rslt_to_str(ret));
-        goto cleanup;
-    } else if(MEMORY_SYSTEM_LIMIT_EXCEEDED == mem_result) {
-        ret = FILESYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_sytem_allocate returned LIMIT_EXCEEDED.", rslt_to_str(ret));
-        goto cleanup;
-    } else if(MEMORY_SYSTEM_BAD_OPERATION == mem_result) {
-        ret = FILESYSTEM_BAD_OPERATION;
-        ERROR_MESSAGE("filesystem_create(%s) - memory_sytem_allocate returned BAD_OPERATION.", rslt_to_str(ret));
-        goto cleanup;
-    } else if(MEMORY_SYSTEM_SUCCESS != mem_result) {
-        ret = FILESYSTEM_UNDEFINED_ERROR;
-        ERROR_MESSAGE("filesystem_create(%s) - Undefined error.", rslt_to_str(ret));
+    }
+    if(!fs_open_mode_is_valid(mode_)) {
+        ret = FILESYSTEM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("filesystem_create(%s) - Provided mode_ is not valid.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_filesystem->file_handle = NULL;
-    tmp_filesystem->mode = FS_OPEN_MODE_NONE;
+    ret_memory_system = memory_system_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp_filesystem);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = memory_system_result_convert(ret_memory_system);
+        ERROR_MESSAGE("filesystem_create(%s) - memory_system_allocate failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    memset(tmp_filesystem, 0, sizeof(filesystem_t));
+
+    open_mode_str = fs_open_mode_c_str(mode_);
+    if(NULL == open_mode_str) {
+        ret = FILESYSTEM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("filesystem_create(%s) - Invalid open mode (mode=%d).", rslt_to_str(ret), mode_);
+        goto cleanup;
+    }
+    tmp_filesystem->file_handle = mock_fopen(fullpath_, open_mode_str);
+    if(NULL == tmp_filesystem->file_handle) {
+        ret = FILESYSTEM_FILE_OPEN_ERROR;
+        ERROR_MESSAGE("filesystem_create(%s) - Failed to open file: '%s'.", rslt_to_str(ret), fullpath_);
+        goto cleanup;
+    }
+    tmp_filesystem->mode = mode_;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!filesystem_is_valid(tmp_filesystem)) {
@@ -107,7 +118,8 @@ cleanup:
     return ret;
 }
 
-void filesystem_destroy(filesystem_t** filesystem_) {
+// NOTE: out_close_succeeded_はNULLを許可する(結果が不要な場合はNULLを指定する)
+void filesystem_destroy(filesystem_t** filesystem_, bool* out_close_succeeded_) {
     if(NULL == filesystem_) {
         goto cleanup;
     }
@@ -116,9 +128,19 @@ void filesystem_destroy(filesystem_t** filesystem_) {
     }
 
     if(NULL != (*filesystem_)->file_handle) {
-        if(FILESYSTEM_SUCCESS != filesystem_close(*filesystem_)) {
-            // エラーが発生しても何もできず、かつ、ハンドルの再利用もできないため、ワーニング出力に留める
-            WARN_MESSAGE("filesystem_destroy - Failed to close file handle.");
+        if(EOF == mock_fclose((*filesystem_)->file_handle)) {
+            ERROR_MESSAGE("filesystem_destroy - Failed to close file handle.");
+            if(NULL != out_close_succeeded_) {
+                *out_close_succeeded_ = false;
+            }
+        } else {
+            if(NULL != out_close_succeeded_) {
+                *out_close_succeeded_ = true;
+            }
+        }
+    } else {
+        if(NULL != out_close_succeeded_) {
+            *out_close_succeeded_ = false;
         }
     }
     memory_system_free((void*)(*filesystem_), sizeof(filesystem_t), MEMORY_TAG_FILE_IO);
@@ -126,97 +148,6 @@ void filesystem_destroy(filesystem_t** filesystem_) {
 
 cleanup:
     return;
-}
-
-filesystem_result_t filesystem_open(const char* fullpath_, fs_open_mode_t mode_, filesystem_t* filesystem_) {
-    filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
-
-    const char* open_mode_str = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_open", "fullpath_")
-    if('\0' == fullpath_[0]) {
-        ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_open(%s) - Provided fullpath_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!filesystem_is_valid(filesystem_)) {
-        ret = FILESYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("filesystem_open(%s) - Precondition validation failed for 'filesystem_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-    if(NULL != filesystem_->file_handle) {
-        ret = FILESYSTEM_BAD_OPERATION;
-        ERROR_MESSAGE("filesystem_open(%s) - File is already open; close it before opening another file.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    open_mode_str = fs_open_mode_c_str(mode_);
-    if(NULL == open_mode_str) {
-        ret = FILESYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("filesystem_open(%s) - Invalid open mode (mode=%d).", rslt_to_str(ret), mode_);
-        goto cleanup;
-    }
-    filesystem_->file_handle = mock_fopen(fullpath_, open_mode_str);
-    if(NULL == filesystem_->file_handle) {
-        ret = FILESYSTEM_FILE_OPEN_ERROR;
-        ERROR_MESSAGE("filesystem_open(%s) - Failed to open file: '%s'.", rslt_to_str(ret), fullpath_);
-        goto cleanup;
-    }
-    filesystem_->mode = mode_;
-
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!filesystem_is_valid(filesystem_)) {
-        ret = FILESYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("filesystem_open(%s) - Postcondition validation failed for 'filesystem_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
-    ret = FILESYSTEM_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-filesystem_result_t filesystem_close(filesystem_t* filesystem_) {
-    filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, rslt_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_close", "filesystem_")
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!filesystem_is_valid(filesystem_)) {
-        ret = FILESYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("filesystem_close(%s) - Precondition validation failed for 'filesystem_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-    if(NULL == filesystem_->file_handle) {
-        ret = FILESYSTEM_BAD_OPERATION;
-        ERROR_MESSAGE("filesystem_close(%s) - File is already closed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(EOF == mock_fclose(filesystem_->file_handle)) {
-        ret = FILESYSTEM_FILE_CLOSE_ERROR;
-        ERROR_MESSAGE("filesystem_close(%s) - Failed to close file.", rslt_to_str(ret));
-    } else {
-        ret = FILESYSTEM_SUCCESS;
-    }
-
-    filesystem_->file_handle = NULL;
-    filesystem_->mode = FS_OPEN_MODE_NONE;
-
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!filesystem_is_valid(filesystem_)) {
-        ret = FILESYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("filesystem_close(%s) - Postcondition validation failed for 'filesystem_'.", rslt_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
-cleanup:
-    return ret;
 }
 
 filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
@@ -238,7 +169,7 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     }
 #endif
     if(NULL == filesystem_->file_handle) {
-        ret = FILESYSTEM_BAD_OPERATION;
+        ret = FILESYSTEM_DATA_CORRUPTED;
         ERROR_MESSAGE("filesystem_byte_read(%s) - provided filehandle is not valid.", rslt_to_str(ret));
         goto cleanup;
     }
@@ -286,9 +217,6 @@ bool filesystem_is_valid(const filesystem_t* filesystem_) {
     if(!fs_open_mode_is_valid(filesystem_->mode)) {
         return false;
     }
-    if(FS_OPEN_MODE_NONE == filesystem_->mode) {
-        return (NULL == filesystem_->file_handle);
-    }
 
     return (NULL != filesystem_->file_handle);
 }
@@ -311,8 +239,6 @@ static const char* rslt_to_str(filesystem_result_t rslt_) {
         return s_rslt_str_no_memory;
     case FILESYSTEM_FILE_OPEN_ERROR:
         return s_rslt_str_file_open_error;
-    case FILESYSTEM_FILE_CLOSE_ERROR:
-        return s_rslt_str_file_close_error;
     case FILESYSTEM_EOF:
         return s_rslt_str_eof;
     case FILESYSTEM_LIMIT_EXCEEDED:
@@ -325,6 +251,23 @@ static const char* rslt_to_str(filesystem_result_t rslt_) {
         return s_rslt_str_undefined_error;
     default:
         return s_rslt_str_undefined_error;
+    }
+}
+
+static filesystem_result_t memory_system_result_convert(memory_system_result_t rslt_) {
+    switch(rslt_) {
+    case MEMORY_SYSTEM_SUCCESS:
+        return FILESYSTEM_SUCCESS;
+    case MEMORY_SYSTEM_INVALID_ARGUMENT:
+        return FILESYSTEM_UNDEFINED_ERROR;
+    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
+        return FILESYSTEM_LIMIT_EXCEEDED;
+    case MEMORY_SYSTEM_BAD_OPERATION:
+        return FILESYSTEM_BAD_OPERATION;
+    case MEMORY_SYSTEM_NO_MEMORY:
+        return FILESYSTEM_NO_MEMORY;
+    default:
+        return FILESYSTEM_UNDEFINED_ERROR;
     }
 }
 

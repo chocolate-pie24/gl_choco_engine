@@ -41,7 +41,6 @@ extern "C" {
  * @retval "LIMIT_EXCEEDED" 実行結果コード:RESOURCE_LIMIT_EXCEEDED(システム使用可能範囲上限超過)
  * @retval "FILE_OPEN_ERROR" 実行結果コード:RESOURCE_FILE_OPEN_ERROR(ファイルオープンエラー)
  * @retval "FILE_READ_ERROR" 実行結果コード:RESOURCE_FILE_READ_ERROR(ファイル読み込みエラー)
- * @retval "FILE_CLOSE_ERROR" 実行結果コード:RESOURCE_FILE_CLOSE_ERROR(ファイルクローズエラー)
  * @retval "UNSUPPORTED_FILE" 実行結果コード:RESOURCE_UNSUPPORTED_FILE(サポート対象外のリソースファイル)
  * @retval "UNDEFINED_ERROR" 実行結果コード:RESOURCE_UNDEFINED_ERROR(未定義の実行結果コード)
  */
