@@ -27,17 +27,9 @@ extern "C" {
 
 typedef struct lit_mesh_geometry lit_mesh_geometry_t;   /**< lit_mesh_geometryモジュール内部状態管理構造体 */
 
-resource_result_t lit_mesh_geometry_default_create(lit_mesh_geometry_t** geometry_);
-
-resource_result_t lit_mesh_geometry_create(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** geometry_);
+resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** out_geometry_);
 
 void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_);
-
-resource_result_t lit_mesh_geometry_initialize(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t* geometry_);
-
-void lit_mesh_geometry_deinitialize(lit_mesh_geometry_t* geometry_);
-
-resource_result_t lit_mesh_geometry_clone(const lit_mesh_geometry_t* src_, lit_mesh_geometry_t** out_geometry_);
 
 resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_);
 

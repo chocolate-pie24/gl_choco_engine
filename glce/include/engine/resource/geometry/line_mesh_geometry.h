@@ -29,36 +29,11 @@ extern "C" {
 
 typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometryモジュール内部状態管理構造体 */
 
-/**
- * @brief line_mesh_geometry_t構造体インスタンスのメモリを確保し、構造体フィールドを初期化する
- *
- * @note 失敗時には*geometry_は変更しない
- *
- * @param[out] geometry_ line_mesh_geometry_t構造体インスタンスへのダブルポインタ
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - geometry_ == NULL
- * - *geometry_ != NULL
- * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
- * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-resource_result_t line_mesh_geometry_default_create(line_mesh_geometry_t** geometry_);
+resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_);
 
-resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** geometry_);
-
-resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** geometry_);
+resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_);
 
 void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
-
-resource_result_t line_mesh_geometry_initialize_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t* geometry_);
-
-resource_result_t line_mesh_geometry_initialize_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t* geometry_);
-
-void line_mesh_geometry_deinitialize(line_mesh_geometry_t* geometry_);
-
-resource_result_t line_mesh_geometry_clone(const line_mesh_geometry_t* src_, line_mesh_geometry_t** out_geometry_);
 
 resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_);
 
