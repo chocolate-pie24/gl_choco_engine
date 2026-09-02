@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/resource/core/resource_types.h"
 
@@ -35,6 +36,8 @@ void ui_mesh_geometry_destroy(ui_mesh_geometry_t** geometry_);
 resource_result_t ui_mesh_geometry_vertices_get(const ui_mesh_geometry_t* geometry_, const ui_vertex_t** out_vertices_);
 
 resource_result_t ui_mesh_geometry_vertex_count_get(const ui_mesh_geometry_t* geometry_, size_t* out_vertex_count_);
+
+bool ui_mesh_geometry_is_valid(const ui_mesh_geometry_t* geometry_);
 
 #ifdef __cplusplus
 }

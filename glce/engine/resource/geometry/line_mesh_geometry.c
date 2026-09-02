@@ -40,6 +40,8 @@ struct line_mesh_geometry {
 static resource_result_t initialize_from_aabbs(line_mesh_geometry_t* geometry_, size_t aabb_count_, const aabb_3d_t* aabbs_);
 static resource_result_t initialize_from_vertices(line_mesh_geometry_t* geometry_, size_t vertex_count_, const line_vertex_t* vertices_);
 
+static bool is_valid_shallow(const line_mesh_geometry_t* geometry_);
+
 resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
@@ -197,6 +199,18 @@ cleanup:
     return ret;
 }
 
+bool line_mesh_geometry_is_valid(const line_mesh_geometry_t* geometry_) {
+    if(!is_valid_shallow(geometry_)) {
+        return false;
+    }
+    for(size_t i = 0; i != geometry_->vertex_count; ++i) {
+        if(!line_vertex_is_valid(&geometry_->vertices[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static resource_result_t initialize_from_vertices(line_mesh_geometry_t* geometry_, size_t vertex_count_, const line_vertex_t* vertices_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
@@ -331,4 +345,23 @@ cleanup:
         }
     }
     return ret;
+}
+
+static bool is_valid_shallow(const line_mesh_geometry_t* geometry_) {
+    if(NULL == geometry_) {
+        return false;
+    }
+    if(0 == geometry_->vertex_count) {
+        return false;
+    }
+    if(0 != (geometry_->vertex_count % 2)) {
+        return false;
+    }
+    if((SIZE_MAX / geometry_->vertex_count) < sizeof(line_vertex_t)) {
+        return false;
+    }
+    if(NULL == geometry_->vertices) {
+        return false;
+    }
+    return true;
 }

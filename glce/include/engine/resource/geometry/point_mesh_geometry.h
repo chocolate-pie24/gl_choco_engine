@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/resource/core/resource_types.h"
 
@@ -37,6 +38,8 @@ void point_mesh_geometry_destroy(point_mesh_geometry_t** geometry_);
 resource_result_t point_mesh_geometry_vertices_get(const point_mesh_geometry_t* geometry_, const point_vertex_t** out_vertices_);
 
 resource_result_t point_mesh_geometry_vertex_count_get(const point_mesh_geometry_t* geometry_, size_t* out_vertex_count_);
+
+bool point_mesh_geometry_is_valid(const point_mesh_geometry_t* geometry_);
 
 #ifdef __cplusplus
 }
