@@ -40,6 +40,7 @@ struct point_mesh_geometry {
 };
 
 static resource_result_t initialize_from_vertices(point_mesh_geometry_t* geometry_, size_t vertex_count_, const point_vertex_t* vertices_);
+static void destroy_unchecked(point_mesh_geometry_t** geometry_);
 
 static bool is_valid_shallow(const point_mesh_geometry_t* geometry_);
 
@@ -87,8 +88,9 @@ resource_result_t point_mesh_geometry_create_from_vertices(size_t vertex_count_,
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_geometry) {
-        point_mesh_geometry_destroy(&tmp_geometry);
+    if(NULL != tmp_geometry && RESOURCE_DATA_CORRUPTED != ret) {
+        // メモリ確保が成功し、initializeで失敗した場合, tmp_geometryはinvalidな状態となっており, destroyを使用するとリソースが解放されないためdestroy_unchecked()を使用する
+        destroy_unchecked(&tmp_geometry);
     }
     return ret;
 }
@@ -100,17 +102,14 @@ void point_mesh_geometry_destroy(point_mesh_geometry_t** geometry_) {
     if(NULL == *geometry_) {
         return;
     }
-
-    if(NULL != (*geometry_)->vertices && 0 == (*geometry_)->vertex_count) {
-        ERROR_MESSAGE("point_mesh_geometry_destroy(%s) - point_mesh_geometry internal state is inconsistent: vertices is not NULL but vertex_count is 0. CPU-side vertex array was not freed because allocation size is unknown.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
-    } else if(NULL != (*geometry_)->vertices) {
-        memory_system_free((*geometry_)->vertices, sizeof(point_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
-        (*geometry_)->vertices = NULL;
-        (*geometry_)->vertex_count = 0;
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!point_mesh_geometry_is_valid(*geometry_)) {
+        ERROR_MESSAGE("point_mesh_geometry_destroy - Provided geometry_ is corrupted.");
+        return;
     }
+#endif
 
-    memory_system_free(*geometry_, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
-    *geometry_ = NULL;
+    destroy_unchecked(geometry_);
 }
 
 resource_result_t point_mesh_geometry_vertices_get(const point_mesh_geometry_t* geometry_, const point_vertex_t** out_vertices_) {
@@ -203,11 +202,20 @@ static resource_result_t initialize_from_vertices(point_mesh_geometry_t* geometr
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_vertices) {
+    if(NULL != tmp_vertices && RESOURCE_DATA_CORRUPTED != ret) {
         memory_system_free(tmp_vertices, sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
     }
     return ret;
+}
+
+static void destroy_unchecked(point_mesh_geometry_t** geometry_) {
+    memory_system_free((*geometry_)->vertices, sizeof(point_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
+    (*geometry_)->vertices = NULL;
+    (*geometry_)->vertex_count = 0;
+
+    memory_system_free(*geometry_, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+    *geometry_ = NULL;
 }
 
 static bool is_valid_shallow(const point_mesh_geometry_t* geometry_) {
