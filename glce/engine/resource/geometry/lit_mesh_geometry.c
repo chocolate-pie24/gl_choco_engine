@@ -72,6 +72,14 @@ resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, c
         goto cleanup;
     }
 
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_geometry_is_valid(tmp_geometry)) {
+        ret = RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
     *out_geometry_ = tmp_geometry;
     tmp_geometry = NULL;
 
@@ -112,17 +120,13 @@ resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geom
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "out_vertices_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "geometry_->vertices")
-    if(0 == geometry_->vertex_count) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != (geometry_->vertex_count % 3)) {
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(geometry_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_rslt_to_str(ret));
         goto cleanup;
     }
+#endif
 
     *out_vertices_ = geometry_->vertices;
 
@@ -137,17 +141,14 @@ resource_result_t lit_mesh_geometry_vertex_count_get(const lit_mesh_geometry_t* 
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertex_count_get", "geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertex_count_get", "out_vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertex_count_get", "geometry_->vertices")
-    if(0 == geometry_->vertex_count) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != (geometry_->vertex_count % 3)) {
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(geometry_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_vertex_count_get(%s) - Provided geometry_ is corrupted.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_geometry_vertex_count_get(%s) - Precondition validation failed for 'geometry_'.", resource_rslt_to_str(ret));
         goto cleanup;
     }
+#endif
 
     *out_vertex_count_ = geometry_->vertex_count;
 
@@ -177,18 +178,7 @@ static resource_result_t initialize_from_vertices(lit_mesh_geometry_t* geometry_
     point_normal_vertex_t* tmp_vertices = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(geometry_->vertices, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "initialize_from_vertices", "geometry_->vertices")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "vertices_")
-    if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("initialize_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != geometry_->vertex_count) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("initialize_from_vertices(%s) - Provided geometry_ is already initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     if((SIZE_MAX / vertex_count_) < sizeof(point_normal_vertex_t)) {
         ret = RESOURCE_OVERFLOW;
