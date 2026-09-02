@@ -93,7 +93,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     ui_vertex[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
     ui_vertex[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
-    ret_resource = ui_mesh_geometry_create_from_vertices(resource_name_, vertex_count, ui_vertex, &geometry);
+    ret_resource = ui_mesh_geometry_create_from_vertices(vertex_count, ui_vertex, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count);

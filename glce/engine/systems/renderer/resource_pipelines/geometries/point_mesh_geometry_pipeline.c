@@ -65,7 +65,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
         goto cleanup;
     }
 
-    ret_resource = point_mesh_geometry_create_from_vertices(resource_name_, vertex_count_, vertices_, &geometry);
+    ret_resource = point_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);

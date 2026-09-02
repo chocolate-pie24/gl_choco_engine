@@ -62,6 +62,8 @@ vec2f_t vec2f_initialize(float x_, float y_);
  */
 vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_);
 
+bool vec2f_is_finite(vec2f_t vec_);
+
 /**
  * @brief 3次元ベクトルxyzを初期化する
  *

@@ -26,8 +26,6 @@
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/loaders/stl_loader.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
@@ -103,7 +101,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(const ren
     }
     vertex_array_size = sizeof(point_normal_vertex_t) * vertex_count;
 
-    ret_resource = lit_mesh_geometry_create(resource_name_, vertex_count, vertices, &geometry);
+    ret_resource = lit_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count);

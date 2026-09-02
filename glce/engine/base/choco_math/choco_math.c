@@ -98,6 +98,13 @@ vec2f_t vec2f_add(vec2f_t vec1_, vec2f_t vec2_) {
     return ret;
 }
 
+bool vec2f_is_finite(vec2f_t vec_) {
+    if(!isfinite(vec_.elem[0]) || !isfinite(vec_.elem[1])) {
+        return false;
+    }
+    return true;
+}
+
 vec3f_t vec3f_initialize(float x_, float y_, float z_) {
     vec3f_t ret = { 0.0f };
 
