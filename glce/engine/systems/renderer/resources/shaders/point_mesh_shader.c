@@ -225,7 +225,7 @@ shader_result_t point_mesh_shader_vbo_initialize(renderer_backend_context_t* bac
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(NULL != tmp_vbo_manager) {
-            vbo_manager_destroy(&tmp_vbo_manager, backend_context_);
+            vbo_manager_destroy(&tmp_vbo_manager);
         }
     }
     return ret;
@@ -263,7 +263,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
     }
     vao_bound = true;
 
-    ret_buff_mgr = vbo_manager_bind(point_mesh_shader_->vbo_manager, backend_context_);
+    ret_buff_mgr = vbo_manager_bind(point_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer(point).", shader_rslt_to_str(ret));
@@ -285,7 +285,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
         goto cleanup;
     }
 
-    ret_buff_mgr = vbo_manager_unbind(backend_context_);
+    ret_buff_mgr = vbo_manager_unbind(point_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("point_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer(point).", shader_rslt_to_str(ret));
@@ -306,7 +306,7 @@ shader_result_t point_mesh_shader_vao_initialize(renderer_backend_context_t* bac
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(vbo_bound) {
-            ret_buff_mgr = vbo_manager_unbind(backend_context_);
+            ret_buff_mgr = vbo_manager_unbind(point_mesh_shader_->vbo_manager);
             if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
                 ret_cleanup = shader_rslt_convert_buffer_manager(ret_buff_mgr);
                 ERROR_MESSAGE("point_mesh_shader_vao_initialize failed.");
@@ -338,7 +338,7 @@ void point_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_conte
         return;
     }
     if(NULL != point_mesh_shader_->vbo_manager) {
-        vbo_manager_destroy(&point_mesh_shader_->vbo_manager, backend_context_);
+        vbo_manager_destroy(&point_mesh_shader_->vbo_manager);
     }
     if(NULL != point_mesh_shader_->vao) {
         renderer_backend_vao_destroy(backend_context_, &point_mesh_shader_->vao);
@@ -368,7 +368,7 @@ shader_result_t point_mesh_shader_vbo_write(const renderer_backend_context_t* ba
     }
     write_size = sizeof(point_vertex_t) * vertex_count_;
 
-    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, backend_context_, write_size, (const void*)vertices_, &tmp_alloc_handle);
+    ret_buff_mgr = vbo_manager_write(point_mesh_shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));

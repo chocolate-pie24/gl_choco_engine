@@ -232,7 +232,7 @@ shader_result_t line_mesh_shader_vbo_initialize(renderer_backend_context_t* back
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(NULL != tmp_vbo_manager) {
-            vbo_manager_destroy(&tmp_vbo_manager, backend_context_);
+            vbo_manager_destroy(&tmp_vbo_manager);
         }
     }
 
@@ -271,7 +271,7 @@ shader_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* back
     }
     vao_bound = true;
 
-    ret_buff_mgr = vbo_manager_bind(line_mesh_shader_->vbo_manager, backend_context_);
+    ret_buff_mgr = vbo_manager_bind(line_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer.", shader_rslt_to_str(ret));
@@ -286,7 +286,7 @@ shader_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* back
         goto cleanup;
     }
 
-    ret_buff_mgr = vbo_manager_unbind(backend_context_);
+    ret_buff_mgr = vbo_manager_unbind(line_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("line_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer.", shader_rslt_to_str(ret));
@@ -307,7 +307,7 @@ shader_result_t line_mesh_shader_vao_initialize(renderer_backend_context_t* back
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(vbo_bound) {
-            ret_buff_mgr = vbo_manager_unbind(backend_context_);
+            ret_buff_mgr = vbo_manager_unbind(line_mesh_shader_->vbo_manager);
             if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
                 ret_cleanup = shader_rslt_convert_buffer_manager(ret_buff_mgr);
                 ERROR_MESSAGE("line_mesh_shader_vao_initialize failed. %s", shader_rslt_to_str(ret_cleanup));
@@ -339,7 +339,7 @@ void line_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_contex
         return;
     }
     if(NULL != line_mesh_shader_->vbo_manager) {
-        vbo_manager_destroy(&line_mesh_shader_->vbo_manager, backend_context_);
+        vbo_manager_destroy(&line_mesh_shader_->vbo_manager);
     }
     if(NULL != line_mesh_shader_->vao) {
         renderer_backend_vao_destroy(backend_context_, &line_mesh_shader_->vao);
@@ -370,7 +370,7 @@ shader_result_t line_mesh_shader_vbo_write(const renderer_backend_context_t* bac
     }
     write_size = sizeof(line_vertex_t) * vertex_count_;
 
-    ret_buff_mgr = vbo_manager_write(line_mesh_shader_->vbo_manager, backend_context_, write_size, (const void*)vertices_, &tmp_alloc_handle);
+    ret_buff_mgr = vbo_manager_write(line_mesh_shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));

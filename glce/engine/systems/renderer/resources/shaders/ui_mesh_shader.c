@@ -221,7 +221,7 @@ shader_result_t ui_mesh_shader_vbo_initialize(renderer_backend_context_t* backen
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(NULL != tmp_vbo_manager) {
-            vbo_manager_destroy(&tmp_vbo_manager, backend_context_);
+            vbo_manager_destroy(&tmp_vbo_manager);
         }
     }
     return ret;
@@ -260,7 +260,7 @@ shader_result_t ui_mesh_shader_vao_initialize(renderer_backend_context_t* backen
     }
     vao_bound = true;
 
-    ret_buff_mgr = vbo_manager_bind(ui_mesh_shader_->vbo_manager, backend_context_);
+    ret_buff_mgr = vbo_manager_bind(ui_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("ui_mesh_shader_vao_initialize(%s) - Failed to bind vertex buffer(ui).", shader_rslt_to_str(ret));
@@ -282,7 +282,7 @@ shader_result_t ui_mesh_shader_vao_initialize(renderer_backend_context_t* backen
         goto cleanup;
     }
 
-    ret_buff_mgr = vbo_manager_unbind(backend_context_);
+    ret_buff_mgr = vbo_manager_unbind(ui_mesh_shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("ui_mesh_shader_vao_initialize(%s) - Failed to unbind vertex buffer(ui).", shader_rslt_to_str(ret));
@@ -303,7 +303,7 @@ shader_result_t ui_mesh_shader_vao_initialize(renderer_backend_context_t* backen
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(vbo_bound) {
-            ret_buff_mgr = vbo_manager_unbind(backend_context_);
+            ret_buff_mgr = vbo_manager_unbind(ui_mesh_shader_->vbo_manager);
             if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
                 ERROR_MESSAGE("ui_mesh_shader_vao_initialize failed.");
                 ret = SHADER_DATA_CORRUPTED;
@@ -334,7 +334,7 @@ void ui_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_
         return;
     }
     if(NULL != ui_mesh_shader_->vbo_manager) {
-        vbo_manager_destroy(&ui_mesh_shader_->vbo_manager, backend_context_);
+        vbo_manager_destroy(&ui_mesh_shader_->vbo_manager);
     }
     if(NULL != ui_mesh_shader_->vao) {
         renderer_backend_vao_destroy(backend_context_, &ui_mesh_shader_->vao);
@@ -357,7 +357,7 @@ shader_result_t ui_mesh_shader_vbo_write(const renderer_backend_context_t* backe
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "out_buffer_range_")
 
     write_size = 6 * sizeof(ui_vertex_t);
-    ret_buff_mgr = vbo_manager_write(ui_mesh_shader_->vbo_manager, backend_context_, write_size, (const void*)vertices_, &tmp_alloc_handle);
+    ret_buff_mgr = vbo_manager_write(ui_mesh_shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
         ret = shader_rslt_convert_buffer_manager(ret_buff_mgr);
         ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - vbo write failed.", shader_rslt_to_str(ret));
