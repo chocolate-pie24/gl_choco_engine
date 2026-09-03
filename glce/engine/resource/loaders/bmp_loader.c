@@ -53,7 +53,6 @@ typedef enum {
     BMP_FILE_INVALID_HEIGHT,        /**< biHeight異常 */
     BMP_FILE_INVALID_WIDTH,         /**< biWidth異常 */
     BMP_FILE_INVALID_CHANNEL_COUNT, /**< チャンネルカウント異常 */
-    BMP_FILE_NOT_INITIALIZED,       /**< 未初期化 */
     BMP_FILE_UNDEFINED,             /**< 未定義エラー */
 } bmp_invalid_reason_t;
 
@@ -91,19 +90,6 @@ typedef struct info_header {
     uint16_t bi_bit_count;          /**< biBitCount: 1ピクセルあたりのビット数(色深度)。1, 4, 8, 16, 24, 32 など, offset = 28 */
 } info_header_t;
 
-/**
- * @brief BMPファイルローダー内部情報管理構造体
- *
- */
-struct bmp_loader {
-    file_header_t file_header;  /**< BMP FILEHEADER情報 */
-    info_header_t info_header;  /**< BMP INFOHEADER情報 */
-    size_t padding;             /**< ピクセル各行に含まれるパディングサイズ(byte) */
-    size_t stride;              /**< ピクセル各行のサイズ(byte)(width * channel_count + padding) */
-    bool padding_removed;       /**< パディング除去済みフラグ */
-    uint8_t* pixels;            /**< ピクセルデータ */
-};
-
 static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_);
 static resource_result_t bmp_loader_pixel_flip(const info_header_t* info_header_, uint8_t* pixels_);
 static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_);
@@ -131,97 +117,37 @@ static const char* const invalid_bmp_file_reason_compression = "invalid biCompre
 static const char* const invalid_bmp_file_reason_height = "invalid biHeight";                   /**< 無効なBMPファイルの原因文字列(biHeight異常) */
 static const char* const invalid_bmp_file_reason_width = "invalid biWidth";                     /**< 無効なBMPファイルの原因文字列(biWidth異常) */
 static const char* const invalid_bmp_file_reason_channel_count = "unsupported biBitCount";      /**< 無効なBMPファイルの原因文字列(biBitCount異常) */
-static const char* const invalid_bmp_file_reason_not_initialized = "not initialized";           /**< 無効なBMPファイルの原因文字列(未初期化) */
 static const char* const invalid_bmp_file_reason_undefined = "undefined";                       /**< 無効なBMPファイルの原因文字列(不明な異常) */
 
-resource_result_t bmp_loader_create(bmp_loader_t** bmp_loader_) {
+resource_result_t bmp_loader_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
-
-    bmp_loader_t* tmp_loader = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_create", "bmp_loader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_create", "*bmp_loader_")
-
-    ret_mem = memory_system_allocate(sizeof(bmp_loader_t), MEMORY_TAG_TEXTURE, (void**)&tmp_loader);
-    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = resource_rslt_convert_choco_memory(ret_mem);
-        ERROR_MESSAGE("bmp_loader_create(%s) - Failed to allocate memory for tmp_loader.", resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    tmp_loader->file_header.bf_off_bits = 0;
-    tmp_loader->file_header.bf_reserved1 = 0;
-    tmp_loader->file_header.bf_reserved2 = 0;
-    tmp_loader->file_header.bf_size = 0;
-    tmp_loader->file_header.bf_type = 0;
-
-    tmp_loader->info_header.bi_bit_count = 0;
-    tmp_loader->info_header.bi_clr_important = 0;
-    tmp_loader->info_header.bi_clr_used = 0;
-    tmp_loader->info_header.bi_compression = 0;
-    tmp_loader->info_header.bi_height = 0;
-    tmp_loader->info_header.bi_planes = 0;
-    tmp_loader->info_header.bi_size = 0;
-    tmp_loader->info_header.bi_size_image = 0;
-    tmp_loader->info_header.bi_width = 0;
-    tmp_loader->info_header.bi_x_pels_per_meter = 0;
-    tmp_loader->info_header.bi_y_pels_per_meter = 0;
-
-    tmp_loader->padding = 0;
-    tmp_loader->stride = 0;
-
-    tmp_loader->padding_removed = false;
-
-    tmp_loader->pixels = NULL;
-
-    *bmp_loader_ = tmp_loader;
-
-    ret = RESOURCE_SUCCESS;
-
-cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        if(NULL != tmp_loader) {
-            memory_system_free(tmp_loader, sizeof(bmp_loader_t), MEMORY_TAG_TEXTURE);
-            tmp_loader = NULL;
-        }
-    }
-    return ret;
-}
-
-void bmp_loader_destroy(bmp_loader_t** bmp_loader_) {
-    if(NULL == bmp_loader_) {
-        return;
-    }
-    if(NULL == *bmp_loader_) {
-        return;
-    }
-    if(NULL != (*bmp_loader_)->pixels) {
-        memory_system_free((*bmp_loader_)->pixels, (*bmp_loader_)->info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-        (*bmp_loader_)->pixels = NULL;
-    }
-
-    memory_system_free(*bmp_loader_, sizeof(bmp_loader_t), MEMORY_TAG_TEXTURE);
-    *bmp_loader_ = NULL;
-}
-
-resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loader_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
+    bmp_invalid_reason_t valid_bmp = BMP_FILE_UNDEFINED;
 
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     uint8_t* tmp_pixels = NULL;
     uint8_t* formatted_pixels = NULL;
     size_t formatted_size = 0;
-    size_t width = 0;
     size_t bit_count = 0;
     size_t stride = 0;
     size_t padding = 0;
 
+    size_t tmp_width = 0;
+    size_t tmp_height = 0;
+    uint8_t tmp_channel_count = 0;
+
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "bmp_loader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(bmp_loader_->pixels, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_load", "bmp_loader_->pixels")
+    IF_ARG_NULL_GOTO_CLEANUP(out_width_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "out_width_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_height_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "out_height_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "out_channel_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixel_data_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "out_pixel_data_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_load", "out_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_load", "*out_pixels_")
+    if('\0' == fullpath_[0]) {
+        ret = RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Provided fullpath_ is not valid.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = header_load(fullpath_, &tmp_file_header, &tmp_info_header);
     if(RESOURCE_SUCCESS != ret) {
@@ -230,11 +156,7 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
     }
 
     valid_bmp = is_bmp_supported(&tmp_file_header, &tmp_info_header);
-    if(BMP_FILE_NOT_INITIALIZED == valid_bmp) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_load(%s) - bmp_loader is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_UNDEFINED == valid_bmp) {
+    if(BMP_FILE_UNDEFINED == valid_bmp) {
         ret = RESOURCE_UNDEFINED_ERROR;
         ERROR_MESSAGE("bmp_loader_load(%s) - Undefined error.", resource_rslt_to_str(ret));
         goto cleanup;
@@ -244,28 +166,23 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
         goto cleanup;
     }
 
-    width = (size_t)(tmp_info_header.bi_width);
+    tmp_width = (size_t)(tmp_info_header.bi_width);
     bit_count = (size_t)(tmp_info_header.bi_bit_count);
 
     // 現状ではINT16_MAXがサイズの上限なので不要だが、将来的な拡張のためにチェックをいれる
-    if((SIZE_MAX / width) < bit_count) {
+    if((SIZE_MAX / tmp_width) < bit_count) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: bit_count * width would overflow. width=%zu, bit_count=%zu", resource_rslt_to_str(ret), width, bit_count);
+        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: bit_count * width would overflow. width=%zu, bit_count=%zu", resource_rslt_to_str(ret), tmp_width, bit_count);
         goto cleanup;
     }
-    if((SIZE_MAX - 31) < (bit_count * width)) {
+    if((SIZE_MAX - 31) < (bit_count * tmp_width)) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: row bit count alignment overflow. row_bits=%zu", resource_rslt_to_str(ret), bit_count * width);
-        goto cleanup;
-    }
-    if((SIZE_MAX / 4) < ((bit_count * width + 31) / 32)) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: aligned stride byte count overflow. aligned_units=%zu", resource_rslt_to_str(ret), (bit_count * width + 31) / 32);
+        ERROR_MESSAGE("bmp_loader_load(%s) - Failed to calculate BMP row stride: row bit count alignment overflow. row_bits=%zu", resource_rslt_to_str(ret), bit_count * tmp_width);
         goto cleanup;
     }
 
-    stride = ((bit_count * width + 31) / 32) * 4;
-    padding = stride - (bit_count * width / 8);
+    stride = ((bit_count * tmp_width + 31) / 32) * 4;
+    padding = stride - (bit_count * tmp_width / 8);
     ret = pixel_load(fullpath_, &tmp_file_header, &tmp_info_header, stride, &tmp_pixels);   // 内部でtmp_pixelsのメモリが確保されるが、失敗時には解放される
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to load BMP pixel data.", resource_rslt_to_str(ret));
@@ -282,7 +199,7 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
         tmp_pixels = NULL;
         tmp_pixels = formatted_pixels;
         formatted_pixels = NULL;
-        tmp_info_header.bi_size_image = formatted_size;
+        tmp_info_header.bi_size_image = (uint32_t)formatted_size;
     }
 
     ret = bmp_loader_pixel_bgr_to_rgb(&tmp_info_header, tmp_pixels);
@@ -297,102 +214,35 @@ resource_result_t bmp_loader_load(const char* fullpath_, bmp_loader_t* bmp_loade
         goto cleanup;
     }
 
-    file_header_copy(&tmp_file_header, &bmp_loader_->file_header);
-    info_header_copy(&tmp_info_header, &bmp_loader_->info_header);
-    bmp_loader_->padding = 0;
-    bmp_loader_->stride = stride - padding;
-    bmp_loader_->padding_removed = true;
-    bmp_loader_->pixels = tmp_pixels;
+    tmp_height = (tmp_info_header.bi_height > 0) ? (size_t)tmp_info_header.bi_height : (size_t)(-1 * tmp_info_header.bi_height);
+    if(24 == tmp_info_header.bi_bit_count) {
+        tmp_channel_count = 3;
+    } else if(32 == tmp_info_header.bi_bit_count) {
+        tmp_channel_count = 4;
+    } else {
+        ret = RESOURCE_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Unsupported BMP bit count.", resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
+    *out_width_ = (uint16_t)tmp_width;
+    *out_height_ = (uint16_t)tmp_height;
+    *out_channel_count_ = tmp_channel_count;
+    *out_pixel_data_size_ = tmp_info_header.bi_size_image;
+    *out_pixels_ = tmp_pixels;
     tmp_pixels = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_SUCCESS != ret) {
-        if(NULL != formatted_pixels && 0 != formatted_size) {
-            memory_system_free(formatted_pixels, formatted_size, MEMORY_TAG_TEXTURE);
-            formatted_pixels = NULL;
-        }
-        if(NULL != tmp_pixels) {
-            memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
-            tmp_pixels = NULL;
-        }
+    if(NULL != formatted_pixels && 0 != formatted_size) {
+        memory_system_free(formatted_pixels, formatted_size, MEMORY_TAG_TEXTURE);
+        formatted_pixels = NULL;
     }
-    return ret;
-}
-
-resource_result_t bmp_loader_pixel_move(bmp_loader_t* bmp_loader_, uint8_t** out_pixels_, size_t* out_pixel_data_size_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "bmp_loader_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixel_data_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_pixel_move", "out_pixel_data_size_")
-    if(NULL == bmp_loader_->pixels || 0 == bmp_loader_->info_header.bi_size_image) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_pixel_move(%s) - pixel is not loaded.", resource_rslt_to_str(ret));
-        goto cleanup;
+    if(NULL != tmp_pixels) {
+        memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+        tmp_pixels = NULL;
     }
-
-    *out_pixels_ = bmp_loader_->pixels;
-    *out_pixel_data_size_ = bmp_loader_->info_header.bi_size_image;
-    bmp_loader_->pixels = NULL;
-
-    ret = RESOURCE_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-resource_result_t bmp_loader_bmp_size_get(const bmp_loader_t* bmp_loader_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_NOT_INITIALIZED;
-
-    int32_t tmp_width = 0;
-    int32_t tmp_height = 0;
-    uint8_t tmp_channel_count = 0;
-
-    IF_ARG_NULL_GOTO_CLEANUP(bmp_loader_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_bmp_size_get", "bmp_loader_")
-    IF_ARG_NULL_GOTO_CLEANUP(width_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_bmp_size_get", "width_")
-    IF_ARG_NULL_GOTO_CLEANUP(height_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_bmp_size_get", "height_")
-    IF_ARG_NULL_GOTO_CLEANUP(channel_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_bmp_size_get", "channel_count_")
-
-    valid_bmp = is_bmp_supported(&bmp_loader_->file_header, &bmp_loader_->info_header);
-    if(BMP_FILE_NOT_INITIALIZED == valid_bmp) {
-        ret = RESOURCE_BAD_OPERATION;
-        ERROR_MESSAGE("bmp_loader_bmp_size_get(%s) - bmp_loader is not initialized.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_UNDEFINED == valid_bmp) {
-        ret = RESOURCE_UNDEFINED_ERROR;
-        ERROR_MESSAGE("bmp_loader_bmp_size_get(%s) - Undefined error.", resource_rslt_to_str(ret));
-        goto cleanup;
-    } else if(BMP_FILE_VALID != valid_bmp) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_bmp_size_get(%s) - Unsupported BMP file. reason = '%s'", resource_rslt_to_str(ret), invalid_reason_to_str(valid_bmp));
-        goto cleanup;
-    }
-
-    tmp_width = bmp_loader_->info_header.bi_width;
-    tmp_height = (bmp_loader_->info_header.bi_height > 0) ? bmp_loader_->info_header.bi_height : -1 * bmp_loader_->info_header.bi_height;
-
-    if(24 == bmp_loader_->info_header.bi_bit_count) {
-        tmp_channel_count = 3;
-    } else if(32 == bmp_loader_->info_header.bi_bit_count) {
-        tmp_channel_count = 4;
-    } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_bmp_size_get(%s) - Unsupported BMP bit count.", resource_rslt_to_str(ret));
-        return ret;
-    }
-
-    *width_ = tmp_width;
-    *height_ = tmp_height;
-    *channel_count_ = tmp_channel_count;
-
-    ret = RESOURCE_SUCCESS;
-
-cleanup:
     return ret;
 }
 
@@ -440,7 +290,7 @@ static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_h
     }
 
     width = (size_t)(info_header_->bi_width);
-    height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
+    height = (0 < info_header_->bi_height) ? (size_t)info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
     for(size_t i = 0; i != height; ++i) {
         for(size_t j = 0; j != width; ++j) {
             const uint8_t tmp = pixels_[ii];
@@ -591,7 +441,7 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
     IF_ARG_FALSE_GOTO_CLEANUP(24 == info_header_->bi_bit_count, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "info_header_->bi_bit_count")
 
     width = (size_t)(info_header_->bi_width);
-    height = (0 < info_header_->bi_height) ? info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
+    height = (0 < info_header_->bi_height) ? (size_t)info_header_->bi_height : (size_t)(-1 * (int64_t)(info_header_->bi_height));
 
     // NOTE: 現状はサイズがint16_tなのでオーバーフローにはならないが、将来の拡張のために入れておく
     if((SIZE_MAX / height) < width) {
@@ -953,27 +803,6 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_) {
     dst_->bi_y_pels_per_meter = src_->bi_y_pels_per_meter;
 }
 
-/**
- * @brief BMP FILEHADER, INFOHEADERを見て正常なBMPファイルかを判定する
- *
- * @note 異常がある場合は原因をメッセージ出力する(DEBUG_BUILD or TEST_BUILD時のみ)
- *
- * @param[in] file_header_ BMP FILEHEADER情報
- * @param[in] info_header_ BMP INFOHEADER情報
- *
- * @retval BMP_FILE_INVALID_BF_TYPE bfTypeが'BM'ではない
- * @retval BMP_FILE_INVALID_BF_RESERVED bfReserved1(or2)が0ではない
- * @retval BMP_FILE_INVALID_BF_SIZE bfSizeが54byte以下
- * @retval BMP_FILE_INVALID_BF_OFF_BITS bfOffBitsが54byte未満もしくはbfSize以上
- * @retval BMP_FILE_INVALID_BI_SIZE biSizeが40(byte)ではない
- * @retval BMP_FILE_INVALID_BI_PLANES biPlanesが1以外
- * @retval BMP_FILE_INVALID_COMPRESSION biCompressionがBI_RGB(非圧縮)以外
- * @retval BMP_FILE_NOT_INITIALIZED biBitCount, biHeight, biWidthのいずれかが0で未初期化
- * @retval BMP_FILE_INVALID_HEIGHT biHeightがint16_tの範囲外
- * @retval BMP_FILE_INVALID_WIDTH biWidthが0未満もしくはint16_tの範囲外
- * @retval BMP_FILE_INVALID_CHANNEL_COUNT biBitCountが24 or 32以外(チャンネルカウントRGB or RGBAのみをサポート)
- * @retval BMP_FILE_VALID BMPヘッダ情報が正常
- */
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_) {
     if(NULL == file_header_ || NULL == info_header_) {
         DEBUG_MESSAGE("BMP validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", file_header_, info_header_);
@@ -1005,16 +834,13 @@ static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, 
     } else if(0 != info_header_->bi_compression) {
         DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP compression: only BI_RGB(0) is supported. biCompression=%u", info_header_->bi_compression);
         ret = BMP_FILE_INVALID_COMPRESSION;
-    } else if(0 == info_header_->bi_bit_count || 0 == info_header_->bi_height || 0 == info_header_->bi_width) {
-        DEBUG_MESSAGE("is_bmp_supported - Invalid BMP dimensions or bit count: width, height, and bit_count must be non-zero. width=%d, height=%d, bit_count=%u", info_header_->bi_width, info_header_->bi_height, info_header_->bi_bit_count);
-        ret = BMP_FILE_NOT_INITIALIZED;
-    } else if(INT16_MIN > info_header_->bi_height || INT16_MAX < info_header_->bi_height) {
+    } else if(0 == info_header_->bi_height || INT16_MIN > info_header_->bi_height || INT16_MAX < info_header_->bi_height) {
         DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP height: height must be within int16_t-compatible range. height=%d, min=%d, max=%d", info_header_->bi_height, INT16_MIN, INT16_MAX);
         ret = BMP_FILE_INVALID_HEIGHT;
-    } else if(info_header_->bi_width < 0 || INT16_MAX < info_header_->bi_width) {
+    } else if(0 == info_header_->bi_width || info_header_->bi_width < 0 || INT16_MAX < info_header_->bi_width) {
         DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP width: width must be positive and within int16_t-compatible range. width=%d, max=%d", info_header_->bi_width, INT16_MAX);
         ret = BMP_FILE_INVALID_WIDTH;
-    } else if(24 != info_header_->bi_bit_count && 32 != info_header_->bi_bit_count) {
+    } else if(0 == info_header_->bi_bit_count || (24 != info_header_->bi_bit_count && 32 != info_header_->bi_bit_count)) {
         DEBUG_MESSAGE("is_bmp_supported - Unsupported BMP bit count: only 24-bit and 32-bit BMP files are supported. biBitCount=%u", info_header_->bi_bit_count);
         ret = BMP_FILE_INVALID_CHANNEL_COUNT;
     } else {
@@ -1024,25 +850,6 @@ static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, 
     return ret;
 }
 
-/**
- * @brief BMPファイルの有効 / 無効判定結果の原因を文字列で取得する
- *
- * @param[in] reason_ BMPファイルの有効 / 無効判定結果の原因
- *
- * @retval "valid BMP file" BMPファイル有効
- * @retval "invalid bfType" 無効なBMPファイルの原因: bfType異常
- * @retval "invalid bfReserved field" 無効なBMPファイルの原因: bfReserved異常
- * @retval "invalid bfSize" 無効なBMPファイルの原因: bfSize異常
- * @retval "invalid bfOffBits" 無効なBMPファイルの原因: bfOffBits異常
- * @retval "invalid biSize" 無効なBMPファイルの原因: biSize異常
- * @retval "invalid biPlanes" 無効なBMPファイルの原因: biPlanes異常
- * @retval "invalid biCompression" 無効なBMPファイルの原因: biCompression異常
- * @retval "invalid biHeight" 無効なBMPファイルの原因: biHeight異常
- * @retval "invalid biWidth" 無効なBMPファイルの原因: biWidth異常
- * @retval "unsupported biBitCount" 無効なBMPファイルの原因: biBitCount異常
- * @retval "not initialized" 無効なBMPファイルの原因: 未初期化
- * @retval "undefined" 無効なBMPファイルの原因: 不明な異常
- */
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
     switch(reason_) {
     case BMP_FILE_VALID:
@@ -1067,8 +874,6 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
         return invalid_bmp_file_reason_width;
     case BMP_FILE_INVALID_CHANNEL_COUNT:
         return invalid_bmp_file_reason_channel_count;
-    case BMP_FILE_NOT_INITIALIZED:
-        return invalid_bmp_file_reason_not_initialized;
     case BMP_FILE_UNDEFINED:
         return invalid_bmp_file_reason_undefined;
     default:

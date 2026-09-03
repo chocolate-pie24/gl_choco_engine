@@ -24,7 +24,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/core/resource_types.h"
-#include "engine/resource/config_loaders/ui_geom_config_loader.h"
+#include "engine/resource/loaders/ui_geom_config_loader.h"
 #include "engine/resource/geometry/ui_mesh_geometry.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
