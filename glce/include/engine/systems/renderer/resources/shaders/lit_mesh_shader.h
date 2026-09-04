@@ -35,31 +35,23 @@ typedef struct mat4x4f mat4x4f_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
 typedef struct lit_mesh_shader_config lit_mesh_shader_config_t;
 
-shader_result_t lit_mesh_shader_create(lit_mesh_shader_t** out_lit_mesh_shader_);
+shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const lit_mesh_shader_config_t* config_, lit_mesh_shader_t** out_lit_mesh_shader_);
 
-void lit_mesh_shader_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t** lit_mesh_shader_);
+void lit_mesh_shader_destroy(lit_mesh_shader_t** lit_mesh_shader_);
 
-shader_result_t lit_mesh_shader_program_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
-
-shader_result_t lit_mesh_shader_vbo_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, const lit_mesh_shader_config_t* config_);
-
-shader_result_t lit_mesh_shader_vao_initialize(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
-
-void lit_mesh_shader_vao_vbo_destroy(renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_);
-
-shader_result_t lit_mesh_shader_vbo_write(const renderer_backend_context_t* backend_context_, lit_mesh_shader_t* lit_mesh_shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
+shader_result_t lit_mesh_shader_vbo_write(lit_mesh_shader_t* lit_mesh_shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
 
 shader_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, const vbo_range_t* buffer_range_);
 
-shader_result_t lit_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
+shader_result_t lit_mesh_shader_vao_bind(const lit_mesh_shader_t* lit_mesh_shader_);
 
-shader_result_t lit_mesh_shader_use(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_);
+shader_result_t lit_mesh_shader_use(const lit_mesh_shader_t* lit_mesh_shader_);
 
-shader_result_t lit_mesh_shader_model_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
+shader_result_t lit_mesh_shader_model_matrix_set(const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
 
-shader_result_t lit_mesh_shader_view_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
+shader_result_t lit_mesh_shader_view_matrix_set(const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
-shader_result_t lit_mesh_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+shader_result_t lit_mesh_shader_projection_matrix_set(const lit_mesh_shader_t* lit_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 #ifdef __cplusplus
 }

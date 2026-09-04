@@ -25,11 +25,10 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
-typedef struct renderer_backend_context renderer_backend_context_t;   /**< Renderer Backend Contextのopaque型 */
 typedef struct ui_mesh_shader ui_mesh_shader_t;                       /**< UI描画用シェーダーリソースのopaque型 */
 typedef struct ui_mesh_geometry_registry ui_mesh_geometry_registry_t; /**< UI描画用ジオメトリレジストリのopaque型 */
 
-resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_);
+resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_);
 
 resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 

@@ -36,7 +36,7 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const renderer_backend_context_t* backend_context_, ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -53,7 +53,6 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
     size_t vertex_offset = 0;
     int16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "geometry_registry_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "resource_name_")
@@ -100,7 +99,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(const rend
         goto cleanup;
     }
 
-    ret_shader = ui_mesh_shader_vbo_write(backend_context_, shader_, vertex_count, ui_vertex, &tmp_buffer_range);
+    ret_shader = ui_mesh_shader_vbo_write(shader_, vertex_count, ui_vertex, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, 6);

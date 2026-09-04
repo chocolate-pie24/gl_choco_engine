@@ -34,7 +34,7 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(const renderer_backend_context_t* backend_context_, point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -48,7 +48,6 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
 
     point_mesh_geometry_t* geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "geometry_registry_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
@@ -72,7 +71,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(con
         goto cleanup;
     }
 
-    ret_shader = point_mesh_shader_vbo_write(backend_context_, shader_, vertex_count_, vertices_, &tmp_buffer_range);
+    ret_shader = point_mesh_shader_vbo_write(shader_, vertex_count_, vertices_, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);
