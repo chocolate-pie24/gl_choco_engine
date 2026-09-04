@@ -362,13 +362,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // UI Shader
-    ret = ui_mesh_shader_initialize(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - ui_mesh_shader_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
+    // Shader config
     tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.ui_mesh_shader_config.vbo_size = 1024;
@@ -384,56 +378,25 @@ application_result_t application_create(void) {
     tmp->renderer_config.lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.lit_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.lit_mesh_shader_config.vbo_size = 1 * GIB;
-    ret_shader = ui_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader, &tmp->renderer_config.ui_mesh_shader_config);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create ui vertex buffer.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = ui_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->ui_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize ui vao.", app_rslt_to_str(ret));
+
+    // UI Mesh Shader
+    ret = ui_mesh_shader_initialize(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - ui_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    // Line Shader
+    // Line Mesh Shader
     ret = line_mesh_shader_initialize(tmp);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - line_mesh_shader_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_shader = line_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader, &tmp->renderer_config.line_mesh_shader_config);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create line vertex buffer.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = line_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->line_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize line vao.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // Point Shader
+    // Point Mesh Shader
     ret = point_mesh_shader_initialize(tmp);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - point_mesh_shader_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = point_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader, &tmp->renderer_config.point_mesh_shader_config);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create point mesh vertex buffer.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = point_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->point_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize point mesh vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -441,19 +404,6 @@ application_result_t application_create(void) {
     ret = lit_mesh_shader_initialize(tmp);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - lit_mesh_shader_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = lit_mesh_shader_vbo_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader, &tmp->renderer_config.lit_mesh_shader_config);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to create lit vertex buffer.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_shader = lit_mesh_shader_vao_initialize(tmp->renderer_backend_context, tmp->lit_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize lit vao.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -554,16 +504,16 @@ cleanup:
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->lit_mesh_shader) {
-                    lit_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->lit_mesh_shader);
+                    lit_mesh_shader_destroy(&tmp->lit_mesh_shader);
                 }
                 if(NULL != tmp->point_mesh_shader) {
-                    point_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->point_mesh_shader);
+                    point_mesh_shader_destroy(&tmp->point_mesh_shader);
                 }
                 if(NULL != tmp->line_mesh_shader) {
-                    line_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->line_mesh_shader);
+                    line_mesh_shader_destroy(&tmp->line_mesh_shader);
                 }
                 if(NULL != tmp->ui_mesh_shader) {
-                    ui_mesh_shader_destroy(tmp->renderer_backend_context, &tmp->ui_mesh_shader);
+                    ui_mesh_shader_destroy(&tmp->ui_mesh_shader);
                 }
             }
 
@@ -628,16 +578,16 @@ void application_destroy(void) {
     }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->lit_mesh_shader) {
-            lit_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->lit_mesh_shader);
+            lit_mesh_shader_destroy(&s_app_state->lit_mesh_shader);
         }
         if(NULL != s_app_state->point_mesh_shader) {
-            point_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->point_mesh_shader);
+            point_mesh_shader_destroy(&s_app_state->point_mesh_shader);
         }
         if(NULL != s_app_state->line_mesh_shader) {
-            line_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->line_mesh_shader);
+            line_mesh_shader_destroy(&s_app_state->line_mesh_shader);
         }
         if(NULL != s_app_state->ui_mesh_shader) {
-            ui_mesh_shader_destroy(s_app_state->renderer_backend_context, &s_app_state->ui_mesh_shader);
+            ui_mesh_shader_destroy(&s_app_state->ui_mesh_shader);
         }
     }
     renderer_backend_destroy(s_app_state->renderer_backend_context);
@@ -725,24 +675,24 @@ application_result_t application_run(void) {
     camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
     camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
-    ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
-    ui_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
-    ui_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->projection_matrix, true);
+    ui_mesh_shader_use(s_app_state->ui_mesh_shader);
+    ui_mesh_shader_view_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
+    ui_mesh_shader_projection_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->projection_matrix, true);
 
-    line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
-    line_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->model_matrix, true);
-    line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
-    line_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->projection_matrix, true);
+    line_mesh_shader_use(s_app_state->line_mesh_shader);
+    line_mesh_shader_model_matrix_set(s_app_state->line_mesh_shader, &s_app_state->model_matrix, true);
+    line_mesh_shader_view_matrix_set(s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
+    line_mesh_shader_projection_matrix_set(s_app_state->line_mesh_shader, &s_app_state->projection_matrix, true);
 
-    point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
-    point_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->model_matrix, true);
-    point_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
-    point_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->projection_matrix, true);
+    point_mesh_shader_use(s_app_state->point_mesh_shader);
+    point_mesh_shader_model_matrix_set(s_app_state->point_mesh_shader, &s_app_state->model_matrix, true);
+    point_mesh_shader_view_matrix_set(s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
+    point_mesh_shader_projection_matrix_set(s_app_state->point_mesh_shader, &s_app_state->projection_matrix, true);
 
-    lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
-    lit_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->model_matrix, true);
-    lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
-    lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
+    lit_mesh_shader_use(s_app_state->lit_mesh_shader);
+    lit_mesh_shader_model_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->model_matrix, true);
+    lit_mesh_shader_view_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
+    lit_mesh_shader_projection_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
 
     ret = texture_initialize(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
@@ -786,7 +736,7 @@ application_result_t application_run(void) {
             ERROR_MESSAGE("application_run - Failed to initialize penguin aabb.");
             goto cleanup;
         }
-        ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "penguin_aabb", &penguin_aabb, &s_app_state->geometry_id_penguin_aabb);
+        ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "penguin_aabb", &penguin_aabb, &s_app_state->geometry_id_penguin_aabb);
         if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
             ret = APPLICATION_RUNTIME_ERROR;
             ERROR_MESSAGE("application_run - Failed to import penguin aabb.");
@@ -799,7 +749,7 @@ application_result_t application_run(void) {
     tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
     s_app_state->test_line_color = vec4u8_initialize(0, 255, 0, 255);
 
-    ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "test_line", tmp_vertices, 2, &s_app_state->geometry_id_test_line);
+    ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "test_line", tmp_vertices, 2, &s_app_state->geometry_id_test_line);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import test line.");
@@ -839,12 +789,12 @@ application_result_t application_run(void) {
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
         // UI描画
-        ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
-        ui_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+        ui_mesh_shader_use(s_app_state->ui_mesh_shader);
+        ui_mesh_shader_vao_bind(s_app_state->ui_mesh_shader);
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon);
         if(NULL != tmp_draw_range) {
             // ウサギ
-            ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
+            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_rabbit);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -853,7 +803,7 @@ application_result_t application_run(void) {
             texture_gpu_resource_unbind(tex_gpu_resource);
 
             // テストテクスチャ
-            ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
+            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_green);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -865,7 +815,7 @@ application_result_t application_run(void) {
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon);
         if(NULL != tmp_draw_range) {
             // カエル
-            ui_mesh_shader_model_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
+            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_frog);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -876,16 +826,16 @@ application_result_t application_run(void) {
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
 
         // 線分描画
-        line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
-        line_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+        line_mesh_shader_use(s_app_state->line_mesh_shader);
+        line_mesh_shader_vao_bind(s_app_state->line_mesh_shader);
         tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb);
         if(NULL != tmp_draw_range) {
-            line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
+            line_mesh_shader_color_set(s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
             glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
         tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line);
         if(NULL != tmp_draw_range) {
-            line_mesh_shader_color_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
+            line_mesh_shader_color_set(s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
             glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
         renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
@@ -893,8 +843,8 @@ application_result_t application_run(void) {
         // ポイント描画
         tmp_draw_range = point_mesh_geometry_registry_draw_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points);
         if(NULL != tmp_draw_range) {
-            point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
-            point_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+            point_mesh_shader_use(s_app_state->point_mesh_shader);
+            point_mesh_shader_vao_bind(s_app_state->point_mesh_shader);
 
             glDrawArrays(GL_POINTS, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
@@ -903,8 +853,8 @@ application_result_t application_run(void) {
         // STL描画
         tmp_draw_range = lit_mesh_geometry_registry_draw_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin);
         if(NULL != tmp_draw_range) {
-            lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
-            lit_mesh_shader_vao_bind(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+            lit_mesh_shader_use(s_app_state->lit_mesh_shader);
+            lit_mesh_shader_vao_bind(s_app_state->lit_mesh_shader);
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
             renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
@@ -1125,56 +1075,56 @@ static void app_state_dispatch(void) {
                 goto cleanup;
             }
 
-            ret_shader = ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+            ret_shader = ui_mesh_shader_use(s_app_state->ui_mesh_shader);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_use failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = ui_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &tmp_projection, true);
+            ret_shader = ui_mesh_shader_projection_matrix_set(s_app_state->ui_mesh_shader, &tmp_projection, true);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+            ret_shader = line_mesh_shader_use(s_app_state->line_mesh_shader);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_use failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = line_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &tmp_projection, true);
+            ret_shader = line_mesh_shader_projection_matrix_set(s_app_state->line_mesh_shader, &tmp_projection, true);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+            ret_shader = point_mesh_shader_use(s_app_state->point_mesh_shader);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_use failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = point_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &tmp_projection, true);
+            ret_shader = point_mesh_shader_projection_matrix_set(s_app_state->point_mesh_shader, &tmp_projection, true);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+            ret_shader = lit_mesh_shader_use(s_app_state->lit_mesh_shader);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_use failed.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_shader = lit_mesh_shader_projection_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &tmp_projection, true);
+            ret_shader = lit_mesh_shader_projection_matrix_set(s_app_state->lit_mesh_shader, &tmp_projection, true);
             if(SHADER_SUCCESS != ret_shader) {
                 ret = app_rslt_convert_shader(ret_shader);
                 ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
@@ -1198,56 +1148,56 @@ static void app_state_dispatch(void) {
                 goto cleanup;
         }
 
-        ret_shader = ui_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader);
+        ret_shader = ui_mesh_shader_use(s_app_state->ui_mesh_shader);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_use failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = ui_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
+        ret_shader = ui_mesh_shader_view_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = line_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader);
+        ret_shader = line_mesh_shader_use(s_app_state->line_mesh_shader);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - renderer_backend_context failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = line_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
+        ret_shader = line_mesh_shader_view_matrix_set(s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = point_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader);
+        ret_shader = point_mesh_shader_use(s_app_state->point_mesh_shader);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_use failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = point_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
+        ret_shader = point_mesh_shader_view_matrix_set(s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = lit_mesh_shader_use(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader);
+        ret_shader = lit_mesh_shader_use(s_app_state->lit_mesh_shader);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_use failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
 
-        ret_shader = lit_mesh_shader_view_matrix_set(s_app_state->renderer_backend_context, s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
+        ret_shader = lit_mesh_shader_view_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
         if(SHADER_SUCCESS != ret_shader) {
             ret = app_rslt_convert_shader(ret_shader);
             ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
@@ -1304,7 +1254,7 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
     tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
 
-    ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->renderer_backend_context, app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
+    ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ERROR_MESSAGE("point_geometry_create - Failed to import point mesh geometry.");
         goto cleanup;
@@ -1337,7 +1287,6 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
         goto cleanup;
     }
     ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        app_state_->renderer_backend_context,
         app_state_->ui_mesh_shader,
         app_state_->ui_mesh_geometry_registry,
         small_icon_name,
@@ -1357,7 +1306,6 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
         goto cleanup;
     }
     ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        app_state_->renderer_backend_context,
         app_state_->ui_mesh_shader,
         app_state_->ui_mesh_geometry_registry,
         large_icon_name,
@@ -1399,7 +1347,6 @@ static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
     }
     // ペンギンSTL pipeline import
     ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
-        app_state_->renderer_backend_context,
         app_state_->lit_mesh_shader,
         app_state_->lit_mesh_geometry_registry,
         penguin_name,
@@ -1444,14 +1391,7 @@ static application_result_t line_mesh_shader_initialize(app_state_t* app_state_)
         goto cleanup;
     }
 
-    ret_shader = line_mesh_shader_create(&app_state_->line_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = line_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->line_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    ret_shader = line_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.line_mesh_shader_config, &app_state_->line_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
@@ -1492,17 +1432,10 @@ static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_) 
         goto cleanup;
     }
 
-    ret_shader = lit_mesh_shader_create(&app_state_->lit_mesh_shader);
+    ret_shader = lit_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.lit_mesh_shader_config, &app_state_->lit_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = lit_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->lit_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit shader.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -1540,14 +1473,7 @@ static application_result_t point_mesh_shader_initialize(app_state_t* app_state_
         goto cleanup;
     }
 
-    ret_shader = point_mesh_shader_create(&app_state_->point_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = point_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->point_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    ret_shader = point_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.point_mesh_shader_config, &app_state_->point_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
@@ -1588,14 +1514,7 @@ static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
         goto cleanup;
     }
 
-    ret_shader = ui_mesh_shader_create(&app_state_->ui_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = ui_mesh_shader_program_initialize(app_state_->renderer_backend_context, app_state_->ui_mesh_shader, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path));
+    ret_shader = ui_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.ui_mesh_shader_config, &app_state_->ui_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
         ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));

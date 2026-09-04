@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-/** @ingroup resource
- *
- * @file stl_loader.h
- * @author chocolate-pie24
- * @brief STLファイルのロード処理を行うAPIの定義
- *
- * @details 以下のSTLファイルをサポートする
- * - ASCII形式のSTL(BINARY形式は将来的にサポート予定)
- * - ファイルに含まれる法線情報は[-1.0...1.0]の範囲であり、NaN、Infを含まないこと
- *
- * @todo 以下を行う
- * - GLCEカスタムフォーマットでの出力機能
- * - カスタムフォーマットが存在する場合はそちらで読み込み、ない場合は通常STLを読み込みカスタムフォーマットファイルを出力
- * @todo 現状では法線情報が[-1.0...1.0]の範囲に収まっているかをチェックしているが、この範囲に収まっていても長さが非1.0で正規化されていない場合がある。チェックを厳密化する。
- *
- * @date 2026-06-02
- *
- */
 #ifndef GLCE_ENGINE_RESOURCE_LOADERS_STL_LOADER_H
 #define GLCE_ENGINE_RESOURCE_LOADERS_STL_LOADER_H
 
@@ -32,79 +14,7 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-typedef struct stl_loader stl_loader_t; /**< STLローダー内部状態管理構造体前方宣言 */
-
-/**
- * @brief stl_loader_tのメモリを確保し、内部状態を初期化する
- *
- * @note 内部状態は以下の値で初期化される
- * - vertex_count = 0
- * - vertices = NULL
- * @note 失敗時にはstl_loader_の状態は不変
- *
- * @param[out] stl_loader_ stl_loader_t構造体インスタンスへのダブルポインタ
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - stl_loader_ == NULL
- * - *stl_loader_ != NULL
- * @retval RESOURCE_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RESOURCE_NO_MEMORY メモリ確保失敗
- * @retval RESOURCE_BAD_OPERATION メモリシステム未初期化
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-resource_result_t stl_loader_create(stl_loader_t** stl_loader_);
-
-/**
- * @brief stl_loader_が保有するリソースを解放し、自身のメモリを解放する
- *
- * @note 本APIが成功した場合、stl_loader_はNULLとなり、再使用不可
- * @note 2重destroyを許可
- * @note NULL != (*stl_loader_)->verticesかつ0 == (*stl_loader_)->vertex_countのように壊れたデータの場合には、verticesのメモリ解放サイズが不明であるため解放せず、verticesはリーク状態となる(この場合はエラーメッセージを出力する)
- *
- * @param[out] stl_loader_ リソース解放対象stl_loader_t構造体インスタンスへのダブルポインタ
- */
-void stl_loader_destroy(stl_loader_t** stl_loader_);
-
-resource_result_t stl_loader_ascii_load(const char* fullpath_, stl_loader_t* stl_loader_);
-
-/**
- * @brief stl_loader_が保有する頂点配列情報の所有権をAPI呼び出し側へ委譲する
- *
- * @note 本APIが成功すると、頂点配列の所有権は呼び出し側へ移り、stl_loader_ は未ロード状態に戻る
- *
- * @param[in,out] stl_loader_ 頂点情報、頂点数情報を保有するstl_loader_t構造体インスタンスへのポインタ
- * @param[out] out_vertices_ 頂点情報委譲先
- * @param[out] out_vertex_count_ 頂点数情報格納先
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - stl_loader_ == NULL
- * - out_vertices_ == NULL
- * - *out_vertices_ != NULL
- * - out_vertex_count_ == NULL
- * @retval RESOURCE_BAD_OPERATION 以下のいずれか
- * - stl_loader_->vertex_count == 0
- * - stl_loader_->vertices == NULL
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-resource_result_t stl_loader_vertices_move(stl_loader_t* stl_loader_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
-
-/**
- * @brief stl_loader_が保持する頂点数情報を取得する
- *
- * @warning stl_loader_vertices_move()実行後はstl_loader_が頂点配列を保持しない状態になるため、本APIはRESOURCE_BAD_OPERATIONを返す
- *
- * @param[in] stl_loader_ stl_loader_t構造体インスタンスへのポインタ
- * @param[out] out_vertex_count_ 頂点数情報格納先
- *
- * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
- * - stl_loader_ == NULL
- * - out_vertex_count_ == NULL
- * @retval RESOURCE_BAD_OPERATION 以下のいずれか
- * - stl_loader_->vertex_count == 0
- * - stl_loader_->vertices == NULL
- * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
- */
-resource_result_t stl_loader_vertices_count_get(const stl_loader_t* stl_loader_, size_t* out_vertex_count_);
+resource_result_t stl_loader_load(const char* fullpath_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
 
 #ifdef __cplusplus
 }

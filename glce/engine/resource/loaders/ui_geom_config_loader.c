@@ -10,7 +10,7 @@
  * @date 2026-06-30
  *
  */
-#include "engine/resource/config_loaders/ui_geom_config_loader.h"
+#include "engine/resource/loaders/ui_geom_config_loader.h"
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -26,15 +26,14 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
-typedef struct renderer_backend_context renderer_backend_context_t;         /**< Renderer Backend Contextのopaque型 */
 typedef struct line_mesh_shader line_mesh_shader_t;                         /**< 線分描画用シェーダーリソースのopaque型 */
 typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**< 線分描画用ジオメトリレジストリのopaque型 */
 typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_);
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(const renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_);
 
 resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
 

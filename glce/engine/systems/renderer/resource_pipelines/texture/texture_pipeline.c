@@ -241,8 +241,6 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
 
-    bmp_loader_t* bmp_loader = NULL;
-
     uint16_t tmp_width = 0;
     uint16_t tmp_height = 0;
     uint8_t tmp_channel_count = 0;
@@ -257,35 +255,12 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "*out_pixels_")
     IF_ARG_NULL_GOTO_CLEANUP(out_pixel_data_size_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_pixel_data_size_")
 
-    ret_resource = bmp_loader_create(&bmp_loader);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("bmp_load(%s) - Failed to create bmp_loader.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_resource = bmp_loader_load(fullpath_, bmp_loader);
+    ret_resource = bmp_loader_load(fullpath_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixel_data_size, &tmp_pixels);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
         ERROR_MESSAGE("bmp_load(%s) - Failed to load BMP file(%s).", resource_pipeline_rslt_to_str(ret), fullpath_);
         goto cleanup;
     }
-
-    ret_resource = bmp_loader_bmp_size_get(bmp_loader, &tmp_width, &tmp_height, &tmp_channel_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("bmp_load(%s) - Failed to get BMP size(%s).", resource_pipeline_rslt_to_str(ret), fullpath_);
-        goto cleanup;
-    }
-
-    ret_resource = bmp_loader_pixel_move(bmp_loader, &tmp_pixels, &tmp_pixel_data_size);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("bmp_load(%s) - Failed to move BMP pixels.", resource_pipeline_rslt_to_str(ret), fullpath_);
-        goto cleanup;
-    }
-
-    bmp_loader_destroy(&bmp_loader);
 
     *out_width_ = tmp_width;
     *out_height_ = tmp_height;
@@ -296,9 +271,6 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_PIPELINE_SUCCESS != ret) {
-        bmp_loader_destroy(&bmp_loader);
-    }
     return ret;
 }
 

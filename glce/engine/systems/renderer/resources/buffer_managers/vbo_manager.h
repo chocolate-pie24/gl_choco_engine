@@ -345,7 +345,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_t* backend_context_);
+void vbo_manager_destroy(vbo_manager_t** vbo_manager_);
 
 /**
  * @brief VBO内にrangeを確保してvertex dataを転送する
@@ -510,7 +510,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_, renderer_backend_context_
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_);
+buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_);
 
 /**
  * @brief vertex allocationが表すVBO内rangeを解放する
@@ -709,7 +709,7 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const rang
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_, const renderer_backend_context_t* backend_context_);
+buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_);
 
 /**
  * @brief 現在のRenderer Backend VBO bindingを解除する
@@ -775,7 +775,7 @@ buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_, const rend
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-buffer_manager_result_t vbo_manager_unbind(const renderer_backend_context_t* backend_context_);
+buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_);
 
 /**
  * @brief VBO Manager生成設定の基本的な有効性を検証する
