@@ -215,6 +215,7 @@ application_result_t application_create(void) {
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
     flight_camera_key_bind_t flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
+    flight_camera_t* tmp_flight_camera = NULL;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -451,7 +452,8 @@ application_result_t application_create(void) {
     // camera
     ret_camera_registry = flight_camera_registry_initialize(16, tmp->linear_alloc, &tmp->flight_camera_registry);
     if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
-        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_initialize failed.", APPLICATION_RUNTIME_ERROR);
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -467,13 +469,13 @@ application_result_t application_create(void) {
     flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
     flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
 
-    ret_camera = flight_camera_create(flight_camera_keybinds, 45.0f, (float)tmp->framebuffer_width / (float)tmp->framebuffer_height, 0.1f, 50.0f, &tmp->flight_camera);
+    ret_camera = flight_camera_create(flight_camera_keybinds, 45.0f, (float)tmp->framebuffer_width / (float)tmp->framebuffer_height, 0.1f, 50.0f, &tmp_flight_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_create(%s) - flight_camera_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_camera_registry = flight_camera_registry_register(tmp->flight_camera_registry, "flight_camera", &tmp->flight_camera, &tmp->active_camera_id);
+    ret_camera_registry = flight_camera_registry_register(tmp->flight_camera_registry, "flight_camera", &tmp_flight_camera, &tmp->active_camera_id);
     if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_create(%s) - flight_camera_registry_register failed.", app_rslt_to_str(ret));
@@ -495,6 +497,9 @@ application_result_t application_create(void) {
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
+        if(NULL != tmp_flight_camera) {
+            flight_camera_destroy(&tmp_flight_camera);
+        }
         if(NULL != tmp) {
             if(NULL != tmp->flight_camera_registry) {
                 flight_camera_registry_deinitialize(tmp->flight_camera_registry);
