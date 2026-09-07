@@ -1,29 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-/**
- * @ingroup camera_system
- * @file camera.c
- * @author chocolate-pie24
- * @brief カメラモジュール実装
- *
- * @date 2026-03-09
- *
- */
-#include "engine/systems/camera_system/camera/camera.h"
+#include "engine/camera/camera.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/containers/choco_string.h"
+#include "engine/core/memory/choco_memory.h"
 
-#include "engine/systems/camera_system/camera_core/camera_err_utils.h"
-#include "engine/systems/camera_system/camera_core/camera_memory.h"
-#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include "engine/camera/core/camera_types.h"
+#include "engine/camera/core/camera_err_utils.h"
 
 /**
  * @brief 視錐台データホルダ
@@ -56,8 +47,6 @@ struct camera {
 
     viewing_frustum_t frustum;          /**< 視錐台パラメータ */
 
-    choco_string_t* name;               /**< カメラ名称文字列 */
-
     bool posture_cache_dirty;           /**< true: 姿勢が更新されているが、姿勢由来の行列が更新されていない, false: 姿勢と姿勢由来の行列が同期済み */
     bool frustum_cache_dirty;           /**< true: 視錐台が更新されているが、視錐台由来の行列が更新されていない, false: 視錐台と視錐台由来の行列が同期済み */
 };
@@ -68,35 +57,42 @@ static camera_result_t camera_posture_cache_sync(camera_t* camera_);
 static void perspective_matrix_update(camera_t* camera_);
 static void camera_to_world_matrix_update(camera_t* camera_);
 static bool view_matrix_update(camera_t* camera_);
-static bool is_valid_frustum(const viewing_frustum_t* frustum_);
 
-camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
+static bool frustum_is_valid(const viewing_frustum_t* frustum_);
+static bool camera_is_valid_shallow(const camera_t* camera_);
+
+static void destroy_unchecked(camera_t** camera_);
+
+camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
+
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
     camera_t* tmp_camera = NULL;
-    choco_string_result_t string_ret = CHOCO_STRING_INVALID_ARGUMENT;
+    const viewing_frustum_t tmp_frustum = {
+        .aspect = aspect_,
+        .far_clip = far_clip_,
+        .fovy = fovy_,
+        .near_clip = near_clip_,
+    };
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "out_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "*out_camera_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_create", "*out_camera_")
+    if(!frustum_is_valid(&tmp_frustum)) {
+        ret = CAMERA_INVALID_ARGUMENT;
+        ERROR_MESSAGE("camera_create(%s) - Provided frustum parameters is not valid.", camera_rslt_to_str(ret));
+        goto cleanup;
+    }
 
-    ret = camera_mem_allocate(sizeof(camera_t), (void**)&tmp_camera);
-    if(CAMERA_SUCCESS != ret) {
+    ret_memory_system = memory_system_allocate(sizeof(camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_camera);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = camera_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", camera_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp_camera->name = NULL;
+    memset(tmp_camera, 0, sizeof(camera_t));
 
-    string_ret = choco_string_create_from_c_string(name_, &tmp_camera->name);
-    if(CHOCO_STRING_SUCCESS != string_ret) {
-        ret = camera_rslt_convert_choco_string(string_ret);
-        ERROR_MESSAGE("camera_create(%s) - Failed to create string for camera name.", camera_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    tmp_camera->frustum.aspect = 0.0f;
-    tmp_camera->frustum.far_clip = 0.0f;
-    tmp_camera->frustum.near_clip = 0.0f;
-    tmp_camera->frustum.fovy = 0.0f;
+    tmp_camera->frustum = tmp_frustum;
 
     mat4f_identity(&tmp_camera->view_matrix);
     mat4f_identity(&tmp_camera->camera_to_world_matrix);
@@ -109,18 +105,13 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_) {
     tmp_camera->position = vec3f_initialize(0.0f, 0.0f, 0.0f);
 
     *out_camera_ = tmp_camera;
+    tmp_camera = NULL;
 
     ret = CAMERA_SUCCESS;
 
 cleanup:
-    if(CAMERA_SUCCESS != ret) {
-        if(NULL != tmp_camera) {
-            if(NULL != tmp_camera->name) {
-                // ここは現状では通ることがないためカバレッジは100にならないが許容
-                choco_string_destroy(&tmp_camera->name);
-            }
-            camera_destroy(&tmp_camera);
-        }
+    if(NULL != tmp_camera) {
+        destroy_unchecked(&tmp_camera);
     }
     return ret;
 }
@@ -132,23 +123,7 @@ void camera_destroy(camera_t** camera_) {
     if(NULL == *camera_) {
         return;
     }
-    if(NULL != (*camera_)->name) {
-        choco_string_destroy(&(*camera_)->name);
-    }
-    camera_mem_free(*camera_, sizeof(camera_t));
-    *camera_ = NULL;
-}
-
-const char* camera_name_get(const camera_t* camera_) {
-    if(NULL == camera_) {
-        ERROR_MESSAGE("camera_name_get(%s) - Argument camera_ requires a valid pointer.", camera_rslt_to_str(CAMERA_INVALID_ARGUMENT));
-        return NULL;
-    }
-    if(NULL == camera_->name) {
-        ERROR_MESSAGE("camera_name_get(%s) - Provided camera_ is corrupted.", camera_rslt_to_str(CAMERA_DATA_CORRUPTED));
-        return NULL;
-    }
-    return choco_string_c_str(camera_->name);
+    destroy_unchecked(camera_);
 }
 
 camera_result_t camera_viewing_frustum_update(camera_t* camera_, float fovy_, float aspect_, float near_clip_, float far_clip_) {
@@ -161,7 +136,7 @@ camera_result_t camera_viewing_frustum_update(camera_t* camera_, float fovy_, fl
     frustum.far_clip = far_clip_;
     frustum.fovy = fovy_;
     frustum.near_clip = near_clip_;
-    if(!is_valid_frustum(&frustum)) {
+    if(!frustum_is_valid(&frustum)) {
         ret = CAMERA_INVALID_ARGUMENT;
         ERROR_MESSAGE("camera_viewing_frustum_update(%s) - Invalid frustum parameter.", camera_rslt_to_str(ret));
         goto cleanup;
@@ -240,7 +215,6 @@ camera_result_t camera_perspective_matrix_get(camera_t* camera_, mat4x4f_t* out_
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_perspective_matrix_get", "out_mat_")
-    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_perspective_matrix_get", "camera_->frustum")
 
     ret = camera_frustum_cache_sync(camera_);
     if(CAMERA_SUCCESS != ret) {
@@ -442,6 +416,13 @@ cleanup:
     return ret;
 }
 
+bool camera_is_valid(const camera_t* camera_) {
+    if(NULL == camera_) {
+        return false;
+    }
+    return camera_is_valid_shallow(camera_);
+}
+
 /**
  * @brief カメラ視錐台に合わせて以下の行列を更新する
  * - 透視投影行列
@@ -458,7 +439,6 @@ static camera_result_t camera_frustum_cache_sync(camera_t* camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_rslt_to_str(CAMERA_INVALID_ARGUMENT), "camera_frustum_cache_sync", "camera_")
-    IF_ARG_FALSE_GOTO_CLEANUP(is_valid_frustum(&camera_->frustum), ret, CAMERA_BAD_OPERATION, camera_rslt_to_str(CAMERA_BAD_OPERATION), "camera_frustum_cache_sync", "camera_->frustum")
 
     if(camera_->frustum_cache_dirty) {
         perspective_matrix_update(camera_);
@@ -505,16 +485,12 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief プロジェクション行列(透視投影)を更新する
- *
- * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
- * - camera_ != NULL
- * - is_valid_frustum(&camera->frustum) == true
- *
- * @param[in,out] camera_ プロジェクション行列取得対象カメラ構造体インスタンスへのポインタ
- */
 static void perspective_matrix_update(camera_t* camera_) {
+    if(NULL == camera_) {
+        ERROR_MESSAGE("perspective_matrix_update(%s) - Provided camera_ is not valid.", camera_rslt_to_str(CAMERA_INVALID_ARGUMENT));
+        return;
+    }
+
     const float dz = camera_->frustum.far_clip - camera_->frustum.near_clip;
 
     mat4f_identity(&camera_->perspective_matrix);
@@ -526,15 +502,12 @@ static void perspective_matrix_update(camera_t* camera_) {
     camera_->perspective_matrix.elem[15] = 0.0f;
 }
 
-/**
- * @brief カメラ座標系からワールド座標系へ変換する行列を更新する
- *
- * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
- * - camera_ != NULL
- *
- * @param[in,out] camera_ 座標変換行列取得対象カメラ構造体インスタンスへのポインタ
- */
 static void camera_to_world_matrix_update(camera_t* camera_) {
+    if(NULL == camera_) {
+        ERROR_MESSAGE("camera_to_world_matrix_update(%s) - Provided camera_ is not valid.", camera_rslt_to_str(CAMERA_INVALID_ARGUMENT));
+        return;
+    }
+
     mat4x4f_t rot = { 0 };
     mat4x4f_t trans = { 0 };
 
@@ -545,18 +518,11 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4f_mul(&trans, &rot, &camera_->camera_to_world_matrix);
 }
 
-/**
- * @brief ビュー行列を更新する
- *
- * @warning この関数を呼び出す際は、事前に以下のチェックを必ず行うこと
- * - camera_ != NULL
- *
- * @param[in,out] camera_ ビュー行列取得対象カメラ構造体インスタンスへのポインタ
- *
- * @return true ビュー行列更新成功
- * @return false ビュー行列の更新に失敗(逆行列の計算に失敗)
- */
 static bool view_matrix_update(camera_t* camera_) {
+    if(NULL == camera_) {
+        ERROR_MESSAGE("view_matrix_update(%s) - Provided camera_ is not valid.", camera_rslt_to_str(CAMERA_INVALID_ARGUMENT));
+        return false;
+    }
     mat4x4f_t tmp = { 0 };
 
     mat4f_copy(&camera_->camera_to_world_matrix, &tmp);
@@ -576,7 +542,7 @@ static bool view_matrix_update(camera_t* camera_) {
  * @retval true 視錐台パラメータ正常
  * @retval false 視錐台パラメータ異常
  */
-static bool is_valid_frustum(const viewing_frustum_t* frustum_) {
+static bool frustum_is_valid(const viewing_frustum_t* frustum_) {
     if(NULL == frustum_) {
         return false;
     } else if(frustum_->near_clip >= frustum_->far_clip) {
@@ -594,4 +560,25 @@ static bool is_valid_frustum(const viewing_frustum_t* frustum_) {
         return false;
     }
     return true;
+}
+
+static bool camera_is_valid_shallow(const camera_t* camera_) {
+    if(NULL == camera_) {
+        return false;
+    }
+    if(!frustum_is_valid(&camera_->frustum)) {
+        return false;
+    }
+    return true;
+}
+
+static void destroy_unchecked(camera_t** camera_) {
+    if(NULL == camera_) {
+        return;
+    }
+    if(NULL == *camera_) {
+        return;
+    }
+    memory_system_free(*camera_, sizeof(camera_t), MEMORY_TAG_CAMERA);
+    *camera_ = NULL;
 }

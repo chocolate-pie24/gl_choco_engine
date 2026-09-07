@@ -19,7 +19,6 @@
 
 #include "engine/containers/ring_queue.h"
 
-#include "engine/systems/camera_system/camera_core/camera_types.h"
 #include "engine/systems/platform/core/platform_types.h"
 
 #include "engine/resource/core/resource_types.h"
@@ -176,29 +175,6 @@ application_result_t app_rslt_convert_renderer_backend(renderer_backend_result_t
         return APPLICATION_RUNTIME_ERROR;
     case RENDERER_BACKEND_SHADER_LINK_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
-    switch(rslt_) {
-    case CAMERA_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case CAMERA_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case CAMERA_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case CAMERA_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case CAMERA_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case CAMERA_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case CAMERA_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case CAMERA_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

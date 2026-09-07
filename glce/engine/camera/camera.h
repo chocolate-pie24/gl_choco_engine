@@ -1,47 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-/**
- * @ingroup camera_system
- * @file camera.h
- * @author chocolate-pie24
- * @brief カメラモジュールで、以下を提供する
- * - カメラ姿勢変更
- * - カメラ視錐台パラメータ更新
- * - ビュー / プロジェクション行列の取得
- *
- * @date 2026-03-09
- *
- */
-#ifndef GLCE_ENGINE_SYSTEMS_CAMERA_SYSTEM_CAMERA_CAMERA_H
-#define GLCE_ENGINE_SYSTEMS_CAMERA_SYSTEM_CAMERA_CAMERA_H
+#ifndef GLCE_ENGINE_CAMERA_CAMERA_H
+#define GLCE_ENGINE_CAMERA_CAMERA_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "engine/systems/camera_system/camera_core/camera_types.h"
+#include <stdbool.h>
+
+#include "engine/camera/core/camera_types.h"
 
 #include "engine/base/choco_math/math_types.h"
 
 typedef struct camera camera_t; /**< カメラ内部状態管理構造体前方宣言 */
 
-/**
- * @brief カメラ構造体インスタンスのメモリを確保し、構造体フィールドを0で初期化する
- *
- * @param[in] name_ カメラ名称文字列
- * @param[out] out_camera_ カメラ構造体インスタンスへのダブルポインタ
- *
- * @retval CAMERA_INVALID_ARGUMENT 以下のいずれか
- * - name_ == NULL
- * - out_camera_ == NULL
- * - *out_camera_ != NULL
- * @retval CAMERA_LIMIT_EXCEEDED メモリシステム使用範囲上限超過
- * @retval CAMERA_NO_MEMORY メモリ割り当て失敗
- * @retval CAMERA_BAD_OPERATION メモリシステム未初期化
- * @retval CAMERA_SUCCESS 処理に成功し、正常終了
- */
-camera_result_t camera_create(const char* name_, camera_t** out_camera_);
+camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t** out_camera_);
 
 /**
  * @brief カメラ構造体インスタンスが管理するリソースを破棄し、自身のメモリも破棄する
@@ -51,21 +26,6 @@ camera_result_t camera_create(const char* name_, camera_t** out_camera_);
  * @param[out] camera_ カメラ構造体インスタンスへのダブルポインタ
  */
 void camera_destroy(camera_t** camera_);
-
-/**
- * @brief カメラ構造体が管理するカメラ名称文字列を取得する
- *
- * @warning 取得した文字列のメモリを解放してはいけない。メモリ解放は必ずcamera_destroyを介して行うこと
- *
- * @note 以下の場合はエラーメッセージを出力し、NULLを返す
- * - camera_ == NULL
- * - camera_->name == NULL
- *
- * @param[in] camera_ カメラ構造体インスタンスへのポインタ
- *
- * @return const char* カメラ名称文字列
- */
-const char* camera_name_get(const camera_t* camera_);
 
 /**
  * @brief カメラ構造体が管理する視錐台パラメータを更新(または初期化)する
@@ -279,6 +239,8 @@ camera_result_t camera_up_vector_get(camera_t* camera_, vec3f_t* out_vec_);
  * @retval CAMERA_SUCCESS 処理に成功し、正常終了
  */
 camera_result_t camera_down_vector_get(camera_t* camera_, vec3f_t* out_vec_);
+
+bool camera_is_valid(const camera_t* camera_);
 
 #ifdef __cplusplus
 }

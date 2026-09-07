@@ -27,7 +27,6 @@
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
 
-#include "application/command_interpreter/flight_camera.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -51,8 +50,13 @@
 
 #include "engine/resource/core/resource_types.h"
 
+#include "engine/camera/flight_camera.h"
+
 #include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/platform_context.h"
+
+#include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
+#include "engine/systems/camera/camera_registries/flight_camera_registry.h"
 
 // NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
 // Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
@@ -86,10 +90,6 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
-
-#include "engine/systems/camera_system/camera_manager/camera_manager.h"
-#include "engine/systems/camera_system/camera_core/camera_types.h"
-#include "engine/systems/camera_system/camera/camera.h"
 
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
@@ -126,6 +126,11 @@ typedef struct app_state {
     // platform/platform_context
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
+    // camera
+    flight_camera_registry_t* flight_camera_registry;
+    flight_camera_t* flight_camera;
+    int16_t active_camera_id;
+
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
 
@@ -135,11 +140,6 @@ typedef struct app_state {
     line_mesh_shader_t* line_mesh_shader;
     point_mesh_shader_t* point_mesh_shader;
     lit_mesh_shader_t* lit_mesh_shader;
-
-    camera_manager_t* camera_manager;
-    camera_t* active_camera;
-    int16_t active_camera_id;
-    command_status_flight_camera_t flight_camera_commands[FLIGHT_CAMERA_COMMAND_MAX];
 
     texture_registry_t* texture_registry;
     int16_t tex_id_rabbit;
@@ -210,9 +210,12 @@ application_result_t application_create(void) {
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
     ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    camera_registry_result_t ret_camera_registry = CAMERA_REGISTRY_INVALID_ARGUMENT;
+    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+
+    flight_camera_key_bind_t flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
+    flight_camera_t* tmp_flight_camera = NULL;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -323,14 +326,6 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("mouse event queue initialized successfully.");
 
-    ret_camera = camera_manager_initialize(8, tmp->linear_alloc, &tmp->camera_manager);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to create camera manager.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("camera manager initialized successfully.");
-
     // texture registry.
     ret_registry = texture_registry_initialize(128, tmp->linear_alloc, &tmp->texture_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
@@ -409,29 +404,6 @@ application_result_t application_create(void) {
 
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
-    // camera create.
-    ret = flight_camera_command_initialize(FLIGHT_CAMERA_COMMAND_MAX, tmp->flight_camera_commands);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize flight camera commands.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    tmp->active_camera_id = INVALID_CAMERA_ID;
-    ret_camera = camera_manager_register(tmp->camera_manager, "flight camera", &tmp->active_camera_id);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to register camera.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_camera = camera_manager_camera_get(tmp->camera_manager, tmp->active_camera_id, &tmp->active_camera);
-    // ret_camera = camera_manager_camera_get_by_name(tmp->camera_manager, "flight camera", &tmp->active_camera);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_create(%s) - Failed to get camera.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
     // geometry registries
     tmp->point_mesh_geometry_registry = NULL;
     ret_registry = point_mesh_geometry_registry_initialize(128, tmp->linear_alloc, &tmp->point_mesh_geometry_registry);
@@ -477,6 +449,45 @@ application_result_t application_create(void) {
     }
     // end temporary
 
+    // camera
+    ret_camera_registry = flight_camera_registry_initialize(16, tmp->linear_alloc, &tmp->flight_camera_registry);
+    if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_initialize failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // camera keybinds
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
+    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
+
+    ret_camera = flight_camera_create(flight_camera_keybinds, 45.0f, (float)tmp->framebuffer_width / (float)tmp->framebuffer_height, 0.1f, 50.0f, &tmp_flight_camera);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_create(%s) - flight_camera_create failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    ret_camera_registry = flight_camera_registry_register(tmp->flight_camera_registry, "flight_camera", &tmp_flight_camera, &tmp->active_camera_id);
+    if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_register failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+    tmp->flight_camera = flight_camera_registry_flight_camera_get(tmp->flight_camera_registry, tmp->active_camera_id);
+    if(NULL == tmp->flight_camera) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_flight_camera_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     // commit
     s_app_state = tmp;
     INFO_MESSAGE("Application created successfully.");
@@ -486,7 +497,13 @@ application_result_t application_create(void) {
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
+        if(NULL != tmp_flight_camera) {
+            flight_camera_destroy(&tmp_flight_camera);
+        }
         if(NULL != tmp) {
+            if(NULL != tmp->flight_camera_registry) {
+                flight_camera_registry_deinitialize(tmp->flight_camera_registry);
+            }
             if(NULL != tmp->line_mesh_geometry_registry) {
                 line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry, tmp->line_mesh_shader);
             }
@@ -498,9 +515,6 @@ cleanup:
             }
             if(NULL != tmp->point_mesh_geometry_registry) {
                 point_mesh_geometry_registry_deinitialize(tmp->point_mesh_geometry_registry, tmp->point_mesh_shader);
-            }
-            if(NULL != tmp->camera_manager) {
-                camera_manager_deinitialize(tmp->camera_manager);
             }
             if(NULL != tmp->renderer_backend_context) {
                 if(NULL != tmp->lit_mesh_shader) {
@@ -558,6 +572,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_app_state->flight_camera_registry) {
+        flight_camera_registry_deinitialize(s_app_state->flight_camera_registry);
+    }
     if(NULL != s_app_state->line_mesh_geometry_registry) {
         line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry, s_app_state->line_mesh_shader);
     }
@@ -572,9 +589,6 @@ void application_destroy(void) {
     }
     if(NULL != s_app_state->texture_registry) {
         texture_registry_deinitialize(s_app_state->texture_registry);
-    }
-    if(NULL != s_app_state->camera_manager) {
-        camera_manager_deinitialize(s_app_state->camera_manager);
     }
     if(NULL != s_app_state->renderer_backend_context) {
         if(NULL != s_app_state->lit_mesh_shader) {
@@ -671,9 +685,9 @@ application_result_t application_run(void) {
     mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_app_state->green_mesh_model_mat);
     mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_app_state->frog_mesh_model_mat);
 
-    camera_viewing_frustum_update(s_app_state->active_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
-    camera_perspective_matrix_get(s_app_state->active_camera, &s_app_state->projection_matrix); // TODO: エラー処理
-    camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+    flight_camera_viewing_frustum_update(s_app_state->flight_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
+    flight_camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix); // TODO: エラー処理
+    flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
 
     ui_mesh_shader_use(s_app_state->ui_mesh_shader);
     ui_mesh_shader_view_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
@@ -766,8 +780,6 @@ application_result_t application_run(void) {
     }
 
     // TODO: window NULLチェック
-
-    INFO_MESSAGE("current camera: %s.", camera_name_get(s_app_state->active_camera));
     // end temporary
 
     while(!s_app_state->window_should_close) {
@@ -960,6 +972,8 @@ cleanup:
 static void app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
+    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+
     if(NULL == s_app_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_rslt_to_str(ret));
@@ -1016,8 +1030,9 @@ static void app_state_update(void) {
             if(KEY_M == event.key && !event.event_args.pressed) {
                 memory_system_report();
             } else {
-                ret = flight_camera_command_update(&event, s_app_state->flight_camera_commands);
-                if(APPLICATION_SUCCESS != ret) {
+                ret_camera = flight_camera_command_update(s_app_state->flight_camera, &event);
+                if(CAMERA_SUCCESS != ret_camera) {
+                    ret = APPLICATION_RUNTIME_ERROR;
                     WARN_MESSAGE("app_state_update(%s) - Failed to update flight camera command.", app_rslt_to_str(ret));
                     goto cleanup;
                 }
@@ -1061,16 +1076,16 @@ static void app_state_dispatch(void) {
 
     if(s_app_state->window_resized) {
         if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            ret_camera = camera_viewing_frustum_update(s_app_state->active_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
+            ret_camera = flight_camera_viewing_frustum_update(s_app_state->flight_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
             if(CAMERA_SUCCESS != ret_camera) {
-                ret = app_rslt_convert_camera(ret_camera);
+                ret = APPLICATION_RUNTIME_ERROR;
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(ret));
                 goto cleanup;
             }
 
-            ret_camera = camera_perspective_matrix_get(s_app_state->active_camera, &tmp_projection);
+            ret_camera = flight_camera_perspective_matrix_get(s_app_state->flight_camera, &tmp_projection);
             if(CAMERA_SUCCESS != ret_camera) {
-                ret = app_rslt_convert_camera(ret_camera);
+                ret = APPLICATION_RUNTIME_ERROR;
                 ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", app_rslt_to_str(ret));
                 goto cleanup;
             }
@@ -1134,16 +1149,16 @@ static void app_state_dispatch(void) {
             mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
         }
     }
-    ret =  flight_camera_command_execute(0.1f, 1.0f, s_app_state->flight_camera_commands, s_app_state->active_camera, &s_app_state->view_dirty);
-    if(APPLICATION_SUCCESS != ret) {
+    ret_camera =  flight_camera_command_execute(s_app_state->flight_camera, 0.1f, 1.0f, &s_app_state->view_dirty);
+    if(CAMERA_SUCCESS != ret_camera) {
         ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     if(s_app_state->view_dirty) {
-        ret_camera = camera_view_matrix_get(s_app_state->active_camera, &s_app_state->view_matrix);
+        ret_camera = flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);
         if(CAMERA_SUCCESS != ret_camera) {
-                ret = app_rslt_convert_camera(ret_camera);
+                ret = APPLICATION_RUNTIME_ERROR;
                 ERROR_MESSAGE("app_state_dispatch(%s) - camera_view_matrix_get failed.", app_rslt_to_str(ret));
                 goto cleanup;
         }
