@@ -34,6 +34,7 @@ static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**<
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
+static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 const char* app_rslt_to_str(application_result_t rslt_) {
@@ -60,6 +61,8 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_file_open_error;
     case APPLICATION_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
+    case APPLICATION_WINDOW_CLOSE:
+        return s_rslt_str_window_close;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -118,7 +121,7 @@ application_result_t app_rslt_convert_platform(platform_result_t rslt_) {
     case PLATFORM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case PLATFORM_WINDOW_CLOSE:
-        return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
+        return APPLICATION_WINDOW_CLOSE;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
