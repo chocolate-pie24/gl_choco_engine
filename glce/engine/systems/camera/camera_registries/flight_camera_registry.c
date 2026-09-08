@@ -35,7 +35,7 @@ static camera_registry_result_t registry_entry_deinitialize(registry_entry_t* re
 static bool registry_entry_is_empty(const registry_entry_t* registry_entry_);
 
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
-static bool flight_camera_id_is_valid(const flight_camera_registry_t* registry_, int16_t flight_camera_id_);
+static bool flight_camera_id_is_valid(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_);
 static bool find_by_name(const flight_camera_registry_t* registry_, const char* name_, size_t* out_index_);
 
 static bool is_valid_shallow(const flight_camera_registry_t* registry_);
@@ -146,7 +146,7 @@ bool flight_camera_registry_find(const flight_camera_registry_t* registry_, cons
     return find_by_name(registry_, name_, &tmp_id);
 }
 
-flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, int16_t flight_camera_id_) {
+flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_) {
     if(NULL == registry_) {
         ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided registry_ is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return NULL;
@@ -165,7 +165,7 @@ flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_re
     return registry_->entries[flight_camera_id_].flight_camera;
 }
 
-camera_registry_result_t flight_camera_registry_id_get(const flight_camera_registry_t* registry_, const char* name_, int16_t* out_flight_camera_id_) {
+camera_registry_result_t flight_camera_registry_id_get(const flight_camera_registry_t* registry_, const char* name_, uint16_t* out_flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
@@ -192,7 +192,7 @@ camera_registry_result_t flight_camera_registry_id_get(const flight_camera_regis
         goto cleanup;
     }
 
-    *out_flight_camera_id_ = (int16_t)tmp_id;
+    *out_flight_camera_id_ = (uint16_t)tmp_id;
 
     ret = CAMERA_REGISTRY_SUCCESS;
 
@@ -200,7 +200,7 @@ cleanup:
     return ret;
 }
 
-camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* resource_name_, flight_camera_t** flight_camera_, int16_t* out_flight_camera_id_) {
+camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* resource_name_, flight_camera_t** flight_camera_, uint16_t* out_flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -276,7 +276,7 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
     }
 #endif
 
-    *out_flight_camera_id_ = (int16_t)tmp_index;
+    *out_flight_camera_id_ = (uint16_t)tmp_index;
 
     ret = CAMERA_REGISTRY_SUCCESS;
 
@@ -289,7 +289,7 @@ cleanup:
     return ret;
 }
 
-camera_registry_result_t flight_camera_registry_unregister(flight_camera_registry_t* registry_, int16_t flight_camera_id_) {
+camera_registry_result_t flight_camera_registry_unregister(flight_camera_registry_t* registry_, uint16_t flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_unregister", "registry_")
@@ -409,11 +409,11 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     return true;
 }
 
-static bool flight_camera_id_is_valid(const flight_camera_registry_t* registry_, int16_t flight_camera_id_) {
+static bool flight_camera_id_is_valid(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_) {
     if(NULL == registry_) {
         return false;
     }
-    if(flight_camera_id_ < 0 || registry_->max_flight_camera_count <= (size_t)flight_camera_id_) {
+    if(registry_->max_flight_camera_count <= (size_t)flight_camera_id_) {
         return false;
     }
     return true;

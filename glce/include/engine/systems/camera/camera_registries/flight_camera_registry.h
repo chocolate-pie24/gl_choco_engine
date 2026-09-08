@@ -26,13 +26,13 @@ void flight_camera_registry_deinitialize(flight_camera_registry_t* registry_);
 
 bool flight_camera_registry_find(const flight_camera_registry_t* registry_, const char* name_);
 
-flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, int16_t flight_camera_id_);
+flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_);
 
-camera_registry_result_t flight_camera_registry_id_get(const flight_camera_registry_t* registry_, const char* name_, int16_t* out_flight_camera_id_);
+camera_registry_result_t flight_camera_registry_id_get(const flight_camera_registry_t* registry_, const char* name_, uint16_t* out_flight_camera_id_);
 
-camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* flight_camera_name_, flight_camera_t** flight_camera_, int16_t* out_flight_camera_id_);
+camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* flight_camera_name_, flight_camera_t** flight_camera_, uint16_t* out_flight_camera_id_);
 
-camera_registry_result_t flight_camera_registry_unregister(flight_camera_registry_t* registry_, int16_t flight_camera_id_);
+camera_registry_result_t flight_camera_registry_unregister(flight_camera_registry_t* registry_, uint16_t flight_camera_id_);
 
 bool flight_camera_registry_is_valid(const flight_camera_registry_t* registry_);
 

@@ -129,7 +129,7 @@ typedef struct app_state {
     // camera
     flight_camera_registry_t* flight_camera_registry;
     flight_camera_t* flight_camera;
-    int16_t active_camera_id;
+    uint16_t active_camera_id;
 
     // begin temporary TODO: remove this!!
     renderer_backend_context_t* renderer_backend_context;
