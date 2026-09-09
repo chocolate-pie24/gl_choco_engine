@@ -356,21 +356,21 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_shader_vao_bind(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_) {
+application_result_t application_renderer_vao_bind(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_shader_vao_bind", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_vao_bind", "application_renderer_")
     if(!application_renderer_shader_type_is_valid(shader_type_)) {
         ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_shader_vao_bind(%s) - Provided shader_type_ is not valid.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_vao_bind(%s) - Provided shader_type_ is not valid.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_shader_vao_bind(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_vao_bind(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -394,7 +394,7 @@ application_result_t application_renderer_shader_vao_bind(application_renderer_t
     }
     if(SHADER_SUCCESS != ret_shader) {
         ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("application_renderer_shader_vao_bind(%s) - vao_bind failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_vao_bind(%s) - vao_bind failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -604,6 +604,41 @@ application_result_t application_renderer_line_mesh_color_set(application_render
 
 cleanup:
     return ret;
+}
+
+renderer_backend_context_t* application_renderer_renderer_backend_context_get(application_renderer_t* application_renderer_) {
+    if(NULL == application_renderer_) {
+        return NULL;
+    }
+    return application_renderer_->renderer_backend_context;
+}
+
+line_mesh_shader_t* application_renderer_line_mesh_shader_get(application_renderer_t* application_renderer_) {
+    if(NULL == application_renderer_) {
+        return NULL;
+    }
+    return application_renderer_->line_mesh_shader;
+}
+
+lit_mesh_shader_t* application_renderer_lit_mesh_shader_get(application_renderer_t* application_renderer_) {
+    if(NULL == application_renderer_) {
+        return NULL;
+    }
+    return application_renderer_->lit_mesh_shader;
+}
+
+point_mesh_shader_t* application_renderer_point_mesh_shader_get(application_renderer_t* application_renderer_) {
+    if(NULL == application_renderer_) {
+        return NULL;
+    }
+    return application_renderer_->point_mesh_shader;
+}
+
+ui_mesh_shader_t* application_renderer_ui_mesh_shader_get(application_renderer_t* application_renderer_) {
+    if(NULL == application_renderer_) {
+        return NULL;
+    }
+    return application_renderer_->ui_mesh_shader;
 }
 
 bool application_renderer_shader_type_is_valid(application_renderer_shader_type_t shader_type_) {

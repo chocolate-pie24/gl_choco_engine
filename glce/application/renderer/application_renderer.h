@@ -35,7 +35,7 @@ application_result_t application_renderer_update(application_renderer_t* applica
 
 application_result_t application_renderer_shader_use(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_);
 
-application_result_t application_renderer_shader_vao_bind(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_);
+application_result_t application_renderer_vao_bind(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_);
 
 application_result_t application_renderer_vao_unbind(application_renderer_t* application_renderer_);
 
@@ -46,6 +46,21 @@ application_result_t application_renderer_view_matrix_set(application_renderer_t
 application_result_t application_renderer_projection_matrix_set(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 application_result_t application_renderer_line_mesh_color_set(application_renderer_t* application_renderer_, const uint8_t color_[4]);
+
+// begin temporary: TODO: REMOVE THIS!!
+// shader + registryの上位モジュールができるまでの暫定API
+typedef struct renderer_backend_context renderer_backend_context_t;
+typedef struct line_mesh_shader line_mesh_shader_t;
+typedef struct lit_mesh_shader lit_mesh_shader_t;
+typedef struct point_mesh_shader point_mesh_shader_t;
+typedef struct ui_mesh_shader ui_mesh_shader_t;
+
+renderer_backend_context_t* application_renderer_renderer_backend_context_get(application_renderer_t* application_renderer_);
+line_mesh_shader_t* application_renderer_line_mesh_shader_get(application_renderer_t* application_renderer_);
+lit_mesh_shader_t* application_renderer_lit_mesh_shader_get(application_renderer_t* application_renderer_);
+point_mesh_shader_t* application_renderer_point_mesh_shader_get(application_renderer_t* application_renderer_);
+ui_mesh_shader_t* application_renderer_ui_mesh_shader_get(application_renderer_t* application_renderer_);
+// end temporary
 
 bool application_renderer_shader_type_is_valid(application_renderer_shader_type_t shader_type_);
 
