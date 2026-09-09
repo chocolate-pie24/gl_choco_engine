@@ -157,14 +157,14 @@ static shader_result_t shader_program_build(renderer_backend_shader_t* shader_, 
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "vertex_shader_source_")
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "fragment_shader_source_")
 
-    ret_renderer_backend = renderer_backend_shader_compile(SHADER_TYPE_VERTEX, choco_string_c_str(vertex_shader_source_), backend_context_, shader_);
+    ret_renderer_backend = renderer_backend_shader_compile(SHADER_STAGE_VERTEX, choco_string_c_str(vertex_shader_source_), backend_context_, shader_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("shader_program_build(%s) - Failed to compile shader object(vertex_shader).", shader_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_compile(SHADER_TYPE_FRAGMENT, choco_string_c_str(fragment_shader_source_), backend_context_, shader_);
+    ret_renderer_backend = renderer_backend_shader_compile(SHADER_STAGE_FRAGMENT, choco_string_c_str(fragment_shader_source_), backend_context_, shader_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("shader_program_build(%s) - Failed to compile shader object(fragment_shader).", shader_rslt_to_str(ret));

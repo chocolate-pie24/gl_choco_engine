@@ -19,6 +19,8 @@
 
 #include "engine/containers/ring_queue.h"
 
+#include "engine/io_utils/fs_path.h"
+
 #include "engine/systems/platform/core/platform_types.h"
 
 #include "engine/resource/core/resource_types.h"
@@ -34,6 +36,7 @@ static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**<
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
+static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 const char* app_rslt_to_str(application_result_t rslt_) {
@@ -60,6 +63,8 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_file_open_error;
     case APPLICATION_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
+    case APPLICATION_WINDOW_CLOSE:
+        return s_rslt_str_window_close;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -118,7 +123,7 @@ application_result_t app_rslt_convert_platform(platform_result_t rslt_) {
     case PLATFORM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case PLATFORM_WINDOW_CLOSE:
-        return APPLICATION_SUCCESS; // これはエラーではないので、成功扱いにする
+        return APPLICATION_WINDOW_CLOSE;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
@@ -263,397 +268,75 @@ application_result_t app_rslt_convert_shader(shader_result_t rslt_) {
     }
 }
 
-// #ifdef TEST_BUILD
-// void NO_COVERAGE test_app_rslt_convert_mem_sys_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_mem_sys.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_mem_sys.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_linear_alloc_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_linear_alloc.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_linear_alloc.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_platform_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_platform.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_platform.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_ring_queue_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_ring_queue.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_ring_queue.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_renderer_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_renderer.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_renderer.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_camera_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_camera.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_camera.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_texture_system_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_texture_system.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_texture_system.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_resource_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_resource.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_resource.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_app_rslt_convert_geometry_primitive_config_set(const test_call_control_t* config_) {
-//     if(NULL == config_) {
-//         assert(false);
-//         return;
-//     }
-//     s_test_config_app_rslt_convert_geometry_primitive.fail_on_call = config_->fail_on_call;
-//     s_test_config_app_rslt_convert_geometry_primitive.forced_result = config_->forced_result;
-// }
-
-// void NO_COVERAGE test_application_err_utils_config_reset(void) {
-//     test_call_control_reset(&s_test_config_app_rslt_convert_mem_sys);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_linear_alloc);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_platform);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_ring_queue);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_renderer);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_camera);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_texture_system);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_resource);
-//     test_call_control_reset(&s_test_config_app_rslt_convert_geometry_primitive);
-// }
-
-// void NO_COVERAGE test_application_err_utils(void) {
-//     test_app_rslt_to_str();
-//     test_app_rslt_convert_mem_sys();
-//     test_app_rslt_convert_linear_alloc();
-//     test_app_rslt_convert_platform();
-//     test_app_rslt_convert_ring_queue();
-//     test_app_rslt_convert_renderer();
-//     test_app_rslt_convert_camera();
-//     test_app_rslt_convert_texture_system();
-//     test_app_rslt_convert_resource();
-//     test_app_rslt_convert_geometry_primitive();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_to_str(void) {
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_SUCCESS), "SUCCESS"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_NO_MEMORY), "NO_MEMORY"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_RUNTIME_ERROR), "RUNTIME_ERROR"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "INVALID_ARGUMENT"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_DATA_CORRUPTED), "DATA_CORRUPTED"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_BAD_OPERATION), "BAD_OPERATION"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_OVERFLOW), "OVERFLOW"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_LIMIT_EXCEEDED), "LIMIT_EXCEEDED"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_UNSUPPORTED_FILE), "UNSUPPORTED_FILE"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_OPEN_ERROR), "FILE_OPEN_ERROR"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_CLOSE_ERROR), "FILE_CLOSE_ERROR"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_FILE_READ_ERROR), "FILE_READ_ERROR"));
-//     assert(0 == strcmp(app_rslt_to_str(APPLICATION_UNDEFINED_ERROR), "UNDEFINED_ERROR"));
-
-//     assert(0 == strcmp(app_rslt_to_str((application_result_t)-1), "UNDEFINED_ERROR"));
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_mem_sys(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_mem_sys(MEMORY_SYSTEM_INVALID_ARGUMENT));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_mem_sys(MEMORY_SYSTEM_NO_MEMORY));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_mem_sys(MEMORY_SYSTEM_LIMIT_EXCEEDED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_mem_sys(MEMORY_SYSTEM_BAD_OPERATION));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_mem_sys((memory_system_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_RUNTIME_ERROR;
-//     test_app_rslt_convert_mem_sys_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_mem_sys(MEMORY_SYSTEM_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_linear_alloc(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_linear_alloc(LINEAR_ALLOC_NO_MEMORY));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_linear_alloc(LINEAR_ALLOC_INVALID_ARGUMENT));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_linear_alloc((linear_allocator_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_RUNTIME_ERROR;
-//     test_app_rslt_convert_linear_alloc_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_linear_alloc(LINEAR_ALLOC_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_platform(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_platform(PLATFORM_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_platform(PLATFORM_INVALID_ARGUMENT));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_platform(PLATFORM_RUNTIME_ERROR));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_platform(PLATFORM_NO_MEMORY));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_platform(PLATFORM_DATA_CORRUPTED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_platform(PLATFORM_BAD_OPERATION));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_platform(PLATFORM_UNDEFINED_ERROR));
-//     assert(APPLICATION_OVERFLOW == app_rslt_convert_platform(PLATFORM_OVERFLOW));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_platform(PLATFORM_LIMIT_EXCEEDED));
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_platform(PLATFORM_WINDOW_CLOSE));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_platform((platform_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_RUNTIME_ERROR;
-//     test_app_rslt_convert_platform_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_platform(PLATFORM_SUCCESS));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_platform(PLATFORM_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_ring_queue(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_ring_queue(RING_QUEUE_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_ring_queue(RING_QUEUE_INVALID_ARGUMENT));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_ring_queue(RING_QUEUE_NO_MEMORY));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_ring_queue(RING_QUEUE_RUNTIME_ERROR));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_ring_queue(RING_QUEUE_UNDEFINED_ERROR));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_ring_queue(RING_QUEUE_EMPTY));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_ring_queue(RING_QUEUE_OVERFLOW));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_ring_queue(RING_QUEUE_LIMIT_EXCEEDED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_ring_queue(RING_QUEUE_BAD_OPERATION));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_ring_queue(RING_QUEUE_DATA_CORRUPTED));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_ring_queue((ring_queue_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_NO_MEMORY;
-//     test_app_rslt_convert_ring_queue_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_ring_queue(RING_QUEUE_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_ring_queue(RING_QUEUE_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_renderer(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_renderer(RENDERER_BACKEND_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_renderer(RENDERER_BACKEND_INVALID_ARGUMENT));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_renderer(RENDERER_BACKEND_RUNTIME_ERROR));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_renderer(RENDERER_BACKEND_NO_MEMORY));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_renderer(RENDERER_BACKEND_SHADER_COMPILE_ERROR));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_renderer(RENDERER_BACKEND_SHADER_LINK_ERROR));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_renderer(RENDERER_BACKEND_LIMIT_EXCEEDED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_renderer(RENDERER_BACKEND_BAD_OPERATION));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_renderer(RENDERER_BACKEND_DATA_CORRUPTED));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_renderer(RENDERER_BACKEND_UNDEFINED_ERROR));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_renderer((renderer_backend_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_NO_MEMORY;
-//     test_app_rslt_convert_renderer_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_renderer(RENDERER_BACKEND_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_renderer(RENDERER_BACKEND_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_camera(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_camera(CAMERA_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_camera(CAMERA_INVALID_ARGUMENT));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_camera(CAMERA_RUNTIME_ERROR));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_camera(CAMERA_BAD_OPERATION));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_camera(CAMERA_NO_MEMORY));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_camera(CAMERA_LIMIT_EXCEEDED));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_camera(CAMERA_DATA_CORRUPTED));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_camera(CAMERA_UNDEFINED_ERROR));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_camera((camera_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_NO_MEMORY;
-//     test_app_rslt_convert_camera_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_camera(CAMERA_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_camera(CAMERA_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_texture_system(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_texture_system(TEXTURE_SYSTEM_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_texture_system(TEXTURE_SYSTEM_NO_MEMORY));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_RUNTIME_ERROR));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_texture_system(TEXTURE_SYSTEM_INVALID_ARGUMENT));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_texture_system(TEXTURE_SYSTEM_DATA_CORRUPTED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_texture_system(TEXTURE_SYSTEM_BAD_OPERATION));
-//     assert(APPLICATION_OVERFLOW == app_rslt_convert_texture_system(TEXTURE_SYSTEM_OVERFLOW));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_texture_system(TEXTURE_SYSTEM_LIMIT_EXCEEDED));
-//     assert(APPLICATION_FILE_OPEN_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_OPEN_ERROR));
-//     assert(APPLICATION_FILE_READ_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_FILE_READ_ERROR));
-//     assert(APPLICATION_UNSUPPORTED_FILE == app_rslt_convert_texture_system(TEXTURE_SYSTEM_UNSUPPORTED_FILE));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_texture_system(TEXTURE_SYSTEM_UNDEFINED_ERROR));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_texture_system((texture_system_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_NO_MEMORY;
-//     test_app_rslt_convert_texture_system_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_texture_system(TEXTURE_SYSTEM_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_texture_system(TEXTURE_SYSTEM_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_resource(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_resource(RESOURCE_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_resource(RESOURCE_NO_MEMORY));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_resource(RESOURCE_RUNTIME_ERROR));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_resource(RESOURCE_INVALID_ARGUMENT));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_resource(RESOURCE_DATA_CORRUPTED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_resource(RESOURCE_BAD_OPERATION));
-//     assert(APPLICATION_OVERFLOW == app_rslt_convert_resource(RESOURCE_OVERFLOW));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_resource(RESOURCE_LIMIT_EXCEEDED));
-//     assert(APPLICATION_FILE_OPEN_ERROR == app_rslt_convert_resource(RESOURCE_FILE_OPEN_ERROR));
-//     assert(APPLICATION_FILE_READ_ERROR == app_rslt_convert_resource(RESOURCE_FILE_READ_ERROR));
-//     assert(APPLICATION_FILE_CLOSE_ERROR == app_rslt_convert_resource(RESOURCE_FILE_CLOSE_ERROR));
-//     assert(APPLICATION_UNSUPPORTED_FILE == app_rslt_convert_resource(RESOURCE_UNSUPPORTED_FILE));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_resource(RESOURCE_UNDEFINED_ERROR));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_resource((resource_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_NO_MEMORY;
-//     test_app_rslt_convert_resource_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_resource(RESOURCE_SUCCESS));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_resource(RESOURCE_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-
-// // Generated by ChatGPT
-// static void NO_COVERAGE test_app_rslt_convert_geometry_primitive(void) {
-//     test_call_control_t config;
-
-//     test_application_err_utils_config_reset();
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-//     assert(APPLICATION_INVALID_ARGUMENT == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_RUNTIME_ERROR));
-//     assert(APPLICATION_LIMIT_EXCEEDED == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED));
-//     assert(APPLICATION_BAD_OPERATION == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_BAD_OPERATION));
-//     assert(APPLICATION_NO_MEMORY == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_NO_MEMORY));
-//     assert(APPLICATION_DATA_CORRUPTED == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_DATA_CORRUPTED));
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_UNDEFINED_ERROR));
-
-//     assert(APPLICATION_UNDEFINED_ERROR == app_rslt_convert_geometry_primitive((geometry_primitive_result_t)-1));
-
-//     test_application_err_utils_config_reset();
-
-//     config.fail_on_call = 2;
-//     config.forced_result = APPLICATION_RUNTIME_ERROR;
-//     test_app_rslt_convert_geometry_primitive_config_set(&config);
-
-//     assert(APPLICATION_SUCCESS == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-//     assert(APPLICATION_RUNTIME_ERROR == app_rslt_convert_geometry_primitive(GEOMETRY_PRIMITIVE_SUCCESS));
-
-//     test_application_err_utils_config_reset();
-// }
-// #endif
+application_result_t app_rslt_convert_camera_registry(camera_registry_result_t rslt_) {
+    switch(rslt_) {
+    case CAMERA_REGISTRY_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case CAMERA_REGISTRY_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case CAMERA_REGISTRY_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case CAMERA_REGISTRY_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case CAMERA_REGISTRY_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case CAMERA_REGISTRY_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case CAMERA_REGISTRY_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case CAMERA_REGISTRY_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case CAMERA_REGISTRY_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
+    switch(rslt_) {
+    case CAMERA_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case CAMERA_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case CAMERA_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case CAMERA_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case CAMERA_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case CAMERA_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case CAMERA_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case CAMERA_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_) {
+    switch(rslt_) {
+    case FS_PATH_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case FS_PATH_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case FS_PATH_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case FS_PATH_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case FS_PATH_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case FS_PATH_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case FS_PATH_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case FS_PATH_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case FS_PATH_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

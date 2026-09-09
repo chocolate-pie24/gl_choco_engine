@@ -93,6 +93,10 @@
 
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
+#include "application/event/application_event.h"
+#include "application/cameras/application_flight_camera.h"
+#include "application/renderer/application_renderer.h"
+
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
  *
@@ -118,28 +122,10 @@ typedef struct app_state {
     void* linear_alloc_pool;        /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
-    // event message queues
-    ring_queue_t* window_event_queue;   /**< ウィンドウイベント格納用リングキュー */
-    ring_queue_t* keyboard_event_queue; /**< キーボードイベント格納用リングキュー */
-    ring_queue_t* mouse_event_queue;    /**< マウスイベント格納用リングキュー */
-
     // platform/platform_context
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
-    // camera
-    flight_camera_registry_t* flight_camera_registry;
-    flight_camera_t* flight_camera;
-    int16_t active_camera_id;
-
-    // begin temporary TODO: remove this!!
-    renderer_backend_context_t* renderer_backend_context;
-
     renderer_config_t renderer_config;
-
-    ui_mesh_shader_t* ui_mesh_shader;
-    line_mesh_shader_t* line_mesh_shader;
-    point_mesh_shader_t* point_mesh_shader;
-    lit_mesh_shader_t* lit_mesh_shader;
 
     texture_registry_t* texture_registry;
     int16_t tex_id_rabbit;
@@ -170,31 +156,25 @@ typedef struct app_state {
     mat4x4f_t green_mesh_model_mat;
     //end
 
-    bool view_dirty;
+    // bool view_dirty;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
     // end temporary
+
+    const application_event_view_t* event_view;
+    application_flight_camera_t* flight_camera;
+    application_renderer_t* renderer;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
-static void on_window(const window_event_t* event_);
-static void on_key(const keyboard_event_t* event_);
-static void on_mouse(const mouse_event_t* event_);
-
-static void app_state_update(void);
-static void app_state_dispatch(void);
+static application_result_t app_state_update(void);
 static void app_state_clean(void);
 
 static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
 static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
 static application_result_t lit_mesh_geometry_import(app_state_t* app_state_);
-
-static application_result_t line_mesh_shader_initialize(app_state_t* app_state_);
-static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_);
-static application_result_t point_mesh_shader_initialize(app_state_t* app_state_);
-static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_);
 
 static application_result_t texture_initialize(app_state_t* app_state_);
 
@@ -208,14 +188,7 @@ application_result_t application_create(void) {
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
-    ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
-    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    camera_registry_result_t ret_camera_registry = CAMERA_REGISTRY_INVALID_ARGUMENT;
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-
-    flight_camera_key_bind_t flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
-    flight_camera_t* tmp_flight_camera = NULL;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -239,12 +212,6 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     memset(tmp, 0, sizeof(*tmp));
-
-    ret = executable_directory_get(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // begin Simulation -> launch all systems.(Don't use s_app_state here.)
@@ -281,6 +248,12 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
+    ret = executable_directory_get(tmp);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create platform.(Don't use s_app_state here.)
     INFO_MESSAGE("Initializing platform state...");
@@ -291,53 +264,8 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
+    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
     INFO_MESSAGE("platform_backend initialized successfully.");
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create event message queue(window event).(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting window event queue initialize...");
-    ret_ring_queue = ring_queue_create(8, sizeof(window_event_t), alignof(window_event_t), &tmp->window_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = app_rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize window event queue.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("window event queue initialized successfully.");
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create event message queue(keyboard event).(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting keyboard event queue initialize...");
-    ret_ring_queue = ring_queue_create(KEY_CODE_MAX, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp->keyboard_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = app_rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize keyboard event queue.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("keyboard event queue initialized successfully.");
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create event message queue(mouse event).(Don't use s_app_state here.)
-    INFO_MESSAGE("Starting mouse event queue initialize...");
-    ret_ring_queue = ring_queue_create(128, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp->mouse_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
-        ret = app_rslt_convert_ring_queue(ret_ring_queue);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize mouse event queue.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("mouse event queue initialized successfully.");
-
-    // texture registry.
-    ret_registry = texture_registry_initialize(128, tmp->linear_alloc, &tmp->texture_registry);
-    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = APPLICATION_RUNTIME_ERROR;  // TODO: エラーコード返還
-        ERROR_MESSAGE("application_create(%s) - Failed to create texture registry.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("texture registry initialized successfully.");
-    // end Simulation -> launch all systems.
-
-    // end Simulation
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // begin temporary
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
@@ -350,13 +278,21 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_initialize(tmp->linear_alloc, GRAPHICS_API_GL33, &tmp->renderer_backend_context);
-    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = app_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize renderer backend.", app_rslt_to_str(ret));
+    // application event system
+    ret = application_event_initialize(tmp->platform_context, 8, KEY_CODE_MAX, 128, tmp->linear_alloc);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - application_event_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
+    // application flight camera
+    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->framebuffer_width, tmp->framebuffer_height, &tmp->flight_camera);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - application_flight_camera_initialize failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // application renderer
     // Shader config
     tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
@@ -373,36 +309,20 @@ application_result_t application_create(void) {
     tmp->renderer_config.lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.lit_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.lit_mesh_shader_config.vbo_size = 1 * GIB;
-
-    // UI Mesh Shader
-    ret = ui_mesh_shader_initialize(tmp);
+    ret = application_renderer_initialize(&tmp->renderer_config, tmp->build_config.selected_graphics_api, tmp->linear_alloc, fs_path_fullpath_get(tmp->executable_directory), "../../assets/shaders/test_shader/", &tmp->renderer);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - ui_mesh_shader_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - application_renderer_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    // Line Mesh Shader
-    ret = line_mesh_shader_initialize(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - line_mesh_shader_initialize failed.", app_rslt_to_str(ret));
+    // texture registry.
+    ret_registry = texture_registry_initialize(128, tmp->linear_alloc, &tmp->texture_registry);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
+        ret = APPLICATION_RUNTIME_ERROR;  // TODO: エラーコード返還
+        ERROR_MESSAGE("application_create(%s) - Failed to create texture registry.", app_rslt_to_str(ret));
         goto cleanup;
     }
-
-    // Point Mesh Shader
-    ret = point_mesh_shader_initialize(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - point_mesh_shader_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // Lit Mesh Shader
-    ret = lit_mesh_shader_initialize(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - lit_mesh_shader_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
+    INFO_MESSAGE("texture registry initialized successfully.");
 
     // geometry registries
     tmp->point_mesh_geometry_registry = NULL;
@@ -449,45 +369,6 @@ application_result_t application_create(void) {
     }
     // end temporary
 
-    // camera
-    ret_camera_registry = flight_camera_registry_initialize(16, tmp->linear_alloc, &tmp->flight_camera_registry);
-    if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // camera keybinds
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
-    flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
-
-    ret_camera = flight_camera_create(flight_camera_keybinds, 45.0f, (float)tmp->framebuffer_width / (float)tmp->framebuffer_height, 0.1f, 50.0f, &tmp_flight_camera);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_create(%s) - flight_camera_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    ret_camera_registry = flight_camera_registry_register(tmp->flight_camera_registry, "flight_camera", &tmp_flight_camera, &tmp->active_camera_id);
-    if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_register failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    tmp->flight_camera = flight_camera_registry_flight_camera_get(tmp->flight_camera_registry, tmp->active_camera_id);
-    if(NULL == tmp->flight_camera) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_create(%s) - flight_camera_registry_flight_camera_get failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
     // commit
     s_app_state = tmp;
     INFO_MESSAGE("Application created successfully.");
@@ -497,52 +378,29 @@ application_result_t application_create(void) {
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
-        if(NULL != tmp_flight_camera) {
-            flight_camera_destroy(&tmp_flight_camera);
-        }
         if(NULL != tmp) {
-            if(NULL != tmp->flight_camera_registry) {
-                flight_camera_registry_deinitialize(tmp->flight_camera_registry);
-            }
             if(NULL != tmp->line_mesh_geometry_registry) {
-                line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry, tmp->line_mesh_shader);
+                line_mesh_geometry_registry_deinitialize(tmp->line_mesh_geometry_registry, application_renderer_line_mesh_shader_get(tmp->renderer));
             }
             if(NULL != tmp->ui_mesh_geometry_registry) {
-                ui_mesh_geometry_registry_deinitialize(tmp->ui_mesh_geometry_registry, tmp->ui_mesh_shader);
+                ui_mesh_geometry_registry_deinitialize(tmp->ui_mesh_geometry_registry, application_renderer_ui_mesh_shader_get(tmp->renderer));
             }
             if(NULL != tmp->lit_mesh_geometry_registry) {
-                lit_mesh_geometry_registry_deinitialize(tmp->lit_mesh_geometry_registry, tmp->lit_mesh_shader);
+                lit_mesh_geometry_registry_deinitialize(tmp->lit_mesh_geometry_registry, application_renderer_lit_mesh_shader_get(tmp->renderer));
             }
             if(NULL != tmp->point_mesh_geometry_registry) {
-                point_mesh_geometry_registry_deinitialize(tmp->point_mesh_geometry_registry, tmp->point_mesh_shader);
+                point_mesh_geometry_registry_deinitialize(tmp->point_mesh_geometry_registry, application_renderer_point_mesh_shader_get(tmp->renderer));
             }
-            if(NULL != tmp->renderer_backend_context) {
-                if(NULL != tmp->lit_mesh_shader) {
-                    lit_mesh_shader_destroy(&tmp->lit_mesh_shader);
-                }
-                if(NULL != tmp->point_mesh_shader) {
-                    point_mesh_shader_destroy(&tmp->point_mesh_shader);
-                }
-                if(NULL != tmp->line_mesh_shader) {
-                    line_mesh_shader_destroy(&tmp->line_mesh_shader);
-                }
-                if(NULL != tmp->ui_mesh_shader) {
-                    ui_mesh_shader_destroy(&tmp->ui_mesh_shader);
-                }
+            if(NULL != tmp->texture_registry) {
+                texture_registry_deinitialize(tmp->texture_registry);
             }
-
-            if(NULL != tmp->mouse_event_queue) {
-                ring_queue_destroy(&tmp->mouse_event_queue);
-                tmp->mouse_event_queue = NULL;
+            if(NULL != tmp->renderer) {
+                application_renderer_deinitialize(tmp->renderer);
             }
-            if(NULL != tmp->keyboard_event_queue) {
-                ring_queue_destroy(&tmp->keyboard_event_queue);
-                tmp->keyboard_event_queue = NULL;
+            if(NULL != tmp->flight_camera) {
+                application_flight_camera_deinitialize(tmp->flight_camera);
             }
-            if(NULL != tmp->window_event_queue) {
-                ring_queue_destroy(&tmp->window_event_queue);
-                tmp->window_event_queue = NULL;
-            }
+            application_event_deinitialize();
             if(NULL != tmp->platform_context) {
                 platform_destroy(tmp->platform_context);
             }
@@ -572,51 +430,28 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
-    if(NULL != s_app_state->flight_camera_registry) {
-        flight_camera_registry_deinitialize(s_app_state->flight_camera_registry);
-    }
     if(NULL != s_app_state->line_mesh_geometry_registry) {
-        line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry, s_app_state->line_mesh_shader);
+        line_mesh_geometry_registry_deinitialize(s_app_state->line_mesh_geometry_registry, application_renderer_line_mesh_shader_get(s_app_state->renderer));
     }
     if(NULL != s_app_state->ui_mesh_geometry_registry) {
-        ui_mesh_geometry_registry_deinitialize(s_app_state->ui_mesh_geometry_registry, s_app_state->ui_mesh_shader);
+        ui_mesh_geometry_registry_deinitialize(s_app_state->ui_mesh_geometry_registry, application_renderer_ui_mesh_shader_get(s_app_state->renderer));
     }
     if(NULL != s_app_state->lit_mesh_geometry_registry) {
-        lit_mesh_geometry_registry_deinitialize(s_app_state->lit_mesh_geometry_registry, s_app_state->lit_mesh_shader);
+        lit_mesh_geometry_registry_deinitialize(s_app_state->lit_mesh_geometry_registry, application_renderer_lit_mesh_shader_get(s_app_state->renderer));
     }
     if(NULL != s_app_state->point_mesh_geometry_registry) {
-        point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry, s_app_state->point_mesh_shader);
+        point_mesh_geometry_registry_deinitialize(s_app_state->point_mesh_geometry_registry, application_renderer_point_mesh_shader_get(s_app_state->renderer));
     }
     if(NULL != s_app_state->texture_registry) {
         texture_registry_deinitialize(s_app_state->texture_registry);
     }
-    if(NULL != s_app_state->renderer_backend_context) {
-        if(NULL != s_app_state->lit_mesh_shader) {
-            lit_mesh_shader_destroy(&s_app_state->lit_mesh_shader);
-        }
-        if(NULL != s_app_state->point_mesh_shader) {
-            point_mesh_shader_destroy(&s_app_state->point_mesh_shader);
-        }
-        if(NULL != s_app_state->line_mesh_shader) {
-            line_mesh_shader_destroy(&s_app_state->line_mesh_shader);
-        }
-        if(NULL != s_app_state->ui_mesh_shader) {
-            ui_mesh_shader_destroy(&s_app_state->ui_mesh_shader);
-        }
+    if(NULL != s_app_state->renderer) {
+        application_renderer_deinitialize(s_app_state->renderer);
     }
-    renderer_backend_destroy(s_app_state->renderer_backend_context);
-    if(NULL != s_app_state->mouse_event_queue) {
-        ring_queue_destroy(&s_app_state->mouse_event_queue);
-        s_app_state->mouse_event_queue = NULL;
+    if(NULL != s_app_state->flight_camera) {
+        application_flight_camera_deinitialize(s_app_state->flight_camera);
     }
-    if(NULL != s_app_state->keyboard_event_queue) {
-        ring_queue_destroy(&s_app_state->keyboard_event_queue);
-        s_app_state->keyboard_event_queue = NULL;
-    }
-    if(NULL != s_app_state->window_event_queue) {
-        ring_queue_destroy(&s_app_state->window_event_queue);
-        s_app_state->window_event_queue = NULL;
-    }
+    application_event_deinitialize();
     if(NULL != s_app_state->platform_context) {
         platform_destroy(s_app_state->platform_context);
     }
@@ -685,28 +520,89 @@ application_result_t application_run(void) {
     mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_app_state->green_mesh_model_mat);
     mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_app_state->frog_mesh_model_mat);
 
-    flight_camera_viewing_frustum_update(s_app_state->flight_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
-    flight_camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix); // TODO: エラー処理
-    flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);   // TODO: エラー処理
+    ret = application_flight_camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_flight_camera_perspective_matrix_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
-    ui_mesh_shader_use(s_app_state->ui_mesh_shader);
-    ui_mesh_shader_view_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
-    ui_mesh_shader_projection_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->projection_matrix, true);
+    ret = application_flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_flight_camera_view_matrix_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
-    line_mesh_shader_use(s_app_state->line_mesh_shader);
-    line_mesh_shader_model_matrix_set(s_app_state->line_mesh_shader, &s_app_state->model_matrix, true);
-    line_mesh_shader_view_matrix_set(s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
-    line_mesh_shader_projection_matrix_set(s_app_state->line_mesh_shader, &s_app_state->projection_matrix, true);
+    ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
-    point_mesh_shader_use(s_app_state->point_mesh_shader);
-    point_mesh_shader_model_matrix_set(s_app_state->point_mesh_shader, &s_app_state->model_matrix, true);
-    point_mesh_shader_view_matrix_set(s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
-    point_mesh_shader_projection_matrix_set(s_app_state->point_mesh_shader, &s_app_state->projection_matrix, true);
+    ret = application_renderer_view_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH, &s_app_state->view_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_view_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
-    lit_mesh_shader_use(s_app_state->lit_mesh_shader);
-    lit_mesh_shader_model_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->model_matrix, true);
-    lit_mesh_shader_view_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
-    lit_mesh_shader_projection_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->projection_matrix, true);
+    ret = application_renderer_projection_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH, &s_app_state->projection_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_projection_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_view_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH, &s_app_state->view_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_view_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_projection_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH, &s_app_state->projection_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_projection_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_view_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH, &s_app_state->view_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_view_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_projection_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH, &s_app_state->projection_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_projection_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_view_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH, &s_app_state->view_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_view_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_projection_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH, &s_app_state->projection_matrix, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - application_renderer_projection_matrix_set failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = texture_initialize(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
@@ -750,7 +646,7 @@ application_result_t application_run(void) {
             ERROR_MESSAGE("application_run - Failed to initialize penguin aabb.");
             goto cleanup;
         }
-        ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "penguin_aabb", &penguin_aabb, &s_app_state->geometry_id_penguin_aabb);
+        ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(application_renderer_line_mesh_shader_get(s_app_state->renderer), s_app_state->line_mesh_geometry_registry, "penguin_aabb", &penguin_aabb, &s_app_state->geometry_id_penguin_aabb);
         if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
             ret = APPLICATION_RUNTIME_ERROR;
             ERROR_MESSAGE("application_run - Failed to import penguin aabb.");
@@ -763,7 +659,7 @@ application_result_t application_run(void) {
     tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
     s_app_state->test_line_color = vec4u8_initialize(0, 255, 0, 255);
 
-    ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(s_app_state->line_mesh_shader, s_app_state->line_mesh_geometry_registry, "test_line", tmp_vertices, 2, &s_app_state->geometry_id_test_line);
+    ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(application_renderer_line_mesh_shader_get(s_app_state->renderer), s_app_state->line_mesh_geometry_registry, "test_line", tmp_vertices, 2, &s_app_state->geometry_id_test_line);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import test line.");
@@ -783,17 +679,12 @@ application_result_t application_run(void) {
     // end temporary
 
     while(!s_app_state->window_should_close) {
-        platform_result_t ret_event = platform_pump_messages(s_app_state->platform_context, on_window, on_key, on_mouse);
-        if(PLATFORM_WINDOW_CLOSE == ret_event) {
-            s_app_state->window_should_close = true;
-            continue;
-        } else if(PLATFORM_SUCCESS != ret_event) {
-            ret = app_rslt_convert_platform(ret_event);
-            WARN_MESSAGE("application_run(%s) - Failed to pump events.", app_rslt_to_str(ret));
-            continue;
+        ret = app_state_update();
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - app_state_update failed.", app_rslt_to_str(ret));
+            goto cleanup;
         }
-        app_state_update();
-        app_state_dispatch();
+        // app_state_dispatch();
         app_state_clean();
 
         // begin temporary TODO: remove this!!
@@ -801,12 +692,24 @@ application_result_t application_run(void) {
         glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
 
         // UI描画
-        ui_mesh_shader_use(s_app_state->ui_mesh_shader);
-        ui_mesh_shader_vao_bind(s_app_state->ui_mesh_shader);
+        ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
+        ret = application_renderer_vao_bind(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_vao_unbind failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_small_icon);
         if(NULL != tmp_draw_range) {
             // ウサギ
-            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->rabbit_mesh_model_mat, true);
+            ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH, &s_app_state->rabbit_mesh_model_mat, true);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_rabbit);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -815,7 +718,11 @@ application_result_t application_run(void) {
             texture_gpu_resource_unbind(tex_gpu_resource);
 
             // テストテクスチャ
-            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->green_mesh_model_mat, true);
+            ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH, &s_app_state->green_mesh_model_mat, true);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_green);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -827,7 +734,11 @@ application_result_t application_run(void) {
         tmp_draw_range = ui_mesh_geometry_registry_draw_range_get(s_app_state->ui_mesh_geometry_registry, s_app_state->geometry_id_large_icon);
         if(NULL != tmp_draw_range) {
             // カエル
-            ui_mesh_shader_model_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->frog_mesh_model_mat, true);
+            ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_UI_MESH, &s_app_state->frog_mesh_model_mat, true);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
             tex_gpu_resource = texture_registry_gpu_resource_get(s_app_state->texture_registry, s_app_state->tex_id_frog);
             texture_gpu_resource_bind(tex_gpu_resource);
 
@@ -835,41 +746,116 @@ application_result_t application_run(void) {
 
             texture_gpu_resource_unbind(tex_gpu_resource);
         }
-        renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
+        ret = application_renderer_vao_unbind(s_app_state->renderer);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_vao_unbind failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
 
         // 線分描画
-        line_mesh_shader_use(s_app_state->line_mesh_shader);
-        line_mesh_shader_vao_bind(s_app_state->line_mesh_shader);
+        ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
+
+        ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH, &s_app_state->model_matrix, true);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
+
+        ret = application_renderer_vao_bind(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_vao_bind failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
+
         tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_penguin_aabb);
         if(NULL != tmp_draw_range) {
-            line_mesh_shader_color_set(s_app_state->line_mesh_shader, s_app_state->penguin_aabb_color.elem);
+            ret = application_renderer_line_mesh_color_set(s_app_state->renderer, s_app_state->penguin_aabb_color.elem);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_color_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
             glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
+
         tmp_draw_range = line_mesh_geometry_registry_draw_range_get(s_app_state->line_mesh_geometry_registry, s_app_state->geometry_id_test_line);
         if(NULL != tmp_draw_range) {
-            line_mesh_shader_color_set(s_app_state->line_mesh_shader, s_app_state->test_line_color.elem);
+            ret = application_renderer_line_mesh_color_set(s_app_state->renderer, s_app_state->test_line_color.elem);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_color_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
             glDrawArrays(GL_LINES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
         }
-        renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
+        ret = application_renderer_vao_unbind(s_app_state->renderer);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_renderer_vao_unbind failed.", app_rslt_to_str(ret));
+            goto cleanup;
+        }
 
         // ポイント描画
         tmp_draw_range = point_mesh_geometry_registry_draw_range_get(s_app_state->point_mesh_geometry_registry, s_app_state->geometry_id_test_points);
         if(NULL != tmp_draw_range) {
-            point_mesh_shader_use(s_app_state->point_mesh_shader);
-            point_mesh_shader_vao_bind(s_app_state->point_mesh_shader);
+            ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
+            ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH, &s_app_state->model_matrix, true);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
+            ret = application_renderer_vao_bind(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_vao_bind failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
 
             glDrawArrays(GL_POINTS, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
-            renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
+
+            ret = application_renderer_vao_unbind(s_app_state->renderer);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_vao_unbind failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
         }
 
         // STL描画
         tmp_draw_range = lit_mesh_geometry_registry_draw_range_get(s_app_state->lit_mesh_geometry_registry, s_app_state->geometry_id_penguin);
         if(NULL != tmp_draw_range) {
-            lit_mesh_shader_use(s_app_state->lit_mesh_shader);
-            lit_mesh_shader_vao_bind(s_app_state->lit_mesh_shader);
+            ret = application_renderer_shader_use(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_shader_use failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
+            ret = application_renderer_model_matrix_set(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH, &s_app_state->model_matrix, true);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_model_matrix_set failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
+
+            ret = application_renderer_vao_bind(s_app_state->renderer, APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_vao_bind failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
 
             glDrawArrays(GL_TRIANGLES, (GLint)tmp_draw_range->first_vertex_count, (GLint)tmp_draw_range->vertex_count);
-            renderer_backend_vao_unbind(s_app_state->renderer_backend_context);
+
+            ret = application_renderer_vao_unbind(s_app_state->renderer);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_renderer_vao_unbind failed.", app_rslt_to_str(ret));
+                goto cleanup;
+            }
         }
 
         platform_swap_buffers(s_app_state->platform_context);
@@ -881,348 +867,63 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief event_をウィンドウイベント用リングキューに格納する
- * @note ウィンドウイベントコールバック
- *
- * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
- */
-static void on_window(const window_event_t* event_) {
-    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
-
-    if(NULL == event_) {
-        WARN_MESSAGE("on_window - Argument 'event_' must not be NULL.");
-        goto cleanup;
-    }
-    if(NULL == s_app_state) {
-        WARN_MESSAGE("on_window - Application state is not initialized.");
-        goto cleanup;
-    }
-
-    ret_push = ring_queue_push(event_, sizeof(window_event_t), alignof(window_event_t), s_app_state->window_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_window(%s) - Failed to push window event.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-cleanup:
-    return;
-}
-
-/**
- * @brief event_をキーボードイベント用リングキューに格納する
- * @note キーボードイベントコールバック
- *
- * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
- */
-static void on_key(const keyboard_event_t* event_) {
-    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
-
-    if(NULL == event_) {
-        WARN_MESSAGE("on_key - Argument event_ requires a valid pointer.");
-        goto cleanup;
-    }
-    if(NULL == s_app_state) {
-        WARN_MESSAGE("on_key - Application state is uninitialized.");
-        goto cleanup;
-    }
-
-    ret_push = ring_queue_push(event_, sizeof(keyboard_event_t), alignof(keyboard_event_t), s_app_state->keyboard_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_key(%s) - Failed to push keyboard event.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-cleanup:
-    return;
-}
-
-/**
- * @brief event_をマウスイベント用リングキューに格納する
- * @note マウスイベントコールバック
- *
- * @param[in] event_ イベントキューに格納するイベント構造体インスタンスへのポインタ
- */
-static void on_mouse(const mouse_event_t* event_) {
-    ring_queue_result_t ret_push = RING_QUEUE_INVALID_ARGUMENT;
-
-    if(NULL == event_) {
-        WARN_MESSAGE("on_mouse - Argument event_ requires a valid pointer.");
-        goto cleanup;
-    }
-    if(NULL == s_app_state) {
-        WARN_MESSAGE("on_mouse - Application state is not initialized.");
-        goto cleanup;
-    }
-
-    ret_push = ring_queue_push(event_, sizeof(mouse_event_t), alignof(mouse_event_t), s_app_state->mouse_event_queue);
-    if(RING_QUEUE_SUCCESS != ret_push) {
-        application_result_t ret = app_rslt_convert_ring_queue(ret_push);
-        WARN_MESSAGE("on_mouse(%s) - Failed to push mouse event.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-cleanup:
-    return;
-}
-
-/**
- * @brief イベント格納用リングキューに格納されているイベントを処理し、アプリケーション状態を更新する
- *
- */
-static void app_state_update(void) {
+static application_result_t app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+    // camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
+
+    bool view_dirty = false;
+    bool projection_dirty = false;
 
     if(NULL == s_app_state) {
-        ret = APPLICATION_RUNTIME_ERROR;
+        ret = APPLICATION_BAD_OPERATION;
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    if(NULL == s_app_state->window_event_queue) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - window event queue is not initialized.", app_rslt_to_str(ret));
+
+    ret = application_event_update(&s_app_state->event_view);
+    if(APPLICATION_WINDOW_CLOSE == ret) {
+        s_app_state->window_should_close = true;
         goto cleanup;
-    }
-    if(NULL == s_app_state->keyboard_event_queue) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - keyboard event queue is not initialized.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(NULL == s_app_state->mouse_event_queue) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("app_state_update(%s) - mouse event queue is not initialized.", app_rslt_to_str(ret));
+    } else if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_event_update failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    // window events.
-    while(!ring_queue_empty(s_app_state->window_event_queue)) {
-        window_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(window_event_t), alignof(window_event_t), s_app_state->window_event_queue, &event);
-        if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = app_rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop window event.", app_rslt_to_str(ret));
-            goto cleanup;
-        } else {
-            if(WINDOW_EVENT_RESIZE == event.event_code) {
-                INFO_MESSAGE("Window resized: window([%dx%d] -> [%dx%d]), framebuffer([%dx%d] -> [%dx%d])",
-                    s_app_state->window_width, s_app_state->window_height, event.event_args.window_width, event.event_args.window_height,
-                    s_app_state->framebuffer_width, s_app_state->framebuffer_height, event.event_args.framebuffer_width, event.event_args.framebuffer_height);
-
-                s_app_state->window_resized = true;
-                s_app_state->window_height = event.event_args.window_height;
-                s_app_state->window_width = event.event_args.window_width;
-                s_app_state->framebuffer_height = event.event_args.framebuffer_height;
-                s_app_state->framebuffer_width = event.event_args.framebuffer_width;
-            }
-        }
+    ret = application_flight_camera_update(s_app_state->flight_camera, 0.1f, 1.0f, s_app_state->event_view, &view_dirty, &projection_dirty);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_update failed.", app_rslt_to_str(ret));
+        goto cleanup;
     }
 
-    // keyboard events.
-    while(!ring_queue_empty(s_app_state->keyboard_event_queue)) {
-        keyboard_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(keyboard_event_t), alignof(keyboard_event_t), s_app_state->keyboard_event_queue, &event);
-        if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = app_rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop keyboard event.", app_rslt_to_str(ret));
-            goto cleanup;
-        } else {
-            if(KEY_M == event.key && !event.event_args.pressed) {
-                memory_system_report();
-            } else {
-                ret_camera = flight_camera_command_update(s_app_state->flight_camera, &event);
-                if(CAMERA_SUCCESS != ret_camera) {
-                    ret = APPLICATION_RUNTIME_ERROR;
-                    WARN_MESSAGE("app_state_update(%s) - Failed to update flight camera command.", app_rslt_to_str(ret));
-                    goto cleanup;
-                }
-            }
-        }
+    ret = application_flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_view_matrix_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
     }
 
-    // mouse events.
-    while(!ring_queue_empty(s_app_state->mouse_event_queue)) {
-        mouse_event_t event;
-        ring_queue_result_t ret_ring = ring_queue_pop(sizeof(mouse_event_t), alignof(mouse_event_t), s_app_state->mouse_event_queue, &event);
-        if(RING_QUEUE_SUCCESS != ret_ring) {
-            ret = app_rslt_convert_ring_queue(ret_ring);
-            WARN_MESSAGE("app_state_update(%s) - Failed to pop mouse event.", app_rslt_to_str(ret));
-            goto cleanup;
-        } else {
-            if(MOUSE_BUTTON_LEFT == event.button) {
-                INFO_MESSAGE("Mouse left %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
-            } else if(MOUSE_BUTTON_RIGHT == event.button) {
-                INFO_MESSAGE("Mouse right %s at (%d, %d)", (event.event_args.pressed) ? "pressed" : "released", event.event_args.x, event.event_args.y);
-            }
+    ret = application_flight_camera_perspective_matrix_get(s_app_state->flight_camera, &s_app_state->projection_matrix);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_perspective_matrix_get failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_update(s_app_state->renderer, view_dirty, projection_dirty, &s_app_state->view_matrix, &s_app_state->projection_matrix, true, true);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", app_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != s_app_state->event_view->window_event_count; ++i) {
+        if(WINDOW_EVENT_RESIZE == s_app_state->event_view->window_events[i].event_code) {
+            s_app_state->framebuffer_width = s_app_state->event_view->window_events[i].event_args.framebuffer_width;
+            s_app_state->framebuffer_height = s_app_state->event_view->window_events[i].event_args.framebuffer_height;
+            s_app_state->window_resized = true;
         }
     }
 
 cleanup:
-    return;
-}
-
-/**
- * @brief 更新されたアプリケーション状態によって、各サブシステムにイベントを通知する
- *
- * @todo ウィンドウサイズ変化時の視錐台更新、プロジェクション行列更新に失敗した場合に、app_state_cleanでwindow_resizedフラグをfalseにしないようにする
- */
-static void app_state_dispatch(void) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-
-    mat4x4f_t tmp_projection = { 0 };
-
-    if(s_app_state->window_resized) {
-        if(0 < s_app_state->framebuffer_height && 0 < s_app_state->framebuffer_width) {
-            ret_camera = flight_camera_viewing_frustum_update(s_app_state->flight_camera, 45.0f, (float)s_app_state->framebuffer_width / (float)s_app_state->framebuffer_height, 0.1f, 50.0f); // TODO: エラー処理
-            if(CAMERA_SUCCESS != ret_camera) {
-                ret = APPLICATION_RUNTIME_ERROR;
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to update world camera frustum.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_camera = flight_camera_perspective_matrix_get(s_app_state->flight_camera, &tmp_projection);
-            if(CAMERA_SUCCESS != ret_camera) {
-                ret = APPLICATION_RUNTIME_ERROR;
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to get perspective matrix.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = ui_mesh_shader_use(s_app_state->ui_mesh_shader);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_use failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = ui_mesh_shader_projection_matrix_set(s_app_state->ui_mesh_shader, &tmp_projection, true);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - Failed to set projection matrix.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = line_mesh_shader_use(s_app_state->line_mesh_shader);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_use failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = line_mesh_shader_projection_matrix_set(s_app_state->line_mesh_shader, &tmp_projection, true);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = point_mesh_shader_use(s_app_state->point_mesh_shader);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_use failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = point_mesh_shader_projection_matrix_set(s_app_state->point_mesh_shader, &tmp_projection, true);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = lit_mesh_shader_use(s_app_state->lit_mesh_shader);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_use failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            ret_shader = lit_mesh_shader_projection_matrix_set(s_app_state->lit_mesh_shader, &tmp_projection, true);
-            if(SHADER_SUCCESS != ret_shader) {
-                ret = app_rslt_convert_shader(ret_shader);
-                ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_projection_matrix_set failed.", app_rslt_to_str(ret));
-                goto cleanup;
-            }
-
-            mat4f_copy(&tmp_projection, &s_app_state->projection_matrix);
-        }
-    }
-    ret_camera =  flight_camera_command_execute(s_app_state->flight_camera, 0.1f, 1.0f, &s_app_state->view_dirty);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ERROR_MESSAGE("app_state_dispatch(%s) - Failed to execute flight camera command.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    if(s_app_state->view_dirty) {
-        ret_camera = flight_camera_view_matrix_get(s_app_state->flight_camera, &s_app_state->view_matrix);
-        if(CAMERA_SUCCESS != ret_camera) {
-                ret = APPLICATION_RUNTIME_ERROR;
-                ERROR_MESSAGE("app_state_dispatch(%s) - camera_view_matrix_get failed.", app_rslt_to_str(ret));
-                goto cleanup;
-        }
-
-        ret_shader = ui_mesh_shader_use(s_app_state->ui_mesh_shader);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_use failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = ui_mesh_shader_view_matrix_set(s_app_state->ui_mesh_shader, &s_app_state->view_matrix, true);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - ui_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = line_mesh_shader_use(s_app_state->line_mesh_shader);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - renderer_backend_context failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = line_mesh_shader_view_matrix_set(s_app_state->line_mesh_shader, &s_app_state->view_matrix, true);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - line_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = point_mesh_shader_use(s_app_state->point_mesh_shader);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_use failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = point_mesh_shader_view_matrix_set(s_app_state->point_mesh_shader, &s_app_state->view_matrix, true);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - point_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = lit_mesh_shader_use(s_app_state->lit_mesh_shader);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_use failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_shader = lit_mesh_shader_view_matrix_set(s_app_state->lit_mesh_shader, &s_app_state->view_matrix, true);
-        if(SHADER_SUCCESS != ret_shader) {
-            ret = app_rslt_convert_shader(ret_shader);
-            ERROR_MESSAGE("app_state_dispatch(%s) - lit_mesh_shader_view_matrix_set failed.", app_rslt_to_str(ret));
-            goto cleanup;
-        }
-
-        s_app_state->view_dirty = false;
-    }
-cleanup:
-    return;
+    return ret;
 }
 
 /**
@@ -1248,8 +949,8 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     point_vertex_t tmp_vertices[8] = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_geometry_create", "app_state_")
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_mesh_shader")
+    // IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
+    // IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_mesh_shader")
 
     tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
     tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
@@ -1269,7 +970,7 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
     tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
     tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
 
-    ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(app_state_->point_mesh_shader, app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
+    ret_resource_pipeline = point_mesh_geometry_pipeline_import_from_vertices(application_renderer_point_mesh_shader_get(app_state_->renderer), app_state_->point_mesh_geometry_registry, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ERROR_MESSAGE("point_geometry_create - Failed to import point mesh geometry.");
         goto cleanup;
@@ -1302,7 +1003,7 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
         goto cleanup;
     }
     ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        app_state_->ui_mesh_shader,
+        application_renderer_ui_mesh_shader_get(app_state_->renderer),
         app_state_->ui_mesh_geometry_registry,
         small_icon_name,
         fs_path_fullpath_get(small_icon_path),
@@ -1321,7 +1022,7 @@ static application_result_t ui_mesh_geometry_import(app_state_t* app_state_) {
         goto cleanup;
     }
     ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(
-        app_state_->ui_mesh_shader,
+        application_renderer_ui_mesh_shader_get(app_state_->renderer),
         app_state_->ui_mesh_geometry_registry,
         large_icon_name,
         fs_path_fullpath_get(large_icon_path),
@@ -1362,7 +1063,7 @@ static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
     }
     // ペンギンSTL pipeline import
     ret_resource_pipeline = lit_mesh_geometry_pipeline_import_from_file(
-        app_state_->lit_mesh_shader,
+        application_renderer_lit_mesh_shader_get(app_state_->renderer),
         app_state_->lit_mesh_geometry_registry,
         penguin_name,
         fs_path_fullpath_get(penguin_path),
@@ -1377,170 +1078,6 @@ static application_result_t lit_mesh_geometry_import(app_state_t* app_state_) {
 
 cleanup:
     fs_path_destroy(&penguin_path);
-
-    return ret;
-}
-
-static application_result_t line_mesh_shader_initialize(app_state_t* app_state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-
-    fs_path_t* vertex_shader_path = NULL;
-    fs_path_t* fragment_shader_path = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "line_mesh_shader_initialize", "app_state_")
-
-    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "vert");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "line_mesh_shader", "frag");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = line_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.line_mesh_shader_config, &app_state_->line_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_shader_initialize(%s) - Failed to create line shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    fs_path_destroy(&vertex_shader_path);
-    fs_path_destroy(&fragment_shader_path);
-
-    return ret;
-}
-
-static application_result_t lit_mesh_shader_initialize(app_state_t* app_state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-
-    fs_path_t* vertex_shader_path = NULL;
-    fs_path_t* fragment_shader_path = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_shader_initialize", "app_state_")
-
-    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "vert");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "lit_mesh_shader", "frag");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = lit_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.lit_mesh_shader_config, &app_state_->lit_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("lit_mesh_shader_initialize(%s) - Failed to create lit mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    fs_path_destroy(&vertex_shader_path);
-    fs_path_destroy(&fragment_shader_path);
-
-    return ret;
-}
-
-static application_result_t point_mesh_shader_initialize(app_state_t* app_state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-
-    fs_path_t* vertex_shader_path = NULL;
-    fs_path_t* fragment_shader_path = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_shader_initialize", "app_state_")
-
-    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "vert");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "point_mesh_shader", "frag");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = point_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.point_mesh_shader_config, &app_state_->point_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("point_mesh_shader_initialize(%s) - Failed to create point mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    fs_path_destroy(&vertex_shader_path);
-    fs_path_destroy(&fragment_shader_path);
-
-    return ret;
-}
-
-static application_result_t ui_mesh_shader_initialize(app_state_t* app_state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-
-    fs_path_t* vertex_shader_path = NULL;
-    fs_path_t* fragment_shader_path = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_shader_initialize", "app_state_")
-
-    ret_fs_path = fs_path_create(&vertex_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "vert");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&fragment_shader_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/shaders/test_shader/", "ui_mesh_shader", "frag");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_shader = ui_mesh_shader_create(app_state_->renderer_backend_context, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &app_state_->renderer_config.ui_mesh_shader_config, &app_state_->ui_mesh_shader);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = app_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_shader_initialize(%s) - Failed to create ui mesh shader.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    fs_path_destroy(&vertex_shader_path);
-    fs_path_destroy(&fragment_shader_path);
 
     return ret;
 }
@@ -1562,7 +1099,7 @@ static application_result_t texture_initialize(app_state_t* app_state_) {
         ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &app_state_->tex_id_rabbit);
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(application_renderer_renderer_backend_context_get(app_state_->renderer), app_state_->texture_registry, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &app_state_->tex_id_rabbit);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
@@ -1575,14 +1112,14 @@ static application_result_t texture_initialize(app_state_t* app_state_) {
         ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    ret_resource_pipeline = texture_pipeline_import_from_bmp(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "frog_512", fs_path_fullpath_get(frog_path), &app_state_->tex_id_frog);
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(application_renderer_renderer_backend_context_get(app_state_->renderer), app_state_->texture_registry, 0, "frog_512", fs_path_fullpath_get(frog_path), &app_state_->tex_id_frog);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_bmp failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_resource_pipeline = texture_pipeline_import_from_solid_color(app_state_->renderer_backend_context, app_state_->texture_registry, 0, "test_texture_green", 0, 255, 0, &app_state_->tex_id_green);
+    ret_resource_pipeline = texture_pipeline_import_from_solid_color(application_renderer_renderer_backend_context_get(app_state_->renderer), app_state_->texture_registry, 0, "test_texture_green", 0, 255, 0, &app_state_->tex_id_green);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("texture_initialize(%s) - texture_pipeline_import_from_solid_color failed.", app_rslt_to_str(ret));

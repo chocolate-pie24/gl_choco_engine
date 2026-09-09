@@ -38,9 +38,9 @@ typedef enum {
 } renderer_type_t;
 
 typedef enum {
-    SHADER_TYPE_VERTEX,
-    SHADER_TYPE_FRAGMENT,
-} shader_type_t;
+    SHADER_STAGE_VERTEX,
+    SHADER_STAGE_FRAGMENT,
+} shader_stage_t;
 
 #ifdef __cplusplus
 }

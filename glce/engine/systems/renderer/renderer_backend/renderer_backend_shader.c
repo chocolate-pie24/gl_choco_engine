@@ -37,7 +37,7 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backen
     renderer_backend_context_->shader_vtable->renderer_shader_destroy(shader_handle_);
 }
 
-renderer_backend_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
+renderer_backend_result_t renderer_backend_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_compile", "backend_context_")
@@ -45,7 +45,7 @@ renderer_backend_result_t renderer_backend_shader_compile(shader_type_t shader_t
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_compile", "backend_context_->shader_vtable")
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_compile", "shader_handle_")
 
-    ret = backend_context_->shader_vtable->renderer_shader_compile(shader_type_, shader_source_, shader_handle_);
+    ret = backend_context_->shader_vtable->renderer_shader_compile(shader_stage_, shader_source_, shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_compile(%s) - Failed to compile shader source.", renderer_backend_rslt_to_str(ret));
         goto cleanup;

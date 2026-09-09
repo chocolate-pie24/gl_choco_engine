@@ -31,7 +31,7 @@ extern "C" {
 
 typedef renderer_backend_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_createの前方宣言 */
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_destroyの前方宣言 */
-typedef renderer_backend_result_t (*pfn_renderer_shader_compile)(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_compileの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_shader_compile)(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_compileの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_linkの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_shader_use)(const renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_useの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_shader_uniform_location_get)(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);  /**< renderer_shader_vtableが保持するrenderer_shader_uniform_location_getの前方宣言 */
@@ -71,26 +71,6 @@ typedef struct renderer_shader_vtable {
      */
     pfn_renderer_shader_destroy renderer_shader_destroy;
 
-    /**
-     * @brief シェーダーオブジェクトを生成し、シェーダーソースをコンパイルする
-     *
-     * @param[in] shader_type_ シェーダー種別指定値
-     * @param[in] shader_source_ シェーダーソース
-     * @param[in,out] shader_handle_ シェーダー関連リソース管理構造体インスタンスへのポインタ
-     *
-     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - shader_source_ == NULL
-     * - shader_handle_ == NULL
-     * - shader_type_が規定値外
-     * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
-     * - 指定したシェーダー種別はすでにコンパイル済み
-     * - シェーダープログラムがすでにリンク済み
-     * - メモリシステム未初期化
-     * @retval RENDERER_BACKEND_SHADER_COMPILE_ERROR シェーダーソースコンパイルエラー
-     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
-     * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
-     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
-     */
     pfn_renderer_shader_compile renderer_shader_compile;
 
     /**
