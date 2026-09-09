@@ -50,26 +50,26 @@ struct renderer_backend_shader {
 typedef enum shader_compile_status {
     SHADER_COMPILE_STATUS_NOT_COMPILED,                 /**< 未コンパイル状態 */
     SHADER_COMPILE_STATUS_COMPILED,                     /**< コンパイル済み状態 */
-    SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE,      /**< サポート対象外のシェーダー種別 */
+    SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_STAGE,     /**< サポート対象外のシェーダーステージ */
     SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE,        /**< 入力されたシェーダーハンドルが不正 */
 } shader_compile_status_t;
 
 static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_);
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
-static renderer_backend_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
+static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 static renderer_backend_result_t gl33_mat4f_uniform_set(int32_t location_, bool should_transpose_, const float* data_);
 static renderer_backend_result_t gl33_vec4u8_uniform_set(int32_t location_, const uint8_t* data_);
 
-static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_);
-static renderer_backend_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_);
-static shader_compile_status_t shader_compile_status_get(shader_type_t shader_type_, const renderer_backend_shader_t* shader_handle_);
+static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_stage_t shader_stage_, GLuint** out_handle_addr_);
+static renderer_backend_result_t gl33_shader_resolve_target(shader_stage_t shader_stage_, GLenum* out_gl33_type_);
+static shader_compile_status_t shader_compile_status_get(shader_stage_t shader_stage_, const renderer_backend_shader_t* shader_handle_);
 
 static void mock_glDeleteShader(GLuint shader_);
 static void mock_glDeleteProgram(GLuint program_);
-static GLuint mock_glCreateShader(GLenum shader_type_);
+static GLuint mock_glCreateShader(GLenum shader_stage_);
 static GLuint mock_glCreateProgram(void);
 static void mock_glShaderSource(GLuint shader_, GLsizei count_, const GLchar **string_, const GLint *length_);
 static void mock_glCompileShader(GLuint shader_);
@@ -173,32 +173,12 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     *shader_handle_ = NULL;
 }
 
-/**
- * @brief OpenGL3.3用シェーダーオブジェクトを生成し、シェーダーソースをコンパイルする
- *
- * @param[in] shader_type_ シェーダー種別指定値
- * @param[in] shader_source_ シェーダーソース
- * @param[in,out] shader_handle_ シェーダー関連リソース管理構造体インスタンスへのポインタ
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - shader_source_ == NULL
- * - shader_handle_ == NULL
- * - shader_type_が規定値外
- * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
- * - 指定したシェーダー種別はすでにコンパイル済み
- * - シェーダープログラムがすでにリンク済み
- * - メモリシステム未初期化
- * @retval RENDERER_BACKEND_SHADER_COMPILE_ERROR シェーダーソースコンパイルエラー
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
- */
-static renderer_backend_result_t gl33_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
+static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    GLenum gl33_shader_type;
+    GLenum gl33_shader_stage;
     GLint result = GL_FALSE;
     GLint info_log_length = 0;
     char* err_mes = NULL;
@@ -209,7 +189,7 @@ static renderer_backend_result_t gl33_shader_compile(shader_type_t shader_type_,
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_compile", "shader_handle_")
 
     // シェーダーオブジェクトのコンパイル状況チェック
-    if(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(shader_type_, shader_handle_)) {
+    if(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(shader_stage_, shader_handle_)) {
         ret = RENDERER_BACKEND_BAD_OPERATION;
         ERROR_MESSAGE("gl33_shader_compile(%s) - Shader object is already compiled.", renderer_backend_rslt_to_str(ret));
         goto cleanup;
@@ -223,21 +203,21 @@ static renderer_backend_result_t gl33_shader_compile(shader_type_t shader_type_,
     }
 
     // シェーダーオブジェクトハンドルを取得
-    ret = gl33_shader_handle_addr_get(shader_handle_, shader_type_, &handle_addr);
+    ret = gl33_shader_handle_addr_get(shader_handle_, shader_stage_, &handle_addr);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_handle_addr_get).", renderer_backend_rslt_to_str(ret));
         goto cleanup;
     }
 
     // シェーダー種別をOpenGLで使用可能な値に変換
-    ret = gl33_shader_resolve_target(shader_type_, &gl33_shader_type);
+    ret = gl33_shader_resolve_target(shader_stage_, &gl33_shader_stage);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         // NOTE: gl33_shader_handle_addr_getで既にエラー処理されているため、ここに来ることはないが将来的な変更のために残しておく
         ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_resolve_target).", renderer_backend_rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_handle = mock_glCreateShader(gl33_shader_type);
+    tmp_handle = mock_glCreateShader(gl33_shader_stage);
     if(0 == tmp_handle) {
         ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
         ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader object handle.", renderer_backend_rslt_to_str(ret));
@@ -315,8 +295,8 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_link", "shader_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
     // バーテックスシェーダーとフラグメントシェーダーは必須なので、有効な状態でなければエラー
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_TYPE_VERTEX, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_TYPE_FRAGMENT, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
 
     // プログラムをリンク
     tmp_program_id = mock_glCreateProgram();
@@ -388,14 +368,14 @@ static renderer_backend_result_t gl33_shader_use(const renderer_backend_shader_t
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_use", "shader_handle_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
 
-    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_TYPE_VERTEX, shader_handle_)) {
+    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderがコンパイル済みではないのは異常
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
         ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader object is not compiled.", renderer_backend_rslt_to_str(ret));
         goto cleanup;
     }
     // TODO: 現状の失敗注入では、shader_compile_status_getの連続呼び出しに対して両方とも強制出力をさせることができないため、下のifはテスト不可(失敗注入方式を引数のシェーダー種別に応じて切り替えるように修正する)
-    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_TYPE_FRAGMENT, shader_handle_)) {
+    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderがコンパイル済みではないのは異常
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
         ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader object is not compiled.", renderer_backend_rslt_to_str(ret));
@@ -506,22 +486,7 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief シェーダーオブジェクトハンドルのアドレスを取得する
- *
- * @note *out_handle_addr_への値の上書きは許可する
- *
- * @param[in] shader_handle_ シェーダーオブジェクトハンドルを格納する構造体インスタンスへのポインタ
- * @param[in] shader_type_ アドレスを取得したいシェーダーオブジェクト種別
- * @param[out] out_handle_addr_ シェーダーオブジェクトハンドルのアドレス格納先
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - shader_handle_ == NULL
- * - out_handle_addr_ == NULL
- * - shader_type_が既定値外
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
- */
-static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_type_t shader_type_, GLuint** out_handle_addr_) {
+static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_stage_t shader_stage_, GLuint** out_handle_addr_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     GLuint* tmp_handle = NULL;
@@ -529,11 +494,11 @@ static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_sh
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "shader_handle_")
     IF_ARG_NULL_GOTO_CLEANUP(out_handle_addr_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "out_handle_addr_")
 
-    switch(shader_type_) {
-    case SHADER_TYPE_VERTEX:
+    switch(shader_stage_) {
+    case SHADER_STAGE_VERTEX:
         tmp_handle = &shader_handle_->vertex_shader_handle;
         break;
-    case SHADER_TYPE_FRAGMENT:
+    case SHADER_STAGE_FRAGMENT:
         tmp_handle = &shader_handle_->fragment_shader_handle;
         break;
     default:
@@ -548,29 +513,18 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief GLCE内で扱うシェーダー種別をOpenGLシェーダー種別に変換する
- *
- * @param[in] shader_type_ 変換元シェーダー種別
- * @param[out] out_gl33_type_ 変換結果格納先
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - out_gl33_type_ == NULL
- * - shader_type_が既定値外
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
- */
-static renderer_backend_result_t gl33_shader_resolve_target(shader_type_t shader_type_, GLenum* out_gl33_type_) {
+static renderer_backend_result_t gl33_shader_resolve_target(shader_stage_t shader_stage_, GLenum* out_gl33_type_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     GLenum tmp_type = GL_VERTEX_SHADER;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_gl33_type_")
 
-    switch(shader_type_) {
-    case SHADER_TYPE_VERTEX:
+    switch(shader_stage_) {
+    case SHADER_STAGE_VERTEX:
         tmp_type = GL_VERTEX_SHADER;
         break;
-    case SHADER_TYPE_FRAGMENT:
+    case SHADER_STAGE_FRAGMENT:
         tmp_type = GL_FRAGMENT_SHADER;
         break;
     default:
@@ -585,32 +539,21 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief シェーダーオブジェクトのコンパイル状況を取得する
- *
- * @param[in] shader_type_ 判定対象シェーダー種別を指定する
- * @param[in] shader_handle_ シェーダーハンドル構造体インスタンスへのポインタ
- *
- * @retval SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE shader_handle_ == NULL
- * @retval SHADER_COMPILE_STATUS_NOT_COMPILED シェーダーオブジェクトは未コンパイル状態
- * @retval SHADER_COMPILE_STATUS_COMPILED シェーダーオブジェクトはコンパイル済み
- * @retval SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE サポート対象外のシェーダー種別
- */
-static shader_compile_status_t shader_compile_status_get(shader_type_t shader_type_, const renderer_backend_shader_t* shader_handle_) {
+static shader_compile_status_t shader_compile_status_get(shader_stage_t shader_stage_, const renderer_backend_shader_t* shader_handle_) {
     shader_compile_status_t status = SHADER_COMPILE_STATUS_NOT_COMPILED;
 
     if(NULL == shader_handle_) {
         status = SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE;
     } else {
-        switch(shader_type_) {
-        case SHADER_TYPE_VERTEX:
+        switch(shader_stage_) {
+        case SHADER_STAGE_VERTEX:
             status = (0 == shader_handle_->vertex_shader_handle) ? SHADER_COMPILE_STATUS_NOT_COMPILED : SHADER_COMPILE_STATUS_COMPILED;
             break;
-        case SHADER_TYPE_FRAGMENT:
+        case SHADER_STAGE_FRAGMENT:
             status = (0 == shader_handle_->fragment_shader_handle) ? SHADER_COMPILE_STATUS_NOT_COMPILED : SHADER_COMPILE_STATUS_COMPILED;
             break;
         default:
-            status = SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_TYPE;
+            status = SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_STAGE;
         }
     }
 
@@ -625,8 +568,8 @@ static void NO_COVERAGE mock_glDeleteProgram(GLuint program_) {
     glDeleteProgram(program_);
 }
 
-static GLuint NO_COVERAGE mock_glCreateShader(GLenum shader_type_) {
-    return glCreateShader(shader_type_);
+static GLuint NO_COVERAGE mock_glCreateShader(GLenum shader_stage_) {
+    return glCreateShader(shader_stage_);
 }
 
 static GLuint NO_COVERAGE mock_glCreateProgram(void) {

@@ -25,6 +25,8 @@ extern "C" {
 
 #include "engine/containers/ring_queue.h"
 
+#include "engine/io_utils/fs_path.h"
+
 #include "engine/camera/core/camera_types.h"
 
 #include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
@@ -110,6 +112,8 @@ application_result_t app_rslt_convert_shader(shader_result_t rslt_);
 application_result_t app_rslt_convert_camera_registry(camera_registry_result_t rslt_);
 
 application_result_t app_rslt_convert_camera(camera_result_t rslt_);
+
+application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_);
 
 #ifdef __cplusplus
 }

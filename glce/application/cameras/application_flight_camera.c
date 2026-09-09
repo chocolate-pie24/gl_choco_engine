@@ -24,6 +24,7 @@
 
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
+#include "application/event/application_event.h"
 
 struct application_flight_camera {
     flight_camera_registry_t* flight_camera_registry;

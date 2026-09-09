@@ -66,37 +66,7 @@ renderer_backend_result_t renderer_backend_shader_create(renderer_backend_contex
  */
 void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_);
 
-/**
- * @brief シェーダーソースをコンパイルし、シェーダーオブジェクトハンドルを初期化する
- *
- * @note
- * - shader_source_のリソース解放は呼び出し側で行うこと
- * - シェーダーオブジェクトのGPUリソース確保に成功後、コンパイルに失敗した場合はGPUリソースは破棄される
- *
- * @details 以下の処理を行う
- * - シェーダーオブジェクトのGPU側リソース確保
- * - シェーダーソースのコンパイル
- *
- * @param[in] shader_type_ シェーダー種別 @ref shader_type_t
- * @param[in] shader_source_ シェーダーソース文字列
- * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[in,out] shader_handle_ コンパイルしたシェーダーオブジェクトへのハンドルを格納する
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - shader_source_ == NULL
- * - shader_handle_ == NULL
- * - shader_type_が無効
- * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
- * - shader_handle_が保持するシェーダーオブジェクトがコンパイル済み
- * - shader_handle_が保持するシェーダープログラムがリンク済み
- * - メモリシステム未初期化
- * @retval RENDERER_BACKEND_SHADER_COMPILE_ERROR シェーダーオブジェクトのGPU側リソース確保に失敗、またはシェーダーソースのコンパイル失敗
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ割り当て失敗
- * @retval RENDERER_BACKEND_SUCCESS シェーダーオブジェクトのコンパイルに成功し、正常終了
- */
-renderer_backend_result_t renderer_backend_shader_compile(shader_type_t shader_type_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
+renderer_backend_result_t renderer_backend_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
 
 /**
  * @brief コンパイル済みのシェーダーオブジェクトをリンクする

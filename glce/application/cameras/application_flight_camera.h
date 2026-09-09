@@ -17,12 +17,11 @@ extern "C" {
 
 #include "application/core/application_types.h"
 
-#include "application/event/application_event.h"
-
 typedef struct application_flight_camera application_flight_camera_t;
 
 typedef struct mat4x4f mat4x4f_t;
 typedef struct linear_alloc linear_alloc_t;
+typedef struct application_event_view application_event_view_t;
 
 application_result_t application_flight_camera_initialize(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_);
 
