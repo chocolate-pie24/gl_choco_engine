@@ -20,6 +20,7 @@ typedef struct line_mesh_shader_config line_mesh_shader_config_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
+typedef struct mat4x4f mat4x4f_t;
 
 render_resource_result_t line_mesh_render_resource_initialize(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_);
 
@@ -33,7 +34,14 @@ render_resource_result_t line_mesh_render_resource_import_from_aabb(line_mesh_re
 render_resource_result_t line_mesh_render_resource_release(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_);
 
 // Frame-global state
+render_resource_result_t line_mesh_render_resource_view_matrix_set(line_mesh_render_resource_t* render_resource_, const mat4x4f_t* view_matrix_);
 
+render_resource_result_t line_mesh_render_resource_projection_matrix_set(line_mesh_render_resource_t* render_resource_, const mat4x4f_t* projection_matrix_);
+
+// Draw
+render_resource_result_t line_mesh_render_resource_draw(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
+
+// Canonical validator
 bool line_mesh_render_resource_is_valid(const line_mesh_render_resource_t* render_resource_);
 
 #ifdef __cplusplus

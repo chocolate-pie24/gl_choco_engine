@@ -8,12 +8,17 @@
 #include <stdalign.h>
 #include <string.h>
 
+#include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/math_types.h"
 
 #include "engine/core/memory/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
+
+#include "engine/systems/renderer/core/renderer_types.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
@@ -244,7 +249,7 @@ render_resource_result_t line_mesh_render_resource_release(line_mesh_render_reso
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_release(%s) - Precondition validation failed for 'tmp_render_resource'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -263,6 +268,141 @@ render_resource_result_t line_mesh_render_resource_release(line_mesh_render_reso
         goto cleanup;
     }
 #endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t line_mesh_render_resource_view_matrix_set(line_mesh_render_resource_t* render_resource_, const mat4x4f_t* view_matrix_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "view_matrix_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = line_mesh_shader_view_matrix_set(render_resource_->shader, view_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_view_matrix_set failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!line_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t line_mesh_render_resource_projection_matrix_set(line_mesh_render_resource_t* render_resource_, const mat4x4f_t* projection_matrix_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "projection_matrix_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = line_mesh_shader_projection_matrix_set(render_resource_->shader, projection_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_projection_matrix_set failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!line_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// NOTE: renderer_backend_vao_unbindを行う場合renderer_backend_contextが必要となる、ただ、実行しなくても良いので当面は実行しない
+render_resource_result_t line_mesh_render_resource_draw(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    const draw_range_t* draw_range = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(color_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "color_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = line_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_model_matrix_set(render_resource_->shader, model_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_model_matrix_set failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_vao_bind(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_vao_bind failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    draw_range = line_mesh_geometry_registry_draw_range_get(render_resource_->geometry_registry, geometry_id_);
+    if(NULL == draw_range) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_geometry_registry_draw_range_get failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = line_mesh_shader_color_set(render_resource_->shader, color_);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_color_set failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // TODO: renderer_backendにgl系APIを追加しOpenGL依存を消す
+    glDrawArrays(GL_LINES, (GLint)draw_range->first_vertex_count, (GLint)draw_range->vertex_count);
 
     ret = RENDER_RESOURCE_SUCCESS;
 
