@@ -128,27 +128,27 @@ typedef struct app_state {
     renderer_config_t renderer_config;
 
     texture_registry_t* texture_registry;
-    int16_t tex_id_rabbit;
-    int16_t tex_id_frog;
-    int16_t tex_id_green;
+    uint16_t tex_id_rabbit;
+    uint16_t tex_id_frog;
+    uint16_t tex_id_green;
     // end
 
     // begin temporary TODO: remove this!!
     point_mesh_geometry_registry_t* point_mesh_geometry_registry;
-    int16_t geometry_id_test_points;
+    uint16_t geometry_id_test_points;
 
     lit_mesh_geometry_registry_t* lit_mesh_geometry_registry;
-    int16_t geometry_id_penguin;
+    uint16_t geometry_id_penguin;
     bool should_draw_penguin_aabb;
 
     ui_mesh_geometry_registry_t* ui_mesh_geometry_registry;
-    int16_t geometry_id_small_icon;
-    int16_t geometry_id_large_icon;
+    uint16_t geometry_id_small_icon;
+    uint16_t geometry_id_large_icon;
 
     line_mesh_geometry_registry_t* line_mesh_geometry_registry;
-    int16_t geometry_id_penguin_aabb;
+    uint16_t geometry_id_penguin_aabb;
     vec4u8_t penguin_aabb_color;
-    int16_t geometry_id_test_line;
+    uint16_t geometry_id_test_line;
     vec4u8_t test_line_color;
 
     mat4x4f_t rabbit_mesh_model_mat;

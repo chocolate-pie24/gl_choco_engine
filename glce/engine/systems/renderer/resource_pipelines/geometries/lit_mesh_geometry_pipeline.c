@@ -39,7 +39,7 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -50,7 +50,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
     size_t vertex_count = 0;
     size_t vertex_offset = 0;
     size_t vertex_array_size = 0;
-    int16_t tmp_geometry_id = 0;
+    uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
 
@@ -133,7 +133,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_) {
+resource_pipeline_result_t lit_mesh_geometry_pipeline_release(lit_mesh_shader_t* shader_, lit_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;

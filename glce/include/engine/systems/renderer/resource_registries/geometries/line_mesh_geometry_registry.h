@@ -96,7 +96,7 @@ bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* regis
  *
  * @return line_mesh_geometry_tへの参照
  */
-const line_mesh_geometry_t* line_mesh_geometry_registry_geometry_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
+const line_mesh_geometry_t* line_mesh_geometry_registry_geometry_get(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
 /**
  * @brief registry_に登録されているname_のジオメトリidを取得する
@@ -117,13 +117,13 @@ const line_mesh_geometry_t* line_mesh_geometry_registry_geometry_get(const line_
  * @retval RESOURCE_REGISTRY_BAD_OPERATION registry_内に名称name_のジオメトリが存在しない
  * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
  */
-resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_);
 
-const draw_range_t* line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
+const draw_range_t* line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
-resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const char* resource_name_, line_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, int16_t* out_geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const char* resource_name_, line_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_);
 
-resource_registry_result_t line_mesh_geometry_registry_unregister(line_mesh_geometry_registry_t* registry_, line_mesh_shader_t* shader_, int16_t geometry_id_);
+resource_registry_result_t line_mesh_geometry_registry_unregister(line_mesh_geometry_registry_t* registry_, line_mesh_shader_t* shader_, uint16_t geometry_id_);
 
 bool line_mesh_geometry_registry_is_valid(const line_mesh_geometry_registry_t* registry_);
 

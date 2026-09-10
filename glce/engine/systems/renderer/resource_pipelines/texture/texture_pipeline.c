@@ -31,7 +31,7 @@
 static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 
-resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, int16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -46,7 +46,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     uint8_t tmp_channel_count = 0;
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
-    int16_t tmp_texture_id = 0;
+    uint16_t tmp_texture_id = 0;
     size_t tmp_pixel_data_size = 0;
 
     // 入力値検証
@@ -124,7 +124,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, int16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -139,7 +139,7 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     uint8_t tmp_channel_count = 0;
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
-    int16_t tmp_texture_id = 0;
+    uint16_t tmp_texture_id = 0;
     size_t tmp_pixel_data_size = 0;
 
     // 入力値検証
@@ -211,7 +211,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_registry_, int16_t texture_id_) {
+resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_registry_, uint16_t texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
