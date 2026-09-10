@@ -290,6 +290,13 @@ render_resource_result_t line_mesh_render_resource_view_matrix_set(line_mesh_ren
     }
 #endif
 
+    ret_shader = line_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
+
     ret_shader = line_mesh_shader_view_matrix_set(render_resource_->shader, view_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
         ret = render_resource_rslt_convert_shader(ret_shader);
@@ -325,6 +332,13 @@ render_resource_result_t line_mesh_render_resource_projection_matrix_set(line_me
         goto cleanup;
     }
 #endif
+
+    ret_shader = line_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_rslt_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret_shader = line_mesh_shader_projection_matrix_set(render_resource_->shader, projection_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {

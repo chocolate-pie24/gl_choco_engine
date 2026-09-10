@@ -340,3 +340,28 @@ application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_) {
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t app_rslt_convert_render_resource(render_resource_result_t rslt_) {
+    switch(rslt_) {
+    case RENDER_RESOURCE_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDER_RESOURCE_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDER_RESOURCE_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDER_RESOURCE_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDER_RESOURCE_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDER_RESOURCE_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDER_RESOURCE_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDER_RESOURCE_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RENDER_RESOURCE_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

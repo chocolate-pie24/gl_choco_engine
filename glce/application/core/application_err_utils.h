@@ -37,6 +37,8 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
+#include "engine/systems/renderer/render_resources/core/render_resource_types.h"
+
 // NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
 // Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
 // 将来Renderer Frontendを導入し、Shaderおよびその内部型をApplicationから隠した時点で削除する予定。
@@ -114,6 +116,8 @@ application_result_t app_rslt_convert_camera_registry(camera_registry_result_t r
 application_result_t app_rslt_convert_camera(camera_result_t rslt_);
 
 application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_);
+
+application_result_t app_rslt_convert_render_resource(render_resource_result_t rslt_);
 
 #ifdef __cplusplus
 }
