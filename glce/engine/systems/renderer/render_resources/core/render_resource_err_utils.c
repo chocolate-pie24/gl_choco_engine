@@ -169,3 +169,59 @@ render_resource_result_t render_resource_rslt_convert_resource_pipeline(resource
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     }
 }
+
+render_resource_result_t render_resource_rslt_convert_resource(resource_result_t rslt_) {
+    switch(rslt_) {
+    case RESOURCE_SUCCESS:
+        return RENDER_RESOURCE_SUCCESS;
+    case RESOURCE_NO_MEMORY:
+        return RENDER_RESOURCE_NO_MEMORY;
+    case RESOURCE_RUNTIME_ERROR:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case RESOURCE_INVALID_ARGUMENT:
+        return RENDER_RESOURCE_INVALID_ARGUMENT;
+    case RESOURCE_DATA_CORRUPTED:
+        return RENDER_RESOURCE_DATA_CORRUPTED;
+    case RESOURCE_BAD_OPERATION:
+        return RENDER_RESOURCE_BAD_OPERATION;
+    case RESOURCE_OVERFLOW:
+        return RENDER_RESOURCE_OVERFLOW;
+    case RESOURCE_LIMIT_EXCEEDED:
+        return RENDER_RESOURCE_LIMIT_EXCEEDED;
+    case RESOURCE_FILE_OPEN_ERROR:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case RESOURCE_FILE_READ_ERROR:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case RESOURCE_UNSUPPORTED_FILE:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case RESOURCE_UNDEFINED_ERROR:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+render_resource_result_t render_resource_rslt_convert_texture_gpu_resource(texture_gpu_resource_result_t rslt_) {
+    switch(rslt_) {
+    case TEXTURE_GPU_RESOURCE_SUCCESS:
+        return RENDER_RESOURCE_SUCCESS;
+    case TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT:
+        return RENDER_RESOURCE_INVALID_ARGUMENT;
+    case TEXTURE_GPU_RESOURCE_RUNTIME_ERROR:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case TEXTURE_GPU_RESOURCE_NO_MEMORY:
+        return RENDER_RESOURCE_NO_MEMORY;
+    case TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED:
+        return RENDER_RESOURCE_LIMIT_EXCEEDED;
+    case TEXTURE_GPU_RESOURCE_BAD_OPERATION:
+        return RENDER_RESOURCE_BAD_OPERATION;
+    case TEXTURE_GPU_RESOURCE_DATA_CORRUPTED:
+        return RENDER_RESOURCE_DATA_CORRUPTED;
+    case TEXTURE_GPU_RESOURCE_OVERFLOW:
+        return RENDER_RESOURCE_OVERFLOW;
+    case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    }
+}

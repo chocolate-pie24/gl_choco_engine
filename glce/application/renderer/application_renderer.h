@@ -22,62 +22,55 @@ typedef struct application_renderer application_renderer_t;
 typedef struct mat4x4f mat4x4f_t;
 typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
+typedef struct point_vertex point_vertex_t;
 
 application_result_t application_renderer_initialize(const renderer_config_t* renderer_config_, target_graphics_api_t target_api_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_);
 
 void application_renderer_deinitialize(application_renderer_t* application_renderer_);
 
-application_result_t application_renderer_update(application_renderer_t* application_renderer_, bool view_dirty_, bool projection_dirty_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, bool should_transpose_view_matrix_, bool should_transpose_projection_matrix_);
+application_result_t application_renderer_update(application_renderer_t* application_renderer_, bool view_dirty_, bool projection_dirty_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
 
-application_result_t application_line_mesh_import_from_vertices(application_renderer_t* application_renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
+// Geometry Import
+application_result_t application_renderer_line_mesh_geometry_import_from_vertices(application_renderer_t* application_renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
-application_result_t application_line_mesh_import_from_aabb(application_renderer_t* application_renderer_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
+application_result_t application_renderer_line_mesh_geometry_import_from_aabb(application_renderer_t* application_renderer_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
 
-application_result_t application_line_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_lit_mesh_geometry_import_from_file(application_renderer_t* application_renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
-application_result_t application_line_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
+application_result_t application_renderer_point_mesh_geometry_import_from_vertices(application_renderer_t* application_renderer_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
+
+application_result_t application_renderer_ui_mesh_geometry_import_from_file(application_renderer_t* application_renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+
+// Geometry Release
+application_result_t application_renderer_line_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+
+application_result_t application_renderer_lit_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+
+application_result_t application_renderer_point_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+
+application_result_t application_renderer_ui_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+
+// Texture Inport
+application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
+
+application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
+
+// Texture Release
+application_result_t application_renderer_ui_mesh_texture_release(application_renderer_t* application_renderer_, uint16_t texture_id_);
+
+// Mesh Draw
+application_result_t application_renderer_line_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
+
+application_result_t application_renderer_lit_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
+
+application_result_t application_renderer_point_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
+
+application_result_t application_renderer_ui_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, uint16_t texture_id_, const mat4x4f_t* model_matrix_);
+
+// Utility(これらはそのうち適切な場所に移す)
+application_result_t application_renderer_lit_mesh_geometry_to_aabb_3d(application_renderer_t* application_renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
 
 bool application_renderer_is_valid(const application_renderer_t* application_renderer_);
-
-
-
-
-
-
-// TODO: ここから下は全部消す
-typedef enum {
-    APPLICATION_RENDERER_SHADER_TYPE_LINE_MESH = 0,
-    APPLICATION_RENDERER_SHADER_TYPE_LIT_MESH,
-    APPLICATION_RENDERER_SHADER_TYPE_POINT_MESH,
-    APPLICATION_RENDERER_SHADER_TYPE_UI_MESH,
-} application_renderer_shader_type_t;
-
-application_result_t application_renderer_shader_use(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_);
-
-application_result_t application_renderer_vao_bind(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_);
-
-application_result_t application_renderer_vao_unbind(application_renderer_t* application_renderer_);
-
-application_result_t application_renderer_model_matrix_set(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_, const mat4x4f_t* model_matrix_, bool should_transpose_);
-
-application_result_t application_renderer_view_matrix_set(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_, const mat4x4f_t* view_matrix_, bool should_transpose_);
-
-application_result_t application_renderer_projection_matrix_set(application_renderer_t* application_renderer_, application_renderer_shader_type_t shader_type_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
-
-// begin temporary: TODO: REMOVE THIS!!
-// shader + registryの上位モジュールができるまでの暫定API
-typedef struct renderer_backend_context renderer_backend_context_t;
-typedef struct lit_mesh_shader lit_mesh_shader_t;
-typedef struct point_mesh_shader point_mesh_shader_t;
-typedef struct ui_mesh_shader ui_mesh_shader_t;
-
-renderer_backend_context_t* application_renderer_renderer_backend_context_get(application_renderer_t* application_renderer_);
-lit_mesh_shader_t* application_renderer_lit_mesh_shader_get(application_renderer_t* application_renderer_);
-point_mesh_shader_t* application_renderer_point_mesh_shader_get(application_renderer_t* application_renderer_);
-ui_mesh_shader_t* application_renderer_ui_mesh_shader_get(application_renderer_t* application_renderer_);
-// end temporary
-
-bool application_renderer_shader_type_is_valid(application_renderer_shader_type_t shader_type_);
 
 #ifdef __cplusplus
 }

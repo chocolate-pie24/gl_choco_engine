@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdalign.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
 
@@ -15,12 +16,12 @@
 #include "engine/base/choco_math/math_types.h"
 
 #include "engine/core/memory/linear_allocator.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/io_utils/fs_path.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
-
-#include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
@@ -141,31 +142,31 @@ void line_mesh_render_resource_deinitialize(line_mesh_render_resource_t* render_
     line_mesh_shader_destroy(&render_resource_->shader);
 }
 
-render_resource_result_t line_mesh_render_resource_import_from_vertices(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_) {
+render_resource_result_t line_mesh_render_resource_geometry_import_from_vertices(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_vertices", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_vertices", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_vertices", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "out_geometry_id_")
     if('\0' == resource_name_[0]) {
         ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_vertices(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
     if(0 == vertex_count_) {
         ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_vertices(%s) - Provided vertex_count_ is not valid.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Provided vertex_count_ is not valid.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_vertices(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -173,14 +174,14 @@ render_resource_result_t line_mesh_render_resource_import_from_vertices(line_mes
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(render_resource_->shader, render_resource_->geometry_registry, resource_name_, vertices_, vertex_count_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_vertices(%s) - line_mesh_geometry_pipeline_import_from_vertices failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - line_mesh_geometry_pipeline_import_from_vertices failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_vertices(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -193,26 +194,26 @@ cleanup:
     return ret;
 }
 
-render_resource_result_t line_mesh_render_resource_import_from_aabb(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_) {
+render_resource_result_t line_mesh_render_resource_geometry_import_from_aabb(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_aabb", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_aabb", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_aabb", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_import_from_aabb", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "out_geometry_id_")
     if('\0' == resource_name_[0]) {
         ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_aabb(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_aabb(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -220,14 +221,14 @@ render_resource_result_t line_mesh_render_resource_import_from_aabb(line_mesh_re
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(render_resource_->shader, render_resource_->geometry_registry, resource_name_, aabb_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_aabb(%s) - line_mesh_geometry_pipeline_import_from_aabb failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - line_mesh_geometry_pipeline_import_from_aabb failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_import_from_aabb(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -240,16 +241,16 @@ cleanup:
     return ret;
 }
 
-render_resource_result_t line_mesh_render_resource_release(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_) {
+render_resource_result_t line_mesh_render_resource_geometry_release(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_release", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_release", "render_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -257,14 +258,14 @@ render_resource_result_t line_mesh_render_resource_release(line_mesh_render_reso
     ret_resource_pipeline = line_mesh_geometry_pipeline_release(render_resource_->shader, render_resource_->geometry_registry, geometry_id_);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_release(%s) - line_mesh_geometry_pipeline_release failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - line_mesh_geometry_pipeline_release failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif

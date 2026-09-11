@@ -27,11 +27,11 @@ render_resource_result_t line_mesh_render_resource_initialize(const line_mesh_sh
 void line_mesh_render_resource_deinitialize(line_mesh_render_resource_t* render_resource_);
 
 // Geometry resource operation
-render_resource_result_t line_mesh_render_resource_import_from_vertices(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
+render_resource_result_t line_mesh_render_resource_geometry_import_from_vertices(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
-render_resource_result_t line_mesh_render_resource_import_from_aabb(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
+render_resource_result_t line_mesh_render_resource_geometry_import_from_aabb(line_mesh_render_resource_t* render_resource_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
 
-render_resource_result_t line_mesh_render_resource_release(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_);
+render_resource_result_t line_mesh_render_resource_geometry_release(line_mesh_render_resource_t* render_resource_, uint16_t geometry_id_);
 
 // Frame-global state
 render_resource_result_t line_mesh_render_resource_view_matrix_set(line_mesh_render_resource_t* render_resource_, const mat4x4f_t* view_matrix_);
