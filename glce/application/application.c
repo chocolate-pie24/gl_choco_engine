@@ -14,8 +14,7 @@
  */
 #include "application/application.h"
 
-#include <stdalign.h>
-#include <stddef.h> // for NULL
+#include <stddef.h>
 #include <string.h> // for memset
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,7 +31,6 @@
 #include "engine/core/memory/choco_memory.h"
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/core/geometry_primitive/geometry_primitive_types.h"
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
@@ -414,9 +412,9 @@ application_result_t application_run(void) {
     s_app_state->should_draw_penguin_aabb = true;
     s_app_state->penguin_aabb_color = vec4u8_initialize(255, 0, 0, 255);
     if(s_app_state->should_draw_penguin_aabb) {
-        ret = application_renderer_lit_mesh_geometry_to_aabb_3d(s_app_state->renderer, s_app_state->geometry_id_penguin, &penguin_aabb);
+        ret = application_renderer_lit_mesh_geometry_convert_to_aabb_3d(s_app_state->renderer, s_app_state->geometry_id_penguin, &penguin_aabb);
         if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_lit_mesh_geometry_to_aabb_3d failed.", app_rslt_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - application_renderer_lit_mesh_geometry_convert_to_aabb_3d failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
         ret = application_renderer_line_mesh_geometry_import_from_aabb(s_app_state->renderer, "penguin_aabb", &penguin_aabb, &s_app_state->geometry_id_penguin_aabb);

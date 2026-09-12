@@ -53,16 +53,6 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(poi
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "vertices_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
 
     ret_resource = point_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {

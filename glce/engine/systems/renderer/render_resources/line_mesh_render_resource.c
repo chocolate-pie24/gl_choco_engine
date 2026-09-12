@@ -21,8 +21,6 @@
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
@@ -60,21 +58,6 @@ render_resource_result_t line_mesh_render_resource_initialize(const line_mesh_sh
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_initialize", "shader_dir_")
     IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_initialize", "out_render_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "line_mesh_render_resource_initialize", "*out_render_resource_")
-    if(0 == max_geometry_count_) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_initialize(%s) - Provided max_geometry_count_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == executable_directory_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_initialize(%s) - Provided executable_directory_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == shader_dir_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_initialize(%s) - Provided shader_dir_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(line_mesh_render_resource_t), alignof(line_mesh_render_resource_t), (void**)&tmp_render_resource);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
@@ -153,16 +136,6 @@ render_resource_result_t line_mesh_render_resource_geometry_import_from_vertices
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Provided vertex_count_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
@@ -205,11 +178,6 @@ render_resource_result_t line_mesh_render_resource_geometry_import_from_aabb(lin
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "aabb_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;

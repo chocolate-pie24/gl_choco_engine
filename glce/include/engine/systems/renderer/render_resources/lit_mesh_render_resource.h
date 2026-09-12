@@ -39,7 +39,7 @@ render_resource_result_t lit_mesh_render_resource_projection_matrix_set(lit_mesh
 render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
 
 // Utility
-render_resource_result_t lit_mesh_render_resource_convert_to_aabb_3d(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
+render_resource_result_t lit_mesh_render_resource_geometry_convert_to_aabb_3d(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
 
 // Canonical validator
 bool lit_mesh_render_resource_is_valid(const lit_mesh_render_resource_t* render_resource_);

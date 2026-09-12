@@ -61,17 +61,6 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Provided resource_fullpath_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-
 
     ret_resource = stl_loader_load(resource_fullpath_, &vertex_count, &vertices);
     if(RESOURCE_SUCCESS != ret_resource) {

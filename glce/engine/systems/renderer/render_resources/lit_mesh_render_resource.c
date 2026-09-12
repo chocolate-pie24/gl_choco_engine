@@ -23,8 +23,6 @@
 
 #include "engine/resource/geometry/conversion/geometry_conversion.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
@@ -62,21 +60,6 @@ render_resource_result_t lit_mesh_render_resource_initialize(const lit_mesh_shad
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "shader_dir_")
     IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "out_render_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "lit_mesh_render_resource_initialize", "*out_render_resource_")
-    if(0 == max_geometry_count_) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - Provided max_geometry_count_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == executable_directory_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - Provided executable_directory_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == shader_dir_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - Provided shader_dir_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(lit_mesh_render_resource_t), alignof(lit_mesh_render_resource_t), (void**)&tmp_render_resource);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
@@ -155,16 +138,6 @@ render_resource_result_t lit_mesh_render_resource_geometry_import_from_file(lit_
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_geometry_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_geometry_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_geometry_import_from_file", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_geometry_import_from_file(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_geometry_import_from_file(%s) - Provided resource_fullpath_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
@@ -372,7 +345,7 @@ cleanup:
     return ret;
 }
 
-render_resource_result_t lit_mesh_render_resource_convert_to_aabb_3d(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
+render_resource_result_t lit_mesh_render_resource_geometry_convert_to_aabb_3d(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -380,12 +353,12 @@ render_resource_result_t lit_mesh_render_resource_convert_to_aabb_3d(lit_mesh_re
     aabb_3d_t tmp_aabb_3d = { 0 };
     const lit_mesh_geometry_t* tmp_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_convert_to_aabb_3d", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_convert_to_aabb_3d", "out_aabb_3d_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_geometry_convert_to_aabb_3d", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_geometry_convert_to_aabb_3d", "out_aabb_3d_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_render_resource_convert_to_aabb_3d(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_geometry_convert_to_aabb_3d(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -393,14 +366,14 @@ render_resource_result_t lit_mesh_render_resource_convert_to_aabb_3d(lit_mesh_re
     tmp_geometry = lit_mesh_geometry_registry_geometry_get(render_resource_->geometry_registry, geometry_id_);
     if(NULL == tmp_geometry) {
         ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_render_resource_convert_to_aabb_3d(%s) - lit_mesh_geometry_registry_geometry_get failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_geometry_convert_to_aabb_3d(%s) - lit_mesh_geometry_registry_geometry_get failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_resource = geometry_conversion_lit_mesh_geometry_to_aabb_3d(tmp_geometry, &tmp_aabb_3d);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = render_resource_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("lit_mesh_render_resource_convert_to_aabb_3d(%s) - geometry_conversion_lit_mesh_geometry_to_aabb_3d failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_geometry_convert_to_aabb_3d(%s) - geometry_conversion_lit_mesh_geometry_to_aabb_3d failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 

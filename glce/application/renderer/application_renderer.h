@@ -42,18 +42,18 @@ application_result_t application_renderer_point_mesh_geometry_import_from_vertic
 application_result_t application_renderer_ui_mesh_geometry_import_from_file(application_renderer_t* application_renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
 // Geometry Release
-application_result_t application_renderer_line_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_line_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_lit_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_lit_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_point_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_point_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_ui_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_ui_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_);
 
-// Texture Inport
-application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
+// Texture Import
+application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* application_renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
 
-application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
+application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* application_renderer_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
 
 // Texture Release
 application_result_t application_renderer_ui_mesh_texture_release(application_renderer_t* application_renderer_, uint16_t texture_id_);
@@ -68,7 +68,7 @@ application_result_t application_renderer_point_mesh_draw(application_renderer_t
 application_result_t application_renderer_ui_mesh_draw(application_renderer_t* application_renderer_, uint16_t geometry_id_, uint16_t texture_id_, const mat4x4f_t* model_matrix_);
 
 // Utility(これらはそのうち適切な場所に移す)
-application_result_t application_renderer_lit_mesh_geometry_to_aabb_3d(application_renderer_t* application_renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
+application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* application_renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
 
 bool application_renderer_is_valid(const application_renderer_t* application_renderer_);
 

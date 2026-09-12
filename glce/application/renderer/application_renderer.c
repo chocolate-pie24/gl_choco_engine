@@ -268,16 +268,6 @@ application_result_t application_renderer_line_mesh_geometry_import_from_vertice
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_vertices", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_line_mesh_geometry_import_from_vertices(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_line_mesh_geometry_import_from_vertices(%s) - Provided vertex_count_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -320,11 +310,6 @@ application_result_t application_renderer_line_mesh_geometry_import_from_aabb(ap
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_aabb", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_aabb", "aabb_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_import_from_aabb", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_line_mesh_geometry_import_from_aabb(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -367,16 +352,6 @@ application_result_t application_renderer_lit_mesh_geometry_import_from_file(app
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_import_from_file(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_import_from_file(%s) - Provided resource_fullpath_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -419,16 +394,6 @@ application_result_t application_renderer_point_mesh_geometry_import_from_vertic
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_point_mesh_geometry_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_point_mesh_geometry_import_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_point_mesh_geometry_import_from_vertices", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_point_mesh_geometry_import_from_vertices(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_point_mesh_geometry_import_from_vertices(%s) - Provided vertex_count_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -471,16 +436,6 @@ application_result_t application_renderer_ui_mesh_geometry_import_from_file(appl
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_geometry_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_geometry_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_geometry_import_from_file", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_ui_mesh_geometry_import_from_file(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_ui_mesh_geometry_import_from_file(%s) - Provided resource_fullpath_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -512,16 +467,16 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_line_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
+application_result_t application_renderer_line_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_release", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_line_mesh_geometry_release", "application_renderer_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_line_mesh_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_line_mesh_geometry_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -529,14 +484,14 @@ application_result_t application_renderer_line_mesh_release(application_renderer
     ret_render_resource = line_mesh_render_resource_geometry_release(application_renderer_->line_mesh_render_resource, geometry_id_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_line_mesh_release(%s) - line_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_line_mesh_geometry_release(%s) - line_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_line_mesh_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_line_mesh_geometry_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -547,16 +502,16 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
+application_result_t application_renderer_lit_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_release", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_release", "application_renderer_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -564,14 +519,14 @@ application_result_t application_renderer_lit_mesh_release(application_renderer_
     ret_render_resource = lit_mesh_render_resource_geometry_release(application_renderer_->lit_mesh_render_resource, geometry_id_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_release(%s) - lit_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - lit_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -582,16 +537,16 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_point_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
+application_result_t application_renderer_point_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_point_mesh_release", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_point_mesh_geometry_release", "application_renderer_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_point_mesh_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_point_mesh_geometry_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -599,14 +554,14 @@ application_result_t application_renderer_point_mesh_release(application_rendere
     ret_render_resource = point_mesh_render_resource_geometry_release(application_renderer_->point_mesh_render_resource, geometry_id_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_point_mesh_release(%s) - point_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_point_mesh_geometry_release(%s) - point_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_point_mesh_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_point_mesh_geometry_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -617,16 +572,16 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_ui_mesh_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
+application_result_t application_renderer_ui_mesh_geometry_release(application_renderer_t* application_renderer_, uint16_t geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_release", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_geometry_release", "application_renderer_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_ui_mesh_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_ui_mesh_geometry_release(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -634,14 +589,14 @@ application_result_t application_renderer_ui_mesh_release(application_renderer_t
     ret_render_resource = ui_mesh_render_resource_geometry_release(application_renderer_->ui_mesh_render_resource, geometry_id_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_ui_mesh_release(%s) - ui_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_ui_mesh_geometry_release(%s) - ui_mesh_render_resource_geometry_release failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_ui_mesh_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_ui_mesh_geometry_release(%s) - Postcondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -652,7 +607,7 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
+application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* application_renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
@@ -663,16 +618,6 @@ application_result_t application_renderer_ui_mesh_texture_import_from_bmp(applic
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_bmp", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_bmp", "texture_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_bmp", "out_texture_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_ui_mesh_texture_import_from_bmp(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == texture_fullpath_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_ui_mesh_texture_import_from_bmp(%s) - Provided texture_fullpath_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -681,7 +626,7 @@ application_result_t application_renderer_ui_mesh_texture_import_from_bmp(applic
     }
 #endif
 
-    ret_render_resource = ui_mesh_render_resource_texture_import_from_bmp(application_renderer_->ui_mesh_render_resource, gpu_unit_num_, resource_name_, texture_fullpath_, &tmp_texture_id);
+    ret_render_resource = ui_mesh_render_resource_texture_import_from_bmp(application_renderer_->ui_mesh_render_resource, texture_unit_index_, resource_name_, texture_fullpath_, &tmp_texture_id);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
         ERROR_MESSAGE("application_renderer_ui_mesh_texture_import_from_bmp(%s) - ui_mesh_render_resource_geometry_import_from_file failed.", app_rslt_to_str(ret));
@@ -704,7 +649,7 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* application_renderer_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
+application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* application_renderer_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
@@ -714,11 +659,6 @@ application_result_t application_renderer_ui_mesh_texture_import_from_solid_colo
     IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_solid_color", "application_renderer_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_solid_color", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_ui_mesh_texture_import_from_solid_color", "out_texture_id_")
-    if('\0' == resource_name_[0]) {
-        ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_ui_mesh_texture_import_from_solid_color(%s) - Provided resource_name_ is not valid.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -727,7 +667,7 @@ application_result_t application_renderer_ui_mesh_texture_import_from_solid_colo
     }
 #endif
 
-    ret_render_resource = ui_mesh_render_resource_texture_import_from_solid_color(application_renderer_->ui_mesh_render_resource, gpu_unit_num_, resource_name_, red_, green_, blue_, &tmp_texture_id);
+    ret_render_resource = ui_mesh_render_resource_texture_import_from_solid_color(application_renderer_->ui_mesh_render_resource, texture_unit_index_, resource_name_, red_, green_, blue_, &tmp_texture_id);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
         ERROR_MESSAGE("application_renderer_ui_mesh_texture_import_from_solid_color(%s) - ui_mesh_render_resource_geometry_import_from_file failed.", app_rslt_to_str(ret));
@@ -898,27 +838,27 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_geometry_to_aabb_3d(application_renderer_t* application_renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
+application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* application_renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     aabb_3d_t tmp_aabb_3d = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_to_aabb_3d", "application_renderer_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_to_aabb_3d", "out_aabb_3d_")
+    IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_convert_to_aabb_3d", "application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_convert_to_aabb_3d", "out_aabb_3d_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_to_aabb_3d(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_convert_to_aabb_3d(%s) - Precondition validation failed for 'application_renderer_'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_convert_to_aabb_3d(application_renderer_->lit_mesh_render_resource, geometry_id_, &tmp_aabb_3d);
+    ret_render_resource = lit_mesh_render_resource_geometry_convert_to_aabb_3d(application_renderer_->lit_mesh_render_resource, geometry_id_, &tmp_aabb_3d);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_render_resource_convert_to_aabb_3d failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_convert_to_aabb_3d(%s) - lit_mesh_render_resource_geometry_convert_to_aabb_3d failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

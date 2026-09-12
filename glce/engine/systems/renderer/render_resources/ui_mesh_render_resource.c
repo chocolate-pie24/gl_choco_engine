@@ -20,8 +20,6 @@
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
@@ -66,26 +64,6 @@ render_resource_result_t ui_mesh_render_resource_initialize(const ui_mesh_shader
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_initialize", "shader_dir_")
     IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_initialize", "out_render_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "ui_mesh_render_resource_initialize", "*out_render_resource_")
-    if(0 == max_geometry_count_) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_initialize(%s) - Provided max_geometry_count_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == max_texture_count_) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_initialize(%s) - Provided max_texture_count_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == executable_directory_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_initialize(%s) - Provided executable_directory_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == shader_dir_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_initialize(%s) - Provided shader_dir_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(ui_mesh_render_resource_t), alignof(ui_mesh_render_resource_t), (void**)&tmp_render_resource);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
@@ -178,16 +156,6 @@ render_resource_result_t ui_mesh_render_resource_geometry_import_from_file(ui_me
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Provided resource_fullpath_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
@@ -254,7 +222,7 @@ cleanup:
     return ret;
 }
 
-render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh_render_resource_t* render_resource_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
+render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh_render_resource_t* render_resource_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
@@ -265,16 +233,6 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "texture_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "out_texture_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == texture_fullpath_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Provided texture_fullpath_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
@@ -283,7 +241,7 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh
     }
 #endif
 
-    ret_resource_pipeline = texture_pipeline_import_from_bmp(render_resource_->backend_context, render_resource_->texture_registry, gpu_unit_num_, resource_name_, texture_fullpath_, &tmp_texture_id);
+    ret_resource_pipeline = texture_pipeline_import_from_bmp(render_resource_->backend_context, render_resource_->texture_registry, texture_unit_index_, resource_name_, texture_fullpath_, &tmp_texture_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
         ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - texture_pipeline_import_from_bmp failed.", render_resource_rslt_to_str(ret));
@@ -306,7 +264,7 @@ cleanup:
     return ret;
 }
 
-render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color(ui_mesh_render_resource_t* render_resource_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
+render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color(ui_mesh_render_resource_t* render_resource_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
@@ -316,11 +274,6 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color
     IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "render_resource_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "out_texture_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - Provided resource_name_ is not valid.", render_resource_rslt_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
@@ -329,7 +282,7 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color
     }
 #endif
 
-    ret_resource_pipeline = texture_pipeline_import_from_solid_color(render_resource_->backend_context, render_resource_->texture_registry, gpu_unit_num_, resource_name_, red_, green_, blue_, &tmp_texture_id);
+    ret_resource_pipeline = texture_pipeline_import_from_solid_color(render_resource_->backend_context, render_resource_->texture_registry, texture_unit_index_, resource_name_, red_, green_, blue_, &tmp_texture_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
         ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - texture_pipeline_import_from_bmp failed.", render_resource_rslt_to_str(ret));

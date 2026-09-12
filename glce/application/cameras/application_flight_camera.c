@@ -30,7 +30,7 @@ struct application_flight_camera {
     flight_camera_registry_t* flight_camera_registry;
 
     flight_camera_t* active_camera;
-    uint16_t active_camera_id;   // id = 0はデフォルトカメラでデフォルトキーバインドのflight cmaera
+    uint16_t active_camera_id;   // id = 0はデフォルトカメラでデフォルトキーバインドのflight camera
 };
 
 static flight_camera_key_bind_t s_default_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
@@ -40,7 +40,7 @@ static const float s_default_far_clip = 50.0f;
 
 static bool is_valid_shallow(const application_flight_camera_t* application_flight_camera_);
 
-// id = 0はデフォルトカメラでデフォルトキーバインドのflight cmaeraが生成され(*out_application_camera_)->active_cameraにアドレスが格納される
+// id = 0はデフォルトカメラでデフォルトキーバインドのflight cameraが生成され(*out_application_camera_)->active_cameraにアドレスが格納される
 application_result_t application_flight_camera_initialize(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 

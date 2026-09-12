@@ -30,9 +30,9 @@ render_resource_result_t ui_mesh_render_resource_geometry_import_from_file(ui_me
 render_resource_result_t ui_mesh_render_resource_geometry_release(ui_mesh_render_resource_t* render_resource_, uint16_t geometry_id_);
 
 // Texture resource operation
-render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh_render_resource_t* render_resource_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
+render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh_render_resource_t* render_resource_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
 
-render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color(ui_mesh_render_resource_t* render_resource_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
+render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color(ui_mesh_render_resource_t* render_resource_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
 
 render_resource_result_t ui_mesh_render_resource_texture_release(ui_mesh_render_resource_t* render_resource_, uint16_t texture_id_);
 

@@ -31,7 +31,7 @@
 static resource_pipeline_result_t bmp_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
 
-resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -55,21 +55,6 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "texture_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "out_texture_id_")
-    if(!texture_registry_is_valid(texture_registry_)) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - provided texture registry is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == texture_fullpath_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - provided texture_fullpath_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret = bmp_load(texture_fullpath_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixel_data_size, &tmp_pixels);
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
@@ -93,7 +78,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     }
 
     // GPU側リソース生成
-    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
+    ret_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
     if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
         ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
         ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_rslt_to_str(ret));
@@ -124,7 +109,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
+resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -147,16 +132,6 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     IF_ARG_NULL_GOTO_CLEANUP(texture_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "texture_registry_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "out_texture_id_")
-    if(!texture_registry_is_valid(texture_registry_)) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - provided texture registry is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret = solid_color_texture_generate(red_, green_, blue_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixel_data_size, &tmp_pixels);
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
@@ -180,7 +155,7 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     }
 
     // GPU側リソース生成
-    ret_gpu_resource = texture_gpu_resource_create(backend_context_, gpu_unit_num_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
+    ret_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_channel_count, tmp_pixels2, &gpu_resource);
     if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_gpu_resource) {
         ret = resource_pipeline_rslt_convert_texture_gpu_resource(ret_gpu_resource);
         ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_rslt_to_str(ret));
@@ -217,11 +192,6 @@ resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "texture_registry_")
-    if(!texture_registry_is_valid(texture_registry_)) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_pipeline_release(%s) - provided texture registry is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret_registry = texture_registry_unregister(texture_registry_, texture_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {

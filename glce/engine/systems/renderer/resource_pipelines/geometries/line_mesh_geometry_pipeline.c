@@ -57,16 +57,6 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "vertices_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
 
     // Geometry CPUリソース生成
     ret_resource = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
@@ -134,11 +124,6 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mes
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
 
     // Geometry CPUリソース生成
     ret_resource = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
