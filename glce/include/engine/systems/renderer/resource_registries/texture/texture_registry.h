@@ -26,17 +26,17 @@ void texture_registry_deinitialize(texture_registry_t* registry_);
 
 bool texture_registry_find(const texture_registry_t* registry_, const char* name_);
 
-const char* texture_registry_name_get(const texture_registry_t* registry_, int16_t texture_id_);
+const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_);
 
-const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_registry_t* registry_, int16_t texture_id_);
+const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_);
 
-const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, int16_t texture_id_);
+const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_);
 
-resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, int16_t* out_texture_id_);
+resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, uint16_t* out_texture_id_);
 
-resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, int16_t* out_texture_id_);
+resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, uint16_t* out_texture_id_);
 
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, int16_t texture_id_);
+resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, uint16_t texture_id_);
 
 bool texture_registry_is_valid(const texture_registry_t* registry_);
 

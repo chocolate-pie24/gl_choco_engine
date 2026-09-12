@@ -37,7 +37,7 @@ struct texture_registry {
 
 static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_);
 
-static bool texture_id_is_valid(const texture_registry_t* registry_, int16_t texture_id_);
+static bool texture_id_is_valid(const texture_registry_t* registry_, uint16_t texture_id_);
 static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
 
 static bool find_by_name(const texture_registry_t* registry_, const char* name_, size_t* out_index_);
@@ -55,7 +55,7 @@ resource_registry_result_t texture_registry_initialize(size_t max_texture_count_
     IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_initialize", "out_registry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_initialize", "*out_registry_")
 
-    if(0 == max_texture_count_ || INT16_MAX < max_texture_count_) {
+    if(0 == max_texture_count_ || UINT16_MAX < max_texture_count_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("texture_registry_initialize(%s) - Provided max_texture_count_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
@@ -129,7 +129,7 @@ bool texture_registry_find(const texture_registry_t* registry_, const char* name
     return find_by_name(registry_, name_, &tmp_id);
 }
 
-const char* texture_registry_name_get(const texture_registry_t* registry_, int16_t texture_id_) {
+const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
         ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
@@ -148,7 +148,7 @@ const char* texture_registry_name_get(const texture_registry_t* registry_, int16
     return choco_string_c_str(registry_->entries[texture_id_].resource_name);
 }
 
-const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_registry_t* registry_, int16_t texture_id_) {
+const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
         ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
@@ -165,7 +165,7 @@ const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_re
     return registry_->entries[texture_id_].gpu_resource;
 }
 
-const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, int16_t texture_id_) {
+const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
         ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
@@ -182,7 +182,7 @@ const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_re
     return registry_->entries[texture_id_].cpu_resource;
 }
 
-resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, int16_t* out_texture_id_) {
+resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, uint16_t* out_texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
@@ -208,7 +208,7 @@ resource_registry_result_t texture_registry_id_get(const texture_registry_t* reg
         goto cleanup;
     }
 
-    *out_texture_id_ = (int16_t)tmp_id;
+    *out_texture_id_ = (uint16_t)tmp_id;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -218,7 +218,7 @@ cleanup:
 
 // cpu_resource, gpu_resourceをregistryにmoveする
 // TODO: geometry側もmoveする仕様に変更する
-resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, int16_t* out_texture_id_) {
+resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, uint16_t* out_texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -294,7 +294,7 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
     *gpu_resource_ = NULL;
     tmp_name = NULL;
 
-    *out_texture_id_ = (int16_t)tmp_index;
+    *out_texture_id_ = (uint16_t)tmp_index;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -307,7 +307,7 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, int16_t texture_id_) {
+resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, uint16_t texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
@@ -332,7 +332,7 @@ bool texture_registry_is_valid(const texture_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
-    if(0 == registry_->max_texture_count || INT16_MAX < registry_->max_texture_count) {
+    if(0 == registry_->max_texture_count || UINT16_MAX < registry_->max_texture_count) {
         return false;
     }
     if(NULL == registry_->entries) {
@@ -356,11 +356,11 @@ static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry
     texture_gpu_resource_destroy(&registry_entry_->gpu_resource);
 }
 
-static bool texture_id_is_valid(const texture_registry_t* registry_, int16_t texture_id_) {
+static bool texture_id_is_valid(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
         return false;
     }
-    if(texture_id_ < 0 || registry_->max_texture_count <= (size_t)texture_id_) {
+    if(registry_->max_texture_count <= (size_t)texture_id_) {
         return false;
     }
     return true;

@@ -31,11 +31,11 @@ typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**<
 typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, int16_t* out_geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
 
-resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_);
 
 #ifdef __cplusplus
 }

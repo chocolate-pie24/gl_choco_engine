@@ -53,7 +53,7 @@ camera_registry_result_t flight_camera_registry_initialize(size_t max_flight_cam
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_initialize", "out_registry_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_rslt_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_initialize", "*out_registry_")
-    if(0 == max_flight_camera_count_ || INT16_MAX < max_flight_camera_count_) {
+    if(0 == max_flight_camera_count_ || UINT16_MAX < max_flight_camera_count_) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_initialize(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_rslt_to_str(ret));
         goto cleanup;
@@ -444,7 +444,7 @@ static bool is_valid_shallow(const flight_camera_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
-    if(0 == registry_->max_flight_camera_count || INT16_MAX < registry_->max_flight_camera_count) {
+    if(0 == registry_->max_flight_camera_count || UINT16_MAX < registry_->max_flight_camera_count) {
         return false;
     }
     if(NULL == registry_->entries) {

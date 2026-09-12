@@ -28,15 +28,15 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
 
 bool point_mesh_geometry_registry_find(const point_mesh_geometry_registry_t* registry_, const char* name_);
 
-const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
+const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
-resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_);
 
-const draw_range_t* point_mesh_geometry_registry_draw_range_get(const point_mesh_geometry_registry_t* registry_, int16_t geometry_id_);
+const draw_range_t* point_mesh_geometry_registry_draw_range_get(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
-resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const char* resource_name_, point_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, int16_t* out_geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geometry_registry_t* registry_, const char* resource_name_, point_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_);
 
-resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_, int16_t geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_, uint16_t geometry_id_);
 
 bool point_mesh_geometry_registry_is_valid(const point_mesh_geometry_registry_t* registry_);
 

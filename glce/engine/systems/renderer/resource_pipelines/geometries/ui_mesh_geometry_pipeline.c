@@ -36,7 +36,7 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -51,23 +51,13 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_sh
 
     const size_t vertex_count = 6;
     size_t vertex_offset = 0;
-    int16_t tmp_geometry_id = 0;
+    uint16_t tmp_geometry_id = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "geometry_registry_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "out_geometry_id_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if('\0' == resource_fullpath_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Provided resource_fullpath_ is not valid.", resource_pipeline_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     ret_resource = ui_geom_config_loader_load(resource_fullpath_, &ui_geometry_config);
     if(RESOURCE_SUCCESS != ret_resource) {
@@ -132,7 +122,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_) {
+resource_pipeline_result_t ui_mesh_geometry_pipeline_release(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;

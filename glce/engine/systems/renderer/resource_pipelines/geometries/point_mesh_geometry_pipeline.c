@@ -34,7 +34,7 @@
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, int16_t* out_geometry_id_) {
+resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
@@ -42,7 +42,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(poi
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t vertex_offset = 0;
-    int16_t tmp_geometry_id = 0;
+    uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
 
@@ -53,16 +53,6 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(poi
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "vertices_")
-    if('\0' == resource_name_[0]) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Provided resource_name_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
-    if(0 == vertex_count_) {
-        ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT));
-        goto cleanup;
-    }
 
     ret_resource = point_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
@@ -104,7 +94,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, int16_t geometry_id_) {
+resource_pipeline_result_t point_mesh_geometry_pipeline_release(point_mesh_shader_t* shader_, point_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;

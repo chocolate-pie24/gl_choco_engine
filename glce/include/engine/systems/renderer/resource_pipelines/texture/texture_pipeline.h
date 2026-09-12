@@ -15,11 +15,11 @@ extern "C" {
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct texture_registry texture_registry_t;
 
-resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, const char* texture_fullpath_, int16_t* out_texture_id_);
+resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
 
-resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t gpu_unit_num_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, int16_t* out_texture_id_);
+resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* texture_registry_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
 
-resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_registry_, int16_t texture_id_);
+resource_pipeline_result_t texture_pipeline_release(texture_registry_t* texture_registry_, uint16_t texture_id_);
 
 #ifdef __cplusplus
 }
