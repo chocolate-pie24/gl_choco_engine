@@ -28,6 +28,7 @@ application_result_t application_renderer_initialize(const renderer_config_t* re
 
 void application_renderer_deinitialize(application_renderer_t* application_renderer_);
 
+// TODO: 全shader一括更新ではなく、個別に更新できるようにAPIを分割する
 application_result_t application_renderer_update(application_renderer_t* application_renderer_, bool view_dirty_, bool projection_dirty_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
 
 // Geometry Import
