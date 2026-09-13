@@ -20,6 +20,8 @@ typedef struct keyboard_event keyboard_event_t;
 typedef struct mouse_event mouse_event_t;
 
 typedef struct application_event_view {
+    bool window_close_requested;
+
     size_t window_event_count;
     const window_event_t* window_events;
 

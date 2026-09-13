@@ -25,6 +25,7 @@
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
 #include "application/event/application_event.h"
+#include "application/event/application_frame_state.h"
 
 struct application_flight_camera {
     flight_camera_registry_t* flight_camera_registry;
@@ -166,7 +167,7 @@ void application_flight_camera_deinitialize(application_flight_camera_t* applica
     application_flight_camera_->active_camera_id = 0;
 }
 
-application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const application_event_view_t* application_event_view_, bool* out_view_dirty_, bool* out_projection_dirty_) {
+application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const application_event_view_t* application_event_view_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
@@ -180,8 +181,7 @@ application_result_t application_flight_camera_update(application_flight_camera_
 
     IF_ARG_NULL_GOTO_CLEANUP(application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "application_flight_camera_")
     IF_ARG_NULL_GOTO_CLEANUP(application_event_view_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "application_event_view_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_dirty_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "out_view_dirty_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_projection_dirty_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "out_projection_dirty_")
+    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_flight_camera_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -232,8 +232,13 @@ application_result_t application_flight_camera_update(application_flight_camera_
     }
 #endif
 
-    *out_projection_dirty_ = projection_changed;
-    *out_view_dirty_ = view_changed;
+    if(window_resized) {
+        frame_state_->framebuffer_height = framebuffer_height;
+        frame_state_->framebuffer_width = framebuffer_width;
+    }
+    frame_state_->projection_dirty = projection_changed;
+    frame_state_->view_dirty = view_changed;
+    frame_state_->window_resized = window_resized;
 
     ret = APPLICATION_SUCCESS;
 

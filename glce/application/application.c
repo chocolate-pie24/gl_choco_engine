@@ -46,6 +46,7 @@
 #include "application/core/application_err_utils.h"
 
 #include "application/event/application_event.h"
+#include "application/event/application_frame_state.h"
 #include "application/cameras/application_flight_camera.h"
 #include "application/renderer/application_renderer.h"
 
@@ -58,11 +59,8 @@ typedef struct app_state {
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
-    bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
     int window_width;           /**< ウィンドウ幅 */
     int window_height;          /**< ウィンドウ高さ */
-    int framebuffer_width;      /**< フレームバッファサイズ(幅) */
-    int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
     // 実行ファイルパス
     fs_path_t* executable_directory;
@@ -79,6 +77,7 @@ typedef struct app_state {
     renderer_config_t renderer_config;
 
     // Frame State
+    application_frame_state_t frame_state;
     bool should_draw_penguin_aabb;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
@@ -213,7 +212,7 @@ application_result_t application_create(void) {
     // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
     tmp->window_width = 1024;
     tmp->window_height = 768;
-    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768, &tmp->framebuffer_width, &tmp->framebuffer_height);
+    ret_platform = platform_window_create(tmp->platform_context, "test_window", tmp->window_width, tmp->window_height, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height);
     if(PLATFORM_SUCCESS != ret_platform) {
         ret = app_rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to create window.", app_rslt_to_str(ret));
@@ -228,7 +227,7 @@ application_result_t application_create(void) {
     }
 
     // application flight camera
-    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->framebuffer_width, tmp->framebuffer_height, &tmp->flight_camera);
+    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->frame_state.framebuffer_width, tmp->frame_state.framebuffer_height, &tmp->flight_camera);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_flight_camera_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -388,7 +387,11 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_app_state->renderer, true, true, &s_app_state->view_matrix, &s_app_state->projection_matrix);
+    application_frame_state_begin_frame(&s_app_state->frame_state);
+    s_app_state->frame_state.projection_dirty = true;
+    s_app_state->frame_state.view_dirty = true;
+    s_app_state->frame_state.window_resized = true;
+    ret = application_renderer_update(s_app_state->renderer, &s_app_state->view_matrix, &s_app_state->projection_matrix, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -447,17 +450,17 @@ application_result_t application_run(void) {
     // end temporary
 
     while(!s_app_state->window_should_close) {
+        app_state_clean();
+
         ret = app_state_update();
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - app_state_update failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
-        // app_state_dispatch();
-        app_state_clean();
 
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
+        glViewport(0, 0, s_app_state->frame_state.framebuffer_width, s_app_state->frame_state.framebuffer_height);
 
         // UI描画
         ret = application_renderer_ui_mesh_draw(s_app_state->renderer, s_app_state->geometry_id_small_icon, s_app_state->tex_id_rabbit, &s_app_state->rabbit_mesh_model_mat);
@@ -517,11 +520,6 @@ cleanup:
 static application_result_t app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    // camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-
-    bool view_dirty = false;
-    bool projection_dirty = false;
-
     if(NULL == s_app_state) {
         ret = APPLICATION_BAD_OPERATION;
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", app_rslt_to_str(ret));
@@ -529,15 +527,16 @@ static application_result_t app_state_update(void) {
     }
 
     ret = application_event_update(&s_app_state->event_view);
-    if(APPLICATION_WINDOW_CLOSE == ret) {
-        s_app_state->window_should_close = true;
-        goto cleanup;
-    } else if(APPLICATION_SUCCESS != ret) {
+    if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_event_update failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = application_flight_camera_update(s_app_state->flight_camera, 0.1f, 1.0f, s_app_state->event_view, &view_dirty, &projection_dirty);
+    if(s_app_state->event_view->window_close_requested) {
+        s_app_state->window_should_close = true;
+    }
+
+    ret = application_flight_camera_update(s_app_state->flight_camera, 0.1f, 1.0f, s_app_state->event_view, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_update failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -555,19 +554,19 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_app_state->renderer, view_dirty, projection_dirty, &s_app_state->view_matrix, &s_app_state->projection_matrix);
+    ret = application_renderer_update(s_app_state->renderer, &s_app_state->view_matrix, &s_app_state->projection_matrix, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    for(size_t i = 0; i != s_app_state->event_view->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == s_app_state->event_view->window_events[i].event_code) {
-            s_app_state->framebuffer_width = s_app_state->event_view->window_events[i].event_args.framebuffer_width;
-            s_app_state->framebuffer_height = s_app_state->event_view->window_events[i].event_args.framebuffer_height;
-            s_app_state->window_resized = true;
-        }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_frame_state_is_valid(&s_app_state->frame_state)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("app_state_update(%s) - Postcondition validation failed for 's_app_state->frame_state'.", app_rslt_to_str(ret));
+        goto cleanup;
     }
+#endif
 
 cleanup:
     return ret;
@@ -583,7 +582,7 @@ static void app_state_clean(void) {
         ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
-    s_app_state->window_resized = false;
+    application_frame_state_begin_frame(&s_app_state->frame_state);
 cleanup:
     return;
 }

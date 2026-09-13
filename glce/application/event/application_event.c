@@ -143,6 +143,7 @@ application_result_t application_event_initialize(platform_context_t* platform_c
     tmp_application_event->mouse_events = tmp_mouse_events;
     tmp_application_event->mouse_event_queue = tmp_mouse_event_queue;
 
+    tmp_application_event->event_view.window_close_requested = false;
     tmp_application_event->event_view.keyboard_events = tmp_application_event->keyboard_events;
     tmp_application_event->event_view.mouse_events = tmp_application_event->mouse_events;
     tmp_application_event->event_view.window_events = tmp_application_event->window_events;
@@ -200,6 +201,8 @@ void application_event_deinitialize(void) {
     s_application_event->max_mouse_event_count = 0;
     s_application_event->max_window_event_count = 0;
 
+    s_application_event->event_view.window_close_requested = false;
+
     s_application_event->event_view.keyboard_event_count = 0;
     s_application_event->event_view.mouse_event_count = 0;
     s_application_event->event_view.window_event_count = 0;
@@ -237,6 +240,8 @@ application_result_t application_event_update(const application_event_view_t** o
     }
 #endif
 
+    s_application_event->event_view.window_close_requested = false;
+
     s_callback_result = APPLICATION_SUCCESS;
     ret_platform = platform_pump_messages(s_application_event->platform_context, on_window, on_key, on_mouse);
     if(APPLICATION_SUCCESS != s_callback_result) {
@@ -245,8 +250,7 @@ application_result_t application_event_update(const application_event_view_t** o
         goto cleanup;
     }
     if(PLATFORM_WINDOW_CLOSE == ret_platform) {
-        ret = APPLICATION_WINDOW_CLOSE;
-        goto cleanup;
+        s_application_event->event_view.window_close_requested = true;
     } else if(PLATFORM_SUCCESS != ret_platform) {
         ret = app_rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_event_update(%s) - Failed to pump events.", app_rslt_to_str(ret));
