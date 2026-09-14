@@ -139,26 +139,37 @@ cleanup:
     return;
 }
 
-platform_result_t platform_pump_messages(
-    platform_context_t* platform_context_,
-    void (*window_event_callback)(const window_event_t* event_),
-    void (*keyboard_event_callback)(const keyboard_event_t* event_),
-    void (*mouse_event_callback)(const mouse_event_t* event_)) {
+platform_result_t platform_update(platform_context_t* platform_context_, const platform_event_view_t** out_event_view_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "platform_context_->backend")
-    IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "window_event_callback")
-    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "keyboard_event_callback")
-    IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_pump_messages", "mouse_event_callback")
-
-    ret = platform_context_->vtable->platform_backend_pump_messages(platform_context_->backend, window_event_callback, keyboard_event_callback, mouse_event_callback);
-    // PLATFORM_WINDOW_CLOSEはPLATFORM_SUCCESS以外でも正常なので無視
-    if(PLATFORM_SUCCESS != ret && PLATFORM_WINDOW_CLOSE != ret) {
-        ERROR_MESSAGE("platform_pump_messages(%s) - Failed to pump messages.", platform_rslt_to_str(ret));
+    // 毎フレーム呼ばれるAPIであるため、*out_event_view_ != NULLは許容する
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_update", "platform_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->vtable, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_update", "platform_context_->vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_context_->backend, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_update", "platform_context_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_update", "out_event_view_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(platform_context_)) {
+        ret = PLATFORM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_update(%s) - Precondition validation failed for 'platform_context_'.", platform_rslt_to_str(ret));
         goto cleanup;
     }
+#endif
+
+    ret = platform_context_->vtable->platform_backend_update(platform_context_->backend, out_event_view_);
+    if(PLATFORM_SUCCESS != ret) {
+        ERROR_MESSAGE("platform_pump_messages(%s) - platform_backend_update failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(platform_context_)) {
+        ret = PLATFORM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_update(%s) - Postcondition validation failed for 'platform_context_'.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = PLATFORM_SUCCESS;
 
 cleanup:
     return ret;

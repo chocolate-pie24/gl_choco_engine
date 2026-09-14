@@ -119,8 +119,6 @@ application_result_t app_rslt_convert_platform(platform_result_t rslt_) {
         return APPLICATION_OVERFLOW;
     case PLATFORM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case PLATFORM_WINDOW_CLOSE:
-        return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

@@ -43,11 +43,7 @@ platform_result_t platform_initialize(platform_type_t platform_type_, const plat
 
 void platform_deinitialize(platform_context_t* platform_context_);
 
-platform_result_t platform_pump_messages(
-    platform_context_t* platform_context_,
-    void (*window_event_callback)(const window_event_t* event_),
-    void (*keyboard_event_callback)(const keyboard_event_t* event_),
-    void (*mouse_event_callback)(const mouse_event_t* event_));
+platform_result_t platform_update(platform_context_t* platform_context_, const platform_event_view_t** out_event_view_);
 
 platform_result_t platform_swap_buffers(platform_context_t* platform_context_);
 
