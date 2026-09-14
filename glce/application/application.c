@@ -37,6 +37,7 @@
 #include "engine/io_utils/fs_path.h"
 
 #include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform/config/platform_config.h"
 #include "engine/systems/platform/platform_context.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
@@ -56,6 +57,8 @@
  */
 typedef struct app_state {
     app_build_config_t build_config;
+    renderer_config_t renderer_config;
+    platform_config_t platform_config;
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
@@ -73,8 +76,6 @@ typedef struct app_state {
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
-
-    renderer_config_t renderer_config;
 
     // Frame State
     application_frame_state_t frame_state;
@@ -195,29 +196,30 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
+    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Simulation -> launch all systems -> create platform.(Don't use s_app_state here.)
     INFO_MESSAGE("Initializing platform state...");
-    ret_platform = platform_initialize(tmp->linear_alloc, PLATFORM_USE_GLFW, &tmp->platform_context);
+
+    tmp->platform_config.max_keyboard_event_count = KEY_CODE_MAX;
+    tmp->platform_config.max_mouse_event_count = 128;
+    tmp->platform_config.max_window_event_count = 8;
+    tmp->platform_config.window_height = 768;
+    tmp->platform_config.window_width = 1024;
+    tmp->platform_config.window_label = "test_window";
+
+    tmp->window_width = 1024;
+    tmp->window_height = 768;
+
+    ret_platform = platform_initialize(tmp->build_config.selected_platform, &tmp->platform_config, tmp->linear_alloc, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height, &tmp->platform_context);
     if(PLATFORM_SUCCESS != ret_platform) {
         ret = app_rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
-    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
     INFO_MESSAGE("platform_backend initialized successfully.");
-
-    // begin temporary
-    // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
-    tmp->window_width = 1024;
-    tmp->window_height = 768;
-    ret_platform = platform_window_create(tmp->platform_context, "test_window", tmp->window_width, tmp->window_height, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height);
-    if(PLATFORM_SUCCESS != ret_platform) {
-        ret = app_rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("application_create(%s) - Failed to create window.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // application event system
     ret = application_event_initialize(tmp->platform_context, 8, KEY_CODE_MAX, 128, tmp->linear_alloc);
@@ -283,7 +285,7 @@ cleanup:
             }
             application_event_deinitialize();
             if(NULL != tmp->platform_context) {
-                platform_destroy(tmp->platform_context);
+                platform_deinitialize(tmp->platform_context);
             }
             if(NULL != tmp->executable_directory) {
                 fs_path_destroy(&tmp->executable_directory);
@@ -319,7 +321,7 @@ void application_destroy(void) {
     }
     application_event_deinitialize();
     if(NULL != s_app_state->platform_context) {
-        platform_destroy(s_app_state->platform_context);
+        platform_deinitialize(s_app_state->platform_context);
     }
     if(NULL != s_app_state->executable_directory) {
         fs_path_destroy(&s_app_state->executable_directory);

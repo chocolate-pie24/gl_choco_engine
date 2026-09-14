@@ -18,10 +18,12 @@
 extern "C" {
 #endif
 
-#include "engine/systems/platform/core/platform_types.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/containers/ring_queue.h"
+
+#include "engine/systems/platform/core/platform_types.h"
 
 /**
  * @brief プラットフォームレイヤーの実行結果コードを文字列に変換する
@@ -49,6 +51,8 @@ platform_result_t platform_rslt_convert_choco_string(choco_string_result_t rslt_
  * @return platform_result_t プラットフォームレイヤー実行結果コード
  */
 platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+
+platform_result_t platform_rslt_convert_ring_queue(ring_queue_result_t rslt_);
 
 #ifdef __cplusplus
 }

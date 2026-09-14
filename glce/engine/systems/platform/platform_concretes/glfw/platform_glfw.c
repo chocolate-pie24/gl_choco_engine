@@ -18,6 +18,7 @@
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -28,11 +29,14 @@
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
+#include "engine/containers/ring_queue.h"
 
 #include "engine/systems/platform/core/platform_types.h"
 #include "engine/systems/platform/core/platform_err_utils.h"
+#include "engine/systems/platform/config/platform_config.h"
 #include "engine/systems/platform/vtables/platform_vtable.h"
 
 /**
@@ -65,70 +69,108 @@ typedef struct input_snapshot {
 struct platform_backend {
     choco_string_t* window_label;   /**< ウィンドウラベル */
     GLFWwindow* window;             /**< GLFWウィンドウ構造体インスタンス */
-    bool initialized_glfw;          /**< GLFW初期済みフラグ */
+
     input_snapshot_t current;       /**< 入力状態のスナップショット(現在値) */
     input_snapshot_t prev;          /**< 入力状態のスナップショット(前回値) */
+
+    ring_queue_t* keyboard_event_queue;
+    ring_queue_t* mouse_event_queue;
+    ring_queue_t* window_event_queue;
 };
 
-static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_);
-static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_);
-static void platform_glfw_destroy(platform_backend_t* platform_backend_);
-static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_);
+static platform_result_t platform_glfw_initialize(const platform_config_t* config_, linear_alloc_t* linear_alloc_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_platform_backend_);
+static void platform_glfw_deinitialize(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_);
 static platform_result_t platform_snapshot_process(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 static platform_result_t platform_glfw_pump_messages(platform_backend_t* platform_backend_, void (*window_event_callback)(const window_event_t* event_), void (*keyboard_event_callback)(const keyboard_event_t* event_), void (*mouse_event_callback)(const mouse_event_t* event_));
 static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform_backend_);
+static bool platform_glfw_is_valid(const platform_backend_t* platform_backend_);
 
+static platform_result_t window_create(const char* window_label_, int window_width_, int window_height_, int* out_framebuffer_width_, int* out_framebuffer_height_, GLFWwindow** out_window_);
 static int keycode_to_glfw_keycode(keycode_t keycode_);
+
+static void input_snapshot_initialize(input_snapshot_t* snapshot_);
+
+static bool is_valid_shallow(const platform_backend_t* platform_backend_);
 
 /**
  * @brief GLFW用仮想関数テーブル定義
  *
  */
 static const platform_vtable_t s_glfw_vtable = {
-    .platform_backend_preinit = platform_glfw_preinit,
-    .platform_backend_init = platform_glfw_init,
-    .platform_backend_destroy = platform_glfw_destroy,
-    .platform_backend_window_create = platform_glfw_window_create,
+    .platform_backend_initialize = platform_glfw_initialize,
+    .platform_backend_deinitialize = platform_glfw_deinitialize,
     .platform_backend_pump_messages = platform_glfw_pump_messages,
     .platform_backend_swap_buffers = platform_glfw_swap_buffers,
+    .platform_backend_is_valid = platform_glfw_is_valid,
 };
 
 const platform_vtable_t* platform_glfw_vtable_get(void) {
     return &s_glfw_vtable;
 }
 
-/**
- * @brief プラットフォーム2段階初期化の1段階目でメモリ要件とメモリアライメント要件を取得する
- *
- * @note
- * - memory_requirement_ == NULL または alignment_requirement_ == NULLの場合は何もしない
- *
- * @param[out] memory_requirement_ メモリ要件
- * @param[out] alignment_requirement_ メモリアライメント要件
- */
-static void platform_glfw_preinit(size_t* memory_requirement_, size_t* alignment_requirement_) {
-    if(NULL == memory_requirement_ || NULL == alignment_requirement_) {
-        WARN_MESSAGE("platform_backend_preinit - No-op: 'memory_requirement_' or 'alignment_requirement_' is NULL.");
-        goto cleanup;
-    }
-    *memory_requirement_ = sizeof(platform_backend_t);
-    *alignment_requirement_ = alignof(platform_backend_t);
-    goto cleanup;
-cleanup:
-    return;
-}
-
-static platform_result_t platform_glfw_init(platform_backend_t* platform_backend_) {
+static platform_result_t platform_glfw_initialize(const platform_config_t* config_, linear_alloc_t* linear_alloc_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_platform_backend_) {
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_init", "platform_backend_")
+    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    ring_queue_result_t ret_ring_queue = RING_QUEUE_INVALID_ARGUMENT;
+    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    platform_backend_->initialized_glfw = false;
+    platform_backend_t* tmp_platform_backend = NULL;
+    ring_queue_t* tmp_window_event_queue = NULL;
+    ring_queue_t* tmp_keyboard_event_queue = NULL;
+    ring_queue_t* tmp_mouse_event_queue = NULL;
+    choco_string_t* tmp_window_label = NULL;
+    GLFWwindow* tmp_window = NULL;
+    int tmp_framebuffer_width = 0;
+    int tmp_framebuffer_height = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_initialize", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(linear_alloc_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_initialize", "linear_alloc_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_initialize", "out_framebuffer_width_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_initialize", "out_framebuffer_height_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_initialize", "out_platform_backend_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_backend_, ret, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "platform_glfw_initialize", "*out_platform_backend_")
+
+    ret_ring_queue = ring_queue_create(config_->max_window_event_count, sizeof(window_event_t), alignof(window_event_t), &tmp_window_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = platform_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - ring_queue_create failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_ring_queue = ring_queue_create(config_->max_keyboard_event_count, sizeof(keyboard_event_t), alignof(keyboard_event_t), &tmp_keyboard_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = platform_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - ring_queue_create failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_ring_queue = ring_queue_create(config_->max_mouse_event_count, sizeof(mouse_event_t), alignof(mouse_event_t), &tmp_mouse_event_queue);
+    if(RING_QUEUE_SUCCESS != ret_ring_queue) {
+        ret = platform_rslt_convert_ring_queue(ret_ring_queue);
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - ring_queue_create failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_string = choco_string_create_from_c_string(config_->window_label, &tmp_window_label);
+    if(CHOCO_STRING_SUCCESS != ret_string) {
+        ret = platform_rslt_convert_choco_string(ret_string);
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - choco_string_create_from_c_string failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_linear_alloc = linear_allocator_allocate(linear_alloc_, sizeof(platform_backend_t), alignof(platform_backend_t), (void**)&tmp_platform_backend);
+    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
+        ret = platform_rslt_convert_linear_alloc(ret_linear_alloc);
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - linear_allocator_allocate failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+    memset(tmp_platform_backend, 0, sizeof(platform_backend_t));
 
     if(GL_FALSE == glfwInit()) {
         ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_init(%s) - Failed to initialize glfw.", platform_rslt_to_str(ret));
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - Failed to initialize glfw.", platform_rslt_to_str(ret));
         goto cleanup;
     }
     glfwWindowHint(GLFW_SAMPLES, 4);                // 4x アンチエイリアス
@@ -143,163 +185,84 @@ static platform_result_t platform_glfw_init(platform_backend_t* platform_backend
     // - 今回は最新の機能のみを使用することにする
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 古いOpenGLは使用しない
 
-    platform_backend_->window = NULL;
-    platform_backend_->window_label = NULL;
-
-    platform_backend_->initialized_glfw = true;
-
-    platform_backend_->prev.left_button_pressed = false;
-    platform_backend_->prev.right_button_pressed = false;
-    platform_backend_->prev.cursor_x = 0.0;
-    platform_backend_->prev.cursor_y = 0.0;
-    platform_backend_->prev.window_width = 0;
-    platform_backend_->prev.window_height = 0;
-    platform_backend_->prev.framebuffer_width = 0;
-    platform_backend_->prev.framebuffer_height = 0;
-    platform_backend_->prev.window_should_close = false;
-    platform_backend_->prev.escape_pressed = false;
-    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_backend_->prev.keycode_state[i] = false;
+    ret = window_create(config_->window_label, config_->window_width, config_->window_height, &tmp_framebuffer_width, &tmp_framebuffer_height, &tmp_window);
+    if(PLATFORM_SUCCESS != ret) {
+        ERROR_MESSAGE("platform_glfw_initialize(%s) - window_create failed.", platform_rslt_to_str(ret));
+        goto cleanup;
     }
 
-    platform_backend_->current.left_button_pressed = false;
-    platform_backend_->current.right_button_pressed = false;
-    platform_backend_->current.cursor_x = 0.0;
-    platform_backend_->current.cursor_y = 0.0;
-    platform_backend_->current.window_width = 0;
-    platform_backend_->current.window_height = 0;
-    platform_backend_->current.framebuffer_width = 0;
-    platform_backend_->current.framebuffer_height = 0;
-    platform_backend_->current.window_should_close = false;
-    platform_backend_->current.escape_pressed = false;
-    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_backend_->current.keycode_state[i] = false;
-    }
+    input_snapshot_initialize(&tmp_platform_backend->prev);
+
+    tmp_platform_backend->keyboard_event_queue = tmp_keyboard_event_queue;
+    tmp_platform_backend->mouse_event_queue = tmp_mouse_event_queue;
+    tmp_platform_backend->window_event_queue = tmp_window_event_queue;
+    tmp_keyboard_event_queue = NULL;
+    tmp_mouse_event_queue = NULL;
+    tmp_window_event_queue = NULL;
+
+    tmp_platform_backend->window_label = tmp_window_label;
+    tmp_window_label = NULL;
+
+    tmp_platform_backend->window = tmp_window;
+    tmp_window = NULL;
+
+    tmp_platform_backend->prev.window_height = config_->window_height;
+    tmp_platform_backend->prev.window_width = config_->window_width;
+    tmp_platform_backend->prev.framebuffer_height = tmp_framebuffer_height;
+    tmp_platform_backend->prev.framebuffer_width = tmp_framebuffer_width;
+
+    tmp_platform_backend->current = tmp_platform_backend->prev;
+
+    *out_platform_backend_ = tmp_platform_backend;
+    *out_framebuffer_height_ = tmp_framebuffer_height;
+    *out_framebuffer_width_ = tmp_framebuffer_width;
+
+    tmp_platform_backend = NULL;
 
     ret = PLATFORM_SUCCESS;
 
 cleanup:
+    if(PLATFORM_DATA_CORRUPTED != ret) {
+        if(NULL != tmp_platform_backend) {
+            platform_glfw_deinitialize(tmp_platform_backend);
+        }
+        if(NULL != tmp_window_label) {
+            choco_string_destroy(&tmp_window_label);
+        }
+        if(NULL != tmp_keyboard_event_queue) {
+            ring_queue_destroy(&tmp_keyboard_event_queue);
+        }
+        if(NULL != tmp_mouse_event_queue) {
+            ring_queue_destroy(&tmp_mouse_event_queue);
+        }
+        if(NULL != tmp_window_event_queue) {
+            ring_queue_destroy(&tmp_window_event_queue);
+        }
+
+    }
     return ret;
 }
 
-static void platform_glfw_destroy(platform_backend_t* platform_backend_) {
+static void platform_glfw_deinitialize(platform_backend_t* platform_backend_) {
     if(NULL == platform_backend_) {
         return;
     }
+
     if(NULL != platform_backend_->window) {
         glfwDestroyWindow(platform_backend_->window);
         platform_backend_->window = NULL;
     }
-    if(platform_backend_->initialized_glfw) {
-        glfwTerminate();
-    }
+
+    glfwTerminate();
+
     choco_string_destroy(&platform_backend_->window_label);
+    ring_queue_destroy(&platform_backend_->keyboard_event_queue);
+    ring_queue_destroy(&platform_backend_->mouse_event_queue);
+    ring_queue_destroy(&platform_backend_->window_event_queue);
     platform_backend_->window = NULL;
-    platform_backend_->initialized_glfw = false;
 
-    platform_backend_->prev.left_button_pressed = false;
-    platform_backend_->prev.right_button_pressed = false;
-    platform_backend_->prev.cursor_x = 0.0;
-    platform_backend_->prev.cursor_y = 0.0;
-    platform_backend_->prev.window_width = 0;
-    platform_backend_->prev.window_height = 0;
-    platform_backend_->prev.framebuffer_width = 0;
-    platform_backend_->prev.framebuffer_height = 0;
-    platform_backend_->prev.window_should_close = false;
-    platform_backend_->prev.escape_pressed = false;
-    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_backend_->prev.keycode_state[i] = false;
-    }
-
-    platform_backend_->current.left_button_pressed = false;
-    platform_backend_->current.right_button_pressed = false;
-    platform_backend_->current.cursor_x = 0.0;
-    platform_backend_->current.cursor_y = 0.0;
-    platform_backend_->current.window_width = 0;
-    platform_backend_->current.window_height = 0;
-    platform_backend_->current.framebuffer_width = 0;
-    platform_backend_->current.framebuffer_height = 0;
-    platform_backend_->current.window_should_close = false;
-    platform_backend_->current.escape_pressed = false;
-    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
-        platform_backend_->current.keycode_state[i] = false;
-    }
-}
-
-static platform_result_t platform_glfw_window_create(platform_backend_t* platform_backend_, const char* window_label_, int window_width_, int window_height_, int* framebuffer_width_, int* framebuffer_height_) {
-    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
-    int framebuffer_width = 0;
-    int framebuffer_height = 0;
-
-    IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "platform_backend_")
-    IF_ARG_NULL_GOTO_CLEANUP(window_label_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_label_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != window_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_window_create", "window_height_")
-    if(!platform_backend_->initialized_glfw) {
-        ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW has not been initialized.", platform_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(NULL != platform_backend_->window) {
-        ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - GLFW window has already been created.", platform_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_string = choco_string_create_from_c_string(window_label_, &platform_backend_->window_label);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = platform_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window title string.", platform_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    platform_backend_->window = glfwCreateWindow(window_width_, window_height_, choco_string_c_str(platform_backend_->window_label), NULL, NULL);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
-    if(NULL == platform_backend_->window) {
-        ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to create window.", platform_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // 引数windowに指定したハンドルのウィンドウのレンダリングコンテキストをカレント(処理対象)にする。
-    // レンダリングコンテキストは描画に用いられる情報で、ウィンドウごとに保持される。
-    // 図形の描画はこれをカレントに設定したウィンドウに対して行われる。
-    glfwMakeContextCurrent(platform_backend_->window);
-    glewExperimental = true;
-    if(GLEW_OK != glewInit()) {
-        ret = PLATFORM_RUNTIME_ERROR;
-        ERROR_MESSAGE("platform_glfw_window_create(%s) - Failed to initialize GLEW.", platform_rslt_to_str(ret));
-        goto cleanup;
-    }
-
-    // https://www.glfw.org/docs/latest/group__input.html#gaa92336e173da9c8834558b54ee80563b
-    glfwSetInputMode(platform_backend_->window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
-
-    glfwGetFramebufferSize(platform_backend_->window, &framebuffer_width, &framebuffer_height);
-
-    platform_backend_->prev.window_height = window_height_;
-    platform_backend_->prev.window_width = window_width_;
-    platform_backend_->prev.framebuffer_width = framebuffer_width;
-    platform_backend_->prev.framebuffer_height = framebuffer_height;
-    platform_backend_->current.window_height = window_height_;
-    platform_backend_->current.window_width = window_width_;
-    platform_backend_->current.framebuffer_width = framebuffer_width;
-    platform_backend_->current.framebuffer_height = framebuffer_height;
-
-    *framebuffer_width_ = framebuffer_width;
-    *framebuffer_height_ = framebuffer_height;
-
-    ret = PLATFORM_SUCCESS;
-
-cleanup:
-    if(PLATFORM_SUCCESS != ret) {
-        if(NULL != platform_backend_->window) {
-            glfwDestroyWindow(platform_backend_->window);
-            platform_backend_->window = NULL;
-        }
-        choco_string_destroy(&platform_backend_->window_label);
-    }
-    return ret;
+    input_snapshot_initialize(&platform_backend_->prev);
+    input_snapshot_initialize(&platform_backend_->current);
 }
 
 static platform_result_t platform_snapshot_collect(platform_backend_t* platform_backend_) {
@@ -309,7 +272,6 @@ static platform_result_t platform_snapshot_collect(platform_backend_t* platform_
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_->window")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_collect", "platform_backend_->initialized_glfw")
 
     // window events.
     platform_backend_->current.window_should_close = (0 != glfwWindowShouldClose(platform_backend_->window)) ? true : false;
@@ -349,7 +311,6 @@ static platform_result_t platform_snapshot_process(
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_")
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_->window, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->window")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "platform_backend_->initialized_glfw")
     IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "window_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "keyboard_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_snapshot_process", "mouse_event_callback")
@@ -421,7 +382,6 @@ static platform_result_t platform_glfw_pump_messages(
     platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_backend_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_")
-    IF_ARG_FALSE_GOTO_CLEANUP(platform_backend_->initialized_glfw, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "platform_backend_->initialized_glfw")
     IF_ARG_NULL_GOTO_CLEANUP(window_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "window_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "keyboard_event_callback")
     IF_ARG_NULL_GOTO_CLEANUP(mouse_event_callback, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "platform_glfw_pump_messages", "mouse_event_callback")
@@ -461,6 +421,91 @@ static platform_result_t platform_glfw_swap_buffers(platform_backend_t* platform
     ret = PLATFORM_SUCCESS;
 
 cleanup:
+    return ret;
+}
+
+static bool platform_glfw_is_valid(const platform_backend_t* platform_backend_) {
+    if(NULL == platform_backend_) {
+        return false;
+    }
+    if(!is_valid_shallow(platform_backend_)) {
+        return false;
+    }
+    if(!ring_queue_is_valid(platform_backend_->keyboard_event_queue)) {
+        return false;
+    }
+    if(!ring_queue_is_valid(platform_backend_->mouse_event_queue)) {
+        return false;
+    }
+    if(!ring_queue_is_valid(platform_backend_->window_event_queue)) {
+        return false;
+    }
+    if(!choco_string_is_valid(platform_backend_->window_label)) {
+        return false;
+    }
+    return true;
+}
+
+static platform_result_t window_create(const char* window_label_, int window_width_, int window_height_, int* out_framebuffer_width_, int* out_framebuffer_height_, GLFWwindow** out_window_) {
+    platform_result_t ret = PLATFORM_INVALID_ARGUMENT;
+
+    GLFWwindow* tmp_window = NULL;
+    int tmp_framebuffer_width = 0;
+    int tmp_framebuffer_height = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(window_label_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "window_create", "window_label_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "window_create", "out_framebuffer_width_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "window_create", "out_framebuffer_height_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_window_, ret, PLATFORM_INVALID_ARGUMENT, platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT), "window_create", "out_window_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_window_, ret, PLATFORM_BAD_OPERATION, platform_rslt_to_str(PLATFORM_BAD_OPERATION), "window_create", "*out_window_")
+    if(0 == window_width_) {
+        ret = PLATFORM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("window_create(%s) - Provided window_width_ is not valid.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 == window_height_) {
+        ret = PLATFORM_INVALID_ARGUMENT;
+        ERROR_MESSAGE("window_create(%s) - Provided window_height_ is not valid.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_window = glfwCreateWindow(window_width_, window_height_, window_label_, NULL, NULL);   // 第四引数でフルスクリーン化, 第五引数で他のウィンドウとリソース共有
+    if(NULL == tmp_window) {
+        ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("window_create(%s) - glfwCreateWindow failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // 引数windowに指定したハンドルのウィンドウのレンダリングコンテキストをカレント(処理対象)にする。
+    // レンダリングコンテキストは描画に用いられる情報で、ウィンドウごとに保持される。
+    // 図形の描画はこれをカレントに設定したウィンドウに対して行われる。
+    glfwMakeContextCurrent(tmp_window);
+    glewExperimental = true;
+    if(GLEW_OK != glewInit()) {
+        ret = PLATFORM_RUNTIME_ERROR;
+        ERROR_MESSAGE("window_create(%s) - glewInit failed.", platform_rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    // https://www.glfw.org/docs/latest/group__input.html#gaa92336e173da9c8834558b54ee80563b
+    glfwSetInputMode(tmp_window, GLFW_STICKY_KEYS, GLFW_TRUE);  // これでエスケープキーが押されるのを捉えるのを保証する
+
+    glfwGetFramebufferSize(tmp_window, &tmp_framebuffer_width, &tmp_framebuffer_height);
+
+    *out_framebuffer_height_ = tmp_framebuffer_height;
+    *out_framebuffer_width_ = tmp_framebuffer_width;
+    *out_window_ = tmp_window;
+    tmp_window = NULL;
+
+    ret = PLATFORM_SUCCESS;
+
+cleanup:
+    if(PLATFORM_SUCCESS != ret) {
+        if(NULL != tmp_window) {
+            glfwDestroyWindow(tmp_window);
+            tmp_window = NULL;
+        }
+    }
     return ret;
 }
 
@@ -584,8 +629,51 @@ static int keycode_to_glfw_keycode(keycode_t keycode_) {
         return GLFW_KEY_F11;
     case KEY_F12:
         return GLFW_KEY_F12;
+    case KEY_CODE_MAX:
+        return GLFW_KEY_LAST;
     default:
         ERROR_MESSAGE("keycode_to_glfw_keycode(%s) - Undefined key code. Returning key '0'", platform_rslt_to_str(PLATFORM_INVALID_ARGUMENT));
         return GLFW_KEY_0;
     }
+}
+
+static void input_snapshot_initialize(input_snapshot_t* snapshot_) {
+    if(NULL == snapshot_) {
+        return;
+    }
+    snapshot_->left_button_pressed = false;
+    snapshot_->right_button_pressed = false;
+    snapshot_->cursor_x = 0.0;
+    snapshot_->cursor_y = 0.0;
+    snapshot_->window_width = 0;
+    snapshot_->window_height = 0;
+    snapshot_->framebuffer_width = 0;
+    snapshot_->framebuffer_height = 0;
+    snapshot_->window_should_close = false;
+    snapshot_->escape_pressed = false;
+    for(size_t i = 0; i != KEY_CODE_MAX; ++i) {
+        snapshot_->keycode_state[i] = false;
+    }
+}
+
+static bool is_valid_shallow(const platform_backend_t* platform_backend_) {
+    if(NULL == platform_backend_) {
+        return false;
+    }
+    if(NULL == platform_backend_->window_label) {
+        return false;
+    }
+    if(NULL == platform_backend_->keyboard_event_queue) {
+        return false;
+    }
+    if(NULL == platform_backend_->mouse_event_queue) {
+        return false;
+    }
+    if(NULL == platform_backend_->window_event_queue) {
+        return false;
+    }
+    if(NULL == platform_backend_->window) {
+        return false;
+    }
+    return true;
 }

@@ -94,3 +94,30 @@ platform_result_t platform_rslt_convert_linear_alloc(linear_allocator_result_t r
         return PLATFORM_UNDEFINED_ERROR;
     }
 }
+
+platform_result_t platform_rslt_convert_ring_queue(ring_queue_result_t rslt_) {
+    switch(rslt_) {
+    case RING_QUEUE_SUCCESS:
+        return PLATFORM_SUCCESS;
+    case RING_QUEUE_INVALID_ARGUMENT:
+        return PLATFORM_INVALID_ARGUMENT;
+    case RING_QUEUE_NO_MEMORY:
+        return PLATFORM_NO_MEMORY;
+    case RING_QUEUE_RUNTIME_ERROR:
+        return PLATFORM_RUNTIME_ERROR;
+    case RING_QUEUE_UNDEFINED_ERROR:
+        return PLATFORM_UNDEFINED_ERROR;
+    case RING_QUEUE_LIMIT_EXCEEDED:
+        return PLATFORM_LIMIT_EXCEEDED;
+    case RING_QUEUE_BAD_OPERATION:
+        return PLATFORM_BAD_OPERATION;
+    case RING_QUEUE_DATA_CORRUPTED:
+        return PLATFORM_DATA_CORRUPTED;
+    case RING_QUEUE_OVERFLOW:
+        return PLATFORM_OVERFLOW;
+    case RING_QUEUE_EMPTY:
+        return PLATFORM_UNDEFINED_ERROR;    // EMPTYはエラーとしては扱わない個別に各APIで処理をする
+    default:
+        return PLATFORM_UNDEFINED_ERROR;
+    }
+}
