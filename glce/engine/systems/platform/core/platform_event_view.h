@@ -19,13 +19,13 @@ typedef struct platform_event_view {
     bool window_close_requested;
 
     size_t window_event_count;
-    window_event_t* window_events;
+    const window_event_t* window_events;
 
     size_t keyboard_event_count;
-    keyboard_event_t* keyboard_events;
+    const keyboard_event_t* keyboard_events;
 
     size_t mouse_event_count;
-    mouse_event_t* mouse_events;
+    const mouse_event_t* mouse_events;
 } platform_event_view_t;
 
 bool platform_event_view_is_valid(const platform_event_view_t* event_view_);
