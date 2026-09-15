@@ -162,7 +162,7 @@ platform_result_t platform_update(platform_context_t* platform_context_, const p
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(platform_context_)) {
+    if(!platform_is_valid(platform_context_)) {
         ret = PLATFORM_DATA_CORRUPTED;
         ERROR_MESSAGE("platform_update(%s) - Postcondition validation failed for 'platform_context_'.", platform_rslt_to_str(ret));
         goto cleanup;
