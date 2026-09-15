@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
+#ifndef GLCE_ENGINE_SYSTEMS_EVENT_SYSTEM_CORE_EVENT_SYSTEM_TYPES_H
+#define GLCE_ENGINE_SYSTEMS_EVENT_SYSTEM_CORE_EVENT_SYSTEM_TYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+    EVENT_SYSTEM_SUCCESS = 0,
+    EVENT_SYSTEM_INVALID_ARGUMENT,
+    EVENT_SYSTEM_RUNTIME_ERROR,
+    EVENT_SYSTEM_NO_MEMORY,
+    EVENT_SYSTEM_DATA_CORRUPTED,
+    EVENT_SYSTEM_BAD_OPERATION,
+    EVENT_SYSTEM_OVERFLOW,
+    EVENT_SYSTEM_LIMIT_EXCEEDED,
+    EVENT_SYSTEM_UNDEFINED_ERROR,
+} event_system_result_t;
+
+#ifdef __cplusplus
+}
+#endif
+#endif

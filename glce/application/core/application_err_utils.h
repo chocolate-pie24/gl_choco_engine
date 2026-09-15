@@ -35,6 +35,8 @@ extern "C" {
 
 #include "engine/systems/platform/core/platform_types.h"
 
+#include "engine/systems/event_system/core/event_system_types.h"
+
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
@@ -118,6 +120,8 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_);
 application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_);
 
 application_result_t app_rslt_convert_render_resource(render_resource_result_t rslt_);
+
+application_result_t app_rslt_convert_event_system(event_system_result_t rslt_);
 
 #ifdef __cplusplus
 }

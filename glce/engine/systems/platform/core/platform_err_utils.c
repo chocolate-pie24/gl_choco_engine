@@ -28,7 +28,6 @@ static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**<
 static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< プラットフォームAPI実行結果コード(オーバーフロー)に対応する文字列 */
 static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< プラットフォームAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< プラットフォームAPI実行結果コード(未定義エラー)に対応する文字列 */
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";          /**< プラットフォームAPI実行結果コード(ウィンドウクローズ)に対応する文字列 */
 
 const char* platform_rslt_to_str(platform_result_t rslt_) {
     switch(rslt_) {
@@ -50,8 +49,6 @@ const char* platform_rslt_to_str(platform_result_t rslt_) {
         return s_rslt_str_limit_exceeded;
     case PLATFORM_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
-    case PLATFORM_WINDOW_CLOSE:
-        return s_rslt_str_window_close;
     default:
         return s_rslt_str_undefined_error;
     }

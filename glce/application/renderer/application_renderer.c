@@ -32,6 +32,7 @@
 
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
+#include "application/event/application_frame_state.h"
 
 struct application_renderer {
     renderer_backend_context_t* renderer_backend_context;
@@ -175,7 +176,7 @@ void application_renderer_deinitialize(application_renderer_t* application_rende
     renderer_backend_destroy(application_renderer_->renderer_backend_context);
 }
 
-application_result_t application_renderer_update(application_renderer_t* application_renderer_, bool view_dirty_, bool projection_dirty_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_) {
+application_result_t application_renderer_update(application_renderer_t* application_renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
@@ -183,6 +184,7 @@ application_result_t application_renderer_update(application_renderer_t* applica
     IF_ARG_NULL_GOTO_CLEANUP(application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "application_renderer_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -191,7 +193,7 @@ application_result_t application_renderer_update(application_renderer_t* applica
     }
 #endif
 
-    if(projection_dirty_) {
+    if(frame_state_->projection_dirty) {
         ret_render_resource = ui_mesh_render_resource_projection_matrix_set(application_renderer_->ui_mesh_render_resource, projection_matrix_);
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = app_rslt_convert_render_resource(ret_render_resource);
@@ -221,7 +223,7 @@ application_result_t application_renderer_update(application_renderer_t* applica
         }
     }
 
-    if(view_dirty_) {
+    if(frame_state_->view_dirty) {
         ret_render_resource = ui_mesh_render_resource_view_matrix_set(application_renderer_->ui_mesh_render_resource, view_matrix_);
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = app_rslt_convert_render_resource(ret_render_resource);

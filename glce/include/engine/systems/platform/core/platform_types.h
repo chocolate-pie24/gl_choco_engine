@@ -32,7 +32,6 @@ typedef enum {
     PLATFORM_OVERFLOW,          /**< 実行結果: 計算過程でオーバーフロー発生 */
     PLATFORM_LIMIT_EXCEEDED,    /**< 実行結果: システムで使用可能な上限範囲を超過 */
     PLATFORM_UNDEFINED_ERROR,   /**< 実行結果: 未定義エラー */
-    PLATFORM_WINDOW_CLOSE,      /**< 実行結果: ウィンドウクローズ(これは絶対に落としてはいけないイベントであるため、イベントキューには入れない(キューが満杯時に捨てられる可能性があるため)) */
 } platform_result_t;
 
 /**

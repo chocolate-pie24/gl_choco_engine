@@ -37,7 +37,6 @@ typedef enum {
     APPLICATION_UNSUPPORTED_FILE,   /**< 未対応のファイル形式 */
     APPLICATION_FILE_OPEN_ERROR,    /**< ファイルオープンエラー */
     APPLICATION_FILE_READ_ERROR,    /**< ファイル読み込みエラー */
-    APPLICATION_WINDOW_CLOSE,
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;
 

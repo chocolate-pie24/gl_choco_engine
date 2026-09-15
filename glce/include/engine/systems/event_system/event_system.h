@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
+#ifndef GLCE_ENGINE_SYSTEMS_EVENT_SYSTEM_EVENT_SYSTEM_H
+#define GLCE_ENGINE_SYSTEMS_EVENT_SYSTEM_EVENT_SYSTEM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdbool.h>
+
+#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/systems/event_system/core/event_system_types.h"
+
+typedef struct event_system event_system_t;
+typedef struct engine_event_view engine_event_view_t;
+typedef struct event_system_config event_system_config_t;
+typedef struct platform_context platform_context_t;
+
+event_system_result_t event_system_initialize(const event_system_config_t* config_, linear_alloc_t* linear_alloc_, platform_context_t* platform_context_, event_system_t** out_event_system_);
+
+void event_system_deinitialize(event_system_t* event_system_);
+
+event_system_result_t event_system_update(event_system_t* event_system_, const engine_event_view_t** out_event_view_);
+
+bool event_system_is_valid(const event_system_t* event_system_);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

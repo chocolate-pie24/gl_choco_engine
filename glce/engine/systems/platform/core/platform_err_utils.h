@@ -18,10 +18,11 @@
 extern "C" {
 #endif
 
-#include "engine/systems/platform/core/platform_types.h"
+#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
-#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/systems/platform/core/platform_types.h"
 
 /**
  * @brief プラットフォームレイヤーの実行結果コードを文字列に変換する

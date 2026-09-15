@@ -36,16 +36,26 @@
 
 #include "engine/io_utils/fs_path.h"
 
+// Platform System
 #include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform/config/platform_config.h"
 #include "engine/systems/platform/platform_context.h"
 
+// Event System
+#include "engine/systems/event_system/core/event_system_types.h"
+#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/event_system/config/event_system_config.h"
+#include "engine/systems/event_system/event_system.h"
+
+// Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/config/renderer_config.h"
 
+// Application Layer
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
 
-#include "application/event/application_event.h"
+#include "application/event/application_frame_state.h"
 #include "application/cameras/application_flight_camera.h"
 #include "application/renderer/application_renderer.h"
 
@@ -56,13 +66,15 @@
 typedef struct app_state {
     app_build_config_t build_config;
 
+    // SubSystem Configuration
+    renderer_config_t renderer_config;
+    platform_config_t platform_config;
+    event_system_config_t event_system_config;
+
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
-    bool window_resized;        /**< ウィンドウサイズ変更イベント発生フラグ */
     int window_width;           /**< ウィンドウ幅 */
     int window_height;          /**< ウィンドウ高さ */
-    int framebuffer_width;      /**< フレームバッファサイズ(幅) */
-    int framebuffer_height;     /**< フレームバッファサイズ(高さ) */
 
     // 実行ファイルパス
     fs_path_t* executable_directory;
@@ -74,12 +86,21 @@ typedef struct app_state {
     void* linear_alloc_pool;        /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
+    // Platform System
     platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
-    renderer_config_t renderer_config;
+    // Event System
+    event_system_t* event_system;
+    const engine_event_view_t* engine_event_view;
+
+    // Camera System
+    application_flight_camera_t* flight_camera;
+
+    // Renderer System
+    application_renderer_t* renderer;
 
     // Frame State
-    bool should_draw_penguin_aabb;
+    application_frame_state_t frame_state;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
@@ -90,6 +111,7 @@ typedef struct app_state {
     uint16_t tex_id_green;
 
     // Geometry ID
+    bool should_draw_penguin_aabb;
     uint16_t geometry_id_test_points;
     uint16_t geometry_id_penguin;
     uint16_t geometry_id_small_icon;
@@ -104,10 +126,6 @@ typedef struct app_state {
     mat4x4f_t rabbit_mesh_model_mat;
     mat4x4f_t frog_mesh_model_mat;
     mat4x4f_t green_mesh_model_mat;
-
-    const application_event_view_t* event_view;
-    application_flight_camera_t* flight_camera;
-    application_renderer_t* renderer;
 } app_state_t;
 
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -131,6 +149,7 @@ application_result_t application_create(void) {
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
+    event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -139,6 +158,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    // Memory System
     ret_mem_sys = memory_system_create();
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
@@ -147,6 +167,7 @@ application_result_t application_create(void) {
     }
 
     // begin Simulation
+    // Application State
     ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
@@ -155,12 +176,7 @@ application_result_t application_create(void) {
     }
     memset(tmp, 0, sizeof(*tmp));
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // begin Simulation -> launch all systems.(Don't use s_app_state here.)
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create linear allocator.(Don't use s_app_state here.)
-    // [NOTE] linear_allocatorのプールサイズについて
+    // Linear Allocator
     //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
     //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
     //   当面は実施せず、多めにメモリを確保する方針にする
@@ -190,52 +206,63 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
+    // 実行ファイルパス取得
     ret = executable_directory_get(tmp);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Simulation -> launch all systems -> create platform.(Don't use s_app_state here.)
-    INFO_MESSAGE("Initializing platform state...");
-    ret_platform = platform_initialize(tmp->linear_alloc, PLATFORM_USE_GLFW, &tmp->platform_context);
+    // ビルドコンフィグ
+    // TODO: ビルドシステムで指定するように変更する
+    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
+    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
+
+    // Platform System
+    INFO_MESSAGE("Initializing Platform System...");
+    tmp->platform_config.max_keyboard_event_count = KEY_CODE_MAX;
+    tmp->platform_config.max_mouse_event_count = 8;
+    tmp->platform_config.max_window_event_count = 8;
+    tmp->platform_config.window_height = 768;
+    tmp->platform_config.window_width = 1024;
+    tmp->platform_config.window_label = "test_window";
+
+    tmp->window_width = 1024;
+    tmp->window_height = 768;
+
+    ret_platform = platform_initialize(tmp->build_config.selected_platform, &tmp->platform_config, tmp->linear_alloc, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height, &tmp->platform_context);
     if(PLATFORM_SUCCESS != ret_platform) {
         ret = app_rslt_convert_platform(ret_platform);
         ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
-    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
-    INFO_MESSAGE("platform_backend initialized successfully.");
+    INFO_MESSAGE("Platform System initialized successfully.");
 
-    // begin temporary
-    // TODO: ウィンドウ生成はレンダラー作成時にそっちに移す
-    tmp->window_width = 1024;
-    tmp->window_height = 768;
-    ret_platform = platform_window_create(tmp->platform_context, "test_window", 1024, 768, &tmp->framebuffer_width, &tmp->framebuffer_height);
-    if(PLATFORM_SUCCESS != ret_platform) {
-        ret = app_rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("application_create(%s) - Failed to create window.", app_rslt_to_str(ret));
+    // Event System
+    INFO_MESSAGE("Initializing Event System...");
+    tmp->event_system_config.max_keyboard_event_count = KEY_CODE_MAX;
+    tmp->event_system_config.max_mouse_event_count = 8;
+    tmp->event_system_config.max_window_event_count = 8;
+
+    ret_event_system = event_system_initialize(&tmp->event_system_config, tmp->linear_alloc, tmp->platform_context, &tmp->event_system);
+    if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
+        ret = app_rslt_convert_event_system(ret_event_system);
+        ERROR_MESSAGE("application_create(%s) - event_system_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-
-    // application event system
-    ret = application_event_initialize(tmp->platform_context, 8, KEY_CODE_MAX, 128, tmp->linear_alloc);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - application_event_initialize failed.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
+    INFO_MESSAGE("Event System initialized successfully.");
 
     // application flight camera
-    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->framebuffer_width, tmp->framebuffer_height, &tmp->flight_camera);
+    INFO_MESSAGE("Initializing Flight Camera System...");
+    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->frame_state.framebuffer_width, tmp->frame_state.framebuffer_height, &tmp->flight_camera);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_flight_camera_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
+    INFO_MESSAGE("Flight Camera System initialized successfully.");
 
     // application renderer
-    // Shader config
+    INFO_MESSAGE("Initializing Renderer System...");
     tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.ui_mesh_shader_config.vbo_size = 1024;
@@ -256,15 +283,7 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - application_renderer_initialize failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-
-
-    // geometry
-    ret = point_geometry_create(tmp);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
-        goto cleanup;
-    }
-    // end temporary
+    INFO_MESSAGE("Renderer System initialized successfully.");
 
     // commit
     s_app_state = tmp;
@@ -282,9 +301,11 @@ cleanup:
             if(NULL != tmp->flight_camera) {
                 application_flight_camera_deinitialize(tmp->flight_camera);
             }
-            application_event_deinitialize();
+            if(NULL != tmp->event_system) {
+                event_system_deinitialize(tmp->event_system);
+            }
             if(NULL != tmp->platform_context) {
-                platform_destroy(tmp->platform_context);
+                platform_deinitialize(tmp->platform_context);
             }
             if(NULL != tmp->executable_directory) {
                 fs_path_destroy(&tmp->executable_directory);
@@ -318,9 +339,11 @@ void application_destroy(void) {
     if(NULL != s_app_state->flight_camera) {
         application_flight_camera_deinitialize(s_app_state->flight_camera);
     }
-    application_event_deinitialize();
+    if(NULL != s_app_state->event_system) {
+        event_system_deinitialize(s_app_state->event_system);
+    }
     if(NULL != s_app_state->platform_context) {
-        platform_destroy(s_app_state->platform_context);
+        platform_deinitialize(s_app_state->platform_context);
     }
     if(NULL != s_app_state->executable_directory) {
         fs_path_destroy(&s_app_state->executable_directory);
@@ -388,7 +411,11 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_app_state->renderer, true, true, &s_app_state->view_matrix, &s_app_state->projection_matrix);
+    application_frame_state_begin_frame(&s_app_state->frame_state);
+    s_app_state->frame_state.projection_dirty = true;
+    s_app_state->frame_state.view_dirty = true;
+    s_app_state->frame_state.window_resized = true;
+    ret = application_renderer_update(s_app_state->renderer, &s_app_state->view_matrix, &s_app_state->projection_matrix, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -405,6 +432,12 @@ application_result_t application_run(void) {
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
+        goto cleanup;
+    }
+
+    ret = point_geometry_create(s_app_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_run(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -447,17 +480,17 @@ application_result_t application_run(void) {
     // end temporary
 
     while(!s_app_state->window_should_close) {
+        app_state_clean();
+
         ret = app_state_update();
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - app_state_update failed.", app_rslt_to_str(ret));
             goto cleanup;
         }
-        // app_state_dispatch();
-        app_state_clean();
 
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, s_app_state->framebuffer_width, s_app_state->framebuffer_height);
+        glViewport(0, 0, s_app_state->frame_state.framebuffer_width, s_app_state->frame_state.framebuffer_height);
 
         // UI描画
         ret = application_renderer_ui_mesh_draw(s_app_state->renderer, s_app_state->geometry_id_small_icon, s_app_state->tex_id_rabbit, &s_app_state->rabbit_mesh_model_mat);
@@ -517,10 +550,7 @@ cleanup:
 static application_result_t app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    // camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
-
-    bool view_dirty = false;
-    bool projection_dirty = false;
+    event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
 
     if(NULL == s_app_state) {
         ret = APPLICATION_BAD_OPERATION;
@@ -528,16 +558,15 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_event_update(&s_app_state->event_view);
-    if(APPLICATION_WINDOW_CLOSE == ret) {
-        s_app_state->window_should_close = true;
-        goto cleanup;
-    } else if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("app_state_update(%s) - application_event_update failed.", app_rslt_to_str(ret));
+    ret_event_system = event_system_update(s_app_state->event_system, &s_app_state->engine_event_view);
+    if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
+        ret = app_rslt_convert_event_system(ret_event_system);
+        ERROR_MESSAGE("app_state_update(%s) - event_system_update failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
+    s_app_state->window_should_close = s_app_state->engine_event_view->window_close_requested;
 
-    ret = application_flight_camera_update(s_app_state->flight_camera, 0.1f, 1.0f, s_app_state->event_view, &view_dirty, &projection_dirty);
+    ret = application_flight_camera_update(s_app_state->flight_camera, 0.1f, 1.0f, s_app_state->engine_event_view, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_update failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -555,19 +584,19 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_app_state->renderer, view_dirty, projection_dirty, &s_app_state->view_matrix, &s_app_state->projection_matrix);
+    ret = application_renderer_update(s_app_state->renderer, &s_app_state->view_matrix, &s_app_state->projection_matrix, &s_app_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    for(size_t i = 0; i != s_app_state->event_view->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == s_app_state->event_view->window_events[i].event_code) {
-            s_app_state->framebuffer_width = s_app_state->event_view->window_events[i].event_args.framebuffer_width;
-            s_app_state->framebuffer_height = s_app_state->event_view->window_events[i].event_args.framebuffer_height;
-            s_app_state->window_resized = true;
-        }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_frame_state_is_valid(&s_app_state->frame_state)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("app_state_update(%s) - Postcondition validation failed for 's_app_state->frame_state'.", app_rslt_to_str(ret));
+        goto cleanup;
     }
+#endif
 
 cleanup:
     return ret;
@@ -583,7 +612,7 @@ static void app_state_clean(void) {
         ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
-    s_app_state->window_resized = false;
+    application_frame_state_begin_frame(&s_app_state->frame_state);
 cleanup:
     return;
 }

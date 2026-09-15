@@ -36,7 +36,6 @@ static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**<
 static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
 static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
 static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
-static const char* const s_rslt_str_window_close = "WINDOW_CLOSE";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
 
 const char* app_rslt_to_str(application_result_t rslt_) {
@@ -63,8 +62,6 @@ const char* app_rslt_to_str(application_result_t rslt_) {
         return s_rslt_str_file_open_error;
     case APPLICATION_FILE_READ_ERROR:
         return s_rslt_str_file_read_error;
-    case APPLICATION_WINDOW_CLOSE:
-        return s_rslt_str_window_close;
     case APPLICATION_UNDEFINED_ERROR:
         return s_rslt_str_undefined_error;
     default:
@@ -122,8 +119,6 @@ application_result_t app_rslt_convert_platform(platform_result_t rslt_) {
         return APPLICATION_OVERFLOW;
     case PLATFORM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case PLATFORM_WINDOW_CLOSE:
-        return APPLICATION_WINDOW_CLOSE;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
@@ -360,6 +355,31 @@ application_result_t app_rslt_convert_render_resource(render_resource_result_t r
     case RENDER_RESOURCE_OVERFLOW:
         return APPLICATION_OVERFLOW;
     case RENDER_RESOURCE_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t app_rslt_convert_event_system(event_system_result_t rslt_) {
+    switch(rslt_) {
+    case EVENT_SYSTEM_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case EVENT_SYSTEM_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case EVENT_SYSTEM_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case EVENT_SYSTEM_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case EVENT_SYSTEM_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case EVENT_SYSTEM_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case EVENT_SYSTEM_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case EVENT_SYSTEM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case EVENT_SYSTEM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

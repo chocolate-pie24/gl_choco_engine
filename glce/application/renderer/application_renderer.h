@@ -23,13 +23,14 @@ typedef struct mat4x4f mat4x4f_t;
 typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
 typedef struct point_vertex point_vertex_t;
+typedef struct application_frame_state application_frame_state_t;
 
 application_result_t application_renderer_initialize(const renderer_config_t* renderer_config_, target_graphics_api_t target_api_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_);
 
 void application_renderer_deinitialize(application_renderer_t* application_renderer_);
 
 // TODO: 全shader一括更新ではなく、個別に更新できるようにAPIを分割する
-application_result_t application_renderer_update(application_renderer_t* application_renderer_, bool view_dirty_, bool projection_dirty_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+application_result_t application_renderer_update(application_renderer_t* application_renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_);
 
 // Geometry Import
 application_result_t application_renderer_line_mesh_geometry_import_from_vertices(application_renderer_t* application_renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
