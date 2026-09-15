@@ -22,9 +22,10 @@
 #include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
 #include "engine/systems/camera/camera_registries/flight_camera_registry.h"
 
+#include "engine/systems/event_system/core/engine_event_view.h"
+
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
-#include "application/event/application_event.h"
 #include "application/event/application_frame_state.h"
 
 struct application_flight_camera {
@@ -167,7 +168,7 @@ void application_flight_camera_deinitialize(application_flight_camera_t* applica
     application_flight_camera_->active_camera_id = 0;
 }
 
-application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const application_event_view_t* application_event_view_, application_frame_state_t* frame_state_) {
+application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const engine_event_view_t* engine_event_view_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
@@ -180,7 +181,7 @@ application_result_t application_flight_camera_update(application_flight_camera_
     float aspect = 0.0f;
 
     IF_ARG_NULL_GOTO_CLEANUP(application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "application_flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(application_event_view_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "application_event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(engine_event_view_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "engine_event_view_")
     IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(application_flight_camera_)) {
@@ -190,16 +191,16 @@ application_result_t application_flight_camera_update(application_flight_camera_
     }
 #endif
 
-    for(size_t i = 0; i != application_event_view_->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == application_event_view_->window_events[i].event_code) {
-            framebuffer_width = application_event_view_->window_events[i].event_args.framebuffer_width;
-            framebuffer_height = application_event_view_->window_events[i].event_args.framebuffer_height;
+    for(size_t i = 0; i != engine_event_view_->window_event_count; ++i) {
+        if(WINDOW_EVENT_RESIZE == engine_event_view_->window_events[i].event_code) {
+            framebuffer_width = engine_event_view_->window_events[i].event_args.framebuffer_width;
+            framebuffer_height = engine_event_view_->window_events[i].event_args.framebuffer_height;
             window_resized = true;
         }
     }
 
-    for(size_t i = 0; i != application_event_view_->keyboard_event_count; ++i) {
-        ret_camera = flight_camera_command_update(application_flight_camera_->active_camera, &application_event_view_->keyboard_events[i]);
+    for(size_t i = 0; i != engine_event_view_->keyboard_event_count; ++i) {
+        ret_camera = flight_camera_command_update(application_flight_camera_->active_camera, &engine_event_view_->keyboard_events[i]);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = app_rslt_convert_camera(ret_camera);
             ERROR_MESSAGE("application_flight_camera_update(%s) - flight_camera_command_update failed.", app_rslt_to_str(ret));

@@ -360,3 +360,28 @@ application_result_t app_rslt_convert_render_resource(render_resource_result_t r
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t app_rslt_convert_event_system(event_system_result_t rslt_) {
+    switch(rslt_) {
+    case EVENT_SYSTEM_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case EVENT_SYSTEM_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case EVENT_SYSTEM_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case EVENT_SYSTEM_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case EVENT_SYSTEM_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case EVENT_SYSTEM_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case EVENT_SYSTEM_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case EVENT_SYSTEM_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case EVENT_SYSTEM_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

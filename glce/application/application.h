@@ -41,14 +41,6 @@ application_result_t application_create(void);
  */
 void application_destroy(void);
 
-/**
- * @brief アプリケーションメインループ
- *
- * @retval APPLICATION_RUNTIME_ERROR アプリケーション内部状態管理構造体インスタンスが未初期化
- * @retval APPLICATION_SUCCESS       正常終了
- *
- * @note 上記以外の実行結果コードはプラットフォーム固有エラー(各プラットフォーム実装依存)
- */
 application_result_t application_run(void);
 
 #ifdef __cplusplus
