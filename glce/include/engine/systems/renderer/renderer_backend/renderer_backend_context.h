@@ -45,20 +45,9 @@ typedef struct linear_alloc linear_alloc_t;
  * - VBO用vtable取得失敗
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_initialize(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_);
+renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_);
 
-/**
- * @brief レンダラーバックエンドの終了処理を行う
- *
- * @note レンダラーバックエンドはサブシステムであり、リニアアロケータでメモリを確保する。
- * リニアアロケータは個別のメモリ開放は不可のため、このAPIではメモリの解放は行わない。
- *
- * @note 使用API別の具体的な処理内容
- * - OpenGL3.3: 何もしない
- *
- * @param renderer_backend_context_ 終了処理対象レンダラーバックエンド構造体インスタンスへのポインタ
- */
-void renderer_backend_destroy(renderer_backend_context_t* renderer_backend_context_);
+void renderer_backend_deinitialize(renderer_backend_context_t* renderer_backend_context_);
 
 #ifdef __cplusplus
 }

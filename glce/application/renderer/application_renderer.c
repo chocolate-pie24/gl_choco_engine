@@ -45,7 +45,7 @@ struct application_renderer {
 
 static bool is_valid_shallow(const application_renderer_t* application_renderer_);
 
-application_result_t application_renderer_initialize(const renderer_config_t* renderer_config_, target_graphics_api_t target_api_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_) {
+application_result_t application_renderer_create(const renderer_config_t* renderer_config_, target_graphics_api_t target_api_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -59,57 +59,57 @@ application_result_t application_renderer_initialize(const renderer_config_t* re
     point_mesh_render_resource_t* tmp_point_mesh_render_resource = NULL;
     ui_mesh_render_resource_t* tmp_ui_mesh_render_resource = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_config_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_initialize", "renderer_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_initialize", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_initialize", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_initialize", "out_application_renderer_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_application_renderer_, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "application_renderer_initialize", "*out_application_renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_config_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "renderer_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_application_renderer_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "out_application_renderer_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_application_renderer_, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "application_renderer_create", "*out_application_renderer_")
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(application_renderer_t), alignof(application_renderer_t), (void**)&tmp_application_renderer);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = app_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - Failed to allocate application_renderer_t instance.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - Failed to allocate application_renderer_t instance.", app_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_application_renderer, 0, sizeof(application_renderer_t));
 
-    ret_renderer_backend = renderer_backend_initialize(allocator_, target_api_, &tmp_renderer_backend_context);
+    ret_renderer_backend = renderer_backend_create(allocator_, target_api_, &tmp_renderer_backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = app_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - Failed to initialize renderer backend.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - Failed to create renderer backend.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = line_mesh_render_resource_initialize(&renderer_config_->line_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_line_mesh_render_resource);
+    ret_render_resource = line_mesh_render_resource_create(&renderer_config_->line_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_line_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - line_mesh_render_resource_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - line_mesh_render_resource_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = lit_mesh_render_resource_initialize(&renderer_config_->lit_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_lit_mesh_render_resource);
+    ret_render_resource = lit_mesh_render_resource_create(&renderer_config_->lit_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_lit_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - lit_mesh_render_resource_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - lit_mesh_render_resource_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = point_mesh_render_resource_initialize(&renderer_config_->point_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_point_mesh_render_resource);
+    ret_render_resource = point_mesh_render_resource_create(&renderer_config_->point_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_point_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - point_mesh_render_resource_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - point_mesh_render_resource_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = ui_mesh_render_resource_initialize(&renderer_config_->ui_mesh_shader_config, 128, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_ui_mesh_render_resource);
+    ret_render_resource = ui_mesh_render_resource_create(&renderer_config_->ui_mesh_shader_config, 128, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_ui_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = app_rslt_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_initialize(%s) - ui_mesh_render_resource_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - ui_mesh_render_resource_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -122,7 +122,7 @@ application_result_t application_renderer_initialize(const renderer_config_t* re
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(tmp_application_renderer)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_initialize(%s) - Postcondition validation failed for 'tmp_application_renderer'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - Postcondition validation failed for 'tmp_application_renderer'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -152,7 +152,7 @@ cleanup:
             ui_mesh_render_resource_deinitialize(tmp_ui_mesh_render_resource);
         }
         if(NULL != tmp_renderer_backend_context) {
-            renderer_backend_destroy(tmp_renderer_backend_context);
+            renderer_backend_deinitialize(tmp_renderer_backend_context);
         }
     }
     return ret;
@@ -173,7 +173,7 @@ void application_renderer_deinitialize(application_renderer_t* application_rende
     lit_mesh_render_resource_deinitialize(application_renderer_->lit_mesh_render_resource);
     point_mesh_render_resource_deinitialize(application_renderer_->point_mesh_render_resource);
     ui_mesh_render_resource_deinitialize(application_renderer_->ui_mesh_render_resource);
-    renderer_backend_destroy(application_renderer_->renderer_backend_context);
+    renderer_backend_deinitialize(application_renderer_->renderer_backend_context);
 }
 
 application_result_t application_renderer_update(application_renderer_t* application_renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_) {

@@ -1,11 +1,11 @@
-#include "engine/systems/platform/config/platform_config.h"
+#include "engine/systems/platform_system/config/platform_system_config.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 
-static bool is_valid_shallow(const platform_config_t* config_);
+static bool is_valid_shallow(const platform_system_config_t* config_);
 
-bool platform_config_is_valid(const platform_config_t* config_) {
+bool platform_system_config_is_valid(const platform_system_config_t* config_) {
     if(NULL == config_) {
         return false;
     }
@@ -15,7 +15,7 @@ bool platform_config_is_valid(const platform_config_t* config_) {
     return true;
 }
 
-static bool is_valid_shallow(const platform_config_t* config_) {
+static bool is_valid_shallow(const platform_system_config_t* config_) {
     if(NULL == config_) {
         return false;
     }

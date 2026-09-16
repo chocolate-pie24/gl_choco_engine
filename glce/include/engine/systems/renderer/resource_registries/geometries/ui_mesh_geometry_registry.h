@@ -22,11 +22,11 @@ typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
 typedef struct ui_mesh_shader ui_mesh_shader_t;
 
-resource_registry_result_t ui_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, ui_mesh_geometry_registry_t** out_registry_);
+resource_registry_result_t ui_mesh_geometry_registry_create(size_t max_geometry_count_, linear_alloc_t* allocator_, ui_mesh_geometry_registry_t** out_registry_);
 
 void ui_mesh_geometry_registry_deinitialize(ui_mesh_geometry_registry_t* registry_, ui_mesh_shader_t* shader_);
 
-bool ui_mesh_geometry_registry_find(const ui_mesh_geometry_registry_t* registry_, const char* name_);
+bool ui_mesh_geometry_registry_exists(const ui_mesh_geometry_registry_t* registry_, const char* name_);
 
 const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 

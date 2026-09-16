@@ -20,11 +20,11 @@ typedef struct texture_gpu_resource texture_gpu_resource_t;
 typedef struct texture_cpu_resource texture_cpu_resource_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 
-resource_registry_result_t texture_registry_initialize(size_t max_texture_count_, linear_alloc_t* allocator_, texture_registry_t** out_registry_);
+resource_registry_result_t texture_registry_create(size_t max_texture_count_, linear_alloc_t* allocator_, texture_registry_t** out_registry_);
 
 void texture_registry_deinitialize(texture_registry_t* registry_);
 
-bool texture_registry_find(const texture_registry_t* registry_, const char* name_);
+bool texture_registry_exists(const texture_registry_t* registry_, const char* name_);
 
 const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_);
 

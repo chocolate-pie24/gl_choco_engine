@@ -70,10 +70,10 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
         goto cleanup;
     }
     // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_resource = texture_cpu_resource_pixel_get(cpu_resource, &tmp_pixels2);
+    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixel_get failed.", resource_pipeline_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -147,10 +147,10 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
         goto cleanup;
     }
     // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_resource = texture_cpu_resource_pixel_get(cpu_resource, &tmp_pixels2);
+    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixel_get failed.", resource_pipeline_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_rslt_to_str(ret));
         goto cleanup;
     }
 

@@ -169,7 +169,7 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
  * @return true リングキューが空
  * @return false リングキューが空ではない
  */
-bool ring_queue_empty(const ring_queue_t* ring_queue_);
+bool ring_queue_is_empty(const ring_queue_t* ring_queue_);
 
 bool ring_queue_is_valid(const ring_queue_t* ring_queue_);
 

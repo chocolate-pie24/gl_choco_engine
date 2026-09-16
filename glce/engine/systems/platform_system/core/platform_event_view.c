@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/platform/core/platform_event_view.h"
+#include "engine/systems/platform_system/core/platform_event_view.h"
 
 #include <stdbool.h>
 #include <stddef.h>

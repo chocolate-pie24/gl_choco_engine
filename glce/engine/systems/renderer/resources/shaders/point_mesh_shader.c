@@ -66,7 +66,7 @@ static shader_result_t vbo_initialize(point_mesh_shader_t* point_mesh_shader_, c
 static shader_result_t vao_initialize(point_mesh_shader_t* point_mesh_shader_);
 
 // validation
-static bool point_mesh_shader_is_initialized(const point_mesh_shader_t* point_mesh_shader_);
+static bool is_valid_shallow(const point_mesh_shader_t* point_mesh_shader_);
 
 shader_result_t point_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const point_mesh_shader_config_t* config_, point_mesh_shader_t** out_point_mesh_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
@@ -186,7 +186,7 @@ shader_result_t point_mesh_shader_vbo_write(point_mesh_shader_t* point_mesh_shad
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -227,7 +227,7 @@ cleanup:
         if(BUFFER_MANAGER_SUCCESS != ret_buff_mgr) {
             ret_cleanup = shader_rslt_convert_buffer_manager(ret_buff_mgr);
             ret = SHADER_DATA_CORRUPTED;
-            ERROR_MESSAGE("point_mesh_shader_vbo_point_write(%s, %s) - vbo free failed.", shader_rslt_to_str(ret), shader_rslt_to_str(ret_cleanup));
+            ERROR_MESSAGE("point_mesh_shader_vbo_write(%s, %s) - vbo free failed.", shader_rslt_to_str(ret), shader_rslt_to_str(ret_cleanup));
         }
     }
     return ret;
@@ -240,7 +240,7 @@ shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shade
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vbo_free", "buffer_range_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vbo_free(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -271,7 +271,7 @@ shader_result_t point_mesh_shader_vao_bind(const point_mesh_shader_t* point_mesh
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vao_bind", "point_mesh_shader_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_vao_bind(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -296,7 +296,7 @@ shader_result_t point_mesh_shader_use(const point_mesh_shader_t* point_mesh_shad
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_use", "point_mesh_shader_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_use(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -322,7 +322,7 @@ shader_result_t point_mesh_shader_model_matrix_set(const point_mesh_shader_t* po
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_model_matrix_set", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_model_matrix_set", "model_matrix_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_model_matrix_set(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -348,7 +348,7 @@ shader_result_t point_mesh_shader_view_matrix_set(const point_mesh_shader_t* poi
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_view_matrix_set", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_view_matrix_set", "view_matrix_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_view_matrix_set(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -374,7 +374,7 @@ shader_result_t point_mesh_shader_projection_matrix_set(const point_mesh_shader_
 
     IF_ARG_NULL_GOTO_CLEANUP(point_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_projection_matrix_set", "point_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_projection_matrix_set", "projection_matrix_")
-    if(!point_mesh_shader_is_initialized(point_mesh_shader_)) {
+    if(!is_valid_shallow(point_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("point_mesh_shader_projection_matrix_set(%s) - Provided point_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -608,7 +608,7 @@ cleanup:
     return ret;
 }
 
-static bool point_mesh_shader_is_initialized(const point_mesh_shader_t* point_mesh_shader_) {
+static bool is_valid_shallow(const point_mesh_shader_t* point_mesh_shader_) {
     if(NULL == point_mesh_shader_) {
         return false;
     }

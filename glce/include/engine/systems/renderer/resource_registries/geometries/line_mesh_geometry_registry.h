@@ -34,26 +34,7 @@ typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
 typedef struct line_mesh_shader line_mesh_shader_t;
 
-/**
- * @brief 線分描画用ジオメトリレジストリ用のメモリを確保し、初期化する
- *
- * @note 失敗した場合out_registry_は不変
- *
- * @param[in] max_geometry_count_ レジストリに登録可能な最大ジオメトリ数
- * @param[in,out] allocator_ レジストリ用メモリの確保に使用するリニアアロケータ
- * @param[out] out_registry_ 初期化されたレジストリの格納先
- *
- * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 以下のいずれか
- * - max_geometry_count_ == 0
- * - max_geometry_count_がINT16_MAXを超過
- * - allocator_ == NULL
- * - out_registry_ == NULL
- * - *out_registry_ != NULL
- * @retval RESOURCE_REGISTRY_NO_MEMORY リニアアロケータによるメモリ確保失敗
- * @retval RESOURCE_REGISTRY_OVERFLOW メモリ割り当てサイズがオーバーフロー
- * @retval RESOURCE_REGISTRY_SUCCESS 処理に成功し、正常終了
- */
-resource_registry_result_t line_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, line_mesh_geometry_registry_t** out_registry_);
+resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, linear_alloc_t* allocator_, line_mesh_geometry_registry_t** out_registry_);
 
 /**
  * @brief registry_に登録された全ジオメトリを破棄し、登録内容を空に戻す
@@ -78,7 +59,7 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* registry_, const char* name_);
+bool line_mesh_geometry_registry_exists(const line_mesh_geometry_registry_t* registry_, const char* name_);
 
 /**
  * @brief registry_からline_mesh_geometry_tへの参照を取得する

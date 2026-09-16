@@ -369,7 +369,7 @@ static fs_path_result_t executable_fullpath_get_apple(char** out_fullpath_, size
     ret_memory_system = memory_system_allocate(bufsize, MEMORY_TAG_FILE_IO, (void**)&buf);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("executable_fullpath_get(%s) - memory_system_allocate failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("executable_fullpath_get_apple(%s) - memory_system_allocate failed.", rslt_to_str(ret));
         goto cleanup;
     }
     allocated_size = bufsize;
@@ -380,7 +380,7 @@ static fs_path_result_t executable_fullpath_get_apple(char** out_fullpath_, size
         ret_memory_system = memory_system_allocate(bufsize, MEMORY_TAG_FILE_IO, (void**)&buf);
         if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
             ret = rslt_convert_choco_memory(ret_memory_system);
-            ERROR_MESSAGE("executable_fullpath_get(%s) - memory_system_allocate failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("executable_fullpath_get_apple(%s) - memory_system_allocate failed.", rslt_to_str(ret));
             goto cleanup;
         }
         allocated_size = bufsize;
@@ -389,7 +389,7 @@ static fs_path_result_t executable_fullpath_get_apple(char** out_fullpath_, size
             buf = NULL;
 
             ret = FS_PATH_UNDEFINED_ERROR;
-            ERROR_MESSAGE("executable_fullpath_get(%s) - _NSGetExecutablePath failed.", rslt_to_str(ret));
+            ERROR_MESSAGE("executable_fullpath_get_apple(%s) - _NSGetExecutablePath failed.", rslt_to_str(ret));
             goto cleanup;
         }
     }

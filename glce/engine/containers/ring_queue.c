@@ -239,7 +239,7 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
         goto cleanup;
     }
 
-    if(ring_queue_empty(ring_queue_)) {
+    if(ring_queue_is_empty(ring_queue_)) {
         DEBUG_MESSAGE("Ring queue is empty.");
         ret = RING_QUEUE_EMPTY;
         goto cleanup;
@@ -270,13 +270,13 @@ cleanup:
     return ret;
 }
 
-bool ring_queue_empty(const ring_queue_t* ring_queue_) {
+bool ring_queue_is_empty(const ring_queue_t* ring_queue_) {
     if(NULL == ring_queue_) {
         return true;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
-        ERROR_MESSAGE("ring_queue_empty(%s) - Precondition validation failed for 'ring_queue_'.", rslt_to_str(RING_QUEUE_DATA_CORRUPTED));
+        ERROR_MESSAGE("ring_queue_is_empty(%s) - Precondition validation failed for 'ring_queue_'.", rslt_to_str(RING_QUEUE_DATA_CORRUPTED));
         return true;
     }
 #endif

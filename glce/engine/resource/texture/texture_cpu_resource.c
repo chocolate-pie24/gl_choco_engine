@@ -124,15 +124,15 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_) {
     }
 }
 
-resource_result_t texture_cpu_resource_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_) {
+resource_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_get", "texture_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_get", "out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "texture_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "out_pixels_")
 
     if(!texture_cpu_resource_is_valid(texture_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_pixel_get(%s) - provided texture_ is corrupted.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_pixels_get(%s) - provided texture_ is corrupted.", resource_rslt_to_str(ret));
         goto cleanup;
     }
     *out_pixels_ = texture_->pixels;

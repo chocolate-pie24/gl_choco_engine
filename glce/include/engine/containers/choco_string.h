@@ -66,7 +66,7 @@ size_t choco_string_length(const choco_string_t* string_);
 
 const char* choco_string_c_str(const choco_string_t* string_);
 
-bool choco_string_equal(const char* str1_, const char* str2_);
+bool choco_string_is_equal(const char* str1_, const char* str2_);
 
 bool choco_string_substring_exists(const char* str_, const char* target_);
 

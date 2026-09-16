@@ -55,25 +55,25 @@ event_system_result_t event_system_rslt_convert_linear_alloc(linear_allocator_re
     }
 }
 
-event_system_result_t event_system_rslt_convert_platform(platform_result_t rslt_) {
+event_system_result_t event_system_rslt_convert_platform_system(platform_system_result_t rslt_) {
     switch(rslt_) {
-    case PLATFORM_SUCCESS:
+    case PLATFORM_SYSTEM_SUCCESS:
         return EVENT_SYSTEM_SUCCESS;
-    case PLATFORM_INVALID_ARGUMENT:
+    case PLATFORM_SYSTEM_INVALID_ARGUMENT:
         return EVENT_SYSTEM_INVALID_ARGUMENT;
-    case PLATFORM_RUNTIME_ERROR:
+    case PLATFORM_SYSTEM_RUNTIME_ERROR:
         return EVENT_SYSTEM_RUNTIME_ERROR;
-    case PLATFORM_NO_MEMORY:
+    case PLATFORM_SYSTEM_NO_MEMORY:
         return EVENT_SYSTEM_NO_MEMORY;
-    case PLATFORM_DATA_CORRUPTED:
+    case PLATFORM_SYSTEM_DATA_CORRUPTED:
         return EVENT_SYSTEM_DATA_CORRUPTED;
-    case PLATFORM_BAD_OPERATION:
+    case PLATFORM_SYSTEM_BAD_OPERATION:
         return EVENT_SYSTEM_BAD_OPERATION;
-    case PLATFORM_OVERFLOW:
+    case PLATFORM_SYSTEM_OVERFLOW:
         return EVENT_SYSTEM_OVERFLOW;
-    case PLATFORM_LIMIT_EXCEEDED:
+    case PLATFORM_SYSTEM_LIMIT_EXCEEDED:
         return EVENT_SYSTEM_LIMIT_EXCEEDED;
-    case PLATFORM_UNDEFINED_ERROR:
+    case PLATFORM_SYSTEM_UNDEFINED_ERROR:
         return EVENT_SYSTEM_UNDEFINED_ERROR;
     default:
         return EVENT_SYSTEM_UNDEFINED_ERROR;
