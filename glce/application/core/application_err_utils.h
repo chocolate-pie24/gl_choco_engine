@@ -33,7 +33,7 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
-#include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
@@ -73,14 +73,7 @@ application_result_t app_rslt_convert_mem_sys(memory_system_result_t rslt_);
  */
 application_result_t app_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
-/**
- * @brief Platformレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] rslt_ Platformレイヤー実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t app_rslt_convert_platform(platform_result_t rslt_);
+application_result_t app_rslt_convert_platform_system(platform_system_result_t rslt_);
 
 /**
  * @brief Ring Queueモジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する

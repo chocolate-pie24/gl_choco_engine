@@ -43,7 +43,7 @@ struct lit_mesh_render_resource {
 static render_resource_result_t shader_create(const lit_mesh_shader_config_t* lit_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, lit_mesh_shader_t** out_lit_mesh_shader_);
 static bool is_valid_shallow(const lit_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t lit_mesh_render_resource_initialize(const lit_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -53,32 +53,32 @@ render_resource_result_t lit_mesh_render_resource_initialize(const lit_mesh_shad
     lit_mesh_shader_t* tmp_shader = NULL;
     lit_mesh_geometry_registry_t* tmp_registry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_initialize", "out_render_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "lit_mesh_render_resource_initialize", "*out_render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "shader_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "out_render_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "lit_mesh_render_resource_create", "*out_render_resource_")
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(lit_mesh_render_resource_t), alignof(lit_mesh_render_resource_t), (void**)&tmp_render_resource);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = render_resource_rslt_convert_linear_allocator(ret_linear_alloc);
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - Failed to allocate lit_mesh_render_resource_t instance.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - Failed to allocate lit_mesh_render_resource_t instance.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_render_resource, 0, sizeof(lit_mesh_render_resource_t));
 
     ret = shader_create(shader_config_, renderer_backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - shader_create failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - shader_create failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_resource_registry = lit_mesh_geometry_registry_initialize(max_geometry_count_, allocator_, &tmp_registry);
+    ret_resource_registry = lit_mesh_geometry_registry_create(max_geometry_count_, allocator_, &tmp_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = render_resource_rslt_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - lit_mesh_geometry_registry_initialize failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - lit_mesh_geometry_registry_create failed.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -88,7 +88,7 @@ render_resource_result_t lit_mesh_render_resource_initialize(const lit_mesh_shad
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!lit_mesh_render_resource_is_valid(tmp_render_resource)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_render_resource_initialize(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_rslt_to_str(ret));
         goto cleanup;
     }
 #endif

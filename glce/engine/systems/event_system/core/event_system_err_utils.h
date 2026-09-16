@@ -10,7 +10,7 @@ extern "C" {
 
 #include "engine/core/memory/linear_allocator.h"
 
-#include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
@@ -18,7 +18,7 @@ const char* event_system_rslt_to_str(event_system_result_t rslt_);
 
 event_system_result_t event_system_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
 
-event_system_result_t event_system_rslt_convert_platform(platform_result_t rslt_);
+event_system_result_t event_system_rslt_convert_platform_system(platform_system_result_t rslt_);
 
 #ifdef __cplusplus
 }

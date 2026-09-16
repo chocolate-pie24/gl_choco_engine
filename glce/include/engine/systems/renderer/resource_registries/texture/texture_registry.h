@@ -20,7 +20,7 @@ typedef struct texture_gpu_resource texture_gpu_resource_t;
 typedef struct texture_cpu_resource texture_cpu_resource_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 
-resource_registry_result_t texture_registry_initialize(size_t max_texture_count_, linear_alloc_t* allocator_, texture_registry_t** out_registry_);
+resource_registry_result_t texture_registry_create(size_t max_texture_count_, linear_alloc_t* allocator_, texture_registry_t** out_registry_);
 
 void texture_registry_deinitialize(texture_registry_t* registry_);
 

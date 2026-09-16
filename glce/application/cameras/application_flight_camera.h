@@ -24,7 +24,7 @@ typedef struct linear_alloc linear_alloc_t;
 typedef struct application_frame_state application_frame_state_t;
 typedef struct engine_event_view engine_event_view_t;
 
-application_result_t application_flight_camera_initialize(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_);
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_);
 
 void application_flight_camera_deinitialize(application_flight_camera_t* application_flight_camera_);
 

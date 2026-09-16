@@ -40,7 +40,7 @@ static bool find_by_name(const flight_camera_registry_t* registry_, const char* 
 
 static bool is_valid_shallow(const flight_camera_registry_t* registry_);
 
-camera_registry_result_t flight_camera_registry_initialize(size_t max_flight_camera_count_, linear_alloc_t* allocator_, flight_camera_registry_t** out_registry_) {
+camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_alloc_t* allocator_, flight_camera_registry_t** out_registry_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -50,12 +50,12 @@ camera_registry_result_t flight_camera_registry_initialize(size_t max_flight_cam
 
     size_t entry_array_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_initialize", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_rslt_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_initialize", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_rslt_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_create", "*out_registry_")
     if(0 == max_flight_camera_count_ || UINT16_MAX < max_flight_camera_count_) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("flight_camera_registry_initialize(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -63,21 +63,21 @@ camera_registry_result_t flight_camera_registry_initialize(size_t max_flight_cam
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), (void**)&tmp_registry);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = camera_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("flight_camera_registry_initialize(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_rslt_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_rslt_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
         goto cleanup;
     }
     memset(tmp_registry, 0, sizeof(flight_camera_registry_t));
 
     if((SIZE_MAX / max_flight_camera_count_) < sizeof(registry_entry_t)) {
         ret = CAMERA_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("flight_camera_registry_initialize(%s) - overflow.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - overflow.", camera_registry_rslt_to_str(ret));
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_flight_camera_count_;
     ret_linear_alloc = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = camera_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("flight_camera_registry_initialize(%s) - allocation failed.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_entry_array, 0, entry_array_size);
@@ -88,7 +88,7 @@ camera_registry_result_t flight_camera_registry_initialize(size_t max_flight_cam
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_registry_is_valid(tmp_registry)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_initialize(%s) - tmp_registry is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - tmp_registry is corrupted.", camera_registry_rslt_to_str(ret));
         goto cleanup;
     }
 #endif

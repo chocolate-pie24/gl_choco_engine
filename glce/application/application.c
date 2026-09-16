@@ -37,9 +37,9 @@
 #include "engine/io_utils/fs_path.h"
 
 // Platform System
-#include "engine/systems/platform/core/platform_types.h"
-#include "engine/systems/platform/config/platform_config.h"
-#include "engine/systems/platform/platform_context.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
+#include "engine/systems/platform_system/config/platform_system_config.h"
+#include "engine/systems/platform_system/platform_system.h"
 
 // Event System
 #include "engine/systems/event_system/core/event_system_types.h"
@@ -68,7 +68,7 @@ typedef struct app_state {
 
     // SubSystem Configuration
     renderer_config_t renderer_config;
-    platform_config_t platform_config;
+    platform_system_config_t platform_system_config;
     event_system_config_t event_system_config;
 
     // application status
@@ -87,7 +87,7 @@ typedef struct app_state {
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     // Platform System
-    platform_context_t* platform_context; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
+    platform_system_t* platform_system; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
 
     // Event System
     event_system_t* event_system;
@@ -133,11 +133,10 @@ static app_state_t* s_app_state = NULL; /**< アプリケーション内部状�
 static application_result_t app_state_update(void);
 static void app_state_clean(void);
 
-static application_result_t point_geometry_create(app_state_t* app_state_);        // TODO: remove this!!
+static application_result_t point_mesh_geometry_import(app_state_t* app_state_);        // TODO: remove this!!
 static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
 static application_result_t lit_mesh_geometry_import(app_state_t* app_state_);
-
-static application_result_t texture_initialize(app_state_t* app_state_);
+static application_result_t ui_mesh_textures_import(app_state_t* app_state_);
 
 static application_result_t executable_directory_get(app_state_t* app_state_);
 
@@ -148,7 +147,7 @@ application_result_t application_create(void) {
 
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
-    platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
+    platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
 
     // Preconditions
@@ -198,7 +197,7 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    ret_linear_alloc = linear_allocator_init(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
+    ret_linear_alloc = linear_allocator_initialize(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = app_rslt_convert_linear_alloc(ret_linear_alloc);
         ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", app_rslt_to_str(ret));
@@ -219,50 +218,50 @@ application_result_t application_create(void) {
     tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
     // Platform System
-    INFO_MESSAGE("Initializing Platform System...");
-    tmp->platform_config.max_keyboard_event_count = KEY_CODE_MAX;
-    tmp->platform_config.max_mouse_event_count = 8;
-    tmp->platform_config.max_window_event_count = 8;
-    tmp->platform_config.window_height = 768;
-    tmp->platform_config.window_width = 1024;
-    tmp->platform_config.window_label = "test_window";
+    INFO_MESSAGE("Creating platform system...");
+    tmp->platform_system_config.max_keyboard_event_count = KEY_CODE_MAX;
+    tmp->platform_system_config.max_mouse_event_count = 8;
+    tmp->platform_system_config.max_window_event_count = 8;
+    tmp->platform_system_config.window_height = 768;
+    tmp->platform_system_config.window_width = 1024;
+    tmp->platform_system_config.window_label = "test_window";
 
     tmp->window_width = 1024;
     tmp->window_height = 768;
 
-    ret_platform = platform_initialize(tmp->build_config.selected_platform, &tmp->platform_config, tmp->linear_alloc, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height, &tmp->platform_context);
-    if(PLATFORM_SUCCESS != ret_platform) {
-        ret = app_rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize platform.", app_rslt_to_str(ret));
+    ret_platform_system = platform_system_create(tmp->build_config.selected_platform, &tmp->platform_system_config, tmp->linear_alloc, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height, &tmp->platform_system);
+    if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
+        ret = app_rslt_convert_platform_system(ret_platform_system);
+        ERROR_MESSAGE("application_create(%s) - platform_system_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("Platform System initialized successfully.");
+    INFO_MESSAGE("platform system created successfully.");
 
     // Event System
-    INFO_MESSAGE("Initializing Event System...");
+    INFO_MESSAGE("Creating event system...");
     tmp->event_system_config.max_keyboard_event_count = KEY_CODE_MAX;
     tmp->event_system_config.max_mouse_event_count = 8;
     tmp->event_system_config.max_window_event_count = 8;
 
-    ret_event_system = event_system_initialize(&tmp->event_system_config, tmp->linear_alloc, tmp->platform_context, &tmp->event_system);
+    ret_event_system = event_system_create(&tmp->event_system_config, tmp->linear_alloc, tmp->platform_system, &tmp->event_system);
     if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
         ret = app_rslt_convert_event_system(ret_event_system);
-        ERROR_MESSAGE("application_create(%s) - event_system_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - event_system_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("Event System initialized successfully.");
+    INFO_MESSAGE("event system created successfully.");
 
     // application flight camera
-    INFO_MESSAGE("Initializing Flight Camera System...");
-    ret = application_flight_camera_initialize(8, tmp->linear_alloc, tmp->frame_state.framebuffer_width, tmp->frame_state.framebuffer_height, &tmp->flight_camera);
+    INFO_MESSAGE("Creating flight camera system...");
+    ret = application_flight_camera_create(8, tmp->linear_alloc, tmp->frame_state.framebuffer_width, tmp->frame_state.framebuffer_height, &tmp->flight_camera);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - application_flight_camera_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - application_flight_camera_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("Flight Camera System initialized successfully.");
+    INFO_MESSAGE("flight camera system created successfully.");
 
     // application renderer
-    INFO_MESSAGE("Initializing Renderer System...");
+    INFO_MESSAGE("Creating renderer system...");
     tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.ui_mesh_shader_config.vbo_size = 1024;
@@ -278,12 +277,12 @@ application_result_t application_create(void) {
     tmp->renderer_config.lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
     tmp->renderer_config.lit_mesh_shader_config.max_allocation_count = 512;
     tmp->renderer_config.lit_mesh_shader_config.vbo_size = 1 * GIB;
-    ret = application_renderer_initialize(&tmp->renderer_config, tmp->build_config.selected_graphics_api, tmp->linear_alloc, fs_path_fullpath_get(tmp->executable_directory), "../../assets/shaders/test_shader/", &tmp->renderer);
+    ret = application_renderer_create(&tmp->renderer_config, tmp->build_config.selected_graphics_api, tmp->linear_alloc, fs_path_fullpath_get(tmp->executable_directory), "../../assets/shaders/test_shader/", &tmp->renderer);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - application_renderer_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("Renderer System initialized successfully.");
+    INFO_MESSAGE("renderer system created successfully.");
 
     // commit
     s_app_state = tmp;
@@ -304,8 +303,8 @@ cleanup:
             if(NULL != tmp->event_system) {
                 event_system_deinitialize(tmp->event_system);
             }
-            if(NULL != tmp->platform_context) {
-                platform_deinitialize(tmp->platform_context);
+            if(NULL != tmp->platform_system) {
+                platform_system_deinitialize(tmp->platform_system);
             }
             if(NULL != tmp->executable_directory) {
                 fs_path_destroy(&tmp->executable_directory);
@@ -342,8 +341,8 @@ void application_destroy(void) {
     if(NULL != s_app_state->event_system) {
         event_system_deinitialize(s_app_state->event_system);
     }
-    if(NULL != s_app_state->platform_context) {
-        platform_deinitialize(s_app_state->platform_context);
+    if(NULL != s_app_state->platform_system) {
+        platform_system_deinitialize(s_app_state->platform_system);
     }
     if(NULL != s_app_state->executable_directory) {
         fs_path_destroy(&s_app_state->executable_directory);
@@ -421,10 +420,10 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = texture_initialize(s_app_state);
+    ret = ui_mesh_textures_import(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - texture_initialize failed.");
+        ERROR_MESSAGE("application_run - ui_mesh_textures_import failed.");
         goto cleanup;
     }
 
@@ -435,7 +434,7 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = point_geometry_create(s_app_state);
+    ret = point_mesh_geometry_import(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
         goto cleanup;
@@ -538,7 +537,7 @@ application_result_t application_run(void) {
             goto cleanup;
         }
 
-        platform_swap_buffers(s_app_state->platform_context);
+        platform_system_swap_buffers(s_app_state->platform_system);
         // end temporary
 
         nanosleep(&req, NULL);
@@ -618,14 +617,12 @@ cleanup:
 }
 
 // TODO: remove this!!
-static application_result_t point_geometry_create(app_state_t* app_state_) {
+static application_result_t point_mesh_geometry_import(app_state_t* app_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     point_vertex_t tmp_vertices[8] = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_geometry_create", "app_state_")
-    // IF_ARG_NULL_GOTO_CLEANUP(app_state_->renderer_backend_context, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->renderer_backend_context")
-    // IF_ARG_NULL_GOTO_CLEANUP(app_state_->point_mesh_shader, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "point_geometry_create", "app_state_->point_mesh_shader")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_geometry_import", "app_state_")
 
     tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
     tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
@@ -647,7 +644,7 @@ static application_result_t point_geometry_create(app_state_t* app_state_) {
 
     ret = application_renderer_point_mesh_geometry_import_from_vertices(app_state_->renderer, "test_points", tmp_vertices, 8, &app_state_->geometry_id_test_points);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("point_geometry_create(%s) - application_renderer_point_mesh_geometry_import_from_vertices failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_geometry_import(%s) - application_renderer_point_mesh_geometry_import_from_vertices failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -737,7 +734,7 @@ cleanup:
     return ret;
 }
 
-static application_result_t texture_initialize(app_state_t* app_state_) {
+static application_result_t ui_mesh_textures_import(app_state_t* app_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
@@ -745,37 +742,37 @@ static application_result_t texture_initialize(app_state_t* app_state_) {
     fs_path_t* rabbit_path = NULL;
     fs_path_t* frog_path = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "texture_initialize", "app_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(app_state_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_textures_import", "app_state_")
 
     ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = application_renderer_ui_mesh_texture_import_from_bmp(app_state_->renderer, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &app_state_->tex_id_rabbit);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("texture_initialize(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(app_state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("texture_initialize(%s) - fs_path_create failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = application_renderer_ui_mesh_texture_import_from_bmp(app_state_->renderer, 0, "frog_512", fs_path_fullpath_get(frog_path), &app_state_->tex_id_frog);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("texture_initialize(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret = application_renderer_ui_mesh_texture_import_from_solid_color(app_state_->renderer, 0, "test_texture_green", 0, 255, 0, &app_state_->tex_id_green);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("texture_initialize(%s) - application_renderer_ui_mesh_texture_import_from_solid_color failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_solid_color failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

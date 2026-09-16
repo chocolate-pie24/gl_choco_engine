@@ -56,7 +56,7 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_);
 static bool geometry_id_is_valid(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 static bool find_by_name(const point_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
 
-resource_registry_result_t point_mesh_geometry_registry_initialize(size_t max_geometry_count_, linear_alloc_t* allocator_, point_mesh_geometry_registry_t** out_registry_) {
+resource_registry_result_t point_mesh_geometry_registry_create(size_t max_geometry_count_, linear_alloc_t* allocator_, point_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -66,31 +66,31 @@ resource_registry_result_t point_mesh_geometry_registry_initialize(size_t max_ge
 
     size_t entry_array_size = 0;
 
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "max_geometry_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(UINT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "max_geometry_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_initialize", "*out_registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "max_geometry_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(UINT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "max_geometry_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "*out_registry_")
 
     // geometry_registry_tメモリ確保
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(point_mesh_geometry_registry_t), alignof(point_mesh_geometry_registry_t), (void**)&tmp_registry);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - Failed to allocate registry instance. target=point_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_rslt_to_str(ret), sizeof(point_mesh_geometry_registry_t), alignof(point_mesh_geometry_registry_t), max_geometry_count_);
+        ERROR_MESSAGE("point_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=point_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_rslt_to_str(ret), sizeof(point_mesh_geometry_registry_t), alignof(point_mesh_geometry_registry_t), max_geometry_count_);
         goto cleanup;
     }
     memset(tmp_registry, 0, sizeof(point_mesh_geometry_registry_t));
 
     if((SIZE_MAX / max_geometry_count_) < sizeof(registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - overflow.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_geometry_registry_create(%s) - overflow.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_geometry_count_;
     ret_linear_alloc = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("point_mesh_geometry_registry_initialize(%s) - allocation failed.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("point_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_entry_array, 0, entry_array_size);

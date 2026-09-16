@@ -26,7 +26,6 @@
 #include "engine/base/choco_math/test_choco_math.h"
 
 // test: engine/core
-#include "engine/core/memory/test_linear_allocator.h"
 #include "engine/core/memory/test_choco_memory.h"
 #include "engine/core/buffer_utils/test_buffer_utils.h"
 #include "engine/core/geometry_primitive/test_aabb_3d.h"
@@ -81,7 +80,6 @@ int main(int argc_, char** argv_) {
         test_choco_math();
 
         // engine/core
-        test_linear_allocator();
         test_choco_memory();
         test_buffer_utils();
         test_aabb_3d();

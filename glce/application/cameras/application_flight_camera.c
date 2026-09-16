@@ -43,7 +43,7 @@ static const float s_default_far_clip = 50.0f;
 static bool is_valid_shallow(const application_flight_camera_t* application_flight_camera_);
 
 // id = 0はデフォルトカメラでデフォルトキーバインドのflight cameraが生成され(*out_application_camera_)->active_cameraにアドレスが格納される
-application_result_t application_flight_camera_initialize(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_) {
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_alloc_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -57,32 +57,32 @@ application_result_t application_flight_camera_initialize(size_t max_flight_came
     uint16_t tmp_active_camera_id = 0;
     float aspect = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_initialize", "out_application_flight_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_application_flight_camera_, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "application_flight_camera_initialize", "*out_application_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, app_rslt_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_create", "out_application_flight_camera_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_application_flight_camera_, ret, APPLICATION_BAD_OPERATION, app_rslt_to_str(APPLICATION_BAD_OPERATION), "application_flight_camera_create", "*out_application_flight_camera_")
     if(0 == max_flight_camera_count_) {
         ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - Provided max_flight_camera_count_ is not valid.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - Provided max_flight_camera_count_ is not valid.", app_rslt_to_str(ret));
         goto cleanup;
     }
     if(0 >= framebuffer_width_ || 0 >= framebuffer_height_) {
         ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(application_flight_camera_t), alignof(application_flight_camera_t), (void**)&tmp_application_flight_camera);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = app_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - Failed to allocate application_flight_camera_t instance.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - Failed to allocate application_flight_camera_t instance.", app_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_application_flight_camera, 0, sizeof(application_flight_camera_t));
 
-    ret_camera_registry = flight_camera_registry_initialize(max_flight_camera_count_, allocator_, &tmp_flight_camera_registry);
+    ret_camera_registry = flight_camera_registry_create(max_flight_camera_count_, allocator_, &tmp_flight_camera_registry);
     if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
         ret = app_rslt_convert_camera_registry(ret_camera_registry);
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - flight_camera_registry_initialize failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - flight_camera_registry_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -101,7 +101,7 @@ application_result_t application_flight_camera_initialize(size_t max_flight_came
     ret_camera = flight_camera_create(s_default_keybinds, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip, &tmp_flight_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = app_rslt_convert_camera(ret_camera);
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - flight_camera_create failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - flight_camera_create failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -109,14 +109,14 @@ application_result_t application_flight_camera_initialize(size_t max_flight_came
     ret_camera_registry = flight_camera_registry_register(tmp_flight_camera_registry, "default_flight_camera", &tmp_flight_camera, &tmp_active_camera_id);
     if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {
         ret = app_rslt_convert_camera_registry(ret_camera_registry);
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - flight_camera_registry_register failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - flight_camera_registry_register failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
     tmp_application_flight_camera->active_camera = flight_camera_registry_flight_camera_get(tmp_flight_camera_registry, tmp_active_camera_id);
     if(NULL == tmp_application_flight_camera->active_camera) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - flight_camera_registry_flight_camera_get failed.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - flight_camera_registry_flight_camera_get failed.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -126,7 +126,7 @@ application_result_t application_flight_camera_initialize(size_t max_flight_came
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_flight_camera_is_valid(tmp_application_flight_camera)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_initialize(%s) - Postcondition validation failed for 'tmp_application_flight_camera'.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_create(%s) - Postcondition validation failed for 'tmp_application_flight_camera'.", app_rslt_to_str(ret));
         goto cleanup;
     }
 #endif

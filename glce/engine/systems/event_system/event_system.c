@@ -17,9 +17,9 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/systems/platform/core/platform_types.h"
-#include "engine/systems/platform/core/platform_event_view.h"
-#include "engine/systems/platform/platform_context.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
+#include "engine/systems/platform_system/core/platform_event_view.h"
+#include "engine/systems/platform_system/platform_system.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 #include "engine/systems/event_system/core/event_system_err_utils.h"
@@ -48,7 +48,7 @@ typedef struct mouse_event_storage {
 // 当面はeventを取得するのがplatformのみなので、単純にplatform_event_viewの中身をengine_event_viewに移すだけ
 // 将来的に通信経由のコマンド等が出てきた際に、各システムのevent_viewをengine_event_view_tにマージする方式にする
 struct event_system {
-    platform_context_t* platform_context;   // mutable borrow
+    platform_system_t* platform_system;   // mutable borrow
 
     window_event_storage_t window_event_storage;
     keyboard_event_storage_t keyboard_event_storage;
@@ -75,21 +75,21 @@ static bool keyboard_event_storage_is_valid(const keyboard_event_storage_t* even
 static bool mouse_event_storage_is_valid(const mouse_event_storage_t* event_storage_);
 static bool is_valid_shallow(const event_system_t* event_system_);
 
-event_system_result_t event_system_initialize(const event_system_config_t* config_, linear_alloc_t* linear_alloc_, platform_context_t* platform_context_, event_system_t** out_event_system_) {
+event_system_result_t event_system_create(const event_system_config_t* config_, linear_alloc_t* linear_alloc_, platform_system_t* platform_system_, event_system_t** out_event_system_) {
     event_system_result_t ret = EVENT_SYSTEM_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
 
     event_system_t* tmp_event_system = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_initialize", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(linear_alloc_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_initialize", "linear_alloc_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_context_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_initialize", "platform_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_event_system_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_initialize", "out_event_system_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_event_system_, ret, EVENT_SYSTEM_BAD_OPERATION, event_system_rslt_to_str(EVENT_SYSTEM_BAD_OPERATION), "event_system_initialize", "*out_event_system_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(linear_alloc_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_create", "linear_alloc_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_create", "platform_system_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_event_system_, ret, EVENT_SYSTEM_INVALID_ARGUMENT, event_system_rslt_to_str(EVENT_SYSTEM_INVALID_ARGUMENT), "event_system_create", "out_event_system_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_event_system_, ret, EVENT_SYSTEM_BAD_OPERATION, event_system_rslt_to_str(EVENT_SYSTEM_BAD_OPERATION), "event_system_create", "*out_event_system_")
     if(!event_system_config_is_valid(config_)) {
         ret = EVENT_SYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("event_system_initialize(%s) - Provided config_ is not valid.", event_system_rslt_to_str(ret));
+        ERROR_MESSAGE("event_system_create(%s) - Provided config_ is not valid.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -97,7 +97,7 @@ event_system_result_t event_system_initialize(const event_system_config_t* confi
     ret_linear_alloc = linear_allocator_allocate(linear_alloc_, sizeof(event_system_t), alignof(event_system_t), (void**)&tmp_event_system);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = event_system_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("event_system_initialize(%s) - linear_allocator_allocate failed.", event_system_rslt_to_str(ret));
+        ERROR_MESSAGE("event_system_create(%s) - linear_allocator_allocate failed.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_event_system, 0, sizeof(event_system_t));
@@ -105,23 +105,23 @@ event_system_result_t event_system_initialize(const event_system_config_t* confi
     // event array, event count
     ret = event_storage_initialize(config_, linear_alloc_, &tmp_event_system->window_event_storage, &tmp_event_system->keyboard_event_storage, &tmp_event_system->mouse_event_storage);
     if(EVENT_SYSTEM_SUCCESS != ret) {
-        ERROR_MESSAGE("event_system_initialize(%s) - event_storage_initialize failed.", event_system_rslt_to_str(ret));
+        ERROR_MESSAGE("event_system_create(%s) - event_storage_initialize failed.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
 
     // event view
     ret = event_view_refresh(false, &tmp_event_system->window_event_storage, &tmp_event_system->keyboard_event_storage, &tmp_event_system->mouse_event_storage, &tmp_event_system->event_view);
     if(EVENT_SYSTEM_SUCCESS != ret) {
-        ERROR_MESSAGE("event_system_initialize(%s) - event_view_refresh failed.", event_system_rslt_to_str(ret));
+        ERROR_MESSAGE("event_system_create(%s) - event_view_refresh failed.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_event_system->platform_context = platform_context_;
+    tmp_event_system->platform_system = platform_system_;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!event_system_is_valid(tmp_event_system)) {
         ret = EVENT_SYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("event_system_initialize(%s) - Postcondition validation failed for 'tmp_event_system'.", event_system_rslt_to_str(ret));
+        ERROR_MESSAGE("event_system_create(%s) - Postcondition validation failed for 'tmp_event_system'.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -152,13 +152,13 @@ void event_system_deinitialize(event_system_t* event_system_) {
 #endif
 
     event_storage_counts_reset(&event_system_->window_event_storage, &event_system_->keyboard_event_storage, &event_system_->mouse_event_storage);
-    event_system_->platform_context = NULL;
+    event_system_->platform_system = NULL;
 }
 
 event_system_result_t event_system_update(event_system_t* event_system_, const engine_event_view_t** out_event_view_) {
     event_system_result_t ret = EVENT_SYSTEM_SUCCESS;
 
-    platform_result_t ret_platform = PLATFORM_INVALID_ARGUMENT;
+    platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     const platform_event_view_t* platform_event_view;
 
@@ -172,10 +172,10 @@ event_system_result_t event_system_update(event_system_t* event_system_, const e
     }
 #endif
 
-    ret_platform = platform_update(event_system_->platform_context, &platform_event_view);
-    if(PLATFORM_SUCCESS != ret_platform) {
-        ret = event_system_rslt_convert_platform(ret_platform);
-        ERROR_MESSAGE("event_system_update(%s) - platform_update failed.", event_system_rslt_to_str(ret));
+    ret_platform_system = platform_system_update(event_system_->platform_system, &platform_event_view);
+    if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
+        ret = event_system_rslt_convert_platform_system(ret_platform_system);
+        ERROR_MESSAGE("event_system_update(%s) - platform_system_update failed.", event_system_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -500,7 +500,7 @@ static bool is_valid_shallow(const event_system_t* event_system_) {
     if(NULL == event_system_) {
         return false;
     }
-    if(NULL == event_system_->platform_context) {
+    if(NULL == event_system_->platform_system) {
         return false;
     }
     if(NULL == event_system_->keyboard_event_storage.event_storage) {

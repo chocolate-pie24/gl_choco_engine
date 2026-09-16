@@ -21,7 +21,7 @@
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/systems/platform/core/platform_types.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -99,25 +99,25 @@ application_result_t app_rslt_convert_linear_alloc(linear_allocator_result_t rsl
     }
 }
 
-application_result_t app_rslt_convert_platform(platform_result_t rslt_) {
+application_result_t app_rslt_convert_platform_system(platform_system_result_t rslt_) {
     switch(rslt_) {
-    case PLATFORM_SUCCESS:
+    case PLATFORM_SYSTEM_SUCCESS:
         return APPLICATION_SUCCESS;
-    case PLATFORM_INVALID_ARGUMENT:
+    case PLATFORM_SYSTEM_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
-    case PLATFORM_RUNTIME_ERROR:
+    case PLATFORM_SYSTEM_RUNTIME_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case PLATFORM_NO_MEMORY:
+    case PLATFORM_SYSTEM_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case PLATFORM_DATA_CORRUPTED:
+    case PLATFORM_SYSTEM_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
-    case PLATFORM_BAD_OPERATION:
+    case PLATFORM_SYSTEM_BAD_OPERATION:
         return APPLICATION_BAD_OPERATION;
-    case PLATFORM_UNDEFINED_ERROR:
+    case PLATFORM_SYSTEM_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
-    case PLATFORM_OVERFLOW:
+    case PLATFORM_SYSTEM_OVERFLOW:
         return APPLICATION_OVERFLOW;
-    case PLATFORM_LIMIT_EXCEEDED:
+    case PLATFORM_SYSTEM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     default:
         return APPLICATION_UNDEFINED_ERROR;

@@ -22,7 +22,7 @@ typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
 typedef struct mat4x4f mat4x4f_t;
 
-render_resource_result_t line_mesh_render_resource_initialize(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_);
+render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_);
 
 void line_mesh_render_resource_deinitialize(line_mesh_render_resource_t* render_resource_);
 

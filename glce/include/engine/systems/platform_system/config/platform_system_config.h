@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_CONFIG_PLATFORM_CONFIG_H
-#define GLCE_ENGINE_SYSTEMS_PLATFORM_CONFIG_PLATFORM_CONFIG_H
+#ifndef GLCE_ENGINE_SYSTEMS_PLATFORM_SYSTEM_CONFIG_PLATFORM_SYSTEM_CONFIG_H
+#define GLCE_ENGINE_SYSTEMS_PLATFORM_SYSTEM_CONFIG_PLATFORM_SYSTEM_CONFIG_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,7 +11,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct platform_config {
+typedef struct platform_system_config {
     size_t max_window_event_count;
     size_t max_keyboard_event_count;
     size_t max_mouse_event_count;
@@ -20,9 +20,9 @@ typedef struct platform_config {
 
     int window_width;
     int window_height;
-} platform_config_t;
+} platform_system_config_t;
 
-bool platform_config_is_valid(const platform_config_t* config_);
+bool platform_system_config_is_valid(const platform_system_config_t* config_);
 
 #ifdef __cplusplus
 }
