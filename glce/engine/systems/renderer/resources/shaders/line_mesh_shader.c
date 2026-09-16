@@ -64,7 +64,7 @@ static shader_result_t vbo_initialize(line_mesh_shader_t* line_mesh_shader_, con
 static shader_result_t vao_initialize(line_mesh_shader_t* line_mesh_shader_);
 
 // validation
-static bool line_mesh_shader_is_initialized(const line_mesh_shader_t* line_mesh_shader_);
+static bool is_valid_shallow(const line_mesh_shader_t* line_mesh_shader_);
 
 shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const line_mesh_shader_config_t* config_, line_mesh_shader_t** out_line_mesh_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
@@ -184,7 +184,7 @@ shader_result_t line_mesh_shader_vbo_write(line_mesh_shader_t* line_mesh_shader_
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -238,7 +238,7 @@ shader_result_t line_mesh_shader_vbo_free(line_mesh_shader_t* line_mesh_shader_,
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_free", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vbo_free", "buffer_range_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_vbo_free(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -269,7 +269,7 @@ shader_result_t line_mesh_shader_vao_bind(const line_mesh_shader_t* line_mesh_sh
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_vao_bind", "line_mesh_shader_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_vao_bind(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -294,7 +294,7 @@ shader_result_t line_mesh_shader_use(const line_mesh_shader_t* line_mesh_shader_
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_use", "line_mesh_shader_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_use(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -320,7 +320,7 @@ shader_result_t line_mesh_shader_model_matrix_set(const line_mesh_shader_t* line
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_model_matrix_set", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_model_matrix_set", "model_matrix_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_model_matrix_set(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -346,7 +346,7 @@ shader_result_t line_mesh_shader_view_matrix_set(const line_mesh_shader_t* line_
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_view_matrix_set", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_view_matrix_set", "view_matrix_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_view_matrix_set(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -372,7 +372,7 @@ shader_result_t line_mesh_shader_projection_matrix_set(const line_mesh_shader_t*
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_projection_matrix_set", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_projection_matrix_set", "projection_matrix_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_projection_matrix_set(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -398,7 +398,7 @@ shader_result_t line_mesh_shader_color_set(const line_mesh_shader_t* line_mesh_s
 
     IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_color_set", "line_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(color_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_color_set", "color_")
-    if(!line_mesh_shader_is_initialized(line_mesh_shader_)) {
+    if(!is_valid_shallow(line_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("line_mesh_shader_color_set(%s) - Provided line_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -635,7 +635,7 @@ cleanup:
     return ret;
 }
 
-static bool line_mesh_shader_is_initialized(const line_mesh_shader_t* line_mesh_shader_) {
+static bool is_valid_shallow(const line_mesh_shader_t* line_mesh_shader_) {
     if(NULL == line_mesh_shader_) {
         return false;
     }

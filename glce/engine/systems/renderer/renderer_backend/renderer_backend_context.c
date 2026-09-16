@@ -103,11 +103,11 @@ cleanup:
     return ret;
 }
 
-void renderer_backend_deinitialize(renderer_backend_context_t* renderer_context_) {
-    if(NULL == renderer_context_) {
+void renderer_backend_deinitialize(renderer_backend_context_t* renderer_backend_context_) {
+    if(NULL == renderer_backend_context_) {
         goto cleanup;
     }
-    // 現状では特に必要な処理はなし(リニアロケータによるメモリ確保のため、renderer_context_のリソース解放は不要)
+    // 現状では特に必要な処理はなし(リニアロケータによるメモリ確保のため、renderer_backend_context_のリソース解放は不要)
 cleanup:
     return;
 }

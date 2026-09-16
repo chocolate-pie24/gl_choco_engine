@@ -111,18 +111,18 @@ void texture_registry_deinitialize(texture_registry_t* registry_) {
     registry_->max_texture_count = 0;
 }
 
-bool texture_registry_find(const texture_registry_t* registry_, const char* name_) {
+bool texture_registry_exists(const texture_registry_t* registry_, const char* name_) {
     size_t tmp_id = 0;
 
     if(NULL == registry_ || NULL == name_) {
         return false;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_find(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_exists(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("texture_registry_find(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_exists(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -403,7 +403,7 @@ static bool find_by_name(const texture_registry_t* registry_, const char* name_,
     }
 
     for(size_t i = 0; i != registry_->max_texture_count; ++i) {
-        if(NULL != registry_->entries[i].resource_name && choco_string_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
+        if(NULL != registry_->entries[i].resource_name && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
             tmp_slot = i;
             found = true;
             break;

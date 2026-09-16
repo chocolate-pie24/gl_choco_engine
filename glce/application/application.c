@@ -87,7 +87,7 @@ typedef struct app_state {
     linear_alloc_t* linear_alloc;   /**< リニアアロケータ構造体インスタンス */
 
     // Platform System
-    platform_system_t* platform_system; /**< プラットフォームStrategyパターンへの窓口としてのコンテキスト構造体インスタンス */
+    platform_system_t* platform_system;
 
     // Event System
     event_system_t* event_system;
@@ -131,7 +131,12 @@ typedef struct app_state {
 static app_state_t* s_app_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 static application_result_t app_state_update(void);
-static void app_state_clean(void);
+static void app_state_begin_frame(void);
+
+// subsystem configuration
+static void platform_system_config_initialize(platform_system_config_t* platform_system_config_);
+static void event_system_config_initialize(event_system_config_t* event_system_config_);
+static void renderer_config_initialize(renderer_config_t* renderer_config_);
 
 static application_result_t point_mesh_geometry_import(app_state_t* app_state_);        // TODO: remove this!!
 static application_result_t ui_mesh_geometry_import(app_state_t* app_state_);
@@ -141,14 +146,14 @@ static application_result_t ui_mesh_textures_import(app_state_t* app_state_);
 static application_result_t executable_directory_get(app_state_t* app_state_);
 
 application_result_t application_create(void) {
-    app_state_t* tmp = NULL;
-
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
 
     memory_system_result_t ret_mem_sys = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
+
+    app_state_t* tmp_app_state = NULL;
 
     // Preconditions
     if(NULL != s_app_state) {
@@ -167,37 +172,37 @@ application_result_t application_create(void) {
 
     // begin Simulation
     // Application State
-    ret_mem_sys = memory_system_allocate(sizeof(*tmp), MEMORY_TAG_SYSTEM, (void**)&tmp);
+    ret_mem_sys = memory_system_allocate(sizeof(*tmp_app_state), MEMORY_TAG_SYSTEM, (void**)&tmp_app_state);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", app_rslt_to_str(ret));
         goto cleanup;
     }
-    memset(tmp, 0, sizeof(*tmp));
+    memset(tmp_app_state, 0, sizeof(*tmp_app_state));
 
     // Linear Allocator
     //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
     //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
     //   当面は実施せず、多めにメモリを確保する方針にする
     INFO_MESSAGE("Initializing linear allocator...");
-    tmp->linear_alloc = NULL;
-    linear_allocator_preinit(&tmp->linear_alloc_mem_req, &tmp->linear_alloc_align_req);
-    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp->linear_alloc);
+    tmp_app_state->linear_alloc = NULL;
+    linear_allocator_preinit(&tmp_app_state->linear_alloc_mem_req, &tmp_app_state->linear_alloc_align_req);
+    ret_mem_sys = memory_system_allocate(tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp_app_state->linear_alloc);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp->linear_alloc_pool_size = 128 * KIB;
-    ret_mem_sys = memory_system_allocate(tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp->linear_alloc_pool);
+    tmp_app_state->linear_alloc_pool_size = 128 * KIB;
+    ret_mem_sys = memory_system_allocate(tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp_app_state->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret_linear_alloc = linear_allocator_initialize(tmp->linear_alloc, tmp->linear_alloc_pool_size, tmp->linear_alloc_pool);
+    ret_linear_alloc = linear_allocator_initialize(tmp_app_state->linear_alloc, tmp_app_state->linear_alloc_pool_size, tmp_app_state->linear_alloc_pool);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
         ret = app_rslt_convert_linear_alloc(ret_linear_alloc);
         ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", app_rslt_to_str(ret));
@@ -206,7 +211,7 @@ application_result_t application_create(void) {
     INFO_MESSAGE("linear_allocator initialized successfully.");
 
     // 実行ファイルパス取得
-    ret = executable_directory_get(tmp);
+    ret = executable_directory_get(tmp_app_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -214,22 +219,17 @@ application_result_t application_create(void) {
 
     // ビルドコンフィグ
     // TODO: ビルドシステムで指定するように変更する
-    tmp->build_config.selected_platform = PLATFORM_USE_GLFW;
-    tmp->build_config.selected_graphics_api = GRAPHICS_API_GL33;
+    tmp_app_state->build_config.selected_platform = PLATFORM_USE_GLFW;
+    tmp_app_state->build_config.selected_graphics_api = GRAPHICS_API_GL33;
 
     // Platform System
     INFO_MESSAGE("Creating platform system...");
-    tmp->platform_system_config.max_keyboard_event_count = KEY_CODE_MAX;
-    tmp->platform_system_config.max_mouse_event_count = 8;
-    tmp->platform_system_config.max_window_event_count = 8;
-    tmp->platform_system_config.window_height = 768;
-    tmp->platform_system_config.window_width = 1024;
-    tmp->platform_system_config.window_label = "test_window";
+    platform_system_config_initialize(&tmp_app_state->platform_system_config);
 
-    tmp->window_width = 1024;
-    tmp->window_height = 768;
+    tmp_app_state->window_width = 1024;
+    tmp_app_state->window_height = 768;
 
-    ret_platform_system = platform_system_create(tmp->build_config.selected_platform, &tmp->platform_system_config, tmp->linear_alloc, &tmp->frame_state.framebuffer_width, &tmp->frame_state.framebuffer_height, &tmp->platform_system);
+    ret_platform_system = platform_system_create(tmp_app_state->build_config.selected_platform, &tmp_app_state->platform_system_config, tmp_app_state->linear_alloc, &tmp_app_state->frame_state.framebuffer_width, &tmp_app_state->frame_state.framebuffer_height, &tmp_app_state->platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
         ret = app_rslt_convert_platform_system(ret_platform_system);
         ERROR_MESSAGE("application_create(%s) - platform_system_create failed.", app_rslt_to_str(ret));
@@ -239,11 +239,8 @@ application_result_t application_create(void) {
 
     // Event System
     INFO_MESSAGE("Creating event system...");
-    tmp->event_system_config.max_keyboard_event_count = KEY_CODE_MAX;
-    tmp->event_system_config.max_mouse_event_count = 8;
-    tmp->event_system_config.max_window_event_count = 8;
-
-    ret_event_system = event_system_create(&tmp->event_system_config, tmp->linear_alloc, tmp->platform_system, &tmp->event_system);
+    event_system_config_initialize(&tmp_app_state->event_system_config);
+    ret_event_system = event_system_create(&tmp_app_state->event_system_config, tmp_app_state->linear_alloc, tmp_app_state->platform_system, &tmp_app_state->event_system);
     if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
         ret = app_rslt_convert_event_system(ret_event_system);
         ERROR_MESSAGE("application_create(%s) - event_system_create failed.", app_rslt_to_str(ret));
@@ -253,7 +250,7 @@ application_result_t application_create(void) {
 
     // application flight camera
     INFO_MESSAGE("Creating flight camera system...");
-    ret = application_flight_camera_create(8, tmp->linear_alloc, tmp->frame_state.framebuffer_width, tmp->frame_state.framebuffer_height, &tmp->flight_camera);
+    ret = application_flight_camera_create(8, tmp_app_state->linear_alloc, tmp_app_state->frame_state.framebuffer_width, tmp_app_state->frame_state.framebuffer_height, &tmp_app_state->flight_camera);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_flight_camera_create failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -262,22 +259,8 @@ application_result_t application_create(void) {
 
     // application renderer
     INFO_MESSAGE("Creating renderer system...");
-    tmp->renderer_config.ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.ui_mesh_shader_config.max_allocation_count = 512;
-    tmp->renderer_config.ui_mesh_shader_config.vbo_size = 1024;
-
-    tmp->renderer_config.line_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.line_mesh_shader_config.max_allocation_count = 512;
-    tmp->renderer_config.line_mesh_shader_config.vbo_size = 1024;
-
-    tmp->renderer_config.point_mesh_shader_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    tmp->renderer_config.point_mesh_shader_config.max_allocation_count = 128;
-    tmp->renderer_config.point_mesh_shader_config.vbo_size = 1 * KIB;
-
-    tmp->renderer_config.lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    tmp->renderer_config.lit_mesh_shader_config.max_allocation_count = 512;
-    tmp->renderer_config.lit_mesh_shader_config.vbo_size = 1 * GIB;
-    ret = application_renderer_create(&tmp->renderer_config, tmp->build_config.selected_graphics_api, tmp->linear_alloc, fs_path_fullpath_get(tmp->executable_directory), "../../assets/shaders/test_shader/", &tmp->renderer);
+    renderer_config_initialize(&tmp_app_state->renderer_config);
+    ret = application_renderer_create(&tmp_app_state->renderer_config, tmp_app_state->build_config.selected_graphics_api, tmp_app_state->linear_alloc, fs_path_fullpath_get(tmp_app_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_app_state->renderer);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", app_rslt_to_str(ret));
         goto cleanup;
@@ -285,7 +268,7 @@ application_result_t application_create(void) {
     INFO_MESSAGE("renderer system created successfully.");
 
     // commit
-    s_app_state = tmp;
+    s_app_state = tmp_app_state;
     INFO_MESSAGE("Application created successfully.");
     memory_system_report();
 
@@ -293,30 +276,30 @@ application_result_t application_create(void) {
 
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
-        if(NULL != tmp) {
-            if(NULL != tmp->renderer) {
-                application_renderer_deinitialize(tmp->renderer);
+        if(NULL != tmp_app_state) {
+            if(NULL != tmp_app_state->renderer) {
+                application_renderer_deinitialize(tmp_app_state->renderer);
             }
-            if(NULL != tmp->flight_camera) {
-                application_flight_camera_deinitialize(tmp->flight_camera);
+            if(NULL != tmp_app_state->flight_camera) {
+                application_flight_camera_deinitialize(tmp_app_state->flight_camera);
             }
-            if(NULL != tmp->event_system) {
-                event_system_deinitialize(tmp->event_system);
+            if(NULL != tmp_app_state->event_system) {
+                event_system_deinitialize(tmp_app_state->event_system);
             }
-            if(NULL != tmp->platform_system) {
-                platform_system_deinitialize(tmp->platform_system);
+            if(NULL != tmp_app_state->platform_system) {
+                platform_system_deinitialize(tmp_app_state->platform_system);
             }
-            if(NULL != tmp->executable_directory) {
-                fs_path_destroy(&tmp->executable_directory);
+            if(NULL != tmp_app_state->executable_directory) {
+                fs_path_destroy(&tmp_app_state->executable_directory);
             }
-            if(NULL != tmp->linear_alloc_pool) {
-                memory_system_free(tmp->linear_alloc_pool, tmp->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+            if(NULL != tmp_app_state->linear_alloc_pool) {
+                memory_system_free(tmp_app_state->linear_alloc_pool, tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
             }
-            if(NULL != tmp->linear_alloc) {
-                memory_system_free(tmp->linear_alloc, tmp->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+            if(NULL != tmp_app_state->linear_alloc) {
+                memory_system_free(tmp_app_state->linear_alloc, tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
             }
-            memory_system_free(tmp, sizeof(*tmp), MEMORY_TAG_SYSTEM);
-            tmp = NULL;
+            memory_system_free(tmp_app_state, sizeof(tmp_app_state), MEMORY_TAG_SYSTEM);
+            tmp_app_state = NULL;
         }
         memory_system_destroy();
     }
@@ -436,7 +419,7 @@ application_result_t application_run(void) {
 
     ret = point_mesh_geometry_import(s_app_state);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - Failed to create point geometry.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_run(%s) - Failed to import point mesh geometry.", app_rslt_to_str(ret));
         goto cleanup;
     }
 
@@ -479,7 +462,7 @@ application_result_t application_run(void) {
     // end temporary
 
     while(!s_app_state->window_should_close) {
-        app_state_clean();
+        app_state_begin_frame();
 
         ret = app_state_update();
         if(APPLICATION_SUCCESS != ret) {
@@ -601,19 +584,47 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief アプリケーション状態変化フラグの値を元に戻す
- *
- *
- */
-static void app_state_clean(void) {
+static void app_state_begin_frame(void) {
     if(NULL == s_app_state) {
-        ERROR_MESSAGE("app_state_clean(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
+        ERROR_MESSAGE("app_state_begin_frame(%s) - Application state is not initialized.", app_rslt_to_str(APPLICATION_RUNTIME_ERROR));
         goto cleanup;
     }
     application_frame_state_begin_frame(&s_app_state->frame_state);
 cleanup:
     return;
+}
+
+static void platform_system_config_initialize(platform_system_config_t* platform_system_config_) {
+    platform_system_config_->max_keyboard_event_count = KEY_CODE_MAX;
+    platform_system_config_->max_mouse_event_count = 8;
+    platform_system_config_->max_window_event_count = 8;
+    platform_system_config_->window_height = 768;
+    platform_system_config_->window_width = 1024;
+    platform_system_config_->window_label = "test_window";
+}
+
+static void event_system_config_initialize(event_system_config_t* event_system_config_) {
+    event_system_config_->max_keyboard_event_count = KEY_CODE_MAX;
+    event_system_config_->max_mouse_event_count = 8;
+    event_system_config_->max_window_event_count = 8;
+}
+
+static void renderer_config_initialize(renderer_config_t* renderer_config_) {
+    renderer_config_->ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    renderer_config_->ui_mesh_shader_config.max_allocation_count = 512;
+    renderer_config_->ui_mesh_shader_config.vbo_size = 1024;
+
+    renderer_config_->line_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    renderer_config_->line_mesh_shader_config.max_allocation_count = 512;
+    renderer_config_->line_mesh_shader_config.vbo_size = 1024;
+
+    renderer_config_->point_mesh_shader_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
+    renderer_config_->point_mesh_shader_config.max_allocation_count = 128;
+    renderer_config_->point_mesh_shader_config.vbo_size = 1 * KIB;
+
+    renderer_config_->lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    renderer_config_->lit_mesh_shader_config.max_allocation_count = 512;
+    renderer_config_->lit_mesh_shader_config.vbo_size = 1 * GIB;
 }
 
 // TODO: remove this!!

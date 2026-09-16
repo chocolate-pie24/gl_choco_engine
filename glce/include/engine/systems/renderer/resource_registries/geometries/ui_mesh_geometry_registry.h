@@ -26,7 +26,7 @@ resource_registry_result_t ui_mesh_geometry_registry_create(size_t max_geometry_
 
 void ui_mesh_geometry_registry_deinitialize(ui_mesh_geometry_registry_t* registry_, ui_mesh_shader_t* shader_);
 
-bool ui_mesh_geometry_registry_find(const ui_mesh_geometry_registry_t* registry_, const char* name_);
+bool ui_mesh_geometry_registry_exists(const ui_mesh_geometry_registry_t* registry_, const char* name_);
 
 const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 

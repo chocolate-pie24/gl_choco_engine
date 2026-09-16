@@ -106,7 +106,7 @@ int main(int argc_, char** argv_) {
 
     app_create_result = application_create();
     if(APPLICATION_SUCCESS != app_create_result) {
-        ERROR_MESSAGE("Failed to initialize application.");
+        ERROR_MESSAGE("Failed to create application.");
         goto cleanup;
     }
 

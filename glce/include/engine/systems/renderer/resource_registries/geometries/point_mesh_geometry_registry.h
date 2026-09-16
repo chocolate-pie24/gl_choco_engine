@@ -26,7 +26,7 @@ resource_registry_result_t point_mesh_geometry_registry_create(size_t max_geomet
 
 void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_);
 
-bool point_mesh_geometry_registry_find(const point_mesh_geometry_registry_t* registry_, const char* name_);
+bool point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* registry_, const char* name_);
 
 const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 

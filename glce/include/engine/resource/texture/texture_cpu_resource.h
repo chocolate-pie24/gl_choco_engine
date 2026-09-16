@@ -29,7 +29,7 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
 
 void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_);
 
-resource_result_t texture_cpu_resource_pixel_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_);
+resource_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_, const uint8_t** out_pixels_);
 
 resource_result_t texture_cpu_resource_pixel_size_get(const texture_cpu_resource_t* texture_, uint16_t* width_, uint16_t* height_, uint8_t* channel_count_);
 

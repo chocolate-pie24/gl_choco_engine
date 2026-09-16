@@ -127,18 +127,18 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
     registry_->max_geometry_count = 0;
 }
 
-bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* registry_, const char* name_) {
+bool line_mesh_geometry_registry_exists(const line_mesh_geometry_registry_t* registry_, const char* name_) {
     size_t tmp_id = 0;
 
     if(NULL == registry_ || NULL == name_) {
         return false;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_find(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_find(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -435,7 +435,7 @@ static bool find_by_name(const line_mesh_geometry_registry_t* registry_, const c
     }
 
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
-        if(NULL != registry_->entries[i].resource_name && choco_string_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
+        if(NULL != registry_->entries[i].resource_name && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
             tmp_slot = i;
             found = true;
             break;

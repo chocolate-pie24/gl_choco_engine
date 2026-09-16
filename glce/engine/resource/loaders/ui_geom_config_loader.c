@@ -173,9 +173,9 @@ static bool key_is_valid(const choco_string_t* key_) {
     if(NULL == key_) {
         return false;
     }
-    if(choco_string_equal(s_key_str_icon_width, choco_string_c_str(key_))) {
+    if(choco_string_is_equal(s_key_str_icon_width, choco_string_c_str(key_))) {
         return true;
-    } else if(choco_string_equal(s_key_str_icon_height, choco_string_c_str(key_))) {
+    } else if(choco_string_is_equal(s_key_str_icon_height, choco_string_c_str(key_))) {
         return true;
     } else {
         return false;
@@ -268,7 +268,7 @@ static resource_result_t line_parse(ui_geom_config_state_t* out_config_, const c
         }
     }
 
-    if(choco_string_equal(s_key_str_icon_width, choco_string_c_str(tmp_key_))) {
+    if(choco_string_is_equal(s_key_str_icon_width, choco_string_c_str(tmp_key_))) {
         parse_result = sscanf(choco_string_c_str(tmp_value_), " %d %c", &width, &extra); // 数字以外の文字が入っていた場合を検出するためextraを追加する
         if(1 != parse_result) {
             ret = RESOURCE_DATA_CORRUPTED;
@@ -284,7 +284,7 @@ static resource_result_t line_parse(ui_geom_config_state_t* out_config_, const c
         }
         out_config_->config.icon_width = (uint16_t)width;
         out_config_->icon_width_is_valid = true;
-    } else if(choco_string_equal(s_key_str_icon_height, choco_string_c_str(tmp_key_))) {
+    } else if(choco_string_is_equal(s_key_str_icon_height, choco_string_c_str(tmp_key_))) {
         parse_result = sscanf(choco_string_c_str(tmp_value_), " %d %c", &height, &extra);   // 数字以外の文字が入っていた場合を検出するためextraを追加する
         if(1 != parse_result) {
             ret = RESOURCE_DATA_CORRUPTED;

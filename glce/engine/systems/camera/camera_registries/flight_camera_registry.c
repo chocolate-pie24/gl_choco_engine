@@ -126,7 +126,7 @@ void flight_camera_registry_deinitialize(flight_camera_registry_t* registry_) {
     registry_->max_flight_camera_count = 0;
 }
 
-bool flight_camera_registry_find(const flight_camera_registry_t* registry_, const char* name_) {
+bool flight_camera_registry_exists(const flight_camera_registry_t* registry_, const char* name_) {
     size_t tmp_id = 0;
 
     if(NULL == registry_ || NULL == name_) {
@@ -134,12 +134,12 @@ bool flight_camera_registry_find(const flight_camera_registry_t* registry_, cons
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(registry_)) {
-        ERROR_MESSAGE("flight_camera_registry_find(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("flight_camera_registry_exists(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
         return false;
     }
 #endif
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("flight_camera_registry_find(%s) - provided resource name is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("flight_camera_registry_exists(%s) - provided resource name is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -347,7 +347,7 @@ bool flight_camera_registry_is_valid(const flight_camera_registry_t* registry_) 
     for(size_t i = 0; i != (registry_->max_flight_camera_count - 1); ++i) {
         for(size_t j = (i + 1); j != registry_->max_flight_camera_count; ++j) {
             if(!registry_entry_is_empty(&registry_->entries[i]) && !registry_entry_is_empty(&registry_->entries[j])) {
-                if(choco_string_equal(choco_string_c_str(registry_->entries[i].resource_name), choco_string_c_str(registry_->entries[j].resource_name))) {
+                if(choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), choco_string_c_str(registry_->entries[j].resource_name))) {
                     return false;
                 }
             }
@@ -428,7 +428,7 @@ static bool find_by_name(const flight_camera_registry_t* registry_, const char* 
     }
 
     for(size_t i = 0; i != registry_->max_flight_camera_count; ++i) {
-        if(NULL != registry_->entries[i].resource_name && choco_string_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
+        if(NULL != registry_->entries[i].resource_name && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
             tmp_slot = i;
             found = true;
             break;

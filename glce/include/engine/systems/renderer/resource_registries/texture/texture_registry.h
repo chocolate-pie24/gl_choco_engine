@@ -24,7 +24,7 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, li
 
 void texture_registry_deinitialize(texture_registry_t* registry_);
 
-bool texture_registry_find(const texture_registry_t* registry_, const char* name_);
+bool texture_registry_exists(const texture_registry_t* registry_, const char* name_);
 
 const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_);
 

@@ -465,7 +465,7 @@ const char* choco_string_c_str(const choco_string_t* string_) {
     }
 }
 
-bool choco_string_equal(const char* str1_, const char* str2_) {
+bool choco_string_is_equal(const char* str1_, const char* str2_) {
     if(NULL == str1_ || NULL == str2_) {
         return false;
     }

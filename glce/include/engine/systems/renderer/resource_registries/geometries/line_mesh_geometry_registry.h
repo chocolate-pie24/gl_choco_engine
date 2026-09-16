@@ -59,7 +59,7 @@ void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* reg
  * - registry_の内部データ不整合(この場合はエラーメッセージを出力する)
  * - registry_に名称name_のジオメトリが存在しない
  */
-bool line_mesh_geometry_registry_find(const line_mesh_geometry_registry_t* registry_, const char* name_);
+bool line_mesh_geometry_registry_exists(const line_mesh_geometry_registry_t* registry_, const char* name_);
 
 /**
  * @brief registry_からline_mesh_geometry_tへの参照を取得する

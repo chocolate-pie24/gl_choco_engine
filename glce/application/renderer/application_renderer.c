@@ -77,7 +77,7 @@ application_result_t application_renderer_create(const renderer_config_t* render
     ret_renderer_backend = renderer_backend_create(allocator_, target_api_, &tmp_renderer_backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = app_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("application_renderer_create(%s) - Failed to initialize renderer backend.", app_rslt_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - Failed to create renderer backend.", app_rslt_to_str(ret));
         goto cleanup;
     }
 

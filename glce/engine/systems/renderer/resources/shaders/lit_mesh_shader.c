@@ -60,7 +60,7 @@ static shader_result_t vbo_initialize(lit_mesh_shader_t* lit_mesh_shader_, const
 static shader_result_t vao_initialize(lit_mesh_shader_t* lit_mesh_shader_);
 
 // validation
-static bool lit_mesh_shader_is_initialized(const lit_mesh_shader_t* lit_mesh_shader_);
+static bool is_valid_shallow(const lit_mesh_shader_t* lit_mesh_shader_);
 
 shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const lit_mesh_shader_config_t* config_, lit_mesh_shader_t** out_lit_mesh_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
@@ -179,7 +179,7 @@ shader_result_t lit_mesh_shader_vbo_write(lit_mesh_shader_t* lit_mesh_shader_, s
         ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_rslt_to_str(ret));
         goto cleanup;
     }
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -233,7 +233,7 @@ shader_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* lit_mesh_shader_, co
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_free", "lit_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_free", "buffer_range_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_vbo_free(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -264,7 +264,7 @@ shader_result_t lit_mesh_shader_vao_bind(const lit_mesh_shader_t* lit_mesh_shade
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vao_bind", "lit_mesh_shader_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_vao_bind(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -289,7 +289,7 @@ shader_result_t lit_mesh_shader_use(const lit_mesh_shader_t* lit_mesh_shader_) {
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_use", "lit_mesh_shader_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_use(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -315,7 +315,7 @@ shader_result_t lit_mesh_shader_model_matrix_set(const lit_mesh_shader_t* lit_me
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "lit_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "model_matrix_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_model_matrix_set(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -341,7 +341,7 @@ shader_result_t lit_mesh_shader_view_matrix_set(const lit_mesh_shader_t* lit_mes
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "lit_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "view_matrix_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_view_matrix_set(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -367,7 +367,7 @@ shader_result_t lit_mesh_shader_projection_matrix_set(const lit_mesh_shader_t* l
 
     IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "lit_mesh_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "projection_matrix_")
-    if(!lit_mesh_shader_is_initialized(lit_mesh_shader_)) {
+    if(!is_valid_shallow(lit_mesh_shader_)) {
         ret = SHADER_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided lit_mesh_shader_ is corrupted.", shader_rslt_to_str(ret));
         goto cleanup;
@@ -420,9 +420,9 @@ static shader_result_t program_initialize(lit_mesh_shader_t* lit_mesh_shader_, c
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "lit_mesh_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "vertex_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_program_initialize", "fragment_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(lit_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "lit_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "vertex_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_rslt_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "fragment_shader_fullpath_")
 
     // シェーダープログラムビルド
     ret = shader_program_builder_create_from_files(lit_mesh_shader_->backend_context, vertex_shader_fullpath_, fragment_shader_fullpath_, &tmp_shader);
@@ -605,7 +605,7 @@ cleanup:
     return ret;
 }
 
-static bool lit_mesh_shader_is_initialized(const lit_mesh_shader_t* lit_mesh_shader_) {
+static bool is_valid_shallow(const lit_mesh_shader_t* lit_mesh_shader_) {
     if(NULL == lit_mesh_shader_) {
         return false;
     }

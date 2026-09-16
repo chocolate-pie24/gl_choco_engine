@@ -23,16 +23,6 @@ extern "C" {
 
 #include "application/core/application_types.h"
 
-/**
- * @brief エンジンを構成する各サブシステムを初期化する
- *
- * @retval APPLICATION_RUNTIME_ERROR    アプリケーションがすでに初期化済み
- * @retval APPLICATION_NO_MEMORY        メモリ確保に失敗
- * @retval APPLICATION_UNDEFINED_ERROR  未定義のエラーが発生
- * @retval APPLICATION_INVALID_ARGUMENT サブシステム初期化に無効な引数を指定した
- * @retval APPLICATION_LIMIT_EXCEEDED   メモリシステムの使用量管理変数がシステム使用可能範囲上限を超過
- * @retval APPLICATION_SUCCESS          エンジンおよびアプリケーションの初期化に成功し、正常終了
- */
 application_result_t application_create(void);
 
 /**

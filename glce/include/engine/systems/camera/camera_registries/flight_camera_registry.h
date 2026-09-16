@@ -24,7 +24,7 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
 
 void flight_camera_registry_deinitialize(flight_camera_registry_t* registry_);
 
-bool flight_camera_registry_find(const flight_camera_registry_t* registry_, const char* name_);
+bool flight_camera_registry_exists(const flight_camera_registry_t* registry_, const char* name_);
 
 flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_);
 
