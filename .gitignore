@@ -3,7 +3,7 @@ obj/
 bin/
 cov/
 *.o
-docs/doxygen/html
+/docs/doxygen/generated/
 node_modules
 package-lock.json
 package.json

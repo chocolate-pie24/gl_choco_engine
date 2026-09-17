@@ -5,7 +5,6 @@
 - [GL CHOCO ENGINE](#gl-choco-engine)
   - [Non-goals](#non-goals)
   - [Who It Is For](#who-it-is-for)
-  - [Documentation](#documentation)
   - [Contributing](#contributing)
   - [Directory Layout](#directory-layout)
   - [Setup](#setup)
@@ -53,13 +52,6 @@ Leaving these areas out allows GLCE to provide the basic functionality needed fo
 - Developers who want sufficient rendering functionality without introducing Unity, Unreal Engine, ROS2, or similarly large systems
 - Developers who prefer to understand and control the full system rather than hide it behind middleware
 
-## Documentation
-
-- [Build System(Japanese)](docs/build_system_ja.md)
-- [Build System(English)](docs/build_system_en.md)
-
-The Build System document describes the internal build architecture, including `build.sh`, Make configuration, build modes, OS-specific settings, analysis workflows, and VS Code integration.
-
 ## Contributing
 
 GL CHOCO ENGINE is currently developed and maintained by a single developer.
@@ -79,55 +71,49 @@ The Application uses the public API exposed by the Engine.
 The Engine does not depend on the Application.
 
 ```text
-Application
+glce/application/
     │
     │ Public API
     ▼
-include/engine/
+glce/include/engine/
     │
     ▼
-Engine
+glce/engine/
 ```
 
 The main repository layout is:
 
 ```text
 .
-├── application/
 ├── assets/
 ├── docs/
-├── engine/
-├── include/
-│   └── engine/
-├── make/
-│   ├── common.mk
-│   ├── linux.mk
-│   ├── macos.mk
-│   └── freebsd.mk
-├── scripts/
-│   ├── coverage.sh
-│   ├── sanitizer.sh
-│   └── valgrind.sh
-├── test/
+├── glce/
+│   ├── application/
+│   ├── engine/
 │   ├── include/
-│   └── src/
-└── build.sh
+│   │   └── engine/
+│   ├── make/
+│   ├── scripts/
+│   ├── test/
+│   └── build.sh
+├── LICENSE
+└── README.md
 ```
 
 The responsibilities of the main directories are:
 
 | Directory | Responsibility |
 |---|---|
-| `application/` | Application-side source code that uses the GLCE Engine |
-| `include/engine/` | Public API exposed by the Engine |
-| `engine/` | Engine source code and internal headers |
+| `glce/application/` | Application-side source code that uses the GLCE Engine |
+| `glce/include/engine/` | Public API exposed by the Engine |
+| `glce/engine/` | Engine source code and internal headers |
+| `glce/test/` | Test source files and headers |
+| `glce/make/` | Common and OS-specific Make configuration |
+| `glce/scripts/` | Development workflows such as Coverage, Sanitizer, and Valgrind |
 | `assets/` | Runtime resources such as shaders and textures |
-| `test/` | Test source files and headers |
-| `make/` | Common and OS-specific Make configuration |
-| `scripts/` | Development workflows such as Coverage, Sanitizer, and Valgrind |
 | `docs/` | Design and development documentation |
 
-Directories such as `bin/`, `obj/`, and `cov/` are generated as needed during builds or analysis workflows.
+Directories such as `glce/bin/`, `glce/obj/`, and `glce/cov/` are generated as needed during builds or analysis workflows.
 
 ## Setup
 
@@ -137,9 +123,9 @@ GLCE currently supports:
 - Linux
 - FreeBSD
 
-The supported entry point for building GLCE is `build.sh`.
+The supported entry point for building GLCE is `glce/build.sh`.
 
-OS-specific compiler, include path, library path, and linker settings are selected automatically by `build.sh` and the files under `make/`.
+OS-specific compiler, include path, library path, and linker settings are selected automatically by `glce/build.sh` and the files under `glce/make/`.
 
 ### macOS
 
@@ -176,9 +162,15 @@ pkg install gmake glew glfw
 GLCE uses the Clang compiler provided by the FreeBSD base system.
 
 Because FreeBSD's standard `make` is BSD make, GLCE uses GNU Make as `gmake`.
-When `build.sh` detects FreeBSD, it selects `gmake` automatically.
+When `glce/build.sh` detects FreeBSD, it selects `gmake` automatically.
 
 ## Build
+
+From the repository root, move to the GLCE directory:
+
+```bash
+cd glce
+```
 
 If necessary, make the shell scripts executable:
 
@@ -213,27 +205,22 @@ Remove generated files:
 ./build.sh clean
 ```
 
-Debug, Release, and Test builds currently share the same `bin/` and `obj/` directories.
+Debug, Release, and Test builds currently share the same `glce/bin/` and `glce/obj/` directories.
 
 Run `clean` before switching build modes.
 
-For details, see [Build System](docs/build_system.md).
+For details, see the Build System documentation:
+
+- [Japanese](docs/build_system_ja.md)
+- [English](docs/build_system_en.md)
 
 ## Run
 
-After building GLCE, run it from the repository root:
+After building GLCE, run:
 
 ```bash
 ./bin/gl_choco_engine
 ```
-
-The executable is generated at:
-
-```text
-bin/gl_choco_engine
-```
-
-Some runtime resources are currently resolved using relative paths, so the GLCE repository root should be used as the current working directory.
 
 ## License
 

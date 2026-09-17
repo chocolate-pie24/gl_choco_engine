@@ -19,7 +19,8 @@ This document describes the following aspects of the GLCE build system:
 
 Setup procedures for individual operating systems and the history of development environment setup are outside the scope of this document.
 
-The official entry point for GLCE build and analysis workflows is `build.sh` at the repository root.
+The official entry point for GLCE build and analysis workflows is `glce/build.sh`.
+Unless otherwise noted, relative paths in this document are based on the `glce/` directory.
 
 For normal use, do not invoke `make/*.mk` or `scripts/*.sh` directly. Use `build.sh` instead.
 
@@ -70,7 +71,7 @@ scripts/sanitizer.sh
 scripts/valgrind.sh
     Specialized analysis workflows
 
-.vscode/
+.vscode/ (repository root)
     Configuration for using build.sh from VS Code
 ```
 
@@ -391,7 +392,7 @@ These workflows are launched from `build.sh`.
 
 | Variable | Description |
 |---|---|
-| `GLCE_DIR` | Absolute path to the GLCE repository |
+| `GLCE_DIR` | Absolute path to the `glce/` directory |
 | `OS_NAME` | OS name |
 | `MAKE_COMMAND` | `make` or `gmake` |
 | `MAKEFILE` | Selected OS-specific Makefile |
@@ -493,7 +494,7 @@ The Valgrind workflow is not used on macOS.
 
 ### 6.1 Basic Policy
 
-VS Code-specific settings are placed under `.vscode/`.
+VS Code-specific settings are placed under .vscode/ at the repository root.
 
 ```text
 .vscode/
@@ -709,20 +710,7 @@ obj/release/
 
 Only the artifacts from the most recently built mode are retained in `bin/` and `obj/`.
 
-### 8.3 Current Directory at Runtime
-
-Some GLCE processes reference assets and other resources using relative paths.
-
-Therefore, as a general rule, the GLCE root should be the current directory at runtime.
-
-```sh
-cd <path-to-glce>
-./bin/gl_choco_engine
-```
-
-The design of asset paths themselves is treated as a separate responsibility from the build system.
-
-### 8.4 Do Not Run Specialized Workflows Directly
+### 8.3 Do Not Run Specialized Workflows Directly
 
 `scripts/*.sh` assumes the execution context passed from `build.sh`.
 

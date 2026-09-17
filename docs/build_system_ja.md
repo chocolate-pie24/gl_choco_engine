@@ -19,7 +19,8 @@ AI Generated
 
 個別OSのセットアップ手順や、開発環境構築の履歴はこの文書の対象外とする。
 
-GLCEのビルドおよび解析ワークフローの正式な入口は、リポジトリルートの`build.sh`である。
+GLCEのビルドおよび解析ワークフローの正式な入口は、`glce/build.sh`である。
+以降、本書に記載する相対パスは、特に断りがない限り`glce/`ディレクトリを基準とする。
 
 通常の利用では、`make/*.mk`や`scripts/*.sh`を直接実行せず、`build.sh`を経由する。
 
@@ -70,7 +71,7 @@ scripts/sanitizer.sh
 scripts/valgrind.sh
     専門的な解析ワークフロー
 
-.vscode/
+repository root/.vscode/
     VS Codeからbuild.shを利用するための設定
 ```
 
@@ -391,7 +392,7 @@ scripts/
 
 | 変数 | 内容 |
 |---|---|
-| `GLCE_DIR` | GLCEリポジトリの絶対パス |
+| `GLCE_DIR` | `glce/`ディレクトリの絶対パス |
 | `OS_NAME` | OS名 |
 | `MAKE_COMMAND` | `make`または`gmake` |
 | `MAKEFILE` | 選択済みOS別Makefile |
@@ -493,7 +494,7 @@ macOSではValgrind workflowを使用しない。
 
 ### 6.1 基本方針
 
-VS Code固有設定は`.vscode/`以下に置く。
+VS Code固有設定は、repository rootの.vscode/以下に置く。
 
 ```text
 .vscode/
@@ -709,20 +710,7 @@ obj/release/
 
 最後にビルドしたモードの成果物だけが`bin/`と`obj/`に保持される。
 
-### 8.3 実行時のcurrent directory
-
-GLCEの一部処理はassets等を相対パスで参照する。
-
-そのため、実行時は原則としてGLCEルートをcurrent directoryとする。
-
-```sh
-cd <path-to-glce>
-./bin/gl_choco_engine
-```
-
-assets pathの設計そのものは、ビルドシステムとは別の責務として扱う。
-
-### 8.4 専門workflowを直接実行しない
+### 8.3 専門workflowを直接実行しない
 
 `scripts/*.sh`は`build.sh`から渡される実行コンテキストを前提とする。
 
