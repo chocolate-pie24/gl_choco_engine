@@ -1,0 +1,118 @@
+/*
+ * GL CHOCO ENGINE
+ * Doxygen custom stylesheet
+ *
+ * This file was generated with AI assistance.
+ *
+ * Doxygen標準スタイルのうち、背景色・ナビゲーション・
+ * サイドバー境界のみをGLCE向けに調整する。
+ */
+
+:root {
+    --glce-background: #efe0c7;
+    --glce-hover-background: #e8dac5;
+    --glce-text: #333333;
+    --glce-border: #000000;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Page
+ * -------------------------------------------------------------------------- */
+
+body {
+    background: var(--glce-background);
+}
+
+
+/* --------------------------------------------------------------------------
+ * Header / Navigation
+ * -------------------------------------------------------------------------- */
+
+#top,
+#titlearea,
+#titlearea table,
+#titlearea tr,
+#titlearea td,
+#main-nav,
+#navrow1,
+#navrow2,
+#navrow3,
+#navrow4,
+#navrow5,
+.tabs,
+.tabs2 {
+    background: var(--glce-background) !important;
+    border: none !important;
+}
+
+#main-nav ul.sm,
+#main-nav ul.sm li,
+#main-nav ul.sm li a {
+    background: var(--glce-background) !important;
+}
+
+#main-nav ul.sm li a {
+    color: var(--glce-text) !important;
+}
+
+#main-nav ul.sm li a:hover,
+#main-nav ul.sm li:hover > a {
+    background: var(--glce-hover-background) !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Breadcrumb
+ * -------------------------------------------------------------------------- */
+
+.navpath,
+.navpath ul,
+.navpath ul li,
+.navpath ul li a {
+    background: var(--glce-background) !important;
+    border: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Sidebar
+ * -------------------------------------------------------------------------- */
+
+#side-nav,
+#nav-tree {
+    background: var(--glce-background) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Main Content
+ * -------------------------------------------------------------------------- */
+
+.contents,
+.header,
+.headertitle,
+#doc-content,
+#doc-content .header,
+#doc-content .headertitle {
+    background: var(--glce-background) !important;
+    border: none !important;
+}
+
+#doc-content {
+    box-shadow: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Sidebar Splitter
+ * -------------------------------------------------------------------------- */
+
+#splitbar,
+.ui-resizable-handle {
+    background: transparent !important;
+    border: none !important;
+    border-left: 1px solid var(--glce-border) !important;
+}
