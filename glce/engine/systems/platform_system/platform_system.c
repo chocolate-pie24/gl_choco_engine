@@ -21,18 +21,18 @@
 #include "engine/systems/platform_system/vtables/platform_backend_vtable.h"
 #include "engine/systems/platform_system/platform_concretes/glfw/platform_glfw.h"
 
+#include "config/build_config.h"
+
 struct platform_system {
-    platform_type_t type;               /**< プラットフォームタイプ */
     platform_backend_t* backend;        /**< 各プラットフォーム固有実装バックエンドデータ */
     const platform_backend_vtable_t* vtable;    /**< 各プラットフォーム仮想関数テーブル */
 };
 
-static const platform_backend_vtable_t* backend_vtable_get(platform_type_t platform_type_);
+static const platform_backend_vtable_t* backend_vtable_get(void);
 
-static bool platform_type_is_valid(platform_type_t platform_type_);
 static bool is_valid_shallow(const platform_system_t* platform_system_);
 
-platform_system_result_t platform_system_create(platform_type_t platform_type_, const platform_system_config_t* config_, linear_alloc_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_) {
+platform_system_result_t platform_system_create(const platform_system_config_t* config_, linear_alloc_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
@@ -48,13 +48,7 @@ platform_system_result_t platform_system_create(platform_type_t platform_type_, 
     IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_rslt_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_width_")
     IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_rslt_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_height_")
     IF_ARG_NULL_GOTO_CLEANUP(out_platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_rslt_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_platform_system_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_rslt_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_create", "*out_platform_system_")
-    if(!platform_type_is_valid(platform_type_)) {
-        ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("platform_system_create(%s) - Provided platform_type_ is not valid.", platform_system_rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(!platform_system_config_is_valid(config_)) {
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_rslt_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_create", "*out_platform_system_")    if(!platform_system_config_is_valid(config_)) {
         ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("platform_system_create(%s) - Provided config_ is not valid.", platform_system_rslt_to_str(ret));
         goto cleanup;
@@ -69,7 +63,7 @@ platform_system_result_t platform_system_create(platform_type_t platform_type_, 
     }
     memset(tmp_system, 0, sizeof(platform_system_t));
 
-    tmp_system->vtable = backend_vtable_get(platform_type_);
+    tmp_system->vtable = backend_vtable_get();
     if(NULL == tmp_system->vtable) {
         ret = PLATFORM_SYSTEM_UNDEFINED_ERROR;
         ERROR_MESSAGE("platform_system_create(%s) - Failed to get platform vtable.", platform_system_rslt_to_str(ret));
@@ -83,7 +77,6 @@ platform_system_result_t platform_system_create(platform_type_t platform_type_, 
     }
 
     tmp_system->backend = tmp_backend;
-    tmp_system->type = platform_type_;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_system_is_valid(tmp_system)) {
@@ -192,29 +185,16 @@ bool platform_system_is_valid(const platform_system_t* platform_system_) {
     return true;
 }
 
-static const platform_backend_vtable_t* backend_vtable_get(platform_type_t platform_type_) {
-    switch (platform_type_) {
-    case PLATFORM_USE_GLFW:
-        return platform_glfw_vtable_get();
-    default:
-        return NULL;
-    }
-}
-
-static bool platform_type_is_valid(platform_type_t platform_type_) {
-    switch(platform_type_) {
-    case PLATFORM_USE_GLFW:
-        return true;
-    default:
-        return false;
-    }
+static const platform_backend_vtable_t* backend_vtable_get(void) {
+#if defined(GLCE_BUILD_PLATFORM_GLFW)
+    return platform_glfw_vtable_get();
+#else
+    return NULL;
+#endif
 }
 
 static bool is_valid_shallow(const platform_system_t* platform_system_) {
     if(NULL == platform_system_) {
-        return false;
-    }
-    if(!platform_type_is_valid(platform_system_->type)) {
         return false;
     }
     if(NULL == platform_system_->backend) {
@@ -223,7 +203,7 @@ static bool is_valid_shallow(const platform_system_t* platform_system_) {
     if(NULL == platform_system_->vtable) {
         return false;
     }
-    const platform_backend_vtable_t* tmp_vtable = backend_vtable_get(platform_system_->type);
+    const platform_backend_vtable_t* tmp_vtable = backend_vtable_get();
     if(platform_system_->vtable != tmp_vtable) {
         return false;
     }

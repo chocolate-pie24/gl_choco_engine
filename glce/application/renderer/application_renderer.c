@@ -45,7 +45,7 @@ struct application_renderer {
 
 static bool is_valid_shallow(const application_renderer_t* application_renderer_);
 
-application_result_t application_renderer_create(const renderer_config_t* renderer_config_, target_graphics_api_t target_api_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_) {
+application_result_t application_renderer_create(const renderer_config_t* renderer_config_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -74,7 +74,7 @@ application_result_t application_renderer_create(const renderer_config_t* render
     }
     memset(tmp_application_renderer, 0, sizeof(application_renderer_t));
 
-    ret_renderer_backend = renderer_backend_create(allocator_, target_api_, &tmp_renderer_backend_context);
+    ret_renderer_backend = renderer_backend_create(allocator_, &tmp_renderer_backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = app_rslt_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("application_renderer_create(%s) - Failed to create renderer backend.", app_rslt_to_str(ret));

@@ -22,7 +22,7 @@ typedef struct platform_system platform_system_t;
 typedef struct platform_event_view platform_event_view_t;
 typedef struct platform_system_config platform_system_config_t;
 
-platform_system_result_t platform_system_create(platform_type_t platform_type_, const platform_system_config_t* config_, linear_alloc_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_);
+platform_system_result_t platform_system_create(const platform_system_config_t* config_, linear_alloc_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_);
 
 void platform_system_deinitialize(platform_system_t* platform_system_);
 
