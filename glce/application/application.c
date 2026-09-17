@@ -64,8 +64,6 @@
  *
  */
 typedef struct app_state {
-    app_build_config_t build_config;
-
     // SubSystem Configuration
     renderer_config_t renderer_config;
     platform_system_config_t platform_system_config;
@@ -217,11 +215,6 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // ビルドコンフィグ
-    // TODO: ビルドシステムで指定するように変更する
-    tmp_app_state->build_config.selected_platform = PLATFORM_USE_GLFW;
-    tmp_app_state->build_config.selected_graphics_api = GRAPHICS_API_GL33;
-
     // Platform System
     INFO_MESSAGE("Creating platform system...");
     platform_system_config_initialize(&tmp_app_state->platform_system_config);
@@ -229,7 +222,7 @@ application_result_t application_create(void) {
     tmp_app_state->window_width = 1024;
     tmp_app_state->window_height = 768;
 
-    ret_platform_system = platform_system_create(tmp_app_state->build_config.selected_platform, &tmp_app_state->platform_system_config, tmp_app_state->linear_alloc, &tmp_app_state->frame_state.framebuffer_width, &tmp_app_state->frame_state.framebuffer_height, &tmp_app_state->platform_system);
+    ret_platform_system = platform_system_create(&tmp_app_state->platform_system_config, tmp_app_state->linear_alloc, &tmp_app_state->frame_state.framebuffer_width, &tmp_app_state->frame_state.framebuffer_height, &tmp_app_state->platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
         ret = app_rslt_convert_platform_system(ret_platform_system);
         ERROR_MESSAGE("application_create(%s) - platform_system_create failed.", app_rslt_to_str(ret));
@@ -260,7 +253,7 @@ application_result_t application_create(void) {
     // application renderer
     INFO_MESSAGE("Creating renderer system...");
     renderer_config_initialize(&tmp_app_state->renderer_config);
-    ret = application_renderer_create(&tmp_app_state->renderer_config, tmp_app_state->build_config.selected_graphics_api, tmp_app_state->linear_alloc, fs_path_fullpath_get(tmp_app_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_app_state->renderer);
+    ret = application_renderer_create(&tmp_app_state->renderer_config, tmp_app_state->linear_alloc, fs_path_fullpath_get(tmp_app_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_app_state->renderer);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", app_rslt_to_str(ret));
         goto cleanup;

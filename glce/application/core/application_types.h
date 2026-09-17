@@ -17,10 +17,6 @@
 extern "C" {
 #endif
 
-#include "engine/systems/platform_system/core/platform_system_types.h"
-
-#include "engine/systems/renderer/core/renderer_types.h"   // for target_graphics_api_t
-
 /**
  * @brief アプリケーション実行結果コード定義
  *
@@ -39,15 +35,6 @@ typedef enum {
     APPLICATION_FILE_READ_ERROR,    /**< ファイル読み込みエラー */
     APPLICATION_UNDEFINED_ERROR,    /**< 未定義エラー */
 } application_result_t;
-
-/**
- * @brief GLCEビルドコンフィグレーション値格納構造体
- *
- */
-typedef struct app_build_config {
-    platform_type_t selected_platform;              /**< 実行プラットフォーム選択 */
-    target_graphics_api_t selected_graphics_api;    /**< 使用グラフィックスAPI選択 */
-} app_build_config_t;
 
 #ifdef __cplusplus
 }

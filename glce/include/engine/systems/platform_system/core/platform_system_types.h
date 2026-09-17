@@ -24,14 +24,6 @@ typedef enum {
     PLATFORM_SYSTEM_UNDEFINED_ERROR,   /**< 実行結果: 未定義エラー */
 } platform_system_result_t;
 
-/**
- * @brief ウィンドウ、キーボード、マウスシステム処理のプラットフォーム種別定義
- *
- */
-typedef enum {
-    PLATFORM_USE_GLFW,  /**< プラットフォーム: GLFW */
-} platform_type_t;
-
 #ifdef __cplusplus
 }
 #endif

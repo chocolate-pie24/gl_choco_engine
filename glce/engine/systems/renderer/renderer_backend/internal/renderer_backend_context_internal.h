@@ -20,8 +20,6 @@ typedef struct renderer_texture_vtable renderer_texture_vtable_t;
  *
  */
 struct renderer_backend_context {
-    target_graphics_api_t target_api;                   /**< 使用グラフィックスAPI */
-
     const renderer_shader_vtable_t* shader_vtable;      /**< シェーダー機能提供vtable */
     const renderer_vao_vtable_t* vao_vtable;            /**< VAO機能提供vtable */
     const renderer_vbo_vtable_t* vbo_vtable;            /**< VBO機能提供vtable */

@@ -21,14 +21,6 @@ extern "C" {
 #include <stddef.h>
 
 /**
- * @brief GraphicsAPI種別リスト
- *
- */
-typedef enum {
-    GRAPHICS_API_GL33,  /**< OpenGL 3.3 */
-} target_graphics_api_t;
-
-/**
  * @brief 上位層で頂点情報データ種別の識別にグラフィックスAPI固有の型を使用しないで済むよう、頂点情報のデータ種別を定義
  *
  */
@@ -75,8 +67,6 @@ typedef struct draw_range {
     size_t first_vertex_count;
     size_t vertex_count;
 } draw_range_t;
-
-bool target_graphics_api_is_valid(target_graphics_api_t graphics_api_);
 
 bool buffer_usage_is_valid(buffer_usage_t usage_);
 

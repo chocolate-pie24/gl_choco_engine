@@ -30,12 +30,14 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_texture.h"
 
-static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_);
-static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_);
-static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_);
+#include "config/build_config.h"
 
-renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, target_graphics_api_t target_api_, renderer_backend_context_t** out_renderer_backend_context_) {
+static const renderer_shader_vtable_t* shader_vtable_get(void);
+static const renderer_vao_vtable_t* vao_vtable_get(void);
+static const renderer_vbo_vtable_t* vbo_vtable_get(void);
+static const renderer_texture_vtable_t* texture_vtable_get(void);
+
+renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, renderer_backend_context_t** out_renderer_backend_context_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
     renderer_backend_context_t* tmp_context = NULL;
@@ -44,8 +46,7 @@ renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, ta
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "out_renderer_backend_context_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "*out_renderer_backend_context_")
-    IF_ARG_FALSE_GOTO_CLEANUP(target_graphics_api_is_valid(target_api_), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "target_api_")
-
+ 
     // Simulation.
     ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_context);
     if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
@@ -56,7 +57,7 @@ renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, ta
     memset(tmp_context, 0, sizeof(renderer_backend_context_t));
 
     // shaderバックエンドメモリ確保+初期化
-    tmp_context->shader_vtable = shader_vtable_get(target_api_);
+    tmp_context->shader_vtable = shader_vtable_get();
     if(NULL == tmp_context->shader_vtable) {
         // ここは引数チェックが事前にされているので通らないため、カバレッジは100にならないが、許容
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
@@ -65,7 +66,7 @@ renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, ta
     }
 
     // vaoバックエンドメモリ確保+初期化
-    tmp_context->vao_vtable = vao_vtable_get(target_api_);
+    tmp_context->vao_vtable = vao_vtable_get();
     if(NULL == tmp_context->vao_vtable) {
         // ここは引数チェックが事前にされているので通らないため、カバレッジは100にならないが、許容
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
@@ -74,7 +75,7 @@ renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, ta
     }
 
     // vboバックエンドメモリ確保+初期化
-    tmp_context->vbo_vtable = vbo_vtable_get(target_api_);
+    tmp_context->vbo_vtable = vbo_vtable_get();
     if(NULL == tmp_context->vbo_vtable) {
         // ここは引数チェックが事前にされているので通らないため、カバレッジは100にならないが、許容
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
@@ -83,15 +84,13 @@ renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, ta
     }
 
     // Textureバックエンドメモリ確保+初期化
-    tmp_context->texture_vtable = texture_vtable_get(target_api_);
+    tmp_context->texture_vtable = texture_vtable_get();
     if(NULL == tmp_context->texture_vtable) {
         // ここは引数チェックが事前にされているので通らないため、カバレッジは100にならないが、許容
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
         ERROR_MESSAGE("renderer_backend_create(%s) - Failed to get texture vtable.", renderer_backend_rslt_to_str(ret));
         goto cleanup;
     }
-
-    tmp_context->target_api = target_api_;
 
     // commit.
     *out_renderer_backend_context_ = tmp_context;
@@ -112,38 +111,34 @@ cleanup:
     return;
 }
 
-static const renderer_shader_vtable_t* shader_vtable_get(target_graphics_api_t target_api_) {
-    switch(target_api_) {
-    case GRAPHICS_API_GL33:
-        return gl33_shader_vtable_get();
-    default:
-        return NULL;
-    }
+static const renderer_shader_vtable_t* shader_vtable_get(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    return gl33_shader_vtable_get();
+#else
+    return NULL;
+#endif
 }
 
-static const renderer_vao_vtable_t* vao_vtable_get(target_graphics_api_t target_api_) {
-    switch(target_api_) {
-    case GRAPHICS_API_GL33:
-        return gl33_vao_vtable_get();
-    default:
-        return NULL;
-    }
+static const renderer_vao_vtable_t* vao_vtable_get(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    return gl33_vao_vtable_get();
+#else
+    return NULL;
+#endif
 }
 
-static const renderer_vbo_vtable_t* vbo_vtable_get(target_graphics_api_t target_api_) {
-    switch(target_api_) {
-    case GRAPHICS_API_GL33:
-        return gl33_vbo_vtable_get();
-    default:
-        return NULL;
-    }
+static const renderer_vbo_vtable_t* vbo_vtable_get(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    return gl33_vbo_vtable_get();
+#else
+    return NULL;
+#endif
 }
 
-static const renderer_texture_vtable_t* texture_vtable_get(target_graphics_api_t target_api_) {
-    switch(target_api_) {
-    case GRAPHICS_API_GL33:
-        return gl33_texture_vtable_get();
-    default:
-        return NULL;
-    }
+static const renderer_texture_vtable_t* texture_vtable_get(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    return gl33_texture_vtable_get();
+#else
+    return NULL;
+#endif
 }

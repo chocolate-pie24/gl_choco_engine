@@ -7,15 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool target_graphics_api_is_valid(target_graphics_api_t graphics_api_) {
-    switch(graphics_api_) {
-    case GRAPHICS_API_GL33:
-        return true;
-    default:
-        return false;
-    }
-}
-
 bool buffer_usage_is_valid(buffer_usage_t usage_) {
     switch(usage_) {
     case BUFFER_USAGE_DYNAMIC:
