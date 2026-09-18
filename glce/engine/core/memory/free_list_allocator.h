@@ -59,6 +59,8 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
 
 free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
 
+free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_);
+
 #ifdef __cplusplus
 }
 #endif

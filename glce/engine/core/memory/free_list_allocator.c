@@ -19,13 +19,22 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";
 static const char* const s_rslt_str_overflow = "OVERFLOW";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
+// for allocate
 static free_list_allocator_result_t allocation_block_size_calc(const free_list_allocator_t* free_list_allocator_, size_t allocation_size_, size_t* out_block_size_);
 static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* free_list_allocator_, size_t required_block_size_, free_list_block_header_t** out_block_);
 static free_list_allocator_result_t free_block_split(free_list_allocator_t* free_list_allocator_, free_list_block_header_t* free_block_, size_t required_block_size_);
 static free_list_allocator_result_t free_block_allocate(free_list_allocator_t* free_list_allocator_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
 
+// for free
+static free_list_allocator_result_t allocation_block_from_ptr(const free_list_allocator_t* free_list_allocator_, const void* ptr_, free_list_block_header_t** out_block_);
+static free_list_allocator_result_t allocated_block_free(free_list_block_header_t* allocation_block_);
+static free_list_allocator_result_t free_block_merge_next(free_list_block_header_t* free_block_);
+static free_list_allocator_result_t free_block_coalesce(free_list_block_header_t* free_block_);
+
+// utility
 static const char* rslt_to_str(free_list_allocator_result_t rslt_);
 
+// validator
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_);
 
 free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* free_list_allocator_) {
@@ -135,6 +144,38 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     }
 
     *out_ptr_ = tmp_ptr;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    free_list_block_header_t* tmp_header = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
+
+    ret = allocation_block_from_ptr(free_list_allocator_, ptr_, &tmp_header);
+    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("free_list_allocator_free(%s) - allocation_block_from_ptr failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = allocated_block_free(tmp_header);
+    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("free_list_allocator_free(%s) - allocated_block_free failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = free_block_coalesce(tmp_header);
+    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("free_list_allocator_free(%s) - free_block_coalesce failed.", rslt_to_str(ret));
+        goto cleanup;
+    }
 
     ret = FREE_LIST_ALLOCATOR_SUCCESS;
 
@@ -296,6 +337,128 @@ static free_list_allocator_result_t free_block_allocate(free_list_allocator_t* f
     payload_address= (unsigned char*)free_block_ + free_list_allocator_->payload_offset;
 
     *out_ptr_ = payload_address;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static free_list_allocator_result_t allocation_block_from_ptr(const free_list_allocator_t* free_list_allocator_, const void* ptr_, free_list_block_header_t** out_block_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    void* tmp_header_ptr = NULL;
+    uintptr_t ptr_address = 0;
+    uintptr_t pool_address = 0;
+    uintptr_t ptr_offset = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_from_ptr", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_from_ptr", "ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_from_ptr", "out_block_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, rslt_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "allocation_block_from_ptr", "*out_block_")
+    ptr_address = (uintptr_t)ptr_;
+    pool_address = (uintptr_t)free_list_allocator_->memory_pool;
+    if(ptr_address < pool_address) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_block_from_ptr(%s) - Provided ptr_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    ptr_offset = ptr_address - pool_address;
+    if(ptr_offset < free_list_allocator_->payload_offset || ptr_offset >= free_list_allocator_->memory_pool_size) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_block_from_ptr(%s) - Provided ptr_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_header_ptr = (void*)(ptr_address - free_list_allocator_->payload_offset);
+
+    *out_block_ = (free_list_block_header_t*)tmp_header_ptr;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static free_list_allocator_result_t allocated_block_free(free_list_block_header_t* allocation_block_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocated_block_free", "allocation_block_")
+    if(FREE_LIST_BLOCK_STATE_ALLOCATED != allocation_block_->block_state) {
+        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("allocated_block_free(%s) - Provided allocation_block_ is not allocated.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    allocation_block_->allocation_size = 0;
+    allocation_block_->block_state = FREE_LIST_BLOCK_STATE_FREE;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static free_list_allocator_result_t free_block_merge_next(free_list_block_header_t* free_block_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    free_list_block_header_t* tmp_next = NULL;
+    size_t new_block_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_merge_next", "free_block_")
+    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->block_state) {
+        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("free_block_merge_next(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    if(NULL != free_block_->next) {
+        if(FREE_LIST_BLOCK_STATE_FREE != free_block_->next->block_state) {
+            ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
+            ERROR_MESSAGE("free_block_merge_next(%s) - Provided next block is not freed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        tmp_next = free_block_->next->next;
+
+        if((SIZE_MAX - free_block_->block_size) < free_block_->next->block_size) {
+            ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
+            ERROR_MESSAGE("free_block_merge_next(%s) - Provided free_list is corrupted.", rslt_to_str(ret));
+            goto cleanup;
+        }
+        new_block_size = free_block_->block_size + free_block_->next->block_size;
+
+        if(NULL != tmp_next) {
+            tmp_next->prev = free_block_;
+        }
+        free_block_->next = tmp_next;
+        free_block_->block_size = new_block_size;
+    }
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static free_list_allocator_result_t free_block_coalesce(free_list_block_header_t* free_block_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_coalesce", "free_block_")
+
+    if(NULL != free_block_->next && FREE_LIST_BLOCK_STATE_FREE == free_block_->next->block_state) {
+        ret = free_block_merge_next(free_block_);
+        if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
+            ERROR_MESSAGE("free_block_coalesce(%s) - free_block_merge_next failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
+    if(NULL != free_block_->prev && FREE_LIST_BLOCK_STATE_FREE == free_block_->prev->block_state) {
+        ret = free_block_merge_next(free_block_->prev);
+        if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
+            ERROR_MESSAGE("free_block_coalesce(%s) - free_block_merge_next failed.", rslt_to_str(ret));
+            goto cleanup;
+        }
+    }
 
     ret = FREE_LIST_ALLOCATOR_SUCCESS;
 
