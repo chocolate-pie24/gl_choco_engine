@@ -131,6 +131,15 @@ static bool free_list_block_state_is_valid(free_list_block_state_t state_);
 
 // free_list_allocator_initialize Validation Policy
 //
+// - initialize前のfree_list_allocator_はinitialized stateではないため、
+//   Preconditionsではfree_list_allocator_tのvalidatorを使用しない。
+// - PreconditionsではModule Boundary Contractおよびfree_list_allocator_initialize()固有のAPI Contractを直接検証する。
+// - Commit完了後、DEBUG_BUILD / TEST_BUILDではcanonical validatorを使用し、
+//   initializedなStable stateがModule Internal Contractを満たすことを検証する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* free_list_allocator_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -215,9 +224,17 @@ cleanup:
 // NOTE: free_list_allocator_deinitialize
 // validなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
 // engine private moduleであるためresult codeを返すことにする
-
+//
 // free_list_allocator_deinitialize Validation Policy
 //
+// - deinitialize対象はinitializedなStable stateであることを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   deinitialize前のfree_list_allocator_がModule Internal Contractを満たすことを検証する。
+// - deinitialize完了後はinitialized stateではなくなるため、Postcondition validationは行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -250,6 +267,13 @@ cleanup:
 
 // free_list_allocator_allocate Validation Policy
 //
+// - free_list_allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する。
+// - direct argument validationはstructural validationより前に行う。
+// - Commit完了後はStable stateに復帰していることをcanonical validatorで検証する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -272,7 +296,7 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
         goto cleanup;
@@ -322,11 +346,19 @@ cleanup:
     return ret;
 }
 
-//NOTE: 正常にallocateされたptr_で、かつvalidなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
+// NOTE: 正常にallocateされたptr_で、かつvalidなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
 // engine private moduleであるためresult codeを返すことにする
-
+//
 // free_list_allocator_free Validation Policy
 //
+// - free_list_allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する。
+// - ptr_は対象allocatorが現在保持するlive allocationのpayload先頭であることを確認する。
+// - allocation pointer validationは、allocatorのstructural validation後に行う。
+// - Commit完了後はStable stateに復帰していることをcanonical validatorで検証する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
