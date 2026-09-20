@@ -24,6 +24,10 @@
  * - allocationのalignmentはalignof(max_align_t)に固定する。
  * - free_list_allocator_tの実体はcallerが保持し、本moduleはそのstorageを確保・解放しない。
  *
+ * @todo
+ * - free_list_allocator_ptr_is_alive()
+ * - free_list_allocator_status_report()
+ *
  * @par AI支援:
  * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
@@ -59,7 +63,7 @@ typedef struct free_list_block_header {
     struct free_list_block_header* prev;
     struct free_list_block_header* next;
 
-    size_t allocation_size; // callerが要求した論理allocation size, FREE blockでは意味を持たない
+    size_t allocation_size; // callerが要求した論理allocation size, FREE blockでは0
     size_t block_size;      // headerを含む、そのblock全体の物理サイズ, FREE / ALLOCATEDの両方で常に有効
 
     free_list_block_state_t block_state;

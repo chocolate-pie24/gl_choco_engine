@@ -81,7 +81,8 @@
  * - Postcondition validationはPublic APIのCommit完了後、Stable stateへ復帰した時点で行う。
  * - Postcondition validatorはCommit途中のtransient stateには適用しない。
  *
- * - canonical validator自身はcorrupted stateを入力として受けても、
+ * - canonical validatorはfree_list_allocator_tおよびbacking memory poolのstorageが有効であることを前提とする。
+ * - canonical validator自身はmemory pool内のmetadataがcorrupted stateであっても、
  *   out-of-bounds access、invalid dereference、unbounded traversalを引き起こさないよう設計する。
  *
  * - DEBUG_BUILD / TEST_BUILD / RELEASE_BUILDごとのvalidation実行条件は、各Public APIのValidation Policyで個別に定義する。
@@ -124,6 +125,7 @@ static const char* rslt_to_str(free_list_allocator_result_t rslt_);
 // Validators
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_);
 static bool free_list_block_state_is_valid(free_list_block_state_t state_);
+static bool free_list_block_is_valid(const free_list_block_header_t* block_, size_t payload_offset_, size_t minimum_block_size_);
 
 // ============================================================
 // Public API
@@ -409,7 +411,6 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
 
     uintptr_t pool_address = 0;
     uintptr_t pool_end_address = 0;
-    uintptr_t expected_node_address = 0;
     uintptr_t node_address = 0;
     uintptr_t next_node_address = 0;
 
@@ -418,98 +419,74 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
     bool is_aligned = false;
     bool prev_node_is_free = false;
 
-    if(NULL == free_list_allocator_) {
-        return false;
-    }
     if(!is_valid_shallow(free_list_allocator_)) {
         return false;
     }
 
     pool_address = (uintptr_t)free_list_allocator_->memory_pool;
-    if((UINTPTR_MAX - pool_address) < free_list_allocator_->memory_pool_size) {
-        return false;
-    }
-
     pool_end_address = pool_address + free_list_allocator_->memory_pool_size;
-    node = free_list_allocator_->head;
-    expected_node_address = pool_address;
-    while(NULL != node) {
-        node_address = (uintptr_t)node;
+    node_address = pool_address;
 
-        // blockがpoolが先頭からgap/overlapなしで並んでいること
-        if(node_address != expected_node_address) {
+    while(node_address < pool_end_address) {
+        remaining_size = (size_t)(pool_end_address - node_address);
+
+        // block headerを安全に読み取れる領域が残っていること
+        if(remaining_size < sizeof(free_list_block_header_t)) {
             return false;
         }
-        if(node_address >= pool_end_address) {
-            return false;
-        }
+
+        // block headerのaddress alignment
         if(!memory_utility_is_aligned(node_address, alignof(max_align_t), &is_aligned)) {
             return false;
         }
         if(!is_aligned) {
             return false;
         }
-        if(node->prev != prev_node) {
+
+        node = (const free_list_block_header_t*)node_address;
+
+        // block単体のlocal invariant
+        if(!free_list_block_is_valid(node, free_list_allocator_->payload_offset, free_list_allocator_->minimum_block_size)) {
             return false;
         }
 
-        // block header + payload開始位置を保持できるだけの領域があるか
-        remaining_size = (size_t)(pool_end_address - node_address);
-        if(node->block_size < free_list_allocator_->payload_offset) {
-            return false;
-        }
+        // block全体がmemory pool内に収まること
         if(node->block_size > remaining_size) {
             return false;
         }
 
-        if(!free_list_block_state_is_valid(node->block_state)) {
+        // prev隣接状態
+        if(node->prev != prev_node) {
             return false;
         }
 
+        // Stable stateではFREE blockが隣接しないこと
         if(prev_node_is_free && FREE_LIST_BLOCK_STATE_FREE == node->block_state) {
             return false;
         }
 
-        if(FREE_LIST_BLOCK_STATE_ALLOCATED == node->block_state) {
-            if(0 == node->allocation_size) {
-                return false;
-            }
-            if(!memory_tag_is_valid(node->memory_tag)) {
-                return false;
-            }
-            if(node->allocation_size > (node->block_size - free_list_allocator_->payload_offset)) {
-                return false;
-            }
-        }
-
         next_node_address = node_address + node->block_size;
-        if(NULL == node->next) {
-            // tail blockはpool末尾であること
-            if(next_node_address != pool_end_address) {
+
+        if(next_node_address == pool_end_address) {
+            if(NULL != node->next) {
                 return false;
             }
         }
         else {
-            if((uintptr_t)node->next != next_node_address) {
+            if(NULL == node->next) {
                 return false;
             }
-
-            if(next_node_address >= pool_end_address) {
+            if((uintptr_t)node->next != next_node_address) {
                 return false;
             }
         }
 
         prev_node_is_free = (FREE_LIST_BLOCK_STATE_FREE == node->block_state);
-        expected_node_address = next_node_address;
         prev_node = node;
-        node = node->next;
+        node_address = next_node_address;
     }
 
-    if(expected_node_address != pool_end_address) {
-        return false;
-    }
-
-    return true;
+    return node_address == pool_end_address;
 }
 
 // ============================================================
@@ -828,13 +805,15 @@ static const char* rslt_to_str(free_list_allocator_result_t rslt_) {
 // Validators
 // ============================================================
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) {
+    size_t expected_payload_offset = 0;
+    size_t expected_minimum_block_size = 0;
+    uintptr_t pool_address = 0;
+    bool is_aligned = false;
+
     if(NULL == free_list_allocator_) {
         return false;
     }
     if(NULL == free_list_allocator_->memory_pool) {
-        return false;
-    }
-    if(0 == free_list_allocator_->memory_pool_size) {
         return false;
     }
     if(NULL == free_list_allocator_->head) {
@@ -843,24 +822,36 @@ static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) 
     if(free_list_allocator_->head != free_list_allocator_->memory_pool) {
         return false;
     }
-    if(0 == free_list_allocator_->payload_offset) {
+
+    if(!memory_utility_align_up(sizeof(free_list_block_header_t), alignof(max_align_t), &expected_payload_offset)) {
         return false;
     }
-    if(free_list_allocator_->payload_offset > free_list_allocator_->memory_pool_size) {
+    if(free_list_allocator_->payload_offset != expected_payload_offset) {
         return false;
     }
-    bool is_aligned = false;
-    uintptr_t pool_address = (uintptr_t)free_list_allocator_->memory_pool;
+
+    if((SIZE_MAX - expected_payload_offset) < alignof(max_align_t)) {
+        return false;
+    }
+    expected_minimum_block_size = expected_payload_offset + alignof(max_align_t);
+
+    if(free_list_allocator_->minimum_block_size != expected_minimum_block_size) {
+        return false;
+    }
+    if(free_list_allocator_->memory_pool_size < free_list_allocator_->minimum_block_size) {
+        return false;
+    }
+
+    pool_address = (uintptr_t)free_list_allocator_->memory_pool;
+
     if(!memory_utility_is_aligned(pool_address, alignof(max_align_t), &is_aligned)) {
         return false;
     }
     if(!is_aligned) {
         return false;
     }
-    if(!memory_utility_is_aligned(free_list_allocator_->payload_offset, alignof(max_align_t), &is_aligned)) {
-        return false;
-    }
-    if(!is_aligned) {
+
+    if((UINTPTR_MAX - pool_address) < free_list_allocator_->memory_pool_size) {
         return false;
     }
 
@@ -871,5 +862,35 @@ static bool free_list_block_state_is_valid(free_list_block_state_t state_) {
     if(FREE_LIST_BLOCK_STATE_FREE != state_ && FREE_LIST_BLOCK_STATE_ALLOCATED != state_) {
         return false;
     }
+    return true;
+}
+
+static bool free_list_block_is_valid(const free_list_block_header_t* block_, size_t payload_offset_, size_t minimum_block_size_) {
+    if(NULL == block_) {
+        return false;
+    }
+    if(block_->block_size < minimum_block_size_) {
+        return false;
+    }
+    if(!free_list_block_state_is_valid(block_->block_state)) {
+        return false;
+    }
+    if(FREE_LIST_BLOCK_STATE_FREE == block_->block_state) {
+        if(0 != block_->allocation_size) {
+            return false;
+        }
+    }
+    else {
+        if(0 == block_->allocation_size) {
+            return false;
+        }
+        if(block_->allocation_size > (block_->block_size - payload_offset_)) {
+            return false;
+        }
+        if(!memory_tag_is_valid(block_->memory_tag)) {
+            return false;
+        }
+    }
+
     return true;
 }
