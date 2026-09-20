@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
 #include "engine/core/memory/free_list_allocator.h"
 
 #include <stdbool.h>
@@ -11,6 +14,19 @@
 
 #include "engine/core/memory/memory_tag.h"
 
+/*
+ * Module Internal Contract
+ *
+ */
+
+/*
+ * Module Validation Policy
+ *
+ */
+
+// ============================================================
+// Private Constants
+// ============================================================
 static const char* const s_rslt_str_success = "SUCCESS";
 static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
 static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
@@ -19,30 +35,43 @@ static const char* const s_rslt_str_no_memory = "NO_MEMORY";
 static const char* const s_rslt_str_overflow = "OVERFLOW";
 static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
 
-// for allocate
+// ============================================================
+// Private Function Declarations
+// ============================================================
+// Allocation helpers
 static free_list_allocator_result_t allocation_block_size_calc(size_t payload_offset_, size_t allocation_size_, size_t* out_required_block_size_);
 static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* free_list_allocator_, size_t required_block_size_, free_list_block_header_t** out_free_block_);
-static free_list_allocator_result_t free_block_split(size_t minimum_block_size_, free_list_block_header_t* free_block_, size_t required_block_size_);
-static free_list_allocator_result_t free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
+static free_list_allocator_result_t allocation_is_ready(const free_list_block_header_t* allocation_block_, size_t required_block_size_, size_t allocation_size_, memory_tag_t memory_tag_);
+static void free_block_split(size_t minimum_block_size_, free_list_block_header_t* free_block_, size_t required_block_size_);
+static void free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
 
-// for free
+// Free helpers
 static bool allocation_ptr_is_valid(const free_list_allocator_t* free_list_allocator_, const void* ptr_);
-static free_list_allocator_result_t allocated_block_free(free_list_block_header_t* allocation_block_);
-static free_list_allocator_result_t free_block_merge_next(free_list_block_header_t* free_block_);
-static free_list_allocator_result_t free_block_coalesce(free_list_block_header_t* free_block_);
+static void allocated_block_free(free_list_block_header_t* allocation_block_);
+static void free_block_merge_next(free_list_block_header_t* free_block_);
+static void free_block_coalesce(free_list_block_header_t* free_block_);
 
-// utility
+// Utilities
 static const char* rslt_to_str(free_list_allocator_result_t rslt_);
 
-// validator
+// Validators
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_);
 static bool free_list_block_state_is_valid(free_list_block_state_t state_);
 
+// ============================================================
+// Public API
+// ============================================================
+
+// free_list_allocator_initialize Validation Policy
+//
 free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* free_list_allocator_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
+    free_list_block_header_t* initial_block = NULL;
+
     size_t payload_offset = 0;
     size_t minimum_block_size = 0;
+
     bool is_aligned = false;
 
     // Preconditions.
@@ -86,19 +115,22 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", rslt_to_str(ret));
         goto cleanup;
     }
+    initial_block = (free_list_block_header_t*)memory_pool_;
+
+    // Commit.
+    initial_block->block_size = memory_pool_size_;
+    initial_block->allocation_size = 0;
+    initial_block->block_state = FREE_LIST_BLOCK_STATE_FREE;
+    initial_block->next = NULL;
+    initial_block->prev = NULL;
 
     free_list_allocator_->memory_pool = memory_pool_;
     free_list_allocator_->memory_pool_size = memory_pool_size_;
     free_list_allocator_->payload_offset = payload_offset;
     free_list_allocator_->minimum_block_size = minimum_block_size;
+    free_list_allocator_->head = initial_block;
 
-    free_list_allocator_->head = (free_list_block_header_t*)memory_pool_;
-    free_list_allocator_->head->block_size = memory_pool_size_;
-    free_list_allocator_->head->allocation_size = 0;
-    free_list_allocator_->head->block_state = FREE_LIST_BLOCK_STATE_FREE;
-    free_list_allocator_->head->next = NULL;
-    free_list_allocator_->head->prev = NULL;
-
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -113,30 +145,52 @@ cleanup:
     return ret;
 }
 
-void free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_) {
+// NOTE: free_list_allocator_deinitialize
+// validなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
+// engine private moduleであるためresult codeを返すことにする
+
+// free_list_allocator_deinitialize Validation Policy
+//
+free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    // Preconditions.
     if(NULL == free_list_allocator_) {
-        return;
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Provided free_list_allocator_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
-        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(FREE_LIST_ALLOCATOR_DATA_CORRUPTED));
-        return;
+        ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        goto cleanup;
     }
 #endif
 
+    // Commit.
     free_list_allocator_->head = NULL;
     free_list_allocator_->payload_offset = 0;
     free_list_allocator_->memory_pool = NULL;
     free_list_allocator_->memory_pool_size = 0;
+    free_list_allocator_->minimum_block_size = 0;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
+// free_list_allocator_allocate Validation Policy
+//
 free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
-    size_t new_block_size = 0;
+    size_t required_block_size = 0;
     free_list_block_header_t* allocation_block = NULL;
     void* tmp_ptr = NULL;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "free_list_allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, rslt_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_list_allocator_allocate", "*out_ptr_")
@@ -158,30 +212,32 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     }
 #endif
 
-    ret = allocation_block_size_calc(free_list_allocator_->payload_offset, allocation_size_, &new_block_size);
+    // Prepare.
+    ret = allocation_block_size_calc(free_list_allocator_->payload_offset, allocation_size_, &required_block_size);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_block_size_calc failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = free_block_find_first_fit(free_list_allocator_, new_block_size, &allocation_block);
+    // Preflight.
+    ret = free_block_find_first_fit(free_list_allocator_, required_block_size, &allocation_block);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_find_first_fit failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret = free_block_split(free_list_allocator_->minimum_block_size, allocation_block, new_block_size);
+    // Commit eligibility.
+    ret = allocation_is_ready(allocation_block, required_block_size, allocation_size_, memory_tag_);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_split failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_is_ready failed.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    ret =free_block_allocate(free_list_allocator_->payload_offset, allocation_block, allocation_size_, memory_tag_, &tmp_ptr);
-    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_allocate failed.", rslt_to_str(ret));
-        goto cleanup;
-    }
+    // Commit.
+    free_block_split(free_list_allocator_->minimum_block_size, allocation_block, required_block_size);
+    free_block_allocate(free_list_allocator_->payload_offset, allocation_block, allocation_size_, memory_tag_, &tmp_ptr);
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -190,6 +246,7 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     }
 #endif
 
+    // Output.
     *out_ptr_ = tmp_ptr;
 
     ret = FREE_LIST_ALLOCATOR_SUCCESS;
@@ -198,13 +255,17 @@ cleanup:
     return ret;
 }
 
-// 正常にallocateされたptr_で、かつvalidなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
+//NOTE: 正常にallocateされたptr_で、かつvalidなfree_list_allocator_tであれば失敗することは基本ないためvoidにしても良いが、
 // engine private moduleであるためresult codeを返すことにする
+
+// free_list_allocator_free Validation Policy
+//
 free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
-    free_list_block_header_t* tmp_header = NULL;
+    free_list_block_header_t* allocation_block = NULL;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "free_list_allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -214,26 +275,21 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* fre
         goto cleanup;
     }
 #endif
+    // NOTE: allocation_ptr_is_validについてはパフォーマンス上の問題が出た場合はRELEASE_BUILDでの実行はやめる
     if(!allocation_ptr_is_valid(free_list_allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_free(%s) - Provided ptr_ is not valid.", rslt_to_str(ret));
         goto cleanup;
     }
 
-    tmp_header = (free_list_block_header_t*)((uintptr_t)ptr_ - free_list_allocator_->payload_offset);
+    // Prepare.
+    allocation_block = (free_list_block_header_t*)((uintptr_t)ptr_ - free_list_allocator_->payload_offset);
 
-    ret = allocated_block_free(tmp_header);
-    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_free(%s) - allocated_block_free failed.", rslt_to_str(ret));
-        goto cleanup;
-    }
+    // Commit.
+    allocated_block_free(allocation_block);
+    free_block_coalesce(allocation_block);
 
-    ret = free_block_coalesce(tmp_header);
-    if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_free(%s) - free_block_coalesce failed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -357,6 +413,9 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
     return true;
 }
 
+// ============================================================
+// Allocation Helpers
+// ============================================================
 static free_list_allocator_result_t allocation_block_size_calc(size_t payload_offset_, size_t allocation_size_, size_t* out_required_block_size_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -434,44 +493,65 @@ cleanup:
     return ret;
 }
 
-static free_list_allocator_result_t free_block_split(size_t minimum_block_size_, free_list_block_header_t* free_block_, size_t required_block_size_) {
+static free_list_allocator_result_t allocation_is_ready(const free_list_block_header_t* allocation_block_, size_t required_block_size_, size_t allocation_size_, memory_tag_t memory_tag_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocation_block_")
+    if(0 == required_block_size_) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(0 == allocation_size_) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided allocation_size_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(!memory_tag_is_valid(memory_tag_)) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided memory_tag_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(required_block_size_ > allocation_block_->block_size) {
+        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
+        goto cleanup;
+    }
+    if(FREE_LIST_BLOCK_STATE_FREE != allocation_block_->block_state) {
+        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+/*
+ * Contract:
+ * - free_list_allocator_allocate() のCommit eligibility成功後にのみ呼び出す。
+ * - free_block_はcanonical-validなallocatorに属するFREE blockを指す。
+ * - minimum_block_size_ はallocatorの有効なminimum block sizeである。
+ * - required_block_size_はallocation_block_size_calc()によって算出されたalignment済みのblock sizeである
+ *
+ * このhelperは上記contractを再検証しない。contract成立下では失敗しない。
+ */
+static void free_block_split(size_t minimum_block_size_, free_list_block_header_t* free_block_, size_t required_block_size_) {
     void* split_block_address = NULL;
     free_list_block_header_t* split_block = NULL;
     free_list_block_header_t* next_block = NULL;
 
     size_t remaining_block_size = 0;
 
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_split", "free_block_")
-    if(0 == minimum_block_size_) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_split(%s) - Provided minimum_block_size_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == required_block_size_) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_split(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(required_block_size_ > free_block_->block_size) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_split(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_split(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
     // Prepare.
     remaining_block_size = free_block_->block_size - required_block_size_;
     if(minimum_block_size_ > remaining_block_size) {
-        ret = FREE_LIST_ALLOCATOR_SUCCESS;
-        goto cleanup;
+        return;
     }
+
     split_block_address = (unsigned char*)free_block_ + required_block_size_;
     split_block = (free_list_block_header_t*)(split_block_address);
     next_block = free_block_->next;
@@ -488,42 +568,25 @@ static free_list_allocator_result_t free_block_split(size_t minimum_block_size_,
     split_block->next = next_block;
     free_block_->next = split_block;
     free_block_->block_size = required_block_size_;
-
-    ret = FREE_LIST_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
-static free_list_allocator_result_t free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_) {
-    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-
+/*
+ * Contract:
+ * - free_list_allocator_allocate() のCommit eligibility成功後にのみ呼び出す。
+ * - free_block_はallocation対象として選択されたFREE blockを指す。
+ * - free_block_のblock layoutとlinkageはCommit開始前に確立されたcontractを維持している。
+ * - payload_offset_はallocatorの有効なpayload offsetである。
+ * - allocation_size_ > 0 である。
+ * - allocation_size_ はfree_block_のpayload領域に収まる。
+ * - memory_tag_は有効なmemory tagである。
+ * - out_ptr_ != NULL である。
+ * - *out_ptr_ == NULL である。
+ *
+ * このhelperは上記contractを再検証しない。
+ * contract成立下では失敗しない。
+ */
+static void free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_) {
     void* payload_address = NULL;
-
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_allocate", "free_block_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, rslt_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_block_allocate", "*out_ptr_")
-    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_allocate(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == payload_offset_) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_allocate(%s) - Provided payload_offset_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == allocation_size_) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_allocate(%s) - Provided allocation_size_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(!memory_tag_is_valid(memory_tag_)) {
-        ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_allocate(%s) - Provided memory_tag_ is not valid.", rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // Prepare.
     payload_address = (unsigned char*)free_block_ + payload_offset_;
@@ -535,13 +598,11 @@ static free_list_allocator_result_t free_block_allocate(size_t payload_offset_, 
 
     // Output.
     *out_ptr_ = payload_address;
-
-    ret = FREE_LIST_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
+// ============================================================
+// Free Helpers
+// ============================================================
 static bool allocation_ptr_is_valid(const free_list_allocator_t* free_list_allocator_, const void* ptr_) {
     bool ret = false;
 
@@ -569,52 +630,41 @@ static bool allocation_ptr_is_valid(const free_list_allocator_t* free_list_alloc
     return ret;
 }
 
-static free_list_allocator_result_t allocated_block_free(free_list_block_header_t* allocation_block_) {
-    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocated_block_free", "allocation_block_")
-    if(FREE_LIST_BLOCK_STATE_ALLOCATED != allocation_block_->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("allocated_block_free(%s) - Provided allocation_block_ is not allocated.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
+/*
+ * Contract:
+ * - free_list_allocator_free()のPreconditions成功後、Commit中にのみ呼び出す。
+ * - allocation_block_ != NULLである。
+ * - allocation_block_は対象allocatorに属するALLOCATED blockを指す。
+ * - block layout、block size、prev / next linkageはCommit開始前に確立されたcontractを維持している。
+ *
+ * このhelperは上記contractを再検証しない。
+ * contract成立下では失敗しない。
+ */
+static void allocated_block_free(free_list_block_header_t* allocation_block_) {
     // Commit.
     allocation_block_->allocation_size = 0;
     allocation_block_->block_state = FREE_LIST_BLOCK_STATE_FREE;
-
-    ret = FREE_LIST_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
-static free_list_allocator_result_t free_block_merge_next(free_list_block_header_t* free_block_) {
-    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-
+/*
+ * Contract:
+ * - free_block_coalesce()がmerge条件を確認した直後に呼び出す。
+ * - free_block_ != NULLである。
+ * - free_block_はFREE blockを指す。
+ * - free_block_->next != NULLである。
+ * - free_block_->nextはFREE blockを指す。
+ * - free_block_とfree_block_->nextは物理的に隣接している。
+ * - 現在のfree_block_とnextが物理的に隣接し、linkageが整合している
+ * - 2 blockのblock_sizeの加算はoverflowしない。
+ *
+ * このhelperは上記contractを再検証しない。
+ * contract成立下では失敗しない。
+ */
+static void free_block_merge_next(free_list_block_header_t* free_block_) {
     free_list_block_header_t* next_block = NULL;
     free_list_block_header_t* next_next_block = NULL;
 
     size_t merged_block_size = 0;
-
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_merge_next", "free_block_")
-    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_merge_next(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(NULL == free_block_->next) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_merge_next(%s) - Next block is NULL.", rslt_to_str(ret));
-        goto cleanup;
-    }
-    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->next->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_merge_next(%s) - Provided next block is not freed.", rslt_to_str(ret));
-        goto cleanup;
-    }
 
     // Prepare.
     merged_block_size = free_block_->block_size + free_block_->next->block_size;    // validなfree_list_allocatorであればオーバーフローは起こらないためチェック不要
@@ -627,48 +677,33 @@ static free_list_allocator_result_t free_block_merge_next(free_list_block_header
     }
     free_block_->next = next_next_block;
     free_block_->block_size = merged_block_size;
-
-    ret = FREE_LIST_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
-static free_list_allocator_result_t free_block_coalesce(free_list_block_header_t* free_block_) {
-    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_coalesce", "free_block_")
-    if(FREE_LIST_BLOCK_STATE_FREE != free_block_->block_state) {
-        ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("free_block_coalesce(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
-        goto cleanup;
-    }
-
+/*
+ * Contract:
+ * - free_list_allocator_free()のCommit中、allocated_block_free()の直後にのみ呼び出す。
+ * - free_block_ != NULLである。
+ * - free_block_は直前のallocated_block_free()によってFREEへ遷移したblockを指す。
+ * - free_block_のblock_size、prev、nextはfree_list_allocator_free()のCommit開始時点から変更されていない。
+ *
+ * このhelperは上記contractを再検証しない。
+ * contract成立下では失敗しない。
+ */
+static void free_block_coalesce(free_list_block_header_t* free_block_) {
     // Commit.
     // 後方merge
     if(NULL != free_block_->next && FREE_LIST_BLOCK_STATE_FREE == free_block_->next->block_state) {
-        ret = free_block_merge_next(free_block_);
-        if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-            ERROR_MESSAGE("free_block_coalesce(%s) - free_block_merge_next failed.", rslt_to_str(ret));
-            goto cleanup;
-        }
+        free_block_merge_next(free_block_);
     }
     // 前方merge
     if(NULL != free_block_->prev && FREE_LIST_BLOCK_STATE_FREE == free_block_->prev->block_state) {
-        ret = free_block_merge_next(free_block_->prev);
-        if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-            ERROR_MESSAGE("free_block_coalesce(%s) - free_block_merge_next failed.", rslt_to_str(ret));
-            goto cleanup;
-        }
+        free_block_merge_next(free_block_->prev);
     }
-
-    ret = FREE_LIST_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
+// ============================================================
+// Utilities
+// ============================================================
 static const char* rslt_to_str(free_list_allocator_result_t rslt_) {
     switch(rslt_) {
     case FREE_LIST_ALLOCATOR_SUCCESS:
@@ -690,6 +725,9 @@ static const char* rslt_to_str(free_list_allocator_result_t rslt_) {
     }
 }
 
+// ============================================================
+// Validators
+// ============================================================
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) {
     if(NULL == free_list_allocator_) {
         return false;

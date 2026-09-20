@@ -54,13 +54,13 @@ typedef struct {
 // free_list_allocatorの生成にmallocを使用したくないためcreateではなくてinitialize
 free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* free_list_allocator_);
 
-void free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_);
-
-bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocator_);
+free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_);
 
 free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
 
 free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_);
+
+bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocator_);
 
 #ifdef __cplusplus
 }
