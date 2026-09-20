@@ -17,11 +17,78 @@
 /*
  * Module Internal Contract
  *
+ * Stable state:
+ * - initializedなfree_list_allocator_tは有効なmemory poolを参照する。
+ * - headはmemory_poolの先頭に配置されたblock headerを指す。
+ * - block chainはmemory_poolの先頭から末尾までをgap / overlapなく連続して覆う。
+ * - 各blockはmemory poolの範囲内に存在する。
+ * - 各block headerはalignof(max_align_t)にalignmentされている。
+ * - 各blockのprev / nextは物理的に隣接するblockとの関係と一致する。
+ * - head->prev == NULLである。
+ * - tail->next == NULLである。
+ * - tail blockの末尾はmemory poolの末尾と一致する。
+ *
+ * Block layout:
+ * - payload_offsetはfree_list_block_header_tの末尾をalignof(max_align_t)へ切り上げた値である。
+ * - minimum_block_sizeはpayload_offset + alignof(max_align_t)である。
+ * - block_sizeはminimum_block_size以上である。
+ * - block_sizeはblock headerを含むblock全体の物理サイズを表す。
+ * - allocation_sizeはcallerが要求した論理allocation sizeを表す。
+ *
+ * Block state:
+ * - block_stateはFREEまたはALLOCATEDのいずれかである。
+ * - ALLOCATED blockではallocation_size > 0である。
+ * - ALLOCATED blockではallocation_sizeはpayload領域内に収まる。
+ * - ALLOCATED blockではmemory_tagは有効な値である。
+ * - FREE blockではallocation_size == 0である。
+ * - FREE blockではmemory_tagの値に意味を持たせない。
+ * - Stable stateでは隣接するFREE blockは存在しない。
+ *
+ * Allocation:
+ * - allocationはmemory pool内からのみ行う。
+ * - allocation payloadはalignof(max_align_t)にalignmentされる。
+ * - allocation対象blockはfirst-fitで選択する。
+ * - split後の残余blockがminimum_block_size未満になる場合はsplitしない。
+ *
+ * State Transition:
+ * - Public APIのentry / exitではStable stateを維持する。
+ * - Commit中はprivate helperのContractで明示された範囲に限り、Stable stateの一部を一時的に満たさないtransient stateを許容する。
+ * - Commit完了時にはStable stateへ復帰する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
  */
 
 /*
  * Module Validation Policy
  *
+ * - ValidationはModule Internal Contractを基準として行う。
+ * - canonical validatorはinitializedなStable stateについて、Module Internal Contract全体の整合性を検証する。
+ * - shallow validatorはallocator rootと、deep traversalを行う前提として必要なlocal invariantのみを検証する。
+ *
+ * - public APIは、対象処理をmemory poolの範囲内で安全に完了するために必要なvalidation depthを選択する。
+ * - shallowで十分なAPIではcanonical validationを要求しない。
+ * - block chain traversalやdeep structureの整合性に依存するAPIでは、必要に応じてcanonical validationを使用する。
+ *
+ * - private helperはcanonical / shallow validatorを呼び出さない。
+ * - private helperはpublic API boundaryまたは直前のhelperによって自身のContractが成立していることを前提とする。
+ * - private helper自身が直接受け取る引数やstateについて、個別Contractで再検証しないと定めた項目は再検証しない。
+ *
+ * - Commit専用のvoid helperは、呼び出し前に必要な条件がすべて成立していることを前提とし、Commit開始後に通常の失敗経路を持たない。
+ * - Commit途中で許容されるtransient stateは、該当private helperのContractで明示する。
+ *
+ * - Postcondition validationはPublic APIのCommit完了後、Stable stateへ復帰した時点で行う。
+ * - Postcondition validatorはCommit途中のtransient stateには適用しない。
+ *
+ * - canonical validator自身はcorrupted stateを入力として受けても、
+ *   out-of-bounds access、invalid dereference、unbounded traversalを引き起こさないよう設計する。
+ *
+ * - DEBUG_BUILD / TEST_BUILD / RELEASE_BUILDごとのvalidation実行条件は、各Public APIのValidation Policyで個別に定義する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
  */
 
 // ============================================================

@@ -1,6 +1,33 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
+/**
+ * @file free_list_allocator.h
+ * @brief 外部から提供されたmemory poolを管理するFree List Allocator
+ *
+ * @details
+ * Free List Allocatorは、callerがあらかじめ確保した連続memory poolを
+ * backing storageとして使用し、その領域内でmemory allocation / freeを行う。
+ *
+ * 本moduleはEngine内部で使用するprivate moduleであり、
+ * Applicationレイヤーからは直接使用せず、上位のMemory Systemを経由して操作する。
+ *
+ * free_list_allocator_tはMemory System起動前に実体を生成する必要があるため、
+ * heap allocationを前提としたopaque typeにはせず、caller側で実体を保持可能な型として公開する。
+ *
+ * @section free_list_allocator_boundary_contract Module Boundary Contract
+ *
+ * - backing memory poolはcallerがあらかじめ確保し、initialize時に提供する。
+ * - Free List Allocatorはbacking memory poolを所有せず、その確保および解放を行わない。
+ * - backing memory poolはFree List Allocatorの使用期間中、有効な状態を維持しなければならない。
+ * - allocationされるmemoryは、initialize時に提供されたmemory pool内からのみ取得する。
+ * - allocationのalignmentはalignof(max_align_t)に固定する。
+ * - free_list_allocator_tの実体はcallerが保持し、本moduleはそのstorageを確保・解放しない。
+ *
+ * @par AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
 #ifndef GLCE_ENGINE_CORE_FREE_LIST_ALLOCATOR_H
 #define GLCE_ENGINE_CORE_FREE_LIST_ALLOCATOR_H
 
