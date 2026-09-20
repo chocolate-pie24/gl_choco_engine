@@ -42,10 +42,11 @@ typedef struct free_list_block_header {
 
 // memory_systemでfree_list_allocator_t allocatorとして宣言したい(memory_poolからのみメモリを確保したいため)ため、内部構造は.hに書く(ただしapplicationには公開しない)
 typedef struct {
-    size_t memory_pool_size;
     void* memory_pool;  // mutable borrowed pointer
 
-    size_t payload_offset;  // header先頭からuser payloadまでのサイズ(sizeof(free_list_block_header_t) + padding)
+    size_t memory_pool_size;
+    size_t minimum_block_size;  // 最小ブロックサイズ(payload_offset + alignof(max_align_t))
+    size_t payload_offset;      // header先頭からuser payloadまでのサイズ(sizeof(free_list_block_header_t) + padding)
 
     free_list_block_header_t* head;
 } free_list_allocator_t;
