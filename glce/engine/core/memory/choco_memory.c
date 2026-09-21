@@ -44,20 +44,20 @@ static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**<
 static const char* rslt_to_str(memory_system_result_t rslt_);
 static void* test_malloc(size_t size_); // TODO: 現状はlinear_allocatorと同じだが、将来的にFreeListになった際に挙動が変わるので、とりあえずコピーを置く
 
-memory_system_result_t memory_system_create(void) {
+memory_system_result_t choco_memory_create(void) {
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     memory_system_t* tmp = NULL;
 
     // Preconditions.
     if(NULL != s_mem_sys_ptr) {
         ret = MEMORY_SYSTEM_BAD_OPERATION;
-        ERROR_MESSAGE("memory_system_create(%s) - Memory system is already initialized.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_memory_create(%s) - Memory system is already initialized.", rslt_to_str(ret));
         goto cleanup;
     }
 
     // Simulation.
     tmp = (memory_system_t*)test_malloc(sizeof(memory_system_t));
-    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_create", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "choco_memory_create", "tmp")
     memset(tmp, 0, sizeof(memory_system_t));
 
     tmp->total_allocated = 0;
@@ -82,12 +82,12 @@ cleanup:
     return ret;
 }
 
-void memory_system_destroy(void) {
+void choco_memory_destroy(void) {
     if(NULL == s_mem_sys_ptr) {
         goto cleanup;
     }
     if(0 != s_mem_sys_ptr->total_allocated) {
-        WARN_MESSAGE("memory_system_destroy - total_allocated != 0. Check memory leaks.");
+        WARN_MESSAGE("choco_memory_destroy - total_allocated != 0. Check memory leaks.");
     }
     s_mem_sys_ptr->total_allocated = 0;
     for(size_t i = 0; i != MEMORY_TAG_MAX; ++i) {

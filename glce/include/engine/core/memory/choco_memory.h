@@ -61,144 +61,14 @@ typedef enum {
     MEMORY_SYSTEM_NO_MEMORY,        /**< メモリ不足 */
 } memory_system_result_t;
 
-/**
- * @brief メモリシステムを起動する
- *
- * @note
- * memory_system_createでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスを初期化する
- * このため、メモリシステムが既に初期化済みであった場合はMEMORY_SYSTEM_BAD_OPERATIONを返す
- * memory_system_createを再度実行する際には、memory_system_destroyを呼び出してから使用すること
- *
- * 使用例:
- * @code{.c}
- * memory_system_result_t ret = memory_system_create();   // メモリシステム内部状態管理構造体インスタンスが初期化される
- * @endcode
- *
- * @retval MEMORY_SYSTEM_BAD_OPERATION メモリシステムが既に初期化済み
- * @retval MEMORY_SYSTEM_NO_MEMORY     メモリシステム用のメモリ確保に失敗
- * @retval MEMORY_SYSTEM_SUCCESS       メモリシステムの初期化に成功し、正常終了
- *
- * @see memory_system_destroy
- */
-memory_system_result_t memory_system_create(void);
+memory_system_result_t choco_memory_create(void);
 
-/**
- * @brief メモリシステムを停止する
- *
- * @note
- * memory_system_destroyでは、シングルトンで定義されたメモリシステム状態管理構造体インスタンスのメモリを破棄する
- * このため、memory_system_destroyを呼び出した後で、memory_system_allocate, memory_system_freeを呼び出すことはできない
- * 再度memory_system_allocate, memory_system_freeを使用する際には、memory_system_createを実行してからにすること
- *
- * @note
- * - 2重destroyは許可する
- * - この関数を呼び出した時点でメモリシステムが管理しているメモリ使用量が0でない場合は、ワーニングメッセージを出力し、メモリシステムを破棄する
- *
- * 使用例:
- * @code{.c}
- * memory_system_result_t ret = memory_system_create();
- * memory_system_destroy();
- * memory_system_destroy(); // 2重destroyは許可
- * @endcode
- *
- * @see memory_system_create
- */
-void memory_system_destroy(void);
+void choco_memory_destroy(void);
 
-/**
- * @brief 容量size_のメモリを確保し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する
- *
- * @note
- * - 割り当ての際にはmemory_tag_tを指定することで、各メモリタグごとの合計割り当てサイズと総メモリ割り当てサイズをトラッキングする
- * - 本関数を使用する前に、memory_system_createでメモリシステムの初期化を行うこと
- * - max_align_tでアラインされたメモリが割り当てられる
- *
- * @param[in] size_ 割り当てサイズ
- * @param[in] mem_tag_ メモリタグ
- * @param[out] out_ptr_ 割り当てたメモリ格納先(ダブルポインタを渡す)
- *
- * 使用例:
- * @code{.c}
- * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
- * // エラー処理
- *
- * // メモリ割り当て
- * void* ptr = NULL;
- * ret = memory_system_allocate(128, MEMORY_TAG_SYSTEM, &ptr); // 128バイト割り当て
- * // エラー処理
- * @endcode
- *
- * @retval MEMORY_SYSTEM_INVALID_ARGUMENT 以下のいずれか
- * - out_ptr_ == NULL
- * - *out_ptr_ != NULL
- * - mem_tag_ >= MEMORY_TAG_MAX
- * @retval MEMORY_SYSTEM_LIMIT_EXCEEDED 以下のいずれか
- * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
- * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
- * @retval MEMORY_SYSTEM_NO_MEMORY        メモリ割り当て失敗
- * @retval MEMORY_SYSTEM_BAD_OPERATION メモリシステム未初期化
- * @retval MEMORY_SYSTEM_SUCCESS          size_ == 0または割り当てに成功し正常終了
- *
- * @see memory_tag_t
- * @see memory_system_create
- */
 memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
-/**
- * @brief ptr_が保持する領域のメモリを解放し、mem_tag_で指定されたメモリタグのメモリ使用量を更新する
- *
- * @note 引数にはvoid*型を渡しており、ptr_のメモリ開放後、NULLをセットすることはできない。
- * この仕様は、標準ライブラリのfree()の仕様に合わせた。なので、呼び出し側でメモリの解放後、NULLをセットすること。
- *
- * @note
- * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
- * - NULL == ptr_でワーニングを出力し、何もしない
- * - mem_tag_ >= MEMORY_TAG_MAXでワーニングを出力し、何もしない
- * - mem_tag_allocatedがマイナスとなる量をfreeしようとするとワーニングを出力し、何もしない
- * - total_allocatedがマイナスとなる量をfreeしようとするとワーニングを出力し、何もしない
- *
- *
- * 使用例:
- * @code{.c}
- * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
- *
- * // メモリ割り当て
- * void* ptr = NULL;
- * ret = memory_system_allocate(128, MEMORY_TAG_SYSTEM, &ptr); // 128バイト割り当て
- * // エラー処理
- *
- * // メモリ解放
- * memory_system_free(ptr, 128, MEMORY_TAG_SYSTEM);
- * ptr = NULL;
- * @endcode
- *
- * @param[in] ptr_ 解放メモリアドレス
- * @param[in] size_ 解放サイズ
- * @param[in] mem_tag_ メモリタグ
- *
- * @see memory_tag_t
- */
 void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
 
-/**
- * @brief メモリシステムが管理しているメモリ使用量状態を標準出力に出力する
- *
- * @note
- * - メモリシステムが未初期化の場合はワーニングを出力し、何もしない
- *
- * 使用例:
- * @code{.c}
- * memory_system_result_t ret = memory_system_create(); // メモリシステム初期化
- *
- * // メモリ割り当て
- * void* ptr = NULL;
- * ret = memory_system_allocate(128, MEMORY_TAG_SYSTEM, &ptr); // 128バイト割り当て
- *
- * // メモリ割り当て状態をレポート
- * memory_system_report();
- * @endcode
- *
- */
 void memory_system_report(void);
 
 #ifdef __cplusplus

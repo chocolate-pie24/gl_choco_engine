@@ -161,7 +161,7 @@ application_result_t application_create(void) {
     }
 
     // Memory System
-    ret_mem_sys = memory_system_create();
+    ret_mem_sys = choco_memory_create();
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", app_rslt_to_str(ret));
@@ -294,7 +294,7 @@ cleanup:
             memory_system_free(tmp_app_state, sizeof(tmp_app_state), MEMORY_TAG_SYSTEM);
             tmp_app_state = NULL;
         }
-        memory_system_destroy();
+        choco_memory_destroy();
     }
 
     return ret;
@@ -336,7 +336,7 @@ void application_destroy(void) {
     s_app_state = NULL;
     INFO_MESSAGE("Freed all memory.");
     memory_system_report();
-    memory_system_destroy();
+    choco_memory_destroy();
     // end cleanup all systems.
 
     INFO_MESSAGE("Application destroyed successfully.");
