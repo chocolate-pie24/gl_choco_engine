@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#ifndef GLCE_ENGINE_CORE_MEMORY_MEMORY_TAG_H
-#define GLCE_ENGINE_CORE_MEMORY_MEMORY_TAG_H
+#ifndef GLCE_ENGINE_MEMORY_CORE_MEMORY_TAG_H
+#define GLCE_ENGINE_MEMORY_CORE_MEMORY_TAG_H
 
 #ifdef __cplusplus
 extern "C" {

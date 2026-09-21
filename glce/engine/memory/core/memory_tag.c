@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#include "engine/core/memory/memory_tag.h"
+#include "engine/memory/core/memory_tag.h"
 
 #include <stdbool.h>
 

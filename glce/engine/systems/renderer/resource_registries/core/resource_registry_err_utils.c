@@ -13,7 +13,7 @@
  */
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 

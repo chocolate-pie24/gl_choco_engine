@@ -3,7 +3,7 @@
 
 #include "engine/systems/platform_system/core/platform_system_err_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 

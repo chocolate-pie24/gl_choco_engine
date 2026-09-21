@@ -10,11 +10,11 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "engine/core/memory/linear_allocator.h"
-
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 

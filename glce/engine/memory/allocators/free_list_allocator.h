@@ -32,8 +32,8 @@
  * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_CORE_FREE_LIST_ALLOCATOR_H
-#define GLCE_ENGINE_CORE_FREE_LIST_ALLOCATOR_H
+#ifndef GLCE_ENGINE_MEMORY_ALLOCATORS_FREE_LIST_ALLOCATOR_H
+#define GLCE_ENGINE_MEMORY_ALLOCATORS_FREE_LIST_ALLOCATOR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +42,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "engine/core/memory/memory_tag.h"
+#include "engine/memory/core/memory_tag.h"
 
 typedef enum {
     FREE_LIST_ALLOCATOR_SUCCESS = 0,

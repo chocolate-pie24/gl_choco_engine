@@ -12,9 +12,10 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/window_event.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/flight_camera.h"

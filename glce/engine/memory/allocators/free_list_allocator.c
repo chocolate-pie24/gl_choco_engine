@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#include "engine/core/memory/free_list_allocator.h"
+#include "engine/memory/allocators/free_list_allocator.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,7 +12,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/memory_utility.h"
 
-#include "engine/core/memory/memory_tag.h"
+#include "engine/memory/core/memory_tag.h"
 
 /*
  * Module Internal Contract

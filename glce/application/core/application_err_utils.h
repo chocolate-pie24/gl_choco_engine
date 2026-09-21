@@ -20,8 +20,9 @@ extern "C" {
 #include "application/core/application_types.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 

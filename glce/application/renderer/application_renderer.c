@@ -15,7 +15,8 @@
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
 #include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 

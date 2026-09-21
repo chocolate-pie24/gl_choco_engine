@@ -13,7 +13,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 

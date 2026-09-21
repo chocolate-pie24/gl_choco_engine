@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 

@@ -9,7 +9,8 @@ extern "C" {
 #endif
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

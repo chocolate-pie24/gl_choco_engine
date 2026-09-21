@@ -10,7 +10,7 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 

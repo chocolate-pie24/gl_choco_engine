@@ -3,7 +3,7 @@
 
 #include "engine/systems/event_system/core/event_system_err_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 

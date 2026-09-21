@@ -1,23 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-/** @ingroup core
- *
- * @file linear_allocator.c
- * @author chocolate-pie24
- * @brief サブシステム等、ライフサイクルが固定で、個別のメモリ開放が不要なメモリ確保に対応するリニアアロケータモジュールの実装
- *
- * @date 2025-09-16
- *
- */
+#include "engine/memory/allocators/linear_allocator.h"
+
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h> // for malloc TODO: remove this!!
 #include <string.h> // for memset
-
-#include "engine/core/memory/linear_allocator.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"

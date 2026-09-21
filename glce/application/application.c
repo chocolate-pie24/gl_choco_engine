@@ -28,11 +28,11 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
-
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
+
+#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -77,7 +77,7 @@ typedef struct app_state {
     // 実行ファイルパス
     fs_path_t* executable_directory;
 
-    // core/memory/linear_allocator
+    // Linear Allocator
     size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
     size_t linear_alloc_align_req;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
     size_t linear_alloc_pool_size;  /**< リニアアロケータ構造体インスタンスが使用するメモリプールのサイズ */

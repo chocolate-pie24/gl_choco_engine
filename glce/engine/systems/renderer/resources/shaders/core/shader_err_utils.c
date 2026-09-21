@@ -4,7 +4,8 @@
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 

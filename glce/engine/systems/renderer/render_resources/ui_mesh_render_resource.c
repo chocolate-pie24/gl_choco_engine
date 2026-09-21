@@ -15,8 +15,9 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 
-#include "engine/core/memory/linear_allocator.h"
 #include "engine/core/geometry_primitive/vertex.h"
+
+#include "engine/memory/allocators/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 
