@@ -26,6 +26,8 @@ typedef enum {
     MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } memory_tag_t;
 
+const char* memory_tag_c_str(memory_tag_t memory_tag_);
+
 bool memory_tag_is_valid(memory_tag_t memory_tag_);
 
 #ifdef __cplusplus

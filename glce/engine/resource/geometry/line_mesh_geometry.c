@@ -59,7 +59,7 @@ resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, 
         goto cleanup;
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    ret_memory_system = choco_memory_allocate(sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Failed to allocate line_mesh_geometry_t instance.", resource_rslt_to_str(ret));
@@ -110,7 +110,7 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
         goto cleanup;
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    ret_memory_system = choco_memory_allocate(sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Failed to allocate line_mesh_geometry_t instance.", resource_rslt_to_str(ret));
@@ -234,7 +234,7 @@ static resource_result_t initialize_from_vertices(line_mesh_geometry_t* geometry
         ERROR_MESSAGE("initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(line_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = memory_system_allocate(sizeof(line_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    ret_memory_system = choco_memory_allocate(sizeof(line_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(line_vertex_t));
@@ -253,7 +253,7 @@ static resource_result_t initialize_from_vertices(line_mesh_geometry_t* geometry
 
 cleanup:
     if(NULL != tmp_vertices && RESOURCE_DATA_CORRUPTED != ret) {
-        memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
+        choco_memory_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
     }
     return ret;
@@ -283,7 +283,7 @@ static resource_result_t initialize_from_aabbs(line_mesh_geometry_t* geometry_, 
         ERROR_MESSAGE("initialize_from_aabbs(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = memory_system_allocate(sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    ret_memory_system = choco_memory_allocate(sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("initialize_from_aabbs(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(line_vertex_t));
@@ -323,18 +323,18 @@ static resource_result_t initialize_from_aabbs(line_mesh_geometry_t* geometry_, 
 
 cleanup:
     if(NULL != tmp_vertices && RESOURCE_DATA_CORRUPTED != ret) {
-        memory_system_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
+        choco_memory_free(tmp_vertices, sizeof(line_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
     }
     return ret;
 }
 
 static void destroy_unchecked(line_mesh_geometry_t** geometry_) {
-    memory_system_free((*geometry_)->vertices, sizeof(line_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
+    choco_memory_free((*geometry_)->vertices, sizeof(line_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
     (*geometry_)->vertices = NULL;
     (*geometry_)->vertex_count = 0;
 
-    memory_system_free(*geometry_, sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+    choco_memory_free(*geometry_, sizeof(line_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
     *geometry_ = NULL;
 }
 

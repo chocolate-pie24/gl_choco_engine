@@ -67,10 +67,10 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
         }
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(flight_camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_flight_camera);
+    ret_memory_system = choco_memory_allocate(sizeof(flight_camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_flight_camera);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = camera_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("flight_camera_create(%s) - memory_system_allocate failed.", camera_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_create(%s) - choco_memory_allocate failed.", camera_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_flight_camera, 0, sizeof(flight_camera_t));
@@ -607,6 +607,6 @@ static void destroy_unchecked(flight_camera_t** flight_camera_) {
         return;
     }
     camera_destroy(&(*flight_camera_)->camera);
-    memory_system_free(*flight_camera_, sizeof(flight_camera_t), MEMORY_TAG_CAMERA);
+    choco_memory_free(*flight_camera_, sizeof(flight_camera_t), MEMORY_TAG_CAMERA);
     *flight_camera_ = NULL;
 }

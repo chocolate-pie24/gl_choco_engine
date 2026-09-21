@@ -470,7 +470,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     }
     node_pool_size = sizeof(node_t) * max_node_count;
 
-    ret_memory = memory_system_allocate(sizeof(range_allocator_t), MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator);
+    ret_memory = choco_memory_allocate(sizeof(range_allocator_t), MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = rslt_convert_choco_memory(ret_memory);
         ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=allocator_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", rslt_to_str(ret), sizeof(range_allocator_t), (int)ret_memory);
@@ -478,7 +478,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     }
     memset(tmp_range_allocator, 0, sizeof(range_allocator_t));
 
-    ret_memory = memory_system_allocate(node_pool_size, MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator->node_pool);
+    ret_memory = choco_memory_allocate(node_pool_size, MEMORY_TAG_RENDERER, (void**)&tmp_range_allocator->node_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = rslt_convert_choco_memory(ret_memory);
         ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=node_pool_allocation_failed, node_pool_size=%zu, max_node_count=%zu, node_size=%zu, memory_system_result=%d", rslt_to_str(ret), node_pool_size, max_node_count, sizeof(node_t), (int)ret_memory);
@@ -520,10 +520,10 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
 cleanup:
     if(NULL != tmp_range_allocator) {
         if(NULL != tmp_range_allocator->node_pool) {
-            memory_system_free((void*)tmp_range_allocator->node_pool, node_pool_size, MEMORY_TAG_RENDERER);
+            choco_memory_free((void*)tmp_range_allocator->node_pool, node_pool_size, MEMORY_TAG_RENDERER);
             tmp_range_allocator->node_pool = NULL;
         }
-        memory_system_free((void*)tmp_range_allocator, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
+        choco_memory_free((void*)tmp_range_allocator, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
         tmp_range_allocator = NULL;
     }
     return ret;
@@ -538,14 +538,14 @@ void range_allocator_destroy(range_allocator_t** range_allocator_) {
     }
 
     if(NULL != (*range_allocator_)->node_pool) {
-        memory_system_free((void*)(*range_allocator_)->node_pool, sizeof(node_t) * (*range_allocator_)->max_node_count, MEMORY_TAG_RENDERER);
+        choco_memory_free((void*)(*range_allocator_)->node_pool, sizeof(node_t) * (*range_allocator_)->max_node_count, MEMORY_TAG_RENDERER);
         (*range_allocator_)->node_pool = NULL;
     }
 
     (*range_allocator_)->max_node_count = 0;
     (*range_allocator_)->memory_pool_size = 0;
 
-    memory_system_free((void*)*range_allocator_, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
+    choco_memory_free((void*)*range_allocator_, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
     *range_allocator_ = NULL;
 }
 

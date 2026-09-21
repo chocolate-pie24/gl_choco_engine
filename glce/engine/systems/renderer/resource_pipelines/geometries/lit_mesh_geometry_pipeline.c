@@ -90,7 +90,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
         goto cleanup;
     }
     vbo_written = true;
-    memory_system_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
+    choco_memory_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
     vertices = NULL;
 
     ret_registry = lit_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
@@ -116,7 +116,7 @@ cleanup:
     }
     lit_mesh_geometry_destroy(&geometry);
     if(NULL != vertices) {
-        memory_system_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
+        choco_memory_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
         vertices = NULL;
     }
     return ret;

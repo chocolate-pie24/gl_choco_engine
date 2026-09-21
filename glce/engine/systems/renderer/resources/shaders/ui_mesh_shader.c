@@ -96,7 +96,7 @@ shader_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_contex
     }
 
     // ui shader構造体インスタンス生成
-    ret_memory_system = memory_system_allocate(sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_ui_mesh_shader);
+    ret_memory_system = choco_memory_allocate(sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_ui_mesh_shader);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = shader_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("ui_mesh_shader_create(%s) - Failed to allocate memory for tmp_ui_mesh_shader.", shader_rslt_to_str(ret));
@@ -404,7 +404,7 @@ static void destroy_unchecked(ui_mesh_shader_t** ui_mesh_shader_) {
     if(NULL != (*ui_mesh_shader_)->shader) {
         renderer_backend_shader_destroy((*ui_mesh_shader_)->backend_context, &(*ui_mesh_shader_)->shader);
     }
-    memory_system_free(*ui_mesh_shader_, sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*ui_mesh_shader_, sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER);
     *ui_mesh_shader_ = NULL;
 }
 

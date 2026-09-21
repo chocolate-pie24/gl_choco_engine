@@ -86,7 +86,7 @@ static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** vbo_) 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "vbo_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "vbo_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("gl33_vbo_create(%s) - gl33_vbo_create failed.", renderer_backend_rslt_to_str(ret));
@@ -117,7 +117,7 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vbo_) {
     }
     mock_glDeleteBuffers(1, &(*vbo_)->vbo_handle);
 
-    memory_system_free(*vbo_, sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*vbo_, sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER);
 
     *vbo_ = NULL;
 

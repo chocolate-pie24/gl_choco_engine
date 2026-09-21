@@ -84,7 +84,7 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
         goto cleanup;
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_camera);
+    ret_memory_system = choco_memory_allocate(sizeof(camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_camera);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = camera_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", camera_rslt_to_str(ret));
@@ -579,6 +579,6 @@ static void destroy_unchecked(camera_t** camera_) {
     if(NULL == *camera_) {
         return;
     }
-    memory_system_free(*camera_, sizeof(camera_t), MEMORY_TAG_CAMERA);
+    choco_memory_free(*camera_, sizeof(camera_t), MEMORY_TAG_CAMERA);
     *camera_ = NULL;
 }

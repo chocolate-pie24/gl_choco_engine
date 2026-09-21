@@ -49,10 +49,10 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
         goto cleanup;
     }
 
-    ret_memory = memory_system_allocate(sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
+    ret_memory = choco_memory_allocate(sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = texture_gpu_resource_rslt_convert_choco_memory(ret_memory);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - memory_system_allocate failed.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - choco_memory_allocate failed.", texture_gpu_resource_rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_texture_gpu_resource, 0, sizeof(texture_gpu_resource_t));
@@ -115,7 +115,7 @@ cleanup:
             renderer_backend_texture_destroy(backend_context_, &tmp_texture_gpu_resource->backend_texture);
         }
         if(NULL != tmp_texture_gpu_resource) {
-            memory_system_free(tmp_texture_gpu_resource, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
+            choco_memory_free(tmp_texture_gpu_resource, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
             tmp_texture_gpu_resource = NULL;
         }
     }
@@ -136,7 +136,7 @@ void texture_gpu_resource_destroy(texture_gpu_resource_t** texture_gpu_resource_
     }
 #endif
     renderer_backend_texture_destroy((*texture_gpu_resource_)->backend_context, &(*texture_gpu_resource_)->backend_texture);
-    memory_system_free(*texture_gpu_resource_, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*texture_gpu_resource_, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
     *texture_gpu_resource_ = NULL;
 }
 

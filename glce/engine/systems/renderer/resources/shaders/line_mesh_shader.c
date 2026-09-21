@@ -96,7 +96,7 @@ shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_cont
     }
 
     // line shader構造体インスタンス生成
-    ret_memory = memory_system_allocate(sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_line_mesh_shader);
+    ret_memory = choco_memory_allocate(sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_line_mesh_shader);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = shader_rslt_convert_choco_memory(ret_memory);
         ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to allocate memory for tmp_line_mesh_shader.", shader_rslt_to_str(ret));
@@ -437,7 +437,7 @@ static void destroy_unchecked(line_mesh_shader_t** line_mesh_shader_) {
     if(NULL != (*line_mesh_shader_)->shader) {
         renderer_backend_shader_destroy((*line_mesh_shader_)->backend_context, &(*line_mesh_shader_)->shader);
     }
-    memory_system_free(*line_mesh_shader_, sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*line_mesh_shader_, sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER);
     *line_mesh_shader_ = NULL;
 }
 

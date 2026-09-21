@@ -101,7 +101,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     }
     capacity = stride * max_element_count_;
 
-    ret_mem = memory_system_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
+    ret_mem = choco_memory_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = rslt_convert_mem_sys(ret_mem);
         ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", rslt_to_str(ret));
@@ -109,7 +109,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     }
     memset(tmp_queue, 0, sizeof(*tmp_queue));
 
-    ret_mem = memory_system_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
+    ret_mem = choco_memory_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = rslt_convert_mem_sys(ret_mem);
         ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", rslt_to_str(ret));
@@ -144,10 +144,10 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 cleanup:
     if(NULL != tmp_queue) {
         if(NULL != tmp_queue->memory_pool) {    // TODO: 現状ではallocate以降でエラーを踏ませる経路がないためカバレッジは未達となる(TODO:処理後に対応)
-            memory_system_free(tmp_queue->memory_pool, capacity, MEMORY_TAG_RING_QUEUE);
+            choco_memory_free(tmp_queue->memory_pool, capacity, MEMORY_TAG_RING_QUEUE);
             tmp_queue->memory_pool = NULL;
         }
-        memory_system_free(tmp_queue, sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE);
+        choco_memory_free(tmp_queue, sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE);
         tmp_queue = NULL;
     }
     return ret;
@@ -161,10 +161,10 @@ void ring_queue_destroy(ring_queue_t** ring_queue_) {
         goto cleanup;
     }
     if(NULL != (*ring_queue_)->memory_pool) {
-        memory_system_free((*ring_queue_)->memory_pool, (*ring_queue_)->capacity, MEMORY_TAG_RING_QUEUE);
+        choco_memory_free((*ring_queue_)->memory_pool, (*ring_queue_)->capacity, MEMORY_TAG_RING_QUEUE);
         (*ring_queue_)->memory_pool = NULL;
     }
-    memory_system_free(*ring_queue_, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
+    choco_memory_free(*ring_queue_, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
     *ring_queue_ = NULL;
 cleanup:
     return;

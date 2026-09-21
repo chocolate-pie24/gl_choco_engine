@@ -84,7 +84,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_) {
 
 cleanup:
     if(NULL != tmp_string) {
-        memory_system_free(tmp_string, sizeof(*tmp_string), MEMORY_TAG_STRING);
+        choco_memory_free(tmp_string, sizeof(*tmp_string), MEMORY_TAG_STRING);
         tmp_string = NULL;
     }
     return ret;
@@ -153,10 +153,10 @@ void choco_string_destroy(choco_string_t** string_) {
         goto cleanup;
     }
     if(NULL != (*string_)->buffer) {
-        memory_system_free((*string_)->buffer, (*string_)->capacity, MEMORY_TAG_STRING);
+        choco_memory_free((*string_)->buffer, (*string_)->capacity, MEMORY_TAG_STRING);
         (*string_)->buffer = NULL;
     }
-    memory_system_free(*string_, sizeof(choco_string_t), MEMORY_TAG_STRING);
+    choco_memory_free(*string_, sizeof(choco_string_t), MEMORY_TAG_STRING);
     *string_ = NULL;
 cleanup:
     return;
@@ -352,7 +352,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
             }
             memcpy(tmp_buffer + dst_->len, string_->buffer, string_->len + 1);
             if(0 != dst_->capacity) {
-                memory_system_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
+                choco_memory_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
                 dst_->buffer = NULL;
             }
 
@@ -422,7 +422,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
             }
             memcpy(tmp_buffer + dst_->len, string_, src_len + 1);
             if(0 != dst_->capacity) {
-                memory_system_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
+                choco_memory_free(dst_->buffer, dst_->capacity, MEMORY_TAG_STRING);
                 dst_->buffer = NULL;
             }
 
@@ -572,7 +572,7 @@ choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_st
 
 cleanup:
     if(NULL != tmp_buff) {
-        memory_system_free(tmp_buff, buff_size, MEMORY_TAG_STRING);
+        choco_memory_free(tmp_buff, buff_size, MEMORY_TAG_STRING);
         tmp_buff = NULL;
     }
     return ret;
@@ -668,7 +668,7 @@ choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_
 
 cleanup:
     if(NULL != tmp_buff) {
-        memory_system_free(tmp_buff, buff_size, MEMORY_TAG_STRING);
+        choco_memory_free(tmp_buff, buff_size, MEMORY_TAG_STRING);
         tmp_buff = NULL;
     }
     return ret;
@@ -720,27 +720,6 @@ static const char* rslt_to_str(choco_string_result_t rslt_) {
     }
 }
 
-/**
- * @brief memory_system_allocateのラッパ関数で、指定されたサイズのメモリを確保する
- *
- * @note
- * - 実行結果コードをchoco_stringモジュールの実行結果コードに変換して出力する
- * - メモリタグはMEMORY_TAG_STRING固定
- *
- * @param[in] size_ 確保するメモリサイズ
- * @param[out] out_ptr_ 確保したメモリの先頭アドレス
- *
- * @retval CHOCO_STRING_INVALID_ARGUMENT 下記のいずれか
- * - out_ptr_ == NULL
- * - *out_ptr_ != NULL
- * - memory_system_allocateの実行結果がMEMORY_SYSTEM_INVALID_ARGUMENT
- * @retval CHOCO_STRING_NO_MEMORY メモリ確保失敗
- * @retval CHOCO_STRING_LIMIT_EXCEEDED 以下のいずれか
- * - 割り当てサイズを割り当てた結果、mem_tag_allocatedがSIZE_MAX超過
- * - 割り当てサイズを割り当てた結果、total_allocatedがSIZE_MAX超過
- * @retval CHOCO_STRING_BAD_OPERATION メモリシステム未初期化
- * @retval CHOCO_STRING_SUCCESS メモリ確保に成功し、正常終了
- */
 static choco_string_result_t choco_string_mem_allocate(size_t size_, void** out_ptr_) {
     void* tmp_ptr = NULL;
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -749,7 +728,7 @@ static choco_string_result_t choco_string_mem_allocate(size_t size_, void** out_
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "*out_ptr_")
 
-    ret_mem = memory_system_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
+    ret_mem = choco_memory_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
     switch(ret_mem) {
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         ret = CHOCO_STRING_INVALID_ARGUMENT;
@@ -827,7 +806,7 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
 
     // Commit.
     if(0 != string_->capacity) {
-        memory_system_free(string_->buffer, string_->capacity, MEMORY_TAG_STRING);
+        choco_memory_free(string_->buffer, string_->capacity, MEMORY_TAG_STRING);
         string_->buffer = NULL;
     }
     string_->buffer = tmp_buffer;

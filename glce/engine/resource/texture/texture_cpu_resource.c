@@ -73,7 +73,7 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
         goto cleanup;
     }
 
-    ret_mem = memory_system_allocate(sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
+    ret_mem = choco_memory_allocate(sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
         ERROR_MESSAGE("texture_cpu_resource_create(%s) - Failed to allocate memory for texture_cpu_resource_t.", resource_rslt_to_str(ret));
@@ -100,7 +100,7 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
 
 cleanup:
     if(NULL != tmp_cpu_resource) {
-        memory_system_free(tmp_cpu_resource, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
+        choco_memory_free(tmp_cpu_resource, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
         tmp_cpu_resource = NULL;
     }
     return ret;
@@ -116,10 +116,10 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_) {
     if(!texture_cpu_resource_is_valid(*texture_)) {
         ERROR_MESSAGE("texture_cpu_resource_destroy(%s) - Provided texture_cpu_resource is corrupted.", resource_rslt_to_str(RESOURCE_DATA_CORRUPTED));
     } else {
-        memory_system_free((*texture_)->pixels, (*texture_)->pixel_data_size, MEMORY_TAG_TEXTURE);
+        choco_memory_free((*texture_)->pixels, (*texture_)->pixel_data_size, MEMORY_TAG_TEXTURE);
         (*texture_)->pixels = NULL;
 
-        memory_system_free(*texture_, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
+        choco_memory_free(*texture_, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
         *texture_ = NULL;
     }
 }

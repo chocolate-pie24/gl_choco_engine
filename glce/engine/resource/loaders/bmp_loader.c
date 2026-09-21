@@ -195,7 +195,7 @@ resource_result_t bmp_loader_load(const char* fullpath_, uint16_t* out_width_, u
             ERROR_MESSAGE("bmp_loader_load(%s) - Failed to remove BMP row padding.", resource_rslt_to_str(ret));
             goto cleanup;
         }
-        memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+        choco_memory_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
         tmp_pixels = NULL;
         tmp_pixels = formatted_pixels;
         formatted_pixels = NULL;
@@ -236,11 +236,11 @@ resource_result_t bmp_loader_load(const char* fullpath_, uint16_t* out_width_, u
 
 cleanup:
     if(NULL != formatted_pixels && 0 != formatted_size) {
-        memory_system_free(formatted_pixels, formatted_size, MEMORY_TAG_TEXTURE);
+        choco_memory_free(formatted_pixels, formatted_size, MEMORY_TAG_TEXTURE);
         formatted_pixels = NULL;
     }
     if(NULL != tmp_pixels) {
-        memory_system_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
+        choco_memory_free(tmp_pixels, tmp_info_header.bi_size_image, MEMORY_TAG_TEXTURE);
         tmp_pixels = NULL;
     }
     return ret;
@@ -461,7 +461,7 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
         ERROR_MESSAGE("bmp_loader_padding_remove(%s) - BMP output image size exceeds uint32_t range. output_size=%zu, limit=%u", resource_rslt_to_str(ret), new_size, UINT32_MAX);
         goto cleanup;
     }
-    ret_mem = memory_system_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
+    ret_mem = choco_memory_allocate(new_size, MEMORY_TAG_TEXTURE, (void**)&new_pixel);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
         ERROR_MESSAGE("bmp_loader_padding_remove(%s) - Failed to allocate memory for new_pixel.", resource_rslt_to_str(ret));
@@ -487,7 +487,7 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
 cleanup:
     if(RESOURCE_SUCCESS != ret) {
         if(NULL != new_pixel) {
-            memory_system_free(new_pixel, new_size, MEMORY_TAG_TEXTURE);
+            choco_memory_free(new_pixel, new_size, MEMORY_TAG_TEXTURE);
             new_pixel = NULL;
         }
     }
@@ -603,7 +603,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "pixel_load", "*out_pixels_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != stride_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "pixel_load", "stride_")
 
-    ret_mem = memory_system_allocate(file_header_->bf_size, MEMORY_TAG_TEXTURE, (void**)&tmp_buffer);
+    ret_mem = choco_memory_allocate(file_header_->bf_size, MEMORY_TAG_TEXTURE, (void**)&tmp_buffer);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
         ERROR_MESSAGE("pixel_load(%s) - Failed to allocate memory for tmp_buffer.", resource_rslt_to_str(ret));
@@ -654,7 +654,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
         goto cleanup;
     }
 
-    ret_mem = memory_system_allocate(pixel_buffer_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
+    ret_mem = choco_memory_allocate(pixel_buffer_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_rslt_convert_choco_memory(ret_mem);
         ERROR_MESSAGE("pixel_load(%s) - Failed to allocate memory for tmp_pixels.", resource_rslt_to_str(ret));
@@ -667,7 +667,7 @@ static resource_result_t pixel_load(const char* fullpath_, const file_header_t* 
 
     // close失敗はfs_stream_destroyないのERROR_MESSAGEを出力するのみとし、エラー処理は行わない
     fs_stream_destroy(&fs_stream, NULL);
-    memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
+    choco_memory_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
     tmp_buffer = NULL;
 
     info_header_->bi_size_image = (uint32_t)pixel_buffer_size;
@@ -678,11 +678,11 @@ cleanup:
     if(RESOURCE_SUCCESS != ret) {
         fs_stream_destroy(&fs_stream, NULL);
         if(NULL != tmp_buffer) {
-            memory_system_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
+            choco_memory_free(tmp_buffer, file_header_->bf_size, MEMORY_TAG_TEXTURE);
             tmp_buffer = NULL;
         }
         if(NULL != tmp_pixels) {
-            memory_system_free(tmp_pixels, pixel_buffer_size, MEMORY_TAG_TEXTURE);
+            choco_memory_free(tmp_pixels, pixel_buffer_size, MEMORY_TAG_TEXTURE);
             tmp_pixels = NULL;
         }
     }

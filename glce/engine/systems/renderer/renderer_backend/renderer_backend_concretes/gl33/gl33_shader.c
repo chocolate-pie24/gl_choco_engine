@@ -123,7 +123,7 @@ static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_backend_rslt_to_str(ret));
@@ -169,7 +169,7 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
         mock_glDeleteProgram((*shader_handle_)->program_id);
     }
 
-    memory_system_free(*shader_handle_, sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*shader_handle_, sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER);
     *shader_handle_ = NULL;
 }
 
@@ -233,7 +233,7 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
     mock_glGetShaderiv(tmp_handle, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
     mock_glGetShaderiv(tmp_handle, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
     if(0 < info_log_length) {
-        ret_memory_system = memory_system_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
+        ret_memory_system = choco_memory_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
         if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
             ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
             ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to allocate memory for shader info log.", renderer_backend_rslt_to_str(ret));
@@ -243,12 +243,12 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
             ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_backend_rslt_to_str(ret), err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
+            choco_memory_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
             err_mes = NULL;
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_compile - info log: %s", err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
+            choco_memory_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
             err_mes = NULL;
         }
     } else if(GL_TRUE != result) {
@@ -315,7 +315,7 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
     mock_glGetProgramiv(tmp_program_id, GL_LINK_STATUS, &result);
     mock_glGetProgramiv(tmp_program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(0 < info_log_length) {
-        ret_memory_system = memory_system_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
+        ret_memory_system = choco_memory_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
         if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
             ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
             ERROR_MESSAGE("gl33_shader_link(%s) - Failed to allocate memory for program info log.", renderer_backend_rslt_to_str(ret));
@@ -325,12 +325,12 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_LINK_ERROR;
             ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_backend_rslt_to_str(ret), err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
+            choco_memory_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
             err_mes = NULL;
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_link - info log: %s", err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
+            choco_memory_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
             err_mes = NULL;
         }
     } else if(GL_TRUE != result) {

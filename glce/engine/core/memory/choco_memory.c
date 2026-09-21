@@ -100,35 +100,35 @@ cleanup:
     return;
 }
 
-memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
+memory_system_result_t choco_memory_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_) {
     memory_system_result_t ret = MEMORY_SYSTEM_INVALID_ARGUMENT;
     void* tmp = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, ret, MEMORY_SYSTEM_BAD_OPERATION, rslt_to_str(MEMORY_SYSTEM_BAD_OPERATION), "memory_system_allocate", "s_mem_sys_ptr")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "*out_ptr_")
-    IF_ARG_FALSE_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "memory_system_allocate", "mem_tag_")
+    IF_ARG_NULL_GOTO_CLEANUP(s_mem_sys_ptr, ret, MEMORY_SYSTEM_BAD_OPERATION, rslt_to_str(MEMORY_SYSTEM_BAD_OPERATION), "choco_memory_allocate", "s_mem_sys_ptr")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "choco_memory_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "choco_memory_allocate", "*out_ptr_")
+    IF_ARG_FALSE_GOTO_CLEANUP(mem_tag_ < MEMORY_TAG_MAX, ret, MEMORY_SYSTEM_INVALID_ARGUMENT, rslt_to_str(MEMORY_SYSTEM_INVALID_ARGUMENT), "choco_memory_allocate", "mem_tag_")
 
     if(0 == size_) {
-        WARN_MESSAGE("memory_system_allocate - No-op: size_ is 0.");
+        WARN_MESSAGE("choco_memory_allocate - No-op: size_ is 0.");
         ret = MEMORY_SYSTEM_SUCCESS;
         goto cleanup;
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] > (SIZE_MAX - size_)) {
         ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
+        ERROR_MESSAGE("choco_memory_allocate(%s) - size_t overflow: tag=%s used=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->mem_tag_str[mem_tag_], s_mem_sys_ptr->mem_tag_allocated[mem_tag_], size_);
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated > (SIZE_MAX - size_)) {
         ret = MEMORY_SYSTEM_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("memory_system_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->total_allocated, size_);
+        ERROR_MESSAGE("choco_memory_allocate(%s) - size_t overflow: total_allocated=%zu, requested=%zu, sum would exceed SIZE_MAX.", rslt_to_str(ret), s_mem_sys_ptr->total_allocated, size_);
         goto cleanup;
     }
 
     // Simulation.
     tmp = test_malloc(size_);    // TODO: FreeList
-    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "memory_system_allocate", "tmp")
+    IF_ALLOC_FAIL_GOTO_CLEANUP(tmp, ret, MEMORY_SYSTEM_NO_MEMORY, "choco_memory_allocate", "tmp")
     memset(tmp, 0, size_);
 
     // commit.
@@ -142,25 +142,25 @@ cleanup:
     return ret;
 }
 
-void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
+void choco_memory_free(void* ptr_, size_t size_, memory_tag_t mem_tag_) {
     if(NULL == s_mem_sys_ptr) {
-        WARN_MESSAGE("memory_system_free - No-op: memory system is uninitialized.");
+        WARN_MESSAGE("choco_memory_free - No-op: memory system is uninitialized.");
         goto cleanup;
     }
     if(NULL == ptr_) {
-        WARN_MESSAGE("memory_system_free - No-op: 'ptr_' must not be NULL.");
+        WARN_MESSAGE("choco_memory_free - No-op: 'ptr_' must not be NULL.");
         goto cleanup;
     }
     if(mem_tag_ >= MEMORY_TAG_MAX) {
-        WARN_MESSAGE("memory_system_free - No-op: 'mem_tag_' is invalid.");
+        WARN_MESSAGE("choco_memory_free - No-op: 'mem_tag_' is invalid.");
         goto cleanup;
     }
     if(s_mem_sys_ptr->mem_tag_allocated[mem_tag_] < size_) {
-        WARN_MESSAGE("memory_system_free - No-op: 'mem_tag_allocated' would underflow.");
+        WARN_MESSAGE("choco_memory_free - No-op: 'mem_tag_allocated' would underflow.");
         goto cleanup;
     }
     if(s_mem_sys_ptr->total_allocated < size_) {
-        WARN_MESSAGE("memory_system_free: No-op: 'total_allocated' would underflow.");
+        WARN_MESSAGE("choco_memory_free: No-op: 'total_allocated' would underflow.");
         goto cleanup;
     }
 

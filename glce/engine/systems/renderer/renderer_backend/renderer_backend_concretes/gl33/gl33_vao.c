@@ -86,7 +86,7 @@ static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** vao_) 
     IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "vao_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "vao_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp'.", renderer_backend_rslt_to_str(ret));
@@ -119,7 +119,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vao_) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vao_)->vao_handle);
-    memory_system_free(*vao_, sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*vao_, sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER);
 
     *vao_ = NULL;
 

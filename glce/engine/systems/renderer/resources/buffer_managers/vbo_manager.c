@@ -157,7 +157,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_config_is_valid(config_), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_")
 
-    ret_memory = memory_system_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
+    ret_memory = choco_memory_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
         ret = buffer_manager_rslt_convert_choco_memory(ret_memory);
         ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=manager_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", buffer_manager_rslt_to_str(ret), sizeof(vbo_manager_t), (int)ret_memory);
@@ -226,7 +226,7 @@ cleanup:
 
         range_allocator_destroy(&tmp_allocator);
         if(NULL != tmp_vbo_manager) {
-            memory_system_free(tmp_vbo_manager, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
+            choco_memory_free(tmp_vbo_manager, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
             tmp_vbo_manager = NULL;
         }
     }
@@ -243,7 +243,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
     renderer_backend_vbo_destroy((*vbo_manager_)->backend_context, &(*vbo_manager_)->vbo);
     range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
-    memory_system_free(*vbo_manager_, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*vbo_manager_, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
     *vbo_manager_ = NULL;
 }
 

@@ -92,7 +92,7 @@ shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_conte
     }
 
     // lit mesh shader構造体インスタンス生成
-    ret_memory_system = memory_system_allocate(sizeof(lit_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_lit_mesh_shader);
+    ret_memory_system = choco_memory_allocate(sizeof(lit_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_lit_mesh_shader);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = shader_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("lit_mesh_shader_create(%s) - Failed to allocate memory for tmp_lit_mesh_shader.", shader_rslt_to_str(ret));
@@ -406,7 +406,7 @@ static void destroy_unchecked(lit_mesh_shader_t** lit_mesh_shader_) {
     if(NULL != (*lit_mesh_shader_)->shader) {
         renderer_backend_shader_destroy((*lit_mesh_shader_)->backend_context, &(*lit_mesh_shader_)->shader);
     }
-    memory_system_free(*lit_mesh_shader_, sizeof(lit_mesh_shader_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*lit_mesh_shader_, sizeof(lit_mesh_shader_t), MEMORY_TAG_RENDERER);
     *lit_mesh_shader_ = NULL;
 }
 

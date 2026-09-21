@@ -170,7 +170,7 @@ application_result_t application_create(void) {
 
     // begin Simulation
     // Application State
-    ret_mem_sys = memory_system_allocate(sizeof(*tmp_app_state), MEMORY_TAG_SYSTEM, (void**)&tmp_app_state);
+    ret_mem_sys = choco_memory_allocate(sizeof(*tmp_app_state), MEMORY_TAG_SYSTEM, (void**)&tmp_app_state);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", app_rslt_to_str(ret));
@@ -185,7 +185,7 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Initializing linear allocator...");
     tmp_app_state->linear_alloc = NULL;
     linear_allocator_preinit(&tmp_app_state->linear_alloc_mem_req, &tmp_app_state->linear_alloc_align_req);
-    ret_mem_sys = memory_system_allocate(tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp_app_state->linear_alloc);
+    ret_mem_sys = choco_memory_allocate(tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp_app_state->linear_alloc);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", app_rslt_to_str(ret));
@@ -193,7 +193,7 @@ application_result_t application_create(void) {
     }
 
     tmp_app_state->linear_alloc_pool_size = 128 * KIB;
-    ret_mem_sys = memory_system_allocate(tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp_app_state->linear_alloc_pool);
+    ret_mem_sys = choco_memory_allocate(tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp_app_state->linear_alloc_pool);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem_sys) {
         ret = app_rslt_convert_mem_sys(ret_mem_sys);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", app_rslt_to_str(ret));
@@ -286,12 +286,12 @@ cleanup:
                 fs_path_destroy(&tmp_app_state->executable_directory);
             }
             if(NULL != tmp_app_state->linear_alloc_pool) {
-                memory_system_free(tmp_app_state->linear_alloc_pool, tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+                choco_memory_free(tmp_app_state->linear_alloc_pool, tmp_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
             }
             if(NULL != tmp_app_state->linear_alloc) {
-                memory_system_free(tmp_app_state->linear_alloc, tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+                choco_memory_free(tmp_app_state->linear_alloc, tmp_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
             }
-            memory_system_free(tmp_app_state, sizeof(tmp_app_state), MEMORY_TAG_SYSTEM);
+            choco_memory_free(tmp_app_state, sizeof(tmp_app_state), MEMORY_TAG_SYSTEM);
             tmp_app_state = NULL;
         }
         choco_memory_destroy();
@@ -324,15 +324,15 @@ void application_destroy(void) {
         fs_path_destroy(&s_app_state->executable_directory);
     }
     if(NULL != s_app_state->linear_alloc_pool) {
-        memory_system_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+        choco_memory_free(s_app_state->linear_alloc_pool, s_app_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc_pool = NULL;
     }
     if(NULL != s_app_state->linear_alloc) {
-        memory_system_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+        choco_memory_free(s_app_state->linear_alloc, s_app_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
         s_app_state->linear_alloc = NULL;
     }
 
-    memory_system_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
+    choco_memory_free(s_app_state, sizeof(*s_app_state), MEMORY_TAG_SYSTEM);
     s_app_state = NULL;
     INFO_MESSAGE("Freed all memory.");
     memory_system_report();

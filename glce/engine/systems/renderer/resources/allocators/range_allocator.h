@@ -277,92 +277,6 @@ typedef struct range_allocator_status {
     size_t allocation_count;        /**< 現在生存しているallocation数 */
 } range_allocator_status_t;
 
-/**
- * @brief Range Allocatorを生成する
- *
- * @details
- * 指定された論理メモリプール容量、最大allocation数、および固定base alignmentを使用してRange Allocatorを生成する。
- *
- * 本関数が確保するのはRange Allocator本体とnode poolだけであり、memory_pool_size_で指定された容量の実メモリやGPU bufferは確保しない。
- *
- * node poolのnode数は次の式で決定する。
- *
- * @code{.c}
- * max_node_count = max_allocation_count_ * 2 + 1;
- * @endcode
- *
- * @pre Memory Systemが初期化されていること。
- * @pre out_range_allocator_が指すpointerがNULLであること。
- *
- * @post 成功時は、次の初期状態を持つRange Allocatorを*out_range_allocator_へ格納する。
- * - memory pool全体を表す一つのFREE nodeがrange listへ接続されている。
- * - range list先頭nodeのoffsetは0である。
- * - range list先頭nodeのblock sizeはmemory_pool_size_である。
- * - allocation countおよびtotal allocated sizeは0である。
- * - 先頭node以外のnodeはすべてNOT_USED状態である。
- *
- * @post 失敗時は、生成途中に確保したRange Allocator本体およびnode poolを解放し、out_range_allocator_が指すpointerを変更しない。
- *
- * @param[in] memory_pool_size_
- * 管理対象となる論理メモリプールの総容量(byte)。0は指定できない。
- * base_align_の倍数である必要はない。
- *
- * @param[in] max_allocation_count_
- * 同時に生存できるallocation数の上限。0は指定できない。
- *
- * @param[in] base_align_
- * 本Range Allocatorが使用する固定base alignment(byte)。
- * 0以外の2の冪乗でなければならない。
- *
- * @param[in,out] out_range_allocator_
- * 生成したRange Allocatorの格納先。
- * 有効なpointerを指定し、呼び出し前に*out_range_allocator_をNULLにする必要がある。
- * 成功時のみ生成したインスタンスが格納される。
- *
- * @retval RANGE_ALLOCATOR_SUCCESS
- * Range Allocatorの生成に成功した。
- *
- * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
- * 次のいずれか。
- * - out_range_allocator_がNULL
- * - *out_range_allocator_がNULLではない
- * - memory_pool_size_が0
- * - max_allocation_count_が0
- * - base_align_が0
- * - memory_system_allocate()がMEMORY_SYSTEM_INVALID_ARGUMENTを返した
- *
- * @retval RANGE_ALLOCATOR_BAD_OPERATION
- * 次のいずれか。
- * - base_align_が2の冪乗ではない
- * - Memory Systemが初期化されていない
- * - memory_system_allocate()がMEMORY_SYSTEM_BAD_OPERATIONを返した
- *
- * @retval RANGE_ALLOCATOR_OVERFLOW
- * 次のいずれか。
- * - max_allocation_count_ * 2 + 1がsize_tの表現可能範囲を超える
- * - sizeof(node_t) * max_node_countがsize_tの表現可能範囲を超える
- *
- * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
- * Range Allocator本体またはnode poolの確保によって、
- * Memory Systemのメモリタグ別使用量または総使用量がsize_tの表現可能範囲を超える。
- *
- * @retval RANGE_ALLOCATOR_NO_MEMORY
- * Range Allocator本体またはnode poolの動的メモリ確保に失敗した。
- *
- * @retval RANGE_ALLOCATOR_UNDEFINED_ERROR
- * memory_system_allocate()から変換対象外の結果コードを受け取った。
- *
- * @par 計算量
- * max_node_count個のnodeを初期化するため、時間計算量は
- * O(max_allocation_count_)である。
- *
- * @see range_allocator_destroy
- * @see memory_system_allocate
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が内容を確認・修正した。
- */
 range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_allocator_t** out_range_allocator_);
 
 /**
@@ -389,10 +303,10 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
  *       node poolとRange Allocator本体が解放され、*range_allocator_がNULLとなる。
  *
  * @warning
- * memory_system_free()は、Memory Systemが未初期化の場合や
+ * choco_memory_free()は、Memory Systemが未初期化の場合や
  * メモリ使用量管理値に矛盾がある場合、対象メモリを解放せずに終了する。
  *
- * 本関数はmemory_system_free()の成否を取得できないため、その場合でも
+ * 本関数はchoco_memory_free()の成否を取得できないため、その場合でも
  * *range_allocator_へNULLを設定する。
  * Range Allocatorの生存期間中はMemory Systemを破棄せず、
  * メモリ使用量管理値を正常に維持する必要がある。
@@ -401,7 +315,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
  * node poolの各要素を走査せずに一括解放するため、時間計算量はO(1)である。
  *
  * @see range_allocator_create
- * @see memory_system_free
+ * @see choco_memory_free
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、

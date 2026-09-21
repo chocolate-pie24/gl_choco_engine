@@ -62,10 +62,10 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fu
         goto cleanup;
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_stream);
+    ret_memory_system = choco_memory_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_stream);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = memory_system_result_convert(ret_memory_system);
-        ERROR_MESSAGE("fs_stream_create(%s) - memory_system_allocate failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("fs_stream_create(%s) - choco_memory_allocate failed.", rslt_to_str(ret));
         goto cleanup;
     }
     memset(tmp_fs_stream, 0, sizeof(fs_stream_t));
@@ -93,7 +93,7 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fu
 cleanup:
     if(NULL != tmp_fs_stream) {
         filesystem_destroy(&tmp_fs_stream->filesystem, NULL);
-        memory_system_free(tmp_fs_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
+        choco_memory_free(tmp_fs_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
         tmp_fs_stream = NULL;
     }
     return ret;
@@ -107,7 +107,7 @@ void fs_stream_destroy(fs_stream_t** fs_stream_, bool* out_close_succeeded_) {
         return;
     }
     filesystem_destroy(&(*fs_stream_)->filesystem, out_close_succeeded_);
-    memory_system_free(*fs_stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
+    choco_memory_free(*fs_stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
     *fs_stream_ = NULL;
 }
 

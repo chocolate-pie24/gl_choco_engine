@@ -60,7 +60,7 @@ resource_result_t point_mesh_geometry_create_from_vertices(size_t vertex_count_,
         goto cleanup;
     }
 
-    ret_memory_system = memory_system_allocate(sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    ret_memory_system = choco_memory_allocate(sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Failed to allocate point_mesh_geometry_t instance.", resource_rslt_to_str(ret));
@@ -184,7 +184,7 @@ static resource_result_t initialize_from_vertices(point_mesh_geometry_t* geometr
         ERROR_MESSAGE("initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = memory_system_allocate(sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    ret_memory_system = choco_memory_allocate(sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(point_vertex_t));
@@ -203,18 +203,18 @@ static resource_result_t initialize_from_vertices(point_mesh_geometry_t* geometr
 
 cleanup:
     if(NULL != tmp_vertices && RESOURCE_DATA_CORRUPTED != ret) {
-        memory_system_free(tmp_vertices, sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
+        choco_memory_free(tmp_vertices, sizeof(point_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
     }
     return ret;
 }
 
 static void destroy_unchecked(point_mesh_geometry_t** geometry_) {
-    memory_system_free((*geometry_)->vertices, sizeof(point_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
+    choco_memory_free((*geometry_)->vertices, sizeof(point_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
     (*geometry_)->vertices = NULL;
     (*geometry_)->vertex_count = 0;
 
-    memory_system_free(*geometry_, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
+    choco_memory_free(*geometry_, sizeof(point_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
     *geometry_ = NULL;
 }
 

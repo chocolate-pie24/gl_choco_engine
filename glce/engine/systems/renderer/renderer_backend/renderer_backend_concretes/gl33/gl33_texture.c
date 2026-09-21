@@ -121,7 +121,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t unit_num_, texture_
     IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
     IF_ARG_FALSE_GOTO_CLEANUP(unit_num_ >= 0, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "unit_num_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER, (void**)&tmp);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("gl33_texture_create(%s) - Failed to allocate memory for texture handle.", renderer_backend_rslt_to_str(ret));
@@ -176,7 +176,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     }
     mock_glDeleteTextures(1, &(*texture_handle_)->handle);
 
-    memory_system_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER);
+    choco_memory_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER);
 
     *texture_handle_ = NULL;
 }

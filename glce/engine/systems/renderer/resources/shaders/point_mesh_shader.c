@@ -98,7 +98,7 @@ shader_result_t point_mesh_shader_create(renderer_backend_context_t* backend_con
     }
 
     // point shader構造体インスタンス生成
-    ret_memory_system = memory_system_allocate(sizeof(point_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_point_mesh_shader);
+    ret_memory_system = choco_memory_allocate(sizeof(point_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_point_mesh_shader);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = shader_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("point_mesh_shader_create(%s) - Failed to allocate memory for tmp_point_mesh_shader.", shader_rslt_to_str(ret));
@@ -413,7 +413,7 @@ static void destroy_unchecked(point_mesh_shader_t** point_mesh_shader_) {
     if(NULL != (*point_mesh_shader_)->shader) {
         renderer_backend_shader_destroy((*point_mesh_shader_)->backend_context, &(*point_mesh_shader_)->shader);
     }
-    memory_system_free(*point_mesh_shader_, sizeof(point_mesh_shader_t), MEMORY_TAG_RENDERER);
+    choco_memory_free(*point_mesh_shader_, sizeof(point_mesh_shader_t), MEMORY_TAG_RENDERER);
     *point_mesh_shader_ = NULL;
 }
 

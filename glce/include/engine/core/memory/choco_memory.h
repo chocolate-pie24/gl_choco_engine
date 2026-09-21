@@ -65,9 +65,9 @@ memory_system_result_t choco_memory_create(void);
 
 void choco_memory_destroy(void);
 
-memory_system_result_t memory_system_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
+memory_system_result_t choco_memory_allocate(size_t size_, memory_tag_t mem_tag_, void** out_ptr_);
 
-void memory_system_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
+void choco_memory_free(void* ptr_, size_t size_, memory_tag_t mem_tag_);
 
 void memory_system_report(void);
 

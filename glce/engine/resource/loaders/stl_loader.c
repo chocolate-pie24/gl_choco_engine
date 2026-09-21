@@ -108,7 +108,7 @@ static resource_result_t ascii_load(const char* fullpath_, size_t* out_vertex_co
         ERROR_MESSAGE("ascii_load(%s) - Vertex buffer size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = memory_system_allocate(sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    ret_memory_system = choco_memory_allocate(sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = resource_rslt_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("ascii_load(%s) - Failed to allocate vertex buffer. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count, sizeof(point_normal_vertex_t));
@@ -259,7 +259,7 @@ cleanup:
         choco_string_destroy(&string);
     }
     if(NULL != tmp_vertices) {
-        memory_system_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
+        choco_memory_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
         tmp_vertices = NULL;
     }
     return ret;

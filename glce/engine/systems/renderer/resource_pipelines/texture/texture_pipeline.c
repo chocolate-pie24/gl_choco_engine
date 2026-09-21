@@ -100,7 +100,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
         if(NULL != tmp_pixels) {
-            memory_system_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
+            choco_memory_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
             tmp_pixels = NULL;
         }
         texture_gpu_resource_destroy(&gpu_resource);
@@ -177,7 +177,7 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
         if(NULL != tmp_pixels) {
-            memory_system_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
+            choco_memory_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
             tmp_pixels = NULL;
         }
         texture_gpu_resource_destroy(&gpu_resource);
@@ -262,7 +262,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_pixels_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "*out_pixels_")
 
-    ret_mem = memory_system_allocate(pixel_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
+    ret_mem = choco_memory_allocate(pixel_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
         ret = resource_pipeline_rslt_convert_choco_memory(ret_mem);
         ERROR_MESSAGE("solid_color_texture_generate(%s) - Failed to allocate memory for pixels.", resource_pipeline_rslt_to_str(ret));
@@ -288,7 +288,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 
 cleanup:
     if(NULL != tmp_pixels) {
-        memory_system_free(tmp_pixels, pixel_size, MEMORY_TAG_TEXTURE);
+        choco_memory_free(tmp_pixels, pixel_size, MEMORY_TAG_TEXTURE);
         tmp_pixels = NULL;
     }
     return ret;
