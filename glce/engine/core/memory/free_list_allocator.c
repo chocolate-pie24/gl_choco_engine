@@ -622,6 +622,11 @@ static void free_block_split(size_t minimum_block_size_, free_list_block_header_
 
     size_t remaining_block_size = 0;
 
+    if(NULL == free_block_) {
+        ERROR_MESSAGE("free_block_split - Provided free_block_ is NULL.");
+        return;
+    }
+
     // Prepare.
     remaining_block_size = free_block_->block_size - required_block_size_;
     if(minimum_block_size_ > remaining_block_size) {
@@ -663,6 +668,15 @@ static void free_block_split(size_t minimum_block_size_, free_list_block_header_
  */
 static void free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_) {
     void* payload_address = NULL;
+
+    if(NULL == free_block_) {
+        ERROR_MESSAGE("free_block_allocate - Provided free_block_ is NULL.");
+        return;
+    }
+    if(NULL == out_ptr_) {
+        ERROR_MESSAGE("free_block_allocate - Provided out_ptr_ is NULL.");
+        return;
+    }
 
     // Prepare.
     payload_address = (unsigned char*)free_block_ + payload_offset_;
@@ -717,6 +731,11 @@ static bool allocation_ptr_is_valid(const free_list_allocator_t* free_list_alloc
  * contract成立下では失敗しない。
  */
 static void allocated_block_free(free_list_block_header_t* allocation_block_) {
+    if(NULL == allocation_block_) {
+        ERROR_MESSAGE("allocated_block_free - Provided allocation_block_ is NULL.");
+        return;
+    }
+
     // Commit.
     allocation_block_->allocation_size = 0;
     allocation_block_->block_state = FREE_LIST_BLOCK_STATE_FREE;
@@ -742,6 +761,11 @@ static void free_block_merge_next(free_list_block_header_t* free_block_) {
 
     size_t merged_block_size = 0;
 
+    if(NULL == free_block_) {
+        ERROR_MESSAGE("free_block_merge_next - Provided free_block_ is NULL.");
+        return;
+    }
+
     // Prepare.
     merged_block_size = free_block_->block_size + free_block_->next->block_size;    // validなfree_list_allocatorであればオーバーフローは起こらないためチェック不要
     next_block = free_block_->next;
@@ -766,6 +790,11 @@ static void free_block_merge_next(free_list_block_header_t* free_block_) {
  * contract成立下では失敗しない。
  */
 static void free_block_coalesce(free_list_block_header_t* free_block_) {
+    if(NULL == free_block_) {
+        ERROR_MESSAGE("free_block_coalesce - Provided free_block_ is NULL.");
+        return;
+    }
+
     // Commit.
     // 後方merge
     if(NULL != free_block_->next && FREE_LIST_BLOCK_STATE_FREE == free_block_->next->block_state) {
