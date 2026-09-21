@@ -91,6 +91,10 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
 
 free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_);
 
+bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_);
+
+free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* free_list_allocator_, const void* ptr_, size_t* out_allocated_size_, memory_tag_t* out_memory_tag_);
+
 bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocator_);
 
 #ifdef __cplusplus
