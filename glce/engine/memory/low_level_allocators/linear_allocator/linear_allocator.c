@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include <stdalign.h>
 #include <stdbool.h>

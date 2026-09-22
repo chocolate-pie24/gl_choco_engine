@@ -15,7 +15,7 @@
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/flight_camera.h"

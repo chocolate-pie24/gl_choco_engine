@@ -16,7 +16,7 @@
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/core/platform_event_view.h"

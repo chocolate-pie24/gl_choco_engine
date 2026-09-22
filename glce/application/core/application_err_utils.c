@@ -16,7 +16,7 @@
 
 #include "engine/core/memory/choco_memory.h"
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 

@@ -32,7 +32,7 @@
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/core/memory/choco_memory.h"
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 

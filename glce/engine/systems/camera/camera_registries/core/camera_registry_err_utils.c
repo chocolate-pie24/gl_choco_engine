@@ -3,7 +3,7 @@
 
 #include "engine/systems/camera/camera_registries/core/camera_registry_err_utils.h"
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 

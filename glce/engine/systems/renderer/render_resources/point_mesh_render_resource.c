@@ -17,7 +17,7 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/memory/allocators/linear_allocator.h"
+#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 

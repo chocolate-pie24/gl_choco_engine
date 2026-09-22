@@ -9,11 +9,11 @@
  * Free List Allocatorは、callerがあらかじめ確保した連続memory poolを
  * backing storageとして使用し、その領域内でmemory allocation / freeを行う。
  *
- * 本moduleはEngine内部で使用するprivate moduleであり、
- * Applicationレイヤーからは直接使用せず、上位のMemory Systemを経由して操作する。
+ * 本moduleはEngine内部で使用するlow-level allocatorであり、
+ * Applicationレイヤーから直接使用しない。
  *
- * free_list_allocator_tはMemory System起動前に実体を生成する必要があるため、
- * heap allocationを前提としたopaque typeにはせず、caller側で実体を保持可能な型として公開する。
+ * free_list_allocator_tのstorageはcaller側で事前に確保する必要があるため、
+ * heap allocationを前提としたopaque typeにはせず、caller側で実体を保持可能な型とする。
  *
  * @section free_list_allocator_boundary_contract Module Boundary Contract
  *
@@ -22,18 +22,17 @@
  * - backing memory poolはFree List Allocatorの使用期間中、有効な状態を維持しなければならない。
  * - allocationされるmemoryは、initialize時に提供されたmemory pool内からのみ取得する。
  * - allocationのalignmentはalignof(max_align_t)に固定する。
- * - free_list_allocator_tの実体はcallerが保持し、本moduleはそのstorageを確保・解放しない。
+ * - free_list_allocator_tのstorageはcallerが保持し、本module自身はそのstorageを動的確保しない。
  *
  * @todo
- * - free_list_allocator_ptr_is_alive()
  * - free_list_allocator_status_report()
  *
  * @par AI支援:
  * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_MEMORY_ALLOCATORS_FREE_LIST_ALLOCATOR_H
-#define GLCE_ENGINE_MEMORY_ALLOCATORS_FREE_LIST_ALLOCATOR_H
+#ifndef GLCE_ENGINE_MEMORY_LOW_LEVEL_ALLOCATORS_FREE_LIST_ALLOCATOR_FREE_LIST_ALLOCATOR_H
+#define GLCE_ENGINE_MEMORY_LOW_LEVEL_ALLOCATORS_FREE_LIST_ALLOCATOR_FREE_LIST_ALLOCATOR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,8 +40,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "engine/memory/core/memory_tag.h"
 
 typedef enum {
     FREE_LIST_ALLOCATOR_SUCCESS = 0,
@@ -67,11 +64,9 @@ typedef struct free_list_block_header {
     size_t block_size;      // headerを含む、そのblock全体の物理サイズ, FREE / ALLOCATEDの両方で常に有効
 
     free_list_block_state_t block_state;
-
-    memory_tag_t memory_tag;
 } free_list_block_header_t;
 
-// memory_systemでfree_list_allocator_t allocatorとして宣言したい(memory_poolからのみメモリを確保したいため)ため、内部構造は.hに書く(ただしapplicationには公開しない)
+// general_allocatorでfree_list_allocator_t allocatorとして宣言したい(memory_poolからのみメモリを確保したいため)ため、内部構造は.hに書く(ただしapplicationには公開しない)
 typedef struct {
     void* memory_pool;  // mutable borrowed pointer
 
@@ -87,13 +82,13 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
 
 free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_);
 
-free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, memory_tag_t memory_tag_, void** out_ptr_);
+free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, void** out_ptr_);
 
 free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_);
 
 bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_);
 
-free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* free_list_allocator_, const void* ptr_, size_t* out_allocated_size_, memory_tag_t* out_memory_tag_);
+free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* free_list_allocator_, const void* ptr_, size_t* out_allocated_size_);
 
 bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocator_);
 
