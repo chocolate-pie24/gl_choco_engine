@@ -50,33 +50,33 @@ resource_result_t ui_mesh_geometry_create_from_vertices(size_t vertex_count_, co
 
     ui_mesh_geometry_t* tmp_geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "out_geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "ui_mesh_geometry_create_from_vertices", "*out_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "ui_mesh_geometry_create_from_vertices", "*out_geometry_")
     if(6 != vertex_count_) {
         ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_memory_system = choco_memory_allocate(sizeof(ui_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Failed to allocate ui_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ret = resource_result_convert_choco_memory(ret_memory_system);
+        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Failed to allocate ui_mesh_geometry_t instance.", resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_geometry, 0, sizeof(ui_mesh_geometry_t));
 
     ret = initialize_from_vertices(tmp_geometry, vertex_count_, vertices_);
     if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Failed to initialize ui_mesh_geometry_t instance.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Failed to initialize ui_mesh_geometry_t instance.", resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_geometry_is_valid(tmp_geometry)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -114,13 +114,13 @@ void ui_mesh_geometry_destroy(ui_mesh_geometry_t** geometry_) {
 resource_result_t ui_mesh_geometry_vertices_get(const ui_mesh_geometry_t* geometry_, const ui_vertex_t** out_vertices_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_rslt_to_str(RESOURCE_BAD_OPERATION), "ui_mesh_geometry_vertices_get", "*out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "ui_mesh_geometry_vertices_get", "*out_vertices_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(geometry_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -136,12 +136,12 @@ cleanup:
 resource_result_t ui_mesh_geometry_vertex_count_get(const ui_mesh_geometry_t* geometry_, size_t* out_vertex_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertex_count_get", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertex_count_get", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertex_count_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_mesh_geometry_vertex_count_get", "out_vertex_count_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(geometry_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_geometry_vertex_count_get(%s) - Precondition validation failed for 'geometry_'.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_vertex_count_get(%s) - Precondition validation failed for 'geometry_'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -173,18 +173,18 @@ static resource_result_t initialize_from_vertices(ui_mesh_geometry_t* geometry_,
 
     ui_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "initialize_from_vertices", "vertices_")
 
     if((SIZE_MAX / vertex_count_) < sizeof(ui_vertex_t)) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(ui_vertex_t));
+        ERROR_MESSAGE("initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(ui_vertex_t));
         goto cleanup;
     }
     ret_memory_system = choco_memory_allocate(sizeof(ui_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_rslt_to_str(ret), vertex_count_, sizeof(ui_vertex_t));
+        ret = resource_result_convert_choco_memory(ret_memory_system);
+        ERROR_MESSAGE("initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(ui_vertex_t));
         goto cleanup;
     }
 

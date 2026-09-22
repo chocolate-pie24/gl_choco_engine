@@ -40,44 +40,44 @@ static bool find_by_name(const flight_camera_registry_t* registry_, const char* 
 
 static bool is_valid_shallow(const flight_camera_registry_t* registry_);
 
-camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_alloc_t* allocator_, flight_camera_registry_t** out_registry_) {
+camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, flight_camera_registry_t** out_registry_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     flight_camera_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entry_array = NULL;
 
     size_t entry_array_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_rslt_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_create", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_result_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_create", "*out_registry_")
     if(0 == max_flight_camera_count_ || UINT16_MAX < max_flight_camera_count_) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // flight_camera_registry_tメモリ確保
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = camera_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_rslt_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
+    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), (void**)&tmp_registry);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = camera_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_result_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
         goto cleanup;
     }
     memset(tmp_registry, 0, sizeof(flight_camera_registry_t));
 
     if((SIZE_MAX / max_flight_camera_count_) < sizeof(registry_entry_t)) {
         ret = CAMERA_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - overflow.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - overflow.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_flight_camera_count_;
-    ret_linear_alloc = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = camera_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_rslt_to_str(ret));
+    ret_linear_allocator = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = camera_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_entry_array, 0, entry_array_size);
@@ -88,7 +88,7 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_registry_is_valid(tmp_registry)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - tmp_registry is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - tmp_registry is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -106,19 +106,19 @@ cleanup:
 // NOTE: このAPIを呼んだ後はmax_flight_camera_countが0になるためregistryは再利用不可となる。再利用を前提で初期化する場合はregistry_reset APIを追加する
 void flight_camera_registry_deinitialize(flight_camera_registry_t* registry_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - provided registry_ is NULL.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - provided registry_ is NULL.", camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_result_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
         return;
     }
 #endif
     for(size_t i = 0; i != registry_->max_flight_camera_count; ++i) {
         if(!registry_entry_is_empty(&registry_->entries[i])) {
             if(CAMERA_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i])) {
-                ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - registry_entry_deinitialize failed.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
+                ERROR_MESSAGE("flight_camera_registry_deinitialize(%s) - registry_entry_deinitialize failed.", camera_registry_result_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
                 return;
             }
         }
@@ -134,12 +134,12 @@ bool flight_camera_registry_exists(const flight_camera_registry_t* registry_, co
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(registry_)) {
-        ERROR_MESSAGE("flight_camera_registry_exists(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("flight_camera_registry_exists(%s) - flight_camera_registry_t internal state is corrupted.", camera_registry_result_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
         return false;
     }
 #endif
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("flight_camera_registry_exists(%s) - provided resource name is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("flight_camera_registry_exists(%s) - provided resource name is not valid.", camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -148,17 +148,17 @@ bool flight_camera_registry_exists(const flight_camera_registry_t* registry_, co
 
 flight_camera_t* flight_camera_registry_flight_camera_get(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided registry_ is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided registry_ is not valid.", camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(registry_)) {
-        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided registry_ is corrupted.", camera_registry_rslt_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided registry_ is corrupted.", camera_registry_result_to_str(CAMERA_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
 #endif
     if(!flight_camera_id_is_valid(registry_, flight_camera_id_)) {
-        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided flight_camera_id_ is not valid.", camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("flight_camera_registry_flight_camera_get(%s) - provided flight_camera_id_ is not valid.", camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
 
@@ -170,25 +170,25 @@ camera_registry_result_t flight_camera_registry_id_get(const flight_camera_regis
 
     size_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "out_flight_camera_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "out_flight_camera_id_")
     if('\0' == name_[0]) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - provided resource name is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - provided resource name is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(registry_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - provided registry_ is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - provided registry_ is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     if(!find_by_name(registry_, name_, &tmp_id)) {
         ret = CAMERA_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - find_by_name failed.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_id_get(%s) - find_by_name failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -203,32 +203,32 @@ cleanup:
 camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* resource_name_, flight_camera_t** flight_camera_, uint16_t* out_flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
     bool found_free_slot = false;
     choco_string_t* tmp_name = NULL;
 
     // 入力値検証
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(*flight_camera_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_rslt_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_register", "*flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "out_flight_camera_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(*flight_camera_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_result_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_register", "*flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "out_flight_camera_id_")
     if('\0' == resource_name_[0]) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_is_valid(*flight_camera_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided *flight_camera_ is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided *flight_camera_ is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!is_valid_shallow(registry_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided registry_ is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided registry_ is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -236,7 +236,7 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
     // リソースの重複チェック
     if(find_by_name(registry_, resource_name_, &tmp_index)) {
         ret = CAMERA_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is already registered.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is already registered.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -250,15 +250,15 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
     }
     if(!found_free_slot) {
         ret = CAMERA_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - free slot not found.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - free slot not found.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // リソース名称生成
-    ret_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = camera_registry_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - choco_string_create_from_c_string failed.", camera_registry_rslt_to_str(ret));
+    ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = camera_registry_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - choco_string_create_from_c_string failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -271,7 +271,7 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_registry_is_valid(registry_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_register(%s) - registry_ is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_register(%s) - registry_ is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -292,36 +292,36 @@ cleanup:
 camera_registry_result_t flight_camera_registry_unregister(flight_camera_registry_t* registry_, uint16_t flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_rslt_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_unregister", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_unregister", "registry_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(registry_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided registry_ is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided registry_ is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!flight_camera_id_is_valid(registry_, flight_camera_id_)) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided flight_camera_id_ is not valid.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided flight_camera_id_ is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(NULL == registry_->entries[flight_camera_id_].resource_name) {
         ret = CAMERA_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided flight_camera id entry is empty.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided flight_camera id entry is empty.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(CAMERA_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[flight_camera_id_])) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - registry_entry_deinitialize failed.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - registry_entry_deinitialize failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!flight_camera_registry_is_valid(registry_)) {
         ret = CAMERA_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - registry_ is corrupted.", camera_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("flight_camera_registry_unregister(%s) - registry_ is corrupted.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif

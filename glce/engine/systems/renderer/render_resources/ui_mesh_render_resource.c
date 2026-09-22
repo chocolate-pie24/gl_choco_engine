@@ -47,50 +47,50 @@ struct ui_mesh_render_resource {
 static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_ui_mesh_shader_);
 static bool is_valid_shallow(const ui_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     ui_mesh_render_resource_t* tmp_render_resource = NULL;
     ui_mesh_shader_t* tmp_shader = NULL;
     ui_mesh_geometry_registry_t* tmp_geometry_registry = NULL;
     texture_registry_t* tmp_texture_registry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "out_render_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "ui_mesh_render_resource_create", "*out_render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "out_render_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "ui_mesh_render_resource_create", "*out_render_resource_")
 
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(ui_mesh_render_resource_t), alignof(ui_mesh_render_resource_t), (void**)&tmp_render_resource);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = render_resource_rslt_convert_linear_allocator(ret_linear_alloc);
-        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - Failed to allocate ui_mesh_render_resource_t instance.", render_resource_rslt_to_str(ret));
+    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(ui_mesh_render_resource_t), alignof(ui_mesh_render_resource_t), (void**)&tmp_render_resource);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = render_resource_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - Failed to allocate ui_mesh_render_resource_t instance.", render_resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_render_resource, 0, sizeof(ui_mesh_render_resource_t));
 
     ret = shader_create(shader_config_, renderer_backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - shader_create failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - shader_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_resource_registry = ui_mesh_geometry_registry_create(max_geometry_count_, allocator_, &tmp_geometry_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
-        ret = render_resource_rslt_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - ui_mesh_geometry_registry_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - ui_mesh_geometry_registry_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_resource_registry = texture_registry_create(max_texture_count_, allocator_, &tmp_texture_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
-        ret = render_resource_rslt_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - texture_registry_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - texture_registry_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -102,7 +102,7 @@ render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_con
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(tmp_render_resource)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -136,7 +136,7 @@ void ui_mesh_render_resource_deinitialize(ui_mesh_render_resource_t* render_reso
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
-        ERROR_MESSAGE("ui_mesh_render_resource_deinitialize(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(RENDER_RESOURCE_DATA_CORRUPTED));
+        ERROR_MESSAGE("ui_mesh_render_resource_deinitialize(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(RENDER_RESOURCE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -153,29 +153,29 @@ render_resource_result_t ui_mesh_render_resource_geometry_import_from_file(ui_me
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_import_from_file", "out_geometry_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = ui_mesh_geometry_pipeline_import_from_file(render_resource_->shader, render_resource_->geometry_registry, resource_name_, resource_fullpath_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - ui_mesh_geometry_pipeline_import_from_file failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - ui_mesh_geometry_pipeline_import_from_file failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_import_from_file(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -193,26 +193,26 @@ render_resource_result_t ui_mesh_render_resource_geometry_release(ui_mesh_render
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_release", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_geometry_release", "render_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = ui_mesh_geometry_pipeline_release(render_resource_->shader, render_resource_->geometry_registry, geometry_id_);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - ui_mesh_geometry_pipeline_release failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - ui_mesh_geometry_pipeline_release failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -230,29 +230,29 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_bmp(ui_mesh
 
     uint16_t tmp_texture_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "texture_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "texture_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_bmp", "out_texture_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = texture_pipeline_import_from_bmp(render_resource_->backend_context, render_resource_->texture_registry, texture_unit_index_, resource_name_, texture_fullpath_, &tmp_texture_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - texture_pipeline_import_from_bmp failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - texture_pipeline_import_from_bmp failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_bmp(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -272,28 +272,28 @@ render_resource_result_t ui_mesh_render_resource_texture_import_from_solid_color
 
     uint16_t tmp_texture_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_import_from_solid_color", "out_texture_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = texture_pipeline_import_from_solid_color(render_resource_->backend_context, render_resource_->texture_registry, texture_unit_index_, resource_name_, red_, green_, blue_, &tmp_texture_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - texture_pipeline_import_from_bmp failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - texture_pipeline_import_from_bmp failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_import_from_solid_color(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -311,26 +311,26 @@ render_resource_result_t ui_mesh_render_resource_texture_release(ui_mesh_render_
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_release", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_texture_release", "render_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = texture_pipeline_release(render_resource_->texture_registry, texture_id_);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - texture_pipeline_release failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - texture_pipeline_release failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_texture_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -346,34 +346,34 @@ render_resource_result_t ui_mesh_render_resource_view_matrix_set(ui_mesh_render_
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_view_matrix_set", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_view_matrix_set", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_view_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_view_matrix_set", "view_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = ui_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - ui_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - ui_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = ui_mesh_shader_view_matrix_set(render_resource_->shader, view_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - ui_mesh_shader_view_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - ui_mesh_shader_view_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_view_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -389,34 +389,34 @@ render_resource_result_t ui_mesh_render_resource_projection_matrix_set(ui_mesh_r
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_projection_matrix_set", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_projection_matrix_set", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_projection_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_projection_matrix_set", "projection_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = ui_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - ui_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - ui_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = ui_mesh_shader_projection_matrix_set(render_resource_->shader, projection_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - ui_mesh_shader_projection_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - ui_mesh_shader_projection_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -432,60 +432,60 @@ render_resource_result_t ui_mesh_render_resource_draw(ui_mesh_render_resource_t*
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    texture_gpu_resource_result_t ret_texture_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
     const texture_gpu_resource_t* gpu_resource = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_draw", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_draw", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_draw", "model_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = ui_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = ui_mesh_shader_model_matrix_set(render_resource_->shader, model_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_model_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_model_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = ui_mesh_shader_vao_bind(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_vao_bind failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_shader_vao_bind failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     draw_range = ui_mesh_geometry_registry_draw_range_get(render_resource_->geometry_registry, geometry_id_);
     if(NULL == draw_range) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_geometry_registry_draw_range_get failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - ui_mesh_geometry_registry_draw_range_get failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     gpu_resource = texture_registry_gpu_resource_get(render_resource_->texture_registry, texture_id_);
     if(NULL == gpu_resource) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - texture_registry_gpu_resource_get failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - texture_registry_gpu_resource_get failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_texture_resource = texture_gpu_resource_bind(gpu_resource);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_resource) {
-        ret = render_resource_rslt_convert_texture_gpu_resource(ret_texture_resource);
-        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - texture_gpu_resource_bind failed.", render_resource_rslt_to_str(ret));
+    ret_texture_gpu_resource = texture_gpu_resource_bind(gpu_resource);
+    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
+        ret = render_resource_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+        ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - texture_gpu_resource_bind failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -527,31 +527,31 @@ static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_
 
     ui_mesh_shader_t* tmp_ui_mesh_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "ui_mesh_shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ui_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_ui_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "ui_mesh_shader_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ui_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_ui_mesh_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_ui_mesh_shader_")
 
     ret_fs_path = fs_path_create(&vertex_shader_path, executable_directory_, shader_dir_, "ui_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_rslt_convert_fs_path(ret_fs_path);
-        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_fs_path = fs_path_create(&fragment_shader_path, executable_directory_, shader_dir_, "ui_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_rslt_convert_fs_path(ret_fs_path);
-        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = ui_mesh_shader_create(renderer_backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), ui_mesh_shader_config_, &tmp_ui_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("shader_create(%s) - Failed to create ui mesh shader.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("shader_create(%s) - Failed to create ui mesh shader.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 

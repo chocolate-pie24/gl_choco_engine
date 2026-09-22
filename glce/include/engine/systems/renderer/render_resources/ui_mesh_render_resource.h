@@ -15,12 +15,12 @@ extern "C" {
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 
 typedef struct ui_mesh_render_resource ui_mesh_render_resource_t;
-typedef struct linear_alloc linear_alloc_t;
+typedef struct linear_allocator linear_allocator_t;
 typedef struct ui_mesh_shader_config ui_mesh_shader_config_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct mat4x4f mat4x4f_t;
 
-render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_);
+render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_);
 
 void ui_mesh_render_resource_deinitialize(ui_mesh_render_resource_t* render_resource_);
 

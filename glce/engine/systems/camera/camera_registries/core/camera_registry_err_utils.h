@@ -14,11 +14,11 @@ extern "C" {
 
 #include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
 
-const char* camera_registry_rslt_to_str(camera_registry_result_t rslt_);
+const char* camera_registry_result_to_str(camera_registry_result_t result_);
 
-camera_registry_result_t camera_registry_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+camera_registry_result_t camera_registry_result_convert_linear_allocator(linear_allocator_result_t result_);
 
-camera_registry_result_t camera_registry_rslt_convert_choco_string(choco_string_result_t rslt_);
+camera_registry_result_t camera_registry_result_convert_choco_string(choco_string_result_t result_);
 
 #ifdef __cplusplus
 }

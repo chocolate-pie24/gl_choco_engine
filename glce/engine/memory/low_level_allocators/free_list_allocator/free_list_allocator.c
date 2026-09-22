@@ -91,13 +91,13 @@
 // ============================================================
 // Private Constants
 // ============================================================
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_overflow = "OVERFLOW";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_success = "SUCCESS";
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_no_memory = "NO_MEMORY";
+static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
 // ============================================================
 // Private Function Declarations
@@ -117,7 +117,7 @@ static void free_block_coalesce(free_list_block_header_t* free_block_);
 // Utilities
 static bool block_exists(const free_list_allocator_t* free_list_allocator_, const free_list_block_header_t* block_);
 static bool ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_);
-static const char* rslt_to_str(free_list_allocator_result_t rslt_);
+static const char* result_to_str(free_list_allocator_result_t result_);
 
 // Validators
 static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_);
@@ -150,44 +150,44 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
     bool is_aligned = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "memory_pool_")
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "memory_pool_")
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "free_list_allocator_")
     if(0 == memory_pool_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
         ret = FREE_LIST_ALLOCATOR_UNDEFINED_ERROR;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_is_aligned failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
         goto cleanup;
     }
     if(!is_aligned) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if((UINTPTR_MAX - (uintptr_t)memory_pool_) < memory_pool_size_) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Address range overflow.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Address range overflow.", result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
     if(!memory_utility_align_up(sizeof(free_list_block_header_t), alignof(max_align_t), &payload_offset)) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗しるのはOVERFLOWのみ
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_align_up failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
     }
     if((SIZE_MAX - payload_offset) < alignof(max_align_t)) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗しるのはOVERFLOWのみ
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - minimum_block_size overflow.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - minimum_block_size overflow.", result_to_str(ret));
         goto cleanup;
     }
     minimum_block_size = payload_offset + alignof(max_align_t);
     if(memory_pool_size_ < minimum_block_size) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     initial_block = (free_list_block_header_t*)memory_pool_;
@@ -209,7 +209,7 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Postcondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -240,13 +240,13 @@ free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocato
     // Preconditions.
     if(NULL == free_list_allocator_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Provided free_list_allocator_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Provided free_list_allocator_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -281,18 +281,18 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "free_list_allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, rslt_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_list_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_list_allocator_allocate", "*out_ptr_")
     if(0 == allocation_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Provided allocation_size_ is not valid.", rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Provided allocation_size_ is not valid.", result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -300,21 +300,21 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     // Prepare.
     ret = allocation_block_size_calc(free_list_allocator_->payload_offset, allocation_size_, &required_block_size);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_block_size_calc failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_block_size_calc failed.", result_to_str(ret));
         goto cleanup;
     }
 
     // Preflight.
     ret = free_block_find_first_fit(free_list_allocator_, required_block_size, &allocation_block);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_find_first_fit failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_find_first_fit failed.", result_to_str(ret));
         goto cleanup;
     }
 
     // Commit eligibility.
     ret = allocation_is_ready(allocation_block, free_list_allocator_->payload_offset, required_block_size, allocation_size_);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_is_ready failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_is_ready failed.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -326,7 +326,7 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Postcondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -359,18 +359,18 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* fre
     free_list_block_header_t* allocation_block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "free_list_allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_free(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_free(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!ptr_is_allocated(free_list_allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_free(%s) - Provided ptr_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_free(%s) - Provided ptr_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -385,7 +385,7 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* fre
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_free(%s) - Postcondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_free(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -420,12 +420,12 @@ cleanup:
 // - 実装コードはプロジェクト作成者が作成した。
 bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_) {
     if(NULL == free_list_allocator_ || NULL == ptr_) {
-        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Provided free_list_allocator_ or ptr_ is not valid.", rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
+        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Provided free_list_allocator_ or ptr_ is not valid.", result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
         return false;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
-        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(FREE_LIST_ALLOCATOR_DATA_CORRUPTED));
+        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(FREE_LIST_ALLOCATOR_DATA_CORRUPTED));
         return false;
     }
 #endif
@@ -457,20 +457,20 @@ free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_
     const free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "free_list_allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "ptr_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "out_allocated_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "out_allocated_size_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(free_list_allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Precondition validation failed for 'free_list_allocator_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!ptr_is_allocated(free_list_allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
                                                          // 内部でblock_is_valid(), block_exists()が実行される
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Provided ptr_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Provided ptr_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -585,27 +585,27 @@ static free_list_allocator_result_t allocation_block_size_calc(size_t payload_of
     size_t required_block_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_size_calc", "out_required_block_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_size_calc", "out_required_block_size_")
     if(0 == allocation_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(0 == payload_offset_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided payload_offset_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided payload_offset_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if((SIZE_MAX - allocation_size_) < payload_offset_) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW;
-        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ overflow.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ overflow.", result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
     if(!memory_utility_align_up(allocation_size_ + payload_offset_, alignof(max_align_t), &required_block_size)) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗するのはOVERFLOWのみ
-        ERROR_MESSAGE("allocation_block_size_calc(%s) - memory_utility_align_up failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_block_size_calc(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -624,12 +624,12 @@ static free_list_allocator_result_t free_block_find_first_fit(const free_list_al
     free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "free_list_allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "out_free_block_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_free_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, rslt_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_block_find_first_fit", "*out_free_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "out_free_block_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_free_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_block_find_first_fit", "*out_free_block_")
     if(0 == required_block_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_block_find_first_fit(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_block_find_first_fit(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -643,7 +643,7 @@ static free_list_allocator_result_t free_block_find_first_fit(const free_list_al
     }
     if(NULL == block) {
         ret = FREE_LIST_ALLOCATOR_NO_MEMORY;
-        ERROR_MESSAGE("free_block_find_first_fit(%s) - free block not found.", rslt_to_str(ret));
+        ERROR_MESSAGE("free_block_find_first_fit(%s) - free block not found.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -660,40 +660,40 @@ static free_list_allocator_result_t allocation_is_ready(const free_list_block_he
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, rslt_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocation_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocation_block_")
     if(0 == required_block_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(0 == allocation_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided allocation_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(0 == payload_offset_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided payload_offset_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided payload_offset_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(required_block_size_ > allocation_block_->block_size) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(FREE_LIST_BLOCK_STATE_FREE != allocation_block_->block_state) {
         ret = FREE_LIST_ALLOCATOR_BAD_OPERATION;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided free_block_ is not freed.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided free_block_ is not freed.", result_to_str(ret));
         goto cleanup;
     }
     if(required_block_size_ < payload_offset_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ and payload_offset_ are not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ and payload_offset_ are not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(allocation_size_ > (required_block_size_ - payload_offset_)) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_is_ready(%s) - Provided allocation_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -978,24 +978,24 @@ static bool ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, 
     return FREE_LIST_BLOCK_STATE_ALLOCATED == node->block_state;
 }
 
-static const char* rslt_to_str(free_list_allocator_result_t rslt_) {
-    switch(rslt_) {
+static const char* result_to_str(free_list_allocator_result_t result_) {
+    switch(result_) {
     case FREE_LIST_ALLOCATOR_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case FREE_LIST_ALLOCATOR_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case FREE_LIST_ALLOCATOR_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case FREE_LIST_ALLOCATOR_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case FREE_LIST_ALLOCATOR_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case FREE_LIST_ALLOCATOR_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case FREE_LIST_ALLOCATOR_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 

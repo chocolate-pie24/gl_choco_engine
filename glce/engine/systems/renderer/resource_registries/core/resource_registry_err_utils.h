@@ -29,31 +29,31 @@ extern "C" {
 /**
  * @brief ログ出力用にresource_registriesの実行結果コードを文字列に変換する
  *
- * @param[in] rslt_ 実行結果コード
+ * @param[in] result_ 実行結果コード
  *
  * @return const char* 文字列化された実行結果コード
  */
-const char* resource_registry_rslt_to_str(resource_registry_result_t rslt_);
+const char* resource_registry_result_to_str(resource_registry_result_t result_);
 
 /**
  * @brief 下位モジュールであるlinear_allocatorが出力する実行結果コードをresource_registriesの実行結果コードに変換する
  *
- * @param[in] rslt_ linear_allocatorモジュールが出力する実行結果コード
+ * @param[in] result_ linear_allocatorモジュールが出力する実行結果コード
  *
  * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
  */
-resource_registry_result_t resource_registry_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+resource_registry_result_t resource_registry_result_convert_linear_allocator(linear_allocator_result_t result_);
 
 /**
  * @brief resourceレイヤーが出力する実行結果コードをresource_registriesの実行結果コードに変換する
  *
- * @param[in] rslt_ resourceレイヤーが出力する実行結果コード
+ * @param[in] result_ resourceレイヤーが出力する実行結果コード
  *
  * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
  */
-resource_registry_result_t resource_registry_rslt_convert_resource(resource_result_t rslt_);
+resource_registry_result_t resource_registry_result_convert_resource(resource_result_t result_);
 
-resource_registry_result_t resource_registry_rslt_convert_choco_string(choco_string_result_t rslt_);
+resource_registry_result_t resource_registry_result_convert_choco_string(choco_string_result_t result_);
 
 #ifdef __cplusplus
 }

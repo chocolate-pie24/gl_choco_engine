@@ -19,7 +19,7 @@ typedef struct engine_event_view engine_event_view_t;
 typedef struct event_system_config event_system_config_t;
 typedef struct platform_system platform_system_t;
 
-event_system_result_t event_system_create(const event_system_config_t* config_, linear_alloc_t* linear_alloc_, platform_system_t* platform_system_, event_system_t** out_event_system_);
+event_system_result_t event_system_create(const event_system_config_t* config_, linear_allocator_t* linear_allocator_, platform_system_t* platform_system_, event_system_t** out_event_system_);
 
 void event_system_deinitialize(event_system_t* event_system_);
 

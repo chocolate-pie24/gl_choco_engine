@@ -140,9 +140,9 @@ static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_);
 buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_context_, const vbo_manager_config_t* config_, vbo_manager_t** out_vbo_manager_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
+    range_allocator_result_t ret_range_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
     range_allocator_t* tmp_allocator = NULL;
@@ -151,53 +151,53 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     bool vbo_created = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "out_vbo_manager_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_config_is_valid(config_), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_rslt_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "out_vbo_manager_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_config_is_valid(config_), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_result_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_")
 
-    ret_memory = choco_memory_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
-        ret = buffer_manager_rslt_convert_choco_memory(ret_memory);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=manager_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", buffer_manager_rslt_to_str(ret), sizeof(vbo_manager_t), (int)ret_memory);
+    ret_memory_system = choco_memory_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = buffer_manager_result_convert_choco_memory(ret_memory_system);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=manager_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", buffer_manager_result_to_str(ret), sizeof(vbo_manager_t), (int)ret_memory_system);
         goto cleanup;
     }
 
-    ret_allocator = range_allocator_create(config_->vbo_size, config_->max_allocation_count, config_->base_align, &tmp_allocator);
-    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=range_allocator_create_failed, vbo_size=%zu, max_allocation_count=%zu, base_align=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(ret), config_->vbo_size, config_->max_allocation_count, config_->base_align, (int)ret_allocator);
+    ret_range_allocator = range_allocator_create(config_->vbo_size, config_->max_allocation_count, config_->base_align, &tmp_allocator);
+    if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
+        ret = buffer_manager_result_convert_range_allocator(ret_range_allocator);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=range_allocator_create_failed, vbo_size=%zu, max_allocation_count=%zu, base_align=%zu, range_allocator_result=%d", buffer_manager_result_to_str(ret), config_->vbo_size, config_->max_allocation_count, config_->base_align, (int)ret_range_allocator);
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_vbo_create(backend_context_, &tmp_vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_create_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_create_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_created = true;
 
     ret_renderer_backend = renderer_backend_vbo_bind(backend_context_, tmp_vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_bind_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = true;
 
     ret_renderer_backend = renderer_backend_vbo_vertex_load(backend_context_, config_->vbo_size, 0, config_->buffer_usage);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_vertex_load_failed, vbo_size=%zu, buffer_usage=%d, renderer_result=%d", buffer_manager_rslt_to_str(ret), config_->vbo_size, (int)config_->buffer_usage, (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_vertex_load_failed, vbo_size=%zu, buffer_usage=%d, renderer_result=%d", buffer_manager_result_to_str(ret), config_->vbo_size, (int)config_->buffer_usage, (int)ret_renderer_backend);
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_unbind_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = false;
@@ -217,7 +217,7 @@ cleanup:
             if(vbo_bound) {
                 ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
                 if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                    ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vbo_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+                    ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vbo_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
                     ret = BUFFER_MANAGER_DATA_CORRUPTED;
                 }
             }
@@ -250,7 +250,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
 buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
+    range_allocator_result_t ret_range_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     range_allocation_t tmp_allocation = { 0 };
@@ -259,46 +259,46 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t si
     bool load_success = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "write_data_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_write", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "vbo_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "write_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_write", "vbo_manager_")
 
     if(0 != (size_ % vbo_manager_->config.base_align)) {
         ret = BUFFER_MANAGER_BAD_OPERATION;
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=write_size_misaligned, write_size=%zu, base_align=%zu", buffer_manager_rslt_to_str(ret), size_, vbo_manager_->config.base_align);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=write_size_misaligned, write_size=%zu, base_align=%zu", buffer_manager_result_to_str(ret), size_, vbo_manager_->config.base_align);
         goto cleanup;
     }
 
-    ret_allocator = range_allocator_allocate(vbo_manager_->range_allocator, size_, vbo_manager_->config.base_align, &tmp_allocation);
-    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=range_allocator_allocate_failed, write_size=%zu, base_align=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(ret), size_, vbo_manager_->config.base_align, (int)ret_allocator);
+    ret_range_allocator = range_allocator_allocate(vbo_manager_->range_allocator, size_, vbo_manager_->config.base_align, &tmp_allocation);
+    if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
+        ret = buffer_manager_result_convert_range_allocator(ret_range_allocator);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=range_allocator_allocate_failed, write_size=%zu, base_align=%zu, range_allocator_result=%d", buffer_manager_result_to_str(ret), size_, vbo_manager_->config.base_align, (int)ret_range_allocator);
         goto cleanup;
     }
     allocate_success = true;
 
     ret_renderer_backend = renderer_backend_vbo_bind(vbo_manager_->backend_context, vbo_manager_->vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_bind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_bind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = true;
 
     ret_renderer_backend = renderer_backend_vbo_vertex_subload(vbo_manager_->backend_context, tmp_allocation.offset, size_, write_data_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_vertex_subload_failed, write_offset=%zu, write_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, size_, (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_vertex_subload_failed, write_offset=%zu, write_size=%zu, renderer_result=%d", buffer_manager_result_to_str(ret), tmp_allocation.offset, size_, (int)ret_renderer_backend);
         goto cleanup;
     }
     load_success = true;
 
     ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_unbind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_unbind_failed, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
         goto cleanup;
     }
     vbo_bound = false;
@@ -311,9 +311,9 @@ cleanup:
     if(allocate_success) {
         if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
             // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            ret_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);
-            if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=range_allocator_free_failed, original_result=%s, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_allocator);
+            ret_range_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);
+            if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
+                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=range_allocator_free_failed, original_result=%s, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_range_allocator);
                 ret = BUFFER_MANAGER_DATA_CORRUPTED;
             }
         }
@@ -321,7 +321,7 @@ cleanup:
             // backend_context_の内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
             ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
             if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vbo_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_rslt_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
+                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vbo_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
                 ret = BUFFER_MANAGER_DATA_CORRUPTED;
             }
         }
@@ -333,29 +333,29 @@ cleanup:
 buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const range_allocation_t* allocation_handle_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    range_allocator_result_t ret_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
+    range_allocator_result_t ret_range_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
 
     if(!range_allocation_is_valid(allocation_handle_)) {
         ret = BUFFER_MANAGER_BAD_OPERATION;
-        ERROR_MESSAGE("vbo_manager_free(%s) - Provided allocation_handle_ is not valid.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_free(%s) - Provided allocation_handle_ is not valid.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
     if(!vbo_manager_is_valid(vbo_manager_)) {
         ret = BUFFER_MANAGER_DATA_CORRUPTED;
-        ERROR_MESSAGE("vbo_manager_free(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_rslt_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_free(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
 
     // NOTE:
     // - range_allocatorの内部データ不整合: DATA_CORRUPTED
     // - vbo_manager_とallocation_handle_の不整合: BAD_OPERATION
-    ret_allocator = range_allocator_free(vbo_manager_->range_allocator, allocation_handle_);
-    if(RANGE_ALLOCATOR_SUCCESS != ret_allocator) {
-        ret = buffer_manager_rslt_convert_range_allocator(ret_allocator);
-        ERROR_MESSAGE("vbo_manager_free(%s) - Failed to free vertex allocation. reason=range_allocator_free_failed, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_rslt_to_str(ret), allocation_handle_->offset, allocation_handle_->allocated_size, (int)ret_allocator);
+    ret_range_allocator = range_allocator_free(vbo_manager_->range_allocator, allocation_handle_);
+    if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
+        ret = buffer_manager_result_convert_range_allocator(ret_range_allocator);
+        ERROR_MESSAGE("vbo_manager_free(%s) - Failed to free vertex allocation. reason=range_allocator_free_failed, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_result_to_str(ret), allocation_handle_->offset, allocation_handle_->allocated_size, (int)ret_range_allocator);
         goto cleanup;
     }
 
@@ -370,13 +370,13 @@ buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_) {
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_rslt_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_bind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
+    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_bind", "vbo_manager_")
 
     ret_renderer_backend = renderer_backend_vbo_bind(vbo_manager_->backend_context, vbo_manager_->vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_bind(%s) - Failed to bind vertex buffer. reason=renderer_backend_vbo_bind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_bind(%s) - Failed to bind vertex buffer. reason=renderer_backend_vbo_bind_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
 
@@ -391,12 +391,12 @@ buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_) {
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_rslt_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "vbo_manager_")
 
     ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = buffer_manager_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vbo_manager_unbind(%s) - Failed to unbind vertex buffer. reason=renderer_backend_vbo_unbind_failed, renderer_result=%d", buffer_manager_rslt_to_str(ret), (int)ret_renderer_backend);
+        ret = buffer_manager_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vbo_manager_unbind(%s) - Failed to unbind vertex buffer. reason=renderer_backend_vbo_unbind_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
 

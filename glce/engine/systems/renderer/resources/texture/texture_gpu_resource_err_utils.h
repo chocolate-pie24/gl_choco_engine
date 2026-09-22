@@ -14,11 +14,11 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-const char* texture_gpu_resource_rslt_to_str(texture_gpu_resource_result_t rslt_);
+const char* texture_gpu_resource_result_to_str(texture_gpu_resource_result_t result_);
 
-texture_gpu_resource_result_t texture_gpu_resource_rslt_convert_choco_memory(memory_system_result_t rslt_);
+texture_gpu_resource_result_t texture_gpu_resource_result_convert_choco_memory(memory_system_result_t result_);
 
-texture_gpu_resource_result_t texture_gpu_resource_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
+texture_gpu_resource_result_t texture_gpu_resource_result_convert_renderer_backend(renderer_backend_result_t result_);
 
 #ifdef __cplusplus
 }

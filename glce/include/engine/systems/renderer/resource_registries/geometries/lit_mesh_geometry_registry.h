@@ -16,13 +16,13 @@ extern "C" {
 
 typedef struct lit_mesh_geometry_registry lit_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
 
-typedef struct linear_alloc linear_alloc_t;                             /**< リニアアロケータのopaque型 */
+typedef struct linear_allocator linear_allocator_t;                             /**< リニアアロケータのopaque型 */
 typedef struct lit_mesh_geometry lit_mesh_geometry_t;                   /**< 単色ライティング描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
 typedef struct lit_mesh_shader lit_mesh_shader_t;
 
-resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry_count_, linear_alloc_t* allocator_, lit_mesh_geometry_registry_t** out_registry_);
+resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry_count_, linear_allocator_t* allocator_, lit_mesh_geometry_registry_t** out_registry_);
 
 void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* registry_, lit_mesh_shader_t* shader_);
 

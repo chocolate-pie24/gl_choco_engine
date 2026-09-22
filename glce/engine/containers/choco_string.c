@@ -32,17 +32,17 @@ struct choco_string {
     char* buffer;       /**< 文字列格納バッファ */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ整合異常)文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< 実行結果コード(計算過程でオーバーフロー発生)文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
+static const char* const s_result_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ整合異常)文字列 */
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
+static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
+static const char* const s_result_str_overflow = "OVERFLOW";                  /**< 実行結果コード(計算過程でオーバーフロー発生)文字列 */
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
 
-static const char* rslt_to_str(choco_string_result_t rslt_);
+static const char* result_to_str(choco_string_result_t result_);
 static choco_string_result_t choco_string_mem_allocate(size_t size_, void** out_ptr_);
 static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string_);
 static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_);
@@ -57,13 +57,13 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_) {
     choco_string_t* tmp_string = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "*string_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "*string_")
 
     // Simulation.
     ret = choco_string_mem_allocate(sizeof(*tmp_string), (void**)&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_string, 0, sizeof(*tmp_string));
@@ -71,7 +71,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_) {
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(tmp_string)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_default_create(%s) - Postcondition validation failed for 'tmp_string'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_default_create(%s) - Postcondition validation failed for 'tmp_string'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -97,14 +97,14 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
     size_t src_len = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "*string_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "*string_")
 
     // Simulation.
     ret = choco_string_default_create(&tmp_string);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Failed to create temporary string.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Failed to create temporary string.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -112,12 +112,12 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
     if(0 != src_len) {
         if((SIZE_MAX - 1) < src_len) {
             ret = CHOCO_STRING_OVERFLOW;
-            ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Provided string is too large.", rslt_to_str(ret));
+            ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Provided string is too large.", result_to_str(ret));
             goto cleanup;
         }
         ret = buffer_reserve(src_len + 1, tmp_string);
         if(CHOCO_STRING_SUCCESS != ret) {
-            ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Failed to reserve buffer space.", rslt_to_str(ret));
+            ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Failed to reserve buffer space.", result_to_str(ret));
             goto cleanup;
         }
         memcpy(tmp_string->buffer, src_, src_len + 1);
@@ -127,7 +127,7 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(tmp_string)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Postcondition validation failed for 'tmp_string'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Postcondition validation failed for 'tmp_string'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -166,29 +166,29 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "dst_")
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(src_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'src_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'src_'.", result_to_str(ret));
         goto cleanup;
     }
     if(!is_valid_shallow(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(src_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'src_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'src_'.", result_to_str(ret));
         goto cleanup;
     }
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -209,7 +209,7 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
             } else {
                 ret = buffer_resize(src_->len + 1, dst_);
                 if(CHOCO_STRING_SUCCESS != ret) {
-                    ERROR_MESSAGE("choco_string_copy(%s) - Failed to reserve buffer space.", rslt_to_str(ret));
+                    ERROR_MESSAGE("choco_string_copy(%s) - Failed to reserve buffer space.", result_to_str(ret));
                     goto cleanup;
                 }
                 memcpy(dst_->buffer, src_->buffer, src_->len + 1);  // 終端文字を含めてコピー
@@ -221,7 +221,7 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy(%s) - Postcondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy(%s) - Postcondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -236,19 +236,19 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
     size_t src_len = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -262,7 +262,7 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
     } else {
         if((SIZE_MAX - 1) < src_len) {
             ret = CHOCO_STRING_OVERFLOW;
-            ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Provided string is too large.", rslt_to_str(ret));
+            ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Provided string is too large.", result_to_str(ret));
             goto cleanup;
         }
         if(dst_->capacity >= (src_len + 1)) {
@@ -271,7 +271,7 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
         } else {
             ret = buffer_resize(src_len + 1, dst_);
             if(CHOCO_STRING_SUCCESS != ret) {
-                ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Failed to resize the buffer.", rslt_to_str(ret));
+                ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Failed to resize the buffer.", result_to_str(ret));
                 goto cleanup;
             }
             memcpy(dst_->buffer, src_, src_len + 1);
@@ -282,7 +282,7 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Postcondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Postcondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -298,41 +298,41 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
     if(string_ == dst_) {
         ret = CHOCO_STRING_BAD_OPERATION;
-        ERROR_MESSAGE("choco_string_concat(%s) - provided dst_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - provided dst_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'string_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'string_'.", result_to_str(ret));
         goto cleanup;
     }
     if(!is_valid_shallow(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(string_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'string_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'string_'.", result_to_str(ret));
         goto cleanup;
     }
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     if((SIZE_MAX - dst_->len - 1) < string_->len) {
         ret = CHOCO_STRING_OVERFLOW;
-        ERROR_MESSAGE("choco_string_concat(%s) - Resulting string length is too large.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Resulting string length is too large.", result_to_str(ret));
         goto cleanup;
     }
     if(0 != string_->len) {
@@ -343,7 +343,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
         } else {
             ret = choco_string_mem_allocate(dst_len_new + 1, (void**)&tmp_buffer);
             if(CHOCO_STRING_SUCCESS != ret) {
-                ERROR_MESSAGE("choco_string_concat(%s) - Failed to allocate memory for 'tmp_buffer'.", rslt_to_str(ret));
+                ERROR_MESSAGE("choco_string_concat(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
                 goto cleanup;
             }
             memset(tmp_buffer, 0, dst_len_new + 1);
@@ -365,7 +365,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat(%s) - Postcondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat(%s) - Postcondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -382,19 +382,19 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "string_")
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Precondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Precondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -402,7 +402,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
     src_len = mock_strlen(string_);
     if((SIZE_MAX - dst_->len - 1) < src_len) {
         ret = CHOCO_STRING_OVERFLOW;
-        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Resulting string length is too large.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Resulting string length is too large.", result_to_str(ret));
         goto cleanup;
     }
     if(0 != src_len) {
@@ -413,7 +413,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
         } else {
             ret = choco_string_mem_allocate(dst_len_new + 1, (void**)&tmp_buffer);
             if(CHOCO_STRING_SUCCESS != ret) {
-                ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Failed to allocate memory for 'tmp_buffer'.", rslt_to_str(ret));
+                ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
                 goto cleanup;
             }
             memset(tmp_buffer, 0, dst_len_new + 1);
@@ -435,7 +435,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Postcondition validation failed for 'dst_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Postcondition validation failed for 'dst_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -491,19 +491,19 @@ choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_st
     size_t buff_size = 0;
     bool equal_found = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_key_get", "line_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_key_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_key_get", "out_key_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_key_get", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_key_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_key_get", "out_key_")
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(out_key_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Precondition validation failed for 'out_key_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Precondition validation failed for 'out_key_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(out_key_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Precondition validation failed for 'out_key_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Precondition validation failed for 'out_key_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -538,7 +538,7 @@ choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_st
     buff_size = equal_index - start_index + 1;
     ret = choco_string_mem_allocate(buff_size, (void**)&tmp_buff);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Failed to get key-value key. reason=tmp_buffer_allocate_failed, bytes=%zu", rslt_to_str(ret), buff_size);
+        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Failed to get key-value key. reason=tmp_buffer_allocate_failed, bytes=%zu", result_to_str(ret), buff_size);
         goto cleanup;
     }
     memset(tmp_buff, 0, buff_size);
@@ -557,13 +557,13 @@ choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_st
 
     ret = choco_string_copy_from_c_string(tmp_buff, out_key_);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - choco_string_copy_from_c_string failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - choco_string_copy_from_c_string failed.", result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(out_key_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Postcondition validation failed for 'out_key_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Postcondition validation failed for 'out_key_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -587,19 +587,19 @@ choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_
     size_t buff_size = 0;
     bool equal_found = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "line_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_value_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "out_value_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_value_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_key_value_value_get", "out_value_")
 #if defined(DEBUG_BUILD)
     if(!is_valid_shallow(out_value_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Precondition validation failed for 'out_value_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Precondition validation failed for 'out_value_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 #if defined(TEST_BUILD)
     if(!choco_string_is_valid(out_value_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Precondition validation failed for 'out_value_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Precondition validation failed for 'out_value_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -634,7 +634,7 @@ choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_
     buff_size = len - equal_index;
     ret = choco_string_mem_allocate(buff_size, (void**)&tmp_buff);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Failed to get key-value value. reason=tmp_buffer_allocate_failed, bytes=%zu", rslt_to_str(ret), buff_size);
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Failed to get key-value value. reason=tmp_buffer_allocate_failed, bytes=%zu", result_to_str(ret), buff_size);
         goto cleanup;
     }
     memset(tmp_buff, 0, buff_size);
@@ -653,14 +653,14 @@ choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_
     }
     ret = choco_string_copy_from_c_string(tmp_buff, out_value_);
     if(CHOCO_STRING_SUCCESS != ret) {
-        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - choco_string_copy_from_c_string failed.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - choco_string_copy_from_c_string failed.", result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(out_value_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
-        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Postcondition validation failed for 'out_value_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Postcondition validation failed for 'out_value_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -692,44 +692,44 @@ bool choco_string_is_valid(const choco_string_t* string_) {
 /**
  * @brief 実行結果コードを文字列に変換する
  *
- * @param[in] rslt_ 文字列に変換する実行結果コード
+ * @param[in] result_ 文字列に変換する実行結果コード
  * @return const char* 変換された文字列の先頭アドレス
  */
-static const char* rslt_to_str(choco_string_result_t rslt_) {
-    switch(rslt_) {
+static const char* result_to_str(choco_string_result_t result_) {
+    switch(result_) {
     case CHOCO_STRING_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case CHOCO_STRING_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case CHOCO_STRING_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case CHOCO_STRING_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case CHOCO_STRING_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case CHOCO_STRING_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case CHOCO_STRING_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     case CHOCO_STRING_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case CHOCO_STRING_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
 static choco_string_result_t choco_string_mem_allocate(size_t size_, void** out_ptr_) {
     void* tmp_ptr = NULL;
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
-    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_mem_allocate", "*out_ptr_")
 
-    ret_mem = choco_memory_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
-    switch(ret_mem) {
+    ret_memory_system = choco_memory_allocate(size_, MEMORY_TAG_STRING, &tmp_ptr);
+    switch(ret_memory_system) {
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
         ret = CHOCO_STRING_INVALID_ARGUMENT;
         goto cleanup;
@@ -763,9 +763,9 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
     char* tmp_buffer = NULL;
 
-    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "string_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == string_->capacity, ret, CHOCO_STRING_BAD_OPERATION, rslt_to_str(CHOCO_STRING_BAD_OPERATION), "buffer_reserve", "string_->capacity")
+    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "string_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == string_->capacity, ret, CHOCO_STRING_BAD_OPERATION, result_to_str(CHOCO_STRING_BAD_OPERATION), "buffer_reserve", "string_->capacity")
 
     ret = choco_string_mem_allocate(size_, (void**)&tmp_buffer);
     if(CHOCO_STRING_SUCCESS != ret) {
@@ -794,8 +794,8 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "string_")
-    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, rslt_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "string_")
+    IF_ARG_FALSE_GOTO_CLEANUP(size_ > 0, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "size_")
 
     // Simulation.
     ret = choco_string_mem_allocate(size_, (void**)&tmp_buffer);

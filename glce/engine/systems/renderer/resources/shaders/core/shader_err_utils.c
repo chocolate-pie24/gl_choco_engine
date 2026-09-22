@@ -16,62 +16,62 @@
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_shader_compile_error = "SHADER_COMPILE_ERROR";
-static const char* const s_rslt_str_shader_link_error = "SHADER_LINK_ERROR";
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_overflow = "OVERFLOW";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_success = "SUCCESS";
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_result_str_no_memory = "NO_MEMORY";
+static const char* const s_result_str_shader_compile_error = "SHADER_COMPILE_ERROR";
+static const char* const s_result_str_shader_link_error = "SHADER_LINK_ERROR";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
-const char* shader_rslt_to_str(shader_result_t rslt_) {
-    switch(rslt_) {
+const char* shader_result_to_str(shader_result_t result_) {
+    switch(result_) {
     case SHADER_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case SHADER_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case SHADER_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case SHADER_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case SHADER_COMPILE_ERROR:
-        return s_rslt_str_shader_compile_error;
+        return s_result_str_shader_compile_error;
     case SHADER_LINK_ERROR:
-        return s_rslt_str_shader_link_error;
+        return s_result_str_shader_link_error;
     case SHADER_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case SHADER_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case SHADER_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case SHADER_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case SHADER_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-shader_result_t shader_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
+shader_result_t shader_result_convert_linear_allocator(linear_allocator_result_t result_) {
+    switch(result_) {
+    case LINEAR_ALLOCATOR_SUCCESS:
         return SHADER_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
+    case LINEAR_ALLOCATOR_NO_MEMORY:
         return SHADER_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
+    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return SHADER_INVALID_ARGUMENT;
     default:
         return SHADER_UNDEFINED_ERROR;
     }
 }
 
-shader_result_t shader_rslt_convert_choco_memory(memory_system_result_t rslt_) {
-    switch(rslt_) {
+shader_result_t shader_result_convert_choco_memory(memory_system_result_t result_) {
+    switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
         return SHADER_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -87,8 +87,8 @@ shader_result_t shader_rslt_convert_choco_memory(memory_system_result_t rslt_) {
     }
 }
 
-shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_) {
-    switch(rslt_) {
+shader_result_t shader_result_convert_choco_string(choco_string_result_t result_) {
+    switch(result_) {
     case CHOCO_STRING_SUCCESS:
         return SHADER_SUCCESS;
     case CHOCO_STRING_DATA_CORRUPTED:
@@ -112,8 +112,8 @@ shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_) {
     }
 }
 
-shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_) {
-    switch(rslt_) {
+shader_result_t shader_result_convert_fs_stream(fs_stream_result_t result_) {
+    switch(result_) {
     case FS_STREAM_SUCCESS:
         return SHADER_SUCCESS;
     case FS_STREAM_INVALID_ARGUMENT:
@@ -141,8 +141,8 @@ shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_) {
     }
 }
 
-shader_result_t shader_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
-    switch(rslt_) {
+shader_result_t shader_result_convert_renderer_backend(renderer_backend_result_t result_) {
+    switch(result_) {
     case RENDERER_BACKEND_SUCCESS:
         return SHADER_SUCCESS;
     case RENDERER_BACKEND_INVALID_ARGUMENT:
@@ -170,8 +170,8 @@ shader_result_t shader_rslt_convert_renderer_backend(renderer_backend_result_t r
     }
 }
 
-shader_result_t shader_rslt_convert_buffer_manager(buffer_manager_result_t rslt_) {
-    switch(rslt_) {
+shader_result_t shader_result_convert_buffer_manager(buffer_manager_result_t result_) {
+    switch(result_) {
     case BUFFER_MANAGER_SUCCESS:
         return SHADER_SUCCESS;
     case BUFFER_MANAGER_INVALID_ARGUMENT:

@@ -12,9 +12,9 @@ extern "C" {
 
 #include "engine/core/memory/choco_memory.h"
 
-const char* camera_rslt_to_str(camera_result_t rslt_);
+const char* camera_result_to_str(camera_result_t result_);
 
-camera_result_t camera_rslt_convert_choco_memory(memory_system_result_t rslt_);
+camera_result_t camera_result_convert_choco_memory(memory_system_result_t result_);
 
 #ifdef __cplusplus
 }

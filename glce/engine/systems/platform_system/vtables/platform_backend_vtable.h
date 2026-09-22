@@ -20,10 +20,10 @@ extern "C" {
 /**< プラットフォーム内部状態管理構造体前方宣言(実体は各ソースファイルで定義) */
 typedef struct platform_backend platform_backend_t;
 typedef struct platform_system_config platform_system_config_t;
-typedef struct linear_alloc linear_alloc_t;
+typedef struct linear_allocator linear_allocator_t;
 typedef struct platform_event_view platform_event_view_t;
 
-typedef platform_system_result_t (*pfn_platform_backend_create)(const platform_system_config_t* config_, linear_alloc_t* linear_alloc_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_platform_backend_);
+typedef platform_system_result_t (*pfn_platform_backend_create)(const platform_system_config_t* config_, linear_allocator_t* linear_allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_platform_backend_);
 
 typedef void (*pfn_platform_backend_deinitialize)(platform_backend_t* platform_backend_);
 

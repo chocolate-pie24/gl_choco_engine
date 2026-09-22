@@ -17,10 +17,10 @@ extern "C" {
 
 typedef struct flight_camera_registry flight_camera_registry_t;
 
-typedef struct linear_alloc linear_alloc_t;                                 /**< リニアアロケータのopaque型 */
+typedef struct linear_allocator linear_allocator_t;                                 /**< リニアアロケータのopaque型 */
 typedef struct flight_camera flight_camera_t;
 
-camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_alloc_t* allocator_, flight_camera_registry_t** out_registry_);
+camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, flight_camera_registry_t** out_registry_);
 
 void flight_camera_registry_deinitialize(flight_camera_registry_t* registry_);
 

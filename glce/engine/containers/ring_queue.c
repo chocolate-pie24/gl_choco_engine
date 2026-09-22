@@ -40,23 +40,25 @@ struct ring_queue {
     void* memory_pool;          /**< 要素を格納するバッファ */
 };
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< リングキューAPI実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< リングキューAPI実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< リングキューAPI実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< リングキューAPI実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< リングキューAPI実行結果コード(内部データ破損)に対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
-static const char* const s_rslt_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
+static const char* const s_result_str_success = "SUCCESS";                    /**< リングキューAPI実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< リングキューAPI実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< リングキューAPI実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< リングキューAPI実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< リングキューAPI実行結果コード(内部データ破損)に対応する文字列 */
+static const char* const s_result_str_overflow = "OVERFLOW";                  /**< リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
+static const char* const s_result_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
 
-static const char* rslt_to_str(ring_queue_result_t rslt_);
-static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_);
+static const char* result_to_str(ring_queue_result_t result_);
+static ring_queue_result_t result_convert_memory_system(memory_system_result_t result_);
 
 ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
-    memory_system_result_t ret_mem = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+
     ring_queue_t* tmp_queue = NULL;
     size_t capacity = 0;
     size_t stride = 0;
@@ -64,16 +66,16 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     size_t diff = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "ring_queue_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "ring_queue_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
     if(0 == max_element_count_ || 0 == element_size_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided max_element_count_ or element_size_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided max_element_count_ or element_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
     if(0 == element_align_ || !IS_POWER_OF_TWO(element_align_) || element_align_ > alignof(max_align_t)) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ring_queue_create(%s) - Provided element_align_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Provided element_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -90,29 +92,29 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     }
     if((SIZE_MAX - padding) < element_size_) {
         ret = RING_QUEUE_OVERFLOW;
-        ERROR_MESSAGE("ring_queue_create(%s) - Computed stride is too large.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed stride is too large.", result_to_str(ret));
         goto cleanup;
     }
     stride = element_size_ + padding;
     if(SIZE_MAX / max_element_count_ < stride) {
         ret = RING_QUEUE_OVERFLOW;
-        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Computed element stride is too large.", result_to_str(ret));
         goto cleanup;
     }
     capacity = stride * max_element_count_;
 
-    ret_mem = choco_memory_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
-    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = rslt_convert_mem_sys(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", rslt_to_str(ret));
+    ret_memory_system = choco_memory_allocate(sizeof(*tmp_queue), MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = result_convert_memory_system(ret_memory_system);
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate ring queue memory.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue, 0, sizeof(*tmp_queue));
 
-    ret_mem = choco_memory_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
-    if(MEMORY_SYSTEM_SUCCESS != ret_mem) {
-        ret = rslt_convert_mem_sys(ret_mem);
-        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", rslt_to_str(ret));
+    ret_memory_system = choco_memory_allocate(capacity, MEMORY_TAG_RING_QUEUE, &tmp_queue->memory_pool);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = result_convert_memory_system(ret_memory_system);
+        ERROR_MESSAGE("ring_queue_create(%s) - Failed to allocate memory pool memory.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_queue->memory_pool, 0, capacity);
@@ -130,7 +132,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(tmp_queue)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_create(%s) - Postcondition validation failed for 'tmp_queue'.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_create(%s) - Postcondition validation failed for 'tmp_queue'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -175,18 +177,18 @@ ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, siz
     char* mem_ptr = NULL;
     char* target_ptr = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "ring_queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_push(%s) - Precondition validation failed for 'ring_queue_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_push(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(ring_queue_->element_size != element_size_ || ring_queue_->element_align != element_align_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ring_queue_push(%s) - Provided element_size_ or element_align_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_push(%s) - Provided element_size_ or element_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -208,7 +210,7 @@ ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, siz
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_push(%s) - Postcondition validation failed for 'ring_queue_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_push(%s) - Postcondition validation failed for 'ring_queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -224,18 +226,18 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
     char* mem_ptr = NULL;
     char* head_ptr = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "ring_queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, rslt_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "data_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_pop(%s) - Precondition validation failed for 'ring_queue_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_pop(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(ring_queue_->element_size != element_size_ || ring_queue_->element_align != element_align_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ring_queue_pop(%s) - Provided element_size_ or element_align_ is not valid.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_pop(%s) - Provided element_size_ or element_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -259,7 +261,7 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_pop(%s) - Postcondition validation failed for 'ring_queue_'.", rslt_to_str(ret));
+        ERROR_MESSAGE("ring_queue_pop(%s) - Postcondition validation failed for 'ring_queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -276,7 +278,7 @@ bool ring_queue_is_empty(const ring_queue_t* ring_queue_) {
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(ring_queue_)) {
-        ERROR_MESSAGE("ring_queue_is_empty(%s) - Precondition validation failed for 'ring_queue_'.", rslt_to_str(RING_QUEUE_DATA_CORRUPTED));
+        ERROR_MESSAGE("ring_queue_is_empty(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(RING_QUEUE_DATA_CORRUPTED));
         return true;
     }
 #endif
@@ -355,11 +357,11 @@ bool ring_queue_is_valid(const ring_queue_t* ring_queue_) {
 /**
  * @brief メモリシステム実行結果コードをリングキュー実行結果コードに変換する
  *
- * @param[in] rslt_ メモリシステム実行結果コード
+ * @param[in] result_ メモリシステム実行結果コード
  * @return ring_queue_result_t 変換されたリングキュー実行結果コード
  */
-static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
-    switch(rslt_) {
+static ring_queue_result_t result_convert_memory_system(memory_system_result_t result_) {
+    switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
         return RING_QUEUE_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:
@@ -378,32 +380,32 @@ static ring_queue_result_t rslt_convert_mem_sys(memory_system_result_t rslt_) {
 /**
  * @brief リングキュー実行結果コードを文字列に変換する
  *
- * @param[in] rslt_ リングキュー実行結果コード
+ * @param[in] result_ リングキュー実行結果コード
  * @return const char* 変換された文字列
  */
-static const char* rslt_to_str(ring_queue_result_t rslt_) {
-    switch(rslt_) {
+static const char* result_to_str(ring_queue_result_t result_) {
+    switch(result_) {
     case RING_QUEUE_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case RING_QUEUE_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case RING_QUEUE_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case RING_QUEUE_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case RING_QUEUE_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     case RING_QUEUE_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case RING_QUEUE_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case RING_QUEUE_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case RING_QUEUE_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case RING_QUEUE_EMPTY:
-        return s_rslt_str_empty;
+        return s_result_str_empty;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }

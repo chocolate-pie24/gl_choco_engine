@@ -16,7 +16,7 @@ extern "C" {
 
 #include "application/core/application_types.h"
 
-typedef struct linear_alloc linear_alloc_t;
+typedef struct linear_allocator linear_allocator_t;
 typedef struct renderer_config renderer_config_t;
 typedef struct application_renderer application_renderer_t;
 typedef struct mat4x4f mat4x4f_t;
@@ -25,7 +25,7 @@ typedef struct aabb_3d aabb_3d_t;
 typedef struct point_vertex point_vertex_t;
 typedef struct application_frame_state application_frame_state_t;
 
-application_result_t application_renderer_create(const renderer_config_t* renderer_config_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_);
+application_result_t application_renderer_create(const renderer_config_t* renderer_config_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_application_renderer_);
 
 void application_renderer_deinitialize(application_renderer_t* application_renderer_);
 

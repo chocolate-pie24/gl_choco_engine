@@ -22,7 +22,7 @@ extern "C" {
 /**
  * @brief geometry primitive実行結果コードを文字列に変換する
  *
- * @param[in] rslt_ geometry primitiveレイヤー実行結果コード
+ * @param[in] result_ geometry primitiveレイヤー実行結果コード
  *
  * @retval "SUCCESS" 実行結果コード:GEOMETRY_PRIMITIVE_SUCCESS(正常終了)
  * @retval "INVALID_ARGUMENT" 実行結果コード:GEOMETRY_PRIMITIVE_INVALID_ARGUMENT(引数異常)
@@ -33,7 +33,7 @@ extern "C" {
  * @retval "DATA_CORRUPTED" 実行結果コード:GEOMETRY_PRIMITIVE_DATA_CORRUPTED(幾何データ不正)
  * @retval "UNDEFINED_ERROR" 実行結果コード:GEOMETRY_PRIMITIVE_UNDEFINED_ERROR(不明なエラー)
  */
-const char* geometry_primitive_rslt_to_str(geometry_primitive_result_t rslt_);
+const char* geometry_primitive_result_to_str(geometry_primitive_result_t result_);
 
 #ifdef __cplusplus
 }

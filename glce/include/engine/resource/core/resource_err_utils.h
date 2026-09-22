@@ -29,7 +29,7 @@ extern "C" {
 /**
  * @brief Resourceレイヤー実行結果コードを文字列に変換する
  *
- * @param[in] rslt_ Resourceレイヤー実行結果コード
+ * @param[in] result_ Resourceレイヤー実行結果コード
  *
  * @retval "SUCCESS" 実行結果コード:RESOURCE_SUCCESS(正常終了)
  * @retval "NO_MEMORY" 実行結果コード:RESOURCE_NO_MEMORY(メモリ不足)
@@ -44,12 +44,12 @@ extern "C" {
  * @retval "UNSUPPORTED_FILE" 実行結果コード:RESOURCE_UNSUPPORTED_FILE(サポート対象外のリソースファイル)
  * @retval "UNDEFINED_ERROR" 実行結果コード:RESOURCE_UNDEFINED_ERROR(未定義の実行結果コード)
  */
-const char* resource_rslt_to_str(resource_result_t rslt_);
+const char* resource_result_to_str(resource_result_t result_);
 
 /**
  * @brief choco_memoryモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
  *
- * @param[in] rslt_ choco_memoryモジュール実行結果コード
+ * @param[in] result_ choco_memoryモジュール実行結果コード
  *
  * @retval RESOURCE_SUCCESS choco_memory実行結果コード:MEMORY_SYSTEM_SUCCESS
  * @retval RESOURCE_INVALID_ARGUMENT choco_memory実行結果コード:MEMORY_SYSTEM_INVALID_ARGUMENT
@@ -58,14 +58,14 @@ const char* resource_rslt_to_str(resource_result_t rslt_);
  * @retval RESOURCE_NO_MEMORY choco_memory実行結果コード:MEMORY_SYSTEM_NO_MEMORY
  * @retval RESOURCE_UNDEFINED_ERROR 未定義のchoco_memory実行結果コード
  */
-resource_result_t resource_rslt_convert_choco_memory(memory_system_result_t rslt_);
+resource_result_t resource_result_convert_choco_memory(memory_system_result_t result_);
 
-resource_result_t resource_rslt_convert_fs_stream(fs_stream_result_t rslt_);
+resource_result_t resource_result_convert_fs_stream(fs_stream_result_t result_);
 
 /**
  * @brief choco_stringモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
  *
- * @param[in] rslt_ choco_stringモジュール実行結果コード
+ * @param[in] result_ choco_stringモジュール実行結果コード
  *
  * @retval RESOURCE_SUCCESS choco_string実行結果コード:CHOCO_STRING_SUCCESS
  * @retval RESOURCE_DATA_CORRUPTED choco_string実行結果コード:CHOCO_STRING_DATA_CORRUPTED
@@ -79,12 +79,12 @@ resource_result_t resource_rslt_convert_fs_stream(fs_stream_result_t rslt_);
  * - choco_string実行結果コード:CHOCO_STRING_UNDEFINED_ERROR
  * - 未定義のchoco_string実行結果コード
  */
-resource_result_t resource_rslt_convert_choco_string(choco_string_result_t rslt_);
+resource_result_t resource_result_convert_choco_string(choco_string_result_t result_);
 
 /**
  * @brief geometry_primitive保有モジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
  *
- * @param[in] rslt_ geometry_primitive保有モジュール実行結果コード
+ * @param[in] result_ geometry_primitive保有モジュール実行結果コード
  *
  * @retval RESOURCE_SUCCESS geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_SUCCESS:
  * @retval RESOURCE_INVALID_ARGUMENT geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
@@ -97,7 +97,7 @@ resource_result_t resource_rslt_convert_choco_string(choco_string_result_t rslt_
  * - geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_UNDEFINED_ERROR
  * - 未定義のgeometry_primitive実行結果コード
  */
-resource_result_t resource_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_);
+resource_result_t resource_result_convert_geometry_primitive(geometry_primitive_result_t result_);
 
 #ifdef __cplusplus
 }

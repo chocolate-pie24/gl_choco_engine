@@ -42,42 +42,42 @@ struct line_mesh_render_resource {
 static render_resource_result_t shader_create(const line_mesh_shader_config_t* line_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, line_mesh_shader_t** out_line_mesh_shader_);
 static bool is_valid_shallow(const line_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_alloc_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     line_mesh_render_resource_t* tmp_render_resource = NULL;
     line_mesh_shader_t* tmp_shader = NULL;
     line_mesh_geometry_registry_t* tmp_registry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "out_render_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "line_mesh_render_resource_create", "*out_render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "out_render_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "line_mesh_render_resource_create", "*out_render_resource_")
 
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(line_mesh_render_resource_t), alignof(line_mesh_render_resource_t), (void**)&tmp_render_resource);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = render_resource_rslt_convert_linear_allocator(ret_linear_alloc);
-        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - Failed to allocate line_mesh_render_resource_t instance.", render_resource_rslt_to_str(ret));
+    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(line_mesh_render_resource_t), alignof(line_mesh_render_resource_t), (void**)&tmp_render_resource);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = render_resource_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - Failed to allocate line_mesh_render_resource_t instance.", render_resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_render_resource, 0, sizeof(line_mesh_render_resource_t));
 
     ret = shader_create(shader_config_, renderer_backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - shader_create failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - shader_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_resource_registry = line_mesh_geometry_registry_create(max_geometry_count_, allocator_, &tmp_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
-        ret = render_resource_rslt_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - line_mesh_geometry_registry_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - line_mesh_geometry_registry_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -87,7 +87,7 @@ render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(tmp_render_resource)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_create(%s) - Postcondition validation failed for 'tmp_render_resource'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -117,7 +117,7 @@ void line_mesh_render_resource_deinitialize(line_mesh_render_resource_t* render_
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
-        ERROR_MESSAGE("line_mesh_render_resource_deinitialize(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(RENDER_RESOURCE_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_render_resource_deinitialize(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(RENDER_RESOURCE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -133,29 +133,29 @@ render_resource_result_t line_mesh_render_resource_geometry_import_from_vertices
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_vertices", "out_geometry_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(render_resource_->shader, render_resource_->geometry_registry, resource_name_, vertices_, vertex_count_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - line_mesh_geometry_pipeline_import_from_vertices failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - line_mesh_geometry_pipeline_import_from_vertices failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_vertices(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -175,29 +175,29 @@ render_resource_result_t line_mesh_render_resource_geometry_import_from_aabb(lin
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_import_from_aabb", "out_geometry_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(render_resource_->shader, render_resource_->geometry_registry, resource_name_, aabb_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - line_mesh_geometry_pipeline_import_from_aabb failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - line_mesh_geometry_pipeline_import_from_aabb failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_import_from_aabb(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -215,26 +215,26 @@ render_resource_result_t line_mesh_render_resource_geometry_release(line_mesh_re
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_release", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_geometry_release", "render_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_release(render_resource_->shader, render_resource_->geometry_registry, geometry_id_);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
-        ret = render_resource_rslt_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - line_mesh_geometry_pipeline_release failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - line_mesh_geometry_pipeline_release failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -250,34 +250,34 @@ render_resource_result_t line_mesh_render_resource_view_matrix_set(line_mesh_ren
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_view_matrix_set", "view_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = line_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_view_matrix_set(render_resource_->shader, view_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_view_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - line_mesh_shader_view_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_view_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -293,34 +293,34 @@ render_resource_result_t line_mesh_render_resource_projection_matrix_set(line_me
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_projection_matrix_set", "projection_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = line_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_projection_matrix_set(render_resource_->shader, projection_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_projection_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - line_mesh_shader_projection_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -339,49 +339,49 @@ render_resource_result_t line_mesh_render_resource_draw(line_mesh_render_resourc
 
     const draw_range_t* draw_range = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "render_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "model_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(color_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "color_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(color_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_draw", "color_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_shader = line_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_use failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_use failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_model_matrix_set(render_resource_->shader, model_matrix_, true);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_model_matrix_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_model_matrix_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_vao_bind(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_vao_bind failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_vao_bind failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     draw_range = line_mesh_geometry_registry_draw_range_get(render_resource_->geometry_registry, geometry_id_);
     if(NULL == draw_range) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_geometry_registry_draw_range_get failed.", render_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_geometry_registry_draw_range_get failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_color_set(render_resource_->shader, color_);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_color_set failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_render_resource_draw(%s) - line_mesh_shader_color_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -420,31 +420,31 @@ static render_resource_result_t shader_create(const line_mesh_shader_config_t* l
 
     line_mesh_shader_t* tmp_line_mesh_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "line_mesh_shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_line_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_rslt_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_line_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_line_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_rslt_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_line_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "line_mesh_shader_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_line_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_line_mesh_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_line_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_line_mesh_shader_")
 
     ret_fs_path = fs_path_create(&vertex_shader_path, executable_directory_, shader_dir_, "line_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_rslt_convert_fs_path(ret_fs_path);
-        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_fs_path = fs_path_create(&fragment_shader_path, executable_directory_, shader_dir_, "line_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_rslt_convert_fs_path(ret_fs_path);
-        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("shader_create(%s) - fs_path_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_create(renderer_backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), line_mesh_shader_config_, &tmp_line_mesh_shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("shader_create(%s) - Failed to create line mesh shader.", render_resource_rslt_to_str(ret));
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("shader_create(%s) - Failed to create line mesh shader.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 

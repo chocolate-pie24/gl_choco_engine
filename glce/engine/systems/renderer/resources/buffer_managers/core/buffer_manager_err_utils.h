@@ -11,7 +11,7 @@
  * Buffer Manager層の結果コードへ変換するAPIを提供する。
  *
  * @par 結果コード文字列
- * buffer_manager_rslt_to_str()は、Buffer Managerの実行結果コードに
+ * buffer_manager_result_to_str()は、Buffer Managerの実行結果コードに
  * 対応する静的な診断用文字列を返す。
  *
  * 本機能は主にエラーメッセージ、status表示、およびdebug表示で使用する。
@@ -59,7 +59,7 @@ extern "C" {
  * @brief Buffer Managerの結果コードを文字列へ変換する
  *
  * @details
- * rslt_に対応する静的文字列定数を返す。
+ * result_に対応する静的文字列定数を返す。
  *
  * 定義済みの各buffer_manager_result_tについて、
  * 結果コード名を表す文字列を返す。
@@ -70,11 +70,11 @@ extern "C" {
  * 返される文字列は静的記憶域期間を持つ。
  * 呼び出し元へ所有権は移動せず、解放または変更してはならない。
  *
- * @param[in] rslt_
+ * @param[in] result_
  * 文字列へ変換するBuffer Managerの結果コード。
  *
  * @return
- * rslt_に対応するNULLではない静的文字列。
+ * result_に対応するNULLではない静的文字列。
  * 定義されていない値の場合はUNDEFINED_ERRORを表す文字列。
  *
  * @note
@@ -91,7 +91,7 @@ extern "C" {
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_);
+const char* buffer_manager_result_to_str(buffer_manager_result_t result_);
 
 /**
  * @brief Range Allocatorの結果コードをBuffer Managerの結果コードへ変換する
@@ -125,32 +125,32 @@ const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_);
  * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
  * rollback、およびメモリ操作を行わない。
  *
- * @param[in] rslt_
+ * @param[in] result_
  * 変換するRange Allocatorの結果コード。
  *
  * @retval BUFFER_MANAGER_SUCCESS
- * rslt_がRANGE_ALLOCATOR_SUCCESSである。
+ * result_がRANGE_ALLOCATOR_SUCCESSである。
  *
  * @retval BUFFER_MANAGER_INVALID_ARGUMENT
- * rslt_がRANGE_ALLOCATOR_INVALID_ARGUMENTである。
+ * result_がRANGE_ALLOCATOR_INVALID_ARGUMENTである。
  *
  * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * rslt_がRANGE_ALLOCATOR_LIMIT_EXCEEDEDである。
+ * result_がRANGE_ALLOCATOR_LIMIT_EXCEEDEDである。
  *
  * @retval BUFFER_MANAGER_NO_MEMORY
- * rslt_がRANGE_ALLOCATOR_NO_MEMORYである。
+ * result_がRANGE_ALLOCATOR_NO_MEMORYである。
  *
  * @retval BUFFER_MANAGER_DATA_CORRUPTED
- * rslt_がRANGE_ALLOCATOR_DATA_CORRUPTEDである。
+ * result_がRANGE_ALLOCATOR_DATA_CORRUPTEDである。
  *
  * @retval BUFFER_MANAGER_BAD_OPERATION
- * rslt_がRANGE_ALLOCATOR_BAD_OPERATIONである。
+ * result_がRANGE_ALLOCATOR_BAD_OPERATIONである。
  *
  * @retval BUFFER_MANAGER_OVERFLOW
- * rslt_がRANGE_ALLOCATOR_OVERFLOWである。
+ * result_がRANGE_ALLOCATOR_OVERFLOWである。
  *
  * @retval BUFFER_MANAGER_UNDEFINED_ERROR
- * rslt_がRANGE_ALLOCATOR_UNDEFINED_ERROR、
+ * result_がRANGE_ALLOCATOR_UNDEFINED_ERROR、
  * またはrange_allocator_result_tに定義されていない値である。
  *
  * @par 計算量
@@ -161,7 +161,7 @@ const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_);
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_allocator_result_t rslt_);
+buffer_manager_result_t buffer_manager_result_convert_range_allocator(range_allocator_result_t result_);
 
 /**
  * @brief Rendererの結果コードをBuffer Managerの結果コードへ変換する
@@ -201,39 +201,39 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
  * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
  * rollback、およびメモリ操作を行わない。
  *
- * @param[in] rslt_
+ * @param[in] result_
  * 変換するRendererの結果コード。
  *
  * @retval BUFFER_MANAGER_SUCCESS
- * rslt_がRENDERER_BACKEND_SUCCESSである。
+ * result_がRENDERER_BACKEND_SUCCESSである。
  *
  * @retval BUFFER_MANAGER_INVALID_ARGUMENT
- * rslt_がRENDERER_BACKEND_INVALID_ARGUMENTである。
+ * result_がRENDERER_BACKEND_INVALID_ARGUMENTである。
  *
  * @retval BUFFER_MANAGER_RUNTIME_ERROR
- * rslt_がRENDERER_BACKEND_RUNTIME_ERRORである。
+ * result_がRENDERER_BACKEND_RUNTIME_ERRORである。
  *
  * @retval BUFFER_MANAGER_NO_MEMORY
- * rslt_がRENDERER_BACKEND_NO_MEMORYである。
+ * result_がRENDERER_BACKEND_NO_MEMORYである。
  *
  * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * rslt_がRENDERER_BACKEND_LIMIT_EXCEEDEDである。
+ * result_がRENDERER_BACKEND_LIMIT_EXCEEDEDである。
  *
  * @retval BUFFER_MANAGER_BAD_OPERATION
- * rslt_がRENDERER_BACKEND_BAD_OPERATIONである。
+ * result_がRENDERER_BACKEND_BAD_OPERATIONである。
  *
  * @retval BUFFER_MANAGER_DATA_CORRUPTED
- * rslt_がRENDERER_BACKEND_DATA_CORRUPTEDである。
+ * result_がRENDERER_BACKEND_DATA_CORRUPTEDである。
  *
  * @retval BUFFER_MANAGER_OVERFLOW
- * rslt_がRENDERER_BACKEND_OVERFLOWである。
+ * result_がRENDERER_BACKEND_OVERFLOWである。
  *
  * @retval BUFFER_MANAGER_UNDEFINED_ERROR
  * 次のいずれか。
- * - rslt_がRENDERER_BACKEND_SHADER_COMPILE_ERRORである
- * - rslt_がRENDERER_BACKEND_SHADER_LINK_ERRORである
- * - rslt_がRENDERER_BACKEND_UNDEFINED_ERRORである
- * - rslt_がrenderer_backend_result_tに定義されていない値である
+ * - result_がRENDERER_BACKEND_SHADER_COMPILE_ERRORである
+ * - result_がRENDERER_BACKEND_SHADER_LINK_ERRORである
+ * - result_がRENDERER_BACKEND_UNDEFINED_ERRORである
+ * - result_がrenderer_backend_result_tに定義されていない値である
  *
  * @par 計算量
  * 時間計算量はO(1)である。
@@ -243,7 +243,7 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
+buffer_manager_result_t buffer_manager_result_convert_renderer_backend(renderer_backend_result_t result_);
 
 /**
  * @brief Memory Systemの結果コードをBuffer Managerの結果コードへ変換する
@@ -271,26 +271,26 @@ buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_ba
  * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
  * rollback、およびメモリ操作を行わない。
  *
- * @param[in] rslt_
+ * @param[in] result_
  * 変換するMemory Systemの結果コード。
  *
  * @retval BUFFER_MANAGER_SUCCESS
- * rslt_がMEMORY_SYSTEM_SUCCESSである。
+ * result_がMEMORY_SYSTEM_SUCCESSである。
  *
  * @retval BUFFER_MANAGER_INVALID_ARGUMENT
- * rslt_がMEMORY_SYSTEM_INVALID_ARGUMENTである。
+ * result_がMEMORY_SYSTEM_INVALID_ARGUMENTである。
  *
  * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * rslt_がMEMORY_SYSTEM_LIMIT_EXCEEDEDである。
+ * result_がMEMORY_SYSTEM_LIMIT_EXCEEDEDである。
  *
  * @retval BUFFER_MANAGER_BAD_OPERATION
- * rslt_がMEMORY_SYSTEM_BAD_OPERATIONである。
+ * result_がMEMORY_SYSTEM_BAD_OPERATIONである。
  *
  * @retval BUFFER_MANAGER_NO_MEMORY
- * rslt_がMEMORY_SYSTEM_NO_MEMORYである。
+ * result_がMEMORY_SYSTEM_NO_MEMORYである。
  *
  * @retval BUFFER_MANAGER_UNDEFINED_ERROR
- * rslt_がmemory_system_result_tに定義されていない値である。
+ * result_がmemory_system_result_tに定義されていない値である。
  *
  * @par 計算量
  * 時間計算量はO(1)である。
@@ -300,7 +300,7 @@ buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_ba
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が実装との整合性を確認・修正した。
  */
-buffer_manager_result_t buffer_manager_rslt_convert_choco_memory(memory_system_result_t rslt_);
+buffer_manager_result_t buffer_manager_result_convert_choco_memory(memory_system_result_t result_);
 
 #ifdef __cplusplus
 }

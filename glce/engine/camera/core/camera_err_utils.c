@@ -5,40 +5,40 @@
 
 #include "engine/camera/core/camera_types.h"
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_success = "SUCCESS";
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_result_str_no_memory = "NO_MEMORY";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
-const char* camera_rslt_to_str(camera_result_t rslt_) {
-    switch(rslt_) {
+const char* camera_result_to_str(camera_result_t result_) {
+    switch(result_) {
     case CAMERA_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case CAMERA_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case CAMERA_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case CAMERA_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case CAMERA_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case CAMERA_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case CAMERA_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case CAMERA_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-camera_result_t camera_rslt_convert_choco_memory(memory_system_result_t rslt_) {
-    switch(rslt_) {
+camera_result_t camera_result_convert_choco_memory(memory_system_result_t result_) {
+    switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
         return CAMERA_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:

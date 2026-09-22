@@ -42,43 +42,43 @@ static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
 
 static bool find_by_name(const texture_registry_t* registry_, const char* name_, size_t* out_index_);
 
-resource_registry_result_t texture_registry_create(size_t max_texture_count_, linear_alloc_t* allocator_, texture_registry_t** out_registry_) {
+resource_registry_result_t texture_registry_create(size_t max_texture_count_, linear_allocator_t* allocator_, texture_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_registry_t* tmp_registry = NULL;
     texture_registry_entry_t* tmp_entries = NULL;
 
     size_t array_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_create", "*out_registry_")
 
     if(0 == max_texture_count_ || UINT16_MAX < max_texture_count_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_registry_create(%s) - Provided max_texture_count_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_create(%s) - Provided max_texture_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
     }
 
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(texture_registry_t), alignof(texture_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, align=%zu, max_texture_count=%zu", resource_registry_rslt_to_str(ret), sizeof(texture_registry_t), alignof(texture_registry_t), max_texture_count_);
+    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(texture_registry_t), alignof(texture_registry_t), (void**)&tmp_registry);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, align=%zu, max_texture_count=%zu", resource_registry_result_to_str(ret), sizeof(texture_registry_t), alignof(texture_registry_t), max_texture_count_);
         goto cleanup;
     }
     memset(tmp_registry, 0, sizeof(texture_registry_t));
 
     if((SIZE_MAX / max_texture_count_) < sizeof(texture_registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("texture_registry_create(%s) - array size overflow.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_create(%s) - array size overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     array_size = sizeof(texture_registry_entry_t) * max_texture_count_;
-    ret_linear_alloc = linear_allocator_allocate(allocator_, array_size, alignof(texture_registry_entry_t), (void**)&tmp_entries);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("texture_registry_create(%s) - allocation failed.", resource_registry_rslt_to_str(ret));
+    ret_linear_allocator = linear_allocator_allocate(allocator_, array_size, alignof(texture_registry_entry_t), (void**)&tmp_entries);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("texture_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_entries, 0, array_size);
@@ -98,11 +98,11 @@ cleanup:
 // NOTE: このAPIを呼んだ後はmax_texture_countが0になるためregistryは再利用不可となる。再利用を前提で初期化する場合はregistry_reset APIを追加する
 void texture_registry_deinitialize(texture_registry_t* registry_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_deinitialize(%s) - provided registry_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_deinitialize(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_deinitialize(%s) - texture_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return;
     }
     for(size_t i = 0; i != registry_->max_texture_count; ++i) {
@@ -118,11 +118,11 @@ bool texture_registry_exists(const texture_registry_t* registry_, const char* na
         return false;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_exists(%s) - texture_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_exists(%s) - texture_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("texture_registry_exists(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -131,15 +131,15 @@ bool texture_registry_exists(const texture_registry_t* registry_, const char* na
 
 const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
     if(!texture_id_is_valid(registry_, texture_id_)) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided texture_id_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("texture_registry_name_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
     if(NULL == registry_->entries[texture_id_].resource_name) {
@@ -150,15 +150,15 @@ const char* texture_registry_name_get(const texture_registry_t* registry_, uint1
 
 const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
     if(!texture_id_is_valid(registry_, texture_id_)) {
-        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -167,15 +167,15 @@ const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_re
 
 const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
     if(!texture_id_is_valid(registry_, texture_id_)) {
-        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -187,24 +187,24 @@ resource_registry_result_t texture_registry_id_get(const texture_registry_t* reg
 
     size_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "out_texture_id_")
 
     if(!texture_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_id_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if('\0' == name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(!find_by_name(registry_, name_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - find_by_name failed.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -221,45 +221,45 @@ cleanup:
 resource_registry_result_t texture_registry_register(texture_registry_t* registry_, const char* resource_name_, texture_gpu_resource_t** gpu_resource_, texture_cpu_resource_t** cpu_resource_, uint16_t* out_texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
     bool found_free_slot = false;
     choco_string_t* tmp_name = NULL;
 
     // 入力値検証
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(gpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(*gpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "*gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(cpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "cpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(*cpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "*cpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(gpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(*gpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "*gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(cpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "cpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(*cpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "*cpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_register", "out_texture_id_")
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!texture_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!texture_cpu_resource_is_valid(*cpu_resource_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - provided CPU resource is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!texture_gpu_resource_is_valid(*gpu_resource_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided GPU resource is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - provided GPU resource is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // リソースの重複チェック
     if(find_by_name(registry_, resource_name_, &tmp_index)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_register(%s) - provided resource name is already registered.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -273,15 +273,15 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
     }
     if(!found_free_slot) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("texture_registry_register(%s) - free slot not found.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // リソース名称生成
-    ret_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_registry_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("texture_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_rslt_to_str(ret));
+    ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = resource_registry_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("texture_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -310,13 +310,13 @@ cleanup:
 resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, uint16_t texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(texture_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "texture_registry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(texture_id_is_valid(registry_, texture_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "texture_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_id_is_valid(registry_, texture_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "texture_id_")
 
     if(NULL == registry_->entries[texture_id_].resource_name) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_unregister(%s) - provided texture id entry is empty.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_registry_unregister(%s) - provided texture id entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 

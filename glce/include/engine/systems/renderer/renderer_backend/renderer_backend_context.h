@@ -22,9 +22,9 @@ extern "C" {
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< renderer_backend_context内部情報管理構造体前方宣言 */
 
-typedef struct linear_alloc linear_alloc_t;
+typedef struct linear_allocator linear_allocator_t;
 
-renderer_backend_result_t renderer_backend_create(linear_alloc_t* allocator_, renderer_backend_context_t** out_renderer_backend_context_);
+renderer_backend_result_t renderer_backend_create(linear_allocator_t* allocator_, renderer_backend_context_t** out_renderer_backend_context_);
 
 void renderer_backend_deinitialize(renderer_backend_context_t* renderer_backend_context_);
 

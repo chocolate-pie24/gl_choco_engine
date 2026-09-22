@@ -21,19 +21,19 @@ extern "C" {
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
-const char* shader_rslt_to_str(shader_result_t rslt_);
+const char* shader_result_to_str(shader_result_t result_);
 
-shader_result_t shader_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+shader_result_t shader_result_convert_linear_allocator(linear_allocator_result_t result_);
 
-shader_result_t shader_rslt_convert_choco_memory(memory_system_result_t rslt_);
+shader_result_t shader_result_convert_choco_memory(memory_system_result_t result_);
 
-shader_result_t shader_rslt_convert_choco_string(choco_string_result_t rslt_);
+shader_result_t shader_result_convert_choco_string(choco_string_result_t result_);
 
-shader_result_t shader_rslt_convert_fs_stream(fs_stream_result_t rslt_);
+shader_result_t shader_result_convert_fs_stream(fs_stream_result_t result_);
 
-shader_result_t shader_rslt_convert_renderer_backend(renderer_backend_result_t rslt_);
+shader_result_t shader_result_convert_renderer_backend(renderer_backend_result_t result_);
 
-shader_result_t shader_rslt_convert_buffer_manager(buffer_manager_result_t rslt_);
+shader_result_t shader_result_convert_buffer_manager(buffer_manager_result_t result_);
 
 #ifdef __cplusplus
 }

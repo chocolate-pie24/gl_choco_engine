@@ -29,14 +29,14 @@ geometry_primitive_result_t aabb_3d_initialize_from_min_max(vec3f_t min_, vec3f_
     geometry_primitive_result_t ret = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
     aabb_3d_t tmp_aabb = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "out_aabb_")
 
     tmp_aabb.min = min_;
     tmp_aabb.max = max_;
 
     if(!aabb_3d_is_valid(&tmp_aabb)) {
         ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
-        ERROR_MESSAGE("aabb_3d_initialize_from_min_max(%s) - Provided min_ and max_ do not form a valid AABB. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
+        ERROR_MESSAGE("aabb_3d_initialize_from_min_max(%s) - Provided min_ and max_ do not form a valid AABB. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_result_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
         goto cleanup;
     }
 
@@ -54,16 +54,16 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_vertices(const point_v
     vec3f_t min = { 0 };
     vec3f_t max = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "out_aabb_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "out_aabb_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "vertex_count_")
 
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
         if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
-            ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
+            ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_result_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
         }
 
@@ -75,7 +75,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_vertices(const point_v
 
     if(!aabb_3d_is_valid(&tmp_aabb)) {
         ret = GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
-        ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
+        ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_result_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
         goto cleanup;
     }
 
@@ -93,17 +93,17 @@ geometry_primitive_result_t aabb_3d_initialize_from_line_vertices(const line_ver
     vec3f_t min = { 0 };
     vec3f_t max = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "out_aabb_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "out_aabb_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 2), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertex_count_")
 
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
         if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
-            ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
+            ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_result_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
         }
 
@@ -115,7 +115,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_line_vertices(const line_ver
 
     if(!aabb_3d_is_valid(&tmp_aabb)) {
         ret = GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
-        ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
+        ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_result_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
         goto cleanup;
     }
 
@@ -133,17 +133,17 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_normal_vertices(const 
     vec3f_t min = { 0 };
     vec3f_t max = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "out_aabb_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "out_aabb_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vertex_count_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == (vertex_count_ % 3), ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertex_count_")
 
     min = vertices_[0].position;
     max = vertices_[0].position;
     for(size_t i = 0; i != vertex_count_; ++i) {
         if(!vec3f_is_finite(vertices_[i].position)) {
             ret = GEOMETRY_PRIMITIVE_DATA_CORRUPTED;
-            ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
+            ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Provided vertices_[%zu].position contains NaN or Inf. position = [%f, %f, %f].", geometry_primitive_result_to_str(ret), i, vertices_[i].position.elem[0], vertices_[i].position.elem[1], vertices_[i].position.elem[2]);
             goto cleanup;
         }
 
@@ -155,7 +155,7 @@ geometry_primitive_result_t aabb_3d_initialize_from_point_normal_vertices(const 
 
     if(!aabb_3d_is_valid(&tmp_aabb)) {
         ret = GEOMETRY_PRIMITIVE_RUNTIME_ERROR;
-        ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
+        ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Internal invariant check failed after AABB calculation. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_result_to_str(ret), tmp_aabb.min.elem[0], tmp_aabb.min.elem[1], tmp_aabb.min.elem[2], tmp_aabb.max.elem[0], tmp_aabb.max.elem[1], tmp_aabb.max.elem[2]);
         goto cleanup;
     }
 
@@ -183,12 +183,12 @@ void aabb_3d_reset(aabb_3d_t* aabb_) {
 geometry_primitive_result_t aabb_3d_vertices_get(const aabb_3d_t* aabb_, vec3f_t vertices_[8]) {
     geometry_primitive_result_t ret = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_vertices_get", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_rslt_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_vertices_get", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_vertices_get", "aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_PRIMITIVE_INVALID_ARGUMENT, geometry_primitive_result_to_str(GEOMETRY_PRIMITIVE_INVALID_ARGUMENT), "aabb_3d_vertices_get", "vertices_")
 
     if(!aabb_3d_is_valid(aabb_)) {
         ret = GEOMETRY_PRIMITIVE_BAD_OPERATION;
-        ERROR_MESSAGE("aabb_3d_vertices_get(%s) - Cannot generate vertices from invalid aabb_. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_rslt_to_str(ret), aabb_->min.elem[0], aabb_->min.elem[1], aabb_->min.elem[2], aabb_->max.elem[0], aabb_->max.elem[1], aabb_->max.elem[2]);
+        ERROR_MESSAGE("aabb_3d_vertices_get(%s) - Cannot generate vertices from invalid aabb_. min = [%f, %f, %f], max = [%f, %f, %f].", geometry_primitive_result_to_str(ret), aabb_->min.elem[0], aabb_->min.elem[1], aabb_->min.elem[2], aabb_->max.elem[0], aabb_->max.elem[1], aabb_->max.elem[2]);
         goto cleanup;
     }
 

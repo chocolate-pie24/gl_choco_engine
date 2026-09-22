@@ -24,25 +24,25 @@ resource_result_t geometry_conversion_lit_mesh_geometry_to_aabb_3d(const lit_mes
     aabb_3d_t tmp_aabb_3d = { 0 };
     const point_normal_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(src_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "src_geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "dst_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "src_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "dst_geometry_")
 
     ret = lit_mesh_geometry_vertex_count_get(src_geometry_, &vertex_count);
     if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertex_count_get failed.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertex_count_get failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret = lit_mesh_geometry_vertices_get(src_geometry_, &tmp_vertices);
     if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertices_get failed.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertices_get failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_geometry_primitive = aabb_3d_initialize_from_point_normal_vertices(tmp_vertices, vertex_count, &tmp_aabb_3d);
     if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry_primitive) {
-        ret = resource_rslt_convert_geometry_primitive(ret_geometry_primitive);
-        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - aabb_3d_initialize_from_point_normal_vertices failed.", resource_rslt_to_str(ret));
+        ret = resource_result_convert_geometry_primitive(ret_geometry_primitive);
+        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - aabb_3d_initialize_from_point_normal_vertices failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 

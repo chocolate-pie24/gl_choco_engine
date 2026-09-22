@@ -14,7 +14,7 @@
  * 各buffer_manager_result_tに対応する文字列を、
  * file scopeの静的な文字列として保持する。
  *
- * buffer_manager_rslt_to_str()は入力された結果コードに対応する
+ * buffer_manager_result_to_str()は入力された結果コードに対応する
  * 文字列へのpointerを返す。
  * 入力値がbuffer_manager_result_tに定義されていない場合は、
  * UNDEFINED_ERRORに対応する文字列を返す。
@@ -64,49 +64,49 @@
  * すべて静的記憶域期間を持ち、呼び出し側へ所有権を移動しない。
  * 文字列および文字列pointerは変更できない。
  *
- * buffer_manager_rslt_to_str()は対応する結果コードの文字列を返す。
- * 定義されていない結果コードにはs_rslt_str_undefined_errorを使用する。
+ * buffer_manager_result_to_str()は対応する結果コードの文字列を返す。
+ * 定義されていない結果コードにはs_result_str_undefined_errorを使用する。
  *
  * @{
  */
-static const char* const s_rslt_str_success = "SUCCESS";                        /** @brief BUFFER_MANAGER_SUCCESSに対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";      /** @brief BUFFER_MANAGER_INVALID_ARGUMENTに対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";            /** @brief BUFFER_MANAGER_RUNTIME_ERRORに対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";          /** @brief BUFFER_MANAGER_LIMIT_EXCEEDEDに対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                    /** @brief BUFFER_MANAGER_NO_MEMORYに対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";          /** @brief BUFFER_MANAGER_DATA_CORRUPTEDに対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";            /** @brief BUFFER_MANAGER_BAD_OPERATIONに対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                      /** @brief BUFFER_MANAGER_OVERFLOWに対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";        /** @brief BUFFER_MANAGER_UNDEFINED_ERRORおよび定義されていない結果コードに対応する文字列 */
+static const char* const s_result_str_success = "SUCCESS";                        /** @brief BUFFER_MANAGER_SUCCESSに対応する文字列 */
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /** @brief BUFFER_MANAGER_INVALID_ARGUMENTに対応する文字列 */
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";            /** @brief BUFFER_MANAGER_RUNTIME_ERRORに対応する文字列 */
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";          /** @brief BUFFER_MANAGER_LIMIT_EXCEEDEDに対応する文字列 */
+static const char* const s_result_str_no_memory = "NO_MEMORY";                    /** @brief BUFFER_MANAGER_NO_MEMORYに対応する文字列 */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";          /** @brief BUFFER_MANAGER_DATA_CORRUPTEDに対応する文字列 */
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";            /** @brief BUFFER_MANAGER_BAD_OPERATIONに対応する文字列 */
+static const char* const s_result_str_overflow = "OVERFLOW";                      /** @brief BUFFER_MANAGER_OVERFLOWに対応する文字列 */
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";        /** @brief BUFFER_MANAGER_UNDEFINED_ERRORおよび定義されていない結果コードに対応する文字列 */
 /** @} */
 
-const char* buffer_manager_rslt_to_str(buffer_manager_result_t rslt_) {
-    switch(rslt_) {
+const char* buffer_manager_result_to_str(buffer_manager_result_t result_) {
+    switch(result_) {
     case BUFFER_MANAGER_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case BUFFER_MANAGER_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case BUFFER_MANAGER_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case BUFFER_MANAGER_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case BUFFER_MANAGER_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case BUFFER_MANAGER_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case BUFFER_MANAGER_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case BUFFER_MANAGER_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case BUFFER_MANAGER_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_allocator_result_t rslt_) {
-    switch(rslt_) {
+buffer_manager_result_t buffer_manager_result_convert_range_allocator(range_allocator_result_t result_) {
+    switch(result_) {
     case RANGE_ALLOCATOR_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
     case RANGE_ALLOCATOR_INVALID_ARGUMENT:
@@ -128,8 +128,8 @@ buffer_manager_result_t buffer_manager_rslt_convert_range_allocator(range_alloca
     }
 }
 
-buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
-    switch(rslt_) {
+buffer_manager_result_t buffer_manager_result_convert_renderer_backend(renderer_backend_result_t result_) {
+    switch(result_) {
     case RENDERER_BACKEND_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
     case RENDERER_BACKEND_INVALID_ARGUMENT:
@@ -157,8 +157,8 @@ buffer_manager_result_t buffer_manager_rslt_convert_renderer_backend(renderer_ba
     }
 }
 
-buffer_manager_result_t buffer_manager_rslt_convert_choco_memory(memory_system_result_t rslt_) {
-    switch(rslt_) {
+buffer_manager_result_t buffer_manager_result_convert_choco_memory(memory_system_result_t result_) {
+    switch(result_) {
     case MEMORY_SYSTEM_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
     case MEMORY_SYSTEM_INVALID_ARGUMENT:

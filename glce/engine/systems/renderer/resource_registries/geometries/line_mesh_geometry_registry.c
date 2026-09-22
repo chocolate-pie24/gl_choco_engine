@@ -56,40 +56,40 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_);
 static bool geometry_id_is_valid(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 static bool find_by_name(const line_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
 
-resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, linear_alloc_t* allocator_, line_mesh_geometry_registry_t** out_registry_) {
+resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, linear_allocator_t* allocator_, line_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_alloc = LINEAR_ALLOC_INVALID_ARGUMENT;
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     line_mesh_geometry_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entry_array = NULL;
 
     size_t entry_array_size = 0;
 
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "max_geometry_count_")
-    IF_ARG_FALSE_GOTO_CLEANUP(UINT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "max_geometry_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "*out_registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "max_geometry_count_")
+    IF_ARG_FALSE_GOTO_CLEANUP(UINT16_MAX >= max_geometry_count_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "max_geometry_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "*out_registry_")
 
     // geometry_registry_tメモリ確保
-    ret_linear_alloc = linear_allocator_allocate(allocator_, sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=line_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_rslt_to_str(ret), sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), max_geometry_count_);
+    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), (void**)&tmp_registry);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=line_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), max_geometry_count_);
         goto cleanup;
     }
     memset(tmp_registry, 0, sizeof(line_mesh_geometry_registry_t));
 
     if((SIZE_MAX / max_geometry_count_) < sizeof(registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - overflow.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_geometry_count_;
-    ret_linear_alloc = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
-    if(LINEAR_ALLOC_SUCCESS != ret_linear_alloc) {
-        ret = resource_registry_rslt_convert_linear_alloc(ret_linear_alloc);
-        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_rslt_to_str(ret));
+    ret_linear_allocator = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_entry_array, 0, entry_array_size);
@@ -109,17 +109,17 @@ cleanup:
 // NOTE: このAPIを呼んだ後はmax_geometry_countが0になるためregistryは再利用不可となる。再利用を前提で初期化する場合はregistry_reset APIを追加する
 void line_mesh_geometry_registry_deinitialize(line_mesh_geometry_registry_t* registry_, line_mesh_shader_t* shader_) {
     if(NULL == registry_ || NULL == shader_) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return;
     }
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         if(!registry_entry_is_empty(&registry_->entries[i])) {
             if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], shader_)) {
-                ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+                ERROR_MESSAGE("line_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
                 return;
             }
         }
@@ -134,11 +134,11 @@ bool line_mesh_geometry_registry_exists(const line_mesh_geometry_registry_t* reg
         return false;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - line_mesh_geometry_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("line_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 
@@ -147,15 +147,15 @@ bool line_mesh_geometry_registry_exists(const line_mesh_geometry_registry_t* reg
 
 const line_mesh_geometry_t* line_mesh_geometry_registry_geometry_get(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
     if(!geometry_id_is_valid(registry_, geometry_id_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("line_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -167,24 +167,24 @@ resource_registry_result_t line_mesh_geometry_registry_id_get(const line_mesh_ge
 
     size_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_id_get", "out_geometry_id_")
 
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if('\0' == name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(!find_by_name(registry_, name_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - find_by_name failed.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -198,19 +198,19 @@ cleanup:
 
 const draw_range_t* line_mesh_geometry_registry_draw_range_get(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return NULL;
     }
     if(!geometry_id_is_valid(registry_, geometry_id_)) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided geometry_id_ is not valid.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
     if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
-        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - no allocation.", resource_registry_rslt_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("line_mesh_geometry_registry_draw_range_get(%s) - no allocation.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -221,34 +221,34 @@ const draw_range_t* line_mesh_geometry_registry_draw_range_get(const line_mesh_g
 resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geometry_registry_t* registry_, const char* resource_name_, line_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
     bool found_free_slot = false;
     choco_string_t* tmp_name = NULL;
 
     // 入力値検証
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "vbo_range_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "vbo_range_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_register", "out_geometry_id_")
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided resource name is not valid.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!line_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided registry_ is corrupted.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided registry_ is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // リソースの重複チェック
     if(find_by_name(registry_, resource_name_, &tmp_index)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided resource name is already registered.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -262,15 +262,15 @@ resource_registry_result_t line_mesh_geometry_registry_register(line_mesh_geomet
     }
     if(!found_free_slot) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - free slot not found.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // リソース名称生成
-    ret_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_registry_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_rslt_to_str(ret));
+    ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = resource_registry_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("line_mesh_geometry_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -299,20 +299,20 @@ cleanup:
 resource_registry_result_t line_mesh_geometry_registry_unregister(line_mesh_geometry_registry_t* registry_, line_mesh_shader_t* shader_, uint16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "shader_")
-    IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_geometry_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_rslt_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_rslt_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "shader_")
+    IF_ARG_FALSE_GOTO_CLEANUP(line_mesh_geometry_registry_is_valid(registry_), ret, RESOURCE_REGISTRY_DATA_CORRUPTED, resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED), "line_mesh_geometry_registry_unregister", "registry_")
+    IF_ARG_FALSE_GOTO_CLEANUP(geometry_id_is_valid(registry_, geometry_id_), ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_unregister", "geometry_id_")
 
     if(NULL == registry_->entries[geometry_id_].resource_name) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("line_mesh_geometry_registry_unregister(%s) - provided geometry id entry is empty.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_unregister(%s) - provided geometry id entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], shader_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("line_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -350,7 +350,7 @@ static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* 
 
     if(SHADER_SUCCESS != line_mesh_shader_vbo_free(shader_, &registry_entry_->allocation_descriptor)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("registry_entry_deinitialize(%s) - line_mesh_shader_vbo_free failed.", resource_registry_rslt_to_str(ret));
+        ERROR_MESSAGE("registry_entry_deinitialize(%s) - line_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(&registry_entry_->allocation_descriptor, 0, sizeof(vbo_range_t));

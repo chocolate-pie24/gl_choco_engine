@@ -20,21 +20,21 @@ extern "C" {
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
-const char* render_resource_rslt_to_str(render_resource_result_t rslt_);
+const char* render_resource_result_to_str(render_resource_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_linear_allocator(linear_allocator_result_t rslt_);
+render_resource_result_t render_resource_result_convert_linear_allocator(linear_allocator_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_fs_path(fs_path_result_t rslt_);
+render_resource_result_t render_resource_result_convert_fs_path(fs_path_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_shader(shader_result_t rslt_);
+render_resource_result_t render_resource_result_convert_shader(shader_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_resource_registry(resource_registry_result_t rslt_);
+render_resource_result_t render_resource_result_convert_resource_registry(resource_registry_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_resource_pipeline(resource_pipeline_result_t rslt_);
+render_resource_result_t render_resource_result_convert_resource_pipeline(resource_pipeline_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_resource(resource_result_t rslt_);
+render_resource_result_t render_resource_result_convert_resource(resource_result_t result_);
 
-render_resource_result_t render_resource_rslt_convert_texture_gpu_resource(texture_gpu_resource_result_t rslt_);
+render_resource_result_t render_resource_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_);
 
 #ifdef __cplusplus
 }

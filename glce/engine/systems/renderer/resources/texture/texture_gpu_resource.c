@@ -27,63 +27,63 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
     texture_gpu_resource_t* tmp_texture_gpu_resource = NULL;
 
     bool texture_created = false;
     bool texture_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_gpu_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "*out_texture_gpu_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_gpu_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "*out_texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "pixels_")
     if(3 != channel_count_ && 4 != channel_count_) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided channel_count_ is not valid.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided channel_count_ is not valid.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     if(0 == texture_width_ || 0 == texture_height_) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided texture_width_ or texture_height_ is not valid.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided texture_width_ or texture_height_ is not valid.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_memory = choco_memory_allocate(sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory) {
-        ret = texture_gpu_resource_rslt_convert_choco_memory(ret_memory);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - choco_memory_allocate failed.", texture_gpu_resource_rslt_to_str(ret));
+    ret_memory_system = choco_memory_allocate(sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
+    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
+        ret = texture_gpu_resource_result_convert_choco_memory(ret_memory_system);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - choco_memory_allocate failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_texture_gpu_resource, 0, sizeof(texture_gpu_resource_t));
 
     ret_renderer_backend = renderer_backend_texture_create(backend_context_, unit_num_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_texture_gpu_resource->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     texture_created = true;
 
     ret_renderer_backend = renderer_backend_texture_bind(backend_context_, tmp_texture_gpu_resource->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_bind failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_bind failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     texture_bound = true;
 
     ret_renderer_backend = renderer_backend_texture_pixel_upload(backend_context_, texture_width_, texture_height_, channel_count_, pixels_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_texture_gpu_resource->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     texture_bound = false;
@@ -93,7 +93,7 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(tmp_texture_gpu_resource)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - Postcondition validation failed for 'tmp_texture_gpu_resource'.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - Postcondition validation failed for 'tmp_texture_gpu_resource'.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -107,7 +107,7 @@ cleanup:
         if(texture_bound) {
             ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_texture_gpu_resource->backend_texture);
             if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
+                ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
                 ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
             }
         }
@@ -131,7 +131,7 @@ void texture_gpu_resource_destroy(texture_gpu_resource_t** texture_gpu_resource_
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(*texture_gpu_resource_)) {
-        ERROR_MESSAGE("texture_gpu_resource_destroy(%s) - Provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_gpu_resource_destroy(%s) - Provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -145,19 +145,19 @@ texture_gpu_resource_result_t texture_gpu_resource_bind(const texture_gpu_resour
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_gpu_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_renderer_backend = renderer_backend_texture_bind(texture_gpu_resource_->backend_context, texture_gpu_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - renderer_backend_texture_bind failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - renderer_backend_texture_bind failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -172,19 +172,19 @@ texture_gpu_resource_result_t texture_gpu_resource_unbind(const texture_gpu_reso
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_rslt_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_gpu_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_rslt_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_renderer_backend = renderer_backend_texture_unbind(texture_gpu_resource_->backend_context, texture_gpu_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_gpu_resource_rslt_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_rslt_to_str(ret));
+        ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 
