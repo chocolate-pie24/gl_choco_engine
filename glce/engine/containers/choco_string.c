@@ -51,14 +51,14 @@ static int mock_strcmp(const char *s1_, const char *s2_);
 
 static bool is_valid_shallow(const choco_string_t* string_);
 
-choco_string_result_t choco_string_default_create(choco_string_t** string_) {
+choco_string_result_t choco_string_default_create(choco_string_t** out_string_) {
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     choco_string_t* tmp_string = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "*string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "out_string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "*out_string_")
 
     // Simulation.
     ret = choco_string_mem_allocate(sizeof(*tmp_string), (void**)&tmp_string);
@@ -77,7 +77,7 @@ choco_string_result_t choco_string_default_create(choco_string_t** string_) {
 #endif
 
     // Commit.
-    *string_ = tmp_string;
+    *out_string_ = tmp_string;
     tmp_string = NULL;
 
     ret = CHOCO_STRING_SUCCESS;
@@ -90,7 +90,7 @@ cleanup:
     return ret;
 }
 
-choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** string_) {
+choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** out_string_) {
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     choco_string_t* tmp_string = NULL;
@@ -98,8 +98,8 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "*string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "out_string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "*out_string_")
 
     // Simulation.
     ret = choco_string_default_create(&tmp_string);
@@ -133,7 +133,7 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 #endif
 
     // Commit.
-    *string_ = tmp_string;
+    *out_string_ = tmp_string;
     tmp_string = NULL;
 
     ret = CHOCO_STRING_SUCCESS;

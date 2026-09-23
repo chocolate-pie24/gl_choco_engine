@@ -24,17 +24,17 @@ typedef struct linear_allocator linear_allocator_t;
 typedef struct application_frame_state application_frame_state_t;
 typedef struct engine_event_view engine_event_view_t;
 
-application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_);
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_);
 
-void application_flight_camera_deinitialize(application_flight_camera_t* application_flight_camera_);
+void application_flight_camera_deinitialize(application_flight_camera_t* flight_camera_);
 
-application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const engine_event_view_t* engine_event_view_, application_frame_state_t* frame_state_);
+application_result_t application_flight_camera_update(application_flight_camera_t* flight_camera_, float speed_, float delta_time_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_);
 
-application_result_t application_flight_camera_view_matrix_get(application_flight_camera_t* application_flight_camera_, mat4x4f_t* out_matrix_);
+application_result_t application_flight_camera_view_matrix_get(application_flight_camera_t* flight_camera_, mat4x4f_t* out_matrix_);
 
-application_result_t application_flight_camera_perspective_matrix_get(application_flight_camera_t* application_flight_camera_, mat4x4f_t* out_matrix_);
+application_result_t application_flight_camera_perspective_matrix_get(application_flight_camera_t* flight_camera_, mat4x4f_t* out_matrix_);
 
-bool application_flight_camera_is_valid(const application_flight_camera_t* application_flight_camera_);
+bool application_flight_camera_is_valid(const application_flight_camera_t* flight_camera_);
 
 #ifdef __cplusplus
 }

@@ -11,15 +11,15 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vbo_vtable.h"
 
-renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vbo_) {
+renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** out_vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_create", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "vbo_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "*vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "out_vbo_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "*out_vbo_")
 
-    ret = backend_context_->vbo_vtable->vbo_create(vbo_);
+    ret = backend_context_->vbo_vtable->vbo_create(out_vbo_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vbo_create(%s) - Failed to create vbo.", renderer_backend_result_to_str(ret));
         goto cleanup;

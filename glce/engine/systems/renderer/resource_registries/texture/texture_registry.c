@@ -35,7 +35,7 @@ struct texture_registry {
     texture_registry_entry_t* entries;
 };
 
-static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_);
+static void registry_entry_deinitialize(texture_registry_entry_t* entry_);
 
 static bool texture_id_is_valid(const texture_registry_t* registry_, uint16_t texture_id_);
 static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
@@ -347,13 +347,13 @@ bool texture_registry_is_valid(const texture_registry_t* registry_) {
 }
 
 // NOTE: registry_entry_のvalidationを上位側で実行しておくこと
-static void registry_entry_deinitialize(texture_registry_entry_t* registry_entry_) {
-    if(NULL == registry_entry_) {
+static void registry_entry_deinitialize(texture_registry_entry_t* entry_) {
+    if(NULL == entry_) {
         return;
     }
-    choco_string_destroy(&registry_entry_->resource_name);
-    texture_cpu_resource_destroy(&registry_entry_->cpu_resource);
-    texture_gpu_resource_destroy(&registry_entry_->gpu_resource);
+    choco_string_destroy(&entry_->resource_name);
+    texture_cpu_resource_destroy(&entry_->cpu_resource);
+    texture_gpu_resource_destroy(&entry_->gpu_resource);
 }
 
 static bool texture_id_is_valid(const texture_registry_t* registry_, uint16_t texture_id_) {

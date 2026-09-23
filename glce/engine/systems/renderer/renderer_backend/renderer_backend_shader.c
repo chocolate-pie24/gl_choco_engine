@@ -11,15 +11,15 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_shader_vtable.h"
 
-renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
+renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** out_shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "renderer_backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_create", "renderer_backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "*shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_create", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "out_shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "*out_shader_handle_")
 
-    ret = renderer_backend_context_->shader_vtable->renderer_shader_create(shader_handle_);
+    ret = backend_context_->shader_vtable->renderer_shader_create(out_shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_shader_create(%s) - Failed to create shader handle.", renderer_backend_result_to_str(ret));
         goto cleanup;
@@ -29,12 +29,12 @@ cleanup:
     return ret;
 }
 
-void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_) {
-    if(NULL == renderer_backend_context_ || NULL == renderer_backend_context_->shader_vtable) {
+void renderer_backend_shader_destroy(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** shader_handle_) {
+    if(NULL == backend_context_ || NULL == backend_context_->shader_vtable) {
         return;
     }
     // NOTE: shader_handle_のNULLチェックは下位に任せる
-    renderer_backend_context_->shader_vtable->renderer_shader_destroy(shader_handle_);
+    backend_context_->shader_vtable->renderer_shader_destroy(shader_handle_);
 }
 
 renderer_backend_result_t renderer_backend_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {

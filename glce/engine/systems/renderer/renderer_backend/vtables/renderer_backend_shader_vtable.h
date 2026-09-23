@@ -29,7 +29,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-typedef renderer_backend_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_shader_create)(renderer_backend_shader_t** out_shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_createの前方宣言 */
 typedef void (*pfn_renderer_shader_destroy)(renderer_backend_shader_t** shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_shader_compile)(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);    /**< renderer_shader_vtableが保持するrenderer_shader_compileの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_shader_link)(renderer_backend_shader_t* shader_handle_);   /**< renderer_shader_vtableが保持するrenderer_shader_linkの前方宣言 */
@@ -46,11 +46,11 @@ typedef struct renderer_shader_vtable {
     /**
      * @brief シェーダーGPUリソース内部状態管理構造体インスタンスのメモリを確保し、フィールドを0で初期化する
      *
-     * @param[out] shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+     * @param[out] out_shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
      *
      * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - shader_handle_ == NULL
-     * - *shader_handle_ != NULL
+     * - out_shader_handle_ == NULL
+     * - *out_shader_handle_ != NULL
      * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システム使用可能範囲上限超過
      * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
      * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化

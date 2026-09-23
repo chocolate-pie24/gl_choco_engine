@@ -52,7 +52,7 @@ static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";      
 static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";          /**< 実行結果コード文字列: 内部データ破損 */
 static const char* const s_result_str_eof = "EOF";                                /**< 実行結果コード文字列: ファイル読み込みEOF */
 
-filesystem_result_t filesystem_create(filesystem_t** filesystem_, const char* fullpath_, fs_open_mode_t mode_) {
+filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char* fullpath_, fs_open_mode_t mode_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -61,8 +61,8 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_, const char* fu
 
     const char* open_mode_str = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "filesystem_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*filesystem_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "out_filesystem_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "*out_filesystem_")
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "fullpath_")
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
@@ -105,7 +105,7 @@ filesystem_result_t filesystem_create(filesystem_t** filesystem_, const char* fu
     }
 #endif
 
-    *filesystem_ = tmp_filesystem;
+    *out_filesystem_ = tmp_filesystem;
     tmp_filesystem = NULL;
 
     ret = FILESYSTEM_SUCCESS;
@@ -150,12 +150,12 @@ cleanup:
     return;
 }
 
-filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
+filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* out_read_bytes_, char* out_buffer_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(result_n_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "result_n_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_read_bytes_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_buffer_")
     if(0 == read_bytes_) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_byte_read(%s) - provided read_bytes_ is not valid.", result_to_str(ret));
@@ -175,8 +175,8 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     }
 
     if(fs_open_mode_is_readable(filesystem_->mode)) {
-        *result_n_ = mock_fread(buffer_, 1, read_bytes_, filesystem_->file_handle); // (1 x read_bytes_)を読み取り
-        if(*result_n_ == read_bytes_) {
+        *out_read_bytes_ = mock_fread(out_buffer_, 1, read_bytes_, filesystem_->file_handle); // (1 x read_bytes_)を読み取り
+        if(*out_read_bytes_ == read_bytes_) {
             ret = FILESYSTEM_SUCCESS;
         } else {
             if(mock_ferror(filesystem_->file_handle)) {
@@ -184,7 +184,7 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
                 ERROR_MESSAGE("filesystem_byte_read(%s) - Read failed.", result_to_str(ret));
                 goto cleanup;
             } else if(mock_feof(filesystem_->file_handle)) {
-                if(0 == *result_n_) {
+                if(0 == *out_read_bytes_) {
                     ret = FILESYSTEM_EOF;
                 } else {
                     ret = FILESYSTEM_SUCCESS;
@@ -204,8 +204,8 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     // filesystem_tのfield間不変条件は変更されないため、postcondition validationは行わない
 
 cleanup:
-    if(NULL != result_n_ && FILESYSTEM_SUCCESS != ret) {
-        *result_n_ = 0;
+    if(NULL != out_read_bytes_ && FILESYSTEM_SUCCESS != ret) {
+        *out_read_bytes_ = 0;
     }
     return ret;
 }

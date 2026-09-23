@@ -59,20 +59,20 @@ static const char* result_to_str(fs_path_result_t result_);
 static fs_path_result_t result_convert_choco_memory(memory_system_result_t result_);
 static fs_path_result_t result_convert_choco_string(choco_string_result_t result_);
 
-static bool is_valid_shallow(const fs_path_t* fs_path_);
+static bool is_valid_shallow(const fs_path_t* path_);
 
 // NOTE:
 // - path_のseparatorはplatformによらず'/'
 // - extension_はNULLを許可
 // - extension_ != NULLの場合, 先頭に'.'は含まない
 // - path_はbase_path_からの相対パスを指定
-fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* base_path_, const char* path_, const char* name_, const char* extension_) {
+fs_path_result_t fs_path_create(fs_path_t** out_path_, const char* base_path_, const char* path_, const char* name_, const char* extension_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
-    fs_path_t* tmp_fs_path = NULL;
+    fs_path_t* tmp_path = NULL;
     choco_string_t* tmp_fullpath = NULL;
     size_t length = 0;
 
@@ -83,8 +83,8 @@ fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* base_path_, co
 #endif
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(fs_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "fs_path_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*fs_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "*fs_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "out_path_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "*out_path_")
     IF_ARG_NULL_GOTO_CLEANUP(base_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "base_path_")
     IF_ARG_NULL_GOTO_CLEANUP(path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "path_")
     IF_ARG_NULL_GOTO_CLEANUP(name_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "name_")
@@ -162,28 +162,28 @@ fs_path_result_t fs_path_create(fs_path_t** fs_path_, const char* base_path_, co
     }
 
     // fs_path_t生成
-    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_path);
+    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_path);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = result_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("fs_path_create(%s) - choco_memory_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_fs_path, 0, sizeof(fs_path_t));
+    memset(tmp_path, 0, sizeof(fs_path_t));
 
-    tmp_fs_path->fullpath = tmp_fullpath;
+    tmp_path->fullpath = tmp_fullpath;
     tmp_fullpath = NULL;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_path_is_valid(tmp_fs_path)) {
+    if(!fs_path_is_valid(tmp_path)) {
         ret = FS_PATH_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_path_create(%s) - Postcondition validation failed for 'tmp_fs_path'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_path_create(%s) - Postcondition validation failed for 'tmp_path'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     // commit
-    *fs_path_ = tmp_fs_path;
-    tmp_fs_path = NULL;
+    *out_path_ = tmp_path;
+    tmp_path = NULL;
 
     ret = FS_PATH_SUCCESS;
 
@@ -191,15 +191,15 @@ cleanup:
     if(NULL != tmp_fullpath) {
         choco_string_destroy(&tmp_fullpath);
     }
-    if(NULL != tmp_fs_path) {
-        fs_path_destroy(&tmp_fs_path);
+    if(NULL != tmp_path) {
+        fs_path_destroy(&tmp_path);
     }
     return ret;
 }
 
 // NOTE:
 // - executable_directoryの文字列の末尾に'/'は付加されない
-fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_path_) {
+fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_path_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -208,12 +208,12 @@ fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_pat
     char* executable_path = NULL;
     char* separator_ptr = NULL;
     size_t executable_path_buf_size = 0;
-    fs_path_t* tmp_fs_path = NULL;
+    fs_path_t* tmp_path = NULL;
     choco_string_t* tmp_fullpath = NULL;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(out_fs_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create_from_executable_directory", "out_fs_path_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fs_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create_from_executable_directory", "*out_fs_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create_from_executable_directory", "out_path_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create_from_executable_directory", "*out_path_")
 
     // fullpath生成
     ret = executable_fullpath_get(&executable_path, &executable_path_buf_size);
@@ -240,28 +240,28 @@ fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_fs_pat
     }
 
     // fs_path_t生成
-    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_path);
+    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_path);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = result_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - choco_memory_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_fs_path, 0, sizeof(fs_path_t));
+    memset(tmp_path, 0, sizeof(fs_path_t));
 
-    tmp_fs_path->fullpath = tmp_fullpath;
+    tmp_path->fullpath = tmp_fullpath;
     tmp_fullpath = NULL;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_path_is_valid(tmp_fs_path)) {
+    if(!fs_path_is_valid(tmp_path)) {
         ret = FS_PATH_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - Postcondition validation failed for 'tmp_fs_path'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - Postcondition validation failed for 'tmp_path'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     // commit
-    *out_fs_path_ = tmp_fs_path;
-    tmp_fs_path = NULL;
+    *out_path_ = tmp_path;
+    tmp_path = NULL;
 
     ret = FS_PATH_SUCCESS;
 
@@ -269,8 +269,8 @@ cleanup:
     if(NULL != tmp_fullpath) {
         choco_string_destroy(&tmp_fullpath);
     }
-    if(NULL != tmp_fs_path) {
-        fs_path_destroy(&tmp_fs_path);
+    if(NULL != tmp_path) {
+        fs_path_destroy(&tmp_path);
     }
     if(0 != executable_path_buf_size && NULL != executable_path) {
         choco_memory_free(executable_path, executable_path_buf_size, MEMORY_TAG_FILE_IO);
@@ -279,45 +279,45 @@ cleanup:
     return ret;
 }
 
-void fs_path_destroy(fs_path_t** fs_path_) {
-    if(NULL == fs_path_) {
+void fs_path_destroy(fs_path_t** path_) {
+    if(NULL == path_) {
         return;
     }
-    if(NULL == *fs_path_) {
+    if(NULL == *path_) {
         return;
     }
-    choco_string_destroy(&(*fs_path_)->fullpath);
-    choco_memory_free(*fs_path_, sizeof(fs_path_t), MEMORY_TAG_FILE_IO);
-    *fs_path_ = NULL;
+    choco_string_destroy(&(*path_)->fullpath);
+    choco_memory_free(*path_, sizeof(fs_path_t), MEMORY_TAG_FILE_IO);
+    *path_ = NULL;
 }
 
-const char* fs_path_fullpath_get(const fs_path_t* fs_path_) {
-    if(NULL == fs_path_) {
+const char* fs_path_fullpath_get(const fs_path_t* path_) {
+    if(NULL == path_) {
         return NULL;
     }
 #if defined(DEBUG_BUILD)
-    if(!is_valid_shallow(fs_path_)) {
-        ERROR_MESSAGE("fs_path_fullpath_get(%s) - Provided fs_path_ is corrupted.", result_to_str(FS_PATH_DATA_CORRUPTED));
+    if(!is_valid_shallow(path_)) {
+        ERROR_MESSAGE("fs_path_fullpath_get(%s) - Provided path_ is corrupted.", result_to_str(FS_PATH_DATA_CORRUPTED));
         return NULL;
     }
 #endif
 #if defined(TEST_BUILD)
-    if(!fs_path_is_valid(fs_path_)) {
-        ERROR_MESSAGE("fs_path_fullpath_get(%s) - Provided fs_path_ is corrupted.", result_to_str(FS_PATH_DATA_CORRUPTED));
+    if(!fs_path_is_valid(path_)) {
+        ERROR_MESSAGE("fs_path_fullpath_get(%s) - Provided path_ is corrupted.", result_to_str(FS_PATH_DATA_CORRUPTED));
         return NULL;
     }
 #endif
-    return choco_string_c_str(fs_path_->fullpath);
+    return choco_string_c_str(path_->fullpath);
 }
 
-bool fs_path_is_valid(const fs_path_t* fs_path_) {
-    if(NULL == fs_path_) {
+bool fs_path_is_valid(const fs_path_t* path_) {
+    if(NULL == path_) {
         return false;
     }
-    if(!choco_string_is_valid(fs_path_->fullpath)) {
+    if(!choco_string_is_valid(path_->fullpath)) {
         return false;
     }
-    if(0 == choco_string_length(fs_path_->fullpath)) {
+    if(0 == choco_string_length(path_->fullpath)) {
         return false;
     }
     return true;
@@ -593,14 +593,14 @@ static fs_path_result_t result_convert_choco_string(choco_string_result_t result
     }
 }
 
-static bool is_valid_shallow(const fs_path_t* fs_path_) {
-    if(NULL == fs_path_) {
+static bool is_valid_shallow(const fs_path_t* path_) {
+    if(NULL == path_) {
         return false;
     }
-    if(NULL == fs_path_->fullpath) {
+    if(NULL == path_->fullpath) {
         return false;
     }
-    if(0 == choco_string_length(fs_path_->fullpath)) {
+    if(0 == choco_string_length(path_->fullpath)) {
         return false;
     }
     return true;

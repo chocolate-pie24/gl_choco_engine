@@ -40,16 +40,16 @@ static fs_stream_result_t result_convert_filesystem(filesystem_result_t result_)
 static fs_stream_result_t result_convert_memory_system(memory_system_result_t result_);
 static fs_stream_result_t result_convert_choco_string(choco_string_result_t result_);
 
-fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fullpath_, fs_open_mode_t mode_) {
+fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullpath_, fs_open_mode_t mode_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
-    fs_stream_t* tmp_fs_stream = NULL;
+    fs_stream_t* tmp_stream = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_fs_stream_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "*out_fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_stream_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "*out_stream_")
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "fullpath_")
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FS_STREAM_INVALID_ARGUMENT;
@@ -62,15 +62,15 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fu
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_fs_stream);
+    ret_memory_system = choco_memory_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_stream);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = result_convert_memory_system(ret_memory_system);
         ERROR_MESSAGE("fs_stream_create(%s) - choco_memory_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_fs_stream, 0, sizeof(fs_stream_t));
+    memset(tmp_stream, 0, sizeof(fs_stream_t));
 
-    ret_filesystem = filesystem_create(&tmp_fs_stream->filesystem, fullpath_, mode_);
+    ret_filesystem = filesystem_create(&tmp_stream->filesystem, fullpath_, mode_);
     if(FILESYSTEM_SUCCESS != ret_filesystem) {
         ret = result_convert_filesystem(ret_filesystem);
         ERROR_MESSAGE("fs_stream_create(%s) - filesystem_create failed.", result_to_str(ret));
@@ -78,61 +78,61 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fu
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_stream_is_valid(tmp_fs_stream)) {
+    if(!fs_stream_is_valid(tmp_stream)) {
         ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_create(%s) - Postcondition validation failed for 'tmp_fs_stream'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_stream_create(%s) - Postcondition validation failed for 'tmp_stream'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    *out_fs_stream_ = tmp_fs_stream;
-    tmp_fs_stream = NULL;
+    *out_stream_ = tmp_stream;
+    tmp_stream = NULL;
 
     ret = FS_STREAM_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_fs_stream) {
-        filesystem_destroy(&tmp_fs_stream->filesystem, NULL);
-        choco_memory_free(tmp_fs_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
-        tmp_fs_stream = NULL;
+    if(NULL != tmp_stream) {
+        filesystem_destroy(&tmp_stream->filesystem, NULL);
+        choco_memory_free(tmp_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
+        tmp_stream = NULL;
     }
     return ret;
 }
 
-void fs_stream_destroy(fs_stream_t** fs_stream_, bool* out_close_succeeded_) {
-    if(NULL == fs_stream_) {
+void fs_stream_destroy(fs_stream_t** stream_, bool* out_close_succeeded_) {
+    if(NULL == stream_) {
         return;
     }
-    if(NULL == *fs_stream_) {
+    if(NULL == *stream_) {
         return;
     }
-    filesystem_destroy(&(*fs_stream_)->filesystem, out_close_succeeded_);
-    choco_memory_free(*fs_stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
-    *fs_stream_ = NULL;
+    filesystem_destroy(&(*stream_)->filesystem, out_close_succeeded_);
+    choco_memory_free(*stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
+    *stream_ = NULL;
 }
 
-fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_bytes_, size_t* result_n_, char* buffer_) {
+fs_stream_result_t fs_stream_byte_read(fs_stream_t* stream_, size_t read_bytes_, size_t* out_read_bytes_, char* out_buffer_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(result_n_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "result_n_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_read_bytes_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_buffer_")
     if(0 == read_bytes_) {
         ret = FS_STREAM_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_stream_byte_read(%s) - Provided read_bytes_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!fs_stream_is_valid(fs_stream_)) {
+    if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_byte_read(%s) - Precondition validation failed for 'fs_stream_'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_stream_byte_read(%s) - Precondition validation failed for 'stream_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_filesystem = filesystem_byte_read(fs_stream_->filesystem, read_bytes_, result_n_, buffer_);
+    ret_filesystem = filesystem_byte_read(stream_->filesystem, read_bytes_, out_read_bytes_, out_buffer_);
     if(FILESYSTEM_SUCCESS != ret_filesystem) {
         ret = result_convert_filesystem(ret_filesystem);
         if(FS_STREAM_EOF != ret) {
@@ -146,31 +146,31 @@ fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_byte
     ret = FS_STREAM_SUCCESS;
 
 cleanup:
-    if(NULL != result_n_ && FS_STREAM_SUCCESS != ret) {
-        *result_n_ = 0;
+    if(NULL != out_read_bytes_ && FS_STREAM_SUCCESS != ret) {
+        *out_read_bytes_ = 0;
     }
     return ret;
 }
 
-bool fs_stream_is_valid(const fs_stream_t* fs_stream_) {
-    if(NULL == fs_stream_) {
+bool fs_stream_is_valid(const fs_stream_t* stream_) {
+    if(NULL == stream_) {
         return false;
     }
-    if(!filesystem_is_valid(fs_stream_->filesystem)) {
+    if(!filesystem_is_valid(stream_->filesystem)) {
         return false;
     }
 
     return true;
 }
 
-fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_string_t* out_string_) {
+fs_stream_result_t fs_stream_text_file_read(fs_stream_t* stream_, choco_string_t* out_string_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     bool complete = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "stream_")
     IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "out_string_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(out_string_)) {
@@ -178,9 +178,9 @@ fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_strin
         ERROR_MESSAGE("fs_stream_text_file_read(%s) - Precondition validation failed for 'out_string_'.", result_to_str(ret));
         goto cleanup;
     }
-    if(!fs_stream_is_valid(fs_stream_)) {
+    if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_text_file_read(%s) - Precondition validation failed for 'fs_stream_'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_stream_text_file_read(%s) - Precondition validation failed for 'stream_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -188,7 +188,7 @@ fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_strin
     while(!complete) {
         char tmp_buffer[FS_STREAM_READ_UNIT_SIZE + 1] = { 0 };
         size_t result = 0;
-        ret = fs_stream_byte_read(fs_stream_, FS_STREAM_READ_UNIT_SIZE, &result, tmp_buffer);
+        ret = fs_stream_byte_read(stream_, FS_STREAM_READ_UNIT_SIZE, &result, tmp_buffer);
         if(FS_STREAM_EOF == ret) {
             complete = true;
         } else if(FS_STREAM_SUCCESS == ret) {
@@ -213,7 +213,7 @@ cleanup:
     return ret;
 }
 
-fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_string_t* out_string_) {
+fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* stream_, choco_string_t* out_string_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -222,7 +222,7 @@ fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_
     size_t read_byte = 0;
     char tmp_buffer[FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE] = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "stream_")
     IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "out_string_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(out_string_)) {
@@ -230,9 +230,9 @@ fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_
         ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Precondition validation failed for 'out_string_'.", result_to_str(ret));
         goto cleanup;
     }
-    if(!fs_stream_is_valid(fs_stream_)) {
+    if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
-        ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Precondition validation failed for 'fs_stream_'.", result_to_str(ret));
+        ERROR_MESSAGE("fs_stream_text_file_line_read(%s) - Precondition validation failed for 'stream_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -240,7 +240,7 @@ fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_
     while(!complete) {
         char tmp = 0;   // 改行コードは文字数カウントに含めないため、一時的にtmpにコピーし、改行コード以外だったらtmp_bufferにコピー
         size_t result = 0;
-        ret = fs_stream_byte_read(fs_stream_, 1, &result, &tmp);
+        ret = fs_stream_byte_read(stream_, 1, &result, &tmp);
         if(FS_STREAM_EOF == ret) {
             complete = true;
             if(0 == read_byte) {

@@ -30,12 +30,12 @@ static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /
 
 static const char* result_to_str(linear_allocator_result_t result_);
 
-void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_) {
-    if(NULL == memory_requirement_ || NULL == align_requirement_) {
+void linear_allocator_preinit(size_t* out_memory_requirement_, size_t* out_align_requirement_) {
+    if(NULL == out_memory_requirement_ || NULL == out_align_requirement_) {
         return;
     }
-    *memory_requirement_ = sizeof(linear_allocator_t);
-    *align_requirement_ = alignof(linear_allocator_t);
+    *out_memory_requirement_ = sizeof(linear_allocator_t);
+    *out_align_requirement_ = alignof(linear_allocator_t);
 }
 
 linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* allocator_, size_t capacity_, void* memory_pool_) {
@@ -55,7 +55,7 @@ cleanup:
     return ret;
 }
 
-linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_) {
+linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, size_t required_align_, void** out_ptr_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
     uintptr_t head = 0;
     uintptr_t align = 0;
@@ -69,17 +69,17 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
-    if(0 == req_align_ || 0 == req_size_) {
-        WARN_MESSAGE("linear_allocator_allocate - No-op: req_align_ or req_size_ is 0.");
+    if(0 == required_align_ || 0 == required_size_) {
+        WARN_MESSAGE("linear_allocator_allocate - No-op: required_align_ or required_size_ is 0.");
         ret = LINEAR_ALLOCATOR_SUCCESS;
         goto cleanup;
     }
-    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(req_align_), ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "req_align_")
+    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(required_align_), ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "required_align_")
 
     // Simulation
     head = (uintptr_t)allocator_->head_ptr;
-    align = (uintptr_t)req_align_;
-    size = (uintptr_t)req_size_;
+    align = (uintptr_t)required_align_;
+    size = (uintptr_t)required_size_;
     offset = head % align;
     if(0 != offset) {
         offset = align - offset;    // 要求アライメントに先頭アドレスを調整
@@ -100,7 +100,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     if((start_addr + size) > (pool + cap)) {
         uintptr_t free_space = pool + cap - start_addr;
         ret = LINEAR_ALLOCATOR_NO_MEMORY;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", result_to_str(ret), req_size_, (size_t)free_space);
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", result_to_str(ret), required_size_, (size_t)free_space);
         goto cleanup;
     }
 

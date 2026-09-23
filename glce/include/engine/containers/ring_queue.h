@@ -58,18 +58,9 @@ typedef enum {
 } ring_queue_result_t;
 
 /**
- * @brief ring_queue_のメモリを確保し、容量max_element_count_で初期化する
+ * @brief out_queue_のメモリを確保し、容量max_element_count_で初期化する
  *
  * @note 初期化されたリングキューに格納するデータのサイズとアライメント要件はelement_size_,element_align_で固定化される
- *
- * 使用例:
- * @code{.c}
- * ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
- * ring_queue_t* ring_queue = NULL;
- *
- * // int型のデータを格納するリングキュー初期化処理(格納要素数は8)
- * ret = ring_queue_create(8, sizeof(int), alignof(int), &ring_queue);
- * @endcode
  *
  * @param[in] max_element_count_ 要素を格納可能な最大個数
  * @param[in] element_size_ 格納する要素のサイズ
@@ -77,8 +68,8 @@ typedef enum {
  * @param[out] ring_queue_ 初期化対象構造体インスタンスへのダブルポインタ
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
- * - ring_queue_ == NULL
- * - *ring_queue_ != NULL
+ * - out_queue_ == NULL
+ * - *out_queue_ != NULL
  * - 0 == max_element_count_
  * - 0 == element_size_
  * - element_align_が2の冪乗ではない
@@ -89,17 +80,17 @@ typedef enum {
  * @retval RING_QUEUE_BAD_OPERATION メモリシステム未初期化
  * @retval RING_QUEUE_SUCCESS 初期化に成功し、正常終了
  */
-ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_);
+ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** out_queue_);
 
 /**
- * @brief ring_queue_が管理しているメモリと自身のメモリを解放し、*ring_queue_=NULLにする
+ * @brief ring_queue_が管理しているメモリと自身のメモリを解放し、*queue_ = NULLにする
  *
  * @warning 内部データが破損している場合にはmemory_poolの破棄は行わず、メモリリークとなる
  *
  * @note
  * - 2重デストロイ許可
- * - ring_queue_ == NULLの場合はno-op
- * - *ring_queue_ == NULLの場合はno-op
+ * - queue_ == NULLの場合はno-op
+ * - *queue_ == NULLの場合はno-op
  *
  * 使用例:
  * @code{.c}
@@ -113,9 +104,9 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
  * ring_queue_destroy(&ring_queue); // 2重デストロイ許可
  * @endcode
  *
- * @param ring_queue_ メモリ破棄対象構造体インスタンスへのダブルポインタ
+ * @param queue_ メモリ破棄対象構造体インスタンスへのダブルポインタ
  */
-void ring_queue_destroy(ring_queue_t** ring_queue_);
+void ring_queue_destroy(ring_queue_t** queue_);
 
 /**
  * @brief ring_queue_にdata_をpushする
@@ -127,36 +118,36 @@ void ring_queue_destroy(ring_queue_t** ring_queue_);
  * @param[in] data_ 格納データへのポインタ
  * @param[in] element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param[in] element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
- * @param[in,out] ring_queue_ データをpushするリングキュー構造体インスタンスへのポインタ
+ * @param[in,out] queue_ データをpushするリングキュー構造体インスタンスへのポインタ
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
- * - ring_queue_ == NULL
+ * - queue_ == NULL
  * - data_ == NULL
  * - データ格納キューが未初期化
  * - element_size_がring_queue_createを実行した時の値と異なる
  * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_SUCCESS          データの格納に成功し、正常終了(キューが満杯で古いデータを捨てて新しいデータを格納した場合でも成功となる)
  */
-ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_);
+ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* queue_);
 
 /**
- * @brief ring_queue_からdata_にデータをpopする
+ * @brief ring_queue_からout_data_にデータをpopする
  *
  * @param[in] element_size_ 格納データサイズ(create時と異なる型ではないかをチェックするため)
  * @param[in] element_align_ 格納データアライメント要件(create時と異なる型ではないかをチェックするため)
- * @param[in,out] ring_queue_ データをpopするリングキュー構造体インスタンスへのポインタ
- * @param[out] data_ popしたデータの格納先アドレス
+ * @param[in,out] queue_ データをpopするリングキュー構造体インスタンスへのポインタ
+ * @param[out] out_data_ popしたデータの格納先アドレス
  *
  * @retval RING_QUEUE_INVALID_ARGUMENT 以下のいずれか
- * - ring_queue_ == NULL
- * - data_ == NULL
+ * - queue_ == NULL
+ * - out_data_ == NULL
  * - データ格納キューが未初期化
  * - element_size_がring_queue_createを実行した時の値と異なる
  * - element_align_がring_queue_createを実行した時の値と異なる
  * @retval RING_QUEUE_EMPTY            ring_queueが空
  * @retval RING_QUEUE_SUCCESS          データの取得に成功し、正常終了
  */
-ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_, void* data_);
+ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* queue_, void* out_data_);
 
 /**
  * @brief リングキューが空かを判定する
@@ -164,14 +155,14 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
  * @note
  * - 引数で与えたring_queue_がNULLの場合は何もせず、true(=空)を返す
  *
- * @param ring_queue_ 判定対象リングキュー
+ * @param queue_ 判定対象リングキュー
  *
  * @return true リングキューが空
  * @return false リングキューが空ではない
  */
-bool ring_queue_is_empty(const ring_queue_t* ring_queue_);
+bool ring_queue_is_empty(const ring_queue_t* queue_);
 
-bool ring_queue_is_valid(const ring_queue_t* ring_queue_);
+bool ring_queue_is_valid(const ring_queue_t* queue_);
 
 #ifdef __cplusplus
 }

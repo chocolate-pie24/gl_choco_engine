@@ -37,7 +37,7 @@ struct renderer_backend_vao {
     GLuint vao_handle;  /**< VAO */
 };
 
-static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** vao_);
+static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_vao_);
 static void gl33_vao_destroy(renderer_backend_vao_t** vao_);
 static renderer_backend_result_t gl33_vao_bind(const renderer_backend_vao_t* vao_);
 static renderer_backend_result_t gl33_vao_unbind(void);
@@ -65,36 +65,36 @@ const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
 /**
  * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
  *
- * @param[out] vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+ * @param[out] out_vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - vao_がNULL
- * - *vao_が非NULL
+ * - out_vao_がNULL
+ * - *out_vao_が非NULL
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** vao_) {
+static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_vao_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    renderer_backend_vao_t* tmp = NULL;
+    renderer_backend_vao_t* tmp_vao = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "vao_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "vao_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "out_vao_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "*out_vao_")
 
-    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_vao_t), MEMORY_TAG_RENDERER, (void**)&tmp_vao);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp'.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_vao_create(%s) - Failed to allocate memory for 'tmp_vao'.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    mock_glGenVertexArrays(1, &tmp->vao_handle);
-    *vao_ = tmp;
+    mock_glGenVertexArrays(1, &tmp_vao->vao_handle);
+    *out_vao_ = tmp_vao;
 
     ret = RENDERER_BACKEND_SUCCESS;
 

@@ -49,8 +49,8 @@ struct line_mesh_geometry_registry {
     registry_entry_t* entries;
 };
 
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* registry_entry_, line_mesh_shader_t* shader_);
-static bool registry_entry_is_empty(const registry_entry_t* registry_entry_);
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, line_mesh_shader_t* shader_);
+static bool registry_entry_is_empty(const registry_entry_t* entry_);
 
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
 static bool geometry_id_is_valid(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
@@ -340,23 +340,23 @@ bool line_mesh_geometry_registry_is_valid(const line_mesh_geometry_registry_t* r
     return true;
 }
 
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* registry_entry_, line_mesh_shader_t* shader_) {
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, line_mesh_shader_t* shader_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == registry_entry_ || NULL == shader_) {
+    if(NULL == entry_ || NULL == shader_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         goto cleanup;
     }
 
-    if(SHADER_SUCCESS != line_mesh_shader_vbo_free(shader_, &registry_entry_->allocation_descriptor)) {
+    if(SHADER_SUCCESS != line_mesh_shader_vbo_free(shader_, &entry_->allocation_descriptor)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("registry_entry_deinitialize(%s) - line_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    memset(&registry_entry_->allocation_descriptor, 0, sizeof(vbo_range_t));
+    memset(&entry_->allocation_descriptor, 0, sizeof(vbo_range_t));
 
-    line_mesh_geometry_destroy(&registry_entry_->cpu_resource);
-    choco_string_destroy(&registry_entry_->resource_name);
+    line_mesh_geometry_destroy(&entry_->cpu_resource);
+    choco_string_destroy(&entry_->resource_name);
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -364,29 +364,29 @@ cleanup:
     return ret;
 }
 
-static bool registry_entry_is_empty(const registry_entry_t* registry_entry_) {
-    if(NULL == registry_entry_) {
+static bool registry_entry_is_empty(const registry_entry_t* entry_) {
+    if(NULL == entry_) {
         return false;
     }
-    if(NULL != registry_entry_->cpu_resource || NULL != registry_entry_->resource_name) {
+    if(NULL != entry_->cpu_resource || NULL != entry_->resource_name) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.allocated_size) {
+    if(0 != entry_->allocation_descriptor.allocation_info.allocated_size) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.node_index) {
+    if(0 != entry_->allocation_descriptor.allocation_info.node_index) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.allocation_info.offset) {
+    if(0 != entry_->allocation_descriptor.allocation_info.offset) {
         return false;
     }
-    if(NULL != registry_entry_->allocation_descriptor.allocation_info.owner) {
+    if(NULL != entry_->allocation_descriptor.allocation_info.owner) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.draw_range.first_vertex_count) {
+    if(0 != entry_->allocation_descriptor.draw_range.first_vertex_count) {
         return false;
     }
-    if(0 != registry_entry_->allocation_descriptor.draw_range.vertex_count) {
+    if(0 != entry_->allocation_descriptor.draw_range.vertex_count) {
         return false;
     }
     return true;

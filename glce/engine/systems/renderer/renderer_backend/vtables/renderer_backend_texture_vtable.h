@@ -25,7 +25,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_); /**< renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
@@ -40,21 +40,21 @@ typedef struct renderer_texture_vtable {
     /**
      * @brief テクスチャGPU側リソース構造体インスタンスのメモリを確保し、テクスチャ設定を行い初期化する
      *
-     * @param[in] unit_num_ シェーダーが参照するテクスチャ用スロット番号
+     * @param[in] texture_unit_index_ シェーダーが参照するテクスチャ用スロット番号
      * @param[in] min_filter_config_ テクスチャ縮小表示の際の設定値
      * @param[in] mag_filter_config_ テクスチャ拡大表示の際の設定値
      * @param[in] wrap_config_s_axis_ テクスチャがラップする部分の表示設定値(s軸)
      * @param[in] wrap_config_t_axis_ テクスチャがラップする部分の表示設定値(t軸)
-     * @param[out] texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
+     * @param[out] out_texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
      *
      * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - texture_handle_ == NULL
-     * - *texture_handle_ != NULL
+     * - out_texture_handle_ == NULL
+     * - *out_texture_handle_ != NULL
      * - min_filter_config_が規定値外
      * - mag_filter_config_が規定値外
      * - wrap_config_s_axis_が規定値外
      * - wrap_config_t_axis_が規定値外
-     * - unit_num_ < 0
+     * - texture_unit_index_ < 0
      * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
      * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
      * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗

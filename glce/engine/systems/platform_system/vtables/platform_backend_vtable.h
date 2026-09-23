@@ -23,23 +23,23 @@ typedef struct platform_system_config platform_system_config_t;
 typedef struct linear_allocator linear_allocator_t;
 typedef struct platform_event_view platform_event_view_t;
 
-typedef platform_system_result_t (*pfn_platform_backend_create)(const platform_system_config_t* config_, linear_allocator_t* linear_allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_platform_backend_);
+typedef platform_system_result_t (*pfn_platform_backend_create)(const platform_system_config_t* config_, linear_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_backend_);
 
-typedef void (*pfn_platform_backend_deinitialize)(platform_backend_t* platform_backend_);
+typedef void (*pfn_platform_backend_deinitialize)(platform_backend_t* backend_);
 
-typedef platform_system_result_t (*pfn_platform_backend_update)(platform_backend_t* platform_backend_, const platform_event_view_t** out_event_view);
+typedef platform_system_result_t (*pfn_platform_backend_update)(platform_backend_t* backend_, const platform_event_view_t** out_event_view_);
 
 /**
  * @brief 描画サーフェイスのフロント/バックバッファをスワップする
  *
- * @param[in,out] platform_backend_ 処理対象プラットフォーム内部状態管理オブジェクト
+ * @param[in,out] backend_ 処理対象プラットフォーム内部状態管理オブジェクト
  *
- * @retval PLATFORM_SYSTEM_INVALID_ARGUMENT platform_backend_がNULL
- * @retval その他                     プラットフォーム実装依存
+ * @retval PLATFORM_SYSTEM_INVALID_ARGUMENT backend_がNULL
+ * @retval 上記以外 プラットフォーム実装依存
  */
-typedef platform_system_result_t (*pfn_platform_backend_swap_buffers)(platform_backend_t* platform_backend_);
+typedef platform_system_result_t (*pfn_platform_backend_swap_buffers)(platform_backend_t* backend_);
 
-typedef bool (*pfn_platform_backend_is_valid)(const platform_backend_t* platform_backend_);
+typedef bool (*pfn_platform_backend_is_valid)(const platform_backend_t* backend_);
 
 /**
  * @brief プラットフォーム処理共通化のための仮想関数テーブル(実装はsrc/platform_system/以下のソースファイルに格納)

@@ -104,7 +104,7 @@ static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 // ============================================================
 // Allocation helpers
 static free_list_allocator_result_t allocation_block_size_calc(size_t payload_offset_, size_t allocation_size_, size_t* out_required_block_size_);
-static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* free_list_allocator_, size_t required_block_size_, free_list_block_header_t** out_free_block_);
+static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* allocator_, size_t required_block_size_, free_list_block_header_t** out_free_block_);
 static free_list_allocator_result_t allocation_is_ready(const free_list_block_header_t* allocation_block_, size_t payload_offset_, size_t required_block_size_, size_t allocation_size_);
 static void free_block_split(size_t minimum_block_size_, free_list_block_header_t* free_block_, size_t required_block_size_);
 static void free_block_allocate(size_t payload_offset_, free_list_block_header_t* free_block_, size_t allocation_size_, void** out_ptr_);
@@ -115,12 +115,12 @@ static void free_block_merge_next(free_list_block_header_t* free_block_);
 static void free_block_coalesce(free_list_block_header_t* free_block_);
 
 // Utilities
-static bool block_exists(const free_list_allocator_t* free_list_allocator_, const free_list_block_header_t* block_);
-static bool ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_);
+static bool block_exists(const free_list_allocator_t* allocator_, const free_list_block_header_t* block_);
+static bool ptr_is_allocated(const free_list_allocator_t* allocator_, const void* ptr_);
 static const char* result_to_str(free_list_allocator_result_t result_);
 
 // Validators
-static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_);
+static bool is_valid_shallow(const free_list_allocator_t* allocator_);
 static bool block_state_is_valid(free_list_block_state_t state_);
 static bool block_is_valid(const free_list_block_header_t* block_, size_t minimum_block_size_);
 
@@ -130,7 +130,7 @@ static bool block_is_valid(const free_list_block_header_t* block_, size_t minimu
 
 // free_list_allocator_initialize Validation Policy
 //
-// - initialize前のfree_list_allocator_はinitialized stateではないため、
+// - initialize前のallocator_はinitialized stateではないため、
 //   Preconditionsではfree_list_allocator_tのvalidatorを使用しない。
 // - PreconditionsではModule Boundary Contractおよびfree_list_allocator_initialize()固有のAPI Contractを直接検証する。
 // - Commit完了後、DEBUG_BUILD / TEST_BUILDではcanonical validatorを使用し、
@@ -139,7 +139,7 @@ static bool block_is_valid(const free_list_block_header_t* block_, size_t minimu
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* free_list_allocator_) {
+free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_size_, void* memory_pool_, free_list_allocator_t* allocator_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     free_list_block_header_t* initial_block = NULL;
@@ -151,7 +151,7 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "memory_pool_")
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "allocator_")
     if(0 == memory_pool_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -199,17 +199,17 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
     initial_block->next = NULL;
     initial_block->prev = NULL;
 
-    free_list_allocator_->memory_pool = memory_pool_;
-    free_list_allocator_->memory_pool_size = memory_pool_size_;
-    free_list_allocator_->payload_offset = payload_offset;
-    free_list_allocator_->minimum_block_size = minimum_block_size;
-    free_list_allocator_->head = initial_block;
+    allocator_->memory_pool = memory_pool_;
+    allocator_->memory_pool_size = memory_pool_size_;
+    allocator_->payload_offset = payload_offset;
+    allocator_->minimum_block_size = minimum_block_size;
+    allocator_->head = initial_block;
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_initialize(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -228,35 +228,35 @@ cleanup:
 //
 // - deinitialize対象はinitializedなStable stateであることを要求する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   deinitialize前のfree_list_allocator_がModule Internal Contractを満たすことを検証する。
+//   deinitialize前のallocator_がModule Internal Contractを満たすことを検証する。
 // - deinitialize完了後はinitialized stateではなくなるため、Postcondition validationは行わない。
 //
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* free_list_allocator_) {
+free_list_allocator_result_t free_list_allocator_deinitialize(free_list_allocator_t* allocator_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    if(NULL == free_list_allocator_) {
+    if(NULL == allocator_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Provided free_list_allocator_ is not valid.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Provided allocator_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_deinitialize(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     // Commit.
-    free_list_allocator_->head = NULL;
-    free_list_allocator_->payload_offset = 0;
-    free_list_allocator_->memory_pool = NULL;
-    free_list_allocator_->memory_pool_size = 0;
-    free_list_allocator_->minimum_block_size = 0;
+    allocator_->head = NULL;
+    allocator_->payload_offset = 0;
+    allocator_->memory_pool = NULL;
+    allocator_->memory_pool_size = 0;
+    allocator_->minimum_block_size = 0;
 
     ret = FREE_LIST_ALLOCATOR_SUCCESS;
 
@@ -266,14 +266,14 @@ cleanup:
 
 // free_list_allocator_allocate Validation Policy
 //
-// - free_list_allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する(DEBUG_BUILD / TEST_BUILDのみ)。
+// - allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する(DEBUG_BUILD / TEST_BUILDのみ)。
 // - direct argument validationはstructural validationより前に行う。
 // - Commit完了後はStable stateに復帰していることをcanonical validatorで検証する(DEBUG_BUILD / TEST_BUILDのみ)。
 //
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* free_list_allocator_, size_t allocation_size_, void** out_ptr_) {
+free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t* allocator_, size_t allocation_size_, void** out_ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t required_block_size = 0;
@@ -281,7 +281,7 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_list_allocator_allocate", "*out_ptr_")
     if(0 == allocation_size_) {
@@ -290,43 +290,43 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     // Prepare.
-    ret = allocation_block_size_calc(free_list_allocator_->payload_offset, allocation_size_, &required_block_size);
+    ret = allocation_block_size_calc(allocator_->payload_offset, allocation_size_, &required_block_size);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_block_size_calc failed.", result_to_str(ret));
         goto cleanup;
     }
 
     // Preflight.
-    ret = free_block_find_first_fit(free_list_allocator_, required_block_size, &allocation_block);
+    ret = free_block_find_first_fit(allocator_, required_block_size, &allocation_block);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - free_block_find_first_fit failed.", result_to_str(ret));
         goto cleanup;
     }
 
     // Commit eligibility.
-    ret = allocation_is_ready(allocation_block, free_list_allocator_->payload_offset, required_block_size, allocation_size_);
+    ret = allocation_is_ready(allocation_block, allocator_->payload_offset, required_block_size, allocation_size_);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret) {
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - allocation_is_ready failed.", result_to_str(ret));
         goto cleanup;
     }
 
     // Commit.
-    free_block_split(free_list_allocator_->minimum_block_size, allocation_block, required_block_size);
-    free_block_allocate(free_list_allocator_->payload_offset, allocation_block, allocation_size_, &tmp_ptr);
+    free_block_split(allocator_->minimum_block_size, allocation_block, required_block_size);
+    free_block_allocate(allocator_->payload_offset, allocation_block, allocation_size_, &tmp_ptr);
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocate(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -345,7 +345,7 @@ cleanup:
 //
 // free_list_allocator_free Validation Policy
 //
-// - free_list_allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する(DEBUG_BUILD / TEST_BUILDのみ)。
+// - allocator_のblock chainを安全に走査するため、Preconditionsではcanonical validatorを使用する(DEBUG_BUILD / TEST_BUILDのみ)。
 // - ptr_は対象allocatorが現在保持するlive allocationのpayload先頭であることを確認する。
 // - allocation pointer validationは、allocatorのstructural validation後に行う。
 // - Commit完了後はStable stateに復帰していることをcanonical validatorで検証する(DEBUG_BUILD / TEST_BUILDのみ)。
@@ -353,29 +353,29 @@ cleanup:
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* free_list_allocator_, void* ptr_) {
+free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* allocator_, void* ptr_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     free_list_block_header_t* allocation_block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_free(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_free(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(!ptr_is_allocated(free_list_allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
+    if(!ptr_is_allocated(allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_free(%s) - Provided ptr_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
-    allocation_block = (free_list_block_header_t*)((uintptr_t)ptr_ - free_list_allocator_->payload_offset);
+    allocation_block = (free_list_block_header_t*)((uintptr_t)ptr_ - allocator_->payload_offset);
 
     // Commit.
     allocated_block_free(allocation_block);
@@ -383,9 +383,9 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* fre
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_free(%s) - Postcondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_free(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -398,9 +398,9 @@ cleanup:
 
 // free_list_allocator_ptr_is_allocated Validation Policy
 //
-// - free_list_allocator_およびptr_はNULLでないことを要求する。
+// - allocator_およびptr_はNULLでないことを要求する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   free_list_allocator_がModule Internal Contractを満たすStable stateであることを検証する。
+//   allocator_がModule Internal Contractを満たすStable stateであることを検証する。
 //
 // - ptr_からblock headerを逆算する前に、ptr_が対象memory poolの範囲内にあり、
 //   payload_offsetを減算してもmemory poolの先頭より前にならないことを全BUILDで検証する。
@@ -418,26 +418,26 @@ cleanup:
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_) {
-    if(NULL == free_list_allocator_ || NULL == ptr_) {
-        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Provided free_list_allocator_ or ptr_ is not valid.", result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
+bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* allocator_, const void* ptr_) {
+    if(NULL == allocator_ || NULL == ptr_) {
+        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Provided allocator_ or ptr_ is not valid.", result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
         return false;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
-        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(FREE_LIST_ALLOCATOR_DATA_CORRUPTED));
+    if(!free_list_allocator_is_valid(allocator_)) {
+        ERROR_MESSAGE("free_list_allocator_ptr_is_allocated(%s) - Precondition validation failed for 'allocator_'.", result_to_str(FREE_LIST_ALLOCATOR_DATA_CORRUPTED));
         return false;
     }
 #endif
 
-    return ptr_is_allocated(free_list_allocator_, ptr_);
+    return ptr_is_allocated(allocator_, ptr_);
 }
 
 // free_list_allocator_allocation_info_get Validation Policy
 //
-// - free_list_allocator_、ptr_、out_allocation_size_はNULLでないことを要求する。
+// - allocator_、ptr_、out_allocated_size_はNULLでないことを要求する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   free_list_allocator_がModule Internal Contractを満たすStable stateであることを検証する。
+//   allocator_がModule Internal Contractを満たすStable stateであることを検証する。
 //
 // - ptr_についてptr_is_allocated()を使用し、対象allocatorが現在保持する
 //   ALLOCATED blockのpayload先頭を指していることを確認する。
@@ -450,24 +450,24 @@ bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* free_list
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* free_list_allocator_, const void* ptr_, size_t* out_allocated_size_) {
+free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* allocator_, const void* ptr_, size_t* out_allocated_size_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     uintptr_t block_address = 0;
     const free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "ptr_")
     IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "out_allocated_size_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!free_list_allocator_is_valid(free_list_allocator_)) {
+    if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Precondition validation failed for 'free_list_allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(!ptr_is_allocated(free_list_allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
+    if(!ptr_is_allocated(allocator_, ptr_)) {  // 内部でblockを走査するため、canonical validatorの後で実行する
                                                          // 内部でblock_is_valid(), block_exists()が実行される
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_allocation_info_get(%s) - Provided ptr_ is not valid.", result_to_str(ret));
@@ -475,7 +475,7 @@ free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_
     }
 
     // Prepare.
-    block_address = (uintptr_t)ptr_ - free_list_allocator_->payload_offset;
+    block_address = (uintptr_t)ptr_ - allocator_->payload_offset;
     block = (free_list_block_header_t*)block_address;
 
     // Output.
@@ -487,7 +487,7 @@ cleanup:
     return ret;
 }
 
-bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocator_) {
+bool free_list_allocator_is_valid(const free_list_allocator_t* allocator_) {
     const free_list_block_header_t* node = NULL;
     const free_list_block_header_t* prev_node = NULL;
 
@@ -500,12 +500,12 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
 
     bool prev_node_is_free = false;
 
-    if(!is_valid_shallow(free_list_allocator_)) {
+    if(!is_valid_shallow(allocator_)) {
         return false;
     }
 
-    pool_address = (uintptr_t)free_list_allocator_->memory_pool;
-    pool_end_address = pool_address + free_list_allocator_->memory_pool_size;
+    pool_address = (uintptr_t)allocator_->memory_pool;
+    pool_end_address = pool_address + allocator_->memory_pool_size;
     node_address = pool_address;
 
     while(node_address < pool_end_address) {
@@ -519,7 +519,7 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
         node = (const free_list_block_header_t*)node_address;
 
         // block単体のlocal invariant
-        if(!block_is_valid(node, free_list_allocator_->minimum_block_size)) {
+        if(!block_is_valid(node, allocator_->minimum_block_size)) {
             return false;
         }
 
@@ -532,7 +532,7 @@ bool free_list_allocator_is_valid(const free_list_allocator_t* free_list_allocat
             if(0 == node->allocation_size) {
                 return false;
             }
-            if(node->allocation_size > node->block_size - free_list_allocator_->payload_offset) {
+            if(node->allocation_size > node->block_size - allocator_->payload_offset) {
                 return false;
             }
         }
@@ -618,13 +618,13 @@ cleanup:
     return ret;
 }
 
-static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* free_list_allocator_, size_t required_block_size_, free_list_block_header_t** out_free_block_) {
+static free_list_allocator_result_t free_block_find_first_fit(const free_list_allocator_t* allocator_, size_t required_block_size_, free_list_block_header_t** out_free_block_) {
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(free_list_allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "free_list_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "out_free_block_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_free_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_block_find_first_fit", "*out_free_block_")
     if(0 == required_block_size_) {
@@ -634,7 +634,7 @@ static free_list_allocator_result_t free_block_find_first_fit(const free_list_al
     }
 
     // Preflight.
-    block = free_list_allocator_->head;
+    block = allocator_->head;
     while(NULL != block) {
         if(FREE_LIST_BLOCK_STATE_FREE == block->block_state && block->block_size >= required_block_size_) {
             break;
@@ -899,7 +899,7 @@ static void free_block_coalesce(free_list_block_header_t* free_block_) {
 // ============================================================
 /*
  * Contract:
- * - block_existsはcanonical validatorを通過したvalidなfree_list_allocator_に対して呼び出す
+ * - block_existsはcanonical validatorを通過したvalidなallocator_に対して呼び出す
  * - block_ != NULLである。
  *
  * canonical-validなblock chainをheadからnextで辿り、
@@ -910,14 +910,14 @@ static void free_block_coalesce(free_list_block_header_t* free_block_) {
  * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-static bool block_exists(const free_list_allocator_t* free_list_allocator_, const free_list_block_header_t* block_) {
+static bool block_exists(const free_list_allocator_t* allocator_, const free_list_block_header_t* block_) {
     const free_list_block_header_t* node = NULL;
 
-    if(NULL == free_list_allocator_ || NULL == block_) {
+    if(NULL == allocator_ || NULL == block_) {
         return false;
     }
 
-    node = free_list_allocator_->head;
+    node = allocator_->head;
     while(NULL != node) {
         if(node == block_) {
             return true;
@@ -929,9 +929,9 @@ static bool block_exists(const free_list_allocator_t* free_list_allocator_, cons
 
 /*
  * Contract:
- * - free_list_allocator_ != NULLである。
+ * - allocator_ != NULLである。
  * - ptr_ != NULLである。
- * - free_list_allocator_はinitializedなStable stateであり、
+ * - allocator_はinitializedなStable stateであり、
  *   Module Internal Contractを満たしていることをcallerが保証する。
  * - DEBUG_BUILD / TEST_BUILDではcallerがcanonical validatorによって
  *   上記contractを検証済みである。
@@ -940,7 +940,7 @@ static bool block_exists(const free_list_allocator_t* free_list_allocator_, cons
  * - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-static bool ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, const void* ptr_) {
+static bool ptr_is_allocated(const free_list_allocator_t* allocator_, const void* ptr_) {
     const free_list_block_header_t* node = NULL;
 
     uintptr_t pool_address = 0;
@@ -948,29 +948,29 @@ static bool ptr_is_allocated(const free_list_allocator_t* free_list_allocator_, 
     uintptr_t ptr_address = 0;
     uintptr_t node_address = 0;
 
-    if(NULL == free_list_allocator_ || NULL == ptr_) {
+    if(NULL == allocator_ || NULL == ptr_) {
         return false;
     }
 
-    pool_address = (uintptr_t)free_list_allocator_->memory_pool;
-    pool_end_address = pool_address + free_list_allocator_->memory_pool_size;
+    pool_address = (uintptr_t)allocator_->memory_pool;
+    pool_end_address = pool_address + allocator_->memory_pool_size;
     ptr_address = (uintptr_t)ptr_;
 
     if(ptr_address < pool_address || pool_end_address <= ptr_address) {
         return false;
     }
-    if((ptr_address - pool_address) < free_list_allocator_->payload_offset) {
+    if((ptr_address - pool_address) < allocator_->payload_offset) {
         return false;
     }
 
-    node_address = ptr_address - free_list_allocator_->payload_offset;
+    node_address = ptr_address - allocator_->payload_offset;
     node = (const free_list_block_header_t*)node_address;
 
-    if(!block_is_valid(node, free_list_allocator_->minimum_block_size)) {
+    if(!block_is_valid(node, allocator_->minimum_block_size)) {
         return false;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!block_exists(free_list_allocator_, node)) {
+    if(!block_exists(allocator_, node)) {
         return false;
     }
 #endif
@@ -1002,29 +1002,29 @@ static const char* result_to_str(free_list_allocator_result_t result_) {
 // ============================================================
 // Validators
 // ============================================================
-static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) {
+static bool is_valid_shallow(const free_list_allocator_t* allocator_) {
     size_t expected_payload_offset = 0;
     size_t expected_minimum_block_size = 0;
     uintptr_t pool_address = 0;
     bool is_aligned = false;
 
-    if(NULL == free_list_allocator_) {
+    if(NULL == allocator_) {
         return false;
     }
-    if(NULL == free_list_allocator_->memory_pool) {
+    if(NULL == allocator_->memory_pool) {
         return false;
     }
-    if(NULL == free_list_allocator_->head) {
+    if(NULL == allocator_->head) {
         return false;
     }
-    if(free_list_allocator_->head != free_list_allocator_->memory_pool) {
+    if(allocator_->head != allocator_->memory_pool) {
         return false;
     }
 
     if(!memory_utility_align_up(sizeof(free_list_block_header_t), alignof(max_align_t), &expected_payload_offset)) {
         return false;
     }
-    if(free_list_allocator_->payload_offset != expected_payload_offset) {
+    if(allocator_->payload_offset != expected_payload_offset) {
         return false;
     }
 
@@ -1033,14 +1033,14 @@ static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) 
     }
     expected_minimum_block_size = expected_payload_offset + alignof(max_align_t);
 
-    if(free_list_allocator_->minimum_block_size != expected_minimum_block_size) {
+    if(allocator_->minimum_block_size != expected_minimum_block_size) {
         return false;
     }
-    if(free_list_allocator_->memory_pool_size < free_list_allocator_->minimum_block_size) {
+    if(allocator_->memory_pool_size < allocator_->minimum_block_size) {
         return false;
     }
 
-    pool_address = (uintptr_t)free_list_allocator_->memory_pool;
+    pool_address = (uintptr_t)allocator_->memory_pool;
 
     if(!memory_utility_is_aligned(pool_address, alignof(max_align_t), &is_aligned)) {
         return false;
@@ -1049,7 +1049,7 @@ static bool is_valid_shallow(const free_list_allocator_t* free_list_allocator_) 
         return false;
     }
 
-    if((UINTPTR_MAX - pool_address) < free_list_allocator_->memory_pool_size) {
+    if((UINTPTR_MAX - pool_address) < allocator_->memory_pool_size) {
         return false;
     }
 

@@ -277,37 +277,37 @@ typedef struct range_allocator_status {
     size_t allocation_count;        /**< 現在生存しているallocation数 */
 } range_allocator_status_t;
 
-range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_allocator_t** out_range_allocator_);
+range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_allocator_t** out_allocator_);
 
 /**
  * @brief Range Allocatorを破棄する
  *
  * @details
- * Range Allocatorが所有するnode poolと内部状態管理構造体を解放し、*range_allocator_へNULLを設定する。
+ * Range Allocatorが所有するnode poolと内部状態管理構造体を解放し、*allocator_へNULLを設定する。
  *
  * 管理対象となる実メモリ、GPU buffer object、およびその保存内容は
  * Range Allocatorの所有物ではないため、本関数では解放しない。
  *
- * range_allocator_がNULL、または*range_allocator_がNULLの場合は何も行わずに終了する。
+ * allocator_がNULL、または*allocator_がNULLの場合は何も行わずに終了する。
  * したがって、同じpointer変数を使用した複数回の呼び出しはno-opとなる。
  *
  * 本関数はallocation countが0であることを要求せず、live allocationが存在する状態でもRange Allocatorを破棄する。
  * 破棄後は、このRange Allocatorをownerとして保持するすべてのrange_allocation_tが無効となる。
  *
- * @param[in,out] range_allocator_
+ * @param[in,out] allocator_
  * 破棄するRange Allocatorを保持するpointerの格納先。
- * 正常に破棄した後は*range_allocator_へNULLが設定される。
- * range_allocator_または*range_allocator_がNULLの場合は何も行わない。
+ * 正常に破棄した後は*allocator_へNULLが設定される。
+ * allocator_または*allocator_がNULLの場合は何も行わない。
  *
  * @post 有効なRange Allocatorを指定し、Memory Systemが正常な場合、
- *       node poolとRange Allocator本体が解放され、*range_allocator_がNULLとなる。
+ *       node poolとRange Allocator本体が解放され、*allocator_がNULLとなる。
  *
  * @warning
  * choco_memory_free()は、Memory Systemが未初期化の場合や
  * メモリ使用量管理値に矛盾がある場合、対象メモリを解放せずに終了する。
  *
  * 本関数はchoco_memory_free()の成否を取得できないため、その場合でも
- * *range_allocator_へNULLを設定する。
+ * *allocator_へNULLを設定する。
  * Range Allocatorの生存期間中はMemory Systemを破棄せず、
  * メモリ使用量管理値を正常に維持する必要がある。
  *
@@ -321,7 +321,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-void range_allocator_destroy(range_allocator_t** range_allocator_);
+void range_allocator_destroy(range_allocator_t** allocator_);
 
 /**
  * @brief 固定alignmentで論理メモリプール内のrangeを確保する
@@ -346,7 +346,7 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  *
  * 本関数はrangeの管理だけを行い、管理対象となる実メモリやGPU bufferへデータを書き込まない。
  *
- * @param[in,out] range_allocator_
+ * @param[in,out] allocator_
  * allocationを行うRange Allocator。
  *
  * @param[in] required_size_
@@ -356,7 +356,7 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  *
  * @param[in] required_align_
  * allocationに必要なalignment(byte)。
- * 0は指定できず、range_allocator_のbase alignmentと一致しなければならない。
+ * 0は指定できず、allocator_のbase alignmentと一致しなければならない。
  *
  * @param[out] out_allocation_
  * 確保したrangeのdescriptor格納先。
@@ -367,13 +367,13 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  *
  * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
  * 次のいずれか。
- * - range_allocator_がNULL
+ * - allocator_がNULL
  * - required_size_が0
  * - required_align_が0
  * - out_allocation_がNULL
  *
  * @retval RANGE_ALLOCATOR_BAD_OPERATION
- * required_align_がrange_allocator_のbase alignmentと一致しない。
+ * required_align_がallocator_のbase alignmentと一致しない。
  *
  * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
  * 現在のallocation countがmax allocation countに到達している。
@@ -433,7 +433,7 @@ void range_allocator_destroy(range_allocator_t** range_allocator_);
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-range_allocator_result_t range_allocator_allocate(range_allocator_t* range_allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
+range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_);
 
 /**
  * @brief allocation descriptorが表すrangeを解放する
@@ -464,7 +464,7 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* range_alloc
  * この保証により、range_allocator_allocate()の成功後に上位処理が失敗した場合、
  * 確保したrangeを解放してallocate前の状態へrollbackできる。
  *
- * @param[in,out] range_allocator_
+ * @param[in,out] allocator_
  * allocation_のownerであるRange Allocator。
  * 成功時はrange list、node pool、管理値、およびnodeのstateが更新される。
  *
@@ -479,14 +479,14 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* range_alloc
  * descriptorに対応するrangeの解放と、必要な隣接FREE rangeのmergeに成功した。
  *
  * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
- * range_allocator_またはallocation_がNULLである。
+ * allocator_またはallocation_がNULLである。
  *
  * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * 次のいずれか。
  * - allocation_->allocated_sizeが現在のtotal allocated sizeを超えている
- * - range_allocator_にlive allocationが存在しない
+ * - allocator_にlive allocationが存在しない
  * - allocation_->allocated_sizeが0
- * - allocation_->ownerがrange_allocator_と一致しない
+ * - allocation_->ownerがallocator_と一致しない
  * - allocation_->node_indexがnode poolの範囲外
  * - 対応nodeのstateがALLOCATEDではない
  * - 対応nodeのblock sizeがallocation_->allocated_sizeと一致しない
@@ -561,9 +561,9 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* range_alloc
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator_, const range_allocation_t* allocation_);
+range_allocator_result_t range_allocator_free(range_allocator_t* allocator_, const range_allocation_t* allocation_);
 
-// range_allocator_result_t range_allocator_validate(const range_allocator_t* range_allocator_, range_allocator_validation_result_t* out_validation_result_);
+// range_allocator_result_t range_allocator_validate(const range_allocator_t* allocator_, range_allocator_validation_result_t* out_validation_result_);
 
 // void range_allocator_validation_result_print(const range_allocator_validation_result_t* validation_result_);
 
@@ -571,7 +571,7 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
  * @brief Range Allocatorの状態snapshotを取得する
  *
  * @details
- * range_allocator_が保持する容量、alignment、node使用状況、および
+ * allocator_が保持する容量、alignment、node使用状況、および
  * allocation状況をrange_allocator_status_tへ格納する。
  *
  * 本関数は、内部データが破損している場合でも管理値を観測できるよう、
@@ -600,7 +600,7 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
  * 内部データの不整合によっていずれかの減算がunderflowする場合は、
  * 対応する出力値を0へ飽和させる。
  *
- * @param[in] range_allocator_
+ * @param[in] allocator_
  * 状態を取得するRange Allocator。
  * NULLの場合は何も行わない。
  *
@@ -609,17 +609,17 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
  * @param[out] out_status_
  * 状態snapshotの格納先。
  *
- * range_allocator_とout_status_がともにNULLでない場合、
+ * allocator_とout_status_がともにNULLでない場合、
  * すべてのfieldが設定される。
  * NULLの場合は何も行わない。
  *
  * @post
- * range_allocator_とout_status_がともにNULLでない場合、
+ * allocator_とout_status_がともにNULLでない場合、
  * out_status_は呼び出し時点におけるRange Allocatorの管理値と、
  * それらから導出した状態値を保持する。
  *
  * @post
- * range_allocator_またはout_status_がNULLの場合、
+ * allocator_またはout_status_がNULLの場合、
  * out_status_の内容は変更されない。
  *
  * @post
@@ -658,7 +658,7 @@ range_allocator_result_t range_allocator_free(range_allocator_t* range_allocator
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-void range_allocator_status_get(const range_allocator_t* range_allocator_, range_allocator_status_t* out_status_);
+void range_allocator_status_get(const range_allocator_t* allocator_, range_allocator_status_t* out_status_);
 
 /**
  * @brief Range Allocatorの状態snapshotを標準出力へ表示する
@@ -778,14 +778,14 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  * FREE nodeが存在しない場合は0となる。
  * range listの走査が打ち切られた場合は、走査できた範囲だけを対象とした値となる。
  *
- * @param[in] range_allocator_
+ * @param[in] allocator_
  * debug表示するRange Allocator。
  *
  * NULLの場合は何も表示せずに終了する。
  * 本関数はRange Allocator、node pool、およびrange listを変更しない。
  *
  * @post
- * range_allocator_がNULLでない場合、状態snapshot、deep validation結果、
+ * allocator_がNULLでない場合、状態snapshot、deep validation結果、
  * range list上の各node、およびmax free block sizeがstdoutへ表示される。
  *
  * @post
@@ -831,9 +831,9 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
  * プロジェクト作成者が内容を確認・修正した。
  */
-void range_allocator_debug_print(const range_allocator_t* range_allocator_);
+void range_allocator_debug_print(const range_allocator_t* allocator_);
 
-bool range_allocation_is_valid(const range_allocation_t* range_allocation_);
+bool range_allocation_is_valid(const range_allocation_t* allocation_);
 
 #ifdef __cplusplus
 }

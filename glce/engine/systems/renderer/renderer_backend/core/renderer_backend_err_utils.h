@@ -14,7 +14,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-const char* renderer_backend_result_to_str(renderer_backend_result_t rslt_);
+const char* renderer_backend_result_to_str(renderer_backend_result_t result_);
 
 renderer_backend_result_t renderer_backend_result_convert_choco_memory(memory_system_result_t result_);
 

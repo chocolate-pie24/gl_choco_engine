@@ -39,10 +39,10 @@ struct line_mesh_render_resource {
     line_mesh_geometry_registry_t* geometry_registry;
 };
 
-static render_resource_result_t shader_create(const line_mesh_shader_config_t* line_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, line_mesh_shader_t** out_line_mesh_shader_);
+static render_resource_result_t shader_create(const line_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, line_mesh_shader_t** out_shader_);
 static bool is_valid_shallow(const line_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader_config_t* config_, size_t max_geometry_count_, renderer_backend_context_t* backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, line_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -52,8 +52,8 @@ render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader
     line_mesh_shader_t* tmp_shader = NULL;
     line_mesh_geometry_registry_t* tmp_registry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "executable_directory_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_dir_")
@@ -68,7 +68,7 @@ render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader
     }
     memset(tmp_render_resource, 0, sizeof(line_mesh_render_resource_t));
 
-    ret = shader_create(shader_config_, renderer_backend_context_, executable_directory_, shader_dir_, &tmp_shader);
+    ret = shader_create(config_, backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_render_resource_create(%s) - shader_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
@@ -409,7 +409,7 @@ bool line_mesh_render_resource_is_valid(const line_mesh_render_resource_t* rende
     return true;
 }
 
-static render_resource_result_t shader_create(const line_mesh_shader_config_t* line_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, line_mesh_shader_t** out_line_mesh_shader_) {
+static render_resource_result_t shader_create(const line_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, line_mesh_shader_t** out_shader_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
@@ -418,14 +418,14 @@ static render_resource_result_t shader_create(const line_mesh_shader_config_t* l
     fs_path_t* vertex_shader_path = NULL;
     fs_path_t* fragment_shader_path = NULL;
 
-    line_mesh_shader_t* tmp_line_mesh_shader = NULL;
+    line_mesh_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(line_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "line_mesh_shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_line_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_line_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_line_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_line_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_shader_")
 
     ret_fs_path = fs_path_create(&vertex_shader_path, executable_directory_, shader_dir_, "line_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
@@ -441,15 +441,15 @@ static render_resource_result_t shader_create(const line_mesh_shader_config_t* l
         goto cleanup;
     }
 
-    ret_shader = line_mesh_shader_create(renderer_backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), line_mesh_shader_config_, &tmp_line_mesh_shader);
+    ret_shader = line_mesh_shader_create(backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), config_, &tmp_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = render_resource_result_convert_shader(ret_shader);
         ERROR_MESSAGE("shader_create(%s) - Failed to create line mesh shader.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
-    *out_line_mesh_shader_ = tmp_line_mesh_shader;
-    tmp_line_mesh_shader = NULL;
+    *out_shader_ = tmp_shader;
+    tmp_shader = NULL;
 
     ret = RENDER_RESOURCE_SUCCESS;
 
@@ -457,8 +457,8 @@ cleanup:
     if(RENDER_RESOURCE_DATA_CORRUPTED != ret) {
         fs_path_destroy(&vertex_shader_path);
         fs_path_destroy(&fragment_shader_path);
-        if(NULL != tmp_line_mesh_shader) {
-            line_mesh_shader_destroy(&tmp_line_mesh_shader);
+        if(NULL != tmp_shader) {
+            line_mesh_shader_destroy(&tmp_shader);
         }
     }
 

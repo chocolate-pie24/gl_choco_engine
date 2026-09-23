@@ -31,8 +31,8 @@ struct flight_camera_registry {
     registry_entry_t* entries;
 };
 
-static camera_registry_result_t registry_entry_deinitialize(registry_entry_t* registry_entry_);
-static bool registry_entry_is_empty(const registry_entry_t* registry_entry_);
+static camera_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_);
+static bool registry_entry_is_empty(const registry_entry_t* entry_);
 
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
 static bool flight_camera_id_is_valid(const flight_camera_registry_t* registry_, uint16_t flight_camera_id_);
@@ -200,7 +200,7 @@ cleanup:
     return ret;
 }
 
-camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* resource_name_, flight_camera_t** flight_camera_, uint16_t* out_flight_camera_id_) {
+camera_registry_result_t flight_camera_registry_register(flight_camera_registry_t* registry_, const char* flight_camera_name_, flight_camera_t** flight_camera_, uint16_t* out_flight_camera_id_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -211,11 +211,11 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
 
     // 入力値検証
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_name_")
     IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_")
     IF_ARG_NULL_GOTO_CLEANUP(*flight_camera_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_result_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_register", "*flight_camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "out_flight_camera_id_")
-    if('\0' == resource_name_[0]) {
+    if('\0' == flight_camera_name_[0]) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
@@ -234,7 +234,7 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
 #endif
 
     // リソースの重複チェック
-    if(find_by_name(registry_, resource_name_, &tmp_index)) {
+    if(find_by_name(registry_, flight_camera_name_, &tmp_index)) {
         ret = CAMERA_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is already registered.", camera_registry_result_to_str(ret));
         goto cleanup;
@@ -255,7 +255,7 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
     }
 
     // リソース名称生成
-    ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
+    ret_choco_string = choco_string_create_from_c_string(flight_camera_name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = camera_registry_result_convert_choco_string(ret_choco_string);
         ERROR_MESSAGE("flight_camera_registry_register(%s) - choco_string_create_from_c_string failed.", camera_registry_result_to_str(ret));
@@ -356,16 +356,16 @@ bool flight_camera_registry_is_valid(const flight_camera_registry_t* registry_) 
     return true;
 }
 
-static camera_registry_result_t registry_entry_deinitialize(registry_entry_t* registry_entry_) {
+static camera_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == registry_entry_) {
+    if(NULL == entry_) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         goto cleanup;
     }
 
-    flight_camera_destroy(&registry_entry_->flight_camera);
-    choco_string_destroy(&registry_entry_->resource_name);
+    flight_camera_destroy(&entry_->flight_camera);
+    choco_string_destroy(&entry_->resource_name);
 
     ret = CAMERA_REGISTRY_SUCCESS;
 
@@ -373,11 +373,11 @@ cleanup:
     return ret;
 }
 
-static bool registry_entry_is_empty(const registry_entry_t* registry_entry_) {
-    if(NULL == registry_entry_) {
+static bool registry_entry_is_empty(const registry_entry_t* entry_) {
+    if(NULL == entry_) {
         return false;
     }
-    if(NULL != registry_entry_->flight_camera || NULL != registry_entry_->resource_name) {
+    if(NULL != entry_->flight_camera || NULL != entry_->resource_name) {
         return false;
     }
     return true;

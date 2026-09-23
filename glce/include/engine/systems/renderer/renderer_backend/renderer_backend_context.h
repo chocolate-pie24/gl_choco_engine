@@ -24,9 +24,9 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< rendere
 
 typedef struct linear_allocator linear_allocator_t;
 
-renderer_backend_result_t renderer_backend_create(linear_allocator_t* allocator_, renderer_backend_context_t** out_renderer_backend_context_);
+renderer_backend_result_t renderer_backend_create(linear_allocator_t* allocator_, renderer_backend_context_t** out_backend_context_);
 
-void renderer_backend_deinitialize(renderer_backend_context_t* renderer_backend_context_);
+void renderer_backend_deinitialize(renderer_backend_context_t* backend_context_);
 
 #ifdef __cplusplus
 }

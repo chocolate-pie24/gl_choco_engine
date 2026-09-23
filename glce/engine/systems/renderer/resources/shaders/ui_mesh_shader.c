@@ -58,15 +58,15 @@ struct ui_mesh_shader {
     vbo_manager_t* vbo_manager;
 };
 
-static void destroy_unchecked(ui_mesh_shader_t** ui_mesh_shader_);
-static shader_result_t program_initialize(ui_mesh_shader_t* ui_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
-static shader_result_t vbo_initialize(ui_mesh_shader_t* ui_mesh_shader_, const ui_mesh_shader_config_t* config_);
-static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_);
+static void destroy_unchecked(ui_mesh_shader_t** shader_);
+static shader_result_t program_initialize(ui_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
+static shader_result_t vbo_initialize(ui_mesh_shader_t* shader_, const ui_mesh_shader_config_t* config_);
+static shader_result_t vao_initialize(ui_mesh_shader_t* shader_);
 
 // validation
-static bool is_valid_shallow(const ui_mesh_shader_t* ui_mesh_shader_);
+static bool is_valid_shallow(const ui_mesh_shader_t* shader_);
 
-shader_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const ui_mesh_shader_config_t* config_, ui_mesh_shader_t** out_ui_mesh_shader_) {
+shader_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const ui_mesh_shader_config_t* config_, ui_mesh_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -74,8 +74,8 @@ shader_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_contex
     ui_mesh_shader_t* tmp_ui_mesh_shader = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "out_ui_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_mesh_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_create", "*out_ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "ui_mesh_shader_create", "*out_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "vertex_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "fragment_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_create", "config_")
@@ -124,7 +124,7 @@ shader_result_t ui_mesh_shader_create(renderer_backend_context_t* backend_contex
         goto cleanup;
     }
 
-    *out_ui_mesh_shader_ = tmp_ui_mesh_shader;
+    *out_shader_ = tmp_ui_mesh_shader;
     tmp_ui_mesh_shader = NULL;
 
     ret = SHADER_SUCCESS;
@@ -136,36 +136,36 @@ cleanup:
     return ret;
 }
 
-void ui_mesh_shader_destroy(ui_mesh_shader_t** ui_mesh_shader_) {
-    if(NULL == ui_mesh_shader_) {
+void ui_mesh_shader_destroy(ui_mesh_shader_t** shader_) {
+    if(NULL == shader_) {
         return;
     }
-    if(NULL == *ui_mesh_shader_) {
+    if(NULL == *shader_) {
         return;
     }
 
     // TODO: validatorに変更する
-    if(NULL == (*ui_mesh_shader_)->backend_context) {
-        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided ui_mesh_shader_ is corrupted.");
+    if(NULL == (*shader_)->backend_context) {
+        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
-    if(NULL == (*ui_mesh_shader_)->shader) {
-        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided ui_mesh_shader_ is corrupted.");
+    if(NULL == (*shader_)->shader) {
+        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
-    if(NULL == (*ui_mesh_shader_)->vao) {
-        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided ui_mesh_shader_ is corrupted.");
+    if(NULL == (*shader_)->vao) {
+        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
-    if(NULL == (*ui_mesh_shader_)->vbo_manager) {
-        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided ui_mesh_shader_ is corrupted.");
+    if(NULL == (*shader_)->vbo_manager) {
+        ERROR_MESSAGE("ui_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
 
-    destroy_unchecked(ui_mesh_shader_);
+    destroy_unchecked(shader_);
 }
 
-shader_result_t ui_mesh_shader_vbo_write(ui_mesh_shader_t* ui_mesh_shader_, size_t vertex_count_, const ui_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
+shader_result_t ui_mesh_shader_vbo_write(ui_mesh_shader_t* shader_, size_t vertex_count_, const ui_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
@@ -175,7 +175,7 @@ shader_result_t ui_mesh_shader_vbo_write(ui_mesh_shader_t* ui_mesh_shader_, size
     size_t write_size = 0;
     bool vbo_written = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_write", "out_buffer_range_")
     if(0 == vertex_count_ || 6 != vertex_count_) {
@@ -183,14 +183,14 @@ shader_result_t ui_mesh_shader_vbo_write(ui_mesh_shader_t* ui_mesh_shader_, size
         ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     write_size = 6 * sizeof(ui_vertex_t);
-    ret_buffer_manager = vbo_manager_write(ui_mesh_shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
+    ret_buffer_manager = vbo_manager_write(shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
         ERROR_MESSAGE("ui_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
@@ -214,7 +214,7 @@ cleanup:
     if(SHADER_SUCCESS != ret && vbo_written) {
         // NOTE: vbo_manager_freeが失敗した場合はvbo_managerにデータ不整合が発生しているため、
         // ui_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
-        ret_buffer_manager = vbo_manager_free(ui_mesh_shader_->vbo_manager, &tmp_alloc_handle);
+        ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &tmp_alloc_handle);
         if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
             ret_cleanup = shader_result_convert_buffer_manager(ret_buffer_manager);
             ret = SHADER_DATA_CORRUPTED;
@@ -224,16 +224,16 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_vbo_free(ui_mesh_shader_t* ui_mesh_shader_, const vbo_range_t* buffer_range_) {
+shader_result_t ui_mesh_shader_vbo_free(ui_mesh_shader_t* shader_, const vbo_range_t* buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_free", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_free", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vbo_free", "buffer_range_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_vbo_free(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_vbo_free(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -243,7 +243,7 @@ shader_result_t ui_mesh_shader_vbo_free(ui_mesh_shader_t* ui_mesh_shader_, const
         goto cleanup;
     }
 
-    ret_buffer_manager = vbo_manager_free(ui_mesh_shader_->vbo_manager, &buffer_range_->allocation_info);
+    ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &buffer_range_->allocation_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
         ERROR_MESSAGE("ui_mesh_shader_vbo_free(%s) - ui_mesh_shader_vbo_free failed.", shader_result_to_str(ret));
@@ -256,19 +256,19 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_vao_bind(const ui_mesh_shader_t* ui_mesh_shader_) {
+shader_result_t ui_mesh_shader_vao_bind(const ui_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vao_bind", "ui_mesh_shader_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_vao_bind", "shader_")
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_vao_bind(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_vao_bind(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_vao_bind(ui_mesh_shader_->backend_context, ui_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_bind(shader_->backend_context, shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("ui_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", shader_result_to_str(ret));
@@ -281,19 +281,19 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_use(const ui_mesh_shader_t* ui_mesh_shader_) {
+shader_result_t ui_mesh_shader_use(const ui_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_use", "ui_mesh_shader_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_use", "shader_")
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_use(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_use(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_use(ui_mesh_shader_->backend_context, ui_mesh_shader_->shader);
+    ret_renderer_backend = renderer_backend_shader_use(shader_->backend_context, shader_->shader);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("ui_mesh_shader_use(%s) - Failed to switch program for ui_mesh_shader.", shader_result_to_str(ret));
@@ -306,20 +306,20 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_model_matrix_set(const ui_mesh_shader_t* ui_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_) {
+shader_result_t ui_mesh_shader_model_matrix_set(const ui_mesh_shader_t* shader_, const mat4x4f_t* model_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_model_matrix_set", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_model_matrix_set", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_model_matrix_set", "model_matrix_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_model_matrix_set(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_model_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(ui_mesh_shader_->backend_context, ui_mesh_shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
+    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("ui_mesh_shader_model_matrix_set(%s) - Failed to set model matrix.", shader_result_to_str(ret));
@@ -332,20 +332,20 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_view_matrix_set(const ui_mesh_shader_t* ui_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
+shader_result_t ui_mesh_shader_view_matrix_set(const ui_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_view_matrix_set", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_view_matrix_set", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_view_matrix_set", "view_matrix_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_view_matrix_set(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_view_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(ui_mesh_shader_->backend_context, ui_mesh_shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
+    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("ui_mesh_shader_view_matrix_set(%s) - Failed to set view matrix.", shader_result_to_str(ret));
@@ -358,20 +358,20 @@ cleanup:
     return ret;
 }
 
-shader_result_t ui_mesh_shader_projection_matrix_set(const ui_mesh_shader_t* ui_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
+shader_result_t ui_mesh_shader_projection_matrix_set(const ui_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_projection_matrix_set", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_projection_matrix_set", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "ui_mesh_shader_projection_matrix_set", "projection_matrix_")
-    if(!is_valid_shallow(ui_mesh_shader_)) {
+    if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_shader_projection_matrix_set(%s) - Provided ui_mesh_shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_shader_projection_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(ui_mesh_shader_->backend_context, ui_mesh_shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
+    ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("ui_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", shader_result_to_str(ret));
@@ -384,31 +384,31 @@ cleanup:
     return ret;
 }
 
-static void destroy_unchecked(ui_mesh_shader_t** ui_mesh_shader_) {
-    if(NULL == ui_mesh_shader_) {
+static void destroy_unchecked(ui_mesh_shader_t** shader_) {
+    if(NULL == shader_) {
         return;
     }
-    if(NULL == *ui_mesh_shader_) {
+    if(NULL == *shader_) {
         return;
     }
-    if(NULL == (*ui_mesh_shader_)->backend_context) {
+    if(NULL == (*shader_)->backend_context) {
         ERROR_MESSAGE("ui_mesh_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
-    if(NULL != (*ui_mesh_shader_)->vbo_manager) {
-        vbo_manager_destroy(&(*ui_mesh_shader_)->vbo_manager);
+    if(NULL != (*shader_)->vbo_manager) {
+        vbo_manager_destroy(&(*shader_)->vbo_manager);
     }
-    if(NULL != (*ui_mesh_shader_)->vao) {
-        renderer_backend_vao_destroy((*ui_mesh_shader_)->backend_context, &(*ui_mesh_shader_)->vao);
+    if(NULL != (*shader_)->vao) {
+        renderer_backend_vao_destroy((*shader_)->backend_context, &(*shader_)->vao);
     }
-    if(NULL != (*ui_mesh_shader_)->shader) {
-        renderer_backend_shader_destroy((*ui_mesh_shader_)->backend_context, &(*ui_mesh_shader_)->shader);
+    if(NULL != (*shader_)->shader) {
+        renderer_backend_shader_destroy((*shader_)->backend_context, &(*shader_)->shader);
     }
-    choco_memory_free(*ui_mesh_shader_, sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER);
-    *ui_mesh_shader_ = NULL;
+    choco_memory_free(*shader_, sizeof(ui_mesh_shader_t), MEMORY_TAG_RENDERER);
+    *shader_ = NULL;
 }
 
-static shader_result_t program_initialize(ui_mesh_shader_t* ui_mesh_shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {
+static shader_result_t program_initialize(ui_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -418,57 +418,57 @@ static shader_result_t program_initialize(ui_mesh_shader_t* ui_mesh_shader_, con
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "vertex_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "fragment_shader_fullpath_")
 
     // シェーダープログラムビルド
-    ret = shader_program_builder_create_from_files(ui_mesh_shader_->backend_context, vertex_shader_fullpath_, fragment_shader_fullpath_, &tmp_shader);
+    ret = shader_program_builder_create_from_files(shader_->backend_context, vertex_shader_fullpath_, fragment_shader_fullpath_, &tmp_shader);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("program_initialize(%s) - Failed to build shader program.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     // uniform location
-    ret_renderer_backend = renderer_backend_shader_uniform_location_get(ui_mesh_shader_->backend_context, tmp_shader, "g_model_matrix", &tmp_model_matrix_location);
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_model_matrix", &tmp_model_matrix_location);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("program_initialize(%s) - Failed to get model matrix location.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_uniform_location_get(ui_mesh_shader_->backend_context, tmp_shader, "g_view_matrix", &tmp_view_matrix_location);
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_view_matrix", &tmp_view_matrix_location);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("program_initialize(%s) - Failed to get view matrix location.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_uniform_location_get(ui_mesh_shader_->backend_context, tmp_shader, "g_projection_matrix", &tmp_projection_matrix_location);
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_projection_matrix", &tmp_projection_matrix_location);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("program_initialize(%s) - Failed to get projection matrix location.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ui_mesh_shader_->model_matrix_location = tmp_model_matrix_location;
-    ui_mesh_shader_->view_matrix_location = tmp_view_matrix_location;
-    ui_mesh_shader_->projection_matrix_location = tmp_projection_matrix_location;
-    ui_mesh_shader_->shader = tmp_shader;
+    shader_->model_matrix_location = tmp_model_matrix_location;
+    shader_->view_matrix_location = tmp_view_matrix_location;
+    shader_->projection_matrix_location = tmp_projection_matrix_location;
+    shader_->shader = tmp_shader;
     tmp_shader = NULL;
 
     ret = SHADER_SUCCESS;
 
 cleanup:
     if(SHADER_SUCCESS != ret && NULL != tmp_shader) {
-        if(NULL != ui_mesh_shader_ && NULL != ui_mesh_shader_->backend_context) {
-            renderer_backend_shader_destroy(ui_mesh_shader_->backend_context, &tmp_shader);
+        if(NULL != shader_ && NULL != shader_->backend_context) {
+            renderer_backend_shader_destroy(shader_->backend_context, &tmp_shader);
         }
     }
     return ret;
 }
 
-static shader_result_t vbo_initialize(ui_mesh_shader_t* ui_mesh_shader_, const ui_mesh_shader_config_t* config_) {
+static shader_result_t vbo_initialize(ui_mesh_shader_t* shader_, const ui_mesh_shader_config_t* config_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -476,7 +476,7 @@ static shader_result_t vbo_initialize(ui_mesh_shader_t* ui_mesh_shader_, const u
     vbo_manager_t* tmp_vbo_manager = NULL;
     vbo_manager_config_t vbo_config = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vbo_initialize", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vbo_initialize", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vbo_initialize", "config_")
 
     vbo_config.base_align = alignof(float);
@@ -484,14 +484,14 @@ static shader_result_t vbo_initialize(ui_mesh_shader_t* ui_mesh_shader_, const u
     vbo_config.max_allocation_count = config_->max_allocation_count;
     vbo_config.vbo_size = config_->vbo_size;
 
-    ret_buffer_manager = vbo_manager_create(ui_mesh_shader_->backend_context, &vbo_config, &tmp_vbo_manager);
+    ret_buffer_manager = vbo_manager_create(shader_->backend_context, &vbo_config, &tmp_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
         ERROR_MESSAGE("vbo_initialize(%s) - buffer manager create failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ui_mesh_shader_->vbo_manager = tmp_vbo_manager;
+    shader_->vbo_manager = tmp_vbo_manager;
     tmp_vbo_manager = NULL;
 
     ret = SHADER_SUCCESS;
@@ -505,7 +505,7 @@ cleanup:
     return ret;
 }
 
-static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
+static shader_result_t vao_initialize(ui_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
@@ -516,9 +516,9 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
     bool vao_bound = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "shader_")
 
-    ret_renderer_backend = renderer_backend_vao_create(ui_mesh_shader_->backend_context, &ui_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_create(shader_->backend_context, &shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to create ui mesh vao.", shader_result_to_str(ret));
@@ -526,7 +526,7 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
     }
     vao_created = true;
 
-    ret_renderer_backend = renderer_backend_vao_bind(ui_mesh_shader_->backend_context, ui_mesh_shader_->vao);
+    ret_renderer_backend = renderer_backend_vao_bind(shader_->backend_context, shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to bind vertex array.", shader_result_to_str(ret));
@@ -534,7 +534,7 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
     }
     vao_bound = true;
 
-    ret_buffer_manager = vbo_manager_bind(ui_mesh_shader_->vbo_manager);
+    ret_buffer_manager = vbo_manager_bind(shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to bind vertex buffer(ui).", shader_result_to_str(ret));
@@ -542,21 +542,21 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
     }
     vbo_bound = true;
 
-    ret_renderer_backend = renderer_backend_vao_attribute_set(ui_mesh_shader_->backend_context, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, position));  // 頂点座標(layout = 0)
+    ret_renderer_backend = renderer_backend_vao_attribute_set(shader_->backend_context, 0, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, position));  // 頂点座標(layout = 0)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to set vertex array attribute(vertex).", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_vao_attribute_set(ui_mesh_shader_->backend_context, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, tex_coord));    // テクスチャuv座標(layout = 1)
+    ret_renderer_backend = renderer_backend_vao_attribute_set(shader_->backend_context, 1, 2, RENDERER_TYPE_FLOAT, false, sizeof(ui_vertex_t), offsetof(ui_vertex_t, tex_coord));    // テクスチャuv座標(layout = 1)
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to set vertex array attribute(texture).", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_buffer_manager = vbo_manager_unbind(ui_mesh_shader_->vbo_manager);
+    ret_buffer_manager = vbo_manager_unbind(shader_->vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to unbind vertex buffer(ui).", shader_result_to_str(ret));
@@ -564,7 +564,7 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
     }
     vbo_bound = false;
 
-    ret_renderer_backend = renderer_backend_vao_unbind(ui_mesh_shader_->backend_context);
+    ret_renderer_backend = renderer_backend_vao_unbind(shader_->backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("vao_initialize(%s) - Failed to unbind vertex array.", shader_result_to_str(ret));
@@ -577,7 +577,7 @@ static shader_result_t vao_initialize(ui_mesh_shader_t* ui_mesh_shader_) {
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(vbo_bound) {
-            ret_buffer_manager = vbo_manager_unbind(ui_mesh_shader_->vbo_manager);
+            ret_buffer_manager = vbo_manager_unbind(shader_->vbo_manager);
             if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
                 ret_cleanup = shader_result_convert_buffer_manager(ret_buffer_manager);
                 ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
@@ -585,7 +585,7 @@ cleanup:
             }
         }
         if(vao_bound) {
-            ret_renderer_backend = renderer_backend_vao_unbind(ui_mesh_shader_->backend_context);
+            ret_renderer_backend = renderer_backend_vao_unbind(shader_->backend_context);
             if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
                 ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
                 ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
@@ -593,26 +593,26 @@ cleanup:
             }
         }
         if(vao_created) {
-            renderer_backend_vao_destroy(ui_mesh_shader_->backend_context, &ui_mesh_shader_->vao);
+            renderer_backend_vao_destroy(shader_->backend_context, &shader_->vao);
         }
     }
     return ret;
 }
 
-static bool is_valid_shallow(const ui_mesh_shader_t* ui_mesh_shader_) {
-    if(NULL == ui_mesh_shader_) {
+static bool is_valid_shallow(const ui_mesh_shader_t* shader_) {
+    if(NULL == shader_) {
         return false;
     }
-    if(NULL == ui_mesh_shader_->shader) {
+    if(NULL == shader_->shader) {
         return false;
     }
-    if(NULL == ui_mesh_shader_->vao) {
+    if(NULL == shader_->vao) {
         return false;
     }
-    if(NULL == ui_mesh_shader_->vbo_manager) {
+    if(NULL == shader_->vbo_manager) {
         return false;
     }
-    if(NULL == ui_mesh_shader_->backend_context) {
+    if(NULL == shader_->backend_context) {
         return false;
     }
     return true;

@@ -26,11 +26,11 @@ typedef enum {
     LINEAR_ALLOCATOR_INVALID_ARGUMENT,  /**< 無効な引数 */
 } linear_allocator_result_t;
 
-void linear_allocator_preinit(size_t* memory_requirement_, size_t* align_requirement_);
+void linear_allocator_preinit(size_t* out_memory_requirement_, size_t* out_align_requirement_);
 
 linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* allocator_, size_t capacity_, void* memory_pool_);
 
-linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t req_size_, size_t req_align_, void** out_ptr_);
+linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, size_t required_align_, void** out_ptr_);
 
 #ifdef __cplusplus
 }

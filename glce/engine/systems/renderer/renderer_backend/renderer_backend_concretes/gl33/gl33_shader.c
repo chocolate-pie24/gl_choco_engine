@@ -54,7 +54,7 @@ typedef enum shader_compile_status {
     SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE,        /**< 入力されたシェーダーハンドルが不正 */
 } shader_compile_status_t;
 
-static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_);
+static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** out_shader_handle_);
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
@@ -103,37 +103,37 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
 /**
  * @brief OpenGL3.3用シェーダーGPUリソース内部状態管理構造体インスタンスのメモリを確保し、フィールドを0で初期化する
  *
- * @param[out] shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+ * @param[out] out_shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - shader_handle_ == NULL
- * - *shader_handle_ != NULL
+ * - out_shader_handle_ == NULL
+ * - *out_shader_handle_ != NULL
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システム使用可能範囲上限超過
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
+static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** out_shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
 
-    renderer_backend_shader_t* tmp = NULL;
+    renderer_backend_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "out_shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "*out_shader_handle_")
 
-    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp);
+    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_shader);
     if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
         ret = renderer_backend_result_convert_choco_memory(ret_memory_system);
         ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    tmp->program_id = 0;
-    tmp->vertex_shader_handle = 0;
-    tmp->fragment_shader_handle = 0;
-    *shader_handle_ = tmp;
+    tmp_shader->program_id = 0;
+    tmp_shader->vertex_shader_handle = 0;
+    tmp_shader->fragment_shader_handle = 0;
+    *out_shader_handle_ = tmp_shader;
 
     ret = RENDERER_BACKEND_SUCCESS;
 

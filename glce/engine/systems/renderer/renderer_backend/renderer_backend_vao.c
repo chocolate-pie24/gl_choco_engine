@@ -11,15 +11,15 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vao_vtable.h"
 
-renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vao_) {
+renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** out_vao_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vao_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vao_create", "backend_context_->vao_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vao_create", "vao_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vao_create", "*vao_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vao_create", "out_vao_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vao_create", "*out_vao_")
 
-    ret = backend_context_->vao_vtable->vao_create(vao_);
+    ret = backend_context_->vao_vtable->vao_create(out_vao_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_backend_vao_create(%s) - Failed to create vao.", renderer_backend_result_to_str(ret));
         goto cleanup;

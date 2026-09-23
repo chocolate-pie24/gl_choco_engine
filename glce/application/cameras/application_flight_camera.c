@@ -43,10 +43,10 @@ static const float s_default_far_clip = 50.0f;
 
 static void default_keybinds_initialize(void);
 
-static bool is_valid_shallow(const application_flight_camera_t* application_flight_camera_);
+static bool is_valid_shallow(const application_flight_camera_t* flight_camera_);
 
-// id = 0はデフォルトカメラでデフォルトキーバインドのflight cameraが生成され(*out_application_flight_camera_)->active_cameraにアドレスが格納される
-application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_application_flight_camera_) {
+// id = 0はデフォルトカメラでデフォルトキーバインドのflight cameraが生成され(*out_flight_camera_)->active_cameraにアドレスが格納される
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
@@ -61,8 +61,8 @@ application_result_t application_flight_camera_create(size_t max_flight_camera_c
     float aspect = 0.0f;
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_create", "out_application_flight_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_application_flight_camera_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "application_flight_camera_create", "*out_application_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_create", "out_flight_camera_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_flight_camera_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "application_flight_camera_create", "*out_flight_camera_")
     if(0 == max_flight_camera_count_) {
         ret = APPLICATION_INVALID_ARGUMENT;
         ERROR_MESSAGE("application_flight_camera_create(%s) - Provided max_flight_camera_count_ is not valid.", application_result_to_str(ret));
@@ -125,7 +125,7 @@ application_result_t application_flight_camera_create(size_t max_flight_camera_c
     }
 #endif
 
-    *out_application_flight_camera_ = tmp_application_flight_camera;
+    *out_flight_camera_ = tmp_application_flight_camera;
 
     tmp_flight_camera_registry = NULL;
     tmp_flight_camera = NULL;
@@ -146,23 +146,23 @@ cleanup:
     return ret;
 }
 
-void application_flight_camera_deinitialize(application_flight_camera_t* application_flight_camera_) {
-    if(NULL == application_flight_camera_) {
+void application_flight_camera_deinitialize(application_flight_camera_t* flight_camera_) {
+    if(NULL == flight_camera_) {
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!application_flight_camera_is_valid(application_flight_camera_)) {
-        ERROR_MESSAGE("application_flight_camera_deinitialize(%s) - Precondition validation failed for 'application_flight_camera_'.", application_result_to_str(APPLICATION_DATA_CORRUPTED));
+    if(!application_flight_camera_is_valid(flight_camera_)) {
+        ERROR_MESSAGE("application_flight_camera_deinitialize(%s) - Precondition validation failed for 'flight_camera_'.", application_result_to_str(APPLICATION_DATA_CORRUPTED));
         return;
     }
 #endif
 
-    flight_camera_registry_deinitialize(application_flight_camera_->flight_camera_registry);
-    application_flight_camera_->active_camera = NULL;
-    application_flight_camera_->active_camera_id = 0;
+    flight_camera_registry_deinitialize(flight_camera_->flight_camera_registry);
+    flight_camera_->active_camera = NULL;
+    flight_camera_->active_camera_id = 0;
 }
 
-application_result_t application_flight_camera_update(application_flight_camera_t* application_flight_camera_, float speed_, float delta_time_, const engine_event_view_t* engine_event_view_, application_frame_state_t* frame_state_) {
+application_result_t application_flight_camera_update(application_flight_camera_t* flight_camera_, float speed_, float delta_time_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
@@ -174,34 +174,34 @@ application_result_t application_flight_camera_update(application_flight_camera_
     int framebuffer_height = 0;
     float aspect = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "application_flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(engine_event_view_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "engine_event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "event_view_")
     IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(application_flight_camera_)) {
+    if(!is_valid_shallow(flight_camera_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_update(%s) - Precondition validation failed for 'application_flight_camera_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_update(%s) - Precondition validation failed for 'flight_camera_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    for(size_t i = 0; i != engine_event_view_->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == engine_event_view_->window_events[i].event_code) {
-            framebuffer_width = engine_event_view_->window_events[i].event_args.framebuffer_width;
-            framebuffer_height = engine_event_view_->window_events[i].event_args.framebuffer_height;
+    for(size_t i = 0; i != event_view_->window_event_count; ++i) {
+        if(WINDOW_EVENT_RESIZE == event_view_->window_events[i].event_code) {
+            framebuffer_width = event_view_->window_events[i].event_args.framebuffer_width;
+            framebuffer_height = event_view_->window_events[i].event_args.framebuffer_height;
             window_resized = true;
         }
     }
 
-    for(size_t i = 0; i != engine_event_view_->keyboard_event_count; ++i) {
-        ret_camera = flight_camera_command_update(application_flight_camera_->active_camera, &engine_event_view_->keyboard_events[i]);
+    for(size_t i = 0; i != event_view_->keyboard_event_count; ++i) {
+        ret_camera = flight_camera_command_update(flight_camera_->active_camera, &event_view_->keyboard_events[i]);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = application_result_convert_camera(ret_camera);
             ERROR_MESSAGE("application_flight_camera_update(%s) - flight_camera_command_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
     }
-    ret_camera = flight_camera_command_execute(application_flight_camera_->active_camera, speed_, delta_time_, &view_changed);
+    ret_camera = flight_camera_command_execute(flight_camera_->active_camera, speed_, delta_time_, &view_changed);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = application_result_convert_camera(ret_camera);
         ERROR_MESSAGE("application_flight_camera_update(%s) - flight_camera_command_execute failed.", application_result_to_str(ret));
@@ -210,7 +210,7 @@ application_result_t application_flight_camera_update(application_flight_camera_
 
     if(window_resized && 0 < framebuffer_height && 0 < framebuffer_width) { // window最小化等でframebuffer_heightが0の場合は視錐台の更新は行わない
         aspect = (float)framebuffer_width / (float)framebuffer_height;
-        ret_camera = flight_camera_viewing_frustum_update(application_flight_camera_->active_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
+        ret_camera = flight_camera_viewing_frustum_update(flight_camera_->active_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = application_result_convert_camera(ret_camera);
             ERROR_MESSAGE("application_flight_camera_update(%s) - flight_camera_viewing_frustum_update failed.", application_result_to_str(ret));
@@ -220,9 +220,9 @@ application_result_t application_flight_camera_update(application_flight_camera_
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!application_flight_camera_is_valid(application_flight_camera_)) {
+    if(!application_flight_camera_is_valid(flight_camera_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_update(%s) - Postcondition validation failed for 'application_flight_camera_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_update(%s) - Postcondition validation failed for 'flight_camera_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -241,22 +241,22 @@ cleanup:
     return ret;
 }
 
-application_result_t application_flight_camera_view_matrix_get(application_flight_camera_t* application_flight_camera_, mat4x4f_t* out_matrix_) {
+application_result_t application_flight_camera_view_matrix_get(application_flight_camera_t* flight_camera_, mat4x4f_t* out_matrix_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_view_matrix_get", "application_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_view_matrix_get", "flight_camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_view_matrix_get", "out_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(application_flight_camera_)) {
+    if(!is_valid_shallow(flight_camera_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_view_matrix_get(%s) - Precondition validation failed for 'application_flight_camera_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_view_matrix_get(%s) - Precondition validation failed for 'flight_camera_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_camera = flight_camera_view_matrix_get(application_flight_camera_->active_camera, out_matrix_);
+    ret_camera = flight_camera_view_matrix_get(flight_camera_->active_camera, out_matrix_);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = application_result_convert_camera(ret_camera);
         ERROR_MESSAGE("application_flight_camera_view_matrix_get(%s) - flight_camera_view_matrix_get failed.", application_result_to_str(ret));
@@ -269,22 +269,22 @@ cleanup:
     return ret;
 }
 
-application_result_t application_flight_camera_perspective_matrix_get(application_flight_camera_t* application_flight_camera_, mat4x4f_t* out_matrix_) {
+application_result_t application_flight_camera_perspective_matrix_get(application_flight_camera_t* flight_camera_, mat4x4f_t* out_matrix_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(application_flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_perspective_matrix_get", "application_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_perspective_matrix_get", "flight_camera_")
     IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_flight_camera_perspective_matrix_get", "out_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(application_flight_camera_)) {
+    if(!is_valid_shallow(flight_camera_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_flight_camera_perspective_matrix_get(%s) - Precondition validation failed for 'application_flight_camera_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_flight_camera_perspective_matrix_get(%s) - Precondition validation failed for 'flight_camera_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_camera = flight_camera_perspective_matrix_get(application_flight_camera_->active_camera, out_matrix_);
+    ret_camera = flight_camera_perspective_matrix_get(flight_camera_->active_camera, out_matrix_);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = application_result_convert_camera(ret_camera);
         ERROR_MESSAGE("application_flight_camera_perspective_matrix_get(%s) - flight_camera_perspective_matrix_get failed.", application_result_to_str(ret));
@@ -297,22 +297,22 @@ cleanup:
     return ret;
 }
 
-bool application_flight_camera_is_valid(const application_flight_camera_t* application_flight_camera_) {
+bool application_flight_camera_is_valid(const application_flight_camera_t* flight_camera_) {
     flight_camera_t* tmp_flight_camera = NULL;
 
-    if(NULL == application_flight_camera_) {
+    if(NULL == flight_camera_) {
         return false;
     }
-    if(!is_valid_shallow(application_flight_camera_)) {
+    if(!is_valid_shallow(flight_camera_)) {
         return false;
     }
-    if(!flight_camera_registry_is_valid(application_flight_camera_->flight_camera_registry)) {
+    if(!flight_camera_registry_is_valid(flight_camera_->flight_camera_registry)) {
         return false;
     }
 
     // active_camera自身のvalidationはregistry_is_validと以下のactive_cameraのアドレスチェックでチェック可能なので行わない
-    tmp_flight_camera = flight_camera_registry_flight_camera_get(application_flight_camera_->flight_camera_registry, application_flight_camera_->active_camera_id);
-    if(application_flight_camera_->active_camera != tmp_flight_camera) {
+    tmp_flight_camera = flight_camera_registry_flight_camera_get(flight_camera_->flight_camera_registry, flight_camera_->active_camera_id);
+    if(flight_camera_->active_camera != tmp_flight_camera) {
         return false;
     }
     return true;
@@ -331,14 +331,14 @@ static void default_keybinds_initialize(void) {
     s_default_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
 }
 
-static bool is_valid_shallow(const application_flight_camera_t* application_flight_camera_) {
-    if(NULL == application_flight_camera_) {
+static bool is_valid_shallow(const application_flight_camera_t* flight_camera_) {
+    if(NULL == flight_camera_) {
         return false;
     }
-    if(NULL == application_flight_camera_->flight_camera_registry) {
+    if(NULL == flight_camera_->flight_camera_registry) {
         return false;
     }
-    if(NULL == application_flight_camera_->active_camera) {
+    if(NULL == flight_camera_->active_camera) {
         return false;
     }
     return true;

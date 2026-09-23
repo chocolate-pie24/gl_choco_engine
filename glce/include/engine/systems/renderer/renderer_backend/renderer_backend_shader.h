@@ -34,19 +34,19 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - メモリ確保、初期化処理はrenderer_backend_context_が保持する仮想関数テーブルを使用する
  * - 確保したリソースの解放は @ref renderer_backend_shader_destroy を使用して解放する
  *
- * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
- * @param[out] shader_handle_ リソース確保対象シェーダーハンドル構造体インスタンスへのダブルポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[out] out_shader_handle_ リソース確保対象シェーダーハンドル構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - renderer_backend_context_ == NULL
- * - shader_handle_ == NULL
- * - *shader_handle_ != NULL
- * @retval RENDERER_BACKEND_BAD_OPERATION renderer_backend_context_が未初期化
+ * - backend_context_ == NULL
+ * - out_shader_handle_ == NULL
+ * - *out_shader_handle_ != NULL
+ * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限超過
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ割り当て失敗
  * @retval RENDERER_BACKEND_SUCCESS メモリ確保および初期化に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_);
+renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** out_shader_handle_);
 
 /**
  * @brief シェーダーハンドル構造体インスタンスを破棄する
@@ -61,10 +61,10 @@ renderer_backend_result_t renderer_backend_shader_create(renderer_backend_contex
  * - シェーダーハンドル構造体インスタンスが保持するリソースの破棄
  * - シェーダーハンドル構造体インスタンス自身のリソースの破棄
  *
- * @param[in] renderer_backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
+ * @param[in] backend_context_ Renderer Backendコンテキスト構造体インスタンスへのポインタ
  * @param[in,out] shader_handle_ 破棄対象構造体インスタンスへのダブルポインタ
  */
-void renderer_backend_shader_destroy(renderer_backend_context_t* renderer_backend_context_, renderer_backend_shader_t** shader_handle_);
+void renderer_backend_shader_destroy(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** shader_handle_);
 
 renderer_backend_result_t renderer_backend_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_);
 

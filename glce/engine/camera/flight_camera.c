@@ -103,15 +103,15 @@ cleanup:
     return ret;
 }
 
-void flight_camera_destroy(flight_camera_t** out_flight_camera_) {
-    if(NULL == out_flight_camera_) {
+void flight_camera_destroy(flight_camera_t** flight_camera_) {
+    if(NULL == flight_camera_) {
         return;
     }
-    if(NULL == *out_flight_camera_) {
+    if(NULL == *flight_camera_) {
         return;
     }
 
-    destroy_unchecked(out_flight_camera_);
+    destroy_unchecked(flight_camera_);
 }
 
 camera_result_t flight_camera_command_update(flight_camera_t* flight_camera_, const keyboard_event_t* keyboard_event_) {

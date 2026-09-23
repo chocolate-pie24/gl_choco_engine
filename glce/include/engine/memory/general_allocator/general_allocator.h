@@ -39,7 +39,7 @@ general_allocator_result_t general_allocator_create(void);
 
 void general_allocator_destroy(void);
 
-general_allocator_result_t general_allocator_allocate(size_t size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_);
+general_allocator_result_t general_allocator_allocate(size_t allocation_size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_);
 
 void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_tag_);
 

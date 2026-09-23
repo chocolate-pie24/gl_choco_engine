@@ -31,7 +31,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-typedef renderer_backend_result_t (*pfn_vao_create)(renderer_backend_vao_t** vao_);   /**< renderer_vao_vtableが保持するvao_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vao_create)(renderer_backend_vao_t** out_vao_);   /**< renderer_vao_vtableが保持するvao_createの前方宣言 */
 typedef void (*pfn_vao_destroy)(renderer_backend_vao_t** vao_);   /**< renderer_vao_vtableが保持するvao_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vao_bind)(const renderer_backend_vao_t* vao_); /**< renderer_vao_vtableが保持するvao_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vao_unbind)(void);  /**< renderer_vao_vtableが保持するvao_unbindの前方宣言 */
@@ -45,7 +45,7 @@ typedef struct renderer_vao_vtable {
     /**
      * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
      *
-     * @param[out] vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+     * @param[out] out_vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
      *
      * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
      * - vao_がNULL

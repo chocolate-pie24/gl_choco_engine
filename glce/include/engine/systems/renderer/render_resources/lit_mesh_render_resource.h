@@ -21,7 +21,7 @@ typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct mat4x4f mat4x4f_t;
 typedef struct aabb_3d aabb_3d_t;
 
-render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_);
+render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, renderer_backend_context_t* backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_);
 
 void lit_mesh_render_resource_deinitialize(lit_mesh_render_resource_t* render_resource_);
 

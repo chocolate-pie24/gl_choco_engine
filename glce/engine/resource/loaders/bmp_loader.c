@@ -92,9 +92,9 @@ typedef struct info_header {
 
 static resource_result_t bmp_loader_pixel_bgr_to_rgb(const info_header_t* info_header_, uint8_t* pixels_);
 static resource_result_t bmp_loader_pixel_flip(const info_header_t* info_header_, uint8_t* pixels_);
-static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_);
+static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** out_pixels_, size_t* out_new_size_);
 
-static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_);
+static resource_result_t header_load(const char* fullpath_, file_header_t* out_file_header_, info_header_t* out_info_header_);
 static resource_result_t pixel_load(const char* fullpath_, const file_header_t* file_header_, info_header_t* info_header_, size_t stride_, uint8_t** out_pixels_);
 
 static resource_result_t file_header_parse(const char header_[54], file_header_t* file_header_);
@@ -395,13 +395,13 @@ cleanup:
  * @param[in] stride_ BMPファイルの各行のサイズ(byte)
  * @param[in] padding_ パディングサイズ
  * @param[in] src_pixels_ padding除去前のピクセルデータ
- * @param[out] dst_pixels_ padding除去後のピクセルデータ
+ * @param[out] out_pixels_ padding除去後のピクセルデータ
  * @param[out] out_new_size_ padding除去後のピクセルデータサイズ(byte)
  *
  * @retval RESOURCE_INVALID_ARGUMENT 以下のいずれか
  * - info_header_ == NULL
  * - src_pixels_ == NULL
- * - dst_pixels_ == NULL
+ * - out_pixels_ == NULL
  * - out_new_size_ == NULL
  * @retval RESOURCE_BAD_OPERATION 以下のいずれか
  * - stride_ == 0
@@ -415,7 +415,7 @@ cleanup:
  * @retval RESOURCE_NO_MEMORY メモリ確保失敗
  * @retval RESOURCE_SUCCESS 処理に成功し、正常終了
  */
-static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** dst_pixels_, size_t* out_new_size_) {
+static resource_result_t bmp_loader_padding_remove(const info_header_t* info_header_, size_t stride_, size_t padding_, const uint8_t* src_pixels_, uint8_t** out_pixels_, size_t* out_new_size_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -431,8 +431,8 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
 
     IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "info_header_")
     IF_ARG_NULL_GOTO_CLEANUP(src_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "src_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "dst_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*dst_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "*dst_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "out_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "*out_pixels_")
     IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "bmp_loader_padding_remove", "out_new_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != stride_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "stride_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != padding_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "bmp_loader_padding_remove", "padding_")
@@ -480,7 +480,7 @@ static resource_result_t bmp_loader_padding_remove(const info_header_t* info_hea
         ii += padding_;
     }
 
-    *dst_pixels_ = new_pixel;
+    *out_pixels_ = new_pixel;
     *out_new_size_ = new_size;
 
     ret = RESOURCE_SUCCESS;
@@ -495,7 +495,7 @@ cleanup:
     return ret;
 }
 
-static resource_result_t header_load(const char* fullpath_, file_header_t* file_header_, info_header_t* info_header_) {
+static resource_result_t header_load(const char* fullpath_, file_header_t* out_file_header_, info_header_t* out_info_header_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
@@ -508,8 +508,8 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
     info_header_t tmp_info_header = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "file_header_")
-    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_file_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "out_file_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_info_header_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "header_load", "out_info_header_")
 
     ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
@@ -543,8 +543,8 @@ static resource_result_t header_load(const char* fullpath_, file_header_t* file_
     // close失敗はfs_stream_destroy内のERROR_MESSAGEを出力するのみとし、エラー処理は行わない
     fs_stream_destroy(&fs_stream, NULL);
 
-    file_header_copy(&tmp_file_header, file_header_);
-    info_header_copy(&tmp_info_header, info_header_);
+    file_header_copy(&tmp_file_header, out_file_header_);
+    info_header_copy(&tmp_info_header, out_info_header_);
 
     ret = RESOURCE_SUCCESS;
 

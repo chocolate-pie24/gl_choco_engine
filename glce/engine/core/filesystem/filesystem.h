@@ -52,11 +52,11 @@ typedef enum {
     FILESYSTEM_EOF,                 /**< 実行結果コード: ファイル読み取りEOF */
 } filesystem_result_t;
 
-filesystem_result_t filesystem_create(filesystem_t** filesystem_, const char* fullpath_, fs_open_mode_t mode_);
+filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char* fullpath_, fs_open_mode_t mode_);
 
 void filesystem_destroy(filesystem_t** filesystem_, bool* out_close_succeeded_);
 
-filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* result_n_, char* buffer_);
+filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_bytes_, size_t* out_read_bytes_, char* out_buffer_);
 
 bool filesystem_is_valid(const filesystem_t* filesystem_);
 

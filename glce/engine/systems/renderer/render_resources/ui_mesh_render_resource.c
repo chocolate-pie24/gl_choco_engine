@@ -44,10 +44,10 @@ struct ui_mesh_render_resource {
     texture_registry_t* texture_registry;
 };
 
-static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_ui_mesh_shader_);
+static render_resource_result_t shader_create(const ui_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_shader_);
 static bool is_valid_shallow(const ui_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* shader_config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* renderer_backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -58,8 +58,8 @@ render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_con
     ui_mesh_geometry_registry_t* tmp_geometry_registry = NULL;
     texture_registry_t* tmp_texture_registry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "executable_directory_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "shader_dir_")
@@ -74,7 +74,7 @@ render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_con
     }
     memset(tmp_render_resource, 0, sizeof(ui_mesh_render_resource_t));
 
-    ret = shader_create(shader_config_, renderer_backend_context_, executable_directory_, shader_dir_, &tmp_shader);
+    ret = shader_create(config_, backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - shader_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
@@ -94,7 +94,7 @@ render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_con
         goto cleanup;
     }
 
-    tmp_render_resource->backend_context = renderer_backend_context_;
+    tmp_render_resource->backend_context = backend_context_;
     tmp_render_resource->shader = tmp_shader;
     tmp_render_resource->geometry_registry = tmp_geometry_registry;
     tmp_render_resource->texture_registry = tmp_texture_registry;
@@ -516,7 +516,7 @@ bool ui_mesh_render_resource_is_valid(const ui_mesh_render_resource_t* render_re
     return true;
 }
 
-static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_mesh_shader_config_, renderer_backend_context_t* renderer_backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_ui_mesh_shader_) {
+static render_resource_result_t shader_create(const ui_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_shader_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
@@ -525,14 +525,14 @@ static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_
     fs_path_t* vertex_shader_path = NULL;
     fs_path_t* fragment_shader_path = NULL;
 
-    ui_mesh_shader_t* tmp_ui_mesh_shader = NULL;
+    ui_mesh_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ui_mesh_shader_config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "ui_mesh_shader_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "renderer_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "executable_directory_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ui_mesh_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_ui_mesh_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ui_mesh_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_ui_mesh_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "shader_create", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "shader_create", "*out_shader_")
 
     ret_fs_path = fs_path_create(&vertex_shader_path, executable_directory_, shader_dir_, "ui_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
@@ -548,15 +548,15 @@ static render_resource_result_t shader_create(const ui_mesh_shader_config_t* ui_
         goto cleanup;
     }
 
-    ret_shader = ui_mesh_shader_create(renderer_backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), ui_mesh_shader_config_, &tmp_ui_mesh_shader);
+    ret_shader = ui_mesh_shader_create(backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), config_, &tmp_shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = render_resource_result_convert_shader(ret_shader);
         ERROR_MESSAGE("shader_create(%s) - Failed to create ui mesh shader.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
-    *out_ui_mesh_shader_ = tmp_ui_mesh_shader;
-    tmp_ui_mesh_shader = NULL;
+    *out_shader_ = tmp_shader;
+    tmp_shader = NULL;
 
     ret = RENDER_RESOURCE_SUCCESS;
 
@@ -564,8 +564,8 @@ cleanup:
     if(RENDER_RESOURCE_DATA_CORRUPTED != ret) {
         fs_path_destroy(&vertex_shader_path);
         fs_path_destroy(&fragment_shader_path);
-        if(NULL != tmp_ui_mesh_shader) {
-            ui_mesh_shader_destroy(&tmp_ui_mesh_shader);
+        if(NULL != tmp_shader) {
+            ui_mesh_shader_destroy(&tmp_shader);
         }
     }
 

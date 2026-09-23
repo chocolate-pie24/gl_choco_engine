@@ -54,7 +54,7 @@ static const char* const s_result_str_empty = "EMPTY";                        /*
 static const char* result_to_str(ring_queue_result_t result_);
 static ring_queue_result_t result_convert_memory_system(memory_system_result_t result_);
 
-ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** ring_queue_) {
+ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_size_, size_t element_align_, ring_queue_t** out_queue_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
 
     memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
@@ -66,8 +66,8 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     size_t diff = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "ring_queue_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "out_queue_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "*out_queue_")
     if(0 == max_element_count_ || 0 == element_size_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided max_element_count_ or element_size_ is not valid.", result_to_str(ret));
@@ -138,7 +138,7 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
 #endif
 
     // Commit
-    *ring_queue_ = tmp_queue;
+    *out_queue_ = tmp_queue;
     tmp_queue = NULL;
 
     ret = RING_QUEUE_SUCCESS;
@@ -155,62 +155,62 @@ cleanup:
     return ret;
 }
 
-void ring_queue_destroy(ring_queue_t** ring_queue_) {
-    if(NULL == ring_queue_) {
+void ring_queue_destroy(ring_queue_t** queue_) {
+    if(NULL == queue_) {
         goto cleanup;
     }
-    if(NULL == *ring_queue_) {
+    if(NULL == *queue_) {
         goto cleanup;
     }
-    if(NULL != (*ring_queue_)->memory_pool) {
-        choco_memory_free((*ring_queue_)->memory_pool, (*ring_queue_)->capacity, MEMORY_TAG_RING_QUEUE);
-        (*ring_queue_)->memory_pool = NULL;
+    if(NULL != (*queue_)->memory_pool) {
+        choco_memory_free((*queue_)->memory_pool, (*queue_)->capacity, MEMORY_TAG_RING_QUEUE);
+        (*queue_)->memory_pool = NULL;
     }
-    choco_memory_free(*ring_queue_, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
-    *ring_queue_ = NULL;
+    choco_memory_free(*queue_, sizeof(ring_queue_t), MEMORY_TAG_RING_QUEUE);
+    *queue_ = NULL;
 cleanup:
     return;
 }
 
-ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_) {
+ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, size_t element_align_, ring_queue_t* queue_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* target_ptr = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "ring_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "queue_")
     IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!ring_queue_is_valid(ring_queue_)) {
+    if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_push(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(ret));
+        ERROR_MESSAGE("ring_queue_push(%s) - Precondition validation failed for 'queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(ring_queue_->element_size != element_size_ || ring_queue_->element_align != element_align_) {
+    if(queue_->element_size != element_size_ || queue_->element_align != element_align_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
         ERROR_MESSAGE("ring_queue_push(%s) - Provided element_size_ or element_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
-    if(ring_queue_->max_element_count == ring_queue_->len) {
+    if(queue_->max_element_count == queue_->len) {
         DEBUG_MESSAGE("Ring queue is full; overwriting the oldest element.");
     }
 
-    mem_ptr = (char*)ring_queue_->memory_pool;
-    target_ptr = mem_ptr + (ring_queue_->stride * ring_queue_->tail);
-    memcpy(target_ptr, data_, ring_queue_->element_size);
+    mem_ptr = (char*)queue_->memory_pool;
+    target_ptr = mem_ptr + (queue_->stride * queue_->tail);
+    memcpy(target_ptr, data_, queue_->element_size);
 
-    ring_queue_->tail = (ring_queue_->tail + 1) % ring_queue_->max_element_count;
-    if(ring_queue_->len != ring_queue_->max_element_count) {
-        ring_queue_->len++;
+    queue_->tail = (queue_->tail + 1) % queue_->max_element_count;
+    if(queue_->len != queue_->max_element_count) {
+        queue_->len++;
     } else {
-        ring_queue_->head = (ring_queue_->head + 1) % ring_queue_->max_element_count;
+        queue_->head = (queue_->head + 1) % queue_->max_element_count;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!ring_queue_is_valid(ring_queue_)) {
+    if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_push(%s) - Postcondition validation failed for 'ring_queue_'.", result_to_str(ret));
+        ERROR_MESSAGE("ring_queue_push(%s) - Postcondition validation failed for 'queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -221,47 +221,47 @@ cleanup:
     return ret;
 }
 
-ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* ring_queue_, void* data_) {
+ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, ring_queue_t* queue_, void* out_data_) {
     ring_queue_result_t ret = RING_QUEUE_INVALID_ARGUMENT;
     char* mem_ptr = NULL;
     char* head_ptr = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(ring_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "ring_queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "out_data_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!ring_queue_is_valid(ring_queue_)) {
+    if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_pop(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(ret));
+        ERROR_MESSAGE("ring_queue_pop(%s) - Precondition validation failed for 'queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(ring_queue_->element_size != element_size_ || ring_queue_->element_align != element_align_) {
+    if(queue_->element_size != element_size_ || queue_->element_align != element_align_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
         ERROR_MESSAGE("ring_queue_pop(%s) - Provided element_size_ or element_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
-    if(ring_queue_is_empty(ring_queue_)) {
+    if(ring_queue_is_empty(queue_)) {
         DEBUG_MESSAGE("Ring queue is empty.");
         ret = RING_QUEUE_EMPTY;
         goto cleanup;
     }
 
-    mem_ptr = (char*)ring_queue_->memory_pool;
-    head_ptr = mem_ptr + (ring_queue_->head * ring_queue_->stride);
-    memcpy(data_, head_ptr, ring_queue_->element_size);
-    ring_queue_->len--;
-    ring_queue_->head = (ring_queue_->head + 1) % ring_queue_->max_element_count;
+    mem_ptr = (char*)queue_->memory_pool;
+    head_ptr = mem_ptr + (queue_->head * queue_->stride);
+    memcpy(out_data_, head_ptr, queue_->element_size);
+    queue_->len--;
+    queue_->head = (queue_->head + 1) % queue_->max_element_count;
 
-    if(0 == ring_queue_->len) {
-        ring_queue_->head = 0;
-        ring_queue_->tail = 0;
+    if(0 == queue_->len) {
+        queue_->head = 0;
+        queue_->tail = 0;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!ring_queue_is_valid(ring_queue_)) {
+    if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
-        ERROR_MESSAGE("ring_queue_pop(%s) - Postcondition validation failed for 'ring_queue_'.", result_to_str(ret));
+        ERROR_MESSAGE("ring_queue_pop(%s) - Postcondition validation failed for 'queue_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -272,82 +272,82 @@ cleanup:
     return ret;
 }
 
-bool ring_queue_is_empty(const ring_queue_t* ring_queue_) {
-    if(NULL == ring_queue_) {
+bool ring_queue_is_empty(const ring_queue_t* queue_) {
+    if(NULL == queue_) {
         return true;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!ring_queue_is_valid(ring_queue_)) {
-        ERROR_MESSAGE("ring_queue_is_empty(%s) - Precondition validation failed for 'ring_queue_'.", result_to_str(RING_QUEUE_DATA_CORRUPTED));
+    if(!ring_queue_is_valid(queue_)) {
+        ERROR_MESSAGE("ring_queue_is_empty(%s) - Precondition validation failed for 'queue_'.", result_to_str(RING_QUEUE_DATA_CORRUPTED));
         return true;
     }
 #endif
-    if(0 != ring_queue_->len) {
+    if(0 != queue_->len) {
         return false;
     } else {
         return true;
     }
 }
 
-bool ring_queue_is_valid(const ring_queue_t* ring_queue_) {
+bool ring_queue_is_valid(const ring_queue_t* queue_) {
     size_t distance_to_end = 0;
     size_t expected_tail = 0;
-    if(NULL == ring_queue_) {
+    if(NULL == queue_) {
         return false;
     }
-    if(0 == ring_queue_->element_align || 0 == ring_queue_->max_element_count || 0 == ring_queue_->element_size || 0 == ring_queue_->stride || 0 == ring_queue_->capacity) {
+    if(0 == queue_->element_align || 0 == queue_->max_element_count || 0 == queue_->element_size || 0 == queue_->stride || 0 == queue_->capacity) {
         return false;
     }
-    if(0 != (ring_queue_->stride % ring_queue_->element_align)) {
+    if(0 != (queue_->stride % queue_->element_align)) {
         return false;
     }
-    if(ring_queue_->padding >= ring_queue_->element_align) {
+    if(queue_->padding >= queue_->element_align) {
         return false;
     }
-    if((SIZE_MAX - ring_queue_->padding) < ring_queue_->element_size) {
+    if((SIZE_MAX - queue_->padding) < queue_->element_size) {
         return false;
     }
-    if(ring_queue_->stride != (ring_queue_->element_size + ring_queue_->padding)) {
+    if(queue_->stride != (queue_->element_size + queue_->padding)) {
         return false;
     }
-    if(0 == ring_queue_->len && 0 != ring_queue_->head) {
+    if(0 == queue_->len && 0 != queue_->head) {
         return false;
     }
-    if(0 == ring_queue_->len && 0 != ring_queue_->tail) {
+    if(0 == queue_->len && 0 != queue_->tail) {
         return false;
     }
-    if(alignof(max_align_t) < ring_queue_->element_align || !IS_POWER_OF_TWO(ring_queue_->element_align)) {
+    if(alignof(max_align_t) < queue_->element_align || !IS_POWER_OF_TWO(queue_->element_align)) {
         return false;
     }
-    if(ring_queue_->head >= ring_queue_->max_element_count) {
+    if(queue_->head >= queue_->max_element_count) {
         return false;
     }
-    if(ring_queue_->tail >= ring_queue_->max_element_count) {
+    if(queue_->tail >= queue_->max_element_count) {
         return false;
     }
-    if(ring_queue_->len > ring_queue_->max_element_count) {
+    if(queue_->len > queue_->max_element_count) {
         return false;
     }
-    if((SIZE_MAX / ring_queue_->stride) < ring_queue_->max_element_count) {
+    if((SIZE_MAX / queue_->stride) < queue_->max_element_count) {
         return false;
     }
-    if(ring_queue_->capacity != ring_queue_->stride * ring_queue_->max_element_count) {
+    if(queue_->capacity != queue_->stride * queue_->max_element_count) {
         return false;
     }
-    if(NULL == ring_queue_->memory_pool) {
+    if(NULL == queue_->memory_pool) {
         return false;
     }
-    if(0 != ((uintptr_t)ring_queue_->memory_pool % ring_queue_->element_align)) {
+    if(0 != ((uintptr_t)queue_->memory_pool % queue_->element_align)) {
         return false;
     }
 
-    distance_to_end = ring_queue_->max_element_count - ring_queue_->head;
-    if(ring_queue_->len < distance_to_end) {
-        expected_tail = ring_queue_->head + ring_queue_->len;
+    distance_to_end = queue_->max_element_count - queue_->head;
+    if(queue_->len < distance_to_end) {
+        expected_tail = queue_->head + queue_->len;
     } else {
-        expected_tail = ring_queue_->len - distance_to_end;
+        expected_tail = queue_->len - distance_to_end;
     }
-    if(ring_queue_->tail != expected_tail) {
+    if(queue_->tail != expected_tail) {
         return false;
     }
 

@@ -23,7 +23,7 @@ struct texture_gpu_resource {
     const renderer_backend_context_t* backend_context;
 };
 
-texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, uint16_t texture_width_, uint16_t texture_height_, uint8_t channel_count_, const uint8_t* pixels_, texture_gpu_resource_t** out_texture_gpu_resource_) {
+texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, uint16_t texture_width_, uint16_t texture_height_, uint8_t channel_count_, const uint8_t* pixels_, texture_gpu_resource_t** out_texture_resource_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -35,8 +35,8 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     bool texture_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_gpu_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "*out_texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "*out_texture_resource_")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "pixels_")
     if(3 != channel_count_ && 4 != channel_count_) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
@@ -57,7 +57,7 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     }
     memset(tmp_texture_gpu_resource, 0, sizeof(texture_gpu_resource_t));
 
-    ret_renderer_backend = renderer_backend_texture_create(backend_context_, unit_num_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_texture_gpu_resource->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_texture_gpu_resource->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_gpu_resource_result_to_str(ret));
@@ -98,7 +98,7 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     }
 #endif
 
-    *out_texture_gpu_resource_ = tmp_texture_gpu_resource;
+    *out_texture_resource_ = tmp_texture_gpu_resource;
 
     ret = TEXTURE_GPU_RESOURCE_SUCCESS;
 
@@ -122,39 +122,39 @@ cleanup:
     return ret;
 }
 
-void texture_gpu_resource_destroy(texture_gpu_resource_t** texture_gpu_resource_) {
-    if(NULL == texture_gpu_resource_) {
+void texture_gpu_resource_destroy(texture_gpu_resource_t** texture_resource_) {
+    if(NULL == texture_resource_) {
         return;
     }
-    if(NULL == *texture_gpu_resource_) {
+    if(NULL == *texture_resource_) {
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!texture_gpu_resource_is_valid(*texture_gpu_resource_)) {
-        ERROR_MESSAGE("texture_gpu_resource_destroy(%s) - Provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
+    if(!texture_gpu_resource_is_valid(*texture_resource_)) {
+        ERROR_MESSAGE("texture_gpu_resource_destroy(%s) - Provided texture_resource_ is corrupted.", texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_DATA_CORRUPTED));
         return;
     }
 #endif
-    renderer_backend_texture_destroy((*texture_gpu_resource_)->backend_context, &(*texture_gpu_resource_)->backend_texture);
-    choco_memory_free(*texture_gpu_resource_, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
-    *texture_gpu_resource_ = NULL;
+    renderer_backend_texture_destroy((*texture_resource_)->backend_context, &(*texture_resource_)->backend_texture);
+    choco_memory_free(*texture_resource_, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
+    *texture_resource_ = NULL;
 }
 
-texture_gpu_resource_result_t texture_gpu_resource_bind(const texture_gpu_resource_t* texture_gpu_resource_) {
+texture_gpu_resource_result_t texture_gpu_resource_bind(const texture_gpu_resource_t* texture_resource_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+    if(!texture_gpu_resource_is_valid(texture_resource_)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_bind(%s) - provided texture_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_renderer_backend = renderer_backend_texture_bind(texture_gpu_resource_->backend_context, texture_gpu_resource_->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_bind(texture_resource_->backend_context, texture_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_bind(%s) - renderer_backend_texture_bind failed.", texture_gpu_resource_result_to_str(ret));
@@ -167,21 +167,21 @@ cleanup:
     return ret;
 }
 
-texture_gpu_resource_result_t texture_gpu_resource_unbind(const texture_gpu_resource_t* texture_gpu_resource_) {
+texture_gpu_resource_result_t texture_gpu_resource_unbind(const texture_gpu_resource_t* texture_resource_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_gpu_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_gpu_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_resource_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!texture_gpu_resource_is_valid(texture_gpu_resource_)) {
+    if(!texture_gpu_resource_is_valid(texture_resource_)) {
         ret = TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - provided texture_gpu_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - provided texture_resource_ is corrupted.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_renderer_backend = renderer_backend_texture_unbind(texture_gpu_resource_->backend_context, texture_gpu_resource_->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_unbind(texture_resource_->backend_context, texture_resource_->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_unbind(%s) - renderer_backend_texture_unbind failed.", texture_gpu_resource_result_to_str(ret));
@@ -194,17 +194,17 @@ cleanup:
     return ret;
 }
 
-bool texture_gpu_resource_is_valid(const texture_gpu_resource_t* texture_gpu_resource_) {
-    if(NULL == texture_gpu_resource_) {
+bool texture_gpu_resource_is_valid(const texture_gpu_resource_t* texture_resource_) {
+    if(NULL == texture_resource_) {
         return false;
     }
-    if(NULL == texture_gpu_resource_->backend_context) {
+    if(NULL == texture_resource_->backend_context) {
         return false;
     }
-    if(NULL == texture_gpu_resource_->backend_texture) {
+    if(NULL == texture_resource_->backend_texture) {
         return false;
     }
-    if(!renderer_backend_texture_is_valid(texture_gpu_resource_->backend_context, texture_gpu_resource_->backend_texture)) {
+    if(!renderer_backend_texture_is_valid(texture_resource_->backend_context, texture_resource_->backend_texture)) {
         return false;
     }
     return true;

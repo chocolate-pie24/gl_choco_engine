@@ -46,79 +46,79 @@ static void test_buffer_utils_le_uint32_t_get(void);
 static void test_buffer_utils_le_uint64_t_get(void);
 #endif
 
-int16_t buffer_utils_le_int16_t_get(const char* buff_) {
+int16_t buffer_utils_le_int16_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
     return convert.buff_int16_t[0];
 }
 
-int32_t buffer_utils_le_int32_t_get(const char* buff_) {
+int32_t buffer_utils_le_int32_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
-    convert.buff_char[2] = buff_[2];
-    convert.buff_char[3] = buff_[3];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
+    convert.buff_char[2] = buffer_[2];
+    convert.buff_char[3] = buffer_[3];
     return convert.buff_int32_t[0];
 }
 
-int64_t buffer_utils_le_int64_t_get(const char* buff_) {
+int64_t buffer_utils_le_int64_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
-    convert.buff_char[2] = buff_[2];
-    convert.buff_char[3] = buff_[3];
-    convert.buff_char[4] = buff_[4];
-    convert.buff_char[5] = buff_[5];
-    convert.buff_char[6] = buff_[6];
-    convert.buff_char[7] = buff_[7];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
+    convert.buff_char[2] = buffer_[2];
+    convert.buff_char[3] = buffer_[3];
+    convert.buff_char[4] = buffer_[4];
+    convert.buff_char[5] = buffer_[5];
+    convert.buff_char[6] = buffer_[6];
+    convert.buff_char[7] = buffer_[7];
     return convert.buff_int64_t;
 }
 
-uint16_t buffer_utils_le_uint16_t_get(const char* buff_) {
+uint16_t buffer_utils_le_uint16_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
     return convert.buff_uint16_t[0];
 }
 
-uint32_t buffer_utils_le_uint32_t_get(const char* buff_) {
+uint32_t buffer_utils_le_uint32_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
-    convert.buff_char[2] = buff_[2];
-    convert.buff_char[3] = buff_[3];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
+    convert.buff_char[2] = buffer_[2];
+    convert.buff_char[3] = buffer_[3];
     return convert.buff_uint32_t[0];
 }
 
-uint64_t buffer_utils_le_uint64_t_get(const char* buff_) {
+uint64_t buffer_utils_le_uint64_t_get(const char* buffer_) {
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    buffer_utils_assert_not_null(buff_);
+    buffer_utils_assert_not_null(buffer_);
 #endif
     buff_utils_t convert;
-    convert.buff_char[0] = buff_[0];
-    convert.buff_char[1] = buff_[1];
-    convert.buff_char[2] = buff_[2];
-    convert.buff_char[3] = buff_[3];
-    convert.buff_char[4] = buff_[4];
-    convert.buff_char[5] = buff_[5];
-    convert.buff_char[6] = buff_[6];
-    convert.buff_char[7] = buff_[7];
+    convert.buff_char[0] = buffer_[0];
+    convert.buff_char[1] = buffer_[1];
+    convert.buff_char[2] = buffer_[2];
+    convert.buff_char[3] = buffer_[3];
+    convert.buff_char[4] = buffer_[4];
+    convert.buff_char[5] = buffer_[5];
+    convert.buff_char[6] = buffer_[6];
+    convert.buff_char[7] = buffer_[7];
     return convert.buff_uint64_t;
 }
 

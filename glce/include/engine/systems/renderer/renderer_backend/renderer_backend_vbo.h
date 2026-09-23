@@ -36,18 +36,18 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - 構造体インスタンスのメモリ確保に成功した場合、VBOのGPU側リソースも確保される
  *
  * @param[in] backend_context_ VBOメモリ確保関数保有構造体インスタンスへのポインタ
- * @param[out] vbo_ メモリ確保対象VBO構造体インスタンスへのダブルポインタ
+ * @param[out] out_vbo_ メモリ確保対象VBO構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - vbo_ == NULL
- * - *vbo_ != NULL
+ * - out_vbo_ == NULL
+ * - *out_vbo_ != NULL
  * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** vbo_);
+renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** out_vbo_);
 
 /**
  * @brief VBO内部状態管理構造体インスタンスを破棄する
