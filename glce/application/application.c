@@ -28,6 +28,8 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
@@ -150,6 +152,7 @@ application_result_t application_create(void) {
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
 
@@ -170,9 +173,9 @@ application_result_t application_create(void) {
 
     // begin Simulation
     // Application State
-    ret_memory_system = choco_memory_allocate(sizeof(*tmp_state), MEMORY_TAG_SYSTEM, (void**)&tmp_state);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = application_result_convert_memory_system(ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(sizeof(*tmp_state), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", application_result_to_str(ret));
         goto cleanup;
     }
@@ -185,17 +188,18 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Initializing linear allocator...");
     tmp_state->linear_allocator = NULL;
     linear_allocator_preinit(&tmp_state->linear_alloc_mem_req, &tmp_state->linear_alloc_align_req);
-    ret_memory_system = choco_memory_allocate(tmp_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_allocator);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = application_result_convert_memory_system(ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(tmp_state->linear_alloc_mem_req, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_allocator);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", application_result_to_str(ret));
         goto cleanup;
     }
+    memset(tmp_state->linear_allocator, 0, tmp_state->linear_alloc_mem_req);
 
     tmp_state->linear_alloc_pool_size = 128 * KIB;
-    ret_memory_system = choco_memory_allocate(tmp_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM, &tmp_state->linear_alloc_pool);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = application_result_convert_memory_system(ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(tmp_state->linear_alloc_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_alloc_pool);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", application_result_to_str(ret));
         goto cleanup;
     }
@@ -286,13 +290,12 @@ cleanup:
                 fs_path_destroy(&tmp_state->executable_directory);
             }
             if(NULL != tmp_state->linear_alloc_pool) {
-                choco_memory_free(tmp_state->linear_alloc_pool, tmp_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
+                general_allocator_free((void**)&tmp_state->linear_alloc_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
             }
             if(NULL != tmp_state->linear_allocator) {
-                choco_memory_free(tmp_state->linear_allocator, tmp_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
+                general_allocator_free((void**)&tmp_state->linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
             }
-            choco_memory_free(tmp_state, sizeof(tmp_state), MEMORY_TAG_SYSTEM);
-            tmp_state = NULL;
+            general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
         }
         choco_memory_destroy();
     }
@@ -324,16 +327,13 @@ void application_destroy(void) {
         fs_path_destroy(&s_application_state->executable_directory);
     }
     if(NULL != s_application_state->linear_alloc_pool) {
-        choco_memory_free(s_application_state->linear_alloc_pool, s_application_state->linear_alloc_pool_size, MEMORY_TAG_SYSTEM);
-        s_application_state->linear_alloc_pool = NULL;
+        general_allocator_free((void**)&s_application_state->linear_alloc_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
     if(NULL != s_application_state->linear_allocator) {
-        choco_memory_free(s_application_state->linear_allocator, s_application_state->linear_alloc_mem_req, MEMORY_TAG_SYSTEM);
-        s_application_state->linear_allocator = NULL;
+        general_allocator_free((void**)&s_application_state->linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
 
-    choco_memory_free(s_application_state, sizeof(*s_application_state), MEMORY_TAG_SYSTEM);
-    s_application_state = NULL;
+    general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     INFO_MESSAGE("Freed all memory.");
     memory_system_report();
     choco_memory_destroy();

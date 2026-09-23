@@ -3,6 +3,8 @@
 
 #include "engine/camera/core/camera_err_utils.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/camera/core/camera_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";
@@ -37,18 +39,22 @@ const char* camera_result_to_str(camera_result_t result_) {
     }
 }
 
-camera_result_t camera_result_convert_choco_memory(memory_system_result_t result_) {
+camera_result_t camera_result_convert_genera_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return CAMERA_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return CAMERA_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return CAMERA_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return CAMERA_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return CAMERA_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return CAMERA_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return CAMERA_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return CAMERA_UNDEFINED_ERROR;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return CAMERA_UNDEFINED_ERROR;
     default:
         return CAMERA_UNDEFINED_ERROR;
     }

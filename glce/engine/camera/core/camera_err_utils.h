@@ -10,11 +10,13 @@ extern "C" {
 
 #include "engine/camera/core/camera_types.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
+#include "engine/core/memory/choco_memory.h"    // TODO: remove this.
 
 const char* camera_result_to_str(camera_result_t result_);
 
-camera_result_t camera_result_convert_choco_memory(memory_system_result_t result_);
+camera_result_t camera_result_convert_genera_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

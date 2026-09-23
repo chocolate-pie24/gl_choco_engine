@@ -11,7 +11,7 @@
 #include "engine/base/choco_math/choco_math.h"
 #include "engine/base/choco_math/math_types.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/core/camera_err_utils.h"
@@ -42,7 +42,7 @@ static void destroy_unchecked(flight_camera_t** flight_camera_);
 camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FLIGHT_CAMERA_COMMAND_MAX], float fovy_, float aspect_, float near_clip_, float far_clip_, flight_camera_t** out_flight_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     camera_t* tmp_camera = NULL;
     flight_camera_t* tmp_flight_camera = NULL;
@@ -67,10 +67,10 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
         }
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(flight_camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_flight_camera);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = camera_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("flight_camera_create(%s) - choco_memory_allocate failed.", camera_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(flight_camera_t), GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_flight_camera);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = camera_result_convert_genera_allocator(ret_general_allocator);
+        ERROR_MESSAGE("flight_camera_create(%s) - general_allocator_allocate failed.", camera_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_flight_camera, 0, sizeof(flight_camera_t));
@@ -607,6 +607,6 @@ static void destroy_unchecked(flight_camera_t** flight_camera_) {
         return;
     }
     camera_destroy(&(*flight_camera_)->camera);
-    choco_memory_free(*flight_camera_, sizeof(flight_camera_t), MEMORY_TAG_CAMERA);
-    *flight_camera_ = NULL;
+
+    general_allocator_free((void**)flight_camera_, GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA);
 }

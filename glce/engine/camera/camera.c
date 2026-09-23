@@ -11,7 +11,7 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/core/camera_err_utils.h"
@@ -66,7 +66,7 @@ static void destroy_unchecked(camera_t** camera_);
 camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     camera_t* tmp_camera = NULL;
     const viewing_frustum_t tmp_frustum = {
@@ -84,9 +84,9 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(camera_t), MEMORY_TAG_CAMERA, (void**)&tmp_camera);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = camera_result_convert_choco_memory(ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(sizeof(camera_t), GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_camera);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = camera_result_convert_genera_allocator(ret_general_allocator);
         ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -579,6 +579,5 @@ static void destroy_unchecked(camera_t** camera_) {
     if(NULL == *camera_) {
         return;
     }
-    choco_memory_free(*camera_, sizeof(camera_t), MEMORY_TAG_CAMERA);
-    *camera_ = NULL;
+    general_allocator_free((void**)camera_, GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA);
 }

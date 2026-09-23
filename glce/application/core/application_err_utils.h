@@ -23,6 +23,7 @@ extern "C" {
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -116,6 +117,8 @@ application_result_t application_result_convert_fs_path(fs_path_result_t result_
 application_result_t application_result_convert_render_resource(render_resource_result_t result_);
 
 application_result_t application_result_convert_event_system(event_system_result_t result_);
+
+application_result_t application_result_convert_general_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

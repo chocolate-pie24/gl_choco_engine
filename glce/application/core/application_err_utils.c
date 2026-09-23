@@ -386,3 +386,24 @@ application_result_t application_result_convert_event_system(event_system_result
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t application_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
