@@ -10,7 +10,8 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/filesystem/filesystem.h"
 #include "engine/core/file_io/fs_types.h"
 
@@ -37,13 +38,13 @@ static const char* const s_result_str_eof = "EOF";                              
 
 static const char* result_to_str(fs_stream_result_t result_);
 static fs_stream_result_t result_convert_filesystem(filesystem_result_t result_);
-static fs_stream_result_t result_convert_memory_system(memory_system_result_t result_);
+static fs_stream_result_t result_convert_general_allocator(general_allocator_result_t result_);
 static fs_stream_result_t result_convert_choco_string(choco_string_result_t result_);
 
 fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullpath_, fs_open_mode_t mode_) {
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
     fs_stream_t* tmp_stream = NULL;
@@ -62,10 +63,10 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(fs_stream_t), MEMORY_TAG_FILE_IO, (void**)&tmp_stream);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_memory_system(ret_memory_system);
-        ERROR_MESSAGE("fs_stream_create(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(fs_stream_t), GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&tmp_stream);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("fs_stream_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_stream, 0, sizeof(fs_stream_t));
@@ -93,8 +94,7 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
 cleanup:
     if(NULL != tmp_stream) {
         filesystem_destroy(&tmp_stream->filesystem, NULL);
-        choco_memory_free(tmp_stream, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
-        tmp_stream = NULL;
+        general_allocator_free((void**)&tmp_stream, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
     }
     return ret;
 }
@@ -107,8 +107,7 @@ void fs_stream_destroy(fs_stream_t** stream_, bool* out_close_succeeded_) {
         return;
     }
     filesystem_destroy(&(*stream_)->filesystem, out_close_succeeded_);
-    choco_memory_free(*stream_, sizeof(fs_stream_t), MEMORY_TAG_FILE_IO);
-    *stream_ = NULL;
+    general_allocator_free((void**)stream_, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 }
 
 fs_stream_result_t fs_stream_byte_read(fs_stream_t* stream_, size_t read_bytes_, size_t* out_read_bytes_, char* out_buffer_) {
@@ -337,18 +336,22 @@ static fs_stream_result_t result_convert_filesystem(filesystem_result_t result_)
     }
 }
 
-static fs_stream_result_t result_convert_memory_system(memory_system_result_t result_) {
+static fs_stream_result_t result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return FS_STREAM_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return FS_STREAM_UNDEFINED_ERROR;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return FS_STREAM_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return FS_STREAM_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return FS_STREAM_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return FS_STREAM_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return FS_STREAM_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return FS_STREAM_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return FS_STREAM_UNDEFINED_ERROR;
     default:
         return FS_STREAM_UNDEFINED_ERROR;
     }

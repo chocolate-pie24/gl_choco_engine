@@ -20,7 +20,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -56,7 +56,7 @@ static fs_path_result_t executable_fullpath_get_freebsd(char** out_fullpath_, si
 #endif
 
 static const char* result_to_str(fs_path_result_t result_);
-static fs_path_result_t result_convert_choco_memory(memory_system_result_t result_);
+static fs_path_result_t result_convert_general_allocator(general_allocator_result_t result_);
 static fs_path_result_t result_convert_choco_string(choco_string_result_t result_);
 
 static bool is_valid_shallow(const fs_path_t* path_);
@@ -69,8 +69,8 @@ static bool is_valid_shallow(const fs_path_t* path_);
 fs_path_result_t fs_path_create(fs_path_t** out_path_, const char* base_path_, const char* path_, const char* name_, const char* extension_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     fs_path_t* tmp_path = NULL;
     choco_string_t* tmp_fullpath = NULL;
@@ -162,10 +162,10 @@ fs_path_result_t fs_path_create(fs_path_t** out_path_, const char* base_path_, c
     }
 
     // fs_path_t生成
-    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_path);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("fs_path_create(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(fs_path_t), GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&tmp_path);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("fs_path_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_path, 0, sizeof(fs_path_t));
@@ -202,7 +202,7 @@ cleanup:
 fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_path_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     char* executable_path = NULL;
@@ -240,10 +240,10 @@ fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_path_)
     }
 
     // fs_path_t生成
-    ret_memory_system = choco_memory_allocate(sizeof(fs_path_t), MEMORY_TAG_FILE_IO, (void**)&tmp_path);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(fs_path_t), GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&tmp_path);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_path, 0, sizeof(fs_path_t));
@@ -273,8 +273,7 @@ cleanup:
         fs_path_destroy(&tmp_path);
     }
     if(0 != executable_path_buf_size && NULL != executable_path) {
-        choco_memory_free(executable_path, executable_path_buf_size, MEMORY_TAG_FILE_IO);
-        executable_path = NULL;
+        general_allocator_free((void**)&executable_path, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
     }
     return ret;
 }
@@ -287,8 +286,7 @@ void fs_path_destroy(fs_path_t** path_) {
         return;
     }
     choco_string_destroy(&(*path_)->fullpath);
-    choco_memory_free(*path_, sizeof(fs_path_t), MEMORY_TAG_FILE_IO);
-    *path_ = NULL;
+    general_allocator_free((void**)path_, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 }
 
 const char* fs_path_fullpath_get(const fs_path_t* path_) {
@@ -360,33 +358,33 @@ cleanup:
 static fs_path_result_t executable_fullpath_get_apple(char** out_fullpath_, size_t* out_bufsize_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     uint32_t bufsize = FS_PATH_DEFAULT_BUFF_SIZE;
     uint32_t allocated_size = 0;
     char* buf = NULL;
 
-    ret_memory_system = choco_memory_allocate(bufsize, MEMORY_TAG_FILE_IO, (void**)&buf);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("executable_fullpath_get_apple(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(bufsize, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&buf);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("executable_fullpath_get_apple(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
+
     allocated_size = bufsize;
     if(0 != _NSGetExecutablePath(buf, &bufsize)) {
-        choco_memory_free(buf, allocated_size, MEMORY_TAG_FILE_IO);
-        buf = NULL;
+        general_allocator_free((void**)&buf, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
-        ret_memory_system = choco_memory_allocate(bufsize, MEMORY_TAG_FILE_IO, (void**)&buf);
-        if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-            ret = result_convert_choco_memory(ret_memory_system);
-            ERROR_MESSAGE("executable_fullpath_get_apple(%s) - choco_memory_allocate failed.", result_to_str(ret));
+        ret_general_allocator = general_allocator_allocate(bufsize, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&buf);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("executable_fullpath_get_apple(%s) - general_allocator_allocate failed.", result_to_str(ret));
             goto cleanup;
         }
+
         allocated_size = bufsize;
         if(0 != _NSGetExecutablePath(buf, &bufsize)) {
-            choco_memory_free(buf, allocated_size, MEMORY_TAG_FILE_IO);
-            buf = NULL;
+            general_allocator_free((void**)&buf, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
             ret = FS_PATH_UNDEFINED_ERROR;
             ERROR_MESSAGE("executable_fullpath_get_apple(%s) - _NSGetExecutablePath failed.", result_to_str(ret));
@@ -409,7 +407,7 @@ cleanup:
 static fs_path_result_t executable_fullpath_get_linux(char** out_fullpath_, size_t* out_bufsize_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     bool success = false;
     ssize_t result = 0;
@@ -418,18 +416,18 @@ static fs_path_result_t executable_fullpath_get_linux(char** out_fullpath_, size
     char* buf = NULL;
 
     while(!success) {
-        ret_memory_system = choco_memory_allocate(bufsize, MEMORY_TAG_FILE_IO, (void**)&buf);
-        if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-            ret = result_convert_choco_memory(ret_memory_system);
-            ERROR_MESSAGE("executable_fullpath_get_linux(%s) - choco_memory_allocate failed.", result_to_str(ret));
+        ret_general_allocator = general_allocator_allocate(bufsize, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&buf);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("executable_fullpath_get_linux(%s) - general_allocator_allocate failed.", result_to_str(ret));
             goto cleanup;
         }
+
         allocated_size = bufsize;
 
         result = readlink("/proc/self/exe", buf, allocated_size);
         if (-1 == result) {
-            choco_memory_free(buf, allocated_size, MEMORY_TAG_FILE_IO);
-            buf = NULL;
+            general_allocator_free((void**)&buf, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
             ret = FS_PATH_RUNTIME_ERROR;
             ERROR_MESSAGE("executable_fullpath_get_linux(%s) - readlink failed.", result_to_str(ret));
@@ -440,8 +438,7 @@ static fs_path_result_t executable_fullpath_get_linux(char** out_fullpath_, size
             buf[result] = '\0';
             success = true;
         } else {    // 切り詰められている可能性があるためバッファを拡張し再取得
-            choco_memory_free(buf, allocated_size, MEMORY_TAG_FILE_IO);
-            buf = NULL;
+            general_allocator_free((void**)&buf, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
             if((SIZE_MAX / 2) < bufsize) {
                 ret = FS_PATH_OVERFLOW;
@@ -473,7 +470,7 @@ cleanup:
 static fs_path_result_t executable_fullpath_get_freebsd(char** out_fullpath_, size_t* out_bufsize_) {
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t allocated_size = 0;
     size_t required_size = 0;
@@ -497,18 +494,17 @@ static fs_path_result_t executable_fullpath_get_freebsd(char** out_fullpath_, si
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(required_size, MEMORY_TAG_FILE_IO, (void**)&buf);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("executable_fullpath_get_freebsd(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(required_size, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&buf);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("executable_fullpath_get_freebsd(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     allocated_size = required_size;
 
     // パス文字列取得
     if(0 != sysctl(mib, 4, buf, &required_size, NULL, 0)) {
-        choco_memory_free(buf, allocated_size, MEMORY_TAG_FILE_IO);
-        buf = NULL;
+        general_allocator_free((void**)&buf, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
         ret = FS_PATH_RUNTIME_ERROR;
         ERROR_MESSAGE("executable_fullpath_get_freebsd(%s) - sysctl failed.", result_to_str(ret));
@@ -551,18 +547,22 @@ static const char* result_to_str(fs_path_result_t result_) {
     }
 }
 
-static fs_path_result_t result_convert_choco_memory(memory_system_result_t result_) {
+static fs_path_result_t result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return FS_PATH_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return FS_PATH_UNDEFINED_ERROR;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return FS_PATH_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return FS_PATH_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return FS_PATH_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return FS_PATH_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return FS_PATH_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return FS_PATH_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return FS_PATH_UNDEFINED_ERROR;
     default:
         return FS_PATH_UNDEFINED_ERROR;
     }

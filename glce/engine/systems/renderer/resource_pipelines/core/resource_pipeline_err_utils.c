@@ -3,7 +3,7 @@
 
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_err_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -250,18 +250,22 @@ resource_pipeline_result_t resource_pipeline_result_convert_texture_gpu_resource
     }
 }
 
-resource_pipeline_result_t resource_pipeline_result_convert_choco_memory(memory_system_result_t result_) {
+resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return RESOURCE_PIPELINE_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return RESOURCE_PIPELINE_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }

@@ -9,7 +9,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/texture/texture_cpu_resource.h"
@@ -100,8 +100,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
         if(NULL != tmp_pixels) {
-            choco_memory_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
-            tmp_pixels = NULL;
+            general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
         }
         texture_gpu_resource_destroy(&gpu_resource);
         texture_cpu_resource_destroy(&cpu_resource);
@@ -177,8 +176,7 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret) {
         if(NULL != tmp_pixels) {
-            choco_memory_free(tmp_pixels, tmp_pixel_data_size, MEMORY_TAG_TEXTURE);
-            tmp_pixels = NULL;
+            general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
         }
         texture_gpu_resource_destroy(&gpu_resource);
         texture_cpu_resource_destroy(&cpu_resource);
@@ -247,7 +245,7 @@ cleanup:
 static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     const uint16_t tmp_width = 32;
     const uint16_t tmp_height = 32;
@@ -262,10 +260,10 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_pixels_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "*out_pixels_")
 
-    ret_memory_system = choco_memory_allocate(pixel_size, MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_pipeline_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("solid_color_texture_generate(%s) - Failed to allocate memory for pixels.", resource_pipeline_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(pixel_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_pipeline_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("solid_color_texture_generate(%s) - general_allocator_allocate failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 
@@ -288,7 +286,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 
 cleanup:
     if(NULL != tmp_pixels) {
-        choco_memory_free(tmp_pixels, pixel_size, MEMORY_TAG_TEXTURE);
+        general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
         tmp_pixels = NULL;
     }
     return ret;

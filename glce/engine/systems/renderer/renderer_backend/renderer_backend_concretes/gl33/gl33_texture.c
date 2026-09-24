@@ -21,7 +21,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -104,7 +104,7 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
 static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     renderer_backend_texture_t* tmp_texture = NULL;
     GLint min_filter = GL_NEAREST;
@@ -121,10 +121,10 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
     IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
     IF_ARG_FALSE_GOTO_CLEANUP(texture_unit_index_ >= 0, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "texture_unit_index_")
 
-    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = renderer_backend_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_texture_create(%s) - Failed to allocate memory for texture handle.", renderer_backend_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_texture_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_texture);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("gl33_texture_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     tmp_texture->handle = 0;
@@ -176,7 +176,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     }
     mock_glDeleteTextures(1, &(*texture_handle_)->handle);
 
-    choco_memory_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)texture_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     *texture_handle_ = NULL;
 }

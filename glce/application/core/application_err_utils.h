@@ -19,7 +19,6 @@ extern "C" {
 
 #include "application/core/application_types.h"
 
-#include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
@@ -56,15 +55,6 @@ extern "C" {
  * @return const char* 変換された文字列
  */
 const char* application_result_to_str(application_result_t result_);
-
-/**
- * @brief Choco Memoryモジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] result_ Choco Memoryモジュール実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t application_result_convert_memory_system(memory_system_result_t result_);
 
 /**
  * @brief Linear Allocatorモジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する

@@ -17,14 +17,15 @@
 extern "C" {
 #endif
 
-#include "engine/resource/core/resource_types.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/core/memory/choco_memory.h"
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_stream.h"
+
+#include "engine/resource/core/resource_types.h"
 
 /**
  * @brief Resourceレイヤー実行結果コードを文字列に変換する
@@ -45,20 +46,6 @@ extern "C" {
  * @retval "UNDEFINED_ERROR" 実行結果コード:RESOURCE_UNDEFINED_ERROR(未定義の実行結果コード)
  */
 const char* resource_result_to_str(resource_result_t result_);
-
-/**
- * @brief choco_memoryモジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
- *
- * @param[in] result_ choco_memoryモジュール実行結果コード
- *
- * @retval RESOURCE_SUCCESS choco_memory実行結果コード:MEMORY_SYSTEM_SUCCESS
- * @retval RESOURCE_INVALID_ARGUMENT choco_memory実行結果コード:MEMORY_SYSTEM_INVALID_ARGUMENT
- * @retval RESOURCE_LIMIT_EXCEEDED choco_memory実行結果コード:MEMORY_SYSTEM_LIMIT_EXCEEDED
- * @retval RESOURCE_BAD_OPERATION choco_memory実行結果コード:MEMORY_SYSTEM_BAD_OPERATION
- * @retval RESOURCE_NO_MEMORY choco_memory実行結果コード:MEMORY_SYSTEM_NO_MEMORY
- * @retval RESOURCE_UNDEFINED_ERROR 未定義のchoco_memory実行結果コード
- */
-resource_result_t resource_result_convert_choco_memory(memory_system_result_t result_);
 
 resource_result_t resource_result_convert_fs_stream(fs_stream_result_t result_);
 
@@ -98,6 +85,8 @@ resource_result_t resource_result_convert_choco_string(choco_string_result_t res
  * - 未定義のgeometry_primitive実行結果コード
  */
 resource_result_t resource_result_convert_geometry_primitive(geometry_primitive_result_t result_);
+
+resource_result_t resource_result_convert_general_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

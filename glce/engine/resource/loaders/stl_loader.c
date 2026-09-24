@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
+#include "engine/resource/loaders/stl_loader.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>  // for sscanf
 
-#include "engine/resource/loaders/stl_loader.h"
-
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/io_utils/fs_stream.h"
@@ -64,7 +65,7 @@ static resource_result_t ascii_load(const char* fullpath_, size_t* out_vertex_co
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     fs_stream_t* fs_stream = NULL;
@@ -108,10 +109,10 @@ static resource_result_t ascii_load(const char* fullpath_, size_t* out_vertex_co
         ERROR_MESSAGE("ascii_load(%s) - Vertex buffer size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = choco_memory_allocate(sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("ascii_load(%s) - Failed to allocate vertex buffer. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count, sizeof(point_normal_vertex_t));
+    ret_general_allocator = general_allocator_allocate(sizeof(point_normal_vertex_t) * vertex_count, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("ascii_load(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -259,8 +260,7 @@ cleanup:
         choco_string_destroy(&string);
     }
     if(NULL != tmp_vertices) {
-        choco_memory_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count, MEMORY_TAG_GEOMETRY);
-        tmp_vertices = NULL;
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
 }

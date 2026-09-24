@@ -3,7 +3,7 @@
 
 #include "engine/systems/renderer/resources/texture/texture_gpu_resource_err_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
@@ -43,18 +43,22 @@ const char* texture_gpu_resource_result_to_str(texture_gpu_resource_result_t res
     }
 }
 
-texture_gpu_resource_result_t texture_gpu_resource_result_convert_choco_memory(memory_system_result_t result_) {
+texture_gpu_resource_result_t texture_gpu_resource_result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return TEXTURE_GPU_RESOURCE_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return TEXTURE_GPU_RESOURCE_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return TEXTURE_GPU_RESOURCE_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return TEXTURE_GPU_RESOURCE_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return TEXTURE_GPU_RESOURCE_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR;
     default:
         return TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR;
     }

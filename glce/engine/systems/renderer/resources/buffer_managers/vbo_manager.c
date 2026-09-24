@@ -84,7 +84,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -142,7 +142,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
 
     range_allocator_result_t ret_range_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     vbo_manager_t* tmp_vbo_manager = NULL;
     range_allocator_t* tmp_allocator = NULL;
@@ -157,10 +157,10 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
     IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_config_is_valid(config_), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_result_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_")
 
-    ret_memory_system = choco_memory_allocate(sizeof(vbo_manager_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = buffer_manager_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=manager_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", buffer_manager_result_to_str(ret), sizeof(vbo_manager_t), (int)ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = buffer_manager_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("vbo_manager_create(%s) - general_allocator_allocate failed.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
 
@@ -226,8 +226,7 @@ cleanup:
 
         range_allocator_destroy(&tmp_allocator);
         if(NULL != tmp_vbo_manager) {
-            choco_memory_free(tmp_vbo_manager, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
-            tmp_vbo_manager = NULL;
+            general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
     }
     return ret;
@@ -243,8 +242,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
     renderer_backend_vbo_destroy((*vbo_manager_)->backend_context, &(*vbo_manager_)->vbo);
     range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
-    choco_memory_free(*vbo_manager_, sizeof(vbo_manager_t), MEMORY_TAG_RENDERER);
-    *vbo_manager_ = NULL;
+    general_allocator_free((void**)vbo_manager_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_) {

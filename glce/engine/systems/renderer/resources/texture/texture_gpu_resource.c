@@ -10,7 +10,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
@@ -27,7 +27,7 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_gpu_resource_t* tmp_texture_gpu_resource = NULL;
 
@@ -49,10 +49,10 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = texture_gpu_resource_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - choco_memory_allocate failed.", texture_gpu_resource_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(texture_gpu_resource_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_texture_gpu_resource);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = texture_gpu_resource_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - general_allocator_allocate failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_texture_gpu_resource, 0, sizeof(texture_gpu_resource_t));
@@ -115,7 +115,7 @@ cleanup:
             renderer_backend_texture_destroy(backend_context_, &tmp_texture_gpu_resource->backend_texture);
         }
         if(NULL != tmp_texture_gpu_resource) {
-            choco_memory_free(tmp_texture_gpu_resource, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&tmp_texture_gpu_resource, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
             tmp_texture_gpu_resource = NULL;
         }
     }
@@ -136,7 +136,7 @@ void texture_gpu_resource_destroy(texture_gpu_resource_t** texture_resource_) {
     }
 #endif
     renderer_backend_texture_destroy((*texture_resource_)->backend_context, &(*texture_resource_)->backend_texture);
-    choco_memory_free(*texture_resource_, sizeof(texture_gpu_resource_t), MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)texture_resource_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     *texture_resource_ = NULL;
 }
 

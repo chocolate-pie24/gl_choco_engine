@@ -69,7 +69,7 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
 
     ret_general_allocator = general_allocator_allocate(sizeof(flight_camera_t), GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_flight_camera);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = camera_result_convert_genera_allocator(ret_general_allocator);
+        ret = camera_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("flight_camera_create(%s) - general_allocator_allocate failed.", camera_result_to_str(ret));
         goto cleanup;
     }

@@ -175,7 +175,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 /**
  * @brief nodeの利用状態、range用途、およびlist接続状態を表す
@@ -438,12 +438,12 @@ static bool node_is_valid(const node_t* node_);
 // Utilities
 static void status_print(const range_allocator_status_t* status_);
 static const char* result_to_str(range_allocator_result_t result_);
-static range_allocator_result_t result_convert_choco_memory(memory_system_result_t result_);
+static range_allocator_result_t result_convert_general_allocator(general_allocator_result_t result_);
 
 range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t max_allocation_count_, size_t base_align_, range_allocator_t** out_allocator_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     range_allocator_t* tmp_allocator = NULL;
 
@@ -471,18 +471,18 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     }
     node_pool_size = sizeof(node_t) * max_node_count;
 
-    ret_memory_system = choco_memory_allocate(sizeof(range_allocator_t), MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=allocator_instance_allocation_failed, allocation_size=%zu, memory_system_result=%d", result_to_str(ret), sizeof(range_allocator_t), (int)ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(sizeof(range_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_allocator, 0, sizeof(range_allocator_t));
 
-    ret_memory_system = choco_memory_allocate(node_pool_size, MEMORY_TAG_RENDERER, (void**)&tmp_allocator->node_pool);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=node_pool_allocation_failed, node_pool_size=%zu, max_node_count=%zu, node_size=%zu, memory_system_result=%d", result_to_str(ret), node_pool_size, max_node_count, sizeof(node_t), (int)ret_memory_system);
+    ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator->node_pool);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_allocator->node_pool, 0, node_pool_size);
@@ -521,11 +521,9 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
 cleanup:
     if(NULL != tmp_allocator) {
         if(NULL != tmp_allocator->node_pool) {
-            choco_memory_free((void*)tmp_allocator->node_pool, node_pool_size, MEMORY_TAG_RENDERER);
-            tmp_allocator->node_pool = NULL;
+            general_allocator_free((void**)&tmp_allocator->node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
-        choco_memory_free((void*)tmp_allocator, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
-        tmp_allocator = NULL;
+        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }
@@ -539,15 +537,13 @@ void range_allocator_destroy(range_allocator_t** allocator_) {
     }
 
     if(NULL != (*allocator_)->node_pool) {
-        choco_memory_free((void*)(*allocator_)->node_pool, sizeof(node_t) * (*allocator_)->max_node_count, MEMORY_TAG_RENDERER);
-        (*allocator_)->node_pool = NULL;
+        general_allocator_free((void**)&(*allocator_)->node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
 
     (*allocator_)->max_node_count = 0;
     (*allocator_)->memory_pool_size = 0;
 
-    choco_memory_free((void*)*allocator_, sizeof(range_allocator_t), MEMORY_TAG_RENDERER);
-    *allocator_ = NULL;
+    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_) {
@@ -3592,73 +3588,22 @@ static const char* result_to_str(range_allocator_result_t result_) {
     }
 }
 
-/**
- * @brief Choco Memoryの結果コードをRange Allocatorの結果コードへ変換する
- *
- * @details
- * 下位モジュールであるChoco Memoryが返したmemory_system_result_tを、
- * 同じ意味を持つrange_allocator_result_tへ変換する。
- *
- * 次の対応で変換する。
- *
- * - MEMORY_SYSTEM_SUCCESS
- *   → RANGE_ALLOCATOR_SUCCESS
- * - MEMORY_SYSTEM_INVALID_ARGUMENT
- *   → RANGE_ALLOCATOR_INVALID_ARGUMENT
- * - MEMORY_SYSTEM_LIMIT_EXCEEDED
- *   → RANGE_ALLOCATOR_LIMIT_EXCEEDED
- * - MEMORY_SYSTEM_BAD_OPERATION
- *   → RANGE_ALLOCATOR_BAD_OPERATION
- * - MEMORY_SYSTEM_NO_MEMORY
- *   → RANGE_ALLOCATOR_NO_MEMORY
- *
- * memory_system_result_tに定義されていない値は、
- * 意味を安全に変換できないためRANGE_ALLOCATOR_UNDEFINED_ERRORへ変換する。
- *
- * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
- * rollback、およびメモリ操作を行わない。
- *
- * @param[in] result_
- * Choco Memoryが返した結果コード。
- *
- * @retval RANGE_ALLOCATOR_SUCCESS
- * result_がMEMORY_SYSTEM_SUCCESSである。
- *
- * @retval RANGE_ALLOCATOR_INVALID_ARGUMENT
- * result_がMEMORY_SYSTEM_INVALID_ARGUMENTである。
- *
- * @retval RANGE_ALLOCATOR_LIMIT_EXCEEDED
- * result_がMEMORY_SYSTEM_LIMIT_EXCEEDEDである。
- *
- * @retval RANGE_ALLOCATOR_BAD_OPERATION
- * result_がMEMORY_SYSTEM_BAD_OPERATIONである。
- *
- * @retval RANGE_ALLOCATOR_NO_MEMORY
- * result_がMEMORY_SYSTEM_NO_MEMORYである。
- *
- * @retval RANGE_ALLOCATOR_UNDEFINED_ERROR
- * result_がmemory_system_result_tに定義されていない値である。
- *
- * @par 計算量
- * 時間計算量はO(1)である。
- * 本関数は動的メモリ確保および動的メモリ解放を行わない。
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が実装との整合性を確認・修正した。
- */
-static range_allocator_result_t result_convert_choco_memory(memory_system_result_t result_) {
+static range_allocator_result_t result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return RANGE_ALLOCATOR_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return RANGE_ALLOCATOR_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return RANGE_ALLOCATOR_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return RANGE_ALLOCATOR_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return RANGE_ALLOCATOR_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return RANGE_ALLOCATOR_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return RANGE_ALLOCATOR_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return RANGE_ALLOCATOR_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RANGE_ALLOCATOR_UNDEFINED_ERROR;
     default:
         return RANGE_ALLOCATOR_UNDEFINED_ERROR;
     }

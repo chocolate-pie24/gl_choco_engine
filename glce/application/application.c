@@ -33,7 +33,6 @@
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
-#include "engine/core/memory/choco_memory.h"
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -148,7 +147,6 @@ static application_result_t executable_directory_get(application_state_t* state_
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
@@ -160,14 +158,6 @@ application_result_t application_create(void) {
     if(NULL != s_application_state) {
         ERROR_MESSAGE("application_create(%s) - Application state is already initialized.", application_result_to_str(APPLICATION_RUNTIME_ERROR));
         ret = APPLICATION_RUNTIME_ERROR;
-        goto cleanup;
-    }
-
-    // Memory System
-    ret_memory_system = choco_memory_create();
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = application_result_convert_memory_system(ret_memory_system);
-        ERROR_MESSAGE("application_create(%s) - Failed to create memory system.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -267,7 +257,7 @@ application_result_t application_create(void) {
     // commit
     s_application_state = tmp_state;
     INFO_MESSAGE("Application created successfully.");
-    memory_system_report();
+    // memory_system_report();
 
     ret = APPLICATION_SUCCESS;
 
@@ -297,7 +287,6 @@ cleanup:
             }
             general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
         }
-        choco_memory_destroy();
     }
 
     return ret;
@@ -335,8 +324,7 @@ void application_destroy(void) {
 
     general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     INFO_MESSAGE("Freed all memory.");
-    memory_system_report();
-    choco_memory_destroy();
+    // memory_system_report();
     // end cleanup all systems.
 
     INFO_MESSAGE("Application destroyed successfully.");

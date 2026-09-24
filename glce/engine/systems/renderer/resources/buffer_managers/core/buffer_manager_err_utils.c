@@ -47,7 +47,7 @@
  */
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_err_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
@@ -157,18 +157,22 @@ buffer_manager_result_t buffer_manager_result_convert_renderer_backend(renderer_
     }
 }
 
-buffer_manager_result_t buffer_manager_result_convert_choco_memory(memory_system_result_t result_) {
+buffer_manager_result_t buffer_manager_result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return BUFFER_MANAGER_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return BUFFER_MANAGER_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return BUFFER_MANAGER_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return BUFFER_MANAGER_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return BUFFER_MANAGER_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return BUFFER_MANAGER_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return BUFFER_MANAGER_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return BUFFER_MANAGER_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return BUFFER_MANAGER_UNDEFINED_ERROR;
     default:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     }

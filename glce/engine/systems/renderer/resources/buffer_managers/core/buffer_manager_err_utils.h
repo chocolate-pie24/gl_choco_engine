@@ -21,7 +21,7 @@
  *
  * - range_allocator_result_t
  * - renderer_backend_result_t
- * - memory_system_result_t
+ * - general_allocator_result_t
  *
  * 意味が対応する結果コードは、Buffer Manager層の同等の結果コードへ変換する。
  * Buffer Manager層に対応する結果コードが存在しない場合、または
@@ -48,7 +48,7 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
@@ -245,62 +245,7 @@ buffer_manager_result_t buffer_manager_result_convert_range_allocator(range_allo
  */
 buffer_manager_result_t buffer_manager_result_convert_renderer_backend(renderer_backend_result_t result_);
 
-/**
- * @brief Memory Systemの結果コードをBuffer Managerの結果コードへ変換する
- *
- * @details
- * 下位モジュールであるMemory Systemが返したmemory_system_result_tを、
- * 同じ意味を持つbuffer_manager_result_tへ変換する。
- *
- * 次の対応で変換する。
- *
- * - MEMORY_SYSTEM_SUCCESS
- *   → BUFFER_MANAGER_SUCCESS
- * - MEMORY_SYSTEM_INVALID_ARGUMENT
- *   → BUFFER_MANAGER_INVALID_ARGUMENT
- * - MEMORY_SYSTEM_LIMIT_EXCEEDED
- *   → BUFFER_MANAGER_LIMIT_EXCEEDED
- * - MEMORY_SYSTEM_BAD_OPERATION
- *   → BUFFER_MANAGER_BAD_OPERATION
- * - MEMORY_SYSTEM_NO_MEMORY
- *   → BUFFER_MANAGER_NO_MEMORY
- *
- * memory_system_result_tに定義されていない値は、
- * 意味を安全に変換できないためBUFFER_MANAGER_UNDEFINED_ERRORへ変換する。
- *
- * 本関数は結果コードの変換だけを行い、ログ出力、状態変更、
- * rollback、およびメモリ操作を行わない。
- *
- * @param[in] result_
- * 変換するMemory Systemの結果コード。
- *
- * @retval BUFFER_MANAGER_SUCCESS
- * result_がMEMORY_SYSTEM_SUCCESSである。
- *
- * @retval BUFFER_MANAGER_INVALID_ARGUMENT
- * result_がMEMORY_SYSTEM_INVALID_ARGUMENTである。
- *
- * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * result_がMEMORY_SYSTEM_LIMIT_EXCEEDEDである。
- *
- * @retval BUFFER_MANAGER_BAD_OPERATION
- * result_がMEMORY_SYSTEM_BAD_OPERATIONである。
- *
- * @retval BUFFER_MANAGER_NO_MEMORY
- * result_がMEMORY_SYSTEM_NO_MEMORYである。
- *
- * @retval BUFFER_MANAGER_UNDEFINED_ERROR
- * result_がmemory_system_result_tに定義されていない値である。
- *
- * @par 計算量
- * 時間計算量はO(1)である。
- * 本関数は動的メモリ確保および動的メモリ解放を行わない。
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が実装との整合性を確認・修正した。
- */
-buffer_manager_result_t buffer_manager_result_convert_choco_memory(memory_system_result_t result_);
+buffer_manager_result_t buffer_manager_result_convert_general_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

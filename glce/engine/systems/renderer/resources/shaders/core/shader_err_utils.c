@@ -3,9 +3,8 @@
 
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
-
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -65,23 +64,6 @@ shader_result_t shader_result_convert_linear_allocator(linear_allocator_result_t
         return SHADER_NO_MEMORY;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return SHADER_INVALID_ARGUMENT;
-    default:
-        return SHADER_UNDEFINED_ERROR;
-    }
-}
-
-shader_result_t shader_result_convert_choco_memory(memory_system_result_t result_) {
-    switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
-        return SHADER_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return SHADER_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return SHADER_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
-        return SHADER_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return SHADER_NO_MEMORY;
     default:
         return SHADER_UNDEFINED_ERROR;
     }
@@ -189,6 +171,27 @@ shader_result_t shader_result_convert_buffer_manager(buffer_manager_result_t res
     case BUFFER_MANAGER_OVERFLOW:
         return SHADER_OVERFLOW;
     case BUFFER_MANAGER_UNDEFINED_ERROR:
+        return SHADER_UNDEFINED_ERROR;
+    default:
+        return SHADER_UNDEFINED_ERROR;
+    }
+}
+
+shader_result_t shader_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return SHADER_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return SHADER_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return SHADER_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return SHADER_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return SHADER_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return SHADER_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return SHADER_UNDEFINED_ERROR;
     default:
         return SHADER_UNDEFINED_ERROR;

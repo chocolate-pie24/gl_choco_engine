@@ -12,11 +12,8 @@
  */
 #include "application/core/application_err_utils.h"
 
-#include "application/core/application_types.h"
-
-#include "engine/core/memory/choco_memory.h"
-
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -25,6 +22,8 @@
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/resource/core/resource_types.h"
+
+#include "application/core/application_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -67,23 +66,6 @@ const char* application_result_to_str(application_result_t result_) {
         return s_result_str_undefined_error;
     default:
         return s_result_str_undefined_error;
-    }
-}
-
-application_result_t application_result_convert_memory_system(memory_system_result_t result_) {
-    switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
     }
 }
 

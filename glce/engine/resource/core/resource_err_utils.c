@@ -10,15 +10,17 @@
  * @date 2026-05-05
  *
  */
-#include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_stream.h"
+
+#include "engine/resource/core/resource_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
@@ -61,23 +63,6 @@ const char* resource_result_to_str(resource_result_t result_) {
         return s_result_str_undefined_error;
     default:
         return s_result_str_undefined_error;
-    }
-}
-
-resource_result_t resource_result_convert_choco_memory(memory_system_result_t result_) {
-    switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
-        return RESOURCE_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return RESOURCE_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return RESOURCE_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
-        return RESOURCE_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return RESOURCE_NO_MEMORY;
-    default:
-        return RESOURCE_UNDEFINED_ERROR;
     }
 }
 
@@ -152,6 +137,27 @@ resource_result_t resource_result_convert_geometry_primitive(geometry_primitive_
     case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
         return RESOURCE_DATA_CORRUPTED;
     case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return RESOURCE_OVERFLOW;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return RESOURCE_UNDEFINED_ERROR;
     default:
         return RESOURCE_UNDEFINED_ERROR;

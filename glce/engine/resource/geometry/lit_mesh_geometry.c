@@ -20,14 +20,15 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "engine/resource/core/resource_types.h"
-#include "engine/resource/core/resource_err_utils.h"
-
-#include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/memory/choco_memory.h"
-
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+
+#include "engine/memory/general_allocator/general_allocator.h"
+
+#include "engine/core/geometry_primitive/vertex.h"
+
+#include "engine/resource/core/resource_types.h"
+#include "engine/resource/core/resource_err_utils.h"
 
 /**
  * @brief lit_mesh_geometry内部状態管理構造体
@@ -46,7 +47,7 @@ static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_);
 resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** out_geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     lit_mesh_geometry_t* tmp_geometry = NULL;
 
@@ -59,10 +60,10 @@ resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, c
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Failed to allocate lit_mesh_geometry_t instance.", resource_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(lit_mesh_geometry_t), GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_geometry, 0, sizeof(lit_mesh_geometry_t));
@@ -170,7 +171,7 @@ bool lit_mesh_geometry_is_valid(const lit_mesh_geometry_t* geometry_) {
 static resource_result_t initialize_from_vertices(lit_mesh_geometry_t* geometry_, size_t vertex_count_, const point_normal_vertex_t* vertices_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     point_normal_vertex_t* tmp_vertices = NULL;
 
@@ -182,10 +183,11 @@ static resource_result_t initialize_from_vertices(lit_mesh_geometry_t* geometry_
         ERROR_MESSAGE("initialize_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
-    ret_memory_system = choco_memory_allocate(sizeof(point_normal_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("initialize_from_vertices(%s) - Failed to allocate CPU-side vertex array. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
+
+    ret_general_allocator = general_allocator_allocate(sizeof(point_normal_vertex_t) * vertex_count_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("initialize_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -201,19 +203,16 @@ static resource_result_t initialize_from_vertices(lit_mesh_geometry_t* geometry_
 
 cleanup:
     if(NULL != tmp_vertices && RESOURCE_DATA_CORRUPTED != ret) {
-        choco_memory_free(tmp_vertices, sizeof(point_normal_vertex_t) * vertex_count_, MEMORY_TAG_GEOMETRY);
-        tmp_vertices = NULL;
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
 }
 
 static void destroy_unchecked(lit_mesh_geometry_t** geometry_) {
-    choco_memory_free((*geometry_)->vertices, sizeof(point_normal_vertex_t) * (*geometry_)->vertex_count, MEMORY_TAG_GEOMETRY);
-    (*geometry_)->vertices = NULL;
+    general_allocator_free((void**)&(*geometry_)->vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     (*geometry_)->vertex_count = 0;
 
-    choco_memory_free(*geometry_, sizeof(lit_mesh_geometry_t), MEMORY_TAG_GEOMETRY);
-    *geometry_ = NULL;
+    general_allocator_free((void**)geometry_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }
 
 static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_) {

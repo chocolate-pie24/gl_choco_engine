@@ -86,7 +86,7 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
 
     ret_general_allocator = general_allocator_allocate(sizeof(camera_t), GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_camera);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = camera_result_convert_genera_allocator(ret_general_allocator);
+        ret = camera_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", camera_result_to_str(ret));
         goto cleanup;
     }

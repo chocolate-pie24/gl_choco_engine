@@ -22,7 +22,8 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
@@ -69,7 +70,7 @@ static bool is_valid_shallow(const line_mesh_shader_t* shader_);
 shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const line_mesh_shader_config_t* config_, line_mesh_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     line_mesh_shader_t* tmp_line_mesh_shader = NULL;
 
@@ -96,10 +97,10 @@ shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_cont
     }
 
     // line shader構造体インスタンス生成
-    ret_memory_system = choco_memory_allocate(sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp_line_mesh_shader);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = shader_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("line_mesh_shader_create(%s) - Failed to allocate memory for tmp_line_mesh_shader.", shader_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_line_mesh_shader);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = shader_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("line_mesh_shader_create(%s) - general_allocator_allocate failed.", shader_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_line_mesh_shader, 0, sizeof(line_mesh_shader_t));
@@ -437,8 +438,7 @@ static void destroy_unchecked(line_mesh_shader_t** shader_) {
     if(NULL != (*shader_)->shader) {
         renderer_backend_shader_destroy((*shader_)->backend_context, &(*shader_)->shader);
     }
-    choco_memory_free(*shader_, sizeof(line_mesh_shader_t), MEMORY_TAG_RENDERER);
-    *shader_ = NULL;
+    general_allocator_free((void**)shader_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 static shader_result_t program_initialize(line_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {

@@ -20,7 +20,8 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/file_io/fs_types.h"
 
 /**
@@ -32,14 +33,14 @@ struct filesystem {
     fs_open_mode_t mode;    /**< ファイルオープンモード */
 };
 
-static const char* result_to_str(filesystem_result_t result_);
-static filesystem_result_t result_convert_memory_system(memory_system_result_t result_);
-
 static FILE* mock_fopen(const char* fullpath_, const char* mode_);
 static int mock_fclose(FILE* stream_);
 static size_t mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_);
 static int mock_ferror(FILE *stream_);
 static int mock_feof(FILE *stream_);
+
+static const char* result_to_str(filesystem_result_t result_);
+static filesystem_result_t result_convert_general_allocator(general_allocator_result_t result_);
 
 static const char* const s_result_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 成功 */
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 無効な引数 */
@@ -55,7 +56,7 @@ static const char* const s_result_str_eof = "EOF";                              
 filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char* fullpath_, fs_open_mode_t mode_) {
     filesystem_result_t ret = FILESYSTEM_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     filesystem_t* tmp_filesystem = NULL;
 
@@ -75,10 +76,10 @@ filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(filesystem_t), MEMORY_TAG_FILE_IO, (void**)&tmp_filesystem);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = result_convert_memory_system(ret_memory_system);
-        ERROR_MESSAGE("filesystem_create(%s) - choco_memory_allocate failed.", result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(filesystem_t), GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&tmp_filesystem);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("filesystem_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_filesystem, 0, sizeof(filesystem_t));
@@ -112,8 +113,7 @@ filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char
 
 cleanup:
     if(NULL != tmp_filesystem) {
-        choco_memory_free(tmp_filesystem, sizeof(filesystem_t), MEMORY_TAG_FILE_IO);
-        tmp_filesystem = NULL;
+        general_allocator_free((void**)&tmp_filesystem, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
     }
     return ret;
 }
@@ -143,8 +143,7 @@ void filesystem_destroy(filesystem_t** filesystem_, bool* out_close_succeeded_) 
             *out_close_succeeded_ = false;
         }
     }
-    choco_memory_free((void*)(*filesystem_), sizeof(filesystem_t), MEMORY_TAG_FILE_IO);
-    *filesystem_ = NULL;
+    general_allocator_free((void**)filesystem_, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
 
 cleanup:
     return;
@@ -221,6 +220,26 @@ bool filesystem_is_valid(const filesystem_t* filesystem_) {
     return (NULL != filesystem_->file_handle);
 }
 
+static FILE* NO_COVERAGE mock_fopen(const char* fullpath_, const char* mode_) {
+    return fopen(fullpath_, mode_);
+}
+
+static int NO_COVERAGE mock_fclose(FILE* stream_) {
+    return fclose(stream_);
+}
+
+static size_t NO_COVERAGE mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_) {
+    return fread(ptr_, size_, nmemb_, stream_);
+}
+
+static int NO_COVERAGE mock_ferror(FILE *stream_) {
+    return ferror(stream_);
+}
+
+static int NO_COVERAGE mock_feof(FILE *stream_) {
+    return feof(stream_);
+}
+
 /**
  * @brief filesystemモジュール実行結果コードを文字列に変換する
  *
@@ -254,39 +273,23 @@ static const char* result_to_str(filesystem_result_t result_) {
     }
 }
 
-static filesystem_result_t result_convert_memory_system(memory_system_result_t result_) {
+static filesystem_result_t result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
-    case MEMORY_SYSTEM_SUCCESS:
+    case GENERAL_ALLOCATOR_SUCCESS:
         return FILESYSTEM_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return FILESYSTEM_UNDEFINED_ERROR;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return FILESYSTEM_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return FILESYSTEM_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
         return FILESYSTEM_BAD_OPERATION;
-    case MEMORY_SYSTEM_NO_MEMORY:
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return FILESYSTEM_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
         return FILESYSTEM_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return FILESYSTEM_UNDEFINED_ERROR;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return FILESYSTEM_UNDEFINED_ERROR;
     default:
         return FILESYSTEM_UNDEFINED_ERROR;
     }
-}
-
-static FILE* NO_COVERAGE mock_fopen(const char* fullpath_, const char* mode_) {
-    return fopen(fullpath_, mode_);
-}
-
-static int NO_COVERAGE mock_fclose(FILE* stream_) {
-    return fclose(stream_);
-}
-
-static size_t NO_COVERAGE mock_fread(void *ptr_, size_t size_, size_t nmemb_, FILE *stream_) {
-    return fread(ptr_, size_, nmemb_, stream_);
-}
-
-static int NO_COVERAGE mock_ferror(FILE *stream_) {
-    return ferror(stream_);
-}
-
-static int NO_COVERAGE mock_feof(FILE *stream_) {
-    return feof(stream_);
 }

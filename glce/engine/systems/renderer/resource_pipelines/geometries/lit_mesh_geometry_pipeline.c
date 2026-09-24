@@ -23,8 +23,9 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
+
 #include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/memory/choco_memory.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/loaders/stl_loader.h"
@@ -90,8 +91,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
         goto cleanup;
     }
     vbo_written = true;
-    choco_memory_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
-    vertices = NULL;
+    general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 
     ret_resource_registry = lit_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -116,8 +116,7 @@ cleanup:
     }
     lit_mesh_geometry_destroy(&geometry);
     if(NULL != vertices) {
-        choco_memory_free(vertices, vertex_array_size, MEMORY_TAG_GEOMETRY);
-        vertices = NULL;
+        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
 }

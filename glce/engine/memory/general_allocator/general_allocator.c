@@ -314,7 +314,7 @@ static bool is_valid_shallow(void) {
 }
 
 static bool memory_tag_is_valid(general_allocator_memory_tag_t memory_tag_) {
-    if(memory_tag_ >= GENERAL_ALLOCATOR_MEMORY_TAG_MAX) {
+    if(memory_tag_ >= GENERAL_ALLOCATOR_MEMORY_TAG_MAX || 0 > memory_tag_) {
         return false;
     }
     return true;

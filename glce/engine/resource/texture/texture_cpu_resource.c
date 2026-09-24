@@ -19,7 +19,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
@@ -39,7 +39,7 @@ struct texture_cpu_resource {
 resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_, uint8_t channel_count_, size_t pixel_data_size_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
@@ -74,12 +74,13 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
         goto cleanup;
     }
 
-    ret_memory_system = choco_memory_allocate(sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = resource_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Failed to allocate memory for texture_cpu_resource_t.", resource_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(texture_cpu_resource_t), GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
+
     tmp_cpu_resource->channel_count = channel_count_;
     tmp_cpu_resource->height = height_;
     tmp_cpu_resource->width = width_;
@@ -101,8 +102,7 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
 
 cleanup:
     if(NULL != tmp_cpu_resource) {
-        choco_memory_free(tmp_cpu_resource, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
-        tmp_cpu_resource = NULL;
+        general_allocator_free((void**)&tmp_cpu_resource, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
     }
     return ret;
 }
@@ -117,11 +117,8 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_) {
     if(!texture_cpu_resource_is_valid(*texture_resource_)) {
         ERROR_MESSAGE("texture_cpu_resource_destroy(%s) - Provided texture_cpu_resource is corrupted.", resource_result_to_str(RESOURCE_DATA_CORRUPTED));
     } else {
-        choco_memory_free((*texture_resource_)->pixels, (*texture_resource_)->pixel_data_size, MEMORY_TAG_TEXTURE);
-        (*texture_resource_)->pixels = NULL;
-
-        choco_memory_free(*texture_resource_, sizeof(texture_cpu_resource_t), MEMORY_TAG_TEXTURE);
-        *texture_resource_ = NULL;
+        general_allocator_free((void**)&(*texture_resource_)->pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        general_allocator_free((void**)texture_resource_, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
     }
 }
 

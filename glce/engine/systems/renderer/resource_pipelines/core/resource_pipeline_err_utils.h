@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -38,7 +38,7 @@ resource_pipeline_result_t resource_pipeline_result_convert_fs_stream(fs_stream_
 
 resource_pipeline_result_t resource_pipeline_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_);
 
-resource_pipeline_result_t resource_pipeline_result_convert_choco_memory(memory_system_result_t result_);
+resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

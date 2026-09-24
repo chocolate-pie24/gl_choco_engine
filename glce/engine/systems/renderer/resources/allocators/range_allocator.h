@@ -303,10 +303,10 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
  *       node poolとRange Allocator本体が解放され、*allocator_がNULLとなる。
  *
  * @warning
- * choco_memory_free()は、Memory Systemが未初期化の場合や
+ * general_allocator_free()は、General Allocatorが未初期化の場合や
  * メモリ使用量管理値に矛盾がある場合、対象メモリを解放せずに終了する。
  *
- * 本関数はchoco_memory_free()の成否を取得できないため、その場合でも
+ * 本関数はgeneral_allocator_free()の成否を取得できないため、その場合でも
  * *allocator_へNULLを設定する。
  * Range Allocatorの生存期間中はMemory Systemを破棄せず、
  * メモリ使用量管理値を正常に維持する必要がある。
@@ -315,7 +315,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
  * node poolの各要素を走査せずに一括解放するため、時間計算量はO(1)である。
  *
  * @see range_allocator_create
- * @see choco_memory_free
+ * @see general_allocator_free
  *
  * @par AI支援
  * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、

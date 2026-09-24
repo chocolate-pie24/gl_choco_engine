@@ -19,7 +19,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -79,17 +79,17 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
 static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** out_vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     renderer_backend_vbo_t* tmp_vbo = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "out_vbo_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "*out_vbo_")
 
-    ret_memory_system = choco_memory_allocate(sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER, (void**)&tmp_vbo);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = renderer_backend_result_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_vbo_create(%s) - gl33_vbo_create failed.", renderer_backend_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vbo_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("gl33_vbo_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -117,7 +117,7 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vbo_) {
     }
     mock_glDeleteBuffers(1, &(*vbo_)->vbo_handle);
 
-    choco_memory_free(*vbo_, sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vbo_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     *vbo_ = NULL;
 
